@@ -187,6 +187,7 @@ def run(args):
     def save():
         p=args.output/'summary.json';tmp=p.with_suffix('.tmp');tmp.write_text(json.dumps(report,indent=2,allow_nan=False)+'\n');tmp.replace(p)
     env=None;observer=None;start_clock=time.monotonic();meters=StreamingMeters();phase='loading';current_interval=None
+    report['phase']=phase;save()
     try:
         schema=json.loads(args.schema.read_text())
         market=schema.get('community_market') or {}
@@ -220,7 +221,7 @@ def run(args):
         trace=args.output/'intervals.csv'
         with trace.open('w',newline='') as stream:
             writer=csv.writer(stream);writer.writerow(['global_step','active_members','net_kwh','cost_eur','outage_members'])
-            phase='dispatch'
+            phase='dispatch';report['phase']=phase;save()
             while not env.terminated:
                 t=env.time_step;buildings=list(env.buildings)
                 current_interval=args.start+t
@@ -247,9 +248,24 @@ def run(args):
                     if now-start_clock>args.max_seconds:raise RuntimeError('Measured wall-time limit exceeded')
         observer.close();observer=None
         if meters.steps!=args.transitions:raise AssertionError('Executed interval count differs from requested window')
-        phase='final_evaluation';evaluation_clock=time.monotonic();frame=env.evaluate_v2(include_business_as_usual=False)
+        phase='final_evaluation';report['phase']=phase;save()
+        def evaluation_progress(event):
+            report['evaluation_progress']=event
+            path=args.output/'evaluation-progress.json'
+            temporary=path.with_suffix('.tmp')
+            temporary.write_text(json.dumps(event,allow_nan=False)+'\n')
+            temporary.replace(path)
+            with (args.output/'evaluation-progress.jsonl').open('a') as stream:
+                stream.write(json.dumps(event,allow_nan=False)+'\n')
+            print(json.dumps(dict(evaluation_progress=event)),flush=True)
+        evaluation_clock=time.monotonic()
+        frame=env.evaluate_v2(include_business_as_usual=False,progress_callback=evaluation_progress)
+        report['kpi_evaluation_seconds']=time.monotonic()-evaluation_clock
+        phase='exporting_kpis';report['phase']=phase;save()
         frame.to_csv(args.output/'kpis.csv',index=False)
+        phase='final_reconciliation';report['phase']=phase;save()
         accounting,service=meters.reconcile(env,frame)
+        phase='exporting_evidence';report['phase']=phase;save()
         (args.output/'service.json').write_text(json.dumps(service,indent=2,allow_nan=False)+'\n')
         manifest=experiment_manifest(env)
         if manifest['input_file_changes']:raise AssertionError('Input content changed after loading')
@@ -260,7 +276,7 @@ def run(args):
             if not np.isfinite(final) or not 0<=final<=initial+1e-8:raise AssertionError('Invalid capacity degradation')
             capacities.append(dict(uid=battery.uid,initial_capacity_kwh=initial,final_capacity_kwh=final,
                                    capacity_loss_kwh=initial-final,history_entries=len(battery.capacity_history)))
-        report.update(status='pass',checks=meters.checks,max_tolerance_fraction=meters.max_fraction,
+        report.update(status='pass',phase='completed',checks=meters.checks,max_tolerance_fraction=meters.max_fraction,
                       max_absolute_errors=dict(meters.max_errors),meter_totals=meters.totals(),accounting=accounting,
                       active_members_min=meters.active_min,active_members_max=meters.active_max,
                       members_ever_observed=len(meters.members),member_totals={k:dict(v) for k,v in meters.members.items()},
@@ -274,7 +290,7 @@ def run(args):
         if time.monotonic()-start_clock>args.max_seconds:
             raise RuntimeError('Measured wall-time limit exceeded during final evaluation/export')
     except Exception as error:
-        report.update(status='fail',completed_intervals=meters.steps,error_type=type(error).__name__,error=str(error),
+        report.update(status='fail',phase='failed',completed_intervals=meters.steps,error_type=type(error).__name__,error=str(error),
                       failure_phase=phase,failed_global_interval=current_interval if phase=='dispatch' else None,
                       traceback=traceback.format_exc(limit=10))
     finally:

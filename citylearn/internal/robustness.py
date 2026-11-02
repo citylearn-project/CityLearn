@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from citylearn.utilities import parse_bool
+from citylearn.internal.robustness_history import RobustnessHistory
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
@@ -113,7 +114,7 @@ class CityLearnRobustnessService:
         self._cursor = 0
         self._active_cache_step: Optional[int] = None
         self._active_cache: List[RobustnessEvent] = []
-        self._history: Dict[int, Dict[str, Any]] = {}
+        self._history = RobustnessHistory()
         self._stuck_values: Dict[Tuple[str, str], float] = {}
         self._action_history: Dict[str, List[Tuple[int, float]]] = {}
         self._flat_layout_cache = None
@@ -130,6 +131,16 @@ class CityLearnRobustnessService:
     @property
     def history(self) -> Mapping[int, Mapping[str, Any]]:
         return {key: self._public_record(value) for key, value in sorted(self._history.items())}
+
+    def iter_history(self, start=None, stop=None):
+        """Yield detached public records in [start, stop), without a full copy."""
+        for step in sorted(self._history):
+            if (start is None or step >= start) and (stop is None or step < stop):
+                yield step, deepcopy(self._public_record(self._history[step]))
+
+    def history_window(self, start=None, stop=None):
+        """Return a detached public snapshot of the requested step window."""
+        return dict(self.iter_history(start, stop))
 
     def initialize(self):
         """Load event definitions after `env.root_directory` is available."""
@@ -169,7 +180,7 @@ class CityLearnRobustnessService:
         self._cursor = 0
         self._active_cache_step = None
         self._active_cache = []
-        self._history = {}
+        self._history = RobustnessHistory()
         self._stuck_values = {}
         self._action_history = {}
         self._flat_layout_cache = None
@@ -402,38 +413,10 @@ class CityLearnRobustnessService:
         return self._declared_target_validator
 
     def summarize(self, building_names: Sequence[str], *, executed_only: bool = False) -> Tuple[Mapping[str, Mapping[str, float]], Mapping[str, float]]:
-        building_names = [str(name) for name in building_names]
-        by_building = {name: self._empty_summary() for name in building_names}
-        district = self._empty_summary()
-        district_events = set()
-        district_steps = set()
-        building_events = {name: set() for name in building_names}
-        building_steps = {name: set() for name in building_names}
-
-        for step, record in self._history.items():
-            if executed_only and step >= self._global_time_step():
-                continue
-            district_events.update(record.get("event_ids", set()))
-            if self._record_has_any_application(record):
-                district_steps.add(step)
-            self._accumulate_summary_sets(district, record)
-
-            for application in record.get("applications", []):
-                building_name = application.get("building")
-                if building_name not in by_building:
-                    continue
-                building_events[building_name].add(application.get("event_id"))
-                building_steps[building_name].add(step)
-                self._accumulate_building_application(by_building[building_name], application)
-
-        district["robustness_events_count"] = float(len(district_events))
-        district["robustness_active_time_step_count"] = float(len(district_steps))
-
-        for name, summary in by_building.items():
-            summary["robustness_events_count"] = float(len(building_events[name]))
-            summary["robustness_active_time_step_count"] = float(len(building_steps[name]))
-
-        return by_building, district
+        return self._history.summary(
+            [str(name) for name in building_names],
+            executed_before=self._global_time_step() if executed_only else None,
+        )
 
     def validate_targets(self):
         """Validate enabled events against the current flat/entity layout."""
@@ -1210,20 +1193,7 @@ class CityLearnRobustnessService:
 
     def _record_application(self, event: RobustnessEvent, kind: str, descriptor: Mapping[str, Any], *, mode: str):
         step = self._global_time_step()
-        record = self._history.setdefault(
-            step,
-            {
-                "event_ids": set(),
-                "modules": set(),
-                "observation": set(),
-                "forecast": set(),
-                "action": set(),
-                "asset": set(),
-                "missing": set(),
-                "dropout": set(),
-                "applications": [],
-            },
-        )
+        record = self._history.writable_record(step)
         target_key = str(descriptor.get("target_key", ""))
         if kind == "asset":
             # An availability event is applied to every observation field and
@@ -1262,15 +1232,7 @@ class CityLearnRobustnessService:
         )
 
     def _counts_for_step(self, step: int) -> Mapping[str, int]:
-        record = self._history.get(int(step), {})
-        return {
-            "observation": len(record.get("observation", set())),
-            "forecast": len(record.get("forecast", set())),
-            "action": len(record.get("action", set())),
-            "asset": len(record.get("asset", set())),
-            "missing": len(record.get("missing", set())),
-            "dropout": len(record.get("dropout", set())),
-        }
+        return self._history.counts(int(step))
 
     def _accumulate_summary_sets(self, target: Dict[str, float], record: Mapping[str, Any]):
         target["robustness_observation_corruption_count"] += float(len(record.get("observation", set())))
@@ -1310,11 +1272,14 @@ class CityLearnRobustnessService:
 
     @staticmethod
     def _public_record(record: Mapping[str, Any]) -> Mapping[str, Any]:
-        return {
-            key: sorted(value) if isinstance(value, set) else value
-            for key, value in record.items()
-            if key != "applications"
-        } | {"applications": list(record.get("applications", []))}
+        result = {}
+        for key in record:
+            if key == "applications":
+                continue
+            value = record[key]
+            result[key] = sorted(value) if isinstance(value, set) else value
+        result["applications"] = list(record.get("applications", []))
+        return result
 
     def _zero_observation_values(self) -> Mapping[str, float]:
         return {

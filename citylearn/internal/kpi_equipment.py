@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
+from citylearn.internal.evaluation_progress import run
 from citylearn.internal import ev_departure_audit
 
 if TYPE_CHECKING:
@@ -336,11 +337,11 @@ class EquipmentKPIAccumulator:
         self.phase_imbalance_sum = 0.0
         self.phase_imbalance_count = 0.0
 
-    def building_records(self, building, t_start, t_end):
+    def building_records(self, building, t_start, t_end, *, progress=None):
         kpi = self.kpi
         building_days = kpi._building_days(building, t_start, t_end)
         extended_building_rows = []
-        ev_metrics = kpi._compute_ev_metrics(building, t_start=t_start, t_final=t_end)
+        ev_metrics = run(progress, 'ev', kpi._compute_ev_metrics, building, t_start=t_start, t_final=t_end)
         self.ev_audit_counts.update(ev_metrics['_departure_audit'])
         extended_building_rows.extend(
             kpi._metric(f'ev_departure_audit_{key}', value, building.name, 'building')
@@ -395,7 +396,7 @@ class EquipmentKPIAccumulator:
         self.ev_connected_soc_gain_total += ev_metrics['ev_connected_soc_gain_total_kwh']
         self.ev_energy_accounting_shortfall_total += ev_metrics['ev_energy_accounting_shortfall_kwh']
 
-        bess_metrics = kpi._compute_bess_metrics(building, t_start=t_start, t_final=t_end)
+        bess_metrics = run(progress, 'battery', kpi._compute_bess_metrics, building, t_start=t_start, t_final=t_end)
         extended_building_rows.extend([
             kpi._metric('bess_charge_total_kwh', bess_metrics['bess_charge_total_kwh'], building.name, 'building'),
             kpi._metric('bess_discharge_total_kwh', bess_metrics['bess_discharge_total_kwh'], building.name, 'building'),
@@ -409,7 +410,7 @@ class EquipmentKPIAccumulator:
         self.bess_capacity_total += bess_metrics['_bess_capacity_kwh']
         self.bess_capacity_loss_total += max(bess_metrics['_bess_capacity_kwh'] - bess_metrics['_bess_degraded_capacity_kwh'], 0.0)
 
-        pv_metrics = kpi._compute_pv_metrics(building, t_start=t_start, t_final=t_end)
+        pv_metrics = run(progress, 'solar', kpi._compute_pv_metrics, building, t_start=t_start, t_final=t_end)
         extended_building_rows.extend([
             kpi._metric('pv_curtailment_total_kwh', pv_metrics['pv_curtailment_total_kwh'], building.name, 'building'),
             kpi._metric('pv_generation_total_kwh', pv_metrics['pv_generation_total_kwh'], building.name, 'building'),
@@ -418,7 +419,7 @@ class EquipmentKPIAccumulator:
             kpi._metric('pv_export_daily_average_kwh', kpi._daily_average(pv_metrics['pv_export_total_kwh'], building_days), building.name, 'building'),
             kpi._metric('pv_self_consumption_ratio', pv_metrics['pv_self_consumption_ratio'], building.name, 'building'),
         ])
-        phase_metrics = kpi._compute_phase_metrics(building, t_start=t_start, t_final=t_end)
+        phase_metrics = run(progress, 'electrical_service', kpi._compute_phase_metrics, building, t_start=t_start, t_final=t_end)
         extended_building_rows.extend([
             kpi._metric('electrical_service_violation_total_kwh', phase_metrics['electrical_service_violation_total_kwh'], building.name, 'building'),
             kpi._metric('electrical_service_violation_time_step_count', phase_metrics['electrical_service_violation_time_step_count'], building.name, 'building'),

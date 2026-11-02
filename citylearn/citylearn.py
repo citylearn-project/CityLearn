@@ -19,6 +19,7 @@ from citylearn.data import CarbonIntensity, DataSet, OfflineDataError, ChargerSi
 from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.energy_model import Battery, DeferrableAppliance, PV
 from citylearn.exporter import EpisodeExporter
+from citylearn.internal.market_history import MarketSettlementHistory
 from citylearn.internal.kpi import CityLearnKPIService
 from citylearn.internal.loading import CityLearnLoadingService
 from citylearn.internal.baseline import CityLearnBusinessAsUsualBaselineService
@@ -206,7 +207,7 @@ class CityLearnEnv(Environment, Env):
         self.community_market_kpi_local_traded_enabled = True
         self.community_market_kpi_self_consumption_enabled = True
         self._last_community_market_settlement = []
-        self._community_market_settlement_history = []
+        self._community_market_settlement_history = MarketSettlementHistory()
         self._configure_community_market()
         schema_start_date = self.schema.get('start_date') if isinstance(self.schema, dict) else None
         schema_render_mode = self.schema.get('render_mode') if isinstance(self.schema, dict) else None
@@ -1450,8 +1451,14 @@ class CityLearnEnv(Environment, Env):
         baseline_condition: EvaluationCondition = None,
         comfort_band: float = None,
         include_business_as_usual: bool = True,
+        *,
+        progress_callback=None,
     ) -> pd.DataFrame:
-        r"""Evaluate v2 cost functions at current time step."""
+        r"""Evaluate v2 KPIs; optional progress callback receives scalar stage events.
+
+        Callback failures are logged and disable reporting, preserving evaluation.
+        No progress events or timings are added to the returned KPI table.
+        """
 
         return self._kpi_service.evaluate_v2(
             control_condition=control_condition,
@@ -1460,6 +1467,7 @@ class CityLearnEnv(Environment, Env):
             include_business_as_usual=include_business_as_usual,
             evaluation_condition_cls=EvaluationCondition,
             dynamics_building_cls=DynamicsBuilding,
+            progress_callback=progress_callback,
         )
 
     def get_kpi_family_audit(self, *, comfort_band=None, control_condition=None, baseline_condition=None):
@@ -1657,7 +1665,7 @@ class CityLearnEnv(Environment, Env):
         self.__net_electricity_consumption_cost = []
         self.__net_electricity_consumption_emission = []
         self._last_community_market_settlement = []
-        self._community_market_settlement_history = []
+        self._community_market_settlement_history = MarketSettlementHistory()
         self._observations_cache = None
         self._observations_cache_time_step = -1
         episode_index = int(getattr(self.episode_tracker, 'episode', 0))

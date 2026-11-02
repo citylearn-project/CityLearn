@@ -145,17 +145,20 @@ def record_departure(service, counts, building, charger, sim, ev, states, step, 
     reason, initial = prerequisites(service, charger, sim, ev, states, start, target)
     outage = any(service._ev_power_outage_at_step(building, t) for t in range(start, step + 1))
     tolerances = (0., service._ev_departure_service_tolerance(), service._ev_departure_within_tolerance())
-    for label, tolerance in zip(THRESHOLDS, tolerances):
+    feasibility = (None,) * len(THRESHOLDS)
+    if reason is None:
+        feasibility = service._ev_departure_thresholds_feasible(
+            building, charger, sim, ev, states, step,
+            tuple(max(target - tolerance, 0.) for tolerance in tolerances),
+            audit_arrival_soc=initial, audit_interval_start=start, audit=True,
+        )
+    for label, tolerance, feasible in zip(THRESHOLDS, tolerances, feasibility):
         met = observed and (abs(actual - target) <= tolerance + service.EV_DEPARTURE_EPS
                            if label == 'within_tolerance'
                            else actual + tolerance + service.EV_DEPARTURE_EPS >= target)
         counts[f'{label}_service_met_count'] += int(met)
         unknown = reason
-        feasible = None
         if unknown is None:
-            feasible = service._ev_departure_threshold_feasible(
-                building, charger, sim, ev, states, step, max(target - tolerance, 0.),
-                audit_arrival_soc=initial, audit_interval_start=start, audit=True)
             if feasible is None:
                 unknown = 'invalid_battery_parameters'
             elif not feasible and outage:

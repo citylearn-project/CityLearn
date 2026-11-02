@@ -63,8 +63,10 @@ class RewardFunction:
         pass
 
     def get_required_observation_names(self) -> Optional[Iterable[str]]:
-        """Return minimal observation names for this reward, or None if unknown."""
+        """Declare inputs of the built-in calculation; custom rewards remain unrestricted."""
 
+        if type(self) is RewardFunction and 'calculate' not in self.__dict__:
+            return ('net_electricity_consumption',)
         return None
 
     def calculate(self, observations: List[Mapping[str, Union[int, float]]]) -> List[float]:

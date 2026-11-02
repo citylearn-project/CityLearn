@@ -1,5 +1,7 @@
 """Explicit observation-index and completed-interval robustness populations."""
 
+from itertools import chain
+
 DEFINITION_VERSION = "robustness-audit-v1"
 
 
@@ -22,11 +24,10 @@ def summary(service):
     end = int(env.episode_tracker.episode_end_time_step)
     current = start + int(env.time_step)
     observed = set(service._observed_steps)
-    names = list(dict.fromkeys(
-        [b.name for b in getattr(env, "_all_buildings", env.buildings)]
-        + [application["building"] for record in service._history.values()
-           for application in record["applications"] if application["building"] is not None]
-    ))
+    names = list(dict.fromkeys(chain(
+        (b.name for b in getattr(env, "_all_buildings", env.buildings)),
+        (building for _, _, _, building in service._history.application_scopes() if building is not None),
+    )))
     legacy_buildings, legacy_district = service.summarize(names)
     executed_buildings, executed_district = service.summarize(names, executed_only=True)
     district = {
@@ -43,11 +44,8 @@ def summary(service):
         "applied_action_event_step_count": 0,
     }
     applications = {}
-    for step, record in service._history.items():
-        for application in record["applications"]:
-            applications.setdefault(application["event_id"], {}).setdefault(
-                application["kind"], set()
-            ).add(step)
+    for step, event_id, kind, _ in service._history.application_scopes():
+        applications.setdefault(event_id, {}).setdefault(kind, set()).add(step)
 
     rows = []
     for event in service.events:

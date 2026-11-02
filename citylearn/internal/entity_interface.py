@@ -3,6 +3,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import time
+from math import isfinite
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from gymnasium import spaces
@@ -1820,26 +1821,36 @@ class CityLearnEntityInterfaceService:
         step: int,
         *,
         include_deferrable: bool = True,
+        _sources: Optional[Dict] = None,
     ) -> Tuple[float, float, float]:
+        # References live only for this forecast request, never across observation phases.
+        sources = {} if _sources is None else _sources
+
+        def series(owner, name):
+            key = (id(owner), name)
+            if key not in sources:
+                sources[key] = getattr(owner, name, [])
+            return sources[key]
+
         step_hours = self._step_hours()
-        temperature = self._safe_index(getattr(building.weather, "outdoor_dry_bulb_temperature", []), step, 0.0)
+        temperature = self._safe_index(series(building.weather, "outdoor_dry_bulb_temperature"), step, 0.0)
         energy_simulation = building.energy_simulation
 
         non_shiftable = self._dataset_energy_to_control_step_for_building(
             building,
-            self._safe_index(getattr(energy_simulation, "non_shiftable_load", []), step, 0.0),
+            self._safe_index(series(energy_simulation, "non_shiftable_load"), step, 0.0),
         )
         cooling_demand = self._dataset_energy_to_control_step_for_building(
             building,
-            self._safe_index(getattr(energy_simulation, "cooling_demand", []), step, 0.0),
+            self._safe_index(series(energy_simulation, "cooling_demand"), step, 0.0),
         )
         heating_demand = self._dataset_energy_to_control_step_for_building(
             building,
-            self._safe_index(getattr(energy_simulation, "heating_demand", []), step, 0.0),
+            self._safe_index(series(energy_simulation, "heating_demand"), step, 0.0),
         )
         dhw_demand = self._dataset_energy_to_control_step_for_building(
             building,
-            self._safe_index(getattr(energy_simulation, "dhw_demand", []), step, 0.0),
+            self._safe_index(series(energy_simulation, "dhw_demand"), step, 0.0),
         )
 
         cooling = self._safe_scalar(building.cooling_device.get_input_power(cooling_demand, temperature, heating=False), 0.0)
@@ -1860,7 +1871,7 @@ class CityLearnEntityInterfaceService:
         load_energy = max(non_shiftable + cooling + heating + dhw + deferrable, 0.0)
         try:
             solar_generation = building._pv_generation_to_control_step([
-                self._safe_index(getattr(energy_simulation, "solar_generation", []), step, 0.0)
+                self._safe_index(series(energy_simulation, "solar_generation"), step, 0.0)
             ])
             pv_energy = abs(self._safe_index(solar_generation, 0, 0.0))
         except Exception:
@@ -1874,6 +1885,7 @@ class CityLearnEntityInterfaceService:
     def _build_derived_forecast_building_metrics(self, *, building, time_step: int) -> Mapping[str, float]:
         metrics: Dict[str, float] = {}
         length = len(getattr(building.energy_simulation, "non_shiftable_load", []))
+        sources, components = {}, {}
 
         for label, steps_ahead in self._forecast_step_offsets:
             point_index = self._derived_forecast_point_index_from_steps(
@@ -1881,10 +1893,14 @@ class CityLearnEntityInterfaceService:
                 steps_ahead,
                 length,
             )
-            load_kw, pv_kw, net_kw = (
-                self._building_forecast_components_at_step(building, point_index, include_deferrable=True)
-                if point_index >= 0 else (0.0, 0.0, 0.0)
-            )
+            if point_index not in components:
+                components[point_index] = (
+                    self._building_forecast_components_at_step(
+                        building, point_index, include_deferrable=True, _sources=sources,
+                    )
+                    if point_index >= 0 else (0.0, 0.0, 0.0)
+                )
+            load_kw, pv_kw, net_kw = components[point_index]
             metrics[f"forecast_load_next_{label}_kw"] = load_kw
             metrics[f"forecast_pv_next_{label}_kw"] = pv_kw
             metrics[f"forecast_net_next_{label}_kw"] = net_kw
@@ -2893,7 +2909,7 @@ class CityLearnEntityInterfaceService:
             scalar = float(value)
         except (TypeError, ValueError):
             return float(default)
-        if not np.isfinite(scalar):
+        if not isfinite(scalar):
             return float(default)
         return scalar
 

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from copy import copy
+from citylearn.internal.kpi_population import current_population, population_scope
+from citylearn.internal.market_history import MarketSettlementHistory
+from citylearn.internal.evaluation_progress import EvaluationProgress, run, span
 from types import SimpleNamespace
 from array import array
 
@@ -596,15 +599,55 @@ class CityLearnKPIService:
         observed connection boundary, and treats non-finite replay as unknown.
         """
 
-        threshold_soc = self._normalize_soc_target(threshold_soc)
+        return self._ev_departure_thresholds_feasible(
+            building, charger, sim, ev, states, departure_index, (threshold_soc,),
+            audit_arrival_soc=audit_arrival_soc,
+            audit_interval_start=audit_interval_start, audit=audit,
+        )[0]
 
-        if not audit and (threshold_soc is None or threshold_soc <= 0.0):
-            return True
+    def _ev_departure_thresholds_feasible(
+        self, building, charger, sim, ev, states, departure_index, thresholds,
+        *, audit_arrival_soc=None, audit_interval_start=None, audit=False,
+    ):
+        """Compare thresholds against one isolated maximum-charge replay.
 
+        This batch belongs to one departure/context only. Legacy and audited
+        callers use separate batches, even if their boundaries happen to match.
+        No battery values or replay buffers are retained between batches.
+        """
+        thresholds = tuple(self._normalize_soc_target(value) for value in thresholds)
+        if not thresholds:
+            return ()
+        if not audit and all(value is None or value <= 0.0 for value in thresholds):
+            return (True,) * len(thresholds)
+        soc = self._ev_departure_max_charge_soc(
+            building, charger, sim, ev, states, departure_index,
+            audit_arrival_soc=audit_arrival_soc,
+            audit_interval_start=audit_interval_start, audit=audit,
+        )
+        results = []
+        for threshold in thresholds:
+            if (not audit and (threshold is None or threshold <= 0.0)) or soc is None:
+                results.append(True)
+            elif audit and not np.isfinite(soc):
+                results.append(None)
+            else:
+                results.append(bool(soc + self.EV_DEPARTURE_EPS >= threshold))
+        return tuple(results)
+
+    def _ev_departure_max_charge_soc(
+        self, building, charger, sim, ev, states, departure_index,
+        *, audit_arrival_soc=None, audit_interval_start=None, audit=False,
+    ):
+        """Departure SOC after the unchanged full maximum-charge trajectory.
+
+        None preserves the legacy permissive result for insufficient inputs;
+        a non-finite replay SOC remains unknown for the additive audit.
+        """
         battery = getattr(ev, 'battery', None)
 
         if battery is None:
-            return True
+            return None
 
         capacity_kwh = self._to_scalar(getattr(battery, 'capacity', np.nan), np.nan)
         charger_power_kw = self._to_scalar(getattr(charger, 'max_charging_power', np.nan), np.nan)
@@ -615,7 +658,7 @@ class CityLearnKPIService:
             or not np.isfinite(charger_power_kw)
             or charger_power_kw < 0.0
         ):
-            return True
+            return None
 
         interval_start = (audit_interval_start if audit else
                           self._ev_connected_interval_start(sim, states, departure_index))
@@ -623,7 +666,7 @@ class CityLearnKPIService:
                        self._ev_arrival_soc_for_interval(sim, ev, states, interval_start))
 
         if arrival_soc is None:
-            return True
+            return None
 
         seconds_per_time_step = self._to_scalar(
             getattr(
@@ -636,7 +679,7 @@ class CityLearnKPIService:
         step_hours = max(seconds_per_time_step / 3600.0, 0.0)
 
         if not np.isfinite(step_hours) or step_hours <= 0.0:
-            return True
+            return None
 
         soc = float(arrival_soc)
         connected_steps = max(int(departure_index) - int(interval_start) + 1, 0)
@@ -682,9 +725,7 @@ class CityLearnKPIService:
                 soc = float(np.clip(soc + battery_power * step_hours * eta / capacity_kwh,
                                     0.0, getattr(battery, 'max_soc', 1.0)))
 
-        if audit and not np.isfinite(soc):
-            return None
-        return bool(soc + self.EV_DEPARTURE_EPS >= threshold_soc)
+        return soc
 
     def _ev_departure_within_tolerance(self) -> float:
         return max(
@@ -1096,32 +1137,11 @@ class CityLearnKPIService:
                 shortfall_beyond_tolerance = max(target_soc - service_tolerance - actual_soc, 0.0)
                 min_acceptable_threshold = max(target_soc - service_tolerance, 0.0)
                 within_tolerance_threshold = max(target_soc - within_tolerance, 0.0)
-                target_feasible = self._ev_departure_threshold_feasible(
-                    building,
-                    charger,
-                    sim,
-                    ev,
-                    states,
-                    t,
-                    target_soc,
-                )
-                min_acceptable_feasible = self._ev_departure_threshold_feasible(
-                    building,
-                    charger,
-                    sim,
-                    ev,
-                    states,
-                    t,
-                    min_acceptable_threshold,
-                )
-                within_tolerance_feasible = self._ev_departure_threshold_feasible(
-                    building,
-                    charger,
-                    sim,
-                    ev,
-                    states,
-                    t,
-                    within_tolerance_threshold,
+                target_feasible, min_acceptable_feasible, within_tolerance_feasible = (
+                    self._ev_departure_thresholds_feasible(
+                        building, charger, sim, ev, states, t,
+                        (target_soc, min_acceptable_threshold, within_tolerance_threshold),
+                    )
                 )
 
                 if absolute_error <= within_tolerance + eps:
@@ -1275,6 +1295,8 @@ class CityLearnKPIService:
 
     def _collect_market_totals(self, building_names: List[str]) -> Tuple[Mapping[str, Mapping[str, float]], Mapping[str, float]]:
         history = getattr(self.env, '_community_market_settlement_history', []) or []
+        if isinstance(history, MarketSettlementHistory):
+            return history.market_totals(building_names)
         by_building = {
             name: {
                 'community_local_import_total_kwh': 0.0,
@@ -1393,7 +1415,9 @@ class CityLearnKPIService:
         if topology_service is None:
             return list(env.buildings)
 
-        lifecycle = getattr(env, 'topology_member_lifecycle', {}) or {}
+        population = current_population(self)
+        lifecycle = (population.lifecycle if population is not None
+                     else getattr(env, 'topology_member_lifecycle', {})) or {}
         pool = dict(getattr(topology_service, 'member_pool', {}) or {})
         if len(pool) == 0:
             return list(env.buildings)
@@ -1415,7 +1439,9 @@ class CityLearnKPIService:
         if getattr(env, 'topology_mode', 'static') != 'dynamic':
             return 0, int(min(max(getattr(building, 'time_step', 0), 0), final_t))
 
-        lifecycle = getattr(env, 'topology_member_lifecycle', {}) or {}
+        population = current_population(self)
+        lifecycle = (population.lifecycle if population is not None
+                     else getattr(env, 'topology_member_lifecycle', {})) or {}
         state = lifecycle.get(getattr(building, 'name', ''), {}) or {}
 
         born_at = state.get('born_at', 0)
@@ -1438,8 +1464,12 @@ class CityLearnKPIService:
         end = upper if t_final is None else min(upper, int(t_final)+1)
         indices = np.arange(max(0, int(t_start)), end)
         if getattr(self.env, 'topology_mode', 'static') == 'dynamic':
-            history = self.env._topology_service
-            indices = np.array([i for i in indices if building.name in history.active_member_ids_at(int(i))], dtype=int)
+            population = current_population(self)
+            if population is None:
+                history = self.env._topology_service
+                indices = np.array([i for i in indices if building.name in history.active_member_ids_at(int(i))], dtype=int)
+            else:
+                indices = indices[population.mask(building.name, upper)[indices]]
         return array[indices]
 
     def _service_energy(self, building, t_start=0, t_final=None):
@@ -1453,25 +1483,28 @@ class CityLearnKPIService:
                            take('energy_to_non_shiftable_load')*scale]).T
         return expected, served
 
-    def family_audit(self, comfort_band=None, control_condition=None, baseline_condition=None):
+    @population_scope
+    def family_audit(self, comfort_band=None, control_condition=None, baseline_condition=None, *, progress=None):
         from citylearn.internal.kpi_family_audit import thermal_counts, thermal_metrics, pool_thermal, equity_metrics
         from citylearn.citylearn import EvaluationCondition
         from citylearn.building import DynamicsBuilding
         rows, counts, costs, conditions = {}, [], [], {}
-        for building in self._get_kpi_buildings():
-            take = lambda name: self._thermal_values(building, getattr(building, name))
-            expected, served = self._service_energy(building)
-            bands = take('comfort_band') if comfort_band is None else comfort_band
-            count = thermal_counts(take('indoor_dry_bulb_temperature'),take('indoor_dry_bulb_temperature_cooling_set_point'),
-                take('indoor_dry_bulb_temperature_heating_set_point'),bands,take('occupant_count'),expected,served,
-                take('power_outage_signal'),self.env.seconds_per_time_step/3600.)
-            counts.append(count); rows[building.name] = thermal_metrics(count)
-            dynamic = isinstance(building, DynamicsBuilding)
-            control = control_condition if control_condition is not None else (EvaluationCondition.WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV if dynamic else EvaluationCondition.WITH_STORAGE_AND_PV)
-            baseline = baseline_condition if baseline_condition is not None else (EvaluationCondition.WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV if dynamic else EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV)
-            conditions[building.name] = dict(control=getattr(control,'name',control.value), reference=getattr(baseline,'name',baseline.value))
-            costs.append((self._sum_finite(self._energy_values(building,getattr(building,'net_electricity_consumption_cost'+control.value))),
-                          self._sum_finite(self._energy_values(building,getattr(building,'net_electricity_consumption_cost'+baseline.value)))))
+        buildings = self._get_kpi_buildings()
+        for member_index, building in enumerate(buildings, 1):
+            with span(progress, 'thermal_service', member=building.name, member_index=member_index, member_count=len(buildings)):
+                take = lambda name: self._thermal_values(building, getattr(building, name))
+                expected, served = self._service_energy(building)
+                bands = take('comfort_band') if comfort_band is None else comfort_band
+                count = thermal_counts(take('indoor_dry_bulb_temperature'),take('indoor_dry_bulb_temperature_cooling_set_point'),
+                    take('indoor_dry_bulb_temperature_heating_set_point'),bands,take('occupant_count'),expected,served,
+                    take('power_outage_signal'),self.env.seconds_per_time_step/3600.)
+                counts.append(count); rows[building.name] = thermal_metrics(count)
+                dynamic = isinstance(building, DynamicsBuilding)
+                control = control_condition if control_condition is not None else (EvaluationCondition.WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV if dynamic else EvaluationCondition.WITH_STORAGE_AND_PV)
+                baseline = baseline_condition if baseline_condition is not None else (EvaluationCondition.WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV if dynamic else EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV)
+                conditions[building.name] = dict(control=getattr(control,'name',control.value), reference=getattr(baseline,'name',baseline.value))
+                costs.append((self._sum_finite(self._energy_values(building,getattr(building,'net_electricity_consumption_cost'+control.value))),
+                              self._sum_finite(self._energy_values(building,getattr(building,'net_electricity_consumption_cost'+baseline.value)))))
         return dict(buildings=rows,district=thermal_metrics(pool_thermal(counts)),equity=equity_metrics(costs),equity_conditions=conditions)
 
     def _building_days(self, building, t_start, t_final):
@@ -1485,6 +1518,10 @@ class CityLearnKPIService:
         """Energy belongs to executed active intervals, not the terminal observation."""
         array = np.asarray(values, dtype='float64')[:int(getattr(self.env, 'time_step', len(values)))].copy()
         if building is self.env or getattr(self.env, 'topology_mode', 'static') != 'dynamic':
+            return array
+        population = current_population(self)
+        if population is not None:
+            array[~population.mask(building.name, len(array), energy=True)] = 0.0
             return array
         history = self.env._topology_service._active_member_history
         steps = sorted(history)
@@ -1567,8 +1604,12 @@ class CityLearnKPIService:
                 t_start, t_end = windows.get(building.name, (0, -1))
                 if not (t_start <= t <= t_end):
                     continue
-                if getattr(env, 'topology_mode', 'static') == 'dynamic' and building.name not in env._topology_service.active_member_ids_at(t):
-                    continue
+                if getattr(env, 'topology_mode', 'static') == 'dynamic':
+                    population = current_population(self)
+                    active = (building.name in env._topology_service.active_member_ids_at(t)
+                              if population is None else population.mask(building.name, final_t)[t])
+                    if not active:
+                        continue
 
                 net_series = net_series_by_name.get(building.name)
                 if net_series is None:
@@ -1624,6 +1665,7 @@ class CityLearnKPIService:
         district_total = float(sum(totals.values()))
         return totals, district_total
 
+    @population_scope
     def evaluate(
         self,
         control_condition=None,
@@ -1632,6 +1674,7 @@ class CityLearnKPIService:
         *,
         evaluation_condition_cls,
         dynamics_building_cls,
+        progress=None,
     ) -> pd.DataFrame:
         """Assemble KPI families in the established legacy/extended row order."""
         simulated_days = self._simulated_days(self.env)
@@ -1642,35 +1685,36 @@ class CityLearnKPIService:
         equipment = kpi_equipment.EquipmentKPIAccumulator(self)
         legacy_frames, building_rows = [], []
 
-        for building in buildings:
+        for member_index, building in enumerate(buildings, 1):
             t_start, t_end = windows.get(building.name, (0, -1))
             if t_end < t_start:
                 continue
-            legacy, rows, benefit = kpi_energy.building_records(
-                self, building, t_start, t_end, control_condition, baseline_condition,
-                comfort_band, evaluation_condition_cls, dynamics_building_cls,
-            )
-            legacy_frames.append(legacy)
-            building_rows.extend(rows)
-            if benefit is not None:
-                benefits[building.name] = float(benefit)
-            building_rows.extend(equipment.building_records(building, t_start, t_end))
+            with span(progress, 'member', member=building.name, member_index=member_index, member_count=len(buildings)):
+                legacy, rows, benefit = run(progress, 'energy_and_service', kpi_energy.building_records,
+                    self, building, t_start, t_end, control_condition, baseline_condition,
+                    comfort_band, evaluation_condition_cls, dynamics_building_cls,
+                )
+                legacy_frames.append(legacy)
+                building_rows.extend(rows)
+                if benefit is not None:
+                    benefits[building.name] = float(benefit)
+                building_rows.extend(equipment.building_records(building, t_start, t_end, progress=progress))
 
         legacy_building = (pd.concat(legacy_frames, ignore_index=True) if legacy_frames
                            else pd.DataFrame(columns=['cost_function', 'value', 'name']))
         legacy_building['level'] = 'building'
-        legacy, district_rows = kpi_energy.district_records(
+        legacy, district_rows = run(progress, 'district_energy', kpi_energy.district_records,
             self, legacy_building, control_condition, baseline_condition,
             evaluation_condition_cls, simulated_days,
         )
-        district_rows.extend(equipment.district_records(buildings, windows, simulated_days))
-        market_building, market_district = kpi_community.market_records(self, buildings, windows, simulated_days)
+        district_rows.extend(run(progress, 'district_equipment', equipment.district_records, buildings, windows, simulated_days))
+        market_building, market_district = run(progress, 'market', kpi_community.market_records, self, buildings, windows, simulated_days)
         building_rows.extend(market_building)
         district_rows.extend(market_district)
-        district_rows.extend(kpi_community.equity_records(
+        district_rows.extend(run(progress, 'equity', kpi_community.equity_records,
             self, [building.name for building in buildings], benefits, groups))
         for family in (kpi_service_metrics.deferrable_records, kpi_service_metrics.escalator_records):
-            rows, district = family(self, buildings)
+            rows, district = run(progress, family.__name__, family, self, buildings)
             building_rows.extend(rows)
             district_rows.extend(district)
         return pd.concat([legacy, pd.DataFrame(district_rows), pd.DataFrame(building_rows)],
@@ -2051,7 +2095,20 @@ class CityLearnKPIService:
                 'level': 'district',
             }
 
+    @population_scope
     def evaluate_v2(
+        self, control_condition=None, baseline_condition=None, comfort_band=None,
+        include_business_as_usual=True, *, evaluation_condition_cls,
+        dynamics_building_cls, progress_callback=None,
+    ) -> pd.DataFrame:
+        progress = None if progress_callback is None else EvaluationProgress(progress_callback)
+        return run(progress, 'evaluation', self._evaluate_v2,
+                   control_condition=control_condition, baseline_condition=baseline_condition,
+                   comfort_band=comfort_band, include_business_as_usual=include_business_as_usual,
+                   evaluation_condition_cls=evaluation_condition_cls,
+                   dynamics_building_cls=dynamics_building_cls, progress=progress)
+
+    def _evaluate_v2(
         self,
         control_condition=None,
         baseline_condition=None,
@@ -2060,6 +2117,7 @@ class CityLearnKPIService:
         *,
         evaluation_condition_cls,
         dynamics_building_cls,
+        progress=None,
     ) -> pd.DataFrame:
         env = self.env
         all_metrics = self.evaluate(
@@ -2068,6 +2126,7 @@ class CityLearnKPIService:
             comfort_band=comfort_band,
             evaluation_condition_cls=evaluation_condition_cls,
             dynamics_building_cls=dynamics_building_cls,
+            progress=progress,
         )
         legacy_df = all_metrics[all_metrics['cost_function'].isin(self.LEGACY_COST_FUNCTIONS)].copy()
         extended_df = all_metrics[~all_metrics['cost_function'].isin(self.LEGACY_COST_FUNCTIONS)].copy()
@@ -2330,7 +2389,7 @@ class CityLearnKPIService:
                         share,
                     )
 
-        family_audit = self.family_audit(comfort_band=comfort_band, control_condition=control_condition, baseline_condition=baseline_condition)
+        family_audit = run(progress, 'thermal_equity_audit', self.family_audit,comfort_band=comfort_band, control_condition=control_condition, baseline_condition=baseline_condition, progress=progress)
         for name, totals in list(family_audit['buildings'].items())+[('District',family_audit['district'])]:
             level = 'district' if name == 'District' else 'building'
             for suffix, value in totals.items():
@@ -2372,7 +2431,7 @@ class CityLearnKPIService:
 
         robustness_service = getattr(env, '_robustness_service', None)
         if getattr(robustness_service, 'enabled', False):
-            robustness_by_building, robustness_district = robustness_service.summarize(building_names)
+            robustness_by_building, robustness_district = run(progress, 'robustness', robustness_service.summarize, building_names)
 
             robustness_metrics = [
                 'robustness_events_count',
@@ -2453,10 +2512,10 @@ class CityLearnKPIService:
         district_baseline_total = 0.0
 
         if getattr(env, 'community_market_enabled', False):
-            control_cost_totals, district_control_total = self._condition_settled_cost_totals(
+            control_cost_totals, district_control_total = run(progress, 'control_cost', self._condition_settled_cost_totals,
                 condition_by_building=control_condition_by_building,
             )
-            baseline_cost_totals, district_baseline_total = self._condition_settled_cost_totals(
+            baseline_cost_totals, district_baseline_total = run(progress, 'reference_cost', self._condition_settled_cost_totals,
                 condition_by_building=baseline_condition_by_building,
             )
         else:
@@ -2527,7 +2586,7 @@ class CityLearnKPIService:
 
         provenance = getattr(env, '_provenance_service', None)
         if provenance is not None:
-            members, district = provenance.summary()
+            members, district = run(progress, 'provenance', provenance.summary)
             for name, metrics in members.items():
                 for metric, value in metrics.items():
                     put('building', name, f'building_energy_provenance_{metric}', value)
@@ -2535,7 +2594,7 @@ class CityLearnKPIService:
                 put('district', 'District', f'district_energy_provenance_{metric}', value)
 
         if include_business_as_usual and not bool(getattr(env, '_business_as_usual_sidecar', False)):
-            self._add_business_as_usual_records(
+            run(progress, 'business_as_usual', self._add_business_as_usual_records,
                 records,
                 v2,
                 simulated_days,
@@ -2582,5 +2641,5 @@ class CityLearnKPIService:
                 output.loc[mask, 'topology_removed_at'] = state.get('removed_at')
                 output.loc[mask, 'topology_active'] = 1.0 if state.get('active', False) else 0.0
 
-        output = output.sort_values(['level', 'name', 'cost_function']).reset_index(drop=True)
+        output = run(progress, 'formatting', lambda: output.sort_values(['level', 'name', 'cost_function']).reset_index(drop=True))
         return output
