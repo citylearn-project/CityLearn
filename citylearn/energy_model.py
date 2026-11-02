@@ -20,6 +20,7 @@ from citylearn.data import (
     WashingMachineSimulation,
 )
 from citylearn.internal.units import power_kw_to_energy_kwh, seconds_to_hours, to_dataset_resolution_energy
+from citylearn.internal.deferrable_cycles import CycleIndex
 np.seterr(divide='ignore', invalid='ignore')
 
 LOGGER = logging.getLogger()
@@ -37,7 +38,7 @@ class Device(Environment):
     **kwargs : dict
         Other keyword arguments used to initialize super class.
     """
-
+    
     def __init__(self, efficiency: Union[float, Tuple[float, float]] = None, **kwargs):
         kwargs.pop("dynamics",None)
         kwargs.pop("occupant",None)
@@ -45,7 +46,7 @@ class Device(Environment):
         self.efficiency = efficiency
         self._autosize_config = None
         self.time_step_ratio = self.time_step_ratio if self.time_step_ratio is not None else 1
-
+       
     @property
     def efficiency(self) -> float:
         """Technical efficiency."""
@@ -70,7 +71,7 @@ class Device(Environment):
             'efficiency': self.efficiency,
             'autosize_config': self.autosize_config,
         }
-
+    
     def _get_property_value(self, value: Union[float, None, Tuple[float, float]], default_value: Union[float, Tuple[float, float]]):
         """Returns `value` if it is a float or a number in the uniform distribution whose limits are defined by `value`. If `value`
         is `None`, the defalut value is used. Ideal and primarily used for stochastically setting device parameters."""
@@ -85,7 +86,7 @@ class Device(Environment):
         else:
             if isinstance(value, tuple):
                 value = self.numpy_random_state.uniform(*value)
-
+            
             else:
                 pass
 
@@ -104,7 +105,7 @@ class ElectricDevice(Device):
     **kwargs : Any
         Other keyword arguments used to initialize super class.
     """
-
+    
     def __init__(self, nominal_power: float = None, **kwargs: Any):
         super().__init__(**kwargs)
         self.nominal_power = nominal_power
@@ -114,7 +115,7 @@ class ElectricDevice(Device):
         r"""Nominal power."""
 
         return self.__nominal_power
-
+    
     @nominal_power.setter
     def nominal_power(self, nominal_power: float):
         nominal_power = 0.0 if nominal_power is None else nominal_power
@@ -154,7 +155,7 @@ class ElectricDevice(Device):
 
     def update_electricity_consumption(self, electricity_consumption: float, enforce_polarity: bool = None):
         r"""Updates `electricity_consumption` at current `time_step`.
-
+        
         Parameters
         ----------
         electricity_consumption: float
@@ -195,6 +196,14 @@ class ElectricDevice(Device):
         step = self.time_step if time_step is None else int(time_step)
         ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
         self.__electricity_consumption[step] = float(electricity_consumption) / ratio
+        # An explicit replacement of the terminal reading also replaces its
+        # gross trace. Ordered physical operations use the transfer journal;
+        # a manually supplied net reading cannot reconstruct those operations.
+        charge = getattr(self, 'gross_energy_charge', None)
+        discharge = getattr(self, 'gross_energy_discharge', None)
+        if charge is not None and discharge is not None:
+            charge[step] = max(float(electricity_consumption), 0.0)
+            discharge[step] = max(-float(electricity_consumption), 0.0)
 
     def reset(self):
         r"""Reset `ElectricDevice` to initial state and set `electricity_consumption` at `time_step` 0 to = 0.0."""
@@ -221,7 +230,7 @@ class HeatPump(ElectricDevice):
     **kwargs : Any
         Other keyword arguments used to initialize super class.
     """
-
+    
     def __init__(self, nominal_power: float = None, efficiency: float = None, target_heating_temperature: Union[float, Tuple[float, float]] = None, target_cooling_temperature: Union[float, Tuple[float, float]] = None, **kwargs: Any):
         super().__init__(nominal_power = nominal_power, efficiency = efficiency, **kwargs)
         self.target_heating_temperature = target_heating_temperature
@@ -311,7 +320,7 @@ class HeatPump(ElectricDevice):
             cop = self.efficiency*c_to_k(self.target_heating_temperature)/(self.target_heating_temperature - outdoor_dry_bulb_temperature)
         else:
             cop = self.efficiency*c_to_k(self.target_cooling_temperature)/(outdoor_dry_bulb_temperature - self.target_cooling_temperature)
-
+        
         cop = np.array(cop)
         cop[cop < 0] = 20
         cop[cop > 20] = 20
@@ -402,18 +411,18 @@ class HeatPump(ElectricDevice):
         -----
         `nominal_power` = max((cooling_demand/cooling_cop) + (heating_demand/heating_cop))*safety_factor
         """
-
+        
         safety_factor = self._get_property_value(safety_factor, 1.0)
 
 
         if cooling_demand is not None:
-            cooling_demand = cooling_demand * self.time_step_ratio
+            cooling_demand = cooling_demand * self.time_step_ratio 
             cooling_nominal_power = np.array(cooling_demand)/self.get_cop(outdoor_dry_bulb_temperature, False)
         else:
             cooling_nominal_power = 0
-
+        
         if heating_demand is not None:
-            heating_demand = heating_demand * self.time_step_ratio
+            heating_demand = heating_demand * self.time_step_ratio 
             heating_nominal_power = np.array(heating_demand)/self.get_cop(outdoor_dry_bulb_temperature, True)
         else:
             heating_nominal_power = 0
@@ -437,7 +446,7 @@ class ElectricHeater(ElectricDevice):
     **kwargs : Any
         Other keyword arguments used to initialize super class.
     """
-
+    
     def __init__(self, nominal_power: float = None, efficiency: Union[float, Tuple[float, float]] = None, **kwargs: Any):
         super().__init__(nominal_power = nominal_power, efficiency = efficiency, **kwargs)
 
@@ -478,7 +487,7 @@ class ElectricHeater(ElectricDevice):
 
         Parameters
         ----------
-        output_power : Union[float, Iterable[float]]
+        output_power : Union[float, Iterable[float]] 
             Output power from heat pump
 
         Returns
@@ -663,7 +672,7 @@ class PV(ElectricDevice):
             model.SystemDesign.azimuth = self.autosize_config['azimuth_1']
             model.SystemDesign.bifaciality = self.autosize_config['bifacial_module_1']*0.65
             model.SolarResource.solar_resource_file = epw_filepath
-
+        
             try:
                 model.execute()
                 break
@@ -673,15 +682,15 @@ class PV(ElectricDevice):
 
                 if i == tries - 1:
                     raise e
-
+                
                 else:
                     pass
-
+        
         inverter_ac_power_per_kw = np.array(model.Outputs.ac, dtype='float32')/pv_nominal_power
 
         if use_sample_target:
             target_nominal_power = self.autosize_config['PV_system_size_DC']
-
+        
         else:
             zne_nominal_power = demand/sum(inverter_ac_power_per_kw/1000.0)
             limited_zne_nominal_power = zne_nominal_power*zero_net_energy_proportion
@@ -711,7 +720,7 @@ class PV(ElectricDevice):
             'roof_limit_nominal_power': roof_limit_nominal_power,
             'nominal_power': nominal_power
         }
-
+        
         return nominal_power, inverter_ac_power_per_kw
 
 class StorageDevice(Device):
@@ -733,7 +742,7 @@ class StorageDevice(Device):
     **kwargs : Any
         Other keyword arguments used to initialize super class.
     """
-
+    
     def __init__(self, capacity: float = None, efficiency: Union[float, Tuple[float, float]] = None, loss_coefficient: Union[float, Tuple[float, float]] = None, initial_soc: Union[float, Tuple[float, float]] = None, time_step_ratio:float = None, **kwargs: Any):
         self.random_seed = kwargs.get('random_seed', None)
         self.capacity = capacity
@@ -746,7 +755,7 @@ class StorageDevice(Device):
         r"""Maximum amount of energy the storage device can store in [kWh]."""
 
         return self.__capacity
-
+    
     @property
     def time_step_ratio(self) -> float:
         r"""Maximum amount of energy the storage device can store in [kWh]."""
@@ -759,7 +768,7 @@ class StorageDevice(Device):
 
         step_hours = max(float(self.seconds_per_time_step) / 3600.0, 0.0)
         return self.__loss_coefficient * step_hours
-
+    
     @property
     def initial_soc(self) -> float:
         r"""State of charge when `time_step` = 0 in [kWh]."""
@@ -774,8 +783,7 @@ class StorageDevice(Device):
 
     @property
     def energy_init(self) -> float:
-        r"""Latest energy level available at the current time step in [kWh]."""
-        minimum_energy = self._minimum_energy()
+        r"""Physical stored energy in [kWh], including states below the reserve."""
         initialized = getattr(self, '_StorageDevice__soc_initialized', None)
         if (
             initialized is not None
@@ -783,15 +791,55 @@ class StorageDevice(Device):
             and self.time_step < len(initialized)
             and not bool(initialized[self.time_step])
         ):
-            return max(minimum_energy, self.__soc[self.time_step - 1]*self.capacity)
-        return max(minimum_energy, self.__soc[self.time_step]*self.capacity)
+            return max(0.0, self.__soc[self.time_step - 1]*self.capacity)
+        return max(0.0, self.__soc[self.time_step]*self.capacity)
+
+    @property
+    def stored_energy_transfer(self) -> float:
+        """Cumulative terminal-flow contribution to stored kWh in this step.
+
+        Includes every charge/discharge call at its own efficiency. Excludes
+        standby losses and exogenous SOC assignments such as vehicle arrivals.
+        """
+        if getattr(self, '_StorageDevice__transfer_time_step', None) != self.time_step:
+            return 0.0
+        return self.__stored_energy_transfer
+
+    @property
+    def gross_energy_charge(self):
+        """Actual positive terminal movements, in control-step kWh."""
+        return getattr(self, '_StorageDevice__gross_energy_charge', None)
+
+    @property
+    def gross_energy_discharge(self):
+        return getattr(self, '_StorageDevice__gross_energy_discharge', None)
+
+    @property
+    def energy_provenance_events(self):
+        """Actual operations in the current step, with AC/storage boundaries.
+
+        This bounded journal is passive: it never feeds the physical model.
+        """
+        if getattr(self, '_energy_event_step', None) != self.time_step:
+            return []
+        return self._energy_events
+
+    def _record_energy_event(self, kind, before, after, terminal=0.0):
+        if getattr(self, '_energy_event_step', None) != self.time_step:
+            self._energy_events = []
+            self._energy_event_step = self.time_step
+        self._energy_events.append(dict(kind=kind, before=float(before), after=float(after),
+                                       terminal=float(terminal), bus=float(terminal)))
+        if kind == 'transfer' and self.__gross_energy_charge is not None:
+            self.__gross_energy_charge[self.time_step] += max(float(terminal), 0.0)
+            self.__gross_energy_discharge[self.time_step] += max(-float(terminal), 0.0)
 
     @property
     def energy_balance(self) -> np.ndarray:
         r"""Charged/discharged energy time series in [kWh]."""
 
         return self.__energy_balance
-
+        
     @property
     def round_trip_efficiency(self) -> float:
         """Efficiency square root."""
@@ -837,9 +885,11 @@ class StorageDevice(Device):
         super().next_time_step()
 
         if np.isfinite(previous_soc) and self.time_step < len(self.__soc):
-            next_soc = float(np.clip(previous_soc * (1.0 - self.loss_coefficient), self._minimum_soc(), 1.0))
+            next_soc = float(np.clip(previous_soc * (1.0 - self.loss_coefficient), 0.0, 1.0))
             self.__soc[self.time_step] = next_soc
             self.__soc_initialized[self.time_step] = True
+            self._record_energy_event('standby', previous_soc*self.capacity,
+                                      float(self.__soc[self.time_step])*self.capacity)
 
     def get_metadata(self) -> Mapping[str, Any]:
         return {
@@ -869,9 +919,9 @@ class StorageDevice(Device):
         energy = energy * self.time_step_ratio
         energy_init = self.energy_init if energy_init is None else energy_init
         round_trip_efficiency = self.round_trip_efficiency
-        # The initial State Of Charge (SOC) is the previous SOC minus the energy losses
+        # A reserve limits discharge; it must never raise the measured stored energy.
         energy_final = min(energy_init + energy*round_trip_efficiency, self.capacity) if energy >= 0\
-            else max(self._minimum_energy(), energy_init + energy/round_trip_efficiency)
+            else max(min(self._minimum_energy(), energy_init), energy_init + energy/round_trip_efficiency)
 
         self.__soc[self.time_step] = energy_final/max(self.capacity, ZERO_DIVISION_PLACEHOLDER)
         self.__soc_initialized[self.time_step] = True
@@ -879,10 +929,19 @@ class StorageDevice(Device):
         self.__energy_balance[self.time_step] = (
             delta_energy / round_trip_efficiency if delta_energy >= 0 else delta_energy * round_trip_efficiency
         )
+        terminal_energy = float(self.__energy_balance[self.time_step])
+        stored_change = (terminal_energy * round_trip_efficiency if terminal_energy >= 0.0
+                         else terminal_energy / round_trip_efficiency)
+        self.__stored_energy_transfer = self.stored_energy_transfer + stored_change
+        self.__transfer_time_step = self.time_step
+
+        self._record_energy_event('transfer', energy_init, self.energy_init, terminal_energy)
 
     def force_set_soc(self, soc: float):
+        before = self.energy_init
         self.__soc[self.time_step] = soc
         self.__soc_initialized[self.time_step] = True
+        self._record_energy_event('external', before, self.energy_init)
 
     def set_energy_balance(self, energy: float, energy_init:float) -> float:
         r"""Calculate energy balance.
@@ -901,7 +960,7 @@ class StorageDevice(Device):
 
         The energy balance is a derived quantity and is the product or quotient of the difference between consecutive SOCs and `round_trip_efficiency`
         for discharge or charge events respectively thus, thus accounts for energy losses to environment during charging and discharge. It is the
-        actual energy charged/discharged irrespective of what is determined in the step function after taking into account storage design limits
+        actual energy charged/discharged irrespective of what is determined in the step function after taking into account storage design limits 
         e.g. maximum power input/output, capacity.
         """
         delta_energy = energy - energy_init
@@ -948,10 +1007,16 @@ class StorageDevice(Device):
 
         super().reset()
         self.__soc = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
-        self.__soc[0] = max(self.initial_soc, self._minimum_soc())
+        self.__soc[0] = self.initial_soc
         self.__soc_initialized = np.zeros(self.episode_tracker.episode_time_steps, dtype=bool)
         self.__soc_initialized[0] = True
         self.__energy_balance = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
+        self.__gross_energy_charge = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32') if isinstance(self, ElectricDevice) and self.capacity > 0 else None
+        self.__gross_energy_discharge = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32') if self.__gross_energy_charge is not None else None
+        self.__stored_energy_transfer = 0.0
+        self.__transfer_time_step = self.time_step
+        self._energy_events = []
+        self._energy_event_step = self.time_step
 
 class StorageTank(StorageDevice):
     r"""Base thermal energy storage class.
@@ -964,13 +1029,13 @@ class StorageTank(StorageDevice):
         Maximum amount of power that the storage unit can output [kW].
     max_input_power : float, optional
         Maximum amount of power that the storage unit can use to charge [kW].
-
+    
     Other Parameters
     ----------------
     **kwargs : Any
         Other keyword arguments used to initialize super class.
     """
-
+    
     def __init__(self, capacity: float = None, max_output_power: float = None, max_input_power: float = None, **kwargs: Any):
         super().__init__(capacity = capacity, **kwargs)
         self.max_output_power = max_output_power
@@ -1035,7 +1100,7 @@ class Battery(StorageDevice, ElectricDevice):
         Battery degradation; storage capacity lost in each charge and discharge cycle (as a fraction of the total capacity).
     power_efficiency_curve: list, default: [[0, 0.83],[0.3, 0.83],[0.7, 0.9],[0.8, 0.9],[1, 0.85]]
         Charging/Discharging efficiency as a function of nominal power.
-    capacity_power_curve: list, default: [[0.0, 1],[0.8, 1],[1.0, 0.2]]
+    capacity_power_curve: list, default: [[0.0, 1],[0.8, 1],[1.0, 0.2]]   
         Maximum power of the battery as a function of its current state of charge.
     depth_of_discharge: Union[float, Tuple[float, float]], default: 1.0
         Maximum fraction of the battery that can be discharged relative to the total battery capacity.
@@ -1045,7 +1110,7 @@ class Battery(StorageDevice, ElectricDevice):
     **kwargs : Any
         Other keyword arguments used to initialize super classes.
     """
-
+    
     def __init__(self, capacity: float = None, nominal_power: float = None, capacity_loss_coefficient: Union[float, Tuple[float, float]] = None, power_efficiency_curve: List[List[float]] = None, capacity_power_curve: List[List[float]] = None, depth_of_discharge: Union[float, Tuple[float, float]] = None, time_step_ratio: float = None, **kwargs: Any):
         self._efficiency_history = array('d')
         self._capacity_history = array('d')
@@ -1063,7 +1128,7 @@ class Battery(StorageDevice, ElectricDevice):
         """Current time step technical efficiency."""
 
         return self.efficiency_history[-1]
-
+    
     @property
     def degraded_capacity(self) -> float:
         r"""Maximum amount of energy the storage device can store after degradation in [kWh]."""
@@ -1087,13 +1152,13 @@ class Battery(StorageDevice, ElectricDevice):
         """Maximum power of the battery as a function of its current state of charge."""
 
         return self.__capacity_power_curve
-
+    
     @property
     def time_step_ratio(self) -> float:
         """Maximum power of the battery as a function of its current state of charge."""
 
         return self.__time_step_ratio
-
+    
     @property
     def depth_of_discharge(self) -> float:
         """Maximum fraction of the battery that can be discharged relative to the total battery capacity."""
@@ -1111,7 +1176,7 @@ class Battery(StorageDevice, ElectricDevice):
         """Time series of maximum amount of energy the storage device can store in [kWh]."""
 
         return self._capacity_history
-
+    
     @StorageDevice.capacity.setter
     def capacity(self, capacity: Union[float, Tuple[float, float]]):
         StorageDevice.capacity.fset(self, capacity)
@@ -1169,7 +1234,7 @@ class Battery(StorageDevice, ElectricDevice):
 
     @time_step_ratio.setter
     def time_step_ratio(self, time_step_ratio: float):
-        self.__time_step_ratio = self._get_property_value(time_step_ratio, 1.0)
+        self.__time_step_ratio = self._get_property_value(time_step_ratio, 1.0)     
 
     def get_metadata(self) -> Mapping[str, Any]:
         return {
@@ -1181,7 +1246,7 @@ class Battery(StorageDevice, ElectricDevice):
         }
 
     def charge(self, energy: float):
-        """Charges or discharges storage with respect to specified energy while considering `capacity` degradation and `soc_init`
+        """Charges or discharges storage with respect to specified energy while considering `capacity` degradation and `soc_init` 
         limitations, losses to the environment quantified by `efficiency`, `power_efficiency_curve` and `capacity_power_curve`.
 
         Parameters
@@ -1189,6 +1254,8 @@ class Battery(StorageDevice, ElectricDevice):
         energy : float
             Energy to charge if (+) or discharge if (-) in [kWh].
         """
+        if np.isnan(self.capacity_before_step[self.time_step]):
+            self.capacity_before_step[self.time_step] = self.degraded_capacity
         # Public control paths pass dataset-resolution kWh; physical limits are per control step.
         ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
         requested_energy = float(energy) * ratio
@@ -1233,6 +1300,11 @@ class Battery(StorageDevice, ElectricDevice):
     def _minimum_soc(self) -> float:
         return float(np.clip(1.0 - self.depth_of_discharge, 0.0, 1.0))
 
+    def next_time_step(self):
+        super().next_time_step()
+        if self.time_step < len(self.capacity_before_step):
+            self.capacity_before_step[self.time_step] = self.degraded_capacity
+
     def get_max_output_power(self, energy_init: float = None) -> float:
         r"""Get maximum output power while considering `capacity_power_curve` limitations if defined otherwise, returns `nominal_power`.
 
@@ -1268,7 +1340,7 @@ class Battery(StorageDevice, ElectricDevice):
             + (curve_y[idx+1] - curve_y[idx])*(soc - curve_x[idx])
             /(curve_x[idx+1] - curve_x[idx])
         )
-
+        
         return max_output_power
 
     def get_current_efficiency(self, power: float) -> float:
@@ -1325,7 +1397,7 @@ class Battery(StorageDevice, ElectricDevice):
         # Calculating the degradation of the battery: new max. capacity of the battery after charge/discharge
         capacity_degrade = self.capacity_loss_coefficient*self.capacity*np.abs(self.energy_balance[self.time_step])/(2*max(self.degraded_capacity, ZERO_DIVISION_PLACEHOLDER))
         return capacity_degrade
-
+    
     def autosize(
         self, demand: float, duration: Union[float, Tuple[float, float]] = None, parallel: bool = None, safety_factor: Union[float, Tuple[float, float]] = None,
         sizing_data: pd.DataFrame = None
@@ -1384,22 +1456,22 @@ class Battery(StorageDevice, ElectricDevice):
 
         if choices.shape[0] == 0:
             choices = sizing_data.sort_values('nominal_power').iloc[0:1].copy()
-
+        
         else:
             pass
-
+        
         choices = choices.to_dict('index')
         choice = self.numpy_random_state.choice(list(choices.keys()))
         target_capacity = demand*duration*safety_factor
         unit_count = max(1, math.floor(target_capacity/choices[choice]['capacity']))
-
+        
         capacity = choices[choice]['capacity']*unit_count
         nominal_power = choices[choice]['nominal_power']*max(1.0, unit_count*int(parallel))
         depth_of_discharge = choices[choice]['depth_of_discharge']
         efficiency = choices[choice]['efficiency']
         loss_coefficient = choices[choice]['loss_coefficient']
         capacity_loss_coefficient = choices[choice]['capacity_loss_coefficient']
-
+        
         self._autosize_config = {
             'model': choice,
             'demand': demand,
@@ -1426,11 +1498,14 @@ class Battery(StorageDevice, ElectricDevice):
         super().reset()
         self._efficiency_history = self._efficiency_history[0:1]
         self._capacity_history = self._capacity_history[0:1]
+        self.capacity_before_step = np.full(self.episode_tracker.episode_time_steps, np.nan)
+        self.capacity_before_step[0] = self.degraded_capacity
 
 class DeferrableAppliance(ElectricDevice):
     """Generic deferrable appliance with sparse cycle requests and fixed kWh/step profiles."""
 
     SENTINEL_TIME_STEP = -1.0
+    _cycle_index = None  # Older serialized appliances rebuild this lazily.
 
     def __init__(
         self,
@@ -1467,6 +1542,7 @@ class DeferrableAppliance(ElectricDevice):
     @deferrable_appliance_simulation.setter
     def deferrable_appliance_simulation(self, value: DeferrableApplianceSimulation):
         self.__deferrable_appliance_simulation = value
+        self._cycle_index = None
 
     @property
     def name(self) -> str:
@@ -1486,6 +1562,7 @@ class DeferrableAppliance(ElectricDevice):
 
     def reset(self):
         super().reset()
+        self._cycle_index = None
         self._validate_cycle_profiles_against_nominal_power()
         self.__past_action_values = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.__cycle_state = {}
@@ -1493,6 +1570,11 @@ class DeferrableAppliance(ElectricDevice):
         self.__cycle_completion_time_steps = {}
         self.__cycle_missed_time_steps = {}
         self.__cycle_cancelled_time_steps = {}
+        from citylearn.internal.deferrable_service_audit import ServiceLedger
+        episode_start = int(self.episode_tracker.episode_start_time_step or 0)
+        self._service_ledger = ServiceLedger(
+            episode_start, episode_start + int(self.episode_tracker.episode_time_steps) - 1,
+        )
         self.action_feedback_last_start_requested = np.zeros(self.episode_tracker.episode_time_steps, dtype=bool)
         self.action_feedback_last_start_applied = np.zeros(self.episode_tracker.episode_time_steps, dtype=bool)
         self.action_feedback_start_blocked = np.zeros(self.episode_tracker.episode_time_steps, dtype=bool)
@@ -1516,9 +1598,9 @@ class DeferrableAppliance(ElectricDevice):
         for cycle in self.deferrable_appliance_simulation.flexibility_schedule:
             cycle_id = cycle['cycle_id']
             if int(cycle['latest_start_time_step']) < episode_start:
-                self.__cycle_state[cycle_id] = 'expired_before_episode'
+                self._set_cycle_state(cycle_id, 'expired_before_episode')
             else:
-                self.__cycle_state[cycle_id] = 'pending'
+                self._set_cycle_state(cycle_id, 'pending')
 
     def skip_cycles_before(self, global_time_step: int):
         """Exclude requests that expired before an asset/member became active.
@@ -1531,13 +1613,14 @@ class DeferrableAppliance(ElectricDevice):
         """
 
         activation = int(global_time_step)
+        self._service_ledger.activation = activation
         for cycle in self.deferrable_appliance_simulation.flexibility_schedule:
             cycle_id = cycle['cycle_id']
             if (
                 self.__cycle_state.get(cycle_id) == 'pending'
                 and int(cycle['latest_start_time_step']) < activation
             ):
-                self.__cycle_state[cycle_id] = 'expired_before_activation'
+                self._set_cycle_state(cycle_id, 'expired_before_activation')
 
     def next_time_step(self):
         super().next_time_step()
@@ -1574,8 +1657,9 @@ class DeferrableAppliance(ElectricDevice):
             return
 
         cycle_id = cycle['cycle_id']
-        self.__cycle_state[cycle_id] = 'running'
+        self._set_cycle_state(cycle_id, 'running')
         self.__cycle_start_time_steps[cycle_id] = current_global
+        self._service_ledger.start(cycle, current_global)
 
         for offset, energy_kwh in enumerate(cycle['load_profile']):
             step = self.time_step + offset
@@ -1607,14 +1691,16 @@ class DeferrableAppliance(ElectricDevice):
 
         return np.array(cycle['load_profile'], dtype='float32')
 
-    def cancel_pending_and_running(self, global_time_step: Optional[int] = None):
+    def cancel_pending_and_running(self, global_time_step: Optional[int] = None, reason: str = 'asset_removed'):
         """Cancel future service after a dynamic topology removal."""
 
         current_global = self._current_global_time_step() if global_time_step is None else int(global_time_step)
+        self._service_ledger.cancel(current_global, reason)
         for cycle in self.deferrable_appliance_simulation.flexibility_schedule:
             cycle_id = cycle['cycle_id']
-            if self.__cycle_state.get(cycle_id) in {'pending', 'running'}:
-                self.__cycle_state[cycle_id] = 'cancelled'
+            if (self.__cycle_state.get(cycle_id) in {'pending', 'running'}
+                    or (cycle_id in self._service_ledger.starts and cycle_id not in self._service_ledger.finished)):
+                self._set_cycle_state(cycle_id, 'cancelled')
                 self.__cycle_cancelled_time_steps[cycle_id] = current_global
 
         local_step = int(self.time_step)
@@ -1713,6 +1799,26 @@ class DeferrableAppliance(ElectricDevice):
             'current_step_power_kw': current_energy / step_hours,
         }
 
+    def record_service_interval(self):
+        """Record the executed interval, never the prebooked future profile."""
+        energy = (float(self._ElectricDevice__electricity_consumption[self.time_step])
+                  * self._electricity_consumption_ratio())
+        self._service_ledger.record(self._current_global_time_step(), energy)
+
+    def exclude_previously_offered_cycles(self, cycle_ids):
+        """A reinstall must not offer the same logical request twice."""
+        self._service_ledger.excluded.update(cycle_ids)
+        for cycle_id in cycle_ids:
+            if self.__cycle_state.get(cycle_id) == 'pending':
+                self._set_cycle_state(cycle_id, 'already_accounted_previous_instance')
+
+    def service_audit(self):
+        """Pure snapshot of actual service with exclusive states and reasons."""
+        from citylearn.internal.deferrable_service_audit import DEFINITION_VERSION
+        return dict(definition_version=DEFINITION_VERSION,
+                    records=self._service_ledger.records(self.deferrable_appliance_simulation.flexibility_schedule),
+                    physical_energy_kwh=self._service_ledger.physical_energy)
+
     def service_summary(self) -> Mapping[str, float]:
         self._finalize_running_cycles_at_current_step()
         completed = 0
@@ -1784,17 +1890,27 @@ class DeferrableAppliance(ElectricDevice):
                     f"{peak_power:.6g} kW exceeds nominal_power {nominal_power:.6g} kW."
                 )
 
+    def _get_cycle_index(self):
+        schedule = self.deferrable_appliance_simulation.flexibility_schedule
+        index = self._cycle_index
+        if index is None or index.schedule is not schedule or index.size != len(schedule):
+            index = self._cycle_index = CycleIndex(schedule, self.__cycle_state)
+        return index
+
+    def _set_cycle_state(self, cycle_id, state):
+        self.__cycle_state[cycle_id] = state
+        if self._cycle_index is not None:
+            self._cycle_index.changed(cycle_id, state)
+
     def _next_pending_cycle(self) -> Optional[Mapping[str, Any]]:
-        for cycle in self.deferrable_appliance_simulation.flexibility_schedule:
-            if self.__cycle_state.get(cycle['cycle_id']) == 'pending':
-                return cycle
-        return None
+        return self._get_cycle_index().first('pending')
 
     def _current_or_next_cycle(self) -> Optional[Mapping[str, Any]]:
-        for state_name in ('running', 'pending', 'missed'):
-            for cycle in self.deferrable_appliance_simulation.flexibility_schedule:
-                if self.__cycle_state.get(cycle['cycle_id']) == state_name:
-                    return cycle
+        index = self._get_cycle_index()
+        for state in ('running', 'pending', 'missed'):
+            cycle = index.first(state)
+            if cycle is not None:
+                return cycle
         return None
 
     def _can_start_cycle(self, cycle: Mapping[str, Any], current_global: int) -> bool:
@@ -1821,35 +1937,42 @@ class DeferrableAppliance(ElectricDevice):
 
     def _update_cycle_states(self):
         current_global = self._current_global_time_step()
-        for cycle in self.deferrable_appliance_simulation.flexibility_schedule:
+        index = self._get_cycle_index()
+        for cycle in index.running():
             cycle_id = cycle['cycle_id']
-            state = self.__cycle_state.get(cycle_id)
-            if state == 'running':
-                start = self.__cycle_start_time_steps.get(cycle_id)
-                if start is not None and current_global > start + int(cycle['duration_steps']) - 1:
-                    self.__cycle_state[cycle_id] = 'completed'
-                    self.__cycle_completion_time_steps[cycle_id] = current_global - 1
-            elif state == 'pending' and current_global > int(cycle['latest_start_time_step']):
+            start = self.__cycle_start_time_steps.get(cycle_id)
+            if start is not None and current_global > start + int(cycle['duration_steps']) - 1:
+                self._set_cycle_state(cycle_id, 'completed')
+                self.__cycle_completion_time_steps[cycle_id] = current_global - 1
+        if index.ordered_latest:
+            # Validated non-overlapping calendars have increasing latest-start bounds.
+            # Only requests whose boundary was crossed can change in this call.
+            while True:
+                cycle = index.first('pending')
+                if cycle is None or current_global <= int(cycle['latest_start_time_step']):
+                    break
                 self._mark_missed(cycle, current_global)
+        else:
+            # Preserve permissive direct-constructor calendars outside the normal parser.
+            for cycle in index.schedule:
+                if current_global > int(cycle['latest_start_time_step']):
+                    self._mark_missed(cycle, current_global)
 
     def _mark_missed(self, cycle: Mapping[str, Any], current_global: int):
         cycle_id = cycle['cycle_id']
         if self.__cycle_state.get(cycle_id) == 'pending':
-            self.__cycle_state[cycle_id] = 'missed'
+            self._set_cycle_state(cycle_id, 'missed')
             self.__cycle_missed_time_steps[cycle_id] = int(current_global)
 
     def _finalize_running_cycles_at_current_step(self):
         """Close cycles whose last energy step has already been reached."""
 
         current_global = self._current_global_time_step()
-        for cycle in self.deferrable_appliance_simulation.flexibility_schedule:
+        for cycle in self._get_cycle_index().running():
             cycle_id = cycle['cycle_id']
-            if self.__cycle_state.get(cycle_id) != 'running':
-                continue
-
             start = self.__cycle_start_time_steps.get(cycle_id)
             if start is not None and current_global >= int(start) + int(cycle['duration_steps']) - 1:
-                self.__cycle_state[cycle_id] = 'completed'
+                self._set_cycle_state(cycle_id, 'completed')
                 self.__cycle_completion_time_steps[cycle_id] = int(start) + int(cycle['duration_steps']) - 1
 
     def _current_cycle_energy(self, cycle: Mapping[str, Any]) -> float:
@@ -2110,7 +2233,7 @@ class WashingMachine(ElectricDevice):
         washing_machine_simulation: WashingMachineSimulation = None,
         name: str = None,
         **kwargs
-    ):
+    ):  
         """Initialize the washing machine with optional simulation data and a unique name."""
         self.washing_machine_simulation = washing_machine_simulation
         self.name = name
@@ -2125,7 +2248,7 @@ class WashingMachine(ElectricDevice):
     @washing_machine_simulation.setter
     def washing_machine_simulation(self, washing_machine_simulation: WashingMachineSimulation):
         """Sets the simulation object for this washing machine."""
-        self.__washing_machine_simulation = washing_machine_simulation
+        self.__washing_machine_simulation = washing_machine_simulation    
 
     @property
     def name(self) -> str:
@@ -2135,7 +2258,7 @@ class WashingMachine(ElectricDevice):
     @name.setter
     def name(self, name: str):
         """Sets the unique name of the washing machine."""
-        self.__name = name
+        self.__name = name        
 
     @property
     def initiated(self) -> bool:
@@ -2208,13 +2331,13 @@ class WashingMachine(ElectricDevice):
             'washing_machine_action': self.past_action_values[self.time_step] if self.past_action_values is not None else 0.0
         }
 
-        return observations
+        return observations    
 
     def reset(self):
         """Reset the internal state of the washing machine at the beginning of a new episode."""
         super().reset()
         self.__initiated = False
-        self.__past_action_values = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
+        self.__past_action_values = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32') 
         self._ElectricDevice__electricity_consumption = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
 
     def __str__(self) -> str:

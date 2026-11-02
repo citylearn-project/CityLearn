@@ -262,64 +262,25 @@ class CostFunction:
             Rolling average of indoor_dry_bulb_temperature - dry_bulb_temperature_cooling_set_point where the condition indoor_dry_bulb_temperature > (dry_bulb_temperature_cooling_set_point + band) is met.
         """
 
-        # unmet hours
-        data = pd.DataFrame({
-            'indoor_dry_bulb_temperature': indoor_dry_bulb_temperature, 
-            'dry_bulb_temperature_cooling_set_point': dry_bulb_temperature_cooling_set_point,
-            'dry_bulb_temperature_heating_set_point': dry_bulb_temperature_heating_set_point,
-            'occupant_count': [1]*len(indoor_dry_bulb_temperature) if occupant_count is None else occupant_count
-        })
-        data['band'] = EnergySimulation.DEFUALT_COMFORT_BAND if band is None else band
-        occupied_time_step_count = data[data['occupant_count'] > 0.0].shape[0]
-        data['cooling_delta'] = data['indoor_dry_bulb_temperature'] - data['dry_bulb_temperature_cooling_set_point']
-        data['heating_delta'] = data['indoor_dry_bulb_temperature'] - data['dry_bulb_temperature_heating_set_point']
-        data.loc[data['occupant_count'] == 0.0, 'cooling_delta'] = 0.0
-        data.loc[data['occupant_count'] == 0.0, 'heating_delta'] = 0.0
-        data['discomfort'] = 0
-        data.loc[data['cooling_delta'] > data['band'], 'discomfort'] = 1
-        data.loc[data['heating_delta'] < -data['band'], 'discomfort'] = 1
-        data['discomfort'] = data['discomfort'].rolling(window=data.shape[0],min_periods=1).sum()/occupied_time_step_count
+        temperature, cooling, heating = [np.asarray(v, dtype=float) for v in
+            (indoor_dry_bulb_temperature, dry_bulb_temperature_cooling_set_point, dry_bulb_temperature_heating_set_point)]
+        if len(temperature) == 0:
+            return tuple([] for _ in range(9))
+        occupants = np.ones(len(temperature)) if occupant_count is None else np.asarray(occupant_count, dtype=float)
+        bands = np.broadcast_to(np.asarray(EnergySimulation.DEFUALT_COMFORT_BAND if band is None else band, dtype=float), temperature.shape)
+        valid = (np.isfinite(temperature) & np.isfinite(cooling) & np.isfinite(heating)
+                 & np.isfinite(bands) & (bands >= 0) & (heating <= cooling)
+                 & np.isfinite(occupants) & (occupants > 0))
+        cold = valid & (temperature < heating-bands)
+        hot = valid & (temperature > cooling+bands)
+        denominator = pd.Series(np.cumsum(valid)).replace(0, np.nan)
+        ratios = [(pd.Series(np.cumsum(mask))/denominator).tolist() for mask in (cold | hot, cold, hot)]
+        deltas = []
+        for mask, values in ((cold, heating-temperature), (hot, temperature-cooling)):
+            observed = pd.Series(np.where(mask, values, np.nan)).expanding(min_periods=1)
+            deltas.extend([observed.min().tolist(), observed.max().tolist(), observed.mean().tolist()])
+        return tuple(ratios+deltas)
 
-        # too cold
-        data['discomfort_cold'] = 0
-        data.loc[data['heating_delta'] < -data['band'], 'discomfort_cold'] = 1
-        data['discomfort_cold'] = data['discomfort_cold'].rolling(window=data.shape[0],min_periods=1).sum()/occupied_time_step_count
-
-        # too hot
-        data['discomfort_hot'] = 0
-        data.loc[data['cooling_delta'] > data['band'], 'discomfort_hot'] = 1
-        data['discomfort_hot'] = data['discomfort_hot'].rolling(window=data.shape[0],min_periods=1).sum()/occupied_time_step_count
-
-        # minimum cold delta
-        data['discomfort_cold_delta_minimum'] = data['heating_delta'].clip(upper=0).abs().rolling(window=data.shape[0],min_periods=1).min()
-
-        # maximum cold delta
-        data['discomfort_cold_delta_maximum'] = data['heating_delta'].clip(upper=0).abs().rolling(window=data.shape[0],min_periods=1).max()
-
-        # average cold delta
-        data['discomfort_cold_delta_average'] = data['heating_delta'].clip(upper=0).abs().rolling(window=data.shape[0],min_periods=1).mean()
-
-        # minimum hot delta
-        data['discomfort_hot_delta_minimum'] = data['cooling_delta'].clip(lower=0).abs().rolling(window=data.shape[0],min_periods=1).min()
-
-        # maximum hot delta
-        data['discomfort_hot_delta_maximum'] = data['cooling_delta'].clip(lower=0).abs().rolling(window=data.shape[0],min_periods=1).max()
-
-        # average hot delta
-        data['discomfort_hot_delta_average'] = data['cooling_delta'].clip(lower=0).abs().rolling(window=data.shape[0],min_periods=1).mean()
-
-        return (
-            data['discomfort'].tolist(),
-            data['discomfort_cold'].tolist(),
-            data['discomfort_hot'].tolist(),
-            data['discomfort_cold_delta_minimum'].tolist(),
-            data['discomfort_cold_delta_maximum'].tolist(),
-            data['discomfort_cold_delta_average'].tolist(),
-            data['discomfort_hot_delta_minimum'].tolist(),
-            data['discomfort_hot_delta_maximum'].tolist(),
-            data['discomfort_hot_delta_average'].tolist(),
-        )
-    
     @staticmethod
     def one_minus_thermal_resilience(power_outage: List[int], **kwargs):
         r"""Rolling percentage of discomfort time steps during power outage.
@@ -346,7 +307,7 @@ class CostFunction:
         occupant_count = [1]*len(power_outage) if kwargs.get('occupant_count', None) is None else kwargs['occupant_count']
         occupant_count = np.array(occupant_count, dtype='float32')
         power_outage = np.array(power_outage, dtype='float32')
-        occupant_count[power_outage==0.0] = 0.0
+        occupant_count[~np.isfinite(power_outage) | (power_outage <= 0.0)] = 0.0
         kwargs['occupant_count'] = occupant_count
         thermal_resilience = CostFunction.discomfort(**kwargs)[0]
 
@@ -373,6 +334,9 @@ class CostFunction:
         normalized_unserved_energy: List[float]
             Unmet demand.
         """
+
+        if len(expected_energy) == 0:
+            return []
 
         data = pd.DataFrame({
             'expected_energy': np.asarray(expected_energy, dtype='float64'),

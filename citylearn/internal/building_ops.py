@@ -8,6 +8,7 @@ import numpy as np
 from citylearn.energy_model import HeatPump
 from citylearn.preprocessing import Normalize, PeriodicNormalization
 from citylearn.internal.units import energy_kwh_to_power_kw, power_kw_to_energy_kwh
+from citylearn.internal.electrical_limits import allocate_electrical_service, electrical_service_violation_kw
 
 if TYPE_CHECKING:
     from citylearn.building import Building
@@ -161,7 +162,8 @@ class BuildingOpsService:
                 if req_soc_key in valid_observations:
                     observations[req_soc_key] = float(sim.electric_vehicle_required_soc_departure[t])
                 if soc_key in valid_observations:
-                    observations[soc_key] = charger.connected_electric_vehicle.battery.soc[endogenous_t]
+                    ev = charger.connected_electric_vehicle
+                    observations[soc_key] = ev.battery.soc[ev.observation_soc_index(endogenous_t)]
                 if capacity_key in valid_observations:
                     observations[capacity_key] = float(charger.connected_electric_vehicle.battery.capacity)
             else:
@@ -270,13 +272,15 @@ class BuildingOpsService:
                     if 0 <= endogenous_t < len(charger.past_charging_action_values_kwh):
                         last_charged_kwh = float(charger.past_charging_action_values_kwh[endogenous_t])
 
-                    battery_soc = connected_car.battery.soc[endogenous_t]
+                    battery_soc = connected_car.battery.soc[connected_car.observation_soc_index(endogenous_t)]
                     previous_battery_soc = connected_car.battery.initial_soc if endogenous_t == 0 else connected_car.battery.soc[endogenous_t - 1]
 
                     required_soc = charger.charger_simulation.electric_vehicle_required_soc_departure[t]
                     departure_steps = charger.charger_simulation.electric_vehicle_departure_time[t]
                     step_hours = building.seconds_per_time_step / 3600.0
-                    hours_until_departure = max(float(departure_steps), 0.0) * step_hours
+                    hours_until_departure = (
+                        float(departure_steps) * step_hours if departure_steps >= 0 else -1.0
+                    )
 
                     battery_capacity = connected_car.battery.capacity
                     min_capacity = (1 - connected_car.battery.depth_of_discharge) * battery_capacity
@@ -864,6 +868,8 @@ class BuildingOpsService:
             profile = self._deferrable_start_profile_kwh(appliance, action)
             if profile.size <= 0:
                 return args
+            if building.power_outage and profile[0] > building.downward_electrical_flexibility + 1.0e-9:
+                return (0.0,)
             return args if self._deferrable_profile_feasible(profile) else (0.0,)
 
         if action_key.startswith('escalator_'):
@@ -1249,18 +1255,6 @@ class BuildingOpsService:
             return 0.0
         return float(np.clip(target_power_kw / nominal_power, -1.0, 1.0))
 
-    def _compute_totals(self, base_total_kw: float, base_phase_kw: Mapping[str, float], controls, scales):
-        total_kw = float(base_total_kw)
-        phase_kw = {phase: float(value) for phase, value in base_phase_kw.items()}
-
-        for control_id, control in controls.items():
-            scale = self._safe_scalar(scales.get(control_id, 1.0), 1.0)
-            total_kw += control['request_total_kw'] * scale
-            for phase_name, value in control['request_phase_kw'].items():
-                phase_kw[phase_name] = phase_kw.get(phase_name, 0.0) + (value * scale)
-
-        return total_kw, phase_kw
-
     def _electrical_service_violation_kw(
         self,
         total_kw: float,
@@ -1269,95 +1263,9 @@ class BuildingOpsService:
         per_phase_limits: Mapping[str, Mapping[str, float]],
         phase_names: List[str],
     ) -> float:
-        violation_kw = 0.0
-        total_kw = self._safe_scalar(total_kw, 0.0)
-
-        import_limit = self._safe_scalar(total_limits.get('import_kw'), np.nan)
-        export_limit = self._safe_scalar(total_limits.get('export_kw'), np.nan)
-        if np.isfinite(import_limit):
-            violation_kw += max(total_kw - import_limit, 0.0)
-        if np.isfinite(export_limit):
-            violation_kw += max(-total_kw - export_limit, 0.0)
-
-        for phase_name in phase_names:
-            phase_total = self._safe_scalar(phase_kw.get(phase_name, 0.0), 0.0)
-            phase_limit = per_phase_limits.get(phase_name, {})
-            phase_import_limit = self._safe_scalar(phase_limit.get('import_kw'), np.nan)
-            phase_export_limit = self._safe_scalar(phase_limit.get('export_kw'), np.nan)
-            if np.isfinite(phase_import_limit):
-                violation_kw += max(phase_total - phase_import_limit, 0.0)
-            if np.isfinite(phase_export_limit):
-                violation_kw += max(-phase_total - phase_export_limit, 0.0)
-
-        return float(violation_kw)
-
-    def _scale_for_import_scope(self, current_value_kw, limit_kw, controls, scales, component_getter) -> bool:
-        limit_kw = self._safe_scalar(limit_kw, np.nan)
-        current_value_kw = self._safe_scalar(current_value_kw, 0.0)
-        if not np.isfinite(limit_kw):
-            return False
-        if limit_kw is None or current_value_kw <= limit_kw + 1e-9:
-            return False
-
-        relevant = []
-        for control_id, control in controls.items():
-            component_kw = component_getter(control)
-            if component_kw > 0.0 and self._safe_scalar(scales.get(control_id, 0.0), 0.0) > 0.0:
-                relevant.append((control_id, component_kw))
-
-        if not relevant:
-            return False
-
-        current_relevant_kw = sum(scales[control_id] * component_kw for control_id, component_kw in relevant)
-        if current_relevant_kw <= 1e-9:
-            return False
-
-        fixed_kw = current_value_kw - current_relevant_kw
-        allowed_kw = limit_kw - fixed_kw
-        factor = 0.0 if allowed_kw <= 0.0 else min(1.0, allowed_kw / current_relevant_kw)
-        if factor >= 1.0 - 1e-9:
-            return False
-
-        for control_id, _ in relevant:
-            scales[control_id] *= factor
-
-        return True
-
-    def _scale_for_export_scope(self, current_value_kw, limit_kw, controls, scales, component_getter) -> bool:
-        limit_kw = self._safe_scalar(limit_kw, np.nan)
-        current_value_kw = self._safe_scalar(current_value_kw, 0.0)
-        if not np.isfinite(limit_kw):
-            return False
-        if limit_kw is None:
-            return False
-
-        current_export_kw = max(-current_value_kw, 0.0)
-        if current_export_kw <= limit_kw + 1e-9:
-            return False
-
-        relevant = []
-        for control_id, control in controls.items():
-            component_kw = component_getter(control)
-            if component_kw < 0.0 and self._safe_scalar(scales.get(control_id, 0.0), 0.0) > 0.0:
-                relevant.append((control_id, component_kw))
-
-        if not relevant:
-            return False
-
-        current_relevant_export_kw = sum(scales[control_id] * abs(component_kw) for control_id, component_kw in relevant)
-        if current_relevant_export_kw <= 1e-9:
-            return False
-
-        fixed_kw = current_value_kw + current_relevant_export_kw
-        allowed_export_kw = limit_kw + fixed_kw
-        factor = 0.0 if allowed_export_kw <= 0.0 else min(1.0, allowed_export_kw / current_relevant_export_kw)
-        if factor >= 1.0 - 1e-9:
-            return False
-
-        for control_id, _ in relevant:
-            scales[control_id] *= factor
-
-        return True
+        # Retain the internal audit entry point; the formula lives with allocation.
+        return electrical_service_violation_kw(
+            total_kw, phase_kw, total_limits, per_phase_limits, phase_names)
 
     def _apply_legacy_charging_constraints(self, actions: Optional[Mapping[str, float]]) -> Optional[Mapping[str, float]]:
         building = self.building
@@ -1513,60 +1421,13 @@ class BuildingOpsService:
                 'request_phase_kw': request_phase_kw,
             }
 
-        scales = {control_id: 1.0 for control_id in controls}
         total_limits = building._electrical_service_limits.get('total', {})
         per_phase_limits = building._electrical_service_limits.get('per_phase', {})
-        requested_total_kw, requested_phase_kw = self._compute_totals(base_total_kw, base_phase_kw, controls, scales)
-        requested_violation_kw = self._electrical_service_violation_kw(
-            requested_total_kw,
-            requested_phase_kw,
-            total_limits,
-            per_phase_limits,
-            phase_names,
+        allocation = allocate_electrical_service(
+            base_total_kw, base_phase_kw, controls, total_limits, per_phase_limits, phase_names,
         )
-
-        for _ in range(8):
-            changed = False
-            total_kw, phase_kw = self._compute_totals(base_total_kw, base_phase_kw, controls, scales)
-
-            changed |= self._scale_for_import_scope(
-                total_kw,
-                total_limits.get('import_kw'),
-                controls,
-                scales,
-                component_getter=lambda c: c['request_total_kw'],
-            )
-            changed |= self._scale_for_export_scope(
-                total_kw,
-                total_limits.get('export_kw'),
-                controls,
-                scales,
-                component_getter=lambda c: c['request_total_kw'],
-            )
-
-            for phase_name in phase_names:
-                phase_limit = per_phase_limits.get(phase_name, {})
-                changed |= self._scale_for_import_scope(
-                    phase_kw.get(phase_name, 0.0),
-                    phase_limit.get('import_kw'),
-                    controls,
-                    scales,
-                    component_getter=lambda c, p=phase_name: c['request_phase_kw'].get(p, 0.0),
-                )
-                changed |= self._scale_for_export_scope(
-                    phase_kw.get(phase_name, 0.0),
-                    phase_limit.get('export_kw'),
-                    controls,
-                    scales,
-                    component_getter=lambda c, p=phase_name: c['request_phase_kw'].get(p, 0.0),
-                )
-
-            if not changed:
-                break
-
-        total_kw, phase_kw = self._compute_totals(base_total_kw, base_phase_kw, controls, scales)
-        total_kw = self._safe_scalar(total_kw, 0.0)
-        phase_kw = {phase: self._safe_scalar(value, 0.0) for phase, value in phase_kw.items()}
+        scales = allocation.scales
+        total_kw, phase_kw = allocation.total_kw, allocation.phase_kw
 
         if adjusted_actions is not None:
             for charger_id in adjusted_actions:
@@ -1585,14 +1446,7 @@ class BuildingOpsService:
 
         import_limit = self._safe_scalar(total_limits.get('import_kw'), np.nan)
         export_limit = self._safe_scalar(total_limits.get('export_kw'), np.nan)
-        residual_violation_kw = self._electrical_service_violation_kw(
-            total_kw,
-            phase_kw,
-            total_limits,
-            per_phase_limits,
-            phase_names,
-        )
-        violation_kw = max(requested_violation_kw, residual_violation_kw)
+        violation_kw = max(allocation.requested_violation_kw, allocation.residual_violation_kw)
 
         phase_headroom = {}
         phase_export_headroom = {}

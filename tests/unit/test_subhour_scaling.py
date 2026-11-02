@@ -16,6 +16,9 @@ from citylearn.energy_model import Battery, ElectricDevice, StorageDevice, Stora
 
 
 _MISSING = object()
+ROOT = Path(__file__).resolve().parents[2]
+EV_SCHEMA = str((ROOT / 'data/datasets/citylearn_challenge_2022_phase_all_plus_evs/schema.json').resolve(strict=True))
+MINUTE_SCHEMA = str((ROOT / 'tests/data/minute_ev_demo/schema.json').resolve(strict=True))
 
 
 def _make_tracker(length: int) -> EpisodeTracker:
@@ -537,7 +540,7 @@ def test_battery_power_efficiency_curve_uses_average_power():
 
 
 def test_env_supports_subhour_seconds_per_time_step():
-    schema = 'data/datasets/citylearn_challenge_2022_phase_all_plus_evs/schema.json'
+    schema = EV_SCHEMA
     env = CityLearnEnv(
         schema,
         central_agent=True,
@@ -556,7 +559,7 @@ def test_env_supports_subhour_seconds_per_time_step():
 
 def test_subhour_ev_charger_reward_observation_uses_physical_hours():
     env = CityLearnEnv(
-        'tests/data/minute_ev_demo/schema.json',
+        MINUTE_SCHEMA,
         central_agent=True,
         episode_time_steps=8,
         random_seed=0,
@@ -574,7 +577,7 @@ def test_subhour_ev_charger_reward_observation_uses_physical_hours():
 
 def test_ev_charger_schedule_aligns_with_nonzero_episode_start():
     env = CityLearnEnv(
-        'tests/data/minute_ev_demo/schema.json',
+        MINUTE_SCHEMA,
         central_agent=True,
         episode_time_steps=4,
         rolling_episode_split=False,
@@ -599,7 +602,7 @@ def test_ev_charger_schedule_aligns_with_nonzero_episode_start():
 
 def test_ev_charger_schedule_alignment_respects_simulation_start_offset():
     env = CityLearnEnv(
-        'tests/data/minute_ev_demo/schema.json',
+        MINUTE_SCHEMA,
         central_agent=True,
         simulation_start_time_step=2,
         simulation_end_time_step=7,
@@ -768,7 +771,7 @@ def test_15_second_charge_immediately_meets_ev_departure_kpis(tmp_path):
 
 
 def test_env_prints_explicit_notice_when_dataset_resolution_is_converted(capsys):
-    schema = 'data/datasets/citylearn_challenge_2022_phase_all_plus_evs/schema.json'
+    schema = EV_SCHEMA
     env = CityLearnEnv(
         schema,
         central_agent=True,
@@ -789,7 +792,7 @@ def test_env_prints_explicit_notice_when_dataset_resolution_is_converted(capsys)
 
 
 def test_subhour_env_scales_initial_and_step_energy_histories():
-    schema = 'data/datasets/citylearn_challenge_2022_phase_all_plus_evs/schema.json'
+    schema = EV_SCHEMA
     hourly = CityLearnEnv(schema, central_agent=True, episode_time_steps=24, seconds_per_time_step=3600, random_seed=0)
     quarter_hour = CityLearnEnv(schema, central_agent=True, episode_time_steps=24, seconds_per_time_step=900, random_seed=0)
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
@@ -39,6 +40,7 @@ class DemandResponseRequest:
     shortfall_penalty_eur_per_kwh: float
     tolerance_power_kw: float
     order: int
+    purpose: str = 'unspecified'
 
 
 class CityLearnDemandResponseService:
@@ -112,12 +114,18 @@ class CityLearnDemandResponseService:
 
     def get_metadata(self) -> Mapping[str, Any]:
         return {
+            "definition_version": "demand-response-audit-v1",
             "enabled": bool(self.enabled),
             "requests_file": self.requests_file,
             "baseline_method": self.baseline_method,
             "baseline_window_seconds": float(self.baseline_window_seconds),
             "allow_overlapping_requests": bool(self.allow_overlapping_requests),
             "request_count": int(len(self._requests)),
+            "baseline_required_steps": self._baseline_window_steps(),
+            "effective_baseline_seconds": self._baseline_window_steps()*self._step_hours()*3600.,
+            "population_rule": "stable_topology_from_preparation_through_settled_interval",
+            "purpose_rule": "explicit_service_stress_or_unspecified; never_inferred_from_shortfall",
+            "aggregation": {"signed_delivery_and_cash": "additive", "member_credit": "uncapped_positive_contribution", "member_shortfall": "equal_share_without_district_tolerance; not_additive"},
         }
 
     def observation_values(self) -> Mapping[str, float]:
@@ -249,10 +257,19 @@ class CityLearnDemandResponseService:
             raise ValueError(f"demand_response.requests_file is missing columns: {sorted(missing)}.")
 
         requests: List[DemandResponseRequest] = []
+        ids = set()
+        purposes = (self.env.schema.get('demand_response') or {}).get('request_purposes') or {}
         for order, row in frame.reset_index(drop=True).iterrows():
             request_id = str(row["request_id"]).strip()
             if request_id == "" or request_id.lower() == "nan":
                 raise ValueError(f"demand_response request at row {order} has an empty request_id.")
+            if request_id in ids:
+                raise ValueError(f"duplicate demand_response request_id: {request_id}; IDs must be unique.")
+            ids.add(request_id)
+            purpose = purposes.get(request_id, row.get('purpose', 'unspecified'))
+            purpose = 'unspecified' if pd.isna(purpose) else str(purpose).strip().lower()
+            if purpose not in {'service', 'stress', 'unspecified'}:
+                raise ValueError('DR purpose must be service, stress or unspecified.')
 
             issuer = str(row["issuer"]).strip().lower()
             if issuer not in self.ISSUER_CODES:
@@ -294,9 +311,12 @@ class CityLearnDemandResponseService:
                     shortfall_penalty_eur_per_kwh=shortfall_penalty,
                     tolerance_power_kw=tolerance,
                     order=int(order),
+                    purpose=purpose,
                 )
             )
 
+        if set(purposes)-ids:
+            raise ValueError('request_purposes references unknown request IDs.')
         return sorted(requests, key=lambda item: (item.start_time_step, item.end_time_step, item.order))
 
     def _validate_overlaps(self):
@@ -329,10 +349,6 @@ class CityLearnDemandResponseService:
         return None
 
     def _ensure_baseline(self, request: DemandResponseRequest) -> Mapping[str, Any]:
-        cached = self._baseline_by_request_id.get(request.request_id)
-        if cached is not None:
-            return cached
-
         local_start = request.start_time_step - self._episode_start_time_step()
         window_steps = self._baseline_window_steps()
         start_index = int(local_start) - window_steps
@@ -342,6 +358,17 @@ class CityLearnDemandResponseService:
             baseline = self._invalid_baseline()
             self._baseline_by_request_id[request.request_id] = baseline
             return baseline
+
+        topology = getattr(self.env, '_topology_service', None)
+        if getattr(self.env, 'topology_mode', 'static') == 'dynamic' and topology is not None:
+            versions = {topology.topology_version_at(t) for t in range(start_index, int(self.env.time_step)+1)}
+            if len(versions) != 1:
+                baseline = self._invalid_baseline('topology_changed')
+                self._baseline_by_request_id[request.request_id] = baseline
+                return baseline
+        cached = self._baseline_by_request_id.get(request.request_id)
+        if cached is not None:
+            return cached
 
         building_baselines: Dict[str, float] = {}
         valid = True
@@ -363,10 +390,11 @@ class CityLearnDemandResponseService:
             building_baselines[building.name] = float(np.mean(samples)) / self._step_hours()
 
         if not valid or len(building_baselines) == 0:
-            baseline = self._invalid_baseline()
+            baseline = self._invalid_baseline('nonfinite_history' if not valid else 'no_members')
         else:
             baseline = {
                 "valid": True,
+                "reason": None,
                 "baseline_power_kw": float(sum(building_baselines.values())),
                 "building_baseline_power_kw": building_baselines,
                 "window_start_time_step": int(start_index),
@@ -390,6 +418,8 @@ class CityLearnDemandResponseService:
                 "issuer": request.issuer,
                 "direction": request.direction,
                 "baseline_valid": False,
+                "baseline_reason": baseline.get('reason'),
+                "purpose": request.purpose,
                 "requested_kwh": requested_kwh,
                 "valid_requested_kwh": 0.0,
                 "baseline_power_kw": 0.0,
@@ -435,6 +465,8 @@ class CityLearnDemandResponseService:
             "issuer": request.issuer,
             "direction": request.direction,
             "baseline_valid": True,
+            "baseline_reason": None,
+            "purpose": request.purpose,
             "requested_kwh": requested_kwh,
             "valid_requested_kwh": requested_kwh,
             "baseline_power_kw": baseline_power,
@@ -578,9 +610,10 @@ class CityLearnDemandResponseService:
         }
 
     @staticmethod
-    def _invalid_baseline() -> Mapping[str, Any]:
+    def _invalid_baseline(reason='insufficient_history') -> Mapping[str, Any]:
         return {
             "valid": False,
+            "reason": reason,
             "baseline_power_kw": 0.0,
             "building_baseline_power_kw": {},
             "window_start_time_step": None,
@@ -596,7 +629,24 @@ class CityLearnDemandResponseService:
 
     def _baseline_window_steps(self) -> int:
         seconds = max(float(getattr(self.env, "seconds_per_time_step", 3600.0) or 3600.0), 1.0)
-        return max(1, int(round(float(self.baseline_window_seconds) / seconds)))
+        return max(1, int(math.ceil(float(self.baseline_window_seconds) / seconds)))
+
+    def audit_summary(self):
+        """District service quality by declared purpose, without inferring feasibility."""
+        result = {}
+        for purpose in ('all', 'service', 'stress', 'unspecified'):
+            rows = [r for r in self.settlement_history if purpose == 'all' or r.get('purpose', 'unspecified') == purpose]
+            valid = [r for r in rows if r['baseline_valid']]
+            totals = {key: sum(float(r[key]) for r in rows) for key in ('requested_kwh', 'valid_requested_kwh', 'delivered_kwh', 'credited_kwh', 'shortfall_kwh', 'revenue_eur', 'penalty_eur', 'net_revenue_eur')}
+            totals.update(events_count=float(len({r['request_id'] for r in rows})),
+                          active_intervals_count=float(len(rows)), valid_intervals_count=float(len(valid)),
+                          baseline_coverage_ratio=len(valid)/len(rows) if rows else None,
+                          requested_energy_coverage_ratio=totals['valid_requested_kwh']/totals['requested_kwh'] if totals['requested_kwh']>0 else None,
+                          compliance_ratio=min(max(totals['credited_kwh']/totals['valid_requested_kwh'],0.),1.) if totals['valid_requested_kwh']>0 else None)
+            for reason in ('insufficient_history', 'nonfinite_history', 'no_members', 'topology_changed'):
+                totals['excluded_'+reason+'_intervals_count'] = float(sum(r.get('baseline_reason') == reason for r in rows))
+            result[purpose] = totals
+        return result
 
     def _step_hours(self) -> float:
         return max(float(getattr(self.env, "seconds_per_time_step", 3600.0) or 3600.0) / 3600.0, 1.0e-12)

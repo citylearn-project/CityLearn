@@ -85,9 +85,18 @@ class Agent(Environment):
 
     @property
     def actions(self) -> List[List[List[Any]]]:
-        """Action history/time series."""
+        """Action history; dynamic rows follow :attr:`action_history_ids`."""
 
         return self.__actions
+
+    @property
+    def action_history_ids(self) -> List[str]:
+        """Stable row identities, retaining departed members and appending arrivals.
+
+        An empty vector marks a step without an action for that member. A
+        centralized history has a single ``central_agent`` row.
+        """
+        return list(self.__action_history_ids)
     
     @env.setter
     def env(self, env: CityLearnEnv):
@@ -121,6 +130,18 @@ class Agent(Environment):
 
     @actions.setter
     def actions(self, actions: List[List[Any]]):
+        env = self.env.unwrapped
+        if getattr(env, 'topology_mode', 'static') == 'dynamic':
+            ids = ['central_agent'] if env.central_agent else [b.name for b in env.buildings]
+            if len(actions) != len(ids):
+                raise ValueError('Action vectors must match the current active members.')
+            for member_id, action in zip(ids, actions):
+                if member_id not in self.__action_history_ids:
+                    self.__action_history_ids.append(member_id)
+                    self.__actions.append([[] for _ in range(self.time_step + 1)])
+                row = self.__actions[self.__action_history_ids.index(member_id)]
+                row[self.time_step] = list(action)
+            return
         for i in range(len(self.action_space)):
             self.__actions[i][self.time_step] = actions[i]
 
@@ -159,13 +180,21 @@ class Agent(Environment):
                 truncated = self.env.truncated
                 time_step = 0
                 rewards_list = []
+                rewards_by_member = {}
+                dynamic = getattr(env, 'topology_mode', 'static') == 'dynamic'
 
                 while not (terminated or truncated):
                     actions = self.predict(observations, deterministic=deterministic)
+                    reward_ids = ['central_agent'] if env.central_agent else [b.name for b in env.buildings]
 
                     # apply actions to citylearn_env
                     next_observations, rewards, terminated, truncated, _ = self.env.step(actions)
                     rewards_list.append(rewards)
+                    if dynamic:
+                        # Rewards belong to the members that executed the step,
+                        # before next-step topology events change the live view.
+                        for member_id, reward in zip(reward_ids, rewards):
+                            rewards_by_member.setdefault(member_id, []).append(float(reward))
 
                     # update
                     if not deterministic:
@@ -173,7 +202,7 @@ class Agent(Environment):
                     else:
                         pass
 
-                    observations = [o for o in next_observations]
+                    observations = next_observations
 
                     logging.debug(
                         f'Time step: {time_step + 1}/{self.episode_time_steps},'\
@@ -184,7 +213,12 @@ class Agent(Environment):
 
                     time_step += 1
 
-                if len(rewards_list) > 0:
+                if dynamic and rewards_by_member:
+                    rewards_summary = {
+                        label: {name: float(reduce(values)) for name, values in rewards_by_member.items()}
+                        for label, reduce in [('min', np.min), ('max', np.max), ('sum', np.sum), ('mean', np.mean)]
+                    }
+                elif len(rewards_list) > 0:
                     rewards = np.array(rewards_list, dtype='float')
                     rewards_summary = {
                         'min': rewards.min(axis=0),
@@ -249,12 +283,17 @@ class Agent(Environment):
     def next_time_step(self):
         super().next_time_step()
 
-        for i in range(len(self.action_space)):
-            self.__actions[i].append([])
+        for history in self.__actions:
+            history.append([])
 
     def reset(self):
         super().reset()
-        self.__actions = [[[]] for _ in self.action_space]
+        env = self.env.unwrapped
+        self.__action_history_ids = (
+            ['central_agent'] if env.central_agent else [b.name for b in env.buildings]
+        )
+        count = len(self.__action_history_ids) if getattr(env, 'topology_mode', 'static') == 'dynamic' else len(self.action_space)
+        self.__actions = [[[]] for _ in range(count)]
 
 class BaselineAgent(Agent):
     r"""Passive no-control baseline where active control actions are disabled.

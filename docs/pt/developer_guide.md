@@ -89,3 +89,33 @@ As APIs publicas continuam centradas em `CityLearnEnv` e `Building`. A orquestra
 | Adicionar testes para fisica ou observacoes novas. | Sub-hourly e entity podem regredir sem falhas obvias. |
 | Preferir observacoes aditivas em patch releases. | Evita quebrar algoritmos e wrappers ja treinados. |
 | Correr auditorias antes de taggar. | Apanham drift de contrato fora dos unit tests normais. |
+
+## Verificação e módulos internos na 3.1
+
+O comando `python scripts/audit/run_full_audit.py --strict --output-dir /tmp/citylearn-audit`
+verifica física, contrato de entidades, datasets oficiais e seis trajetórias de
+referência com comandos fixos. Falhas, dependências ausentes e referências divergentes
+produzem erro; a execução normal não reescreve snapshots. Auditorias de algoritmos
+continuam opcionais e explícitas. As referências de teste usam casos temporários
+pequenos e os fixtures existentes, sem incluir datasets do SoftCPS.
+
+As fachadas públicas delegam em módulos internos de energia/equipamentos/serviço/
+comunidade nos KPIs, observações/layout de entidades, componentes/inputs no loading
+e contratos/auditoria de robustez. O módulo de limites elétricos é partilhado pelo
+controlo e pelo runtime. Importações públicas, exemplos e catálogo mantêm a
+identidade CityLearn; estes módulos internos não são APIs de extensão estáveis.
+
+### Desempenho e leitura dos históricos
+
+A avaliação pode receber `progress_callback`, com eventos de etapa/membro/família
+de KPIs; os tempos não são acrescentados à tabela dos indicadores. O auditor
+contínuo distingue dispatch, avaliação e exportação nos ficheiros de progresso.
+
+Os históricos do mercado e da robustez mantêm todo o detalhe e a ordem em
+representações compactas sem perdas. Consultas por janela/iterador evitam
+materializar a execução inteira; leituras são snapshots independentes e alterações
+históricas devem ser atribuídas de volta. O reset limpa histórico e contadores.
+As máscaras de população dos KPIs e os replays EV são reutilizados apenas no
+contexto de avaliação/partida apropriado. Ciclos diferíveis são indexados e a
+preparação de previsões/observações é reutilizada dentro do pedido, mantendo a
+semântica e o fallback de recompensas personalizadas.

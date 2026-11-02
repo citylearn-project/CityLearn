@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run full simulator audit suite and aggregate reports."""
+"""Verify selected simulator audits; report-only and algorithm audits are explicit."""
 
 from __future__ import annotations
 
@@ -15,6 +15,14 @@ from typing import Any, Dict, List
 ROOT = Path(__file__).resolve().parents[2]
 AUDIT_DIR = ROOT / "scripts" / "audit"
 OUTPUT_DIR_DEFAULT = ROOT / "outputs" / "audit"
+DEFAULT_AUDITS = ("physics", "entity_contract", "datasets", "refactor_parity")
+AUDIT_COVERAGE = {
+    "physics": "Physical units, power, SOC and energy across step durations and topology boundaries.",
+    "entity_contract": "Entity IDs, features, relations and saved interface contracts.",
+    "datasets": "Declared dataset schemas and bounded supported-interface rollouts.",
+    "refactor_parity": "Fixed-command physical trajectories, service, cash, KPIs, interfaces and exports.",
+    "performance_results": "Legacy performance and RBC/SAC result snapshots; opt-in only.",
+}
 
 
 def _run(cmd: List[str], cwd: Path) -> Dict[str, Any]:
@@ -32,18 +40,27 @@ def _run(cmd: List[str], cwd: Path) -> Dict[str, Any]:
     }
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv=None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR_DEFAULT)
-    parser.add_argument("--strict", action="store_true", help="Fail if any component fails.")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--strict", dest="strict", action="store_true", help="Verify all selected audits (the default).")
+    mode.add_argument("--report-only", dest="strict", action="store_false", help="Collect diagnostics; return zero even when verification fails.")
+    parser.set_defaults(strict=True)
+    parser.add_argument("--audits", nargs="+", choices=tuple(AUDIT_COVERAGE), default=DEFAULT_AUDITS,
+                        help="Audits to run. Algorithm/result comparisons are excluded by default.")
     parser.add_argument("--episode-steps", type=int, default=2000, help="Passed to perf/results audit where supported.")
     parser.add_argument("--seed", type=int, default=0, help="Passed to sub-audits where supported.")
     parser.add_argument("--update-snapshots", action="store_true", help="Update contract/KPI baselines in snapshot-aware audits.")
-    return parser.parse_args()
+    args = parser.parse_args(argv)
+    if args.update_snapshots and args.strict:
+        parser.error("Snapshot updates require --report-only; verification must not rewrite its references.")
+    args.output_dir = args.output_dir.expanduser().resolve()
+    return args
 
 
-def main() -> int:
-    args = parse_args()
+def main(argv=None) -> int:
+    args = parse_args(argv)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     audit_scripts = [
@@ -70,7 +87,14 @@ def main() -> int:
             "extra_args": [
                 "--output",
                 str(args.output_dir / "datasets_audit.json"),
+                "--offline",
+                "--max-steps", "8",
             ],
+        },
+        {
+            "name": "refactor_parity",
+            "path": AUDIT_DIR / "audit_refactor_parity.py",
+            "extra_args": ["--output", str(args.output_dir / "refactor_parity.json")],
         },
         {
             "name": "performance_results",
@@ -89,7 +113,10 @@ def main() -> int:
 
     runs: List[Dict[str, Any]] = []
     hard_fail = False
+    selected = set(args.audits)
     for item in audit_scripts:
+        if item["name"] not in selected:
+            continue
         script_path: Path = item["path"]
         if not script_path.is_file():
             runs.append(
@@ -103,7 +130,10 @@ def main() -> int:
             continue
 
         cmd = [sys.executable, str(script_path), *item["extra_args"]]
-        run = _run(cmd, ROOT)
+        try:
+            run = _run(cmd, ROOT)
+        except OSError as error:
+            run = {"cmd": cmd, "returncode": None, "error": str(error)}
         run["name"] = item["name"]
         run["path"] = str(script_path.relative_to(ROOT))
 
@@ -111,6 +141,7 @@ def main() -> int:
             run["status"] = "ok"
         elif run["returncode"] == 2:
             run["status"] = "skipped_deps"
+            hard_fail = True
         else:
             run["status"] = "failed"
             hard_fail = True
@@ -121,6 +152,12 @@ def main() -> int:
         "generated_utc": dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
         "python": sys.version,
         "strict": bool(args.strict),
+        "mode": "verify" if args.strict else "report_only",
+        "verification_passed": not hard_fail and not args.update_snapshots,
+        "coverage": {name: AUDIT_COVERAGE[name] for name in AUDIT_COVERAGE if name in selected},
+        "scope": "Selected audits only; not the full pytest suite or empirical calibration.",
+        "default_audits_selected": set(DEFAULT_AUDITS).issubset(selected),
+        "snapshot_updates_requested": bool(args.update_snapshots),
         "output_dir": str(args.output_dir),
         "runs": runs,
     }

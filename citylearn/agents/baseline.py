@@ -6,16 +6,11 @@ import numpy as np
 
 from citylearn.agents.base import Agent
 from citylearn.citylearn import CityLearnEnv
+from citylearn.internal.electrical_limits import allocate_electrical_service
 
 
-class BusinessAsUsualAgent(Agent):
-    """Deterministic operational baseline for day-to-day equipment use.
-
-    The policy represents a conservative non-optimizing operator:
-    connected EVs charge toward their declared departure service target when
-    available, deferrable appliances start as soon as they can, and electrical
-    storage performs simple PV self-consumption.
-    """
+class _OperationalBaselineAgent(Agent):
+    """Shared equipment dispatch and deadline-based EV service for native RBCs."""
 
     def __init__(
         self,
@@ -51,6 +46,18 @@ class BusinessAsUsualAgent(Agent):
 
     def predict(self, observations: List[List[float]], deterministic: bool = None) -> List[List[float]]:
         env = self.env.unwrapped
+        if env.time_step == 0 and self.time_step != 0:
+            self.reset()
+        if getattr(env, 'topology_mode', 'static') == 'dynamic':
+            version = env.topology_version
+            if version != self._baseline_topology_version:
+                self.action_space = env.flat_action_space
+                self.action_names = env.action_names
+                self.observation_space = env.flat_observation_space
+                self.observation_names = env.observation_names
+                self.building_metadata = env.get_metadata()['buildings']
+                self._building_action_layout_cache.clear()
+                self._baseline_topology_version = version
         per_building_actions = [
             self._building_action_vector(building)
             for building in env.buildings
@@ -64,6 +71,18 @@ class BusinessAsUsualAgent(Agent):
         self.actions = actions
         self.next_time_step()
         return actions
+
+    def comparison_identity(self):
+        from citylearn import __version__
+        keys = ('ev_target_soc', 'ev_follow_required_soc', 'ev_service_margin_rate', 'ev_service_floor_rate',
+                'storage_min_soc', 'storage_max_soc', 'storage_deadband_kw', 'deferrable_start_action',
+                'low_price_quantile', 'high_price_quantile', 'price_charge_rate', 'price_discharge_rate',
+                'ev_price_charge_rate', 'pv_charge_rate', 'storage_discharge_rate', 'import_peak_threshold_kw',
+                'ev_urgency_hours', 'community_surplus_charge_soc_ceiling', 'community_import_threshold_kw',
+                'community_storage_discharge_rate', 'community_surplus_threshold_kw')
+        return dict(implementation=type(self).__module__+'.'+type(self).__qualname__, version=__version__,
+                    parameters={key: getattr(self, key) for key in keys if hasattr(self, key)},
+                    observation_access='privileged_simulator_state')
 
     def _building_action_vector(self, building) -> List[float]:
         layout = self._building_action_layout(building)
@@ -336,48 +355,14 @@ class BusinessAsUsualAgent(Agent):
             if not controls:
                 return actions
 
-            scales = {control_id: 1.0 for control_id in controls}
             limits = getattr(building, '_electrical_service_limits', {}) or {}
-            total_limits = limits.get('total', {}) or {}
-            per_phase_limits = limits.get('per_phase', {}) or {}
-
-            for _ in range(8):
-                changed = False
-                total_kw, phase_kw = ops._compute_totals(base_total_kw, base_phase_kw, controls, scales)
-                changed |= ops._scale_for_import_scope(
-                    total_kw,
-                    total_limits.get('import_kw'),
-                    controls,
-                    scales,
-                    component_getter=lambda c: c['request_total_kw'],
-                )
-                changed |= ops._scale_for_export_scope(
-                    total_kw,
-                    total_limits.get('export_kw'),
-                    controls,
-                    scales,
-                    component_getter=lambda c: c['request_total_kw'],
-                )
-
-                for phase_name in phase_names:
-                    phase_limit = per_phase_limits.get(phase_name, {}) or {}
-                    changed |= ops._scale_for_import_scope(
-                        phase_kw.get(phase_name, 0.0),
-                        phase_limit.get('import_kw'),
-                        controls,
-                        scales,
-                        component_getter=lambda c, p=phase_name: c['request_phase_kw'].get(p, 0.0),
-                    )
-                    changed |= ops._scale_for_export_scope(
-                        phase_kw.get(phase_name, 0.0),
-                        phase_limit.get('export_kw'),
-                        controls,
-                        scales,
-                        component_getter=lambda c, p=phase_name: c['request_phase_kw'].get(p, 0.0),
-                    )
-
-                if not changed:
-                    break
+            # Prediction uses prospective loads; runtime repeats this calculation
+            # with its own state and remains responsible for final device limits.
+            allocation = allocate_electrical_service(
+                base_total_kw, base_phase_kw, controls,
+                limits.get('total', {}) or {}, limits.get('per_phase', {}) or {}, phase_names,
+            )
+            scales = allocation.scales
 
             for charger_id, index in ev_action_indices.items():
                 charger = getattr(building, '_charger_lookup', {}).get(charger_id)
@@ -535,6 +520,83 @@ class BusinessAsUsualAgent(Agent):
     def reset(self):
         super().reset()
         self._building_action_layout_cache.clear()
+        self._baseline_topology_version = None
+
+
+class BusinessAsUsualAgent(_OperationalBaselineAgent):
+    """Immediate EV charging to 100%, earliest appliance start and PV storage.
+
+    The request is maximum charging power while connected, independent of the
+    departure target, time, price and solar forecast. Charger/battery physics
+    and the existing electrical-service limiter determine delivered power.
+    """
+
+    DEFINITION_VERSION = 'immediate-full-charge-v1'
+
+    def __init__(
+        self, env: CityLearnEnv, ev_target_soc: float = 1.0,
+        ev_follow_required_soc: bool = False, ev_service_margin_rate: float = 0.02,
+        ev_service_floor_rate: float = 0.0, storage_min_soc: float = 0.20,
+        storage_max_soc: float = 0.90, storage_deadband_kw: float = 0.05,
+        deferrable_start_action: float = 1.0, **kwargs: Any,
+    ):
+        # Keep CityLearn's explicit public signature and positional arguments.
+        # Departure-target scheduling belongs to RBCs; BAU requests full charge.
+        if (ev_target_soc is not None and float(ev_target_soc) != 1.0) or ev_follow_required_soc:
+            raise ValueError('BusinessAsUsualAgent always charges to 100%; use an RBC for departure targets.')
+        for name, value, default in (
+            ('ev_service_margin_rate', ev_service_margin_rate, 0.02),
+            ('ev_service_floor_rate', ev_service_floor_rate, 0.0),
+        ):
+            if value is not None and float(value) != default:
+                raise ValueError(f'{name} configures deadline charging; use an RBC instead of BAU.')
+        super().__init__(
+            env, ev_target_soc=1.0, ev_follow_required_soc=False,
+            storage_min_soc=storage_min_soc, storage_max_soc=storage_max_soc,
+            storage_deadband_kw=storage_deadband_kw,
+            deferrable_start_action=deferrable_start_action, **kwargs,
+        )
+
+    def _ev_action_for_charger(self, charger, low: float, high: float, *, building=None) -> float:
+        ev = None if charger is None else getattr(charger, 'connected_electric_vehicle', None)
+        if ev is None:
+            return 0.0
+        soc = self._current_soc(getattr(ev, 'battery', None))
+        if soc is None or soc >= 1.0 - 1.0e-6:
+            return 0.0
+        if self._safe_scalar(getattr(charger, 'max_charging_power', 0.0), 0.0) <= 0.0:
+            return 0.0
+        # Do not reduce this request to the small remaining energy: doing so can
+        # fall into the charger's minimum-power deadband and strand the EV below
+        # full charge. The battery clips the final interval to its capacity.
+        return float(np.clip(1.0, max(0.0, low), max(0.0, high)))
+
+    def _charger_requested_kw_for_charger(self, charger, action: float) -> float:
+        """Estimate accepted EV power before dispatching self-consumption BESS.
+
+        A full-power request near 100% is clipped by the EV battery. Reserving
+        nominal charger power instead would discharge the house battery into
+        an export. Mirror the native positive-charge limits without mutating
+        battery SOC, efficiency, capacity history or provenance.
+        """
+        ev = None if charger is None else getattr(charger, 'connected_electric_vehicle', None)
+        if ev is None or action <= 0.0:
+            return 0.0
+        power = max(charger.get_requested_power_kw(action), 0.0)
+        if power <= 0.0:
+            return 0.0
+        hours = max(float(charger.seconds_per_time_step) / 3600.0, 1.0e-12)
+        charger_efficiency = max(charger.get_efficiency(power / charger.max_charging_power, True), 1.0e-9)
+        battery = ev.battery
+        initial = battery.energy_init
+        requested = power * hours * charger_efficiency
+        maximum = max(battery.get_max_input_power(energy_init=initial), 0.0) * hours
+        remaining = max(battery.degraded_capacity - initial, 0.0)
+        accepted = min(requested, maximum)
+        for _ in range(2):
+            efficiency = max(battery.get_current_efficiency(accepted / hours) ** 0.5, 1.0e-9)
+            accepted = min(requested, maximum, remaining / efficiency)
+        return accepted / (hours * charger_efficiency)
 
 
 class ZeroActionBaselineAgent(Agent):
@@ -570,7 +632,7 @@ class NormalNoBatteryPolicy(ServiceOnlyBaselineAgent):
     """Day-to-day baseline without stationary battery control."""
 
 
-class RBCBasicPolicy(BusinessAsUsualAgent):
+class RBCBasicPolicy(_OperationalBaselineAgent):
     """Basic rule-based controller with service-aware EV charging and simple price response."""
 
     def __init__(

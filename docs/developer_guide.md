@@ -113,3 +113,86 @@ build does not train learning agents.
 | Add tests for new physics or observations. | Sub-hourly and entity behavior are easy to regress silently. |
 | Prefer additive observations in patch releases. | Avoid breaking trained algorithms and wrappers. |
 | Run audits before tagging. | They catch contract drift outside normal unit tests. |
+
+## Verification and internal modules in 3.1
+
+Run `python scripts/audit/run_full_audit.py --strict --output-dir /tmp/citylearn-audit`
+to verify physics, entity contracts, official datasets and six fixed-command
+reference trajectories. Missing dependencies/scripts, child failures and reference
+drift fail verification; ordinary runs do not rewrite snapshots. Algorithm audits
+remain explicit opt-in tools. Reference tests generate small temporary cases from
+existing fixtures; no SoftCPS production datasets are included.
+
+Public facades delegate to focused internal modules for energy/equipment/service/
+community KPIs, entity observation/layout preparation, loading inputs/components
+and robustness contracts/auditing. Electrical-service allocation is shared by
+control and runtime. Public imports, executable examples and the official registry
+retain CityLearn identity; internal modules are not stable extension APIs.
+
+### Evaluation progress
+
+`env.evaluate_v2(progress_callback=callback)` optionally reports scalar stage events
+without adding timings to the KPI table or its attributes. Each event includes a
+sequence number, stage, status and elapsed seconds. Member stages and their equipment
+families also include the member ID, index and total. Completed/failed stages include
+the stage duration. Observers receive fresh dictionaries; they must avoid slow I/O
+and must not mutate the environment. A failing observer is logged and disabled;
+actual evaluation errors still propagate with failed-stage events.
+
+The long-run auditor writes `phase` in `summary.json`, the latest KPI stage in
+`evaluation-progress.json` and the event history in `evaluation-progress.jsonl`.
+It distinguishes loading, dispatch, final evaluation, KPI export, reconciliation
+and evidence export. `kpi_evaluation_seconds` excludes export/reconciliation;
+`final_kpi_and_export_seconds` retains its existing combined meaning. Progress is
+reported at stage boundaries, so a long individual family may stay active for some
+time. No background thread or per-step callback is installed by KPI reporting.
+
+### Market settlement history
+
+The internal settlement history stores binary64 numeric columns and member IDs,
+with offsets for each executed interval. No rows are sampled or rounded. Indexing,
+slicing and iteration expose ordinary per-step lists of dictionaries as detached
+snapshots; assign an edited step back to persist it. Use a slice to read a window
+or iterate to stream the history, rather than materializing an entire long run.
+The current-step settlement and export schemas are unchanged. Legacy rows with
+additional/missing fields are retained in full. Market KPI totals are accumulated
+in chronological order and rebuilt after historical edits. Reset clears both
+history and totals.
+
+### Robustness application journal
+
+The sparse robustness journal retains every recorded application and its order.
+Completed steps use integer references to shared descriptions; the current step
+keeps writable sets for identical deduplication. Summaries accumulate completed
+steps and handle unexecuted terminal telemetry separately. No numeric channel
+values, RNG state, event application rules or physical state are changed.
+`env._robustness_service.history` keeps its complete public dictionary contract.
+For bounded reads, use `history_window(start, stop)` or `iter_history(start, stop)`
+on that service; bounds are global step indices, start inclusive and stop exclusive.
+These window/stream records are detached snapshots. Reset clears journal and
+summary counters together. The bounded action-delay buffer remains unchanged.
+
+### KPI active populations
+
+Dynamic KPI evaluation snapshots sparse membership transitions and lifecycle
+metadata once. Nested KPI families reuse read-only masks keyed by member, series
+horizon and semantics. Energy masking retains absent intervals as zero; thermal
+selection removes absent samples. Completed intervals still exclude the terminal
+observation, and historical assets continue to use their existing readers.
+The scope includes environment, episode window, executed horizon, history identity
+and topology version. It refreshes if those change and releases masks after each
+evaluation, including exceptions; no physical values or KPI results are cached.
+Public topology queries still return independent lists with their original rules.
+
+### EV departure replay reuse
+
+Departure feasibility compares target, minimum acceptable and tolerance thresholds
+against one maximum-charge replay per departure/context. The existing single-
+threshold helper remains available. Legacy and audited batches stay separate: their
+arrival boundaries and outage rules can differ. The replay still runs through the
+whole connection interval, including losses after a target may have been reached.
+Physical charge/efficiency/taper/capacity/deadband/service-limit rules are unchanged.
+Missing-input permissive legacy results and audited unknown classifications keep
+their existing contracts. No memo or replay battery is retained between batches,
+sessions, evaluations or episodes; only the departure endpoint is shared within
+the three comparisons. Native BAU actions and real battery histories are untouched.

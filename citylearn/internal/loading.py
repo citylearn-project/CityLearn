@@ -12,20 +12,16 @@ import pandas as pd
 from citylearn.base import EpisodeTracker
 from citylearn.building import Building
 from citylearn.data import (
-    CarbonIntensity,
-    ChargerSimulation,
     DataSet,
     EnergySimulation,
-    LogisticRegressionOccupantParameters,
-    Pricing,
     DeferrableApplianceSimulation,
     EscalatorSimulation,
-    Weather,
 )
 from citylearn.electric_vehicle import ElectricVehicle
-from citylearn.energy_model import Battery, DeferrableAppliance, Escalator, PV
+from citylearn.energy_model import Battery, DeferrableAppliance, Escalator
 from citylearn.reward_function import MultiBuildingRewardFunction, RewardFunction
 from citylearn.utilities import parse_bool
+from citylearn.internal import loading_inputs, loading_components
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
@@ -48,7 +44,6 @@ class CityLearnLoadingService:
         self._dynamic_expected_rows: int = 0
         self._dynamic_member_windows: Dict[str, Tuple[int, int]] = {}
         self._dynamic_charger_windows: Dict[Tuple[str, str], Tuple[int, int]] = {}
-        self._dynamic_deferrable_appliance_windows: Dict[Tuple[str, str], Tuple[int, int]] = {}
         self._shared_timeseries_cache: Dict[Tuple[Any, ...], Any] = {}
 
     @staticmethod
@@ -113,6 +108,13 @@ class CityLearnLoadingService:
 
         schema['root_directory'] = kwargs['root_directory'] if kwargs.get('root_directory') is not None else schema['root_directory']
         schema['random_seed'] = schema.get('random_seed', None) if kwargs.get('random_seed', None) is None else kwargs['random_seed']
+        if schema['random_seed'] is None:
+            schema['random_seed'] = self.env.random_seed
+        from citylearn.internal.temporal import TimeAxis, snapshot_inputs
+        self.env._initialization_seed = schema['random_seed']
+        self.env._input_snapshot = snapshot_inputs(schema)
+        self.env._time_axis = TimeAxis(schema)
+
         schema['central_agent'] = parse_bool(
             kwargs['central_agent'] if kwargs.get('central_agent') is not None else schema['central_agent'],
             default=False,
@@ -193,17 +195,11 @@ class CityLearnLoadingService:
         self._dynamic_expected_rows = int(episode_tracker.simulation_time_steps)
         self._dynamic_member_windows = {}
         self._dynamic_charger_windows = {}
-        self._dynamic_deferrable_appliance_windows = {}
         self._shared_timeseries_cache = {}
 
         if dynamic_mode:
             self._dynamic_member_windows = self._build_dynamic_member_windows(schema, self._dynamic_expected_rows)
             self._dynamic_charger_windows = self._build_dynamic_charger_windows(
-                schema,
-                self._dynamic_member_windows,
-                self._dynamic_expected_rows,
-            )
-            self._dynamic_deferrable_appliance_windows = self._build_dynamic_deferrable_appliance_windows(
                 schema,
                 self._dynamic_member_windows,
                 self._dynamic_expected_rows,
@@ -383,356 +379,47 @@ class CityLearnLoadingService:
         battery_sizing_data: pd.DataFrame,
         **kwargs,
     ) -> Building:
-        """Initialize and return a building model."""
-
+        """Orchestrate input preparation, metadata and component construction."""
         building_schema = schema['buildings'][building_name]
-        building_kwargs = {}
-        if building_schema.get('charging_constraints') is not None:
-            building_kwargs['charging_constraints'] = building_schema['charging_constraints']
-        if building_schema.get('electrical_service') is not None:
-            building_kwargs['electrical_service'] = building_schema['electrical_service']
-        if building_schema.get('equity_group') is not None:
-            building_kwargs['equity_group'] = building_schema.get('equity_group')
-        electrical_storage_attributes = (building_schema.get('electrical_storage') or {}).get('attributes', {}) or {}
-        if electrical_storage_attributes.get('phase_connection') is not None:
-            building_kwargs['electrical_storage_phase_connection'] = electrical_storage_attributes.get('phase_connection')
-        seconds_per_time_step = schema['seconds_per_time_step']
-        noise_std = building_schema.get('noise_std', 0.0)
+        options = loading_components.base_building_options(building_schema)
         expected_rows = int(getattr(self, '_dynamic_expected_rows', episode_tracker.simulation_time_steps))
         member_window = self._dynamic_member_windows.get(building_name)
+        inputs = loading_inputs.load_building_inputs(self, building_name, schema, expected_rows, member_window)
+        options['time_step_ratio'] = inputs.time_step_ratio
+        building_type = ('citylearn.citylearn.Building' if building_schema.get('type') is None
+                         else building_schema['type'])
+        constructor = loading_components.component_constructor(building_type, f'buildings.{building_name}.type')
+        loading_components.add_model_options(options, building_name, building_schema, schema, episode_tracker)
+        outage = loading_components.outage_options(index, building_name, building_schema, kwargs)
+        chargers = loading_components.load_chargers(
+            self, building_name, building_schema, schema, episode_tracker, expected_rows, inputs.time_step_ratio)
 
-        energy_simulation_filepath = os.path.join(schema['root_directory'], building_schema['energy_simulation'])
-        energy_simulation = self._read_simulation_dataframe(schema, energy_simulation_filepath)
-        energy_simulation = self._align_dynamic_timeseries_dataframe(
-            energy_simulation,
-            expected_rows=expected_rows,
-            window=member_window,
-            source_label=f'buildings.{building_name}.energy_simulation',
-        )
-        energy_simulation = EnergySimulation(
-            **self._dataframe_to_constructor_kwargs(energy_simulation),
-            seconds_per_time_step=seconds_per_time_step,
-            noise_std=noise_std,
-        )
-        self._set_time_step_offset(energy_simulation, schema['simulation_start_time_step'])
-        ratios = getattr(energy_simulation, 'time_step_ratios', None) or []
-        building_kwargs['time_step_ratio'] = ratios[-1] if len(ratios) > 0 else 1.0
-        self._print_time_step_conversion_notice(
-            building_name=building_name,
-            source=energy_simulation_filepath,
-            dataset_seconds_per_time_step=getattr(energy_simulation, 'dataset_seconds_per_time_step', None),
-            seconds_per_time_step=seconds_per_time_step,
-            time_step_ratio=building_kwargs['time_step_ratio'],
-        )
-        weather_filepath = os.path.join(schema['root_directory'], building_schema['weather'])
-        weather = self._load_shared_timeseries(
-            Weather,
-            schema=schema,
-            filepath=weather_filepath,
-            expected_rows=expected_rows,
-            window=member_window,
-            source_label=f'buildings.{building_name}.weather',
-            noise_std=noise_std,
-        )
-
-        if building_schema.get('carbon_intensity', None) is not None:
-            carbon_intensity_filepath = os.path.join(schema['root_directory'], building_schema['carbon_intensity'])
-            carbon_intensity = self._load_shared_timeseries(
-                CarbonIntensity,
-                schema=schema,
-                filepath=carbon_intensity_filepath,
-                expected_rows=expected_rows,
-                window=member_window,
-                source_label=f'buildings.{building_name}.carbon_intensity',
-                noise_std=noise_std,
-            )
-        else:
-            carbon_intensity = CarbonIntensity(np.zeros(energy_simulation.hour.shape[0], dtype='float32'), noise_std=noise_std)
-            self._set_time_step_offset(carbon_intensity, schema['simulation_start_time_step'])
-
-        if building_schema.get('pricing', None) is not None:
-            pricing_filepath = os.path.join(schema['root_directory'], building_schema['pricing'])
-            pricing = self._load_shared_timeseries(
-                Pricing,
-                schema=schema,
-                filepath=pricing_filepath,
-                expected_rows=expected_rows,
-                window=member_window,
-                source_label=f'buildings.{building_name}.pricing',
-                noise_std=noise_std,
-            )
-        else:
-            pricing = Pricing(
-                np.zeros(energy_simulation.hour.shape[0], dtype='float32'),
-                np.zeros(energy_simulation.hour.shape[0], dtype='float32'),
-                np.zeros(energy_simulation.hour.shape[0], dtype='float32'),
-                np.zeros(energy_simulation.hour.shape[0], dtype='float32'),
-                noise_std=noise_std,
-            )
-            self._set_time_step_offset(pricing, schema['simulation_start_time_step'])
-
-        building_type = 'citylearn.citylearn.Building' if building_schema.get('type', None) is None else building_schema['type']
-        building_type_module = '.'.join(building_type.split('.')[0:-1])
-        building_type_name = building_type.split('.')[-1]
-        building_constructor = getattr(importlib.import_module(building_type_module), building_type_name)
-
-        if building_schema.get('dynamics', None) is not None:
-            dynamics_type = building_schema['dynamics']['type']
-            dynamics_module = '.'.join(dynamics_type.split('.')[0:-1])
-            dynamics_name = dynamics_type.split('.')[-1]
-            dynamics_constructor = getattr(importlib.import_module(dynamics_module), dynamics_name)
-            attributes = building_schema['dynamics'].get('attributes', {})
-            attributes['filepath'] = os.path.join(schema['root_directory'], attributes['filename'])
-            _ = attributes.pop('filename')
-            building_kwargs['dynamics'] = dynamics_constructor(**attributes)
-        else:
-            building_kwargs['dynamics'] = None
-
-        if building_schema.get('occupant', None) is not None:
-            building_occupant = building_schema['occupant']
-            occupant_type = building_occupant['type']
-            occupant_module = '.'.join(occupant_type.split('.')[0:-1])
-            occupant_name = occupant_type.split('.')[-1]
-            occupant_constructor = getattr(importlib.import_module(occupant_module), occupant_name)
-            attributes: dict = building_occupant.get('attributes', {})
-            parameters_filepath = os.path.join(schema['root_directory'], building_occupant['parameters_filename'])
-            parameters = pd.read_csv(parameters_filepath)
-            attributes['parameters'] = LogisticRegressionOccupantParameters(**parameters.to_dict('list'))
-            attributes['episode_tracker'] = episode_tracker
-            attributes['random_seed'] = schema['random_seed']
-
-            for key in ['increase', 'decrease']:
-                attributes[f'setpoint_{key}_model_filepath'] = os.path.join(schema['root_directory'], attributes[f'setpoint_{key}_model_filename'])
-                _ = attributes.pop(f'setpoint_{key}_model_filename')
-
-            building_kwargs['occupant'] = occupant_constructor(**attributes)
-        else:
-            building_kwargs['occupant'] = None
-
-        building_schema_power_outage = building_schema.get('power_outage', {})
-        simulate_power_outage = kwargs.get('simulate_power_outage')
-        simulate_power_outage = building_schema_power_outage.get('simulate_power_outage') if simulate_power_outage is None else simulate_power_outage
-        simulate_power_outage = simulate_power_outage[index] if isinstance(simulate_power_outage, list) else simulate_power_outage
-        stochastic_power_outage = building_schema_power_outage.get('stochastic_power_outage')
-
-        if building_schema_power_outage.get('stochastic_power_outage_model', None) is not None:
-            stochastic_power_outage_model_type = building_schema_power_outage['stochastic_power_outage_model']['type']
-            stochastic_power_outage_model_module = '.'.join(stochastic_power_outage_model_type.split('.')[0:-1])
-            stochastic_power_outage_model_name = stochastic_power_outage_model_type.split('.')[-1]
-            stochastic_power_outage_model_constructor = getattr(
-                importlib.import_module(stochastic_power_outage_model_module),
-                stochastic_power_outage_model_name,
-            )
-            attributes = building_schema_power_outage.get('stochastic_power_outage_model', {}).get('attributes', {})
-            stochastic_power_outage_model = stochastic_power_outage_model_constructor(**attributes)
-        else:
-            stochastic_power_outage_model = None
-
-        chargers_list = []
-        if building_schema.get('chargers', None) is not None:
-            for charger_name, charger_config in building_schema['chargers'].items():
-                noise_std = charger_config.get('noise_std', 0.0)
-
-                charger_simulation_filepath = os.path.join(schema['root_directory'], charger_config['charger_simulation'])
-                charger_simulation_file = self._read_simulation_dataframe(schema, charger_simulation_filepath)
-                charger_window = self._dynamic_charger_windows.get((building_name, charger_name))
-                charger_simulation_file = self._align_dynamic_timeseries_dataframe(
-                    charger_simulation_file,
-                    expected_rows=expected_rows,
-                    window=charger_window,
-                    source_label=f'buildings.{building_name}.chargers.{charger_name}.charger_simulation',
-                )
-
-                # Keep the constructor contract stable when charger datasets add
-                # optional telemetry columns.  Passing the complete dataframe
-                # positionally would silently reinterpret a seventh column as
-                # ``start_time_step``.
-                charger_columns = (
-                    'electric_vehicle_charger_state',
-                    'electric_vehicle_id',
-                    'electric_vehicle_departure_time',
-                    'electric_vehicle_required_soc_departure',
-                    'electric_vehicle_estimated_arrival_time',
-                    'electric_vehicle_estimated_soc_arrival',
-                )
-                missing_charger_columns = [
-                    column for column in charger_columns
-                    if column not in charger_simulation_file.columns
-                ]
-                if missing_charger_columns:
-                    raise ValueError(
-                        f"Charger simulation '{charger_simulation_filepath}' is missing "
-                        f"required columns: {missing_charger_columns}."
-                    )
-                charger_simulation = ChargerSimulation(
-                    *(charger_simulation_file[column].to_numpy() for column in charger_columns),
-                    electric_vehicle_session_id=(
-                        charger_simulation_file['electric_vehicle_session_id'].to_numpy()
-                        if 'electric_vehicle_session_id' in charger_simulation_file.columns
-                        else None
-                    ),
-                    noise_std=noise_std,
-                )
-                self._set_time_step_offset(charger_simulation, schema['simulation_start_time_step'])
-                if 'electric_vehicle_current_soc' in charger_simulation_file.columns:
-                    current_soc_raw = pd.to_numeric(charger_simulation_file['electric_vehicle_current_soc'], errors='coerce').to_numpy(dtype='float32')
-                    charger_simulation.electric_vehicle_current_soc = ChargerSimulation.normalize_soc_series(
-                        current_soc_raw,
-                        default_soc_value=-0.1,
-                        noise_std=0.0,
-                    )
-
-                charger_type = charger_config['type']
-                charger_module = '.'.join(charger_type.split('.')[0:-1])
-                charger_class_name = charger_type.split('.')[-1]
-                charger_class = getattr(importlib.import_module(charger_module), charger_class_name)
-                charger_attributes = dict(charger_config.get('attributes', {}) or {})
-                charger_attributes['episode_tracker'] = episode_tracker
-                charger_object = charger_class(
-                    charger_simulation=charger_simulation,
-                    charger_id=charger_name,
-                    **charger_attributes,
-                    seconds_per_time_step=schema['seconds_per_time_step'],
-                    time_step_ratio=building_kwargs['time_step_ratio'],
-                )
-                chargers_list.append(charger_object)
-
-        deferrable_appliances_list = []
-        if kwargs.get('deferrable_appliances') is not None and len(kwargs['deferrable_appliances']) > 0:
-            deferrable_appliance_schemas = kwargs['deferrable_appliances']
-        else:
-            deferrable_appliance_schemas = building_schema.get('deferrable_appliances', {})
-
-        for appliance_name, appliance_schema in deferrable_appliance_schemas.items():
-            deferrable_appliances_list.append(
-                self.load_deferrable_appliance(
-                    appliance_name,
-                    building_name,
-                    schema,
-                    appliance_schema,
-                    episode_tracker,
-                )
-            )
-
-        escalators_list = []
-        for escalator_name, escalator_schema in (building_schema.get('escalators', {}) or {}).items():
-            escalators_list.append(
-                self.load_escalator(
-                    escalator_name,
-                    building_name,
-                    schema,
-                    escalator_schema,
-                    episode_tracker,
-                    expected_rows=expected_rows,
-                    window=member_window,
-                    time_step_ratio=building_kwargs['time_step_ratio'],
-                )
-            )
-
-        declared_inactive_actions = self._resolve_inactive_actions(index, building_schema, kwargs)
+        appliance_schemas = (kwargs['deferrable_appliances'] if kwargs.get('deferrable_appliances')
+                             else building_schema.get('deferrable_appliances', {}))
+        appliances = [self.load_deferrable_appliance(name, building_name, schema, config, episode_tracker)
+                      for name, config in appliance_schemas.items()]
+        escalators = [self.load_escalator(
+            name, building_name, schema, config, episode_tracker, expected_rows=expected_rows,
+            window=member_window, time_step_ratio=inputs.time_step_ratio,
+        ) for name, config in (building_schema.get('escalators', {}) or {}).items()]
+        inactive_actions = self._resolve_inactive_actions(index, building_schema, kwargs)
         observation_metadata, action_metadata = self.process_metadata(
-            schema,
-            building_schema,
-            chargers_list,
-            deferrable_appliances_list,
-            escalators_list,
-            index,
-            energy_simulation,
-            **kwargs,
+            schema, building_schema, chargers, appliances, escalators, index, inputs.energy_simulation, **kwargs)
+        building = constructor(
+            energy_simulation=inputs.energy_simulation, deferrable_appliances=appliances,
+            escalators=escalators, electric_vehicle_chargers=chargers, weather=inputs.weather,
+            observation_metadata=observation_metadata, action_metadata=action_metadata,
+            carbon_intensity=inputs.carbon_intensity, pricing=inputs.pricing, name=building_name,
+            seconds_per_time_step=schema['seconds_per_time_step'], random_seed=schema['random_seed'],
+            episode_tracker=episode_tracker, **outage, **options,
         )
-
-        building: Building = building_constructor(
-            energy_simulation=energy_simulation,
-            deferrable_appliances=deferrable_appliances_list,
-            escalators=escalators_list,
-            electric_vehicle_chargers=chargers_list,
-            weather=weather,
-            observation_metadata=observation_metadata,
-            action_metadata=action_metadata,
-            carbon_intensity=carbon_intensity,
-            pricing=pricing,
-            name=building_name,
-            seconds_per_time_step=schema['seconds_per_time_step'],
-            random_seed=schema['random_seed'],
-            episode_tracker=episode_tracker,
-            simulate_power_outage=simulate_power_outage,
-            stochastic_power_outage=stochastic_power_outage,
-            stochastic_power_outage_model=stochastic_power_outage_model,
-            **building_kwargs,
+        building._declared_inactive_actions = set(inactive_actions)
+        loading_components.configure_devices(
+            building, building_name, building_type, building_schema, schema, index, kwargs,
+            pv_sizing_data, battery_sizing_data,
         )
-        building._declared_inactive_actions = set(declared_inactive_actions)
-
-        device_metadata = {
-            'cooling_device': {'autosizer': building.autosize_cooling_device},
-            'heating_device': {'autosizer': building.autosize_heating_device},
-            'dhw_device': {'autosizer': building.autosize_dhw_device},
-            'dhw_storage': {'autosizer': building.autosize_dhw_storage},
-            'cooling_storage': {'autosizer': building.autosize_cooling_storage},
-            'heating_storage': {'autosizer': building.autosize_heating_storage},
-            'electrical_storage': {'autosizer': building.autosize_electrical_storage},
-            'pv': {'autosizer': building.autosize_pv},
-        }
-        solar_generation = kwargs.get('solar_generation')
-        solar_generation = True if solar_generation is None else solar_generation
-        solar_generation = solar_generation[index] if isinstance(solar_generation, list) else solar_generation
-
-        for device_name in device_metadata:
-            if building_schema.get(device_name, None) is None:
-                device = None
-
-            elif device_name == 'pv' and not solar_generation:
-                device = None
-
-            else:
-                device_type: str = building_schema[device_name]['type']
-                device_module = '.'.join(device_type.split('.')[0:-1])
-                device_type_name = device_type.split('.')[-1]
-                constructor = getattr(importlib.import_module(device_module), device_type_name)
-                attributes = dict(building_schema[device_name].get('attributes', {}) or {})
-                if device_name == 'electrical_storage':
-                    attributes.pop('phase_connection', None)
-                attributes['seconds_per_time_step'] = schema['seconds_per_time_step']
-
-                md5 = hashlib.md5()
-                device_random_seed = 0
-
-                for string in [building_name, building_type, device_name, device_type]:
-                    md5.update(string.encode())
-                    hash_to_integer_base = 16
-                    device_random_seed += int(md5.hexdigest(), hash_to_integer_base)
-
-                device_random_seed = int(str(device_random_seed * (schema['random_seed'] + 1))[:9])
-
-                attributes = {
-                    **attributes,
-                    'random_seed': attributes['random_seed'] if attributes.get('random_seed', None) is not None else device_random_seed,
-                }
-                device = constructor(**attributes)
-                autosize = parse_bool(
-                    building_schema[device_name].get('autosize', False),
-                    default=False,
-                    path=f'buildings.{building.name}.{device_name}.autosize',
-                )
-                building.__setattr__(device_name, device)
-
-                if autosize:
-                    autosizer = device_metadata[device_name]['autosizer']
-                    autosize_kwargs = {} if building_schema[device_name].get('autosize_attributes', None) is None else building_schema[device_name]['autosize_attributes']
-
-                    if isinstance(device, PV):
-                        autosize_kwargs['epw_filepath'] = os.path.join(schema['root_directory'], autosize_kwargs['epw_filepath'])
-                        autosize_kwargs['sizing_data'] = pv_sizing_data
-
-                    elif isinstance(device, Battery):
-                        autosize_kwargs['sizing_data'] = battery_sizing_data
-
-                    autosizer(**autosize_kwargs)
-
-                device.random_seed = schema['random_seed']
-
         building.observation_space = building.estimate_observation_space()
         building.action_space = building.estimate_action_space()
-
         return building
 
     def process_metadata(
@@ -933,13 +620,22 @@ class CityLearnLoadingService:
             'capacity_loss_coefficient',
             'power_efficiency_curve',
             'capacity_power_curve',
+            'max_charge_kw',
+            'max_discharge_kw',
+            'min_soc',
+            'max_soc',
+            'charging_efficiency',
+            'discharging_efficiency',
         ]:
             if attribute in attrs:
                 battery_kwargs[attribute] = attrs[attribute]
 
-        battery = Battery(
-            **battery_kwargs,
-        )
+        battery_type = electric_vehicle_schema['battery'].get('type', 'citylearn.energy_model.Battery')
+        module, class_name = battery_type.rsplit('.', 1)
+        battery_constructor = getattr(importlib.import_module(module), class_name)
+        if not issubclass(battery_constructor, Battery):
+            raise ValueError('An electric vehicle battery must extend Battery')
+        battery = battery_constructor(**battery_kwargs)
 
         electric_vehicle_type = 'citylearn.citylearn.ElectricVehicle' if electric_vehicle_schema.get('type', None) is None else electric_vehicle_schema['type']
         electric_vehicle_type_module = '.'.join(electric_vehicle_type.split('.')[0:-1])
@@ -971,13 +667,9 @@ class CityLearnLoadingService:
 
         profiles = self._read_dataframe(profiles_file)
         schedule = self._read_dataframe(schedule_file)
-        window = self._dynamic_deferrable_appliance_windows.get((building_name, appliance_name))
-        if self._dynamic_mode and window is not None and not schedule.empty:
-            start, end = window
-            schedule = schedule[
-                (pd.to_numeric(schedule['deadline_time_step'], errors='coerce') >= int(start))
-                & (pd.to_numeric(schedule['earliest_start_time_step'], errors='coerce') < int(end))
-            ].reset_index(drop=True)
+        # Sparse requests use global calendar indexes. Keep the catalogue intact:
+        # a local loading window can discard current requests in partial episodes
+        # and future requests after member re-entry. Activation/audit owns eligibility.
 
         source_label = f'buildings.{building_name}.deferrable_appliances.{appliance_name}'
         simulation = DeferrableApplianceSimulation.from_dataframes(
@@ -1126,7 +818,7 @@ class CityLearnLoadingService:
                 pd.Series([terminal['electric_vehicle_departure_time']]),
                 errors='coerce',
             ).iloc[0]
-            if state == 1 and np.isfinite(departure) and float(departure) <= 1.0:
+            if state == 1 and np.isfinite(departure) and 0.0 <= float(departure) <= 1.0:
                 terminal['electric_vehicle_charger_state'] = 3
                 for column in (
                     'electric_vehicle_session_id',
@@ -1228,6 +920,11 @@ class CityLearnLoadingService:
 
         return pa.Table.from_batches(batches).to_pandas()
 
+    @staticmethod
+    def _noise_seed(schema, label):
+        payload = f"{schema.get('random_seed',0)}:{label}".encode()
+        return int.from_bytes(hashlib.sha256(payload).digest()[:4], 'big')
+
     def _read_dataframe(self, filepath: Union[str, os.PathLike]) -> pd.DataFrame:
         if self._file_format(filepath) == 'parquet':
             return self._read_parquet_timeseries_dataframe(filepath)
@@ -1269,7 +966,8 @@ class CityLearnLoadingService:
             window=window,
             source_label=source_label,
         )
-        time_series = constructor(**self._dataframe_to_constructor_kwargs(dataframe), noise_std=noise_std)
+        time_series = constructor(**self._dataframe_to_constructor_kwargs(dataframe), noise_std=noise_std,
+            noise_seed=self._noise_seed(schema, source_label), noise_start_index=schema['simulation_start_time_step'])
         self._set_time_step_offset(time_series, schema['simulation_start_time_step'])
 
         if cacheable:
@@ -1445,32 +1143,6 @@ class CityLearnLoadingService:
                 end = max(start, min(end, int(expected_rows)))
                 if end > start:
                     windows[(str(member_id), str(charger_id))] = (start, end)
-
-        return windows
-
-    @staticmethod
-    def _build_dynamic_deferrable_appliance_windows(
-        schema: Mapping[str, Any],
-        member_windows: Mapping[str, Tuple[int, int]],
-        expected_rows: int,
-    ) -> Dict[Tuple[str, str], Tuple[int, int]]:
-        windows: Dict[Tuple[str, str], Tuple[int, int]] = {}
-        buildings = schema.get('buildings', {}) if isinstance(schema, Mapping) else {}
-
-        for member_id, member_schema in buildings.items():
-            member_window = member_windows.get(str(member_id))
-            if member_window is None:
-                continue
-
-            start, end = member_window
-            start = max(0, min(int(start), int(expected_rows)))
-            end = max(start, min(int(end), int(expected_rows)))
-            if end <= start:
-                continue
-
-            appliances = (member_schema or {}).get('deferrable_appliances', {}) or {}
-            for appliance_id in appliances.keys():
-                windows[(str(member_id), str(appliance_id))] = (start, end)
 
         return windows
 

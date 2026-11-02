@@ -63,8 +63,10 @@ class RewardFunction:
         pass
 
     def get_required_observation_names(self) -> Optional[Iterable[str]]:
-        """Return minimal observation names for this reward, or None if unknown."""
+        """Declare inputs of the built-in calculation; custom rewards remain unrestricted."""
 
+        if type(self) is RewardFunction and 'calculate' not in self.__dict__:
+            return ('net_electricity_consumption',)
         return None
 
     def calculate(self, observations: List[Mapping[str, Union[int, float]]]) -> List[float]:
@@ -545,7 +547,7 @@ class Electric_Vehicles_Reward_Function(MARL):
                 contributions["battery_limits"] += self.weights["battery_limits"] * penalty_multiplier
 
             # SoC penalties/rewards
-            if required_soc is not None:
+            if required_soc is not None and hours_until_departure >= 0:
                 soc_diff = soc_now - required_soc
                 soc_diff_kWh = soc_diff * capacity
 

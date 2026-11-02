@@ -14,7 +14,7 @@ It is not a scenario with all equipment switched off.
 
 | Equipment or service | BAU behaviour |
 |---|---|
-| EVs | Requests charging towards full SOC by default. The request uses the SOC deficit and remaining connection time, with a charging margin and the charger's minimum charging rate. It never requests V2G. |
+| EVs | Requests maximum charging power immediately while connected, until 100% SOC. It ignores departure targets, deadlines, prices and solar forecasts, and never requests V2G. Electrical limits share available power proportionally; equal requests receive equal shares. |
 | Stationary batteries | Charges from PV surplus and discharges to serve local demand, including prospective EV and appliance demand. SOC thresholds and a power deadband control when this rule acts. |
 | Flexible appliances | Requests the next pending cycle at its first feasible start opportunity. |
 | Electrical connection | Scales EV and battery requests against configured total and per-phase import/export limits. Equipment and simulator constraints still determine the applied energy. |
@@ -32,8 +32,8 @@ arbitrage, optimize a planning horizon or coordinate communities.
 |---|---:|---|
 | `ev_target_soc` | `1.0` | EV charging target/cap, as a SOC ratio. |
 | `ev_follow_required_soc` | `False` | With the default, charge towards full SOC rather than a lower requested departure target. |
-| `ev_service_margin_rate` | `0.02` | Margin added to the requested normalized charging rate. |
-| `ev_service_floor_rate` | `0.0` | Minimum normalized service request, in addition to the charger's minimum rate. |
+| `ev_service_margin_rate` | `0.02` | Compatibility spelling for the fixed legacy default; target scheduling uses an RBC. |
+| `ev_service_floor_rate` | `0.0` | Compatibility spelling for the fixed legacy default; equipment minimum power still applies. |
 | `storage_min_soc` | `0.20` | Stop requesting discharge below this SOC threshold. |
 | `storage_max_soc` | `0.90` | Stop requesting charge above this SOC threshold. |
 | `storage_deadband_kw` | `0.05` | Ignore small net-load differences around zero. |
@@ -124,3 +124,9 @@ their simulator-defined meaning.
 
 Read [the scorecard](scorecard.md) for matched-controller comparisons and
 [the UI guide](https://www.citylearn.net/ui.html) for the visual workflow.
+
+From 3.1, BAU uses `immediate-full-charge-v1`. Explicit departure-target scheduling
+settings belong to `RBCBasicPolicy` or its variants; configure those instead of BAU.
+The public BAU parameter names and positional signature remain available, with
+the fixed EV defaults shown above. Historical BAU results may differ after corrected
+charging and shared electrical limits; compare experiments with matching versions.

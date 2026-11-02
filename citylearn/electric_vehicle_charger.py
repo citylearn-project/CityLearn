@@ -153,6 +153,15 @@ class Charger(Environment):
         return self.__past_charging_action_values_kwh
 
     @property
+    def gross_energy_charge(self):
+        """Actual AC import before netting opposing calls in an interval."""
+        return self.__gross_energy_charge
+
+    @property
+    def gross_energy_discharge(self):
+        return self.__gross_energy_discharge
+
+    @property
     def electricity_consumption(self) -> List[float]:
         r"""Electricity consumption time series."""
 
@@ -307,10 +316,14 @@ class Charger(Environment):
             return 0.0
 
         requested_power_kw = abs(float(action_value)) * max_power_kw
-        if requested_power_kw < min_power_kw:
+        # Entity actions are float32. A command exactly at the minimum can
+        # round a fraction below it; preserve that valid command without
+        # admitting materially sub-minimum requests.
+        tolerance_kw = np.finfo(np.float32).eps * max_power_kw
+        if requested_power_kw + tolerance_kw < min_power_kw:
             return 0.0
 
-        return min(requested_power_kw, max_power_kw)
+        return min(max(requested_power_kw, min_power_kw), max_power_kw)
 
     def _signed_power_from_action(self, action_value: float) -> Tuple[float, bool]:
         try:
@@ -359,7 +372,6 @@ class Charger(Environment):
             # Without this, SOC at `time_step` can remain the zero-initialized default.
             if self.connected_electric_vehicle is not None:
                 self.connected_electric_vehicle.battery.charge(0.0)
-            self.__electricity_consumption[self.time_step] = 0
             self.__past_charging_action_values_kwh[self.time_step] = 0
             return
 
@@ -395,12 +407,17 @@ class Charger(Environment):
             electric_vehicle.battery.charge(battery_command)
 
             battery_energy_balance = electric_vehicle.battery.energy_balance[self.time_step]
-            self.__electricity_consumption[self.time_step] = (
+            ac_energy = (
                 battery_energy_balance / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
                 if battery_energy_balance >= 0 else battery_energy_balance * efficiency
             )
-        else:
-            self.__electricity_consumption[self.time_step] = 0
+            self.__electricity_consumption[self.time_step] += ac_energy
+            self.__gross_energy_charge[self.time_step] += max(float(ac_energy), 0.0)
+            self.__gross_energy_discharge[self.time_step] += max(-float(ac_energy), 0.0)
+            # Preserve charger losses at the AC boundary for passive provenance.
+            events = electric_vehicle.battery.energy_provenance_events
+            if events:
+                events[-1]['bus'] = float(ac_energy)
 
 
     def next_time_step(self):
@@ -418,6 +435,8 @@ class Charger(Environment):
         self.connected_electric_vehicle = None
         self.incoming_electric_vehicle = None
         self.__electricity_consumption = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
+        self.__gross_energy_charge = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
+        self.__gross_energy_discharge = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.__past_charging_action_values_kwh = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.__past_connected_evs = [None] * self.episode_tracker.episode_time_steps
         self.action_feedback_requested_action_normalized = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')

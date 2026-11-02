@@ -65,6 +65,19 @@ def test_terminal_padding_exposes_ev_departure_transition(tmp_path):
     assert np.isnan(frame.iloc[-1]["electric_vehicle_current_soc"])
 
 
+@pytest.mark.parametrize('departure', [-1.0, np.nan, 2.0])
+def test_terminal_padding_keeps_ev_with_no_known_departure_connected(tmp_path, departure):
+    path = tmp_path / 'charger.parquet'
+    pd.DataFrame({'electric_vehicle_charger_state': [1],
+                  'electric_vehicle_departure_time': [departure],
+                  'electric_vehicle_required_soc_departure': [.8]}).to_parquet(path, index=False)
+    schema = {'simulation_start_time_step': 0, 'simulation_end_time_step': 1,
+              'seconds_per_time_step': 900, 'terminal_observation_padding': True}
+    frame = _service()._read_simulation_dataframe(schema, path)
+    assert frame.electric_vehicle_charger_state.tolist() == [1, 1]
+    assert frame.electric_vehicle_required_soc_departure.tolist() == [.8, .8]
+
+
 def test_terminal_padding_rejects_more_than_one_missing_state(tmp_path):
     path = tmp_path / "short.parquet"
     pd.DataFrame({"value": [1.0]}).to_parquet(path, index=False)

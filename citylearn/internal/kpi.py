@@ -1,12 +1,22 @@
 from __future__ import annotations
 
+from copy import copy
+from citylearn.internal.kpi_population import current_population, population_scope
+from citylearn.internal.market_history import MarketSettlementHistory
+from citylearn.internal.evaluation_progress import EvaluationProgress, run, span
+from types import SimpleNamespace
+from array import array
+
+from citylearn.energy_model import Battery
+from citylearn.internal import ev_departure_audit, deferrable_service_audit
+from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
+
 from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
 
-from citylearn.cost_function import CostFunction
-from citylearn.data import EnergySimulation, ZERO_DIVISION_PLACEHOLDER
+from citylearn.data import ZERO_DIVISION_PLACEHOLDER
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
@@ -20,6 +30,20 @@ class CityLearnKPIService:
     EV_DEPARTURE_EPS = 1.0e-6
     ELECTRICAL_RESIDUAL_EPS_KW = 1.0e-5
     SCORECARD_DEFAULT_KPIS: Tuple[str, ...] = (
+        'district_thermal_service_audit_discomfort_ratio',
+        'district_thermal_service_audit_thermal_coverage_ratio',
+        'district_thermal_service_audit_outage_discomfort_ratio',
+        'district_thermal_service_audit_unserved_service_ratio',
+        'district_thermal_service_audit_outage_unserved_service_ratio',
+        'district_thermal_service_audit_energy_coverage_ratio',
+        'district_equity_audit_coverage_ratio',
+        # Final destinations and external carbon use the versioned ledger.
+        'district_energy_provenance_pv_useful_building_ratio',
+        'district_energy_provenance_pv_useful_with_mobility_ratio',
+        'district_energy_provenance_pv_stored_kwh',
+        'district_energy_provenance_pv_grid_export_kwh',
+        'district_energy_provenance_external_purchase_emissions_kgco2',
+        'district_energy_provenance_external_purchase_emissions_business_as_usual_kgco2',
         # Cost scorecard values and BAU reference.
         'district_cost_total_control_eur',
         'district_cost_total_business_as_usual_eur',
@@ -29,12 +53,18 @@ class CityLearnKPIService:
         'building_cost_total_delta_to_business_as_usual_eur',
 
         # EV service and grid-safety values are judged directly, not vs BAU.
-        'district_ev_performance_departure_min_acceptable_feasible_ratio',
-        'district_ev_performance_departure_within_tolerance_feasible_ratio',
+        'district_ev_departure_audit_min_acceptable_service_feasible_ratio',
+        'district_ev_departure_audit_within_tolerance_service_feasible_ratio',
+        'district_ev_departure_audit_target_coverage_ratio',
+        'district_ev_departure_audit_service_coverage_ratio',
+        'district_ev_departure_audit_target_unknown_count',
         'district_electrical_service_phase_violations_energy_total_kwh',
         'district_electrical_service_phase_requested_pressure_energy_total_kwh',
-        'building_ev_performance_departure_min_acceptable_feasible_ratio',
-        'building_ev_performance_departure_within_tolerance_feasible_ratio',
+        'building_ev_departure_audit_min_acceptable_service_feasible_ratio',
+        'building_ev_departure_audit_within_tolerance_service_feasible_ratio',
+        'building_ev_departure_audit_target_coverage_ratio',
+        'building_ev_departure_audit_service_coverage_ratio',
+        'building_ev_departure_audit_target_unknown_count',
         'building_electrical_service_phase_violations_energy_total_kwh',
         'building_electrical_service_phase_requested_pressure_energy_total_kwh',
 
@@ -142,7 +172,7 @@ class CityLearnKPIService:
 
     @staticmethod
     def _simulated_days(env: "CityLearnEnv") -> float:
-        steps = max(int(getattr(env, 'time_step', 0)), 1)
+        steps = max(int(env.time_step), 0) if hasattr(env, 'time_step') else 1
         step_seconds = max(float(getattr(env, 'seconds_per_time_step', 0) or 0), 1.0)
         return (steps * step_seconds) / (24.0 * 3600.0)
 
@@ -556,22 +586,68 @@ class CityLearnKPIService:
         states: np.ndarray,
         departure_index: int,
         threshold_soc: float,
-    ) -> bool:
+        *,
+        audit_arrival_soc: Optional[float] = None,
+        audit_interval_start: Optional[int] = None,
+        audit: bool = False,
+    ) -> Optional[bool]:
         """Return whether a departure threshold was reachable with max charging.
 
         Missing charger/battery/arrival data is treated as feasible to preserve
         existing KPI semantics for legacy datasets that cannot support this audit.
+        The additive departure audit validates its inputs first, supplies an
+        observed connection boundary, and treats non-finite replay as unknown.
         """
 
-        threshold_soc = self._normalize_soc_target(threshold_soc)
+        return self._ev_departure_thresholds_feasible(
+            building, charger, sim, ev, states, departure_index, (threshold_soc,),
+            audit_arrival_soc=audit_arrival_soc,
+            audit_interval_start=audit_interval_start, audit=audit,
+        )[0]
 
-        if threshold_soc is None or threshold_soc <= 0.0:
-            return True
+    def _ev_departure_thresholds_feasible(
+        self, building, charger, sim, ev, states, departure_index, thresholds,
+        *, audit_arrival_soc=None, audit_interval_start=None, audit=False,
+    ):
+        """Compare thresholds against one isolated maximum-charge replay.
 
+        This batch belongs to one departure/context only. Legacy and audited
+        callers use separate batches, even if their boundaries happen to match.
+        No battery values or replay buffers are retained between batches.
+        """
+        thresholds = tuple(self._normalize_soc_target(value) for value in thresholds)
+        if not thresholds:
+            return ()
+        if not audit and all(value is None or value <= 0.0 for value in thresholds):
+            return (True,) * len(thresholds)
+        soc = self._ev_departure_max_charge_soc(
+            building, charger, sim, ev, states, departure_index,
+            audit_arrival_soc=audit_arrival_soc,
+            audit_interval_start=audit_interval_start, audit=audit,
+        )
+        results = []
+        for threshold in thresholds:
+            if (not audit and (threshold is None or threshold <= 0.0)) or soc is None:
+                results.append(True)
+            elif audit and not np.isfinite(soc):
+                results.append(None)
+            else:
+                results.append(bool(soc + self.EV_DEPARTURE_EPS >= threshold))
+        return tuple(results)
+
+    def _ev_departure_max_charge_soc(
+        self, building, charger, sim, ev, states, departure_index,
+        *, audit_arrival_soc=None, audit_interval_start=None, audit=False,
+    ):
+        """Departure SOC after the unchanged full maximum-charge trajectory.
+
+        None preserves the legacy permissive result for insufficient inputs;
+        a non-finite replay SOC remains unknown for the additive audit.
+        """
         battery = getattr(ev, 'battery', None)
 
         if battery is None:
-            return True
+            return None
 
         capacity_kwh = self._to_scalar(getattr(battery, 'capacity', np.nan), np.nan)
         charger_power_kw = self._to_scalar(getattr(charger, 'max_charging_power', np.nan), np.nan)
@@ -582,16 +658,15 @@ class CityLearnKPIService:
             or not np.isfinite(charger_power_kw)
             or charger_power_kw < 0.0
         ):
-            return True
+            return None
 
-        interval_start = self._ev_connected_interval_start(sim, states, departure_index)
-        arrival_soc = self._ev_arrival_soc_for_interval(sim, ev, states, interval_start)
+        interval_start = (audit_interval_start if audit else
+                          self._ev_connected_interval_start(sim, states, departure_index))
+        arrival_soc = (audit_arrival_soc if audit else
+                       self._ev_arrival_soc_for_interval(sim, ev, states, interval_start))
 
         if arrival_soc is None:
-            return True
-
-        if arrival_soc + self.EV_DEPARTURE_EPS >= threshold_soc:
-            return True
+            return None
 
         seconds_per_time_step = self._to_scalar(
             getattr(
@@ -603,44 +678,54 @@ class CityLearnKPIService:
         )
         step_hours = max(seconds_per_time_step / 3600.0, 0.0)
 
-        if step_hours <= 0.0:
-            return True
+        if not np.isfinite(step_hours) or step_hours <= 0.0:
+            return None
 
         soc = float(arrival_soc)
         connected_steps = max(int(departure_index) - int(interval_start) + 1, 0)
 
+        # Replay the concrete battery implementation in compact, isolated buffers.
+        # No real state, RNG, degradation history or episode tracker is advanced.
+        replay = None
+        if isinstance(battery, Battery):
+            replay = copy(battery)
+            replay.episode_tracker = SimpleNamespace(episode_time_steps=max(connected_steps, 1))
+            replay.reset()
+            capacities = getattr(battery, 'capacity_before_step', [])
+            capacity = self._safe_sequence_value(capacities, interval_start)
+            if capacity is not None and np.isfinite(capacity):
+                replay._capacity_history = array('d', [float(capacity)])
+            replay.force_set_soc(arrival_soc)
+
         for offset in range(connected_steps):
-            if soc + self.EV_DEPARTURE_EPS >= threshold_soc:
-                return True
-
             step = int(interval_start) + offset
-            battery_limited_power_kw = self._ev_battery_max_input_power_kw(battery, charger_power_kw, soc)
+            # Service limits apply at the AC charger inlet; battery limits apply
+            # downstream of charger losses, inside Battery.charge().
             power_kw = self._ev_constraint_limited_charge_power_kw(
-                building,
-                charger,
-                step,
-                battery_limited_power_kw,
+                building, charger, step, charger_power_kw,
             )
-
-            if power_kw <= self.EV_DEPARTURE_EPS:
-                break
-
+            if audit and self._ev_power_outage_at_step(building, step):
+                power_kw = 0.0
             charger_efficiency = self._ev_charger_charge_efficiency(charger, power_kw, charger_power_kw)
-            battery_round_trip_efficiency = self._ev_battery_charge_round_trip_efficiency(battery, power_kw)
-            delta_soc = (
-                power_kw
-                * step_hours
-                * charger_efficiency
-                * battery_round_trip_efficiency
-                / capacity_kwh
-            )
+            if replay is not None:
+                if offset:
+                    replay.next_time_step()
+                ratio = replay.time_step_ratio or 1.0
+                replay.charge(power_kw * step_hours * charger_efficiency / ratio)
+                soc = float(replay.soc[offset])
+            else:
+                # Compatibility for legacy battery adapters without a physical
+                # charge method; never used for native Battery/InventoryBattery.
+                if offset:
+                    soc *= 1.0 - float(getattr(battery, 'loss_coefficient', 0.0))
+                battery_power = self._ev_battery_max_input_power_kw(
+                    battery, power_kw * charger_efficiency, soc,
+                )
+                eta = self._ev_battery_charge_round_trip_efficiency(battery, battery_power)
+                soc = float(np.clip(soc + battery_power * step_hours * eta / capacity_kwh,
+                                    0.0, getattr(battery, 'max_soc', 1.0)))
 
-            if delta_soc <= self.EV_DEPARTURE_EPS:
-                break
-
-            soc = float(np.clip(soc + delta_soc, 0.0, 1.0))
-
-        return bool(soc + self.EV_DEPARTURE_EPS >= threshold_soc)
+        return soc
 
     def _ev_departure_within_tolerance(self) -> float:
         return max(
@@ -859,8 +944,10 @@ class CityLearnKPIService:
         t_final = upper if t_final is None else int(min(max(t_final, 0), upper))
         within_tolerance = self._ev_departure_within_tolerance()
         service_tolerance = self._ev_departure_service_tolerance()
+        audit_counts = ev_departure_audit.empty_counts()
         if t_final < t_start:
             return {
+                '_departure_audit': audit_counts,
                 'departures_total': 0.0,
                 'departures_met': 0.0,
                 'departures_min_acceptable': 0.0,
@@ -919,8 +1006,10 @@ class CityLearnKPIService:
 
         for charger in self._chargers_for_metrics(building):
             consumption = np.array(charger.electricity_consumption[t_start:t_final + 1], dtype='float64')
-            charge_total_kwh += self._sum_finite(np.clip(consumption, 0.0, None))
-            v2g_export_total_kwh += self._sum_finite(np.clip(-consumption, 0.0, None))
+            charge = getattr(charger, 'gross_energy_charge', None)
+            discharge = getattr(charger, 'gross_energy_discharge', None)
+            charge_total_kwh += self._sum_finite(charge[t_start:t_final + 1] if charge is not None else np.clip(consumption, 0.0, None))
+            v2g_export_total_kwh += self._sum_finite(discharge[t_start:t_final + 1] if discharge is not None else np.clip(-consumption, 0.0, None))
 
             sim = charger.charger_simulation
             states = np.array(sim.electric_vehicle_charger_state, dtype='float64')
@@ -928,8 +1017,6 @@ class CityLearnKPIService:
             history_limit = min(
                 t_final,
                 len(states) - 1,
-                len(required_soc) - 1,
-                len(charger.past_connected_evs) - 1,
             )
 
             if history_limit < t_start:
@@ -969,7 +1056,8 @@ class CityLearnKPIService:
                 terminal_departure = (
                     t == len(states) - 1
                     and np.isfinite(departure_countdown)
-                    and departure_countdown <= 1.0 + self.EV_DEPARTURE_EPS
+                    # -1 is the schedule's unknown-departure sentinel.
+                    and 0.0 <= departure_countdown <= 1.0 + self.EV_DEPARTURE_EPS
                 )
                 departure_transition = t + 1 < len(states) and (
                     next_state != 1
@@ -993,7 +1081,7 @@ class CityLearnKPIService:
                         # ``countdown <= 1`` check also counts ordinary
                         # departures one interval early, so require the next
                         # session's countdown to increase explicitly.
-                        and departure_countdown <= 1.0 + self.EV_DEPARTURE_EPS
+                        and 0.0 <= departure_countdown <= 1.0 + self.EV_DEPARTURE_EPS
                         and np.isfinite(next_departure_countdown)
                         and next_departure_countdown
                         > departure_countdown + self.EV_DEPARTURE_EPS
@@ -1003,15 +1091,18 @@ class CityLearnKPIService:
                 if current_state != 1 or not (departure_transition or terminal_departure):
                     continue
 
-                ev = charger.past_connected_evs[t]
-                if ev is None:
+                ev = self._safe_sequence_value(charger.past_connected_evs, t)
+                target_soc = self._normalize_soc_target(self._safe_sequence_value(required_soc, t))
+                ev_departure_audit.record_departure(
+                    self, audit_counts, building, charger, sim, ev, states, t, target_soc)
+                if ev is None or getattr(ev, 'battery', None) is None:
                     continue
 
-                target_soc = self._normalize_soc_target(required_soc[t])
                 if target_soc is None:
                     continue
 
-                if t >= len(ev.battery.soc):
+                battery_soc = getattr(ev.battery, 'soc', [])
+                if t >= len(battery_soc):
                     continue
 
                 actual_soc = self._to_scalar(ev.battery.soc[t], np.nan)
@@ -1046,32 +1137,11 @@ class CityLearnKPIService:
                 shortfall_beyond_tolerance = max(target_soc - service_tolerance - actual_soc, 0.0)
                 min_acceptable_threshold = max(target_soc - service_tolerance, 0.0)
                 within_tolerance_threshold = max(target_soc - within_tolerance, 0.0)
-                target_feasible = self._ev_departure_threshold_feasible(
-                    building,
-                    charger,
-                    sim,
-                    ev,
-                    states,
-                    t,
-                    target_soc,
-                )
-                min_acceptable_feasible = self._ev_departure_threshold_feasible(
-                    building,
-                    charger,
-                    sim,
-                    ev,
-                    states,
-                    t,
-                    min_acceptable_threshold,
-                )
-                within_tolerance_feasible = self._ev_departure_threshold_feasible(
-                    building,
-                    charger,
-                    sim,
-                    ev,
-                    states,
-                    t,
-                    within_tolerance_threshold,
+                target_feasible, min_acceptable_feasible, within_tolerance_feasible = (
+                    self._ev_departure_thresholds_feasible(
+                        building, charger, sim, ev, states, t,
+                        (target_soc, min_acceptable_threshold, within_tolerance_threshold),
+                    )
                 )
 
                 if absolute_error <= within_tolerance + eps:
@@ -1124,6 +1194,7 @@ class CityLearnKPIService:
         absolute_error_mean = None if departures_total == 0 else departure_absolute_error_sum / departures_total
 
         return {
+            '_departure_audit': audit_counts,
             'departures_total': float(departures_total),
             'departures_met': float(departures_met),
             'departures_min_acceptable': float(departures_min_acceptable),
@@ -1174,6 +1245,9 @@ class CityLearnKPIService:
 
         return list(building.electric_vehicle_chargers or [])
 
+    def deferrable_service_audit(self):
+        return deferrable_service_audit.environment_audit(self)
+
     def _deferrable_appliances_for_metrics(self, building) -> Sequence:
         topology_service = getattr(self.env, '_topology_service', None)
         if (
@@ -1202,101 +1276,10 @@ class CityLearnKPIService:
         return [] if storage is None else [storage]
 
     def _compute_bess_metrics(self, building, *, t_start: int = 0, t_final: Optional[int] = None) -> Dict[str, float]:
-        upper = int(max(building.time_step, 0))
-        t_start = int(max(t_start, 0))
-        t_final = upper if t_final is None else int(min(max(t_final, 0), upper))
-        if t_final < t_start:
-            capacity = self._to_scalar(getattr(getattr(building, 'electrical_storage', None), 'capacity', 0.0), 0.0)
-            return {
-                'bess_charge_total_kwh': 0.0,
-                'bess_discharge_total_kwh': 0.0,
-                'bess_throughput_total_kwh': 0.0,
-                'bess_equivalent_full_cycles': None,
-                'bess_capacity_fade_ratio': None,
-                '_bess_capacity_kwh': capacity,
-                '_bess_degraded_capacity_kwh': capacity,
-            }
-
-        storages = [
-            storage for storage in self._storages_for_metrics(building)
-            if self._to_scalar(getattr(storage, 'capacity', 0.0), 0.0) > 0.0
-        ]
-        storage_series = []
-        for storage in storages:
-            values = getattr(storage, 'electricity_consumption', None)
-            if values is None and len(storages) == 1:
-                # Compatibility for legacy/custom building facades that expose
-                # only the aggregate storage series on the building.
-                values = getattr(
-                    building,
-                    'electrical_storage_electricity_consumption',
-                    [],
-                )
-            storage_series.append(
-                np.array(values[t_start:t_final + 1], dtype='float64')
-            )
-        charge_total = sum(
-            self._sum_finite(np.clip(values, 0.0, None))
-            for values in storage_series
-        )
-        discharge_total = sum(
-            self._sum_finite(np.clip(-values, 0.0, None))
-            for values in storage_series
-        )
-        throughput_total = charge_total + discharge_total
-
-        capacity = sum(
-            self._to_scalar(getattr(storage, 'capacity', 0.0), 0.0)
-            for storage in storages
-        )
-        degraded_capacity = sum(
-            self._to_scalar(
-                getattr(storage, 'degraded_capacity', getattr(storage, 'capacity', 0.0)),
-                self._to_scalar(getattr(storage, 'capacity', 0.0), 0.0),
-            )
-            for storage in storages
-        )
-        equivalent_cycles = None if capacity <= 0.0 else throughput_total / (2.0 * capacity)
-        fade_ratio = None if capacity <= 0.0 else (capacity - degraded_capacity) / capacity
-
-        if fade_ratio is not None:
-            fade_ratio = float(np.clip(fade_ratio, 0.0, 1.0))
-
-        return {
-            'bess_charge_total_kwh': charge_total,
-            'bess_discharge_total_kwh': discharge_total,
-            'bess_throughput_total_kwh': throughput_total,
-            'bess_equivalent_full_cycles': equivalent_cycles,
-            'bess_capacity_fade_ratio': fade_ratio,
-            '_bess_capacity_kwh': capacity,
-            '_bess_degraded_capacity_kwh': degraded_capacity,
-        }
+        return kpi_equipment.compute_bess_metrics(self, building, t_start=t_start, t_final=t_final)
 
     def _compute_pv_metrics(self, building, *, t_start: int = 0, t_final: Optional[int] = None) -> Dict[str, float]:
-        upper = int(max(building.time_step, 0))
-        t_start = int(max(t_start, 0))
-        t_final = upper if t_final is None else int(min(max(t_final, 0), upper))
-        if t_final < t_start:
-            return {
-                'pv_generation_total_kwh': 0.0,
-                'pv_export_total_kwh': 0.0,
-                'pv_self_consumption_ratio': None,
-            }
-
-        solar = np.array(building.solar_generation[t_start:t_final + 1], dtype='float64')
-        net = np.array(building.net_electricity_consumption[t_start:t_final + 1], dtype='float64')
-
-        generation = np.clip(-solar, 0.0, None)
-        export = np.clip(-net, 0.0, None)
-        pv_generation_total = self._sum_finite(generation)
-        pv_export_total = self._sum_finite(np.minimum(generation, export))
-        self_consumption_ratio = None if pv_generation_total <= 0.0 else (pv_generation_total - pv_export_total) / pv_generation_total
-
-        return {
-            'pv_generation_total_kwh': pv_generation_total,
-            'pv_export_total_kwh': pv_export_total,
-            'pv_self_consumption_ratio': self_consumption_ratio,
-        }
+        return kpi_equipment.compute_pv_metrics(self, building, t_start=t_start, t_final=t_final)
 
     def _compute_district_pv_metrics(
         self,
@@ -1305,177 +1288,15 @@ class CityLearnKPIService:
         *,
         final_t: int,
     ) -> Dict[str, float]:
-        series_by_building = []
-        for building in buildings:
-            t_start, t_end = building_windows.get(building.name, (0, -1))
-            if t_end < t_start:
-                continue
-
-            series_by_building.append(
-                (
-                    building.name,
-                    int(t_start),
-                    int(t_end),
-                    np.array(building.solar_generation, dtype='float64'),
-                    np.array(building.net_electricity_consumption, dtype='float64'),
-                )
-            )
-
-        pv_generation_total = 0.0
-        pv_export_total = 0.0
-
-        for t in range(int(max(final_t, 0)) + 1):
-            generation_t = 0.0
-            district_net_t = 0.0
-
-            for _, t_start, t_end, solar, net in series_by_building:
-                if not (t_start <= t <= t_end):
-                    continue
-
-                solar_value = self._to_scalar(solar[t] if t < len(solar) else np.nan, 0.0)
-                net_value = self._to_scalar(net[t] if t < len(net) else np.nan, 0.0)
-                generation_t += max(-solar_value, 0.0)
-                district_net_t += net_value
-
-            pv_generation_total += generation_t
-            pv_export_total += min(generation_t, max(-district_net_t, 0.0))
-
-        self_consumption_ratio = None if pv_generation_total <= 0.0 else (pv_generation_total - pv_export_total) / pv_generation_total
-
-        return {
-            'pv_generation_total_kwh': float(pv_generation_total),
-            'pv_export_total_kwh': float(pv_export_total),
-            'pv_self_consumption_ratio': self_consumption_ratio,
-        }
+        return kpi_equipment.compute_district_pv_metrics(self, buildings, building_windows, final_t=final_t)
 
     def _compute_phase_metrics(self, building, *, t_start: int = 0, t_final: Optional[int] = None) -> Dict[str, object]:
-        if not getattr(building, '_electrical_service_enabled', False):
-            return {
-                'electrical_service_violation_total_kwh': 0.0,
-                'electrical_service_violation_time_step_count': 0.0,
-                'electrical_service_requested_pressure_total_kwh': 0.0,
-                'electrical_service_requested_pressure_time_step_count': 0.0,
-                'phase_imbalance_ratio_average': None,
-                'phase_import_peak_kw': {},
-                'phase_export_peak_kw': {},
-                '_imbalance_sum': 0.0,
-                '_imbalance_count': 0.0,
-            }
-
-        upper = int(max(building.time_step, 0))
-        t_start = int(max(t_start, 0))
-        t_final = upper if t_final is None else int(min(max(t_final, 0), upper))
-        if t_final < t_start:
-            return {
-                'electrical_service_violation_total_kwh': 0.0,
-                'electrical_service_violation_time_step_count': 0.0,
-                'electrical_service_requested_pressure_total_kwh': 0.0,
-                'electrical_service_requested_pressure_time_step_count': 0.0,
-                'phase_imbalance_ratio_average': None,
-                'phase_import_peak_kw': {},
-                'phase_export_peak_kw': {},
-                '_imbalance_sum': 0.0,
-                '_imbalance_count': 0.0,
-            }
-
-        # The constraint penalty records requested-action pressure before
-        # projection. It is useful controller feedback, but it is not evidence
-        # that post-projection power still violates the declared service limits.
-        pressure_history = np.array(
-            getattr(building, '_charging_constraint_violation_history', [0.0]),
-            dtype='float64',
-        )[t_start:t_final + 1]
-        requested_pressure_total = float(np.clip(pressure_history, 0.0, None).sum())
-        requested_pressure_count = float(np.count_nonzero(pressure_history > 1e-9))
-
-        all_total_history = np.array(
-            getattr(building, '_charging_total_power_history_kw', [0.0]),
-            dtype='float64',
-        )
-        total_history = all_total_history[t_start:t_final + 1]
-        phase_history = getattr(building, '_charging_phase_power_history_kw', {}) or {}
-        total_limits = getattr(building, '_electrical_service_limits', {}).get('total', {}) or {}
-        per_phase_limits = getattr(building, '_electrical_service_limits', {}).get('per_phase', {}) or {}
-        step_hours = max(
-            self._to_scalar(getattr(building, 'seconds_per_time_step', 3600.0), 3600.0) / 3600.0,
-            0.0,
-        )
-        residual_violation_kw = np.zeros(len(total_history), dtype='float64')
-
-        def accumulate_limit(values: np.ndarray, limits: Mapping[str, float]) -> None:
-            import_limit = self._to_scalar(limits.get('import_kw'), np.nan)
-            export_limit = self._to_scalar(limits.get('export_kw'), np.nan)
-            if np.isfinite(import_limit):
-                excess = np.clip(values - import_limit, 0.0, None)
-                excess[excess <= self.ELECTRICAL_RESIDUAL_EPS_KW] = 0.0
-                residual_violation_kw[:] += excess
-            if np.isfinite(export_limit):
-                excess = np.clip(-values - export_limit, 0.0, None)
-                excess[excess <= self.ELECTRICAL_RESIDUAL_EPS_KW] = 0.0
-                residual_violation_kw[:] += excess
-
-        accumulate_limit(total_history, total_limits)
-        for phase_name in self._electrical_service_phase_names(building):
-            full_values = np.array(
-                phase_history.get(phase_name, np.zeros(len(all_total_history))),
-                dtype='float64',
-            )
-            values = full_values[t_start:t_final + 1]
-            if len(values) != len(residual_violation_kw):
-                aligned = np.zeros(len(residual_violation_kw), dtype='float64')
-                count = min(len(values), len(aligned))
-                aligned[:count] = values[:count]
-                values = aligned
-            accumulate_limit(values, per_phase_limits.get(phase_name, {}) or {})
-
-        violation_history = residual_violation_kw * step_hours
-        violation_total = float(np.clip(violation_history, 0.0, None).sum())
-        violation_count = float(np.count_nonzero(violation_history > 1e-9))
-
-        phase_history = getattr(building, '_charging_phase_power_history_kw', {}) or {}
-        phase_import_peak = {}
-        phase_export_peak = {}
-
-        for phase_name, values in phase_history.items():
-            series = np.array(values[t_start:t_final + 1], dtype='float64')
-            phase_import_peak[phase_name] = float(np.clip(series, 0.0, None).max(initial=0.0))
-            phase_export_peak[phase_name] = float(np.clip(-series, 0.0, None).max(initial=0.0))
-
-        imbalance_sum = 0.0
-        imbalance_count = 0.0
-        imbalance_average = None
-
-        if getattr(building, '_electrical_service_mode', 'single_phase') == 'three_phase':
-            names = [n for n in ['L1', 'L2', 'L3'] if n in phase_history]
-            if len(names) == 3:
-                stacked = np.stack([np.array(phase_history[n][t_start:t_final + 1], dtype='float64') for n in names], axis=1)
-                for row in stacked:
-                    abs_row = np.abs(row)
-                    mean_abs = float(abs_row.mean())
-                    if mean_abs <= 1e-9:
-                        ratio = 0.0
-                    else:
-                        ratio = float((abs_row.max() - abs_row.min()) / mean_abs)
-                    imbalance_sum += ratio
-                    imbalance_count += 1.0
-
-                if imbalance_count > 0:
-                    imbalance_average = imbalance_sum / imbalance_count
-
-        return {
-            'electrical_service_violation_total_kwh': violation_total,
-            'electrical_service_violation_time_step_count': violation_count,
-            'electrical_service_requested_pressure_total_kwh': requested_pressure_total,
-            'electrical_service_requested_pressure_time_step_count': requested_pressure_count,
-            'phase_imbalance_ratio_average': imbalance_average,
-            'phase_import_peak_kw': phase_import_peak,
-            'phase_export_peak_kw': phase_export_peak,
-            '_imbalance_sum': imbalance_sum,
-            '_imbalance_count': imbalance_count,
-        }
+        return kpi_equipment.compute_phase_metrics(self, building, t_start=t_start, t_final=t_final)
 
     def _collect_market_totals(self, building_names: List[str]) -> Tuple[Mapping[str, Mapping[str, float]], Mapping[str, float]]:
         history = getattr(self.env, '_community_market_settlement_history', []) or []
+        if isinstance(history, MarketSettlementHistory):
+            return history.market_totals(building_names)
         by_building = {
             name: {
                 'community_local_import_total_kwh': 0.0,
@@ -1594,7 +1415,9 @@ class CityLearnKPIService:
         if topology_service is None:
             return list(env.buildings)
 
-        lifecycle = getattr(env, 'topology_member_lifecycle', {}) or {}
+        population = current_population(self)
+        lifecycle = (population.lifecycle if population is not None
+                     else getattr(env, 'topology_member_lifecycle', {})) or {}
         pool = dict(getattr(topology_service, 'member_pool', {}) or {})
         if len(pool) == 0:
             return list(env.buildings)
@@ -1616,7 +1439,9 @@ class CityLearnKPIService:
         if getattr(env, 'topology_mode', 'static') != 'dynamic':
             return 0, int(min(max(getattr(building, 'time_step', 0), 0), final_t))
 
-        lifecycle = getattr(env, 'topology_member_lifecycle', {}) or {}
+        population = current_population(self)
+        lifecycle = (population.lifecycle if population is not None
+                     else getattr(env, 'topology_member_lifecycle', {})) or {}
         state = lifecycle.get(getattr(building, 'name', ''), {}) or {}
 
         born_at = state.get('born_at', 0)
@@ -1631,6 +1456,82 @@ class CityLearnKPIService:
             end = min(final_t, int(removed_at) - 1)
 
         return start, end
+
+    def _thermal_values(self, building, values, t_start=0, t_final=None):
+        """Select completed active samples without inserting fictitious zero temperatures."""
+        array = np.asarray(values, dtype=float)
+        upper = min(len(array), int(getattr(self.env, 'time_step', len(array))))
+        end = upper if t_final is None else min(upper, int(t_final)+1)
+        indices = np.arange(max(0, int(t_start)), end)
+        if getattr(self.env, 'topology_mode', 'static') == 'dynamic':
+            population = current_population(self)
+            if population is None:
+                history = self.env._topology_service
+                indices = np.array([i for i in indices if building.name in history.active_member_ids_at(int(i))], dtype=int)
+            else:
+                indices = indices[population.mask(building.name, upper)[indices]]
+        return array[indices]
+
+    def _service_energy(self, building, t_start=0, t_final=None):
+        """Demand/device histories use dataset energy; tank balances already use control kWh."""
+        take = lambda name: self._thermal_values(building, getattr(building, name), t_start, t_final)
+        scale = float(getattr(building, 'time_step_ratio', 1.) or 1.)
+        expected = np.array([take(name)*scale for name in ('cooling_demand','heating_demand','dhw_demand','non_shiftable_load')]).T
+        served = np.array([take('energy_from_cooling_device')*scale+take('energy_from_cooling_storage'),
+                           take('energy_from_heating_device')*scale+take('energy_from_heating_storage'),
+                           take('energy_from_dhw_device')*scale+take('energy_from_dhw_storage'),
+                           take('energy_to_non_shiftable_load')*scale]).T
+        return expected, served
+
+    @population_scope
+    def family_audit(self, comfort_band=None, control_condition=None, baseline_condition=None, *, progress=None):
+        from citylearn.internal.kpi_family_audit import thermal_counts, thermal_metrics, pool_thermal, equity_metrics
+        from citylearn.citylearn import EvaluationCondition
+        from citylearn.building import DynamicsBuilding
+        rows, counts, costs, conditions = {}, [], [], {}
+        buildings = self._get_kpi_buildings()
+        for member_index, building in enumerate(buildings, 1):
+            with span(progress, 'thermal_service', member=building.name, member_index=member_index, member_count=len(buildings)):
+                take = lambda name: self._thermal_values(building, getattr(building, name))
+                expected, served = self._service_energy(building)
+                bands = take('comfort_band') if comfort_band is None else comfort_band
+                count = thermal_counts(take('indoor_dry_bulb_temperature'),take('indoor_dry_bulb_temperature_cooling_set_point'),
+                    take('indoor_dry_bulb_temperature_heating_set_point'),bands,take('occupant_count'),expected,served,
+                    take('power_outage_signal'),self.env.seconds_per_time_step/3600.)
+                counts.append(count); rows[building.name] = thermal_metrics(count)
+                dynamic = isinstance(building, DynamicsBuilding)
+                control = control_condition if control_condition is not None else (EvaluationCondition.WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV if dynamic else EvaluationCondition.WITH_STORAGE_AND_PV)
+                baseline = baseline_condition if baseline_condition is not None else (EvaluationCondition.WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV if dynamic else EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV)
+                conditions[building.name] = dict(control=getattr(control,'name',control.value), reference=getattr(baseline,'name',baseline.value))
+                costs.append((self._sum_finite(self._energy_values(building,getattr(building,'net_electricity_consumption_cost'+control.value))),
+                              self._sum_finite(self._energy_values(building,getattr(building,'net_electricity_consumption_cost'+baseline.value)))))
+        return dict(buildings=rows,district=thermal_metrics(pool_thermal(counts)),equity=equity_metrics(costs),equity_conditions=conditions)
+
+    def _building_days(self, building, t_start, t_final):
+        if not hasattr(self.env, 'time_step'):
+            return self._window_days(t_start, t_final, self.env.seconds_per_time_step)
+        count = self._energy_values(building, np.ones(max(int(t_final)+1, 0)))
+        active_steps = float(count[max(int(t_start), 0):].sum())
+        return active_steps*self.env.seconds_per_time_step/86400.
+
+    def _energy_values(self, building, values):
+        """Energy belongs to executed active intervals, not the terminal observation."""
+        array = np.asarray(values, dtype='float64')[:int(getattr(self.env, 'time_step', len(values)))].copy()
+        if building is self.env or getattr(self.env, 'topology_mode', 'static') != 'dynamic':
+            return array
+        population = current_population(self)
+        if population is not None:
+            array[~population.mask(building.name, len(array), energy=True)] = 0.0
+            return array
+        history = self.env._topology_service._active_member_history
+        steps = sorted(history)
+        mask = np.zeros(len(array), dtype=bool)
+        for i, start in enumerate(steps):
+            end = steps[i + 1] if i + 1 < len(steps) else len(array)
+            if building.name in history[start]:
+                mask[start:min(end, len(array))] = True
+        array[~mask] = 0.0
+        return array
 
     @staticmethod
     def _slice_window(values, t_start: int, t_final: int) -> np.ndarray:
@@ -1687,7 +1588,7 @@ class CityLearnKPIService:
                 continue
 
             net_series_by_name[building.name] = np.asarray(
-                getattr(building, f'net_electricity_consumption{condition.value}'),
+                self._energy_values(building, getattr(building, f'net_electricity_consumption{condition.value}')),
                 dtype='float64',
             )
             price_series_by_name[building.name] = np.asarray(
@@ -1695,7 +1596,7 @@ class CityLearnKPIService:
                 dtype='float64',
             )
 
-        for t in range(final_t + 1):
+        for t in range(min(final_t + 1, int(env.time_step))):
             net_values = []
             active_buildings_t = []
             active_weights_t = []
@@ -1703,6 +1604,12 @@ class CityLearnKPIService:
                 t_start, t_end = windows.get(building.name, (0, -1))
                 if not (t_start <= t <= t_end):
                     continue
+                if getattr(env, 'topology_mode', 'static') == 'dynamic':
+                    population = current_population(self)
+                    active = (building.name in env._topology_service.active_member_ids_at(t)
+                              if population is None else population.mask(building.name, final_t)[t])
+                    if not active:
+                        continue
 
                 net_series = net_series_by_name.get(building.name)
                 if net_series is None:
@@ -1720,7 +1627,7 @@ class CityLearnKPIService:
             exports = np.clip(-net_values, 0.0, None)
             total_import = float(imports.sum())
             total_export = float(exports.sum())
-            traded_kwh = min(total_import, total_export)
+            traded_kwh = min(total_import, total_export) if getattr(env, 'community_market_local_enabled', True) else 0.0
 
             if total_import > 0.0 and traded_kwh > 0.0:
                 local_import = self._allocate_weighted_share_import(
@@ -1742,19 +1649,23 @@ class CityLearnKPIService:
                     price_series[t] if price_series is not None and t < len(price_series) else np.nan,
                     0.0,
                 )
-                local_price = ratio * grid_import_price
+                from citylearn.community_dataset import settlement_prices
+                grid_export_price, local_buy_price, local_sell_price = settlement_prices(env, building.name, t, grid_import_price)
+                grid_export_remaining = max(exports[idx] - local_export[idx], 0.0)
                 grid_import_remaining = max(imports[idx] - local_import[idx], 0.0)
 
                 cost = (
                     grid_import_remaining * grid_import_price
-                    + local_import[idx] * local_price
-                    - local_export[idx] * local_price
+                    + local_import[idx] * local_buy_price
+                    - local_export[idx] * local_sell_price
+                    - grid_export_remaining * grid_export_price
                 )
                 totals[building.name] += float(cost)
 
         district_total = float(sum(totals.values()))
         return totals, district_total
 
+    @population_scope
     def evaluate(
         self,
         control_condition=None,
@@ -1763,762 +1674,51 @@ class CityLearnKPIService:
         *,
         evaluation_condition_cls,
         dynamics_building_cls,
+        progress=None,
     ) -> pd.DataFrame:
-        """Evaluate cost functions at current time step."""
+        """Assemble KPI families in the established legacy/extended row order."""
+        simulated_days = self._simulated_days(self.env)
+        buildings = self._get_kpi_buildings()
+        windows = {building.name: self._building_active_window(building) for building in buildings}
+        groups = {building.name: getattr(building, 'equity_group', None) for building in buildings}
+        benefits = {}
+        equipment = kpi_equipment.EquipmentKPIAccumulator(self)
+        legacy_frames, building_rows = [], []
 
-        env = self.env
-
-        get_net_electricity_consumption = lambda x, c: getattr(x, f'net_electricity_consumption{c.value}')
-        get_net_electricity_consumption_cost = lambda x, c: getattr(x, f'net_electricity_consumption_cost{c.value}')
-        get_net_electricity_consumption_emission = lambda x, c: getattr(x, f'net_electricity_consumption_emission{c.value}')
-
-        comfort_band = EnergySimulation.DEFUALT_COMFORT_BAND if comfort_band is None else comfort_band
-        daily_steps = self._window_steps(24.0 * 3600.0, env.seconds_per_time_step)
-        monthly_steps = self._window_steps(730.0 * 3600.0, env.seconds_per_time_step)
-        simulated_days = self._simulated_days(env)
-
-        legacy_building_frames: List[pd.DataFrame] = []
-        extended_building_rows: List[Dict[str, object]] = []
-
-        ev_departures_total = 0.0
-        ev_departures_met = 0.0
-        ev_departures_min_acceptable = 0.0
-        ev_departures_within_tolerance = 0.0
-        ev_departures_target_feasible = 0.0
-        ev_departures_target_infeasible = 0.0
-        ev_departures_min_acceptable_feasible = 0.0
-        ev_departures_min_acceptable_infeasible = 0.0
-        ev_departures_within_tolerance_feasible = 0.0
-        ev_departures_within_tolerance_infeasible = 0.0
-        ev_departures_met_target_feasible = 0.0
-        ev_departures_min_acceptable_feasible_met = 0.0
-        ev_departures_within_tolerance_feasible_met = 0.0
-        ev_deficit_sum = 0.0
-        ev_shortfall_beyond_tolerance_sum = 0.0
-        ev_surplus_sum = 0.0
-        ev_absolute_error_sum = 0.0
-        ev_charge_total = 0.0
-        ev_v2g_total = 0.0
-        ev_connected_soc_gain_total = 0.0
-        ev_energy_accounting_shortfall_total = 0.0
-
-        bess_charge_total = 0.0
-        bess_discharge_total = 0.0
-        bess_throughput_total = 0.0
-        bess_capacity_total = 0.0
-        bess_capacity_loss_total = 0.0
-
-        phase_violation_total = 0.0
-        phase_violation_count = 0.0
-        phase_requested_pressure_total = 0.0
-        phase_requested_pressure_count = 0.0
-        phase_imbalance_sum = 0.0
-        phase_imbalance_count = 0.0
-
-        kpi_buildings = self._get_kpi_buildings()
-        building_windows = {building.name: self._building_active_window(building) for building in kpi_buildings}
-        building_names = [building.name for building in kpi_buildings]
-        equity_group_by_building = {building.name: getattr(building, 'equity_group', None) for building in kpi_buildings}
-        equity_relative_benefit_by_building: Dict[str, Optional[float]] = {}
-        equity_valid_benefits: Dict[str, float] = {}
-
-        for building in kpi_buildings:
-            t_start, t_end = building_windows.get(building.name, (0, -1))
+        for member_index, building in enumerate(buildings, 1):
+            t_start, t_end = windows.get(building.name, (0, -1))
             if t_end < t_start:
                 continue
-            building_days = self._window_days(t_start, t_end, env.seconds_per_time_step)
-
-            if isinstance(building, dynamics_building_cls):
-                building_control_condition = (
-                    evaluation_condition_cls.WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV
-                    if control_condition is None else control_condition
+            with span(progress, 'member', member=building.name, member_index=member_index, member_count=len(buildings)):
+                legacy, rows, benefit = run(progress, 'energy_and_service', kpi_energy.building_records,
+                    self, building, t_start, t_end, control_condition, baseline_condition,
+                    comfort_band, evaluation_condition_cls, dynamics_building_cls,
                 )
-                building_baseline_condition = (
-                    evaluation_condition_cls.WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV
-                    if baseline_condition is None else baseline_condition
-                )
-            else:
-                building_control_condition = (
-                    evaluation_condition_cls.WITH_STORAGE_AND_PV
-                    if control_condition is None else control_condition
-                )
-                building_baseline_condition = (
-                    evaluation_condition_cls.WITHOUT_STORAGE_BUT_WITH_PV
-                    if baseline_condition is None else baseline_condition
-                )
+                legacy_frames.append(legacy)
+                building_rows.extend(rows)
+                if benefit is not None:
+                    benefits[building.name] = float(benefit)
+                building_rows.extend(equipment.building_records(building, t_start, t_end, progress=progress))
 
-            indoor = self._slice_window(building.indoor_dry_bulb_temperature, t_start, t_end)
-            cooling_setpoint = self._slice_window(building.indoor_dry_bulb_temperature_cooling_set_point, t_start, t_end)
-            heating_setpoint = self._slice_window(building.indoor_dry_bulb_temperature_heating_set_point, t_start, t_end)
-            occupants = self._slice_window(building.occupant_count, t_start, t_end)
-            discomfort_kwargs = {
-                'indoor_dry_bulb_temperature': indoor,
-                'dry_bulb_temperature_cooling_set_point': cooling_setpoint,
-                'dry_bulb_temperature_heating_set_point': heating_setpoint,
-                'band': building.comfort_band if comfort_band is None else comfort_band,
-                'occupant_count': occupants,
-            }
-            unmet, cold, hot, \
-                cold_minimum_delta, cold_maximum_delta, cold_average_delta, \
-                hot_minimum_delta, hot_maximum_delta, hot_average_delta = CostFunction.discomfort(**discomfort_kwargs)
-
-            expected_energy = (
-                self._slice_window(building.cooling_demand, t_start, t_end)
-                + self._slice_window(building.heating_demand, t_start, t_end)
-                + self._slice_window(building.dhw_demand, t_start, t_end)
-                + self._slice_window(building.non_shiftable_load, t_start, t_end)
-            )
-            served_energy = (
-                self._slice_window(building.energy_from_cooling_device, t_start, t_end)
-                + self._slice_window(building.energy_from_cooling_storage, t_start, t_end)
-                + self._slice_window(building.energy_from_heating_device, t_start, t_end)
-                + self._slice_window(building.energy_from_heating_storage, t_start, t_end)
-                + self._slice_window(building.energy_from_dhw_device, t_start, t_end)
-                + self._slice_window(building.energy_from_dhw_storage, t_start, t_end)
-                + self._slice_window(building.energy_to_non_shiftable_load, t_start, t_end)
-            )
-
-            net_c_series = self._slice_window(
-                getattr(building, f'net_electricity_consumption{building_control_condition.value}'),
-                t_start,
-                t_end,
-            )
-            net_b_series = self._slice_window(
-                getattr(building, f'net_electricity_consumption{building_baseline_condition.value}'),
-                t_start,
-                t_end,
-            )
-            ec_c = self._positive_total(net_c_series)
-            ec_b = self._positive_total(net_b_series)
-            export_c = self._sum_finite(np.clip(-net_c_series, 0.0, None))
-            export_b = self._sum_finite(np.clip(-net_b_series, 0.0, None))
-            zne_c = self._net_total(net_c_series)
-            zne_b = self._net_total(net_b_series)
-            ce_c_series = self._slice_window(
-                getattr(building, f'net_electricity_consumption_emission{building_control_condition.value}'),
-                t_start,
-                t_end,
-            )
-            ce_b_series = self._slice_window(
-                getattr(building, f'net_electricity_consumption_emission{building_baseline_condition.value}'),
-                t_start,
-                t_end,
-            )
-            ce_c = self._positive_total(ce_c_series)
-            ce_b = (
-                self._positive_total(ce_b_series)
-                if np.sum(self._slice_window(building.carbon_intensity.carbon_intensity, t_start, t_end)) != 0
-                else 0.0
-            )
-            control_cost_series = self._slice_window(
-                getattr(building, f'net_electricity_consumption_cost{building_control_condition.value}'),
-                t_start,
-                t_end,
-            )
-            baseline_cost_series = self._slice_window(
-                getattr(building, f'net_electricity_consumption_cost{building_baseline_condition.value}'),
-                t_start,
-                t_end,
-            )
-            cost_c_legacy = self._positive_total(control_cost_series)
-            cost_b_legacy = self._positive_total(baseline_cost_series)
-            cost_c_raw = self._sum_finite(control_cost_series)
-            cost_b_raw = self._sum_finite(baseline_cost_series)
-            equity_benefit = self._equity_relative_benefit_percent(cost_c_raw, cost_b_raw)
-            equity_relative_benefit_by_building[building.name] = equity_benefit
-
-            if equity_benefit is not None:
-                equity_valid_benefits[building.name] = float(equity_benefit)
-
-            legacy_building_frame = pd.DataFrame([{
-                'cost_function': 'electricity_consumption_total',
-                'value': self._safe_div(ec_c, ec_b),
-            }, {
-                'cost_function': 'zero_net_energy',
-                'value': self._safe_div(zne_c, zne_b),
-            }, {
-                'cost_function': 'carbon_emissions_total',
-                'value': self._safe_div(ce_c, ce_b),
-            }, {
-                'cost_function': 'cost_total',
-                'value': self._safe_div(cost_c_legacy, cost_b_legacy),
-            }, {
-                'cost_function': 'discomfort_proportion',
-                'value': unmet[-1],
-            }, {
-                'cost_function': 'discomfort_cold_proportion',
-                'value': cold[-1],
-            }, {
-                'cost_function': 'discomfort_hot_proportion',
-                'value': hot[-1],
-            }, {
-                'cost_function': 'discomfort_cold_delta_minimum',
-                'value': cold_minimum_delta[-1],
-            }, {
-                'cost_function': 'discomfort_cold_delta_maximum',
-                'value': cold_maximum_delta[-1],
-            }, {
-                'cost_function': 'discomfort_cold_delta_average',
-                'value': cold_average_delta[-1],
-            }, {
-                'cost_function': 'discomfort_hot_delta_minimum',
-                'value': hot_minimum_delta[-1],
-            }, {
-                'cost_function': 'discomfort_hot_delta_maximum',
-                'value': hot_maximum_delta[-1],
-            }, {
-                'cost_function': 'discomfort_hot_delta_average',
-                'value': hot_average_delta[-1],
-            }, {
-                'cost_function': 'one_minus_thermal_resilience_proportion',
-                'value': self._cost_last(
-                    np.asarray(
-                        CostFunction.one_minus_thermal_resilience(
-                            power_outage=self._slice_window(building.power_outage_signal, t_start, t_end),
-                            **discomfort_kwargs,
-                        ),
-                        dtype='float64',
-                    ),
-                    lambda x: x,
-                ),
-            }, {
-                'cost_function': 'power_outage_normalized_unserved_energy_total',
-                'value': self._cost_last(
-                    np.asarray(
-                        CostFunction.normalized_unserved_energy(
-                            expected_energy,
-                            served_energy,
-                            power_outage=self._slice_window(building.power_outage_signal, t_start, t_end),
-                        ),
-                        dtype='float64',
-                    ),
-                    lambda x: x,
-                ),
-            }, {
-                'cost_function': 'annual_normalized_unserved_energy_total',
-                'value': self._cost_last(
-                    np.asarray(CostFunction.normalized_unserved_energy(expected_energy, served_energy), dtype='float64'),
-                    lambda x: x,
-                ),
-            }])
-            legacy_building_frame['name'] = building.name
-            legacy_building_frames.append(legacy_building_frame)
-
-            extended_building_rows.extend([
-                self._metric('electricity_consumption_control_total_kwh', ec_c, building.name, 'building'),
-                self._metric('electricity_consumption_baseline_total_kwh', ec_b, building.name, 'building'),
-                self._metric('electricity_consumption_delta_total_kwh', ec_c - ec_b, building.name, 'building'),
-                self._metric('electricity_consumption_control_daily_average_kwh', self._daily_average(ec_c, building_days), building.name, 'building'),
-                self._metric('electricity_consumption_baseline_daily_average_kwh', self._daily_average(ec_b, building_days), building.name, 'building'),
-                self._metric('electricity_consumption_delta_daily_average_kwh', self._daily_average(ec_c - ec_b, building_days), building.name, 'building'),
-                self._metric('electricity_export_control_total_kwh', export_c, building.name, 'building'),
-                self._metric('electricity_export_baseline_total_kwh', export_b, building.name, 'building'),
-                self._metric('electricity_export_delta_total_kwh', export_c - export_b, building.name, 'building'),
-                self._metric('electricity_export_control_daily_average_kwh', self._daily_average(export_c, building_days), building.name, 'building'),
-                self._metric('electricity_export_baseline_daily_average_kwh', self._daily_average(export_b, building_days), building.name, 'building'),
-                self._metric('electricity_export_delta_daily_average_kwh', self._daily_average(export_c - export_b, building_days), building.name, 'building'),
-                self._metric('zero_net_energy_control_total_kwh', zne_c, building.name, 'building'),
-                self._metric('zero_net_energy_baseline_total_kwh', zne_b, building.name, 'building'),
-                self._metric('zero_net_energy_delta_total_kwh', zne_c - zne_b, building.name, 'building'),
-                self._metric('zero_net_energy_control_daily_average_kwh', self._daily_average(zne_c, building_days), building.name, 'building'),
-                self._metric('zero_net_energy_baseline_daily_average_kwh', self._daily_average(zne_b, building_days), building.name, 'building'),
-                self._metric('zero_net_energy_delta_daily_average_kwh', self._daily_average(zne_c - zne_b, building_days), building.name, 'building'),
-                self._metric('carbon_emissions_control_total_kgco2', ce_c, building.name, 'building'),
-                self._metric('carbon_emissions_baseline_total_kgco2', ce_b, building.name, 'building'),
-                self._metric('carbon_emissions_delta_total_kgco2', ce_c - ce_b, building.name, 'building'),
-                self._metric('carbon_emissions_control_daily_average_kgco2', self._daily_average(ce_c, building_days), building.name, 'building'),
-                self._metric('carbon_emissions_baseline_daily_average_kgco2', self._daily_average(ce_b, building_days), building.name, 'building'),
-                self._metric('carbon_emissions_delta_daily_average_kgco2', self._daily_average(ce_c - ce_b, building_days), building.name, 'building'),
-                self._metric('cost_control_total_eur', cost_c_raw, building.name, 'building'),
-                self._metric('cost_baseline_total_eur', cost_b_raw, building.name, 'building'),
-                self._metric('cost_delta_total_eur', cost_c_raw - cost_b_raw, building.name, 'building'),
-                self._metric('cost_control_daily_average_eur', self._daily_average(cost_c_raw, building_days), building.name, 'building'),
-                self._metric('cost_baseline_daily_average_eur', self._daily_average(cost_b_raw, building_days), building.name, 'building'),
-                self._metric('cost_delta_daily_average_eur', self._daily_average(cost_c_raw - cost_b_raw, building_days), building.name, 'building'),
-                self._metric('equity_relative_benefit_percent', equity_benefit, building.name, 'building'),
-            ])
-
-            ev_metrics = self._compute_ev_metrics(building, t_start=t_start, t_final=t_end)
-            extended_building_rows.extend([
-                self._metric('ev_departure_events_count', ev_metrics['departures_total'], building.name, 'building'),
-                self._metric('ev_departure_met_events_count', ev_metrics['departures_met'], building.name, 'building'),
-                self._metric('ev_departure_min_acceptable_events_count', ev_metrics['departures_min_acceptable'], building.name, 'building'),
-                self._metric('ev_departure_within_tolerance_events_count', ev_metrics['departures_within_tolerance'], building.name, 'building'),
-                self._metric('ev_departure_target_feasible_events_count', ev_metrics['departures_target_feasible'], building.name, 'building'),
-                self._metric('ev_departure_target_infeasible_events_count', ev_metrics['departures_target_infeasible'], building.name, 'building'),
-                self._metric('ev_departure_min_acceptable_feasible_events_count', ev_metrics['departures_min_acceptable_feasible'], building.name, 'building'),
-                self._metric('ev_departure_min_acceptable_infeasible_events_count', ev_metrics['departures_min_acceptable_infeasible'], building.name, 'building'),
-                self._metric('ev_departure_within_tolerance_feasible_events_count', ev_metrics['departures_within_tolerance_feasible'], building.name, 'building'),
-                self._metric('ev_departure_within_tolerance_infeasible_events_count', ev_metrics['departures_within_tolerance_infeasible'], building.name, 'building'),
-                self._metric('ev_departure_success_rate', ev_metrics['ev_departure_success_rate'], building.name, 'building'),
-                self._metric('ev_departure_min_acceptable_rate', ev_metrics['ev_departure_min_acceptable_rate'], building.name, 'building'),
-                self._metric('ev_departure_within_tolerance_rate', ev_metrics['ev_departure_within_tolerance_rate'], building.name, 'building'),
-                self._metric('ev_departure_success_feasible_rate', ev_metrics['ev_departure_success_feasible_rate'], building.name, 'building'),
-                self._metric('ev_departure_min_acceptable_feasible_rate', ev_metrics['ev_departure_min_acceptable_feasible_rate'], building.name, 'building'),
-                self._metric('ev_departure_within_tolerance_feasible_rate', ev_metrics['ev_departure_within_tolerance_feasible_rate'], building.name, 'building'),
-                self._metric('ev_departure_soc_deficit_mean', ev_metrics['ev_departure_soc_deficit_mean'], building.name, 'building'),
-                self._metric('ev_departure_shortfall_beyond_tolerance_mean', ev_metrics['ev_departure_shortfall_beyond_tolerance_mean'], building.name, 'building'),
-                self._metric('ev_departure_soc_surplus_mean', ev_metrics['ev_departure_soc_surplus_mean'], building.name, 'building'),
-                self._metric('ev_departure_soc_absolute_error_mean', ev_metrics['ev_departure_soc_absolute_error_mean'], building.name, 'building'),
-                self._metric('ev_departure_tolerance_ratio', ev_metrics['ev_departure_tolerance_ratio'], building.name, 'building'),
-                self._metric('ev_charge_total_kwh', ev_metrics['ev_charge_total_kwh'], building.name, 'building'),
-                self._metric('ev_v2g_export_total_kwh', ev_metrics['ev_v2g_export_total_kwh'], building.name, 'building'),
-                self._metric('ev_connected_soc_gain_total_kwh', ev_metrics['ev_connected_soc_gain_total_kwh'], building.name, 'building'),
-                self._metric('ev_energy_accounting_shortfall_kwh', ev_metrics['ev_energy_accounting_shortfall_kwh'], building.name, 'building'),
-            ])
-            ev_departures_total += ev_metrics['departures_total']
-            ev_departures_met += ev_metrics['departures_met']
-            ev_departures_min_acceptable += ev_metrics['departures_min_acceptable']
-            ev_departures_within_tolerance += ev_metrics['departures_within_tolerance']
-            ev_departures_target_feasible += ev_metrics['departures_target_feasible']
-            ev_departures_target_infeasible += ev_metrics['departures_target_infeasible']
-            ev_departures_min_acceptable_feasible += ev_metrics['departures_min_acceptable_feasible']
-            ev_departures_min_acceptable_infeasible += ev_metrics['departures_min_acceptable_infeasible']
-            ev_departures_within_tolerance_feasible += ev_metrics['departures_within_tolerance_feasible']
-            ev_departures_within_tolerance_infeasible += ev_metrics['departures_within_tolerance_infeasible']
-            ev_departures_met_target_feasible += ev_metrics['_departures_met_target_feasible']
-            ev_departures_min_acceptable_feasible_met += ev_metrics['_departures_min_acceptable_feasible_met']
-            ev_departures_within_tolerance_feasible_met += ev_metrics['_departures_within_tolerance_feasible_met']
-            ev_deficit_sum += ev_metrics['departure_deficit_sum']
-            ev_shortfall_beyond_tolerance_sum += ev_metrics['departure_shortfall_beyond_tolerance_sum']
-            ev_surplus_sum += ev_metrics['departure_surplus_sum']
-            ev_absolute_error_sum += ev_metrics['departure_absolute_error_sum']
-            ev_charge_total += ev_metrics['ev_charge_total_kwh']
-            ev_v2g_total += ev_metrics['ev_v2g_export_total_kwh']
-            ev_connected_soc_gain_total += ev_metrics['ev_connected_soc_gain_total_kwh']
-            ev_energy_accounting_shortfall_total += ev_metrics['ev_energy_accounting_shortfall_kwh']
-
-            bess_metrics = self._compute_bess_metrics(building, t_start=t_start, t_final=t_end)
-            extended_building_rows.extend([
-                self._metric('bess_charge_total_kwh', bess_metrics['bess_charge_total_kwh'], building.name, 'building'),
-                self._metric('bess_discharge_total_kwh', bess_metrics['bess_discharge_total_kwh'], building.name, 'building'),
-                self._metric('bess_throughput_total_kwh', bess_metrics['bess_throughput_total_kwh'], building.name, 'building'),
-                self._metric('bess_equivalent_full_cycles', bess_metrics['bess_equivalent_full_cycles'], building.name, 'building'),
-                self._metric('bess_capacity_fade_ratio', bess_metrics['bess_capacity_fade_ratio'], building.name, 'building'),
-            ])
-            bess_charge_total += bess_metrics['bess_charge_total_kwh']
-            bess_discharge_total += bess_metrics['bess_discharge_total_kwh']
-            bess_throughput_total += bess_metrics['bess_throughput_total_kwh']
-            bess_capacity_total += bess_metrics['_bess_capacity_kwh']
-            bess_capacity_loss_total += max(bess_metrics['_bess_capacity_kwh'] - bess_metrics['_bess_degraded_capacity_kwh'], 0.0)
-
-            pv_metrics = self._compute_pv_metrics(building, t_start=t_start, t_final=t_end)
-            extended_building_rows.extend([
-                self._metric('pv_generation_total_kwh', pv_metrics['pv_generation_total_kwh'], building.name, 'building'),
-                self._metric('pv_export_total_kwh', pv_metrics['pv_export_total_kwh'], building.name, 'building'),
-                self._metric('pv_generation_daily_average_kwh', self._daily_average(pv_metrics['pv_generation_total_kwh'], building_days), building.name, 'building'),
-                self._metric('pv_export_daily_average_kwh', self._daily_average(pv_metrics['pv_export_total_kwh'], building_days), building.name, 'building'),
-                self._metric('pv_self_consumption_ratio', pv_metrics['pv_self_consumption_ratio'], building.name, 'building'),
-            ])
-            phase_metrics = self._compute_phase_metrics(building, t_start=t_start, t_final=t_end)
-            extended_building_rows.extend([
-                self._metric('electrical_service_violation_total_kwh', phase_metrics['electrical_service_violation_total_kwh'], building.name, 'building'),
-                self._metric('electrical_service_violation_time_step_count', phase_metrics['electrical_service_violation_time_step_count'], building.name, 'building'),
-                self._metric('electrical_service_requested_pressure_total_kwh', phase_metrics['electrical_service_requested_pressure_total_kwh'], building.name, 'building'),
-                self._metric('electrical_service_requested_pressure_time_step_count', phase_metrics['electrical_service_requested_pressure_time_step_count'], building.name, 'building'),
-                self._metric('phase_imbalance_ratio_average', phase_metrics['phase_imbalance_ratio_average'], building.name, 'building'),
-            ])
-            for phase_name, value in phase_metrics['phase_import_peak_kw'].items():
-                extended_building_rows.append(self._metric(f'phase_import_peak_kw_{phase_name}', value, building.name, 'building'))
-            for phase_name, value in phase_metrics['phase_export_peak_kw'].items():
-                extended_building_rows.append(self._metric(f'phase_export_peak_kw_{phase_name}', value, building.name, 'building'))
-
-            phase_violation_total += phase_metrics['electrical_service_violation_total_kwh']
-            phase_violation_count += phase_metrics['electrical_service_violation_time_step_count']
-            phase_requested_pressure_total += phase_metrics['electrical_service_requested_pressure_total_kwh']
-            phase_requested_pressure_count += phase_metrics['electrical_service_requested_pressure_time_step_count']
-            phase_imbalance_sum += phase_metrics['_imbalance_sum']
-            phase_imbalance_count += phase_metrics['_imbalance_count']
-
-        legacy_building = pd.concat(legacy_building_frames, ignore_index=True) if legacy_building_frames else pd.DataFrame(columns=['cost_function', 'value', 'name'])
+        legacy_building = (pd.concat(legacy_frames, ignore_index=True) if legacy_frames
+                           else pd.DataFrame(columns=['cost_function', 'value', 'name']))
         legacy_building['level'] = 'building'
-
-        env_control_condition = (
-            evaluation_condition_cls.WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV
-            if control_condition is None else control_condition
+        legacy, district_rows = run(progress, 'district_energy', kpi_energy.district_records,
+            self, legacy_building, control_condition, baseline_condition,
+            evaluation_condition_cls, simulated_days,
         )
-        env_baseline_condition = (
-            evaluation_condition_cls.WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV
-            if baseline_condition is None else baseline_condition
-        )
-
-        net_c_env_series = np.array(get_net_electricity_consumption(env, env_control_condition), dtype='float64')
-        net_b_env_series = np.array(get_net_electricity_consumption(env, env_baseline_condition), dtype='float64')
-        ramp_c = self._ramping_final(net_c_env_series)
-        ramp_b = self._ramping_final(net_b_env_series)
-        dlf_daily_c = self._one_minus_load_factor_final(net_c_env_series, window=daily_steps)
-        dlf_daily_b = self._one_minus_load_factor_final(net_b_env_series, window=daily_steps)
-        dlf_monthly_c = self._one_minus_load_factor_final(net_c_env_series, window=monthly_steps)
-        dlf_monthly_b = self._one_minus_load_factor_final(net_b_env_series, window=monthly_steps)
-        peak_daily_c = self._peak_final(net_c_env_series, window=daily_steps)
-        peak_daily_b = self._peak_final(net_b_env_series, window=daily_steps)
-        peak_all_c = self._peak_final(net_c_env_series, window=env.time_steps)
-        peak_all_b = self._peak_final(net_b_env_series, window=env.time_steps)
-
-        legacy_district_base = pd.DataFrame([{
-            'cost_function': 'ramping_average',
-            'value': self._safe_div(ramp_c, ramp_b),
-        }, {
-            'cost_function': 'daily_one_minus_load_factor_average',
-            'value': self._safe_div(dlf_daily_c, dlf_daily_b),
-        }, {
-            'cost_function': 'monthly_one_minus_load_factor_average',
-            'value': self._safe_div(dlf_monthly_c, dlf_monthly_b),
-        }, {
-            'cost_function': 'daily_peak_average',
-            'value': self._safe_div(peak_daily_c, peak_daily_b),
-        }, {
-            'cost_function': 'all_time_peak_average',
-            'value': self._safe_div(peak_all_c, peak_all_b),
-        }])
-
-        legacy_district = pd.concat([legacy_district_base, legacy_building], ignore_index=True, sort=False)
-        legacy_district = legacy_district.groupby(['cost_function'])[['value']].mean().reset_index()
-        legacy_district['name'] = 'District'
-        legacy_district['level'] = 'district'
-
-        legacy_cost_functions = pd.concat([legacy_district, legacy_building], ignore_index=True, sort=False)
-
-        # Extended KPI district-level
-        ec_c_env = self._positive_total(net_c_env_series)
-        ec_b_env = self._positive_total(net_b_env_series)
-        export_c_env = self._sum_finite(np.clip(-net_c_env_series, 0.0, None))
-        export_b_env = self._sum_finite(np.clip(-net_b_env_series, 0.0, None))
-        zne_c_env = self._net_total(net_c_env_series)
-        zne_b_env = self._net_total(net_b_env_series)
-        ce_c_env = self._positive_total(get_net_electricity_consumption_emission(env, env_control_condition))
-        ce_b_env = self._positive_total(get_net_electricity_consumption_emission(env, env_baseline_condition))
-        env_control_cost_series = get_net_electricity_consumption_cost(env, env_control_condition)
-        env_baseline_cost_series = get_net_electricity_consumption_cost(env, env_baseline_condition)
-        cost_c_env_raw = self._sum_finite(env_control_cost_series)
-        cost_b_env_raw = self._sum_finite(env_baseline_cost_series)
-
-        extended_district_rows = [
-            self._metric('electricity_consumption_control_total_kwh', ec_c_env, 'District', 'district'),
-            self._metric('electricity_consumption_baseline_total_kwh', ec_b_env, 'District', 'district'),
-            self._metric('electricity_consumption_delta_total_kwh', ec_c_env - ec_b_env, 'District', 'district'),
-            self._metric('electricity_consumption_control_daily_average_kwh', self._daily_average(ec_c_env, simulated_days), 'District', 'district'),
-            self._metric('electricity_consumption_baseline_daily_average_kwh', self._daily_average(ec_b_env, simulated_days), 'District', 'district'),
-            self._metric('electricity_consumption_delta_daily_average_kwh', self._daily_average(ec_c_env - ec_b_env, simulated_days), 'District', 'district'),
-            self._metric('electricity_export_control_total_kwh', export_c_env, 'District', 'district'),
-            self._metric('electricity_export_baseline_total_kwh', export_b_env, 'District', 'district'),
-            self._metric('electricity_export_delta_total_kwh', export_c_env - export_b_env, 'District', 'district'),
-            self._metric('electricity_export_control_daily_average_kwh', self._daily_average(export_c_env, simulated_days), 'District', 'district'),
-            self._metric('electricity_export_baseline_daily_average_kwh', self._daily_average(export_b_env, simulated_days), 'District', 'district'),
-            self._metric('electricity_export_delta_daily_average_kwh', self._daily_average(export_c_env - export_b_env, simulated_days), 'District', 'district'),
-            self._metric('zero_net_energy_control_total_kwh', zne_c_env, 'District', 'district'),
-            self._metric('zero_net_energy_baseline_total_kwh', zne_b_env, 'District', 'district'),
-            self._metric('zero_net_energy_delta_total_kwh', zne_c_env - zne_b_env, 'District', 'district'),
-            self._metric('zero_net_energy_control_daily_average_kwh', self._daily_average(zne_c_env, simulated_days), 'District', 'district'),
-            self._metric('zero_net_energy_baseline_daily_average_kwh', self._daily_average(zne_b_env, simulated_days), 'District', 'district'),
-            self._metric('zero_net_energy_delta_daily_average_kwh', self._daily_average(zne_c_env - zne_b_env, simulated_days), 'District', 'district'),
-            self._metric('carbon_emissions_control_total_kgco2', ce_c_env, 'District', 'district'),
-            self._metric('carbon_emissions_baseline_total_kgco2', ce_b_env, 'District', 'district'),
-            self._metric('carbon_emissions_delta_total_kgco2', ce_c_env - ce_b_env, 'District', 'district'),
-            self._metric('carbon_emissions_control_daily_average_kgco2', self._daily_average(ce_c_env, simulated_days), 'District', 'district'),
-            self._metric('carbon_emissions_baseline_daily_average_kgco2', self._daily_average(ce_b_env, simulated_days), 'District', 'district'),
-            self._metric('carbon_emissions_delta_daily_average_kgco2', self._daily_average(ce_c_env - ce_b_env, simulated_days), 'District', 'district'),
-            self._metric('cost_control_total_eur', cost_c_env_raw, 'District', 'district'),
-            self._metric('cost_baseline_total_eur', cost_b_env_raw, 'District', 'district'),
-            self._metric('cost_delta_total_eur', cost_c_env_raw - cost_b_env_raw, 'District', 'district'),
-            self._metric('cost_control_daily_average_eur', self._daily_average(cost_c_env_raw, simulated_days), 'District', 'district'),
-            self._metric('cost_baseline_daily_average_eur', self._daily_average(cost_b_env_raw, simulated_days), 'District', 'district'),
-            self._metric('cost_delta_daily_average_eur', self._daily_average(cost_c_env_raw - cost_b_env_raw, simulated_days), 'District', 'district'),
-        ]
-
-        ev_success_rate = None if ev_departures_total <= 0.0 else ev_departures_met / ev_departures_total
-        ev_min_acceptable_rate = None if ev_departures_total <= 0.0 else ev_departures_min_acceptable / ev_departures_total
-        ev_within_tolerance_rate = None if ev_departures_total <= 0.0 else ev_departures_within_tolerance / ev_departures_total
-        ev_success_feasible_rate = (
-            None if ev_departures_target_feasible <= 0.0
-            else ev_departures_met_target_feasible / ev_departures_target_feasible
-        )
-        ev_min_acceptable_feasible_rate = (
-            None if ev_departures_min_acceptable_feasible <= 0.0
-            else ev_departures_min_acceptable_feasible_met / ev_departures_min_acceptable_feasible
-        )
-        ev_within_tolerance_feasible_rate = (
-            None if ev_departures_within_tolerance_feasible <= 0.0
-            else ev_departures_within_tolerance_feasible_met / ev_departures_within_tolerance_feasible
-        )
-        ev_deficit_mean = None if ev_departures_total <= 0.0 else ev_deficit_sum / ev_departures_total
-        ev_shortfall_beyond_tolerance_mean = None if ev_departures_total <= 0.0 else ev_shortfall_beyond_tolerance_sum / ev_departures_total
-        ev_surplus_mean = None if ev_departures_total <= 0.0 else ev_surplus_sum / ev_departures_total
-        ev_absolute_error_mean = None if ev_departures_total <= 0.0 else ev_absolute_error_sum / ev_departures_total
-        extended_district_rows.extend([
-            self._metric('ev_departure_events_count', ev_departures_total, 'District', 'district'),
-            self._metric('ev_departure_met_events_count', ev_departures_met, 'District', 'district'),
-            self._metric('ev_departure_min_acceptable_events_count', ev_departures_min_acceptable, 'District', 'district'),
-            self._metric('ev_departure_within_tolerance_events_count', ev_departures_within_tolerance, 'District', 'district'),
-            self._metric('ev_departure_target_feasible_events_count', ev_departures_target_feasible, 'District', 'district'),
-            self._metric('ev_departure_target_infeasible_events_count', ev_departures_target_infeasible, 'District', 'district'),
-            self._metric('ev_departure_min_acceptable_feasible_events_count', ev_departures_min_acceptable_feasible, 'District', 'district'),
-            self._metric('ev_departure_min_acceptable_infeasible_events_count', ev_departures_min_acceptable_infeasible, 'District', 'district'),
-            self._metric('ev_departure_within_tolerance_feasible_events_count', ev_departures_within_tolerance_feasible, 'District', 'district'),
-            self._metric('ev_departure_within_tolerance_infeasible_events_count', ev_departures_within_tolerance_infeasible, 'District', 'district'),
-            self._metric('ev_departure_success_rate', ev_success_rate, 'District', 'district'),
-            self._metric('ev_departure_min_acceptable_rate', ev_min_acceptable_rate, 'District', 'district'),
-            self._metric('ev_departure_within_tolerance_rate', ev_within_tolerance_rate, 'District', 'district'),
-            self._metric('ev_departure_success_feasible_rate', ev_success_feasible_rate, 'District', 'district'),
-            self._metric('ev_departure_min_acceptable_feasible_rate', ev_min_acceptable_feasible_rate, 'District', 'district'),
-            self._metric('ev_departure_within_tolerance_feasible_rate', ev_within_tolerance_feasible_rate, 'District', 'district'),
-            self._metric('ev_departure_soc_deficit_mean', ev_deficit_mean, 'District', 'district'),
-            self._metric('ev_departure_shortfall_beyond_tolerance_mean', ev_shortfall_beyond_tolerance_mean, 'District', 'district'),
-            self._metric('ev_departure_soc_surplus_mean', ev_surplus_mean, 'District', 'district'),
-            self._metric('ev_departure_soc_absolute_error_mean', ev_absolute_error_mean, 'District', 'district'),
-            self._metric('ev_departure_tolerance_ratio', self._ev_departure_service_tolerance(), 'District', 'district'),
-            self._metric('ev_charge_total_kwh', ev_charge_total, 'District', 'district'),
-            self._metric('ev_v2g_export_total_kwh', ev_v2g_total, 'District', 'district'),
-            self._metric('ev_connected_soc_gain_total_kwh', ev_connected_soc_gain_total, 'District', 'district'),
-            self._metric('ev_energy_accounting_shortfall_kwh', ev_energy_accounting_shortfall_total, 'District', 'district'),
-        ])
-
-        district_bess_cycles = None if bess_capacity_total <= 0.0 else bess_throughput_total / (2.0 * bess_capacity_total)
-        district_bess_fade = None if bess_capacity_total <= 0.0 else bess_capacity_loss_total / bess_capacity_total
-        extended_district_rows.extend([
-            self._metric('bess_charge_total_kwh', bess_charge_total, 'District', 'district'),
-            self._metric('bess_discharge_total_kwh', bess_discharge_total, 'District', 'district'),
-            self._metric('bess_throughput_total_kwh', bess_throughput_total, 'District', 'district'),
-            self._metric('bess_equivalent_full_cycles', district_bess_cycles, 'District', 'district'),
-            self._metric('bess_capacity_fade_ratio', district_bess_fade, 'District', 'district'),
-        ])
-
-        final_t = int(max(getattr(env, 'time_step', 0), 0))
-        district_pv_metrics = self._compute_district_pv_metrics(kpi_buildings, building_windows, final_t=final_t)
-        pv_generation_total = district_pv_metrics['pv_generation_total_kwh']
-        pv_export_total = district_pv_metrics['pv_export_total_kwh']
-        district_pv_ratio = district_pv_metrics['pv_self_consumption_ratio']
-        extended_district_rows.extend([
-            self._metric('pv_generation_total_kwh', pv_generation_total, 'District', 'district'),
-            self._metric('pv_export_total_kwh', pv_export_total, 'District', 'district'),
-            self._metric('pv_generation_daily_average_kwh', self._daily_average(pv_generation_total, simulated_days), 'District', 'district'),
-            self._metric('pv_export_daily_average_kwh', self._daily_average(pv_export_total, simulated_days), 'District', 'district'),
-            self._metric('pv_self_consumption_ratio', district_pv_ratio, 'District', 'district'),
-        ])
-
-        district_phase_imbalance = None if phase_imbalance_count <= 0.0 else phase_imbalance_sum / phase_imbalance_count
-        extended_district_rows.extend([
-            self._metric('electrical_service_violation_total_kwh', phase_violation_total, 'District', 'district'),
-            self._metric('electrical_service_violation_time_step_count', phase_violation_count, 'District', 'district'),
-            self._metric('electrical_service_requested_pressure_total_kwh', phase_requested_pressure_total, 'District', 'district'),
-            self._metric('electrical_service_requested_pressure_time_step_count', phase_requested_pressure_count, 'District', 'district'),
-            self._metric('phase_imbalance_ratio_average', district_phase_imbalance, 'District', 'district'),
-        ])
-
-        phase_union = ['L1', 'L2', 'L3']
-        for phase_name in phase_union:
-            phase_series = np.zeros(final_t + 1, dtype='float64')
-            has_phase_data = False
-            for building in kpi_buildings:
-                history_map = getattr(building, '_charging_phase_power_history_kw', {}) or {}
-                if phase_name not in history_map:
-                    continue
-                t_start, t_end = building_windows.get(building.name, (0, -1))
-                if t_end < t_start:
-                    continue
-                values = np.array(history_map[phase_name], dtype='float64')
-                start = max(int(t_start), 0)
-                end = min(int(t_end), final_t, len(values) - 1)
-                if end < start:
-                    continue
-                phase_series[start:end + 1] += values[start:end + 1]
-                has_phase_data = True
-
-            if not has_phase_data:
-                continue
-
-            extended_district_rows.append(
-                self._metric(f'phase_import_peak_kw_{phase_name}', float(np.clip(phase_series, 0.0, None).max(initial=0.0)), 'District', 'district')
-            )
-            extended_district_rows.append(
-                self._metric(f'phase_export_peak_kw_{phase_name}', float(np.clip(-phase_series, 0.0, None).max(initial=0.0)), 'District', 'district')
-            )
-
-        market_by_building, market_district = self._collect_market_totals(building_names)
-
-        for building_name in building_names:
-            t_start, t_end = building_windows.get(building_name, (0, -1))
-            building_days = self._window_days(t_start, t_end, env.seconds_per_time_step)
-            totals = market_by_building.get(building_name, {})
-            local_import = self._to_scalar(totals.get('community_local_import_total_kwh'), 0.0)
-            local_export = self._to_scalar(totals.get('community_local_export_total_kwh'), 0.0)
-            grid_import = self._to_scalar(totals.get('community_grid_import_after_local_total_kwh'), 0.0)
-            grid_export = self._to_scalar(totals.get('community_grid_export_after_local_total_kwh'), 0.0)
-            import_share = None if (local_import + grid_import) <= 0.0 else local_import / (local_import + grid_import)
-            export_share = None if (local_export + grid_export) <= 0.0 else local_export / (local_export + grid_export)
-
-            extended_building_rows.extend([
-                self._metric('community_local_import_total_kwh', local_import, building_name, 'building'),
-                self._metric('community_local_export_total_kwh', local_export, building_name, 'building'),
-                self._metric('community_grid_import_after_local_total_kwh', grid_import, building_name, 'building'),
-                self._metric('community_grid_export_after_local_total_kwh', grid_export, building_name, 'building'),
-                self._metric('community_local_import_daily_average_kwh', self._daily_average(local_import, building_days), building_name, 'building'),
-                self._metric('community_local_export_daily_average_kwh', self._daily_average(local_export, building_days), building_name, 'building'),
-                self._metric('community_grid_import_after_local_daily_average_kwh', self._daily_average(grid_import, building_days), building_name, 'building'),
-                self._metric('community_grid_export_after_local_daily_average_kwh', self._daily_average(grid_export, building_days), building_name, 'building'),
-                self._metric('community_settled_cost_total_eur', totals.get('community_settled_cost_total_eur', 0.0), building_name, 'building'),
-                self._metric('community_counterfactual_cost_total_eur', totals.get('community_counterfactual_cost_total_eur', 0.0), building_name, 'building'),
-                self._metric('community_market_savings_total_eur', totals.get('community_market_savings_total_eur', 0.0), building_name, 'building'),
-                self._metric('community_settled_cost_daily_average_eur', self._daily_average(totals.get('community_settled_cost_total_eur', 0.0), building_days), building_name, 'building'),
-                self._metric('community_counterfactual_cost_daily_average_eur', self._daily_average(totals.get('community_counterfactual_cost_total_eur', 0.0), building_days), building_name, 'building'),
-                self._metric('community_market_savings_daily_average_eur', self._daily_average(totals.get('community_market_savings_total_eur', 0.0), building_days), building_name, 'building'),
-                self._metric('community_local_share_of_demand', import_share, building_name, 'building'),
-                self._metric('community_local_share_of_export', export_share, building_name, 'building'),
-            ])
-
-        district_local_import = market_district['community_local_import_total_kwh']
-        district_local_export = market_district['community_local_export_total_kwh']
-        district_grid_import = market_district['community_grid_import_after_local_total_kwh']
-        district_grid_export = market_district['community_grid_export_after_local_total_kwh']
-
-        extended_district_rows.extend([
-            self._metric('community_local_import_total_kwh', district_local_import, 'District', 'district'),
-            self._metric('community_local_export_total_kwh', district_local_export, 'District', 'district'),
-            self._metric('community_grid_import_after_local_total_kwh', district_grid_import, 'District', 'district'),
-            self._metric('community_grid_export_after_local_total_kwh', district_grid_export, 'District', 'district'),
-            self._metric('community_local_import_daily_average_kwh', self._daily_average(district_local_import, simulated_days), 'District', 'district'),
-            self._metric('community_local_export_daily_average_kwh', self._daily_average(district_local_export, simulated_days), 'District', 'district'),
-            self._metric('community_grid_import_after_local_daily_average_kwh', self._daily_average(district_grid_import, simulated_days), 'District', 'district'),
-            self._metric('community_grid_export_after_local_daily_average_kwh', self._daily_average(district_grid_export, simulated_days), 'District', 'district'),
-            self._metric('community_settled_cost_total_eur', market_district['community_settled_cost_total_eur'], 'District', 'district'),
-            self._metric('community_counterfactual_cost_total_eur', market_district['community_counterfactual_cost_total_eur'], 'District', 'district'),
-            self._metric('community_market_savings_total_eur', market_district['community_market_savings_total_eur'], 'District', 'district'),
-            self._metric('community_settled_cost_daily_average_eur', self._daily_average(market_district['community_settled_cost_total_eur'], simulated_days), 'District', 'district'),
-            self._metric('community_counterfactual_cost_daily_average_eur', self._daily_average(market_district['community_counterfactual_cost_total_eur'], simulated_days), 'District', 'district'),
-            self._metric('community_market_savings_daily_average_eur', self._daily_average(market_district['community_market_savings_total_eur'], simulated_days), 'District', 'district'),
-            self._metric(
-                'community_local_share_of_demand',
-                None if (district_local_import + district_grid_import) <= 0.0 else district_local_import / (district_local_import + district_grid_import),
-                'District',
-                'district',
-            ),
-            self._metric(
-                'community_local_share_of_export',
-                None if (district_local_export + district_grid_export) <= 0.0 else district_local_export / (district_local_export + district_grid_export),
-                'District',
-                'district',
-            ),
-        ])
-
-        equity_distribution = self._equity_distribution_metrics(np.array(list(equity_valid_benefits.values()), dtype='float64'))
-        non_negative_benefits = {name: max(value, 0.0) for name, value in equity_valid_benefits.items()}
-        has_complete_manual_groups = all(
-            equity_group_by_building.get(name) in {'asset_rich', 'asset_poor'}
-            for name in building_names
-        )
-        equity_bpr = self._equity_bpr(non_negative_benefits, equity_group_by_building) if has_complete_manual_groups else None
-
-        extended_district_rows.extend([
-            self._metric('equity_gini_benefit', equity_distribution['equity_gini_benefit'], 'District', 'district'),
-            self._metric('equity_cr20_benefit', equity_distribution['equity_cr20_benefit'], 'District', 'district'),
-            self._metric('equity_losers_percent', equity_distribution['equity_losers_percent'], 'District', 'district'),
-            self._metric('equity_bpr_asset_poor_over_rich', equity_bpr, 'District', 'district'),
-        ])
-
-        district_deferrable = {
-            'completed_cycles': 0.0,
-            'missed_cycles': 0.0,
-            'served_energy_kwh': 0.0,
-            'unserved_energy_kwh': 0.0,
-        }
-        delay_weighted_sum = 0.0
-        delay_weight = 0.0
-        for building in kpi_buildings:
-            building_summary = {
-                'completed_cycles': 0.0,
-                'missed_cycles': 0.0,
-                'served_energy_kwh': 0.0,
-                'unserved_energy_kwh': 0.0,
-            }
-            building_delay_weighted_sum = 0.0
-            building_delay_weight = 0.0
-            for appliance in self._deferrable_appliances_for_metrics(building):
-                summary = appliance.service_summary()
-                completed = self._to_scalar(summary.get('completed_cycles'), 0.0)
-                missed = self._to_scalar(summary.get('missed_cycles'), 0.0)
-                for key in building_summary:
-                    building_summary[key] += self._to_scalar(summary.get(key), 0.0)
-                if completed > 0.0:
-                    delay = self._to_scalar(summary.get('average_start_delay_hours'), 0.0)
-                    building_delay_weighted_sum += delay * completed
-                    building_delay_weight += completed
-
-            requested = building_summary['completed_cycles'] + building_summary['missed_cycles']
-            service_level = None if requested <= 0.0 else building_summary['completed_cycles'] / requested
-            avg_delay = 0.0 if building_delay_weight <= 0.0 else building_delay_weighted_sum / building_delay_weight
-            extended_building_rows.extend([
-                self._metric('deferrable_appliance_completed_cycles_count', building_summary['completed_cycles'], building.name, 'building'),
-                self._metric('deferrable_appliance_missed_cycles_count', building_summary['missed_cycles'], building.name, 'building'),
-                self._metric('deferrable_appliance_service_level_ratio', service_level, building.name, 'building'),
-                self._metric('deferrable_appliance_served_energy_total_kwh', building_summary['served_energy_kwh'], building.name, 'building'),
-                self._metric('deferrable_appliance_unserved_energy_total_kwh', building_summary['unserved_energy_kwh'], building.name, 'building'),
-                self._metric('deferrable_appliance_average_start_delay_hours', avg_delay, building.name, 'building'),
-            ])
-
-            for key in district_deferrable:
-                district_deferrable[key] += building_summary[key]
-            delay_weighted_sum += building_delay_weighted_sum
-            delay_weight += building_delay_weight
-
-        district_requested = district_deferrable['completed_cycles'] + district_deferrable['missed_cycles']
-        district_service_level = None if district_requested <= 0.0 else district_deferrable['completed_cycles'] / district_requested
-        district_avg_delay = 0.0 if delay_weight <= 0.0 else delay_weighted_sum / delay_weight
-        extended_district_rows.extend([
-            self._metric('deferrable_appliance_completed_cycles_count', district_deferrable['completed_cycles'], 'District', 'district'),
-            self._metric('deferrable_appliance_missed_cycles_count', district_deferrable['missed_cycles'], 'District', 'district'),
-            self._metric('deferrable_appliance_service_level_ratio', district_service_level, 'District', 'district'),
-            self._metric('deferrable_appliance_served_energy_total_kwh', district_deferrable['served_energy_kwh'], 'District', 'district'),
-            self._metric('deferrable_appliance_unserved_energy_total_kwh', district_deferrable['unserved_energy_kwh'], 'District', 'district'),
-            self._metric('deferrable_appliance_average_start_delay_hours', district_avg_delay, 'District', 'district'),
-        ])
-
-        # Escalators deliberately use aggregate passenger demand rather than a
-        # queueing model. These KPIs expose the resulting energy/service tradeoff
-        # alongside the existing electricity cost metrics.
-        district_escalator = {
-            'requested_passengers': 0.0,
-            'served_passengers': 0.0,
-            'unserved_passengers': 0.0,
-            'electricity_consumption_kwh': 0.0,
-            'state_changes_count': 0.0,
-        }
-        for building in kpi_buildings:
-            building_escalator = dict.fromkeys(district_escalator, 0.0)
-            for escalator in getattr(building, 'escalators', []) or []:
-                summary = escalator.service_summary()
-                for key in building_escalator:
-                    building_escalator[key] += self._to_scalar(summary.get(key), 0.0)
-
-            requested = building_escalator['requested_passengers']
-            service_level = None if requested <= 0.0 else building_escalator['served_passengers'] / requested
-            extended_building_rows.extend([
-                self._metric('escalator_requested_passengers_total_count', requested, building.name, 'building'),
-                self._metric('escalator_served_passengers_total_count', building_escalator['served_passengers'], building.name, 'building'),
-                self._metric('escalator_unserved_passengers_total_count', building_escalator['unserved_passengers'], building.name, 'building'),
-                self._metric('escalator_service_level_ratio', service_level, building.name, 'building'),
-                self._metric('escalator_electricity_consumption_total_kwh', building_escalator['electricity_consumption_kwh'], building.name, 'building'),
-                self._metric('escalator_state_changes_count', building_escalator['state_changes_count'], building.name, 'building'),
-            ])
-            for key in district_escalator:
-                district_escalator[key] += building_escalator[key]
-
-        district_requested = district_escalator['requested_passengers']
-        district_service_level = None if district_requested <= 0.0 else district_escalator['served_passengers'] / district_requested
-        extended_district_rows.extend([
-            self._metric('escalator_requested_passengers_total_count', district_requested, 'District', 'district'),
-            self._metric('escalator_served_passengers_total_count', district_escalator['served_passengers'], 'District', 'district'),
-            self._metric('escalator_unserved_passengers_total_count', district_escalator['unserved_passengers'], 'District', 'district'),
-            self._metric('escalator_service_level_ratio', district_service_level, 'District', 'district'),
-            self._metric('escalator_electricity_consumption_total_kwh', district_escalator['electricity_consumption_kwh'], 'District', 'district'),
-            self._metric('escalator_state_changes_count', district_escalator['state_changes_count'], 'District', 'district'),
-        ])
-
-        extended_building = pd.DataFrame(extended_building_rows)
-        extended_district = pd.DataFrame(extended_district_rows)
-
-        cost_functions = pd.concat([legacy_cost_functions, extended_district, extended_building], ignore_index=True, sort=False)
-
-        return cost_functions
+        district_rows.extend(run(progress, 'district_equipment', equipment.district_records, buildings, windows, simulated_days))
+        market_building, market_district = run(progress, 'market', kpi_community.market_records, self, buildings, windows, simulated_days)
+        building_rows.extend(market_building)
+        district_rows.extend(market_district)
+        district_rows.extend(run(progress, 'equity', kpi_community.equity_records,
+            self, [building.name for building in buildings], benefits, groups))
+        for family in (kpi_service_metrics.deferrable_records, kpi_service_metrics.escalator_records):
+            rows, district = run(progress, family.__name__, family, self, buildings)
+            building_rows.extend(rows)
+            district_rows.extend(district)
+        return pd.concat([legacy, pd.DataFrame(district_rows), pd.DataFrame(building_rows)],
+                         ignore_index=True, sort=False)
 
     @staticmethod
     def _v2_name(
@@ -2578,6 +1778,19 @@ class CityLearnKPIService:
             (str(row['level']), str(row['name']), str(row['cost_function'])): row['value']
             for _, row in bau_df.iterrows()
         }
+
+        # These references use the same provenance definition and physical
+        # boundary because the BAU sidecar executes the same passive ledger.
+        for (level, name, metric), record in list(records.items()):
+            if metric.startswith(f'{level}_energy_provenance_'):
+                reference = bau_lookup.get((level, name, metric))
+                stem, unit = metric.rsplit('_', 1)
+                reference_key = f'{stem}_business_as_usual_{unit}'
+                records[(level, name, reference_key)] = dict(record, cost_function=reference_key, value=reference)
+                a, b = self._to_scalar(record['value'], np.nan), self._to_scalar(reference, np.nan)
+                delta_key = f'{stem}_delta_to_business_as_usual_{unit}'
+                records[(level, name, delta_key)] = dict(record, cost_function=delta_key,
+                    value=float(a-b) if np.isfinite(a) and np.isfinite(b) else None)
 
         def put(level: str, name: str, cost_function: str, value):
             records[(level, name, cost_function)] = {
@@ -2882,7 +2095,20 @@ class CityLearnKPIService:
                 'level': 'district',
             }
 
+    @population_scope
     def evaluate_v2(
+        self, control_condition=None, baseline_condition=None, comfort_band=None,
+        include_business_as_usual=True, *, evaluation_condition_cls,
+        dynamics_building_cls, progress_callback=None,
+    ) -> pd.DataFrame:
+        progress = None if progress_callback is None else EvaluationProgress(progress_callback)
+        return run(progress, 'evaluation', self._evaluate_v2,
+                   control_condition=control_condition, baseline_condition=baseline_condition,
+                   comfort_band=comfort_band, include_business_as_usual=include_business_as_usual,
+                   evaluation_condition_cls=evaluation_condition_cls,
+                   dynamics_building_cls=dynamics_building_cls, progress=progress)
+
+    def _evaluate_v2(
         self,
         control_condition=None,
         baseline_condition=None,
@@ -2891,6 +2117,7 @@ class CityLearnKPIService:
         *,
         evaluation_condition_cls,
         dynamics_building_cls,
+        progress=None,
     ) -> pd.DataFrame:
         env = self.env
         all_metrics = self.evaluate(
@@ -2899,6 +2126,7 @@ class CityLearnKPIService:
             comfort_band=comfort_band,
             evaluation_condition_cls=evaluation_condition_cls,
             dynamics_building_cls=dynamics_building_cls,
+            progress=progress,
         )
         legacy_df = all_metrics[all_metrics['cost_function'].isin(self.LEGACY_COST_FUNCTIONS)].copy()
         extended_df = all_metrics[~all_metrics['cost_function'].isin(self.LEGACY_COST_FUNCTIONS)].copy()
@@ -3008,6 +2236,7 @@ class CityLearnKPIService:
             ('carbon_emissions_control_daily_average_kgco2', 'emissions', 'daily_average', 'control', None, 'kgco2'),
             ('carbon_emissions_baseline_daily_average_kgco2', 'emissions', 'daily_average', 'baseline', None, 'kgco2'),
             ('carbon_emissions_delta_daily_average_kgco2', 'emissions', 'daily_average', 'delta', None, 'kgco2'),
+            ('pv_curtailment_total_kwh', 'solar_self_consumption', 'total', 'curtailment', None, 'kwh'),
             ('pv_generation_total_kwh', 'solar_self_consumption', 'total', 'generation', None, 'kwh'),
             ('pv_export_total_kwh', 'solar_self_consumption', 'total', 'export', None, 'kwh'),
             ('pv_generation_daily_average_kwh', 'solar_self_consumption', 'daily_average', 'generation', None, 'kwh'),
@@ -3082,6 +2311,12 @@ class CityLearnKPIService:
             ('escalator_electricity_consumption_total_kwh', 'escalator', 'energy', 'electricity_consumption_total', None, 'kwh'),
             ('escalator_state_changes_count', 'escalator', 'operation', 'state_changes', None, 'count'),
         ]
+        for key in deferrable_service_audit.summarize([]):
+            metric, unit = key.rsplit('_', 1)
+            extended_map.append((f'deferrable_appliance_audit_{key}', 'deferrable_appliance', 'audit', metric, None, unit))
+        for key in ev_departure_audit.metrics(ev_departure_audit.empty_counts()):
+            metric, unit = key.rsplit('_', 1)
+            extended_map.append((f'ev_departure_audit_{key}', 'ev', 'departure_audit', metric, None, unit))
         for old_name, family, subfamily, metric, variant, unit in extended_map:
             map_from(extended_df, old_name, family, subfamily, metric, variant, unit)
 
@@ -3110,6 +2345,7 @@ class CityLearnKPIService:
 
         kpi_buildings = self._get_kpi_buildings()
         building_windows = {building.name: self._building_active_window(building) for building in kpi_buildings}
+        kpi_building_by_name = {building.name: building for building in kpi_buildings}
         building_names = [building.name for building in kpi_buildings]
 
         # Optional community KPIs are district-only.
@@ -3153,9 +2389,21 @@ class CityLearnKPIService:
                         share,
                     )
 
+        family_audit = run(progress, 'thermal_equity_audit', self.family_audit,comfort_band=comfort_band, control_condition=control_condition, baseline_condition=baseline_condition, progress=progress)
+        for name, totals in list(family_audit['buildings'].items())+[('District',family_audit['district'])]:
+            level = 'district' if name == 'District' else 'building'
+            for suffix, value in totals.items():
+                put(level, name, f'{level}_thermal_service_audit_{suffix}', value)
+        for suffix, value in family_audit['equity'].items():
+            put('district', 'District', f'district_equity_audit_{suffix}', value)
+
         demand_response_service = getattr(env, '_demand_response_service', None)
         if getattr(demand_response_service, 'enabled', False):
             dr_by_building, dr_district = demand_response_service.summarize(building_names)
+            for purpose, totals in demand_response_service.audit_summary().items():
+                for suffix, value in totals.items():
+                    put('district', 'District', f'district_demand_response_audit_{purpose}_{suffix}', value)
+
 
             def dr_name(level: str, suffix: str) -> str:
                 return f'{level}_demand_response_{suffix}'
@@ -3183,7 +2431,7 @@ class CityLearnKPIService:
 
         robustness_service = getattr(env, '_robustness_service', None)
         if getattr(robustness_service, 'enabled', False):
-            robustness_by_building, robustness_district = robustness_service.summarize(building_names)
+            robustness_by_building, robustness_district = run(progress, 'robustness', robustness_service.summarize, building_names)
 
             robustness_metrics = [
                 'robustness_events_count',
@@ -3264,10 +2512,10 @@ class CityLearnKPIService:
         district_baseline_total = 0.0
 
         if getattr(env, 'community_market_enabled', False):
-            control_cost_totals, district_control_total = self._condition_settled_cost_totals(
+            control_cost_totals, district_control_total = run(progress, 'control_cost', self._condition_settled_cost_totals,
                 condition_by_building=control_condition_by_building,
             )
-            baseline_cost_totals, district_baseline_total = self._condition_settled_cost_totals(
+            baseline_cost_totals, district_baseline_total = run(progress, 'reference_cost', self._condition_settled_cost_totals,
                 condition_by_building=baseline_condition_by_building,
             )
         else:
@@ -3289,7 +2537,7 @@ class CityLearnKPIService:
 
         for building_name in building_names:
             t_start, t_end = building_windows.get(building_name, (0, -1))
-            building_days = self._window_days(t_start, t_end, env.seconds_per_time_step)
+            building_days = self._building_days(kpi_building_by_name[building_name], t_start, t_end)
             control_total = self._to_scalar(control_cost_totals.get(building_name), 0.0)
             baseline_total = self._to_scalar(baseline_cost_totals.get(building_name), 0.0)
             delta_total = control_total - baseline_total
@@ -3336,8 +2584,17 @@ class CityLearnKPIService:
         put('district', 'District', v2('district', 'equity', 'distribution', 'losers', None, 'percent'), equity_distribution['equity_losers_percent'])
         put('district', 'District', v2('district', 'equity', 'distribution', 'bpr_asset_poor_over_rich', None, 'ratio'), equity_bpr)
 
+        provenance = getattr(env, '_provenance_service', None)
+        if provenance is not None:
+            members, district = run(progress, 'provenance', provenance.summary)
+            for name, metrics in members.items():
+                for metric, value in metrics.items():
+                    put('building', name, f'building_energy_provenance_{metric}', value)
+            for metric, value in district.items():
+                put('district', 'District', f'district_energy_provenance_{metric}', value)
+
         if include_business_as_usual and not bool(getattr(env, '_business_as_usual_sidecar', False)):
-            self._add_business_as_usual_records(
+            run(progress, 'business_as_usual', self._add_business_as_usual_records,
                 records,
                 v2,
                 simulated_days,
@@ -3346,6 +2603,13 @@ class CityLearnKPIService:
             )
 
         output = pd.DataFrame(list(records.values()))
+        if getattr(robustness_service, 'enabled', False):
+            output.attrs['robustness_audit'] = robustness_service.audit_summary()
+        if provenance is not None:
+            output.attrs['energy_accounting'] = provenance.get_metadata()
+        from citylearn.internal.kpi_family_audit import metadata as family_metadata
+        output.attrs['kpi_family_audit'] = family_metadata()
+        output.attrs['kpi_family_audit']['equity_conditions'] = family_audit['equity_conditions']
         if output.empty:
             return pd.DataFrame(columns=['cost_function', 'value', 'name', 'level'])
 
@@ -3377,5 +2641,5 @@ class CityLearnKPIService:
                 output.loc[mask, 'topology_removed_at'] = state.get('removed_at')
                 output.loc[mask, 'topology_active'] = 1.0 if state.get('active', False) else 0.0
 
-        output = output.sort_values(['level', 'name', 'cost_function']).reset_index(drop=True)
+        output = run(progress, 'formatting', lambda: output.sort_values(['level', 'name', 'cost_function']).reset_index(drop=True))
         return output

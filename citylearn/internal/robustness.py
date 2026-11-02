@@ -2,15 +2,17 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 import hashlib
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from gymnasium import spaces
 import numpy as np
 import pandas as pd
 
 from citylearn.utilities import parse_bool
+from citylearn.internal.robustness_history import RobustnessHistory
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
@@ -112,11 +114,13 @@ class CityLearnRobustnessService:
         self._cursor = 0
         self._active_cache_step: Optional[int] = None
         self._active_cache: List[RobustnessEvent] = []
-        self._history: Dict[int, Dict[str, Any]] = {}
+        self._history = RobustnessHistory()
         self._stuck_values: Dict[Tuple[str, str], float] = {}
         self._action_history: Dict[str, List[Tuple[int, float]]] = {}
         self._flat_layout_cache = None
         self._validated_layout_signature = None
+        self._declared_target_validator = None
+        self._observed_steps = set()
         self._max_delay_steps = 1
         self._configure()
 
@@ -127,6 +131,16 @@ class CityLearnRobustnessService:
     @property
     def history(self) -> Mapping[int, Mapping[str, Any]]:
         return {key: self._public_record(value) for key, value in sorted(self._history.items())}
+
+    def iter_history(self, start=None, stop=None):
+        """Yield detached public records in [start, stop), without a full copy."""
+        for step in sorted(self._history):
+            if (start is None or step >= start) and (stop is None or step < stop):
+                yield step, deepcopy(self._public_record(self._history[step]))
+
+    def history_window(self, start=None, stop=None):
+        """Return a detached public snapshot of the requested step window."""
+        return dict(self.iter_history(start, stop))
 
     def initialize(self):
         """Load event definitions after `env.root_directory` is available."""
@@ -149,7 +163,9 @@ class CityLearnRobustnessService:
         if suffix in {".parquet", ".pq"}:
             frame = pd.read_parquet(path)
         elif suffix in {".csv", ".txt"}:
-            frame = pd.read_csv(path)
+            # Preserve explicit "nan"/"inf" parameters for validation; only
+            # empty fields represent omitted CSV parameters.
+            frame = pd.read_csv(path, keep_default_na=False)
         else:
             raise ValueError("robustness.events_file must be a CSV or Parquet file.")
 
@@ -159,17 +175,25 @@ class CityLearnRobustnessService:
     def reset(self):
         """Reset episode-local state without reloading event definitions."""
 
+        if (self.env.schema.get('robustness') or {}).get('random_seed') is None:
+            self.random_seed = int(self.env.random_seed)
         self._cursor = 0
         self._active_cache_step = None
         self._active_cache = []
-        self._history = {}
+        self._history = RobustnessHistory()
         self._stuck_values = {}
         self._action_history = {}
         self._flat_layout_cache = None
         self._validated_layout_signature = None
+        self._declared_target_validator = None
+        self._observed_steps = set()
 
     def get_metadata(self) -> Mapping[str, Any]:
+        from citylearn.internal.observation_contract import configuration
+        from citylearn.internal.robustness_audit import metadata as audit_metadata
         return {
+            'agent_observation_contract': configuration(self.env),
+            'counter_contract': audit_metadata(),
             "enabled": bool(self.enabled),
             "events_file": self.events_file,
             "random_seed": int(self.random_seed),
@@ -208,6 +232,7 @@ class CityLearnRobustnessService:
             "enabled": bool(self.enabled),
             "active_event_ids": [event.event_id for event in active],
             "active_modules": sorted({event.module for event in active}),
+            "applied_event_ids": sorted(self._history.get(step, {}).get("event_ids", set())),
             "last_step_counts": {
                 "observation": counts["observation"],
                 "forecast": counts["forecast"],
@@ -270,6 +295,12 @@ class CityLearnRobustnessService:
         return payload
 
     def apply_observations(self, observations: Any) -> Any:
+        from citylearn.internal.observation_contract import apply
+        if self.enabled:
+            self._observed_steps.add(self._global_time_step())
+        return apply(self, self._apply_observation_events(observations))
+
+    def _apply_observation_events(self, observations: Any) -> Any:
         """Apply observation/forecast/telemetry events to the agent-facing payload."""
 
         if not self.enabled:
@@ -333,7 +364,12 @@ class CityLearnRobustnessService:
         if not active:
             return actions
 
-        for event in active:
+        # Channel transforms keep file order (e.g. bias then clip). Asset
+        # availability is a final control constraint, never a transform that
+        # a later channel event can undo.
+        channel_events = [event for event in active if event.module == "action"]
+        availability_events = [event for event in active if event.module == "asset"]
+        for event in channel_events + availability_events:
             for descriptor in descriptors:
                 if event.module == "asset":
                     if not self._asset_control_event_matches(event, descriptor):
@@ -355,59 +391,37 @@ class CityLearnRobustnessService:
         return actions
 
     def adjust_observation_space(self, observation_space: Any) -> Any:
-        """Conservatively expand observation spaces for sentinel/clip values."""
+        """Describe configured corruptions without changing sensor values."""
 
+        from citylearn.internal.observation_contract import configuration
+        contract = configuration(self.env)
+        if contract['mode'] == 'hidden_faults':
+            return self._adjust_space_bounds(observation_space, -np.inf, np.inf)
         if not self.enabled:
             return observation_space
+        from citylearn.internal.robustness_spaces import adjusted_space
+        return adjusted_space(self, observation_space)
 
-        low_value = self.missing_replacement_value
-        high_value = self.missing_replacement_value
+    def audit_summary(self):
+        from citylearn.internal.robustness_audit import summary
+        return summary(self)
 
-        for event in self._events:
-            replacement = self._event_replacement_value(event)
-            low_value = min(low_value, replacement)
-            high_value = max(high_value, replacement)
-            if event.min_value is not None:
-                low_value = min(low_value, event.min_value)
-            if event.max_value is not None:
-                high_value = max(high_value, event.max_value)
+    def _target_validator(self):
+        if self._declared_target_validator is None:
+            from citylearn.internal.robustness_targets import declared_target_view
+            self._declared_target_validator = declared_target_view(self)
+        return self._declared_target_validator
 
-        return self._adjust_space_bounds(observation_space, low_value, high_value)
-
-    def summarize(self, building_names: Sequence[str]) -> Tuple[Mapping[str, Mapping[str, float]], Mapping[str, float]]:
-        building_names = [str(name) for name in building_names]
-        by_building = {name: self._empty_summary() for name in building_names}
-        district = self._empty_summary()
-        district_events = set()
-        district_steps = set()
-        building_events = {name: set() for name in building_names}
-        building_steps = {name: set() for name in building_names}
-
-        for step, record in self._history.items():
-            district_events.update(record.get("event_ids", set()))
-            if self._record_has_any_application(record):
-                district_steps.add(step)
-            self._accumulate_summary_sets(district, record)
-
-            for application in record.get("applications", []):
-                building_name = application.get("building")
-                if building_name not in by_building:
-                    continue
-                building_events[building_name].add(application.get("event_id"))
-                building_steps[building_name].add(step)
-                self._accumulate_building_application(by_building[building_name], application)
-
-        district["robustness_events_count"] = float(len(district_events))
-        district["robustness_active_time_step_count"] = float(len(district_steps))
-
-        for name, summary in by_building.items():
-            summary["robustness_events_count"] = float(len(building_events[name]))
-            summary["robustness_active_time_step_count"] = float(len(building_steps[name]))
-
-        return by_building, district
+    def summarize(self, building_names: Sequence[str], *, executed_only: bool = False) -> Tuple[Mapping[str, Mapping[str, float]], Mapping[str, float]]:
+        return self._history.summary(
+            [str(name) for name in building_names],
+            executed_before=self._global_time_step() if executed_only else None,
+        )
 
     def validate_targets(self):
         """Validate enabled events against the current flat/entity layout."""
+        from citylearn.internal.observation_contract import validate
+        validate(self)
 
         if not self.enabled:
             return
@@ -420,9 +434,12 @@ class CityLearnRobustnessService:
             if not self._module_enabled(event.module):
                 continue
             if not self._event_has_target(event):
+                if self.env.topology_mode == "dynamic":
+                    if self._target_validator()._event_has_target(event):
+                        continue
                 raise ValueError(
                     "robustness event "
-                    f"'{event.event_id}' target does not match any active {event.module} target."
+                    f"'{event.event_id}' target does not match any declared {event.module} target."
                 )
 
         self._validated_layout_signature = signature
@@ -435,10 +452,16 @@ class CityLearnRobustnessService:
 
         self.enabled = parse_bool(config.get("enabled", False), default=False, path="robustness.enabled")
         self.events_file = config.get("events_file")
-        self.random_seed = self._int_value(config.get("random_seed", getattr(self.env, "random_seed", 0)), default=0)
-        self.missing_replacement_value = self._float_value(
-            config.get("missing_replacement_value", self.DEFAULT_MISSING_REPLACEMENT_VALUE),
-            default=self.DEFAULT_MISSING_REPLACEMENT_VALUE,
+        seed = config.get("random_seed")
+        if seed is None:
+            seed = getattr(self.env, "random_seed", None)
+        self.random_seed = self._int_required(
+            0 if seed is None else seed, path="robustness.random_seed"
+        )
+        replacement = config.get("missing_replacement_value")
+        self.missing_replacement_value = self._finite_float(
+            self.DEFAULT_MISSING_REPLACEMENT_VALUE if replacement is None else replacement,
+            path="robustness.missing_replacement_value",
         )
 
         raw_modules = config.get("modules", {}) if isinstance(config, Mapping) else {}
@@ -461,10 +484,15 @@ class CityLearnRobustnessService:
             raise ValueError(f"robustness.events_file is missing columns: {sorted(missing)}.")
 
         events: List[RobustnessEvent] = []
+        event_ids = set()
         for order, row in frame.reset_index(drop=True).iterrows():
             event_id = str(row["event_id"]).strip()
-            if event_id == "" or event_id.lower() == "nan":
+            if self._parameter_missing(row["event_id"]) or event_id.lower() == "nan":
                 raise ValueError(f"robustness event at row {order} has an empty event_id.")
+            if event_id in event_ids:
+                raise ValueError(f"robustness event '{event_id}'.event_id must be unique (duplicate at row {order}).")
+            event_ids.add(event_id)
+            event_path = f"robustness event '{event_id}'"
 
             module = str(row["module"]).strip().lower()
             if module not in self.MODULE_ALIASES:
@@ -485,8 +513,12 @@ class CityLearnRobustnessService:
 
             start = self._int_required(row["start_time_step"], path=f"robustness event '{event_id}'.start_time_step")
             end = self._int_required(row["end_time_step"], path=f"robustness event '{event_id}'.end_time_step")
+            if start < 0:
+                raise ValueError(f"{event_path}.start_time_step must be non-negative.")
+            if end < 0:
+                raise ValueError(f"{event_path}.end_time_step must be non-negative.")
             if end < start:
-                raise ValueError(f"robustness event '{event_id}' end_time_step cannot be earlier than start_time_step.")
+                raise ValueError(f"{event_path}.end_time_step cannot be earlier than start_time_step.")
 
             mode = str(row["mode"]).strip().lower()
             if mode not in self.VALID_MODES[module]:
@@ -512,10 +544,25 @@ class CityLearnRobustnessService:
                 event_domain=event_domain,
             )
 
-            delay_steps = max(
-                self._int_value(row.get("delay_steps", 1), default=1),
-                1,
+            raw_delay = row.get("delay_steps")
+            delay_steps = 1 if self._parameter_missing(raw_delay) else self._int_required(
+                raw_delay, path=f"{event_path}.delay_steps"
             )
+            if delay_steps < 1:
+                raise ValueError(f"{event_path}.delay_steps must be a positive integer.")
+
+            parameters = {
+                name: self._optional_float(row.get(name), path=f"{event_path}.{name}")
+                for name in ("value", "std", "min_value", "max_value", "replacement_value")
+            }
+            if parameters["std"] is not None and parameters["std"] < 0.0:
+                raise ValueError(f"{event_path}.std must be non-negative.")
+            if (
+                parameters["min_value"] is not None
+                and parameters["max_value"] is not None
+                and parameters["min_value"] > parameters["max_value"]
+            ):
+                raise ValueError(f"{event_path}.max_value cannot be less than min_value.")
 
             events.append(
                 RobustnessEvent(
@@ -528,11 +575,7 @@ class CityLearnRobustnessService:
                     end_time_step=end,
                     mode=mode,
                     event_domain=event_domain,
-                    value=self._optional_float(row.get("value")),
-                    std=self._optional_float(row.get("std")),
-                    min_value=self._optional_float(row.get("min_value")),
-                    max_value=self._optional_float(row.get("max_value")),
-                    replacement_value=self._optional_float(row.get("replacement_value")),
+                    **parameters,
                     delay_steps=delay_steps,
                     order=int(order),
                 )
@@ -989,7 +1032,10 @@ class CityLearnRobustnessService:
                     return False
                 return bool(self._matching_entity_rows(event, event.target_type, list(table_spec.get("ids", []))))
             if event.target_type in {"building", "district"}:
-                return True
+                return any(
+                    self._observation_event_matches(event, descriptor)
+                    for agent in self._flat_observation_layout() for descriptor in agent
+                )
 
         if event.module == "action":
             descriptors = self._validation_action_descriptors()
@@ -1147,20 +1193,7 @@ class CityLearnRobustnessService:
 
     def _record_application(self, event: RobustnessEvent, kind: str, descriptor: Mapping[str, Any], *, mode: str):
         step = self._global_time_step()
-        record = self._history.setdefault(
-            step,
-            {
-                "event_ids": set(),
-                "modules": set(),
-                "observation": set(),
-                "forecast": set(),
-                "action": set(),
-                "asset": set(),
-                "missing": set(),
-                "dropout": set(),
-                "applications": [],
-            },
-        )
+        record = self._history.writable_record(step)
         target_key = str(descriptor.get("target_key", ""))
         if kind == "asset":
             # An availability event is applied to every observation field and
@@ -1199,15 +1232,7 @@ class CityLearnRobustnessService:
         )
 
     def _counts_for_step(self, step: int) -> Mapping[str, int]:
-        record = self._history.get(int(step), {})
-        return {
-            "observation": len(record.get("observation", set())),
-            "forecast": len(record.get("forecast", set())),
-            "action": len(record.get("action", set())),
-            "asset": len(record.get("asset", set())),
-            "missing": len(record.get("missing", set())),
-            "dropout": len(record.get("dropout", set())),
-        }
+        return self._history.counts(int(step))
 
     def _accumulate_summary_sets(self, target: Dict[str, float], record: Mapping[str, Any]):
         target["robustness_observation_corruption_count"] += float(len(record.get("observation", set())))
@@ -1247,11 +1272,14 @@ class CityLearnRobustnessService:
 
     @staticmethod
     def _public_record(record: Mapping[str, Any]) -> Mapping[str, Any]:
-        return {
-            key: sorted(value) if isinstance(value, set) else value
-            for key, value in record.items()
-            if key != "applications"
-        } | {"applications": list(record.get("applications", []))}
+        result = {}
+        for key in record:
+            if key == "applications":
+                continue
+            value = record[key]
+            result[key] = sorted(value) if isinstance(value, set) else value
+        result["applications"] = list(record.get("applications", []))
+        return result
 
     def _zero_observation_values(self) -> Mapping[str, float]:
         return {
@@ -1330,29 +1358,33 @@ class CityLearnRobustnessService:
         return space
 
     @staticmethod
-    def _optional_float(value: Any) -> Optional[float]:
-        try:
-            parsed = float(value)
-        except (TypeError, ValueError):
-            return None
-        return parsed if np.isfinite(parsed) else None
+    def _parameter_missing(value: Any) -> bool:
+        if isinstance(value, str):
+            return value.strip() == ""
+        return value is None or (pd.api.types.is_scalar(value) and bool(pd.isna(value)))
 
     @classmethod
-    def _float_value(cls, value: Any, *, default: float) -> float:
-        parsed = cls._optional_float(value)
-        return float(default) if parsed is None else float(parsed)
+    def _optional_float(cls, value: Any, *, path: str) -> Optional[float]:
+        if cls._parameter_missing(value):
+            return None
+        return cls._finite_float(value, path=path)
 
     @staticmethod
-    def _int_value(value: Any, *, default: int) -> int:
+    def _finite_float(value: Any, *, path: str) -> float:
         try:
-            parsed = int(float(value))
-        except (TypeError, ValueError):
-            return int(default)
+            parsed = float(value)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError(f"{path} must be a finite number when supplied.") from exc
+        if isinstance(value, (bool, np.bool_)) or not np.isfinite(parsed):
+            raise ValueError(f"{path} must be a finite number when supplied.")
         return parsed
 
     @staticmethod
     def _int_required(value: Any, *, path: str) -> int:
         try:
-            return int(float(value))
-        except (TypeError, ValueError) as exc:
-            raise ValueError(f"{path} must be an integer.") from exc
+            parsed = Decimal(str(value))
+        except InvalidOperation as exc:
+            raise ValueError(f"{path} must be a finite integer.") from exc
+        if not parsed.is_finite() or parsed != parsed.to_integral_value():
+            raise ValueError(f"{path} must be a finite integer.")
+        return int(parsed)

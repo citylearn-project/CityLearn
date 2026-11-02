@@ -19,10 +19,12 @@ from citylearn.data import CarbonIntensity, DataSet, OfflineDataError, ChargerSi
 from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.energy_model import Battery, DeferrableAppliance, PV
 from citylearn.exporter import EpisodeExporter
+from citylearn.internal.market_history import MarketSettlementHistory
 from citylearn.internal.kpi import CityLearnKPIService
 from citylearn.internal.loading import CityLearnLoadingService
 from citylearn.internal.baseline import CityLearnBusinessAsUsualBaselineService
 from citylearn.internal.physics_invariants import CityLearnPhysicsInvariantService
+from citylearn.internal.provenance import CityLearnProvenanceService
 from citylearn.internal.runtime import CityLearnRuntimeService
 from citylearn.internal.entity_interface import CityLearnEntityInterfaceService
 from citylearn.internal.topology import CityLearnTopologyService
@@ -205,7 +207,7 @@ class CityLearnEnv(Environment, Env):
         self.community_market_kpi_local_traded_enabled = True
         self.community_market_kpi_self_consumption_enabled = True
         self._last_community_market_settlement = []
-        self._community_market_settlement_history = []
+        self._community_market_settlement_history = MarketSettlementHistory()
         self._configure_community_market()
         schema_start_date = self.schema.get('start_date') if isinstance(self.schema, dict) else None
         schema_render_mode = self.schema.get('render_mode') if isinstance(self.schema, dict) else None
@@ -272,6 +274,7 @@ class CityLearnEnv(Environment, Env):
         )
         self._observations_cache: List[List[float]] = None
         self._observations_cache_time_step: int = -1
+        self._render_origin_overridden = start_date is not None
         self._render_start_date = self._parse_render_start_date(start_date if start_date is not None else schema_start_date)
         self.previous_month = None
         self.current_day = self._render_start_date.day
@@ -296,6 +299,7 @@ class CityLearnEnv(Environment, Env):
         self._kpi_service = CityLearnKPIService(self)
         self._business_as_usual_baseline_service = CityLearnBusinessAsUsualBaselineService(self)
         self._physics_invariant_service = CityLearnPhysicsInvariantService(self)
+        self._provenance_service = CityLearnProvenanceService(self)
         self._entity_service = CityLearnEntityInterfaceService(self)
         self._topology_service = CityLearnTopologyService(self)
         self._demand_response_service = CityLearnDemandResponseService(self)
@@ -382,6 +386,9 @@ class CityLearnEnv(Environment, Env):
 
         # reset environment and initializes episode time steps
         self.reset()
+        from citylearn.internal.temporal import input_changes
+        if input_changes(self._input_snapshot):
+            raise RuntimeError('Input files changed during environment construction')
 
         # reset episode tracker to start after initializing episode time steps during reset
         self.episode_tracker.reset_episode_index()
@@ -1150,14 +1157,7 @@ class CityLearnEnv(Environment, Env):
 
             if schema_path.is_file():
                 schema = FileHandler.read_json(schema_path)
-                configured_root = schema.get('root_directory')
-                if configured_root is None:
-                    schema['root_directory'] = os.path.split(schema_path.absolute())[0]
-                else:
-                    configured_root = Path(configured_root).expanduser()
-                    if not configured_root.is_absolute():
-                        configured_root = schema_path.absolute().parent / configured_root
-                    schema['root_directory'] = str(configured_root.resolve())
+                schema['root_directory'] = str(FileHandler.resolve_schema_root(schema, schema_path))
 
             elif isinstance(schema, str):
                 try:
@@ -1287,14 +1287,38 @@ class CityLearnEnv(Environment, Env):
         for b in self.buildings:
             b.time_step_ratio = self.time_step_ratio        
 
+    def set_experiment_identity(self, implementation, version, parameters, observation_access='agent_payload'):
+        """Declare the controller used for exported paired comparisons."""
+        import json
+        if not implementation or not version or not isinstance(parameters, dict):
+            raise ValueError('Controller implementation, version and parameter dictionary are required')
+        self._controller_identity = json.loads(json.dumps(dict(implementation=implementation,
+            version=version, parameters=parameters, observation_access=observation_access), allow_nan=False))
+
+    def get_deferrable_service_audit(self):
+        """Return executed appliance service, including partial and excluded requests."""
+        return self._kpi_service.deferrable_service_audit()
+
+    def get_robustness_audit(self):
+        """Return versioned fault coverage, telemetry and completed-interval counters."""
+        return self._robustness_service.audit_summary()
+
     def get_metadata(self) -> Mapping[str, Any]:
+        from citylearn.internal.deferrable_service_audit import metadata as deferrable_metadata
+        from citylearn.internal.kpi_family_audit import metadata as family_metadata, reward_metadata
+        from citylearn.internal.temporal import axis_metadata
         return {
+            'deferrable_service_audit': deferrable_metadata(),
+            'kpi_family_audit': family_metadata(),
+            'reward_evidence': reward_metadata(self),
             **super().get_metadata(),
             'interface': self.interface,
             'topology_mode': self.topology_mode,
             'topology_version': self.topology_version,
             'topology_event_log': self.topology_event_log,
             'physics_invariant_checks': bool(getattr(self, 'physics_invariant_checks', False)),
+            'energy_accounting': self._provenance_service.get_metadata(),
+            'temporal_reproducibility': axis_metadata(self),
             'ev_departure_within_tolerance': self.ev_departure_within_tolerance,
             'ev_departure_service_tolerance': self.ev_departure_service_tolerance,
             'reward_function': self.reward_function.__class__.__name__,
@@ -1305,6 +1329,8 @@ class CityLearnEnv(Environment, Env):
                 'local_price_ratio_to_grid_import': self.community_market_sell_ratio,
                 'intra_community_sell_ratio': self.community_market_sell_ratio,
                 'grid_export_price': self.community_market_grid_export_price,
+                'local_trading_enabled': getattr(self, 'community_market_local_enabled', True),
+                'settlement_version': (self.schema.get('community_market') or {}).get('settlement_version', 1),
                 'import_member_weights': self.community_market_import_member_weights,
                 'kpis': {
                     'community_local_traded_enabled': self.community_market_kpi_local_traded_enabled,
@@ -1418,8 +1444,14 @@ class CityLearnEnv(Environment, Env):
         baseline_condition: EvaluationCondition = None,
         comfort_band: float = None,
         include_business_as_usual: bool = True,
+        *,
+        progress_callback=None,
     ) -> pd.DataFrame:
-        r"""Evaluate v2 cost functions at current time step."""
+        r"""Evaluate v2 KPIs; optional progress callback receives scalar stage events.
+
+        Callback failures are logged and disable reporting, preserving evaluation.
+        No progress events or timings are added to the returned KPI table.
+        """
 
         return self._kpi_service.evaluate_v2(
             control_condition=control_condition,
@@ -1428,7 +1460,13 @@ class CityLearnEnv(Environment, Env):
             include_business_as_usual=include_business_as_usual,
             evaluation_condition_cls=EvaluationCondition,
             dynamics_building_cls=DynamicsBuilding,
+            progress_callback=progress_callback,
         )
+
+    def get_kpi_family_audit(self, *, comfort_band=None, control_condition=None, baseline_condition=None):
+        """Return observed populations, thermal service and equity audit evidence."""
+        return self._kpi_service.family_audit(comfort_band=comfort_band,
+            control_condition=control_condition, baseline_condition=baseline_condition)
 
     def run_business_as_usual_baseline(self, force: bool = False):
         """Run or return the cached native business-as-usual baseline."""
@@ -1560,8 +1598,7 @@ class CityLearnEnv(Environment, Env):
         seed: int, optional
             Use to updated :code:`citylearn.CityLearnEnv.random_seed` if value is provided.
         options: Mapping[str, Any], optional
-            Use to pass additional data to environment on reset. Not used in this base class
-            but included to conform to gymnasium interface.
+            Optional ``episode_index`` selects a specific episode split for replay.
         
         Returns
         -------
@@ -1586,6 +1623,9 @@ class CityLearnEnv(Environment, Env):
             pass
 
         # update time steps for time series
+        self._episode_index_explicit = bool(options and 'episode_index' in options)
+        if self._episode_index_explicit:
+            self.episode_tracker.set_next_episode_index(options['episode_index'])
         self.episode_tracker.next_episode(
             self.episode_time_steps,
             self.rolling_episode_split,
@@ -1605,6 +1645,9 @@ class CityLearnEnv(Environment, Env):
         self._demand_response_service.reset()
         self._robustness_service.reset()
         self.associate_chargers_to_electric_vehicles()
+        self._provenance_service.reset()
+        from citylearn.internal.comparison import inventory
+        self._comparison_initial_inventory = inventory(self)
 
         # reset reward function (does nothing by default)
         self.reward_function.reset()
@@ -1615,11 +1658,13 @@ class CityLearnEnv(Environment, Env):
         self.__net_electricity_consumption_cost = []
         self.__net_electricity_consumption_emission = []
         self._last_community_market_settlement = []
-        self._community_market_settlement_history = []
+        self._community_market_settlement_history = MarketSettlementHistory()
         self._observations_cache = None
         self._observations_cache_time_step = -1
         episode_index = int(getattr(self.episode_tracker, 'episode', 0))
-        self._ev_drift_random_state = np.random.RandomState(int(self.random_seed) + episode_index)
+        self._reset_seed_explicit = seed is not None
+        self._ev_drift_seed = int(self.random_seed) if seed is not None else int(self.random_seed) + episode_index
+        self._ev_drift_random_state = np.random.RandomState(self._ev_drift_seed)
         self._render_buffer.clear()
         self._refresh_action_cache()
         self.update_variables()
@@ -1649,7 +1694,12 @@ class CityLearnEnv(Environment, Env):
             ratio = 0.8
 
         self.community_market_sell_ratio = min(max(ratio, 0.0), 1.0)
-        self.community_market_grid_export_price = 0.0
+        export_price = float(config.get('grid_export_price', 0.0)) if config.get('settlement_version') == 2 else 0.0
+        if not np.isfinite(export_price):
+            raise ValueError('grid_export_price must be finite')
+        self.community_market_grid_export_price = export_price
+        from citylearn.community_dataset import configure_tariffs
+        configure_tariffs(self, config)
         weights = config.get('import_member_weights', {}) or {}
         parsed_weights = {}
         if isinstance(weights, Mapping):

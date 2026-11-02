@@ -157,6 +157,9 @@ class EpisodeExporter:
         if model is not None and getattr(model, 'env', None) is not None:
             kpis = model.env.evaluate_v2(include_business_as_usual=include_business_as_usual)
             export_env = model.env.unwrapped
+            identity = getattr(model, 'comparison_identity', None)
+            if callable(identity):
+                export_env.set_experiment_identity(**identity())
         else:
             kpis = env.evaluate_v2(include_business_as_usual=include_business_as_usual)
             export_env = env
@@ -172,6 +175,14 @@ class EpisodeExporter:
             kpis.fillna('').to_csv(file_path, index=False, encoding='utf-8')
         if include_business_as_usual and export_business_as_usual_timeseries:
             self.export_business_as_usual_timeseries(export_env)
+        from citylearn.internal.experiment import experiment_manifest
+        from citylearn.utils.file_handler import FileHandler
+        FileHandler.write_json(str(Path(file_path).with_suffix('.manifest.json')), experiment_manifest(export_env))
+        FileHandler.write_json(str(Path(file_path).with_suffix('.deferrable_service.json')),
+                               export_env.get_deferrable_service_audit())
+        if export_env._robustness_service.enabled:
+            FileHandler.write_json(str(Path(file_path).with_suffix('.robustness.json')),
+                                   export_env.get_robustness_audit())
         env._final_kpis_exported = True
 
     def export_business_as_usual_timeseries(self, source_env: "CityLearnEnv" = None):
@@ -722,6 +733,12 @@ class EpisodeExporter:
 
         if env.time_step == 0 or getattr(env, '_render_start_datetime', None) is None:
             self.reset_time_tracking()
+
+        axis = getattr(env, '_time_axis', None)
+        if axis is not None and axis.utc is not None and not getattr(env, '_render_origin_overridden', False):
+            timestamp = axis.at(env.episode_tracker.episode_start_time_step+env.time_step)
+            env.year, env.current_day = timestamp.year, timestamp.day
+            return timestamp.isoformat()
 
         start_datetime = env._render_start_datetime
         timestamp_dt = start_datetime + datetime.timedelta(seconds=env.time_step * env.seconds_per_time_step)

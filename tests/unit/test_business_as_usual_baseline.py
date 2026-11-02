@@ -9,7 +9,10 @@ import pytest
 
 pytest.importorskip("gymnasium")
 
-from citylearn.agents.baseline import BusinessAsUsualAgent
+from citylearn.agents.baseline import (
+    BusinessAsUsualAgent, NormalPolicy, NormalNoBatteryPolicy,
+    RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy,
+)
 from citylearn.citylearn import CityLearnEnv
 
 
@@ -95,6 +98,102 @@ def test_business_as_usual_ev_charges_to_full_and_never_discharges():
         action = _business_action(env)
         assert action[ev_index] == pytest.approx(0.0)
         assert action[ev_index] >= 0.0
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize('agent_class', [BusinessAsUsualAgent, NormalPolicy, NormalNoBatteryPolicy])
+@pytest.mark.parametrize('soc', [0.2, 0.8, 0.999])
+def test_bau_requests_maximum_until_full_even_above_departure_target(agent_class, soc):
+    env = CityLearnEnv(str(SOURCE_DATASET / 'schema.json'), episode_time_steps=4, random_seed=0)
+    try:
+        env.reset(seed=0)
+        charger = env.buildings[0].electric_vehicle_chargers[0]
+        charger.connected_electric_vehicle.battery.soc[0] = soc
+        charger.min_charging_power = 1.38
+        agent = agent_class(env)
+        # A long deadline and a lower service target must never slow down BAU.
+        agent._ev_service_context_for_charger = lambda *args: {
+            'soc': soc, 'required_soc': 0.6, 'departure_hours': 100.0, 'capacity_kwh': 20.0,
+        }
+        assert agent._ev_action_for_charger(charger, -1.0, 1.0, building=env.buildings[0]) == 1.0
+        assert agent._ev_action_for_charger(charger, -1.0, 0.4, building=env.buildings[0]) == 0.4
+        charger.connected_electric_vehicle = None
+        assert agent._ev_action_for_charger(charger, -1.0, 1.0) == 0.0
+    finally:
+        env.close()
+
+
+def test_bau_finishes_the_last_charge_interval_despite_charger_deadband():
+    env = CityLearnEnv(str(SOURCE_DATASET / 'schema.json'), episode_time_steps=4, random_seed=0)
+    try:
+        env.reset(seed=0)
+        charger = env.buildings[0].electric_vehicle_chargers[0]
+        ev = charger.connected_electric_vehicle
+        ev.battery.soc[0] = 0.999
+        charger.min_charging_power = 1.38
+        agent = BusinessAsUsualAgent(env)
+        action = agent._ev_action_for_charger(charger, -1.0, 1.0)
+        charger.update_connected_electric_vehicle_soc(action)
+        assert ev.battery.soc[0] == pytest.approx(1.0, abs=1e-6)
+        assert agent._ev_action_for_charger(charger, -1.0, 1.0) == 0.0
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize('seconds', [15, 900, 3600])
+def test_bau_battery_covers_accepted_ev_energy_instead_of_exporting_nominal_request(seconds):
+    env = CityLearnEnv(str(SOURCE_DATASET / 'schema.json'), central_agent=True,
+                      seconds_per_time_step=seconds, episode_time_steps=4, random_seed=0)
+    try:
+        env.reset(seed=0)
+        building = env.buildings[0]
+        charger = building.electric_vehicle_chargers[0]
+        ev = charger.connected_electric_vehicle
+        ev.battery.soc[0] = 0.999
+        building.energy_simulation.non_shiftable_load[0] = 0.0
+        building._Building__solar_generation[0] = 0.0
+        agent = BusinessAsUsualAgent(env)
+        before = ev.battery.soc.copy()
+        efficiency = ev.battery.efficiency
+        actions = agent.predict([])
+        np.testing.assert_array_equal(ev.battery.soc, before)
+        assert ev.battery.efficiency == efficiency
+        assert actions[0][-1] == 1.0
+        env.step(actions)
+        assert 0.999 < ev.battery.soc[0] <= 1.0
+        if seconds >= 900:
+            assert ev.battery.soc[0] == pytest.approx(1.0, abs=1e-6)
+        assert building.net_electricity_consumption[0] >= -1.0e-5
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize('kwargs', [
+    {'ev_target_soc': 0.8}, {'ev_follow_required_soc': True}, {'ev_service_floor_rate': 0.5},
+])
+def test_bau_rejects_configuration_that_changes_its_full_charge_definition(kwargs):
+    env = CityLearnEnv(str(SOURCE_DATASET / 'schema.json'), episode_time_steps=4, random_seed=0)
+    try:
+        with pytest.raises(ValueError, match='RBC'):
+            BusinessAsUsualAgent(env, **kwargs)
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize('agent_class', [RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy])
+def test_native_rbcs_still_stop_at_departure_target(agent_class):
+    env = CityLearnEnv(str(SOURCE_DATASET / 'schema.json'), episode_time_steps=4, random_seed=0)
+    try:
+        env.reset(seed=0)
+        building = env.buildings[0]
+        charger = building.electric_vehicle_chargers[0]
+        charger.connected_electric_vehicle.battery.soc[0] = 0.8
+        agent = agent_class(env)
+        agent._ev_service_context_for_charger = lambda *args: {
+            'soc': 0.8, 'required_soc': 0.6, 'departure_hours': 100.0, 'capacity_kwh': 20.0,
+        }
+        assert agent._ev_action_for_charger(charger, 0.0, 1.0, building=building) == 0.0
     finally:
         env.close()
 

@@ -197,7 +197,8 @@ def test_ev_departure_at_terminal_episode_boundary_is_counted():
     assert metrics["ev_energy_accounting_shortfall_kwh"] == pytest.approx(0.0)
 
 
-def test_connected_ev_without_terminal_departure_is_not_counted():
+@pytest.mark.parametrize('countdown', [2.0, -1.0, np.nan])
+def test_connected_ev_without_terminal_departure_is_not_counted(countdown):
     charger = _fake_feasibility_departure_charger(actual_soc=0.80)
     charger.charger_simulation.electric_vehicle_charger_state = np.array(
         [1.0], dtype="float64"
@@ -210,7 +211,7 @@ def test_connected_ev_without_terminal_departure_is_not_counted():
         [0.20], dtype="float64"
     )
     charger.charger_simulation.electric_vehicle_departure_time = np.array(
-        [2.0], dtype="float64"
+        [countdown], dtype="float64"
     )
     charger.past_connected_evs = [charger.past_connected_evs[0]]
     charger.past_connected_evs[0].battery.soc = [0.80]
@@ -1205,9 +1206,9 @@ def test_extended_cost_and_equity_use_raw_cost_series(tmp_path: Path):
         expected_legacy_cost_total = float(CostFunction.cost(control_cost[:settled_steps])[-1])
         assert float(legacy_building["cost_total"]) == pytest.approx(expected_legacy_cost_total)
 
-        assert float(district_df["district_cost_total_control_eur"]) == pytest.approx(-2.0)
-        assert float(district_df["district_cost_total_baseline_eur"]) == pytest.approx(4.0)
-        assert float(district_df["district_cost_total_delta_eur"]) == pytest.approx(-6.0)
+        assert float(district_df["district_cost_total_control_eur"]) == pytest.approx(building_control_total * env_count)
+        assert float(district_df["district_cost_total_baseline_eur"]) == pytest.approx(building_baseline_total * env_count)
+        assert float(district_df["district_cost_total_delta_eur"]) == pytest.approx(building_delta_total * env_count)
     finally:
         env.close()
 
