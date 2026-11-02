@@ -1,0 +1,7 @@
+citylearn.community\_dataset module
+===================================
+
+.. automodule:: citylearn.community_dataset
+   :members:
+   :show-inheritance:
+   :undoc-members:

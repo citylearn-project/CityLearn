@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.internal.robustness &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.internal.robustness &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -126,15 +126,17 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span><span class="p">,</span> <span class="n">InvalidOperation</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">spaces</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_bool</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.robustness_history</span><span class="w"> </span><span class="kn">import</span> <span class="n">RobustnessHistory</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
@@ -241,11 +243,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_active_cache_step</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_active_cache</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RobustnessEvent</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_history</span> <span class="o">=</span> <span class="n">RobustnessHistory</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stuck_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_action_history</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flat_layout_cache</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validated_layout_signature</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_declared_target_validator</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_observed_steps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_max_delay_steps</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_configure</span><span class="p">()</span>
 
@@ -256,6 +260,22 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">history</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_public_record</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="o">.</span><span class="n">items</span><span class="p">())}</span>
+
+<div class="viewcode-block" id="CityLearnRobustnessService.iter_history">
+<a class="viewcode-back" href="../../../api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.iter_history">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iter_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Yield detached public records in [start, stop), without a full copy."""</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">step</span> <span class="o">&gt;=</span> <span class="n">start</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="n">stop</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">step</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_public_record</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="p">[</span><span class="n">step</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="CityLearnRobustnessService.history_window">
+<a class="viewcode-back" href="../../../api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.history_window">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">history_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return a detached public snapshot of the requested step window."""</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_history</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="CityLearnRobustnessService.initialize">
 <a class="viewcode-back" href="../../../api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.initialize">[docs]</a>
@@ -280,7 +300,9 @@
         <span class="k">if</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">".parquet"</span><span class="p">,</span> <span class="s2">".pq"</span><span class="p">}:</span>
             <span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">".csv"</span><span class="p">,</span> <span class="s2">".txt"</span><span class="p">}:</span>
-            <span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="c1"># Preserve explicit "nan"/"inf" parameters for validation; only</span>
+            <span class="c1"># empty fields represent omitted CSV parameters.</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">keep_default_na</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"robustness.events_file must be a CSV or Parquet file."</span><span class="p">)</span>
 
@@ -293,20 +315,28 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Reset episode-local state without reloading event definitions."""</span>
 
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'robustness'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'random_seed'</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_active_cache_step</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_active_cache</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_history</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_history</span> <span class="o">=</span> <span class="n">RobustnessHistory</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stuck_values</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_action_history</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flat_layout_cache</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_validated_layout_signature</span> <span class="o">=</span> <span class="kc">None</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validated_layout_signature</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_declared_target_validator</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_observed_steps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="CityLearnRobustnessService.get_metadata">
 <a class="viewcode-back" href="../../../api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.get_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.observation_contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">configuration</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.robustness_audit</span><span class="w"> </span><span class="kn">import</span> <span class="n">metadata</span> <span class="k">as</span> <span class="n">audit_metadata</span>
         <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">'agent_observation_contract'</span><span class="p">:</span> <span class="n">configuration</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">),</span>
+            <span class="s1">'counter_contract'</span><span class="p">:</span> <span class="n">audit_metadata</span><span class="p">(),</span>
             <span class="s2">"enabled"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">),</span>
             <span class="s2">"events_file"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">events_file</span><span class="p">,</span>
             <span class="s2">"random_seed"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">),</span>
@@ -351,6 +381,7 @@
             <span class="s2">"enabled"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">),</span>
             <span class="s2">"active_event_ids"</span><span class="p">:</span> <span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">event_id</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">active</span><span class="p">],</span>
             <span class="s2">"active_modules"</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">event</span><span class="o">.</span><span class="n">module</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">active</span><span class="p">}),</span>
+            <span class="s2">"applied_event_ids"</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"event_ids"</span><span class="p">,</span> <span class="nb">set</span><span class="p">())),</span>
             <span class="s2">"last_step_counts"</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">"observation"</span><span class="p">:</span> <span class="n">counts</span><span class="p">[</span><span class="s2">"observation"</span><span class="p">],</span>
                 <span class="s2">"forecast"</span><span class="p">:</span> <span class="n">counts</span><span class="p">[</span><span class="s2">"forecast"</span><span class="p">],</span>
@@ -419,6 +450,13 @@
 <div class="viewcode-block" id="CityLearnRobustnessService.apply_observations">
 <a class="viewcode-back" href="../../../api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.apply_observations">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">apply_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.observation_contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_observed_steps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_global_time_step</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_observation_events</span><span class="p">(</span><span class="n">observations</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_observation_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Apply observation/forecast/telemetry events to the agent-facing payload."""</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
@@ -445,8 +483,7 @@
             <span class="k">return</span> <span class="n">observations</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_apply_flat_observation_events</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="n">active</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">observations</span></div>
-
+        <span class="k">return</span> <span class="n">observations</span>
 
 <div class="viewcode-block" id="CityLearnRobustnessService.apply_actions">
 <a class="viewcode-back" href="../../../api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.apply_actions">[docs]</a>
@@ -485,7 +522,12 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">active</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">actions</span>
 
-        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">active</span><span class="p">:</span>
+        <span class="c1"># Channel transforms keep file order (e.g. bias then clip). Asset</span>
+        <span class="c1"># availability is a final control constraint, never a transform that</span>
+        <span class="c1"># a later channel event can undo.</span>
+        <span class="n">channel_events</span> <span class="o">=</span> <span class="p">[</span><span class="n">event</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">active</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">module</span> <span class="o">==</span> <span class="s2">"action"</span><span class="p">]</span>
+        <span class="n">availability_events</span> <span class="o">=</span> <span class="p">[</span><span class="n">event</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">active</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">module</span> <span class="o">==</span> <span class="s2">"asset"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">channel_events</span> <span class="o">+</span> <span class="n">availability_events</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">descriptor</span> <span class="ow">in</span> <span class="n">descriptors</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">module</span> <span class="o">==</span> <span class="s2">"asset"</span><span class="p">:</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_asset_control_event_matches</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">):</span>
@@ -510,65 +552,46 @@
 <div class="viewcode-block" id="CityLearnRobustnessService.adjust_observation_space">
 <a class="viewcode-back" href="../../../api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.adjust_observation_space">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">adjust_observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation_space</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Conservatively expand observation spaces for sentinel/clip values."""</span>
+<span class="w">        </span><span class="sd">"""Describe configured corruptions without changing sensor values."""</span>
 
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.observation_contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">configuration</span>
+        <span class="n">contract</span> <span class="o">=</span> <span class="n">configuration</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">contract</span><span class="p">[</span><span class="s1">'mode'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'hidden_faults'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjust_space_bounds</span><span class="p">(</span><span class="n">observation_space</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">observation_space</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.robustness_spaces</span><span class="w"> </span><span class="kn">import</span> <span class="n">adjusted_space</span>
+        <span class="k">return</span> <span class="n">adjusted_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation_space</span><span class="p">)</span></div>
 
-        <span class="n">low_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_replacement_value</span>
-        <span class="n">high_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_replacement_value</span>
 
-        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span>
-            <span class="n">replacement</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_replacement_value</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
-            <span class="n">low_value</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">low_value</span><span class="p">,</span> <span class="n">replacement</span><span class="p">)</span>
-            <span class="n">high_value</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">high_value</span><span class="p">,</span> <span class="n">replacement</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">min_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">low_value</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">low_value</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">min_value</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">max_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">high_value</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">high_value</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">max_value</span><span class="p">)</span>
+<div class="viewcode-block" id="CityLearnRobustnessService.audit_summary">
+<a class="viewcode-back" href="../../../api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.audit_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">audit_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.robustness_audit</span><span class="w"> </span><span class="kn">import</span> <span class="n">summary</span>
+        <span class="k">return</span> <span class="n">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjust_space_bounds</span><span class="p">(</span><span class="n">observation_space</span><span class="p">,</span> <span class="n">low_value</span><span class="p">,</span> <span class="n">high_value</span><span class="p">)</span></div>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_target_validator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_declared_target_validator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.robustness_targets</span><span class="w"> </span><span class="kn">import</span> <span class="n">declared_target_view</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_declared_target_validator</span> <span class="o">=</span> <span class="n">declared_target_view</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_declared_target_validator</span>
 
 <div class="viewcode-block" id="CityLearnRobustnessService.summarize">
 <a class="viewcode-back" href="../../../api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.summarize">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building_names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-        <span class="n">building_names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">building_names</span><span class="p">]</span>
-        <span class="n">by_building</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_summary</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">building_names</span><span class="p">}</span>
-        <span class="n">district</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_summary</span><span class="p">()</span>
-        <span class="n">district_events</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">district_steps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-        <span class="n">building_events</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="nb">set</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">building_names</span><span class="p">}</span>
-        <span class="n">building_steps</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="nb">set</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">building_names</span><span class="p">}</span>
-
-        <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">district_events</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"event_ids"</span><span class="p">,</span> <span class="nb">set</span><span class="p">()))</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_record_has_any_application</span><span class="p">(</span><span class="n">record</span><span class="p">):</span>
-                <span class="n">district_steps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_accumulate_summary_sets</span><span class="p">(</span><span class="n">district</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">application</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"applications"</span><span class="p">,</span> <span class="p">[]):</span>
-                <span class="n">building_name</span> <span class="o">=</span> <span class="n">application</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"building"</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">building_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">by_building</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="n">building_events</span><span class="p">[</span><span class="n">building_name</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">application</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"event_id"</span><span class="p">))</span>
-                <span class="n">building_steps</span><span class="p">[</span><span class="n">building_name</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_accumulate_building_application</span><span class="p">(</span><span class="n">by_building</span><span class="p">[</span><span class="n">building_name</span><span class="p">],</span> <span class="n">application</span><span class="p">)</span>
-
-        <span class="n">district</span><span class="p">[</span><span class="s2">"robustness_events_count"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">district_events</span><span class="p">))</span>
-        <span class="n">district</span><span class="p">[</span><span class="s2">"robustness_active_time_step_count"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">district_steps</span><span class="p">))</span>
-
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">by_building</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">summary</span><span class="p">[</span><span class="s2">"robustness_events_count"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">building_events</span><span class="p">[</span><span class="n">name</span><span class="p">]))</span>
-            <span class="n">summary</span><span class="p">[</span><span class="s2">"robustness_active_time_step_count"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">building_steps</span><span class="p">[</span><span class="n">name</span><span class="p">]))</span>
-
-        <span class="k">return</span> <span class="n">by_building</span><span class="p">,</span> <span class="n">district</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building_names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">executed_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">building_names</span><span class="p">],</span>
+            <span class="n">executed_before</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_global_time_step</span><span class="p">()</span> <span class="k">if</span> <span class="n">executed_only</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CityLearnRobustnessService.validate_targets">
 <a class="viewcode-back" href="../../../api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.validate_targets">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Validate enabled events against the current flat/entity layout."""</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.observation_contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate</span>
+        <span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
             <span class="k">return</span>
@@ -581,9 +604,12 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_enabled</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">module</span><span class="p">):</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_has_target</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">topology_mode</span> <span class="o">==</span> <span class="s2">"dynamic"</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_validator</span><span class="p">()</span><span class="o">.</span><span class="n">_event_has_target</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+                        <span class="k">continue</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">"robustness event "</span>
-                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="si">}</span><span class="s2">' target does not match any active </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">module</span><span class="si">}</span><span class="s2"> target."</span>
+                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="si">}</span><span class="s2">' target does not match any declared </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">module</span><span class="si">}</span><span class="s2"> target."</span>
                 <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_validated_layout_signature</span> <span class="o">=</span> <span class="n">signature</span></div>
@@ -597,10 +623,16 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="n">parse_bool</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"robustness.enabled"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">events_file</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"events_file"</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_int_value</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"random_seed"</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">"random_seed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">missing_replacement_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_float_value</span><span class="p">(</span>
-            <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"missing_replacement_value"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_MISSING_REPLACEMENT_VALUE</span><span class="p">),</span>
-            <span class="n">default</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_MISSING_REPLACEMENT_VALUE</span><span class="p">,</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"random_seed"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">seed</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">"random_seed"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_int_required</span><span class="p">(</span>
+            <span class="mi">0</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">seed</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"robustness.random_seed"</span>
+        <span class="p">)</span>
+        <span class="n">replacement</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"missing_replacement_value"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_replacement_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finite_float</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_MISSING_REPLACEMENT_VALUE</span> <span class="k">if</span> <span class="n">replacement</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">replacement</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"robustness.missing_replacement_value"</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="n">raw_modules</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"modules"</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
@@ -623,10 +655,15 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"robustness.events_file is missing columns: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
 
         <span class="n">events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RobustnessEvent</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">event_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">order</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
             <span class="n">event_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"event_id"</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">event_id</span> <span class="o">==</span> <span class="s2">""</span> <span class="ow">or</span> <span class="n">event_id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"nan"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_missing</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"event_id"</span><span class="p">])</span> <span class="ow">or</span> <span class="n">event_id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"nan"</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"robustness event at row </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2"> has an empty event_id."</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">event_id</span> <span class="ow">in</span> <span class="n">event_ids</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"robustness event '</span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">'.event_id must be unique (duplicate at row </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
+            <span class="n">event_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">event_id</span><span class="p">)</span>
+            <span class="n">event_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"robustness event '</span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">'"</span>
 
             <span class="n">module</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"module"</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">module</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">MODULE_ALIASES</span><span class="p">:</span>
@@ -647,8 +684,12 @@
 
             <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_int_required</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"start_time_step"</span><span class="p">],</span> <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"robustness event '</span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">'.start_time_step"</span><span class="p">)</span>
             <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_int_required</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"end_time_step"</span><span class="p">],</span> <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"robustness event '</span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">'.end_time_step"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event_path</span><span class="si">}</span><span class="s2">.start_time_step must be non-negative."</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event_path</span><span class="si">}</span><span class="s2">.end_time_step must be non-negative."</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"robustness event '</span><span class="si">{</span><span class="n">event_id</span><span class="si">}</span><span class="s2">' end_time_step cannot be earlier than start_time_step."</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event_path</span><span class="si">}</span><span class="s2">.end_time_step cannot be earlier than start_time_step."</span><span class="p">)</span>
 
             <span class="n">mode</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">VALID_MODES</span><span class="p">[</span><span class="n">module</span><span class="p">]:</span>
@@ -674,10 +715,25 @@
                 <span class="n">event_domain</span><span class="o">=</span><span class="n">event_domain</span><span class="p">,</span>
             <span class="p">)</span>
 
-            <span class="n">delay_steps</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_int_value</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"delay_steps"</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
-                <span class="mi">1</span><span class="p">,</span>
+            <span class="n">raw_delay</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"delay_steps"</span><span class="p">)</span>
+            <span class="n">delay_steps</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameter_missing</span><span class="p">(</span><span class="n">raw_delay</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_int_required</span><span class="p">(</span>
+                <span class="n">raw_delay</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event_path</span><span class="si">}</span><span class="s2">.delay_steps"</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="n">delay_steps</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event_path</span><span class="si">}</span><span class="s2">.delay_steps must be a positive integer."</span><span class="p">)</span>
+
+            <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event_path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"value"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"min_value"</span><span class="p">,</span> <span class="s2">"max_value"</span><span class="p">,</span> <span class="s2">"replacement_value"</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">"std"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">"std"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event_path</span><span class="si">}</span><span class="s2">.std must be non-negative."</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">parameters</span><span class="p">[</span><span class="s2">"min_value"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">"max_value"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">"min_value"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">"max_value"</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">event_path</span><span class="si">}</span><span class="s2">.max_value cannot be less than min_value."</span><span class="p">)</span>
 
             <span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">RobustnessEvent</span><span class="p">(</span>
@@ -690,11 +746,7 @@
                     <span class="n">end_time_step</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
                     <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
                     <span class="n">event_domain</span><span class="o">=</span><span class="n">event_domain</span><span class="p">,</span>
-                    <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value"</span><span class="p">)),</span>
-                    <span class="n">std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"std"</span><span class="p">)),</span>
-                    <span class="n">min_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"min_value"</span><span class="p">)),</span>
-                    <span class="n">max_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_value"</span><span class="p">)),</span>
-                    <span class="n">replacement_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"replacement_value"</span><span class="p">)),</span>
+                    <span class="o">**</span><span class="n">parameters</span><span class="p">,</span>
                     <span class="n">delay_steps</span><span class="o">=</span><span class="n">delay_steps</span><span class="p">,</span>
                     <span class="n">order</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">order</span><span class="p">),</span>
                 <span class="p">)</span>
@@ -1151,7 +1203,10 @@
                     <span class="k">return</span> <span class="kc">False</span>
                 <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_matching_entity_rows</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">target_type</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">table_spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ids"</span><span class="p">,</span> <span class="p">[]))))</span>
             <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">target_type</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"building"</span><span class="p">,</span> <span class="s2">"district"</span><span class="p">}:</span>
-                <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_observation_event_matches</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flat_observation_layout</span><span class="p">()</span> <span class="k">for</span> <span class="n">descriptor</span> <span class="ow">in</span> <span class="n">agent</span>
+                <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">module</span> <span class="o">==</span> <span class="s2">"action"</span><span class="p">:</span>
             <span class="n">descriptors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validation_action_descriptors</span><span class="p">()</span>
@@ -1309,20 +1364,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_record_application</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">RobustnessEvent</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_time_step</span><span class="p">()</span>
-        <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
-            <span class="n">step</span><span class="p">,</span>
-            <span class="p">{</span>
-                <span class="s2">"event_ids"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
-                <span class="s2">"modules"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
-                <span class="s2">"observation"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
-                <span class="s2">"forecast"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
-                <span class="s2">"action"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
-                <span class="s2">"asset"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
-                <span class="s2">"missing"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
-                <span class="s2">"dropout"</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
-                <span class="s2">"applications"</span><span class="p">:</span> <span class="p">[],</span>
-            <span class="p">},</span>
-        <span class="p">)</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="o">.</span><span class="n">writable_record</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
         <span class="n">target_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">descriptor</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"target_key"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"asset"</span><span class="p">:</span>
             <span class="c1"># An availability event is applied to every observation field and</span>
@@ -1361,15 +1403,7 @@
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_counts_for_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-        <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">step</span><span class="p">),</span> <span class="p">{})</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">"observation"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"observation"</span><span class="p">,</span> <span class="nb">set</span><span class="p">())),</span>
-            <span class="s2">"forecast"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"forecast"</span><span class="p">,</span> <span class="nb">set</span><span class="p">())),</span>
-            <span class="s2">"action"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"action"</span><span class="p">,</span> <span class="nb">set</span><span class="p">())),</span>
-            <span class="s2">"asset"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"asset"</span><span class="p">,</span> <span class="nb">set</span><span class="p">())),</span>
-            <span class="s2">"missing"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"missing"</span><span class="p">,</span> <span class="nb">set</span><span class="p">())),</span>
-            <span class="s2">"dropout"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dropout"</span><span class="p">,</span> <span class="nb">set</span><span class="p">())),</span>
-        <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_history</span><span class="o">.</span><span class="n">counts</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">step</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_accumulate_summary_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">record</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="n">target</span><span class="p">[</span><span class="s2">"robustness_observation_corruption_count"</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"observation"</span><span class="p">,</span> <span class="nb">set</span><span class="p">())))</span>
@@ -1409,11 +1443,14 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_public_record</span><span class="p">(</span><span class="n">record</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="n">key</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
-            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">"applications"</span>
-        <span class="p">}</span> <span class="o">|</span> <span class="p">{</span><span class="s2">"applications"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"applications"</span><span class="p">,</span> <span class="p">[]))}</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">record</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"applications"</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
+        <span class="n">result</span><span class="p">[</span><span class="s2">"applications"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"applications"</span><span class="p">,</span> <span class="p">[]))</span>
+        <span class="k">return</span> <span class="n">result</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_zero_observation_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span>
@@ -1492,32 +1529,36 @@
         <span class="k">return</span> <span class="n">space</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_optional_float</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">parsed</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="n">parsed</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parameter_missing</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">""</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_float_value</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="n">parsed</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_optional_float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">default</span><span class="p">)</span> <span class="k">if</span> <span class="n">parsed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_optional_float</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_parameter_missing</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_finite_float</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_int_value</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_finite_float</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">parsed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+            <span class="n">parsed</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> must be a finite number when supplied."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">parsed</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> must be a finite number when supplied."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">parsed</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_int_required</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> must be an integer."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span></div>
+            <span class="n">parsed</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">InvalidOperation</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> must be a finite integer."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">parsed</span><span class="o">.</span><span class="n">is_finite</span><span class="p">()</span> <span class="ow">or</span> <span class="n">parsed</span> <span class="o">!=</span> <span class="n">parsed</span><span class="o">.</span><span class="n">to_integral_value</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> must be a finite integer."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span></div>
 
 </pre></div>
 

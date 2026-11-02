@@ -1,0 +1,7 @@
+citylearn.internal.kpi\_service\_metrics module
+===============================================
+
+.. automodule:: citylearn.internal.kpi_service_metrics
+   :members:
+   :show-inheritance:
+   :undoc-members:

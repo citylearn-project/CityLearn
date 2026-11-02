@@ -7,11 +7,27 @@ The full evaluation table contains additional KPIs.
 
 ## District
 
+- `district_thermal_service_audit_discomfort_ratio`
+- `district_thermal_service_audit_thermal_coverage_ratio`
+- `district_thermal_service_audit_outage_discomfort_ratio`
+- `district_thermal_service_audit_unserved_service_ratio`
+- `district_thermal_service_audit_outage_unserved_service_ratio`
+- `district_thermal_service_audit_energy_coverage_ratio`
+- `district_equity_audit_coverage_ratio`
+- `district_energy_provenance_pv_useful_building_ratio`
+- `district_energy_provenance_pv_useful_with_mobility_ratio`
+- `district_energy_provenance_pv_stored_kwh`
+- `district_energy_provenance_pv_grid_export_kwh`
+- `district_energy_provenance_external_purchase_emissions_kgco2`
+- `district_energy_provenance_external_purchase_emissions_business_as_usual_kgco2`
 - `district_cost_total_control_eur`
 - `district_cost_total_business_as_usual_eur`
 - `district_cost_total_delta_to_business_as_usual_eur`
-- `district_ev_performance_departure_min_acceptable_feasible_ratio`
-- `district_ev_performance_departure_within_tolerance_feasible_ratio`
+- `district_ev_departure_audit_min_acceptable_service_feasible_ratio`
+- `district_ev_departure_audit_within_tolerance_service_feasible_ratio`
+- `district_ev_departure_audit_target_coverage_ratio`
+- `district_ev_departure_audit_service_coverage_ratio`
+- `district_ev_departure_audit_target_unknown_count`
 - `district_electrical_service_phase_violations_energy_total_kwh`
 - `district_electrical_service_phase_requested_pressure_energy_total_kwh`
 - `district_battery_total_throughput_kwh`
@@ -41,8 +57,11 @@ The full evaluation table contains additional KPIs.
 - `building_cost_total_control_eur`
 - `building_cost_total_business_as_usual_eur`
 - `building_cost_total_delta_to_business_as_usual_eur`
-- `building_ev_performance_departure_min_acceptable_feasible_ratio`
-- `building_ev_performance_departure_within_tolerance_feasible_ratio`
+- `building_ev_departure_audit_min_acceptable_service_feasible_ratio`
+- `building_ev_departure_audit_within_tolerance_service_feasible_ratio`
+- `building_ev_departure_audit_target_coverage_ratio`
+- `building_ev_departure_audit_service_coverage_ratio`
+- `building_ev_departure_audit_target_unknown_count`
 - `building_electrical_service_phase_violations_energy_total_kwh`
 - `building_electrical_service_phase_requested_pressure_energy_total_kwh`
 - `building_battery_total_throughput_kwh`

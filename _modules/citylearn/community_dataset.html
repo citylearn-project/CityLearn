@@ -1,0 +1,293 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.community_dataset &mdash; CityLearn 3.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=dd1205ac"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/publishing.html">Publishing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases.html">Releases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.community_dataset</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.community_dataset</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Explicit physical and economic contracts for inventory-derived datasets.</span>
+
+<span class="sd">Legacy schemas are unchanged. Prices are EUR/kWh and timeseries are indexed by</span>
+<span class="sd">absolute dataset time, including an episode's start offset.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Battery</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
+
+
+<div class="viewcode-block" id="InventoryBuilding">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBuilding">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InventoryBuilding</span><span class="p">(</span><span class="n">Building</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Versioned loader for inventory scenarios; older runtimes fail explicitly."""</span></div>
+
+
+
+<div class="viewcode-block" id="InventoryEVBuilding">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryEVBuilding">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InventoryEVBuilding</span><span class="p">(</span><span class="n">InventoryBuilding</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Requires the EV battery loader contract introduced in version 1.8.2."""</span></div>
+
+
+
+<div class="viewcode-block" id="RuntimeEVBuilding">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.RuntimeEVBuilding">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RuntimeEVBuilding</span><span class="p">(</span><span class="n">InventoryEVBuilding</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Runtime EV datasets require arrival observations fixed in version 1.8.3."""</span></div>
+
+
+
+<div class="viewcode-block" id="InventoryBattery">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBattery">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InventoryBattery</span><span class="p">(</span><span class="n">Battery</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Battery with declared asymmetric powers, SOC range and efficiencies."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_charge_kw</span><span class="p">,</span> <span class="n">max_discharge_kw</span><span class="p">,</span> <span class="n">min_soc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_soc</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">charging_efficiency</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">discharging_efficiency</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">max_charge_kw</span><span class="p">,</span> <span class="n">max_discharge_kw</span><span class="p">,</span> <span class="n">min_soc</span><span class="p">,</span> <span class="n">max_soc</span><span class="p">,</span>
+                  <span class="n">charging_efficiency</span><span class="p">,</span> <span class="n">discharging_efficiency</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Battery parameters must be finite'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_charge_kw</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">max_discharge_kw</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">min_soc</span> <span class="o">&lt;</span> <span class="n">max_soc</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Invalid battery power or SOC limits'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">charging_efficiency</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">discharging_efficiency</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Battery efficiencies must be in (0, 1]'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_charge_kw</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_charge_kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_discharge_kw</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_discharge_kw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_soc</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_soc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">charging_efficiency</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">charging_efficiency</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discharging_efficiency</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">discharging_efficiency</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charging</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">nominal_power</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">max_charge_kw</span><span class="p">,</span> <span class="n">max_discharge_kw</span><span class="p">),</span>
+                      <span class="n">depth_of_discharge</span><span class="o">=</span><span class="mf">1.0</span><span class="o">-</span><span class="n">min_soc</span><span class="p">,</span> <span class="n">efficiency</span><span class="o">=</span><span class="n">charging_efficiency</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">'capacity_power_curve'</span><span class="p">,</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]])</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">'power_efficiency_curve'</span><span class="p">,</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">charging_efficiency</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">charging_efficiency</span><span class="o">**</span><span class="mi">2</span><span class="p">]])</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">'capacity_loss_coefficient'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">'loss_coefficient'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">min_soc</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_soc</span> <span class="o">&lt;=</span> <span class="n">max_soc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Initial battery SOC is outside its declared limits'</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InventoryBattery.get_max_input_power">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBattery.get_max_input_power">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_max_input_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_init</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">energy_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_init</span> <span class="k">if</span> <span class="n">energy_init</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">energy_init</span>
+        <span class="n">headroom</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">max_soc</span><span class="o">-</span><span class="n">energy_init</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_charge_kw</span><span class="p">,</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_max_input_power</span><span class="p">(</span><span class="n">energy_init</span><span class="p">),</span>
+                   <span class="n">headroom</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">charging_efficiency</span><span class="o">*</span><span class="mi">3600</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="InventoryBattery.get_max_output_power">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBattery.get_max_output_power">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_max_output_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_init</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Call Battery input directly: its output method delegates back to input.</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_discharge_kw</span><span class="p">,</span> <span class="n">Battery</span><span class="o">.</span><span class="n">get_max_input_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="InventoryBattery.get_current_efficiency">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBattery.get_current_efficiency">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_current_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">power</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">charging_efficiency</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charging</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">discharging_efficiency</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="InventoryBattery.charge">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBattery.charge">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charging</span> <span class="o">=</span> <span class="n">energy</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="InventoryBattery.get_metadata">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBattery.get_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(),</span> <span class="s1">'max_charge_kw'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_charge_kw</span><span class="p">,</span>
+                <span class="s1">'max_discharge_kw'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_discharge_kw</span><span class="p">,</span> <span class="s1">'max_soc'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_soc</span><span class="p">,</span>
+                <span class="s1">'charging_efficiency'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">charging_efficiency</span><span class="p">,</span>
+                <span class="s1">'discharging_efficiency'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">discharging_efficiency</span><span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="configure_tariffs">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.configure_tariffs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">configure_tariffs</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Load portable per-building tariffs once; invalid explicit data fails closed."""</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">community_tariffs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'root_directory'</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">'.'</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'tariff_files'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="p">(</span><span class="n">root</span><span class="o">/</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">root</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">parents</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Community tariff files must be inside the dataset'</span><span class="p">)</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'grid_export_price'</span><span class="p">,</span> <span class="s1">'community_buy_price'</span><span class="p">,</span> <span class="s1">'community_sell_price'</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">frame</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">required</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Community tariff file lacks required columns'</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">required</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Community tariffs must be finite and nonempty'</span><span class="p">)</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">community_tariffs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+    <span class="n">env</span><span class="o">.</span><span class="n">community_market_local_enabled</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'local_trading_enabled'</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="settlement_prices">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.settlement_prices">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">settlement_prices</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">grid_import_price</span><span class="p">):</span>
+    <span class="n">tariffs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_tariffs'</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tariffs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">local</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">community_market_sell_ratio</span><span class="o">*</span><span class="n">grid_import_price</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_grid_export_price'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span> <span class="n">local</span><span class="p">,</span> <span class="n">local</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'episode_tracker'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s1">'episode_start_time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tariffs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Community tariff series does not cover this episode'</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tariffs</span><span class="p">[</span><span class="n">index</span><span class="p">])</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

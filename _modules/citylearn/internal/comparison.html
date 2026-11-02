@@ -1,0 +1,380 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.internal.comparison &mdash; CityLearn 3.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/publishing.html">Publishing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases.html">Releases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.internal.comparison</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.internal.comparison</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Portable pairing evidence and explicit interpretation of experiment differences."""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'paired-experiment-v1'</span>
+
+
+<div class="viewcode-block" id="digest">
+<a class="viewcode-back" href="../../../api/citylearn.internal.comparison.html#citylearn.internal.comparison.digest">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">digest</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s1">','</span><span class="p">,</span> <span class="s1">':'</span><span class="p">),</span> <span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="inventory">
+<a class="viewcode-back" href="../../../api/citylearn.internal.comparison.html#citylearn.internal.comparison.inventory">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">inventory</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Boundary snapshots, not a financial credit for unused stored energy."""</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
+        <span class="n">battery</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage</span>
+        <span class="k">if</span> <span class="n">battery</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">battery</span><span class="o">.</span><span class="n">capacity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">'active_stationary'</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">capacity_kwh</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">capacity</span><span class="p">),</span>
+                             <span class="n">energy_kwh</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">energy_init</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_all_electric_vehicles'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">:</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">'fleet_ev_including_away'</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">capacity_kwh</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">capacity</span><span class="p">),</span>
+                         <span class="n">energy_kwh</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">energy_init</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">'kind'</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]))</span></div>
+
+
+
+<div class="viewcode-block" id="canonical">
+<a class="viewcode-back" href="../../../api/citylearn.internal.comparison.html#citylearn.internal.comparison.canonical">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">canonical</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">canonical</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">canonical</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">root</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)</span><span class="o">+</span><span class="s1">'/'</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">))</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="context">
+<a class="viewcode-back" href="../../../api/citylearn.internal.comparison.html#citylearn.internal.comparison.context">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">context</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">data_files</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.observation_contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">configuration</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'root_directory'</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">'.'</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+    <span class="n">ignored</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'root_directory'</span><span class="p">,</span> <span class="s1">'reward_function'</span><span class="p">,</span> <span class="s1">'central_agent'</span><span class="p">,</span> <span class="s1">'interface'</span><span class="p">,</span> <span class="s1">'shared_observations'</span><span class="p">,</span>
+               <span class="s1">'observations'</span><span class="p">,</span> <span class="s1">'actions'</span><span class="p">,</span> <span class="s1">'observation_bundles'</span><span class="p">,</span> <span class="s1">'community_market'</span><span class="p">,</span> <span class="s1">'random_seed'</span><span class="p">,</span>
+               <span class="s1">'render'</span><span class="p">,</span> <span class="s1">'render_mode'</span><span class="p">,</span> <span class="s1">'render_directory'</span><span class="p">,</span> <span class="s1">'render_file_format'</span><span class="p">,</span> <span class="s1">'debug_timing'</span><span class="p">,</span>
+               <span class="s1">'metrics_log_interval'</span><span class="p">,</span> <span class="s1">'check_observation_limits'</span><span class="p">,</span> <span class="s1">'physics_invariant_checks'</span><span class="p">,</span>
+               <span class="s1">'export_kpis_on_episode_end'</span><span class="p">,</span> <span class="s1">'chargers_observations_helper'</span><span class="p">,</span> <span class="s1">'chargers_actions_helper'</span><span class="p">,</span>
+               <span class="s1">'chargers_shared_observations_helper'</span><span class="p">,</span> <span class="s1">'deferrable_appliance_observations_helper'</span><span class="p">,</span>
+               <span class="s1">'deferrable_appliance_actions_helper'</span><span class="p">,</span> <span class="s1">'escalator_observations_helper'</span><span class="p">,</span> <span class="s1">'escalator_actions_helper'</span><span class="p">}</span>
+    <span class="n">physical</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignored</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">physical</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'robustness'</span><span class="p">),</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">physical</span><span class="p">[</span><span class="s1">'robustness'</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'agent_observation_contract'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">observation</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'observations'</span><span class="p">,</span> <span class="s1">'observation_bundles'</span><span class="p">,</span> <span class="s1">'derived_forecasts'</span><span class="p">)}</span>
+    <span class="n">observation</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">interface</span><span class="p">,</span> <span class="n">agent_contract</span><span class="o">=</span><span class="n">configuration</span><span class="p">(</span><span class="n">env</span><span class="p">))</span>
+    <span class="n">source_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">source_root</span><span class="p">)):</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">source_root</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s1">'*.py'</span><span class="p">))}</span>
+    <span class="n">tracker</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">axis_metadata</span><span class="p">,</span> <span class="n">runtime_versions</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">axis_metadata</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+    <span class="n">temporal</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span><span class="n">axis</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'definition_version'</span><span class="p">,</span><span class="s1">'initialization_seed'</span><span class="p">,</span><span class="s1">'clock_source'</span><span class="p">,</span><span class="s1">'dataset_seconds_per_time_step'</span><span class="p">,</span><span class="s1">'control_seconds_per_time_step'</span><span class="p">,</span><span class="s1">'terminal_padding'</span><span class="p">,</span><span class="s1">'data_noise_generator'</span><span class="p">,</span><span class="s1">'episode_split_rng'</span><span class="p">)}</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">temporal</span><span class="o">=</span><span class="n">temporal</span><span class="p">,</span><span class="n">definition_version</span><span class="o">=</span><span class="n">DEFINITION_VERSION</span><span class="p">,</span>
+                <span class="n">engine</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">__version__</span><span class="p">,</span> <span class="n">source_sha256</span><span class="o">=</span><span class="n">digest</span><span class="p">(</span><span class="n">code</span><span class="p">),</span> <span class="n">runtime_versions</span><span class="o">=</span><span class="n">runtime_versions</span><span class="p">()),</span>
+                <span class="n">physical_configuration_sha256</span><span class="o">=</span><span class="n">digest</span><span class="p">(</span><span class="n">canonical</span><span class="p">(</span><span class="n">physical</span><span class="p">,</span> <span class="n">root</span><span class="p">)),</span>
+                <span class="n">data_files_sha256</span><span class="o">=</span><span class="p">{</span><span class="n">canonical</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data_files</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+                <span class="n">episode_start_time_step</span><span class="o">=</span><span class="n">tracker</span><span class="o">.</span><span class="n">episode_start_time_step</span><span class="p">,</span>
+                <span class="n">episode_end_time_step</span><span class="o">=</span><span class="n">tracker</span><span class="o">.</span><span class="n">episode_end_time_step</span><span class="p">,</span>
+                <span class="n">completed_intervals</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span>
+                <span class="n">seconds_per_time_step</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span> <span class="n">time_step_ratio</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">time_step_ratio</span><span class="p">,</span>
+                <span class="n">random_seed</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span> <span class="n">ev_drift_seed</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_ev_drift_seed'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">initial_inventory</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_comparison_initial_inventory'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                <span class="n">service_tolerances</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">ev_within</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">ev_departure_within_tolerance</span><span class="p">,</span>
+                                        <span class="n">ev_service</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">ev_departure_service_tolerance</span><span class="p">),</span>
+                <span class="n">observation</span><span class="o">=</span><span class="n">canonical</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">root</span><span class="p">),</span>
+                <span class="n">market</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()[</span><span class="s1">'community_market'</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="native_reference">
+<a class="viewcode-back" href="../../../api/citylearn.internal.comparison.html#citylearn.internal.comparison.native_reference">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">native_reference</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">BusinessAsUsualAgent</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">implementation</span><span class="o">=</span><span class="s1">'citylearn.agents.baseline.BusinessAsUsualAgent'</span><span class="p">,</span>
+                  <span class="n">simulator_version</span><span class="o">=</span><span class="n">__version__</span><span class="p">,</span> <span class="n">definition_version</span><span class="o">=</span><span class="n">BusinessAsUsualAgent</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span><span class="p">,</span>
+                  <span class="n">observation_access</span><span class="o">=</span><span class="s1">'privileged_simulator_state'</span><span class="p">,</span> <span class="n">evaluated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">resolved_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">))</span>
+    <span class="n">cached</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_business_as_usual_baseline_cache'</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">cached</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_native_reference_metadata'</span><span class="p">,</span> <span class="p">{}))</span>
+        <span class="n">result</span><span class="p">[</span><span class="s1">'evaluated'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="load_kpis">
+<a class="viewcode-back" href="../../../api/citylearn.internal.comparison.html#citylearn.internal.comparison.load_kpis">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_kpis</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s1">'.parquet'</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">'KPI'</span> <span class="ow">in</span> <span class="n">frame</span><span class="p">:</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="s1">'KPI'</span><span class="p">,</span> <span class="n">var_name</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">'KPI'</span><span class="p">:</span> <span class="s1">'cost_function'</span><span class="p">})</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="p">{</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">}</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Expected a V2 KPI export or long-form cost_function/name/value columns'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">duplicated</span><span class="p">([</span><span class="s1">'name'</span><span class="p">,</span> <span class="s1">'cost_function'</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Duplicate KPI/name rows cannot be compared safely'</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{(</span><span class="n">r</span><span class="p">[</span><span class="s1">'name'</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]):</span> <span class="p">(</span><span class="kc">None</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">'value'</span><span class="p">])</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">'value'</span><span class="p">]))</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">'value'</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s1">'records'</span><span class="p">)}</span></div>
+
+
+
+<div class="viewcode-block" id="compare_manifests">
+<a class="viewcode-back" href="../../../api/citylearn.internal.comparison.html#citylearn.internal.comparison.compare_manifests">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_manifests</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'controller'</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'controller'</span><span class="p">,</span> <span class="s1">'sharing'</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Comparison mode must be controller or sharing'</span><span class="p">)</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">left</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'comparison_context'</span><span class="p">),</span> <span class="n">right</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'comparison_context'</span><span class="p">)</span>
+    <span class="n">missing</span><span class="p">,</span> <span class="n">mismatches</span><span class="p">,</span> <span class="n">declared</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">b</span> <span class="ow">or</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'definition_version'</span><span class="p">)</span> <span class="o">!=</span> <span class="n">DEFINITION_VERSION</span> <span class="ow">or</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'definition_version'</span><span class="p">)</span> <span class="o">!=</span> <span class="n">DEFINITION_VERSION</span><span class="p">:</span>
+        <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'versioned_comparison_context'</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'temporal'</span><span class="p">)</span> <span class="o">!=</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'temporal'</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">'temporal'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">a</span> <span class="ow">or</span> <span class="s1">'temporal'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">b</span><span class="p">:</span><span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'temporal'</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span><span class="n">mismatches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'temporal'</span><span class="p">)</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'engine'</span><span class="p">,</span> <span class="s1">'physical_configuration_sha256'</span><span class="p">,</span> <span class="s1">'data_files_sha256'</span><span class="p">,</span> <span class="s1">'episode_start_time_step'</span><span class="p">,</span>
+                    <span class="s1">'episode_end_time_step'</span><span class="p">,</span> <span class="s1">'completed_intervals'</span><span class="p">,</span> <span class="s1">'seconds_per_time_step'</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span>
+                    <span class="s1">'random_seed'</span><span class="p">,</span> <span class="s1">'ev_drift_seed'</span><span class="p">,</span> <span class="s1">'initial_inventory'</span><span class="p">,</span> <span class="s1">'service_tolerances'</span><span class="p">,</span> <span class="s1">'observation'</span><span class="p">,</span> <span class="s1">'market'</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">required</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">a</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">b</span> <span class="ow">or</span> <span class="p">(</span><span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'time_step_ratio'</span><span class="p">,)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">b</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)):</span>
+                <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">'market'</span> <span class="ow">and</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">'sharing'</span><span class="p">:</span>
+                <span class="n">toggles</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'enabled'</span><span class="p">,</span> <span class="s1">'local_trading_enabled'</span><span class="p">}</span>
+                <span class="n">aa</span><span class="p">,</span> <span class="n">bb</span> <span class="o">=</span> <span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">toggles</span><span class="p">}</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">aa</span> <span class="o">!=</span> <span class="n">bb</span><span class="p">:</span>
+                    <span class="n">mismatches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'market_prices_or_settlement'</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                    <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'sharing_toggle_difference'</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">declared</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'sharing_enabled_flags'</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">a</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">b</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+                <span class="n">mismatches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">manifest</span> <span class="ow">in</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+        <span class="n">identity</span> <span class="o">=</span> <span class="n">manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'controller_identity'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">identity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'implementation'</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">identity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'version'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">identity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'parameters'</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">identity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'observation_access'</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">'controller_identity'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'controller_identity'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'input_file_changes'</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">'input_changed_after_load'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'input_changed_after_load'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'unresolved_file_references'</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'data_files_sha256'</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">'data_file_evidence'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'data_file_evidence'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'controller_identity'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">right</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'controller_identity'</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">left</span><span class="p">[</span><span class="s1">'controller_identity'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'observation_access'</span><span class="p">)</span> <span class="o">!=</span> <span class="n">right</span><span class="p">[</span><span class="s1">'controller_identity'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'observation_access'</span><span class="p">)):</span>
+        <span class="n">mismatches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'controller_observation_access'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">'sharing'</span> <span class="ow">and</span> <span class="n">left</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'controller_identity'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">right</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'controller_identity'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">left</span><span class="p">[</span><span class="s1">'controller_identity'</span><span class="p">]</span> <span class="o">!=</span> <span class="n">right</span><span class="p">[</span><span class="s1">'controller_identity'</span><span class="p">]:</span>
+        <span class="n">mismatches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'controller_identity'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">left</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'final_inventory'</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">right</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'final_inventory'</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'final_inventory'</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'business_as_usual_reference'</span><span class="p">,</span> <span class="s1">'energy_accounting'</span><span class="p">,</span> <span class="s1">'deferrable_service_audit'</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">left</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">right</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="n">missing</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">left</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">right</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+            <span class="n">mismatches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="s1">'incompatible'</span> <span class="k">if</span> <span class="n">mismatches</span> <span class="k">else</span> <span class="p">(</span><span class="s1">'unknown'</span> <span class="k">if</span> <span class="n">missing</span> <span class="k">else</span> <span class="s1">'paired'</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">definition_version</span><span class="o">=</span><span class="n">DEFINITION_VERSION</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
+                <span class="n">permitted_claim</span><span class="o">=</span><span class="p">(</span><span class="s1">'controller_difference'</span> <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">'controller'</span> <span class="k">else</span> <span class="s1">'sharing_difference'</span><span class="p">)</span> <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">'paired'</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">mismatches</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">mismatches</span><span class="p">)),</span> <span class="n">missing_evidence</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">missing</span><span class="p">)),</span> <span class="n">declared_differences</span><span class="o">=</span><span class="n">declared</span><span class="p">,</span>
+                <span class="n">left_controller</span><span class="o">=</span><span class="n">left</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'controller_identity'</span><span class="p">),</span> <span class="n">right_controller</span><span class="o">=</span><span class="n">right</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'controller_identity'</span><span class="p">),</span>
+                <span class="n">baseline_reference</span><span class="o">=</span><span class="n">left</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'business_as_usual_reference'</span><span class="p">),</span>
+                <span class="n">final_inventory</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">left</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'final_inventory'</span><span class="p">),</span> <span class="n">right</span><span class="o">=</span><span class="n">right</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'final_inventory'</span><span class="p">)),</span>
+                <span class="n">inventory_differences</span><span class="o">=</span><span class="n">inventory_differences</span><span class="p">(</span><span class="n">left</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'final_inventory'</span><span class="p">),</span> <span class="n">right</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'final_inventory'</span><span class="p">)),</span>
+                <span class="n">interpretation</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">legacy_solar</span><span class="o">=</span><span class="s1">'instantaneous_absorption_includes_charging'</span><span class="p">,</span>
+                    <span class="n">useful_solar</span><span class="o">=</span><span class="s1">'provenance_to_final_building_load_or_mobility; stored_energy_reported_separately'</span><span class="p">,</span>
+                    <span class="n">emissions</span><span class="o">=</span><span class="s1">'use_external_purchase_emissions_for_external_carbon; internal_allocation_is_separate'</span><span class="p">,</span>
+                    <span class="n">service</span><span class="o">=</span><span class="s1">'read_EV_and_appliance_service_with_coverage_and_final_inventory'</span><span class="p">,</span>
+                    <span class="n">cost</span><span class="o">=</span><span class="s1">'cost_delta_alone_does_not_prove_equal_service_or_equal_final_inventory'</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="compare_exports">
+<a class="viewcode-back" href="../../../api/citylearn.internal.comparison.html#citylearn.internal.comparison.compare_exports">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_exports</span><span class="p">(</span><span class="n">left_path</span><span class="p">,</span> <span class="n">right_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'controller'</span><span class="p">):</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">left_path</span><span class="p">),</span> <span class="n">Path</span><span class="p">(</span><span class="n">right_path</span><span class="p">)]</span>
+    <span class="n">manifests</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+        <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">'.manifest.json'</span><span class="p">)</span>
+        <span class="n">manifests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">manifest_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span> <span class="k">if</span> <span class="n">manifest_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="p">{})</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">compare_manifests</span><span class="p">(</span><span class="o">*</span><span class="n">manifests</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">load_kpis</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])):</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">)</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">kpi</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">b</span><span class="p">,</span>
+                         <span class="n">delta_right_minus_left</span><span class="o">=</span><span class="n">b</span><span class="o">-</span><span class="n">a</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">b</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">report</span><span class="p">[</span><span class="s1">'kpis'</span><span class="p">]</span> <span class="o">=</span> <span class="n">rows</span>
+    <span class="n">report</span><span class="p">[</span><span class="s1">'outcome_summary'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="o">==</span><span class="s1">'District'</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">text</span> <span class="ow">in</span> <span class="n">r</span><span class="p">[</span><span class="s1">'kpi'</span><span class="p">]</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'cost_total_control'</span><span class="p">,</span> <span class="s1">'departure_audit_'</span><span class="p">,</span> <span class="s1">'deferrable_appliance_audit_'</span><span class="p">,</span>
+                                     <span class="s1">'provenance_pv_useful_'</span><span class="p">,</span> <span class="s1">'provenance_external_purchase_emissions'</span><span class="p">))]</span>
+    <span class="n">report</span><span class="p">[</span><span class="s1">'observed_differences'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s1">'kpi'</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">report</span><span class="p">[</span><span class="s1">'outcome_summary'</span><span class="p">]</span>
+                                      <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">'delta_right_minus_left'</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s1">'delta_right_minus_left'</span><span class="p">])</span><span class="o">&gt;</span><span class="mf">1e-7</span><span class="p">]</span>
+    <span class="n">report</span><span class="p">[</span><span class="s1">'service_and_inventory_must_be_checked'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">report</span></div>
+
+
+
+<div class="viewcode-block" id="inventory_differences">
+<a class="viewcode-back" href="../../../api/citylearn.internal.comparison.html#citylearn.internal.comparison.inventory_differences">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">inventory_differences</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+    <span class="n">maps</span> <span class="o">=</span> <span class="p">[{(</span><span class="n">r</span><span class="p">[</span><span class="s1">'kind'</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="s1">'id'</span><span class="p">]):</span> <span class="n">r</span><span class="p">[</span><span class="s1">'energy_kwh'</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="p">(</span><span class="n">rows</span> <span class="ow">or</span> <span class="p">[])}</span> <span class="k">for</span> <span class="n">rows</span> <span class="ow">in</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">left_kwh</span><span class="o">=</span><span class="n">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">kind</span><span class="p">,</span><span class="n">name</span><span class="p">)),</span> <span class="n">right_kwh</span><span class="o">=</span><span class="n">maps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">kind</span><span class="p">,</span><span class="n">name</span><span class="p">)),</span>
+                 <span class="n">delta_right_minus_left_kwh</span><span class="o">=</span><span class="p">(</span><span class="n">maps</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">kind</span><span class="p">,</span><span class="n">name</span><span class="p">]</span><span class="o">-</span><span class="n">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">kind</span><span class="p">,</span><span class="n">name</span><span class="p">])</span>
+                 <span class="k">if</span> <span class="p">(</span><span class="n">kind</span><span class="p">,</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span><span class="n">kind</span><span class="p">,</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">maps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">kind</span><span class="p">,</span><span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">|</span><span class="nb">set</span><span class="p">(</span><span class="n">maps</span><span class="p">[</span><span class="mi">1</span><span class="p">]))]</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

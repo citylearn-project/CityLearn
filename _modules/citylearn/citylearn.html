@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.citylearn &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.citylearn &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -143,10 +143,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.electric_vehicle</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElectricVehicle</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Battery</span><span class="p">,</span> <span class="n">DeferrableAppliance</span><span class="p">,</span> <span class="n">PV</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.exporter</span><span class="w"> </span><span class="kn">import</span> <span class="n">EpisodeExporter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.market_history</span><span class="w"> </span><span class="kn">import</span> <span class="n">MarketSettlementHistory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnKPIService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.loading</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnLoadingService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnBusinessAsUsualBaselineService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.physics_invariants</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnPhysicsInvariantService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.provenance</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnProvenanceService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnRuntimeService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.entity_interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEntityInterfaceService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.topology</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnTopologyService</span>
@@ -334,7 +336,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">community_market_kpi_local_traded_enabled</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">community_market_kpi_self_consumption_enabled</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_community_market_settlement</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_community_market_settlement_history</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_community_market_settlement_history</span> <span class="o">=</span> <span class="n">MarketSettlementHistory</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_configure_community_market</span><span class="p">()</span>
         <span class="n">schema_start_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'start_date'</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="n">schema_render_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'render_mode'</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
@@ -401,6 +403,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache_time_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_render_origin_overridden</span> <span class="o">=</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_render_start_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_render_start_date</span><span class="p">(</span><span class="n">start_date</span> <span class="k">if</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">schema_start_date</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">previous_month</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_day</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_start_date</span><span class="o">.</span><span class="n">day</span>
@@ -425,6 +428,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_kpi_service</span> <span class="o">=</span> <span class="n">CityLearnKPIService</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_business_as_usual_baseline_service</span> <span class="o">=</span> <span class="n">CityLearnBusinessAsUsualBaselineService</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_physics_invariant_service</span> <span class="o">=</span> <span class="n">CityLearnPhysicsInvariantService</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_provenance_service</span> <span class="o">=</span> <span class="n">CityLearnProvenanceService</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_entity_service</span> <span class="o">=</span> <span class="n">CityLearnEntityInterfaceService</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_topology_service</span> <span class="o">=</span> <span class="n">CityLearnTopologyService</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_demand_response_service</span> <span class="o">=</span> <span class="n">CityLearnDemandResponseService</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -511,6 +515,9 @@
 
         <span class="c1"># reset environment and initializes episode time steps</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_changes</span>
+        <span class="k">if</span> <span class="n">input_changes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_input_snapshot</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">'Input files changed during environment construction'</span><span class="p">)</span>
 
         <span class="c1"># reset episode tracker to start after initializing episode time steps during reset</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">reset_episode_index</span><span class="p">()</span>
@@ -1279,14 +1286,7 @@
 
             <span class="k">if</span> <span class="n">schema_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
                 <span class="n">schema</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">schema_path</span><span class="p">)</span>
-                <span class="n">configured_root</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'root_directory'</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">configured_root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">schema</span><span class="p">[</span><span class="s1">'root_directory'</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">schema_path</span><span class="o">.</span><span class="n">absolute</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">configured_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">configured_root</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">configured_root</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
-                        <span class="n">configured_root</span> <span class="o">=</span> <span class="n">schema_path</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">configured_root</span>
-                    <span class="n">schema</span><span class="p">[</span><span class="s1">'root_directory'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">configured_root</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+                <span class="n">schema</span><span class="p">[</span><span class="s1">'root_directory'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">FileHandler</span><span class="o">.</span><span class="n">resolve_schema_root</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">schema_path</span><span class="p">))</span>
 
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
@@ -1416,16 +1416,49 @@
         <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
             <span class="n">b</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span>        
 
+<div class="viewcode-block" id="CityLearnEnv.set_experiment_identity">
+<a class="viewcode-back" href="../../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.set_experiment_identity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_experiment_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">implementation</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">observation_access</span><span class="o">=</span><span class="s1">'agent_payload'</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Declare the controller used for exported paired comparisons."""</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">implementation</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">version</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Controller implementation, version and parameter dictionary are required'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_controller_identity</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">implementation</span><span class="o">=</span><span class="n">implementation</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span> <span class="n">observation_access</span><span class="o">=</span><span class="n">observation_access</span><span class="p">),</span> <span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="CityLearnEnv.get_deferrable_service_audit">
+<a class="viewcode-back" href="../../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.get_deferrable_service_audit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_deferrable_service_audit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return executed appliance service, including partial and excluded requests."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kpi_service</span><span class="o">.</span><span class="n">deferrable_service_audit</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="CityLearnEnv.get_robustness_audit">
+<a class="viewcode-back" href="../../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.get_robustness_audit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_robustness_audit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return versioned fault coverage, telemetry and completed-interval counters."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_robustness_service</span><span class="o">.</span><span class="n">audit_summary</span><span class="p">()</span></div>
+
+
 <div class="viewcode-block" id="CityLearnEnv.get_metadata">
 <a class="viewcode-back" href="../../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.get_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.deferrable_service_audit</span><span class="w"> </span><span class="kn">import</span> <span class="n">metadata</span> <span class="k">as</span> <span class="n">deferrable_metadata</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi_family_audit</span><span class="w"> </span><span class="kn">import</span> <span class="n">metadata</span> <span class="k">as</span> <span class="n">family_metadata</span><span class="p">,</span> <span class="n">reward_metadata</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">axis_metadata</span>
         <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">'deferrable_service_audit'</span><span class="p">:</span> <span class="n">deferrable_metadata</span><span class="p">(),</span>
+            <span class="s1">'kpi_family_audit'</span><span class="p">:</span> <span class="n">family_metadata</span><span class="p">(),</span>
+            <span class="s1">'reward_evidence'</span><span class="p">:</span> <span class="n">reward_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
             <span class="o">**</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(),</span>
             <span class="s1">'interface'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="p">,</span>
             <span class="s1">'topology_mode'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_mode</span><span class="p">,</span>
             <span class="s1">'topology_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_version</span><span class="p">,</span>
             <span class="s1">'topology_event_log'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_event_log</span><span class="p">,</span>
             <span class="s1">'physics_invariant_checks'</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+            <span class="s1">'energy_accounting'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(),</span>
+            <span class="s1">'temporal_reproducibility'</span><span class="p">:</span> <span class="n">axis_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
             <span class="s1">'ev_departure_within_tolerance'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_departure_within_tolerance</span><span class="p">,</span>
             <span class="s1">'ev_departure_service_tolerance'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_departure_service_tolerance</span><span class="p">,</span>
             <span class="s1">'reward_function'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_function</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
@@ -1436,6 +1469,8 @@
                 <span class="s1">'local_price_ratio_to_grid_import'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_market_sell_ratio</span><span class="p">,</span>
                 <span class="s1">'intra_community_sell_ratio'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_market_sell_ratio</span><span class="p">,</span>
                 <span class="s1">'grid_export_price'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_market_grid_export_price</span><span class="p">,</span>
+                <span class="s1">'local_trading_enabled'</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'community_market_local_enabled'</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+                <span class="s1">'settlement_version'</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'community_market'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'settlement_version'</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
                 <span class="s1">'import_member_weights'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_market_import_member_weights</span><span class="p">,</span>
                 <span class="s1">'kpis'</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s1">'community_local_traded_enabled'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">community_market_kpi_local_traded_enabled</span><span class="p">,</span>
@@ -1567,8 +1602,14 @@
         <span class="n">baseline_condition</span><span class="p">:</span> <span class="n">EvaluationCondition</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">comfort_band</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include_business_as_usual</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">progress_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Evaluate v2 cost functions at current time step."""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Evaluate v2 KPIs; optional progress callback receives scalar stage events.</span>
+
+<span class="sd">        Callback failures are logged and disable reporting, preserving evaluation.</span>
+<span class="sd">        No progress events or timings are added to the returned KPI table.</span>
+<span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kpi_service</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span>
             <span class="n">control_condition</span><span class="o">=</span><span class="n">control_condition</span><span class="p">,</span>
@@ -1577,7 +1618,16 @@
             <span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">,</span>
             <span class="n">evaluation_condition_cls</span><span class="o">=</span><span class="n">EvaluationCondition</span><span class="p">,</span>
             <span class="n">dynamics_building_cls</span><span class="o">=</span><span class="n">DynamicsBuilding</span><span class="p">,</span>
+            <span class="n">progress_callback</span><span class="o">=</span><span class="n">progress_callback</span><span class="p">,</span>
         <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CityLearnEnv.get_kpi_family_audit">
+<a class="viewcode-back" href="../../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.get_kpi_family_audit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_kpi_family_audit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">comfort_band</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">control_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">baseline_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return observed populations, thermal service and equity audit evidence."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kpi_service</span><span class="o">.</span><span class="n">family_audit</span><span class="p">(</span><span class="n">comfort_band</span><span class="o">=</span><span class="n">comfort_band</span><span class="p">,</span>
+            <span class="n">control_condition</span><span class="o">=</span><span class="n">control_condition</span><span class="p">,</span> <span class="n">baseline_condition</span><span class="o">=</span><span class="n">baseline_condition</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CityLearnEnv.run_business_as_usual_baseline">
@@ -1736,8 +1786,7 @@
 <span class="sd">        seed: int, optional</span>
 <span class="sd">            Use to updated :code:`citylearn.CityLearnEnv.random_seed` if value is provided.</span>
 <span class="sd">        options: Mapping[str, Any], optional</span>
-<span class="sd">            Use to pass additional data to environment on reset. Not used in this base class</span>
-<span class="sd">            but included to conform to gymnasium interface.</span>
+<span class="sd">            Optional ``episode_index`` selects a specific episode split for replay.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1762,6 +1811,9 @@
             <span class="k">pass</span>
 
         <span class="c1"># update time steps for time series</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_episode_index_explicit</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">options</span> <span class="ow">and</span> <span class="s1">'episode_index'</span> <span class="ow">in</span> <span class="n">options</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_episode_index_explicit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">set_next_episode_index</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">'episode_index'</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">next_episode</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">rolling_episode_split</span><span class="p">,</span>
@@ -1781,6 +1833,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_demand_response_service</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_robustness_service</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">associate_chargers_to_electric_vehicles</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.comparison</span><span class="w"> </span><span class="kn">import</span> <span class="n">inventory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_comparison_initial_inventory</span> <span class="o">=</span> <span class="n">inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="c1"># reset reward function (does nothing by default)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reward_function</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
@@ -1791,11 +1846,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_cost</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_emission</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_community_market_settlement</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_community_market_settlement_history</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_community_market_settlement_history</span> <span class="o">=</span> <span class="n">MarketSettlementHistory</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache_time_step</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="n">episode_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span> <span class="s1">'episode'</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span> <span class="o">+</span> <span class="n">episode_index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset_seed_explicit</span> <span class="o">=</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span> <span class="o">+</span> <span class="n">episode_index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_render_buffer</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_action_cache</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_variables</span><span class="p">()</span>
@@ -1826,7 +1883,12 @@
             <span class="n">ratio</span> <span class="o">=</span> <span class="mf">0.8</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">community_market_sell_ratio</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">ratio</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">community_market_grid_export_price</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">export_price</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'grid_export_price'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'settlement_version'</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">export_price</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'grid_export_price must be finite'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">community_market_grid_export_price</span> <span class="o">=</span> <span class="n">export_price</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.community_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_tariffs</span>
+        <span class="n">configure_tariffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_member_weights'</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">parsed_weights</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>

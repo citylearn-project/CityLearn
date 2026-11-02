@@ -1,0 +1,1086 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.internal.balance_audit &mdash; CityLearn 3.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/publishing.html">Publishing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases.html">Releases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.internal.balance_audit</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.internal.balance_audit</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Offline independent balance audit using a directed physical-flow network.</span>
+
+<span class="sd">No production accounting, settlement or KPI formula is used to calculate expected</span>
+<span class="sd">values. Battery journals are physical measurements and are checked against device</span>
+<span class="sd">terminals and stored energy. This is model-consistency evidence, not calibration.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s2">"independent-flow-audit-v1"</span>
+<span class="n">DESTINATIONS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"load"</span><span class="p">,</span>
+    <span class="s2">"mobility"</span><span class="p">,</span>
+    <span class="s2">"grid_export"</span><span class="p">,</span>
+    <span class="s2">"loss"</span><span class="p">,</span>
+    <span class="s2">"asset_exit"</span><span class="p">,</span>
+    <span class="s2">"external_reset"</span><span class="p">,</span>
+    <span class="s2">"curtailment"</span><span class="p">,</span>
+    <span class="s2">"stored"</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="BalanceAuditError">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.BalanceAuditError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BalanceAuditError</span><span class="p">(</span><span class="ne">AssertionError</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="plus">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.plus">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plus</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">target</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="n">factor</span>
+    <span class="k">return</span> <span class="n">target</span></div>
+
+
+
+<div class="viewcode-block" id="total">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.total">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">total</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="FlowNetwork">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.FlowNetwork">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FlowNetwork</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Solve concentrations from Kirchhoff balances on explicit operation nodes."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinks</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="FlowNetwork.node">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.FlowNetwork.node">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">mass</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inputs</span> <span class="ow">or</span> <span class="p">{})</span>
+        <span class="k">return</span> <span class="n">i</span></div>
+
+
+<div class="viewcode-block" id="FlowNetwork.edge">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.FlowNetwork.edge">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">amount</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="FlowNetwork.sink">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.FlowNetwork.sink">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">amount</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sinks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">amount</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="FlowNetwork.solve">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.FlowNetwork.solve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">check</span><span class="p">):</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">key</span> <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">source</span><span class="p">})</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">)}</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">)</span>
+        <span class="n">rhs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)))</span>
+        <span class="n">incoming</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">outgoing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">source</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">):</span>
+            <span class="n">incoming</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">+=</span> <span class="n">total</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">rhs</span><span class="p">[</span><span class="n">node</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">index</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">flow</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">flow</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1e-10</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BalanceAuditError</span><span class="p">(</span><span class="s2">"Negative physical edge"</span><span class="p">)</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="o">-=</span> <span class="n">flow</span>
+            <span class="n">incoming</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+            <span class="n">outgoing</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">flow</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinks</span><span class="p">:</span>
+            <span class="n">outgoing</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flow</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mass</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">):</span>
+            <span class="n">check</span><span class="p">(</span><span class="sa">f</span><span class="s2">"node_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_input"</span><span class="p">,</span> <span class="n">incoming</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">mass</span><span class="p">)</span>
+            <span class="n">check</span><span class="p">(</span><span class="sa">f</span><span class="s2">"node_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_output"</span><span class="p">,</span> <span class="n">outgoing</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">mass</span><span class="p">)</span>
+        <span class="n">active</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-12</span><span class="p">)</span>
+        <span class="n">concentrations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">active</span><span class="p">,</span> <span class="n">active</span><span class="p">)]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">)[</span><span class="n">active</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">rhs</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">)[</span><span class="n">active</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="n">a</span> <span class="o">@</span> <span class="n">x</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">():</span>
+                <span class="n">check</span><span class="p">(</span><span class="s2">"flow_network_equation"</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1e-7</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BalanceAuditError</span><span class="p">(</span><span class="s2">"Negative source concentration"</span><span class="p">)</span>
+            <span class="n">concentrations</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">flow</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinks</span><span class="p">:</span>
+            <span class="n">bag</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">label</span><span class="p">:</span> <span class="n">concentrations</span><span class="p">[</span><span class="n">node</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">flow</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">plus</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">bag</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">concentrations</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">)</span> <span class="o">-</span> <span class="n">rank</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="weighted_imports">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.weighted_imports">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">weighted_imports</span><span class="p">(</span><span class="n">demands</span><span class="p">,</span> <span class="n">traded</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Independent progressive filling at demand-saturation breakpoints."""</span>
+    <span class="n">demands</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">demands</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">demands</span><span class="p">)</span>
+    <span class="n">remaining</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">traded</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">demands</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">active</span> <span class="o">=</span> <span class="n">demands</span> <span class="o">-</span> <span class="n">result</span> <span class="o">&gt;</span> <span class="mf">1e-12</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">active</span><span class="p">)</span> <span class="ow">or</span> <span class="n">remaining</span> <span class="o">&lt;=</span> <span class="mf">1e-12</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">rates</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">weights</span><span class="p">[</span><span class="n">active</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">weights</span><span class="p">[</span><span class="n">active</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">1e-9</span>
+            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">active</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+        <span class="p">)</span>
+        <span class="n">positive</span> <span class="o">=</span> <span class="n">rates</span> <span class="o">&gt;</span> <span class="mf">0.0</span>
+        <span class="n">next_cap</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="p">((</span><span class="n">demands</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">-</span> <span class="n">result</span><span class="p">[</span><span class="n">active</span><span class="p">])[</span><span class="n">positive</span><span class="p">]</span> <span class="o">/</span> <span class="n">rates</span><span class="p">[</span><span class="n">positive</span><span class="p">])</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">remaining</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">rates</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span> <span class="n">next_cap</span><span class="p">)</span>
+        <span class="n">granted</span> <span class="o">=</span> <span class="n">rates</span> <span class="o">*</span> <span class="n">level</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">+=</span> <span class="n">granted</span>
+        <span class="n">remaining</span> <span class="o">-=</span> <span class="nb">float</span><span class="p">(</span><span class="n">granted</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="IndependentBalanceAudit">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.IndependentBalanceAudit">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IndependentBalanceAudit</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Attach after reset at interval zero; detach before resetting the episode.</span>
+
+<span class="sd">    The optional instrumentation observes both normal and no-feedback transitions.</span>
+<span class="sd">    It adds no dispatch decisions and preserves the original runtime methods.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">absolute_tolerance</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">relative_tolerance</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Start an audit immediately after reset, before actions"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atol</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">absolute_tolerance</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rtol</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">relative_tolerance</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sources</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sinks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transfers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">members</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_error</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_scaled_error</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">singular_networks</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tariffs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"root_directory"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"."</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"community_market"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tariff_files"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="k">with</span> <span class="p">(</span><span class="n">root</span> <span class="o">/</span> <span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tariffs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">stream</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_inventory</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="n">total</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="IndependentBalanceAudit.check">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.IndependentBalanceAudit.check">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">actual</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expected</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">actual</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">actual</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="n">BalanceAuditError</span><span class="p">(</span><span class="n">label</span> <span class="o">+</span> <span class="s2">": expected undefined value"</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">actual</span><span class="p">,</span> <span class="n">expected</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">actual</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">actual</span> <span class="o">-</span> <span class="n">expected</span><span class="p">)</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">atol</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rtol</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">actual</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">expected</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_error</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_error</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_scaled_error</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_scaled_error</span><span class="p">,</span> <span class="n">error</span> <span class="o">/</span> <span class="n">limit</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">actual</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span> <span class="ow">or</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="n">limit</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BalanceAuditError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: actual=</span><span class="si">{</span><span class="n">actual</span><span class="si">:</span><span class="s2">.12g</span><span class="si">}</span><span class="s2">, expected=</span><span class="si">{</span><span class="n">expected</span><span class="si">:</span><span class="s2">.12g</span><span class="si">}</span><span class="s2">, tolerance=</span><span class="si">{</span><span class="n">limit</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
+            <span class="n">candidates</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">electrical_storage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">b</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">b</span><span class="o">.</span><span class="n">electrical_storage</span><span class="p">,</span> <span class="s2">"stationary"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span> <span class="ow">or</span> <span class="p">[]:</span>
+                <span class="n">ev</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span>
+                <span class="k">if</span> <span class="n">ev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="p">,</span> <span class="s2">"ev"</span><span class="p">,</span> <span class="n">charger</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">battery</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">connection</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">battery</span><span class="p">)</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">BalanceAuditError</span><span class="p">(</span>
+                        <span class="s2">"One battery appears on multiple active ports"</span>
+                    <span class="p">)</span>
+                <span class="n">result</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="n">battery</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">battery</span><span class="o">=</span><span class="n">battery</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span> <span class="n">connection</span><span class="o">=</span><span class="n">connection</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pending</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stock</span><span class="p">):</span>
+        <span class="n">battery</span> <span class="o">=</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"battery"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"step"</span><span class="p">]</span> <span class="o">!=</span> <span class="n">battery</span><span class="o">.</span><span class="n">time_step</span><span class="p">:</span>
+            <span class="n">stock</span><span class="p">[</span><span class="s2">"step"</span><span class="p">],</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"cursor"</span><span class="p">]</span> <span class="o">=</span> <span class="n">battery</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">battery</span><span class="o">.</span><span class="n">energy_provenance_events</span><span class="p">[</span><span class="n">stock</span><span class="p">[</span><span class="s2">"cursor"</span><span class="p">]</span> <span class="p">:]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">carbon</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="n">bag</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">amount</span><span class="p">,</span> <span class="n">carbon</span><span class="p">])}</span>
+        <span class="n">plus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">,</span> <span class="n">bag</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">bag</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">bag</span><span class="p">):</span>
+        <span class="n">plus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sinks</span><span class="o">.</span><span class="n">setdefault</span><span class="p">((</span><span class="n">owner</span><span class="p">,</span> <span class="n">destination</span><span class="p">),</span> <span class="p">{}),</span> <span class="n">bag</span><span class="p">)</span>
+
+<div class="viewcode-block" id="IndependentBalanceAudit.boundary">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.IndependentBalanceAudit.boundary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">assets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assets</span><span class="p">()</span>
+        <span class="n">chargers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nb">id</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">stock</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">assets</span> <span class="ow">or</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"owner"</span><span class="p">]</span> <span class="o">!=</span> <span class="n">assets</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">"owner"</span><span class="p">]:</span>
+                <span class="n">destination</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">"mobility"</span>
+                    <span class="k">if</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"ev"</span> <span class="ow">and</span> <span class="nb">id</span><span class="p">(</span><span class="n">stock</span><span class="p">[</span><span class="s2">"connection"</span><span class="p">])</span> <span class="ow">in</span> <span class="n">chargers</span>
+                    <span class="k">else</span> <span class="s2">"asset_exit"</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sink</span><span class="p">(</span><span class="n">stock</span><span class="p">[</span><span class="s2">"owner"</span><span class="p">],</span> <span class="n">destination</span><span class="p">,</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">])</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">assets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">battery</span> <span class="o">=</span> <span class="n">asset</span><span class="p">[</span><span class="s2">"battery"</span><span class="p">]</span>
+            <span class="n">owner</span> <span class="o">=</span> <span class="n">asset</span><span class="p">[</span><span class="s2">"owner"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">asset</span><span class="p">,</span>
+                    <span class="n">mix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">((</span><span class="s2">"unknown"</span><span class="p">,</span> <span class="n">owner</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">energy_init</span><span class="p">)),</span>
+                    <span class="n">step</span><span class="o">=</span><span class="n">battery</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span>
+                    <span class="n">cursor</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">energy_provenance_events</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">stock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span><span class="p">(</span><span class="n">stock</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"transfer"</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">BalanceAuditError</span><span class="p">(</span>
+                        <span class="s2">"Unobserved transfer at an interval boundary"</span>
+                    <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                    <span class="s2">"boundary stored energy"</span><span class="p">,</span> <span class="n">total</span><span class="p">(</span><span class="n">stock</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">]),</span> <span class="n">event</span><span class="p">[</span><span class="s2">"before"</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"external"</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sink</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="s2">"external_reset"</span><span class="p">,</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">])</span>
+                    <span class="n">stock</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">((</span><span class="s2">"unknown"</span><span class="p">,</span> <span class="n">owner</span><span class="p">),</span> <span class="n">event</span><span class="p">[</span><span class="s2">"after"</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ratio</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">event</span><span class="p">[</span><span class="s2">"after"</span><span class="p">]</span> <span class="o">/</span> <span class="n">event</span><span class="p">[</span><span class="s2">"before"</span><span class="p">]</span> <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"before"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sink</span><span class="p">(</span>
+                        <span class="n">owner</span><span class="p">,</span>
+                        <span class="s2">"loss"</span><span class="p">,</span>
+                        <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ratio</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+                    <span class="p">)</span>
+                    <span class="n">stock</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="o">*</span> <span class="n">ratio</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="n">stock</span><span class="p">[</span><span class="s2">"cursor"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">"boundary inventory"</span><span class="p">,</span> <span class="n">total</span><span class="p">(</span><span class="n">stock</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">]),</span> <span class="n">battery</span><span class="o">.</span><span class="n">energy_init</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_cohorts</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">runtime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">_runtime_service</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="s2">"_independent_audit_attached"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"An audit is already attached"</span><span class="p">)</span>
+        <span class="n">runtime</span><span class="o">.</span><span class="n">_independent_audit_attached</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"update_variables"</span><span class="p">,</span> <span class="s2">"_step_once"</span><span class="p">,</span> <span class="s2">"step_without_feedback"</span><span class="p">):</span>
+            <span class="n">original</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">original</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"update_variables"</span><span class="p">:</span>
+
+                <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">_original</span><span class="o">=</span><span class="n">original</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">_original</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">_original</span><span class="o">=</span><span class="n">original</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">_original</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">boundary</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="n">value</span>
+
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">wrapper</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">method</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">_runtime_service</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">_runtime_service</span><span class="o">.</span><span class="n">_independent_audit_attached</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="IndependentBalanceAudit.prices">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.IndependentBalanceAudit.prices">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">pricing</span><span class="o">.</span><span class="n">electricity_pricing</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tariffs</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tariffs</span><span class="p">[</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">][</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_start_time_step</span> <span class="o">+</span> <span class="n">t</span>
+            <span class="p">]</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">price</span><span class="p">,</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"grid_export_price"</span><span class="p">]),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"community_buy_price"</span><span class="p">]),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"community_sell_price"</span><span class="p">]),</span>
+            <span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"community_market"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="nb">max</span><span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span>
+                    <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                        <span class="s2">"local_price_ratio_to_grid_import"</span><span class="p">,</span>
+                        <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"intra_community_sell_ratio"</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="p">),</span>
+                <span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">export</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"grid_export_price"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"settlement_version"</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">price</span><span class="p">,</span> <span class="n">export</span><span class="p">,</span> <span class="n">ratio</span> <span class="o">*</span> <span class="n">price</span><span class="p">,</span> <span class="n">ratio</span> <span class="o">*</span> <span class="n">price</span></div>
+
+
+<div class="viewcode-block" id="IndependentBalanceAudit.record">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.IndependentBalanceAudit.record">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">BalanceAuditError</span><span class="p">(</span><span class="s2">"Repeated/missing interval or reset during audit"</span><span class="p">)</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">FlowNetwork</span><span class="p">()</span>
+        <span class="n">buses</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">transfers</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">stock</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">movements</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">e</span><span class="p">[</span><span class="s2">"bus"</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span><span class="p">(</span><span class="n">stock</span><span class="p">)</span> <span class="k">if</span> <span class="n">e</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"transfer"</span>
+            <span class="p">]</span>
+            <span class="n">transfers</span><span class="p">[</span><span class="n">stock</span><span class="p">[</span><span class="s2">"owner"</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">movements</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"stationary"</span><span class="p">:</span>
+                <span class="n">power</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">stock</span><span class="p">[</span><span class="s2">"battery"</span><span class="p">]</span><span class="o">.</span><span class="n">nominal_power</span><span class="p">)</span>
+                <span class="n">duty</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">movements</span><span class="p">)</span> <span class="o">/</span> <span class="n">power</span> <span class="k">if</span> <span class="n">power</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">port</span> <span class="o">=</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"connection"</span><span class="p">]</span>
+                <span class="n">duty</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="n">v</span> <span class="o">/</span> <span class="n">port</span><span class="o">.</span><span class="n">max_charging_power</span>
+                    <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+                    <span class="k">else</span> <span class="o">-</span><span class="n">v</span> <span class="o">/</span> <span class="n">port</span><span class="o">.</span><span class="n">max_discharging_power</span>
+                    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">movements</span>
+                    <span class="k">if</span> <span class="n">v</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                <span class="s2">"interval nameplate duty"</span><span class="p">,</span>
+                <span class="nb">max</span><span class="p">(</span><span class="n">duty</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3600.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
+            <span class="n">load</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">name</span><span class="p">)[</span><span class="n">t</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span>
+                    <span class="s2">"non_shiftable_load_electricity_consumption"</span><span class="p">,</span>
+                    <span class="s2">"cooling_electricity_consumption"</span><span class="p">,</span>
+                    <span class="s2">"heating_electricity_consumption"</span><span class="p">,</span>
+                    <span class="s2">"dhw_electricity_consumption"</span><span class="p">,</span>
+                    <span class="s2">"deferrable_appliances_electricity_consumption"</span><span class="p">,</span>
+                    <span class="s2">"escalators_electricity_consumption"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">pv</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">[</span><span class="n">t</span><span class="p">]),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">measured_ac</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">b</span><span class="o">.</span><span class="n">electrical_storage_electricity_consumption</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">chargers_electricity_consumption</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">"device terminal journal"</span><span class="p">,</span> <span class="n">transfers</span><span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="p">],</span> <span class="n">measured_ac</span><span class="p">)</span>
+            <span class="n">net</span> <span class="o">=</span> <span class="n">load</span> <span class="o">+</span> <span class="n">measured_ac</span> <span class="o">-</span> <span class="n">pv</span>
+            <span class="n">curtailed</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">net</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">power_outage</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                <span class="s2">"curtailment cannot exceed available PV"</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">curtailed</span> <span class="o">-</span> <span class="n">pv</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span>
+            <span class="p">)</span>
+            <span class="n">net</span> <span class="o">+=</span> <span class="n">curtailed</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s2">"pv_curtailment"</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                    <span class="s2">"physical PV curtailment"</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">pv_curtailment</span><span class="p">[</span><span class="n">t</span><span class="p">]),</span> <span class="n">curtailed</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                <span class="s2">"physical building bus "</span> <span class="o">+</span> <span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">[</span><span class="n">t</span><span class="p">]),</span>
+                <span class="n">net</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">rows</span><span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">load</span><span class="o">=</span><span class="n">load</span><span class="p">,</span>
+                <span class="n">pv</span><span class="o">=</span><span class="n">pv</span><span class="p">,</span>
+                <span class="n">curtailed</span><span class="o">=</span><span class="n">curtailed</span><span class="p">,</span>
+                <span class="n">net</span><span class="o">=</span><span class="n">net</span><span class="p">,</span>
+                <span class="n">building</span><span class="o">=</span><span class="n">b</span><span class="p">,</span>
+                <span class="n">charge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">discharge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+        <span class="n">imports</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">([</span><span class="n">rows</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s2">"net"</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">exports</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">([</span><span class="o">-</span><span class="n">rows</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s2">"net"</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"community_market"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">financial</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">community_market_enabled</span><span class="p">)</span>
+        <span class="n">physical_trading</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">financial</span> <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"local_trading_enabled"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">traded</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">min</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">imports</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="n">exports</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span> <span class="k">if</span> <span class="n">physical_trading</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"import_member_weights"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span>
+        <span class="p">]</span>
+        <span class="n">local_in</span> <span class="o">=</span> <span class="n">weighted_imports</span><span class="p">(</span><span class="n">imports</span><span class="p">,</span> <span class="n">traded</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+        <span class="n">local_out</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">exports</span> <span class="o">*</span> <span class="p">(</span><span class="n">traded</span> <span class="o">/</span> <span class="n">exports</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">exports</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">exports</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"building"</span><span class="p">]</span>
+            <span class="n">grid_in</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">imports</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">local_in</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">grid_out</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">exports</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">local_out</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">ci</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">carbon_intensity</span><span class="o">.</span><span class="n">carbon_intensity</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+            <span class="n">origin</span> <span class="o">=</span> <span class="s2">"grid"</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ci</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"grid_unknown_carbon"</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">available</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">((</span><span class="s2">"pv"</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">row</span><span class="p">[</span><span class="s2">"pv"</span><span class="p">])</span>
+            <span class="n">plus</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="p">,</span>
+                <span class="n">available</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"pv"</span><span class="p">]</span> <span class="o">-</span> <span class="n">row</span><span class="p">[</span><span class="s2">"curtailed"</span><span class="p">])</span> <span class="o">/</span> <span class="n">row</span><span class="p">[</span><span class="s2">"pv"</span><span class="p">]</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"pv"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"curtailed"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sink</span><span class="p">(</span>
+                    <span class="n">name</span><span class="p">,</span>
+                    <span class="s2">"curtailment"</span><span class="p">,</span>
+                    <span class="p">{(</span><span class="s2">"pv"</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="s2">"curtailed"</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">])},</span>
+                <span class="p">)</span>
+            <span class="n">plus</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">grid_in</span><span class="p">,</span> <span class="n">grid_in</span> <span class="o">*</span> <span class="n">ci</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ci</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">discharge</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="o">-</span><span class="n">e</span><span class="p">[</span><span class="s2">"bus"</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s2">"owner"</span><span class="p">]</span> <span class="o">==</span> <span class="n">name</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">e</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"transfer"</span> <span class="ow">and</span> <span class="n">e</span><span class="p">[</span><span class="s2">"bus"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span>
+            <span class="p">)</span>
+            <span class="n">charge</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="n">e</span><span class="p">[</span><span class="s2">"bus"</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="s2">"owner"</span><span class="p">]</span> <span class="o">==</span> <span class="n">name</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">e</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"transfer"</span> <span class="ow">and</span> <span class="n">e</span><span class="p">[</span><span class="s2">"bus"</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.0</span>
+            <span class="p">)</span>
+            <span class="n">supply</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"pv"</span><span class="p">]</span> <span class="o">-</span> <span class="n">row</span><span class="p">[</span><span class="s2">"curtailed"</span><span class="p">]</span> <span class="o">+</span> <span class="n">discharge</span> <span class="o">+</span> <span class="n">imports</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">buses</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">supply</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="n">buses</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"load"</span><span class="p">),</span> <span class="n">row</span><span class="p">[</span><span class="s2">"load"</span><span class="p">])</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="n">buses</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"grid_export"</span><span class="p">),</span> <span class="n">grid_out</span><span class="p">)</span>
+            <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="n">grid_import</span><span class="o">=</span><span class="n">grid_in</span><span class="p">,</span>
+                <span class="n">grid_export</span><span class="o">=</span><span class="n">grid_out</span><span class="p">,</span>
+                <span class="n">local_import</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">local_in</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                <span class="n">local_export</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">local_out</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+            <span class="p">)</span>
+            <span class="n">member</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s2">"pv_generated_kwh"</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">"pv"</span><span class="p">]),</span>
+                <span class="p">(</span><span class="s2">"pv_curtailment_kwh"</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">"curtailed"</span><span class="p">]),</span>
+                <span class="p">(</span><span class="s2">"import_kwh"</span><span class="p">,</span> <span class="n">imports</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                <span class="p">(</span><span class="s2">"export_kwh"</span><span class="p">,</span> <span class="n">exports</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                <span class="p">(</span><span class="s2">"net_kwh"</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">"net"</span><span class="p">]),</span>
+                <span class="p">(</span><span class="s2">"external_import_kwh"</span><span class="p">,</span> <span class="n">grid_in</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">"load_kwh"</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s2">"load"</span><span class="p">]),</span>
+                <span class="p">(</span>
+                    <span class="s2">"external_purchase_emissions_kgco2"</span><span class="p">,</span>
+                    <span class="n">grid_in</span> <span class="o">*</span> <span class="n">ci</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ci</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">]:</span>
+                <span class="n">member</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">member</span><span class="p">[</span><span class="s2">"appliance_kwh"</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">b</span><span class="o">.</span><span class="n">deferrable_appliances_electricity_consumption</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">p</span><span class="p">,</span> <span class="n">pe</span><span class="p">,</span> <span class="n">pb</span><span class="p">,</span> <span class="n">ps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prices</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="n">cost</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">grid_in</span> <span class="o">*</span> <span class="n">p</span> <span class="o">+</span> <span class="n">local_in</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">pb</span> <span class="o">-</span> <span class="n">local_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">ps</span> <span class="o">-</span> <span class="n">grid_out</span> <span class="o">*</span> <span class="n">pe</span>
+                <span class="k">if</span> <span class="n">financial</span>
+                <span class="k">else</span> <span class="n">imports</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span>
+            <span class="p">)</span>
+            <span class="n">operator</span> <span class="o">=</span> <span class="n">local_in</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">pb</span> <span class="o">-</span> <span class="n">local_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">ps</span> <span class="k">if</span> <span class="n">financial</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="n">member</span><span class="p">[</span><span class="s2">"cost_eur"</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span>
+            <span class="n">member</span><span class="p">[</span><span class="s2">"operator_balance_eur"</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">operator</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                <span class="s2">"member settled cost "</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span><span class="p">[</span><span class="n">t</span><span class="p">]),</span>
+                <span class="n">cost</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">financial</span><span class="p">:</span>
+                <span class="n">observed</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">r</span><span class="p">[</span><span class="s2">"building"</span><span class="p">]:</span> <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">_last_community_market_settlement</span>
+                <span class="p">}[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">expected</span> <span class="ow">in</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="s2">"grid_import_kwh"</span><span class="p">,</span> <span class="n">grid_in</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"grid_export_kwh"</span><span class="p">,</span> <span class="n">grid_out</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"local_import_kwh"</span><span class="p">,</span> <span class="n">local_in</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                    <span class="p">(</span><span class="s2">"local_export_kwh"</span><span class="p">,</span> <span class="n">local_out</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                    <span class="p">(</span><span class="s2">"grid_import_price"</span><span class="p">,</span> <span class="n">p</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"grid_export_price"</span><span class="p">,</span> <span class="n">pe</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"local_buy_price"</span><span class="p">,</span> <span class="n">pb</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"local_sell_price"</span><span class="p">,</span> <span class="n">ps</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"operator_balance_eur"</span><span class="p">,</span> <span class="n">operator</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"settled_cost_eur"</span><span class="p">,</span> <span class="n">cost</span><span class="p">),</span>
+                <span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                        <span class="s2">"market "</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">field</span><span class="p">,</span> <span class="n">observed</span><span class="p">[</span><span class="n">field</span><span class="p">],</span> <span class="n">expected</span>
+                    <span class="p">)</span>
+        <span class="c1"># Trade is a complete bipartite graph between net sellers and buyers.</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">seller</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">buyer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+                <span class="n">flow</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">local_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">local_in</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">/</span> <span class="n">traded</span><span class="p">)</span> <span class="k">if</span> <span class="n">traded</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+                <span class="k">if</span> <span class="n">flow</span><span class="p">:</span>
+                    <span class="n">graph</span><span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="n">buses</span><span class="p">[</span><span class="n">seller</span><span class="p">],</span> <span class="n">buses</span><span class="p">[</span><span class="n">buyer</span><span class="p">],</span> <span class="n">flow</span><span class="p">)</span>
+        <span class="n">final_nodes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">stock</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">owner</span> <span class="o">=</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"owner"</span><span class="p">]</span>
+            <span class="n">mix</span> <span class="o">=</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">]</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">total</span><span class="p">(</span><span class="n">mix</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span><span class="p">(</span><span class="n">stock</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"transfer"</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">owner</span><span class="p">][</span><span class="n">stock</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">+</span> <span class="s2">"_charge_kwh"</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span>
+                        <span class="n">event</span><span class="p">[</span><span class="s2">"bus"</span><span class="p">],</span> <span class="mf">0.0</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">owner</span><span class="p">][</span><span class="n">stock</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">+</span> <span class="s2">"_discharge_kwh"</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span>
+                        <span class="o">-</span><span class="n">event</span><span class="p">[</span><span class="s2">"bus"</span><span class="p">],</span> <span class="mf">0.0</span>
+                    <span class="p">)</span>
+            <span class="n">previous</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">mix</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span><span class="p">(</span><span class="n">stock</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="s2">"operation initial energy"</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">event</span><span class="p">[</span><span class="s2">"before"</span><span class="p">])</span>
+                <span class="n">after</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">"after"</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"external"</span><span class="p">:</span>
+                    <span class="n">graph</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="n">previous</span><span class="p">,</span> <span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="s2">"external_reset"</span><span class="p">),</span> <span class="n">current</span><span class="p">)</span>
+                    <span class="n">previous</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">(</span>
+                        <span class="n">after</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">((</span><span class="s2">"unknown"</span><span class="p">,</span> <span class="n">owner</span><span class="p">),</span> <span class="n">after</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">current</span> <span class="o">=</span> <span class="n">after</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ac</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">"bus"</span><span class="p">])</span> <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"transfer"</span> <span class="k">else</span> <span class="mf">0.0</span>
+                    <span class="n">loss</span> <span class="o">=</span> <span class="n">current</span> <span class="o">+</span> <span class="n">ac</span> <span class="o">-</span> <span class="n">after</span>
+                    <span class="k">if</span> <span class="n">loss</span> <span class="o">&lt;</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">BalanceAuditError</span><span class="p">(</span>
+                            <span class="s2">"Physical operation creates stored energy"</span>
+                        <span class="p">)</span>
+                    <span class="c1"># Conversion loss is upstream of mixing on charge. Old</span>
+                    <span class="c1"># inventory must not inherit the fresh input's charge losses.</span>
+                    <span class="n">stored</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">after</span> <span class="o">-</span> <span class="n">current</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">if</span> <span class="n">ac</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+                    <span class="n">node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="n">current</span> <span class="o">+</span> <span class="n">stored</span><span class="p">)</span>
+                    <span class="n">graph</span><span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="n">previous</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">current</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">ac</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">graph</span><span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="n">buses</span><span class="p">[</span><span class="n">owner</span><span class="p">],</span> <span class="n">node</span><span class="p">,</span> <span class="n">stored</span><span class="p">)</span>
+                        <span class="n">graph</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="n">buses</span><span class="p">[</span><span class="n">owner</span><span class="p">],</span> <span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="s2">"loss"</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">graph</span><span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">buses</span><span class="p">[</span><span class="n">owner</span><span class="p">],</span> <span class="o">-</span><span class="n">ac</span><span class="p">)</span>
+                        <span class="n">graph</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="s2">"loss"</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+                    <span class="n">previous</span> <span class="o">=</span> <span class="n">node</span>
+                    <span class="n">current</span> <span class="o">=</span> <span class="n">after</span>
+                <span class="n">stock</span><span class="p">[</span><span class="s2">"cursor"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">sink</span><span class="p">(</span><span class="n">previous</span><span class="p">,</span> <span class="p">(</span><span class="s2">"inventory"</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">current</span><span class="p">)</span>
+            <span class="n">final_nodes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">previous</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                <span class="s2">"operation final inventory"</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"battery"</span><span class="p">]</span><span class="o">.</span><span class="n">energy_init</span>
+            <span class="p">)</span>
+        <span class="n">result</span><span class="p">,</span> <span class="n">concentrations</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">singular</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">singular_networks</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">singular</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">destination</span><span class="p">),</span> <span class="n">bag</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">owner</span> <span class="o">==</span> <span class="s2">"inventory"</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="n">destination</span><span class="p">][</span><span class="s2">"mix"</span><span class="p">]</span> <span class="o">=</span> <span class="n">bag</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sink</span><span class="p">(</span><span class="n">owner</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">bag</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">direction</span><span class="p">,</span> <span class="n">amount</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s2">"local_import"</span><span class="p">,</span> <span class="n">local_in</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                <span class="p">(</span><span class="s2">"local_export"</span><span class="p">,</span> <span class="n">local_out</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+            <span class="p">]:</span>
+                <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">"local_export"</span><span class="p">:</span>
+                    <span class="n">node</span> <span class="o">=</span> <span class="n">buses</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                    <span class="n">mix</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="n">label</span><span class="p">:</span> <span class="n">concentrations</span><span class="p">[</span><span class="n">node</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">amount</span>
+                        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+                    <span class="p">}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mix</span> <span class="o">=</span> <span class="p">{}</span>
+                    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">seller</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+                        <span class="n">flow</span> <span class="o">=</span> <span class="n">local_out</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">amount</span> <span class="o">/</span> <span class="n">traded</span> <span class="k">if</span> <span class="n">traded</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+                        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+                            <span class="n">plus</span><span class="p">(</span>
+                                <span class="n">mix</span><span class="p">,</span>
+                                <span class="p">{</span>
+                                    <span class="n">label</span><span class="p">:</span> <span class="n">concentrations</span><span class="p">[</span>
+                                        <span class="n">buses</span><span class="p">[</span><span class="n">seller</span><span class="p">],</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">2</span>
+                                    <span class="p">]</span>
+                                    <span class="o">*</span> <span class="n">flow</span>
+                                <span class="p">},</span>
+                            <span class="p">)</span>
+                <span class="n">plus</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transfers</span><span class="o">.</span><span class="n">setdefault</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">direction</span><span class="p">),</span> <span class="p">{}),</span> <span class="n">mix</span><span class="p">)</span>
+        <span class="c1"># A second network tracks fresh PV without carrying it through storage.</span>
+        <span class="n">direct_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="n">graph</span><span class="o">.</span><span class="n">mass</span><span class="p">[</span><span class="n">buses</span><span class="p">[</span><span class="n">n</span><span class="p">]]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])</span>
+        <span class="n">direct_rhs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">rows</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s2">"pv"</span><span class="p">]</span> <span class="o">-</span> <span class="n">rows</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="s2">"curtailed"</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">seller</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">buyer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">traded</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">direct_matrix</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="n">local_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">local_in</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">/</span> <span class="n">traded</span>
+        <span class="n">direct</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">direct_matrix</span><span class="p">,</span> <span class="n">direct_rhs</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">names</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">"pv_load_direct_kwh"</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">direct</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">rows</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">"load"</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="n">external_cash</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">r</span><span class="p">[</span><span class="s2">"grid_import"</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">prices</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"building"</span><span class="p">],</span> <span class="n">t</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="s2">"grid_export"</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">prices</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"building"</span><span class="p">],</span> <span class="n">t</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">financial</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                <span class="s2">"operator/member/external cash conservation"</span><span class="p">,</span>
+                <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">"cost_eur"</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+                <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">"operator_balance_eur"</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+                <span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">"external_cash_eur"</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">)</span> <span class="o">+</span> <span class="n">external_cash</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">time_step</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
+                <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
+                <span class="n">external_cash_eur</span><span class="o">=</span><span class="n">external_cash</span><span class="p">,</span>
+                <span class="n">net_kwh</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"net"</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+                <span class="n">cost_eur</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">"building"</span><span class="p">]</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IndependentBalanceAudit.expected_rows">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.IndependentBalanceAudit.expected_rows">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">expected_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">bags</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sinks</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">stock</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">plus</span><span class="p">(</span><span class="n">bags</span><span class="o">.</span><span class="n">setdefault</span><span class="p">((</span><span class="n">stock</span><span class="p">[</span><span class="s2">"owner"</span><span class="p">],</span> <span class="s2">"stored"</span><span class="p">),</span> <span class="p">{}),</span> <span class="n">stock</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">])</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">recipient</span><span class="p">,</span> <span class="n">destination</span><span class="p">),</span> <span class="n">bag</span> <span class="ow">in</span> <span class="n">bags</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">producer</span><span class="p">),</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">bag</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
+                    <span class="n">rows</span><span class="p">[</span><span class="n">origin</span><span class="p">,</span> <span class="n">producer</span><span class="p">,</span> <span class="n">recipient</span><span class="p">,</span> <span class="n">destination</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rows</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_cohorts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">observed</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">source_destinations</span><span class="p">():</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"origin"</span><span class="p">,</span> <span class="s2">"producer"</span><span class="p">,</span> <span class="s2">"recipient"</span><span class="p">,</span> <span class="s2">"destination"</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">observed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">row</span><span class="p">[</span><span class="s2">"energy_kwh"</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">"carbon_kgco2"</span><span class="p">]])</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_rows</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">expected</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">observed</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">component</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s2">"kwh"</span><span class="p">,</span> <span class="s2">"kgco2"</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                    <span class="s2">"provenance "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">unit</span><span class="p">,</span>
+                    <span class="n">observed</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))[</span><span class="n">component</span><span class="p">],</span>
+                    <span class="n">expected</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))[</span><span class="n">component</span><span class="p">],</span>
+                <span class="p">)</span>
+
+<div class="viewcode-block" id="IndependentBalanceAudit.finish">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.IndependentBalanceAudit.finish">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">finish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">check_kpis</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary</span><span class="p">()</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_rows</span><span class="p">()</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">producer</span><span class="p">),</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">source</span><span class="p">[</span><span class="n">origin</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">producer</span><span class="p">,</span> <span class="n">recipient</span><span class="p">,</span> <span class="n">dest</span><span class="p">),</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">expected</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">destination</span><span class="p">[</span><span class="n">origin</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span>
+        <span class="k">for</span> <span class="n">origin</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">destination</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s2">"kwh"</span><span class="p">,</span> <span class="s2">"kgco2"</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                    <span class="s2">"global source/destination "</span> <span class="o">+</span> <span class="n">origin</span> <span class="o">+</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">unit</span><span class="p">,</span>
+                    <span class="n">source</span><span class="p">[</span><span class="n">origin</span><span class="p">][</span><span class="n">i</span><span class="p">],</span>
+                    <span class="n">destination</span><span class="p">[</span><span class="n">origin</span><span class="p">][</span><span class="n">i</span><span class="p">],</span>
+                <span class="p">)</span>
+        <span class="n">actual_members</span><span class="p">,</span> <span class="n">actual_district</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                <span class="s2">"direct PV "</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span>
+                <span class="n">actual_members</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">"pv_load_direct_kwh"</span><span class="p">],</span>
+                <span class="n">values</span><span class="p">[</span><span class="s2">"pv_load_direct_kwh"</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">direction</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"local_import"</span><span class="p">,</span> <span class="s2">"local_export"</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">:</span>
+                <span class="n">bag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transfers</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">direction</span><span class="p">),</span> <span class="p">{})</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                    <span class="s2">"local transfer "</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">direction</span><span class="p">,</span>
+                    <span class="n">actual_members</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">direction</span> <span class="o">+</span> <span class="s2">"_kwh"</span><span class="p">],</span>
+                    <span class="n">total</span><span class="p">(</span><span class="n">bag</span><span class="p">),</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">check_kpis</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">{(</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">cost_function</span><span class="p">):</span> <span class="n">r</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">itertuples</span><span class="p">()}</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">suffix</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="s2">"cost_total_control_eur"</span><span class="p">,</span> <span class="s2">"cost_eur"</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"energy_grid_total_import_control_kwh"</span><span class="p">,</span> <span class="s2">"import_kwh"</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"energy_grid_total_export_control_kwh"</span><span class="p">,</span> <span class="s2">"export_kwh"</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s2">"solar_self_consumption_total_generation_kwh"</span><span class="p">,</span> <span class="s2">"pv_generated_kwh"</span><span class="p">),</span>
+                <span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                        <span class="s2">"KPI "</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">,</span>
+                        <span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="s2">"building_"</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="k">for</span> <span class="n">kind</span><span class="p">,</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="p">[(</span><span class="s2">"stationary"</span><span class="p">,</span> <span class="s2">"battery"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"ev"</span><span class="p">,</span> <span class="s2">"ev"</span><span class="p">)]:</span>
+                    <span class="k">for</span> <span class="n">direction</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"charge"</span><span class="p">,</span> <span class="s2">"discharge"</span><span class="p">):</span>
+                        <span class="n">suffix</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="s2">"v2g_export"</span>
+                            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"ev"</span> <span class="ow">and</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">"discharge"</span>
+                            <span class="k">else</span> <span class="n">direction</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                            <span class="s2">"equipment KPI "</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">kind</span> <span class="o">+</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">direction</span><span class="p">,</span>
+                            <span class="n">values</span><span class="p">[</span>
+                                <span class="n">name</span><span class="p">,</span> <span class="s2">"building_"</span> <span class="o">+</span> <span class="n">prefix</span> <span class="o">+</span> <span class="s2">"_total_"</span> <span class="o">+</span> <span class="n">suffix</span> <span class="o">+</span> <span class="s2">"_kwh"</span>
+                            <span class="p">],</span>
+                            <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">kind</span> <span class="o">+</span> <span class="s2">"_"</span> <span class="o">+</span> <span class="n">direction</span> <span class="o">+</span> <span class="s2">"_kwh"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                        <span class="p">)</span>
+            <span class="n">appliance_audit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">get_deferrable_service_audit</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                    <span class="s2">"appliance physical service "</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span>
+                    <span class="n">appliance_audit</span><span class="p">[</span><span class="s2">"buildings"</span><span class="p">]</span>
+                    <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">{})</span>
+                    <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"served_energy_kwh"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"appliance_kwh"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">summary</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_summary</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="s2">"district"</span> <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"District"</span> <span class="k">else</span> <span class="s2">"building"</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">expected_value</span> <span class="ow">in</span> <span class="n">summary</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                        <span class="s2">"provenance KPI "</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">" "</span> <span class="o">+</span> <span class="n">key</span><span class="p">,</span>
+                        <span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="n">level</span> <span class="o">+</span> <span class="s2">"_energy_provenance_"</span> <span class="o">+</span> <span class="n">key</span><span class="p">],</span>
+                        <span class="n">expected_value</span><span class="p">,</span>
+                    <span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s2">"net_kwh"</span><span class="p">,</span> <span class="s2">"energy_grid_total_net_exchange_control_kwh"</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">"cost_eur"</span><span class="p">,</span> <span class="s2">"cost_total_control_eur"</span><span class="p">),</span>
+            <span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check</span><span class="p">(</span>
+                    <span class="s2">"district KPI "</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">,</span>
+                    <span class="n">values</span><span class="p">[</span><span class="s2">"District"</span><span class="p">,</span> <span class="s2">"district_"</span> <span class="o">+</span> <span class="n">suffix</span><span class="p">],</span>
+                    <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">definition_version</span><span class="o">=</span><span class="n">DEFINITION_VERSION</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="s2">"pass"</span><span class="p">,</span>
+            <span class="n">completed_intervals</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intervals</span><span class="p">),</span>
+            <span class="n">checks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">check_count</span><span class="p">,</span>
+            <span class="n">max_absolute_error</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_error</span><span class="p">,</span>
+            <span class="n">max_tolerance_fraction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_scaled_error</span><span class="p">,</span>
+            <span class="n">absolute_tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+            <span class="n">relative_tolerance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+            <span class="n">source_free_circulation_intervals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">singular_networks</span><span class="p">,</span>
+            <span class="n">members</span><span class="o">=</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+            <span class="n">carbon_boundary</span><span class="o">=</span><span class="s2">"acquisition_carbon; unknown input energy remains in explicit unknown cohorts"</span><span class="p">,</span>
+            <span class="n">initial_inventory_kwh</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_inventory</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+            <span class="n">final_inventory_kwh</span><span class="o">=</span><span class="nb">sum</span><span class="p">(</span><span class="n">total</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"mix"</span><span class="p">])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+            <span class="n">expected_provenance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">expected_summary</span><span class="p">(),</span>
+            <span class="n">source_destinations</span><span class="o">=</span><span class="p">[</span>
+                <span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">origin</span><span class="o">=</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">producer</span><span class="o">=</span><span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">recipient</span><span class="o">=</span><span class="n">k</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                    <span class="n">destination</span><span class="o">=</span><span class="n">k</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                    <span class="n">energy_kwh</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                    <span class="n">carbon_kgco2</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">expected</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="p">],</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IndependentBalanceAudit.expected_summary">
+<a class="viewcode-back" href="../../../api/citylearn.internal.balance_audit.html#citylearn.internal.balance_audit.IndependentBalanceAudit.expected_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">expected_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">expected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_rows</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">stats</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">stats</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span>
+                    <span class="s2">"pv_generated_kwh"</span><span class="p">,</span>
+                    <span class="s2">"external_import_kwh"</span><span class="p">,</span>
+                    <span class="s2">"external_purchase_emissions_kgco2"</span><span class="p">,</span>
+                    <span class="s2">"pv_load_direct_kwh"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">}</span>
+            <span class="n">summary</span><span class="p">[</span><span class="s2">"unknown_input_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">producer</span><span class="p">),</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">producer</span> <span class="o">==</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">origin</span> <span class="o">==</span> <span class="s2">"unknown"</span>
+            <span class="p">)</span>
+            <span class="n">summary</span><span class="p">[</span><span class="s2">"external_purchase_unknown_carbon_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">producer</span><span class="p">),</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">producer</span> <span class="o">==</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">origin</span> <span class="o">==</span> <span class="s2">"grid_unknown_carbon"</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">dest</span> <span class="ow">in</span> <span class="n">DESTINATIONS</span><span class="p">:</span>
+                <span class="n">entries</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">expected</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">name</span> <span class="ow">and</span> <span class="n">key</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="n">dest</span>
+                <span class="p">]</span>
+                <span class="k">for</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">origins</span> <span class="ow">in</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="s2">"pv"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"pv"</span><span class="p">}),</span>
+                    <span class="p">(</span><span class="s2">"grid"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"grid"</span><span class="p">,</span> <span class="s2">"grid_unknown_carbon"</span><span class="p">}),</span>
+                    <span class="p">(</span><span class="s2">"unknown"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"unknown"</span><span class="p">}),</span>
+                <span class="p">]:</span>
+                    <span class="n">summary</span><span class="p">[</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">"_"</span> <span class="o">+</span> <span class="n">dest</span> <span class="o">+</span> <span class="s2">"_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                        <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">origin</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">entries</span> <span class="k">if</span> <span class="n">origin</span> <span class="ow">in</span> <span class="n">origins</span>
+                    <span class="p">)</span>
+                <span class="n">summary</span><span class="p">[</span><span class="s2">"carbon_"</span> <span class="o">+</span> <span class="n">dest</span> <span class="o">+</span> <span class="s2">"_kgco2"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">origin</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">entries</span>
+                <span class="p">)</span>
+                <span class="n">summary</span><span class="p">[</span><span class="s2">"carbon_unknown_"</span> <span class="o">+</span> <span class="n">dest</span> <span class="o">+</span> <span class="s2">"_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">origin</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">entries</span>
+                    <span class="k">if</span> <span class="n">origin</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"unknown"</span><span class="p">,</span> <span class="s2">"grid_unknown_carbon"</span><span class="p">}</span>
+                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">direction</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"local_import"</span><span class="p">,</span> <span class="s2">"local_export"</span><span class="p">):</span>
+                <span class="n">bag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transfers</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">direction</span><span class="p">),</span> <span class="p">{})</span>
+                <span class="n">summary</span><span class="p">[</span><span class="n">direction</span> <span class="o">+</span> <span class="s2">"_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="n">total</span><span class="p">(</span><span class="n">bag</span><span class="p">)</span>
+                <span class="n">summary</span><span class="p">[</span><span class="s2">"pv_"</span> <span class="o">+</span> <span class="n">direction</span> <span class="o">+</span> <span class="s2">"_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">bag</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">origin</span> <span class="o">==</span> <span class="s2">"pv"</span>
+                <span class="p">)</span>
+                <span class="n">summary</span><span class="p">[</span><span class="s2">"grid_"</span> <span class="o">+</span> <span class="n">direction</span> <span class="o">+</span> <span class="s2">"_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">bag</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">origin</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"grid"</span><span class="p">,</span> <span class="s2">"grid_unknown_carbon"</span><span class="p">}</span>
+                <span class="p">)</span>
+            <span class="n">summary</span><span class="p">[</span><span class="s2">"pv_load_after_storage_kwh"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="n">summary</span><span class="p">[</span><span class="s2">"pv_load_kwh"</span><span class="p">]</span> <span class="o">-</span> <span class="n">summary</span><span class="p">[</span><span class="s2">"pv_load_direct_kwh"</span><span class="p">],</span> <span class="mf">0.0</span>
+            <span class="p">)</span>
+            <span class="n">rows</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">summary</span>
+        <span class="n">district</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="p">{})</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">origin</span><span class="p">,</span> <span class="n">source_key</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">"pv"</span><span class="p">,</span> <span class="s2">"pv_generated_kwh"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"grid"</span><span class="p">,</span> <span class="s2">"external_import_kwh"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"unknown"</span><span class="p">,</span> <span class="s2">"unknown_input_kwh"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"carbon"</span><span class="p">,</span> <span class="s2">"external_purchase_emissions_kgco2"</span><span class="p">),</span>
+        <span class="p">]:</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="s2">"kgco2"</span> <span class="k">if</span> <span class="n">origin</span> <span class="o">==</span> <span class="s2">"carbon"</span> <span class="k">else</span> <span class="s2">"kwh"</span>
+            <span class="n">district</span><span class="p">[</span><span class="n">origin</span> <span class="o">+</span> <span class="s2">"_balance_residual_"</span> <span class="o">+</span> <span class="n">unit</span><span class="p">]</span> <span class="o">=</span> <span class="n">district</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">source_key</span><span class="p">,</span> <span class="mf">0.0</span>
+            <span class="p">)</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="n">district</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">origin</span> <span class="o">+</span> <span class="s2">"_"</span> <span class="o">+</span> <span class="n">dest</span> <span class="o">+</span> <span class="s2">"_"</span> <span class="o">+</span> <span class="n">unit</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">dest</span> <span class="ow">in</span> <span class="n">DESTINATIONS</span>
+            <span class="p">)</span>
+        <span class="n">pv</span> <span class="o">=</span> <span class="n">district</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pv_generated_kwh"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">district</span><span class="p">[</span><span class="s2">"pv_useful_building_ratio"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">district</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pv_load_kwh"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">pv</span> <span class="k">if</span> <span class="n">pv</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">district</span><span class="p">[</span><span class="s2">"pv_useful_with_mobility_ratio"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">district</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pv_load_kwh"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">district</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pv_mobility_kwh"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+            <span class="o">/</span> <span class="n">pv</span>
+            <span class="k">if</span> <span class="n">pv</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">rows</span><span class="p">[</span><span class="s2">"District"</span><span class="p">]</span> <span class="o">=</span> <span class="n">district</span>
+        <span class="k">return</span> <span class="n">rows</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

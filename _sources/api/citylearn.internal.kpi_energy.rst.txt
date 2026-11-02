@@ -1,0 +1,7 @@
+citylearn.internal.kpi\_energy module
+=====================================
+
+.. automodule:: citylearn.internal.kpi_energy
+   :members:
+   :show-inheritance:
+   :undoc-members:

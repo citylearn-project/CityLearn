@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.internal.baseline &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.internal.baseline &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -161,6 +161,9 @@
         <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">BusinessAsUsualAgent</span>
 
         <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.temporal</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_changes</span>
+        <span class="k">if</span> <span class="n">input_changes</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_input_snapshot'</span><span class="p">,</span> <span class="p">{})):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Native BAU inputs changed since loading; restore inputs or evaluate without the native reference'</span><span class="p">)</span>
         <span class="n">target_time_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
         <span class="n">episode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span> <span class="s1">'episode'</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
         <span class="n">cache_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">episode</span><span class="p">,</span> <span class="n">target_time_step</span><span class="p">)</span>
@@ -174,8 +177,25 @@
             <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span>
 
         <span class="n">baseline_env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_sidecar_env</span><span class="p">()</span>
+        <span class="n">baseline_env</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">random_seed</span>
         <span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">)</span>
         <span class="n">baseline_env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="c1"># Pair the away-EV stochastic stream with the source episode, including</span>
+        <span class="c1"># repeated resets; a freshly constructed sidecar has a different episode index.</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+        <span class="n">baseline_env</span><span class="o">.</span><span class="n">_ev_drift_seed</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_ev_drift_seed</span>
+        <span class="n">baseline_env</span><span class="o">.</span><span class="n">_ev_drift_random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_ev_drift_seed</span><span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.comparison</span><span class="w"> </span><span class="kn">import</span> <span class="n">inventory</span>
+        <span class="k">if</span> <span class="n">inventory</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">)</span> <span class="o">!=</span> <span class="n">env</span><span class="o">.</span><span class="n">_comparison_initial_inventory</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Native BAU initial inventory differs from the evaluated episode'</span><span class="p">)</span>
+        <span class="n">baseline_env</span><span class="o">.</span><span class="n">_native_reference_metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">implementation</span><span class="o">=</span><span class="s1">'citylearn.agents.baseline.BusinessAsUsualAgent'</span><span class="p">,</span> <span class="n">simulator_version</span><span class="o">=</span><span class="n">__version__</span><span class="p">,</span>
+            <span class="n">definition_version</span><span class="o">=</span><span class="n">agent</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span><span class="p">,</span> <span class="n">observation_access</span><span class="o">=</span><span class="s1">'privileged_simulator_state'</span><span class="p">,</span>
+            <span class="n">resolved_parameters</span><span class="o">=</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="s1">'ev_target_soc'</span><span class="p">,</span> <span class="s1">'ev_follow_required_soc'</span><span class="p">,</span> <span class="s1">'ev_service_margin_rate'</span><span class="p">,</span> <span class="s1">'ev_service_floor_rate'</span><span class="p">,</span>
+                <span class="s1">'storage_min_soc'</span><span class="p">,</span> <span class="s1">'storage_max_soc'</span><span class="p">,</span> <span class="s1">'storage_deadband_kw'</span><span class="p">,</span> <span class="s1">'deferrable_start_action'</span><span class="p">)},</span>
+        <span class="p">)</span>
 
         <span class="k">while</span> <span class="nb">int</span><span class="p">(</span><span class="n">baseline_env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">target_time_step</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">baseline_env</span><span class="o">.</span><span class="n">terminated</span> <span class="ow">or</span> <span class="n">baseline_env</span><span class="o">.</span><span class="n">truncated</span><span class="p">):</span>
             <span class="n">actions</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">predict</span><span class="p">([],</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -235,13 +255,15 @@
             <span class="n">random_episode_split</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">seconds_per_time_step</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'seconds_per_time_step'</span><span class="p">,</span> <span class="mf">3600.0</span><span class="p">)),</span>
             <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">random_seed</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'random_seed'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">random_seed</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_initialization_seed'</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">random_seed</span><span class="p">),</span>
             <span class="n">offline</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'offline'</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
             <span class="n">time_step_ratio</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
             <span class="n">interface</span><span class="o">=</span><span class="s1">'entity'</span> <span class="k">if</span> <span class="n">requires_entity_interface</span> <span class="k">else</span> <span class="s1">'flat'</span><span class="p">,</span>
             <span class="n">topology_mode</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
             <span class="n">render_mode</span><span class="o">=</span><span class="s1">'none'</span><span class="p">,</span>
             <span class="n">export_kpis_on_episode_end</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">ev_departure_within_tolerance</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">ev_departure_within_tolerance</span><span class="p">,</span>
+            <span class="n">ev_departure_service_tolerance</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">ev_departure_service_tolerance</span><span class="p">,</span>
             <span class="n">check_observation_limits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">physics_invariant_checks</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
         <span class="p">)</span>

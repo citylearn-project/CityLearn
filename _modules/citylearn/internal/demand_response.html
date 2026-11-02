@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.internal.demand_response &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.internal.demand_response &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -125,6 +125,7 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
 
@@ -164,7 +165,8 @@
     <span class="n">activation_price_eur_per_kwh</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">shortfall_penalty_eur_per_kwh</span><span class="p">:</span> <span class="nb">float</span>
     <span class="n">tolerance_power_kw</span><span class="p">:</span> <span class="nb">float</span>
-    <span class="n">order</span><span class="p">:</span> <span class="nb">int</span></div>
+    <span class="n">order</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'unspecified'</span></div>
 
 
 
@@ -249,12 +251,18 @@
 <a class="viewcode-back" href="../../../api/citylearn.internal.demand_response.html#citylearn.internal.demand_response.CityLearnDemandResponseService.get_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"definition_version"</span><span class="p">:</span> <span class="s2">"demand-response-audit-v1"</span><span class="p">,</span>
             <span class="s2">"enabled"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">),</span>
             <span class="s2">"requests_file"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">requests_file</span><span class="p">,</span>
             <span class="s2">"baseline_method"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_method</span><span class="p">,</span>
             <span class="s2">"baseline_window_seconds"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline_window_seconds</span><span class="p">),</span>
             <span class="s2">"allow_overlapping_requests"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">allow_overlapping_requests</span><span class="p">),</span>
             <span class="s2">"request_count"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_requests</span><span class="p">)),</span>
+            <span class="s2">"baseline_required_steps"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_window_steps</span><span class="p">(),</span>
+            <span class="s2">"effective_baseline_seconds"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_window_steps</span><span class="p">()</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_hours</span><span class="p">()</span><span class="o">*</span><span class="mf">3600.</span><span class="p">,</span>
+            <span class="s2">"population_rule"</span><span class="p">:</span> <span class="s2">"stable_topology_from_preparation_through_settled_interval"</span><span class="p">,</span>
+            <span class="s2">"purpose_rule"</span><span class="p">:</span> <span class="s2">"explicit_service_stress_or_unspecified; never_inferred_from_shortfall"</span><span class="p">,</span>
+            <span class="s2">"aggregation"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"signed_delivery_and_cash"</span><span class="p">:</span> <span class="s2">"additive"</span><span class="p">,</span> <span class="s2">"member_credit"</span><span class="p">:</span> <span class="s2">"uncapped_positive_contribution"</span><span class="p">,</span> <span class="s2">"member_shortfall"</span><span class="p">:</span> <span class="s2">"equal_share_without_district_tolerance; not_additive"</span><span class="p">},</span>
         <span class="p">}</span></div>
 
 
@@ -399,10 +407,19 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"demand_response.requests_file is missing columns: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
 
         <span class="n">requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DemandResponseRequest</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">purposes</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'demand_response'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'request_purposes'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">order</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
             <span class="n">request_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"request_id"</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">request_id</span> <span class="o">==</span> <span class="s2">""</span> <span class="ow">or</span> <span class="n">request_id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"nan"</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"demand_response request at row </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2"> has an empty request_id."</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">request_id</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"duplicate demand_response request_id: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">; IDs must be unique."</span><span class="p">)</span>
+            <span class="n">ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">request_id</span><span class="p">)</span>
+            <span class="n">purpose</span> <span class="o">=</span> <span class="n">purposes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">request_id</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'purpose'</span><span class="p">,</span> <span class="s1">'unspecified'</span><span class="p">))</span>
+            <span class="n">purpose</span> <span class="o">=</span> <span class="s1">'unspecified'</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">purpose</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">purpose</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">purpose</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">'service'</span><span class="p">,</span> <span class="s1">'stress'</span><span class="p">,</span> <span class="s1">'unspecified'</span><span class="p">}:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'DR purpose must be service, stress or unspecified.'</span><span class="p">)</span>
 
             <span class="n">issuer</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"issuer"</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">issuer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ISSUER_CODES</span><span class="p">:</span>
@@ -444,9 +461,12 @@
                     <span class="n">shortfall_penalty_eur_per_kwh</span><span class="o">=</span><span class="n">shortfall_penalty</span><span class="p">,</span>
                     <span class="n">tolerance_power_kw</span><span class="o">=</span><span class="n">tolerance</span><span class="p">,</span>
                     <span class="n">order</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">order</span><span class="p">),</span>
+                    <span class="n">purpose</span><span class="o">=</span><span class="n">purpose</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">purposes</span><span class="p">)</span><span class="o">-</span><span class="n">ids</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'request_purposes references unknown request IDs.'</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">start_time_step</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">end_time_step</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">order</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_overlaps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -479,10 +499,6 @@
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_baseline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">DemandResponseRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="n">cached</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_by_request_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">request_id</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">cached</span>
-
         <span class="n">local_start</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">start_time_step</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_episode_start_time_step</span><span class="p">()</span>
         <span class="n">window_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_window_steps</span><span class="p">()</span>
         <span class="n">start_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">local_start</span><span class="p">)</span> <span class="o">-</span> <span class="n">window_steps</span>
@@ -492,6 +508,17 @@
             <span class="n">baseline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_invalid_baseline</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_by_request_id</span><span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">baseline</span>
             <span class="k">return</span> <span class="n">baseline</span>
+
+        <span class="n">topology</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_topology_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dynamic'</span> <span class="ow">and</span> <span class="n">topology</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">versions</span> <span class="o">=</span> <span class="p">{</span><span class="n">topology</span><span class="o">.</span><span class="n">topology_version_at</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_index</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)}</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">versions</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">baseline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_invalid_baseline</span><span class="p">(</span><span class="s1">'topology_changed'</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_by_request_id</span><span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">baseline</span>
+                <span class="k">return</span> <span class="n">baseline</span>
+        <span class="n">cached</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_by_request_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">request_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cached</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cached</span>
 
         <span class="n">building_baselines</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">valid</span> <span class="o">=</span> <span class="kc">True</span>
@@ -513,10 +540,11 @@
             <span class="n">building_baselines</span><span class="p">[</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">samples</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_hours</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">building_baselines</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">baseline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_invalid_baseline</span><span class="p">()</span>
+            <span class="n">baseline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_invalid_baseline</span><span class="p">(</span><span class="s1">'nonfinite_history'</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span> <span class="k">else</span> <span class="s1">'no_members'</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">baseline</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">"valid"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">"reason"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="s2">"baseline_power_kw"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">building_baselines</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span>
                 <span class="s2">"building_baseline_power_kw"</span><span class="p">:</span> <span class="n">building_baselines</span><span class="p">,</span>
                 <span class="s2">"window_start_time_step"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">start_index</span><span class="p">),</span>
@@ -540,6 +568,8 @@
                 <span class="s2">"issuer"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">issuer</span><span class="p">,</span>
                 <span class="s2">"direction"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span>
                 <span class="s2">"baseline_valid"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">"baseline_reason"</span><span class="p">:</span> <span class="n">baseline</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'reason'</span><span class="p">),</span>
+                <span class="s2">"purpose"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">purpose</span><span class="p">,</span>
                 <span class="s2">"requested_kwh"</span><span class="p">:</span> <span class="n">requested_kwh</span><span class="p">,</span>
                 <span class="s2">"valid_requested_kwh"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
                 <span class="s2">"baseline_power_kw"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
@@ -585,6 +615,8 @@
             <span class="s2">"issuer"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">issuer</span><span class="p">,</span>
             <span class="s2">"direction"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span>
             <span class="s2">"baseline_valid"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"baseline_reason"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"purpose"</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">purpose</span><span class="p">,</span>
             <span class="s2">"requested_kwh"</span><span class="p">:</span> <span class="n">requested_kwh</span><span class="p">,</span>
             <span class="s2">"valid_requested_kwh"</span><span class="p">:</span> <span class="n">requested_kwh</span><span class="p">,</span>
             <span class="s2">"baseline_power_kw"</span><span class="p">:</span> <span class="n">baseline_power</span><span class="p">,</span>
@@ -728,9 +760,10 @@
         <span class="p">}</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_invalid_baseline</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_invalid_baseline</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s1">'insufficient_history'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">"valid"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="p">,</span>
             <span class="s2">"baseline_power_kw"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
             <span class="s2">"building_baseline_power_kw"</span><span class="p">:</span> <span class="p">{},</span>
             <span class="s2">"window_start_time_step"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
@@ -746,7 +779,27 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_baseline_window_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="n">seconds</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">"seconds_per_time_step"</span><span class="p">,</span> <span class="mf">3600.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">3600.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline_window_seconds</span><span class="p">)</span> <span class="o">/</span> <span class="n">seconds</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">baseline_window_seconds</span><span class="p">)</span> <span class="o">/</span> <span class="n">seconds</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="CityLearnDemandResponseService.audit_summary">
+<a class="viewcode-back" href="../../../api/citylearn.internal.demand_response.html#citylearn.internal.demand_response.CityLearnDemandResponseService.audit_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">audit_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""District service quality by declared purpose, without inferring feasibility."""</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">purpose</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'all'</span><span class="p">,</span> <span class="s1">'service'</span><span class="p">,</span> <span class="s1">'stress'</span><span class="p">,</span> <span class="s1">'unspecified'</span><span class="p">):</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settlement_history</span> <span class="k">if</span> <span class="n">purpose</span> <span class="o">==</span> <span class="s1">'all'</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'purpose'</span><span class="p">,</span> <span class="s1">'unspecified'</span><span class="p">)</span> <span class="o">==</span> <span class="n">purpose</span><span class="p">]</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">'baseline_valid'</span><span class="p">]]</span>
+            <span class="n">totals</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'requested_kwh'</span><span class="p">,</span> <span class="s1">'valid_requested_kwh'</span><span class="p">,</span> <span class="s1">'delivered_kwh'</span><span class="p">,</span> <span class="s1">'credited_kwh'</span><span class="p">,</span> <span class="s1">'shortfall_kwh'</span><span class="p">,</span> <span class="s1">'revenue_eur'</span><span class="p">,</span> <span class="s1">'penalty_eur'</span><span class="p">,</span> <span class="s1">'net_revenue_eur'</span><span class="p">)}</span>
+            <span class="n">totals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">events_count</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">({</span><span class="n">r</span><span class="p">[</span><span class="s1">'request_id'</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">})),</span>
+                          <span class="n">active_intervals_count</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)),</span> <span class="n">valid_intervals_count</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">valid</span><span class="p">)),</span>
+                          <span class="n">baseline_coverage_ratio</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">valid</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="k">if</span> <span class="n">rows</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                          <span class="n">requested_energy_coverage_ratio</span><span class="o">=</span><span class="n">totals</span><span class="p">[</span><span class="s1">'valid_requested_kwh'</span><span class="p">]</span><span class="o">/</span><span class="n">totals</span><span class="p">[</span><span class="s1">'requested_kwh'</span><span class="p">]</span> <span class="k">if</span> <span class="n">totals</span><span class="p">[</span><span class="s1">'requested_kwh'</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                          <span class="n">compliance_ratio</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">totals</span><span class="p">[</span><span class="s1">'credited_kwh'</span><span class="p">]</span><span class="o">/</span><span class="n">totals</span><span class="p">[</span><span class="s1">'valid_requested_kwh'</span><span class="p">],</span><span class="mf">0.</span><span class="p">),</span><span class="mf">1.</span><span class="p">)</span> <span class="k">if</span> <span class="n">totals</span><span class="p">[</span><span class="s1">'valid_requested_kwh'</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">reason</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'insufficient_history'</span><span class="p">,</span> <span class="s1">'nonfinite_history'</span><span class="p">,</span> <span class="s1">'no_members'</span><span class="p">,</span> <span class="s1">'topology_changed'</span><span class="p">):</span>
+                <span class="n">totals</span><span class="p">[</span><span class="s1">'excluded_'</span><span class="o">+</span><span class="n">reason</span><span class="o">+</span><span class="s1">'_intervals_count'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'baseline_reason'</span><span class="p">)</span> <span class="o">==</span> <span class="n">reason</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">))</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">purpose</span><span class="p">]</span> <span class="o">=</span> <span class="n">totals</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_step_hours</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">"seconds_per_time_step"</span><span class="p">,</span> <span class="mf">3600.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">3600.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3600.0</span><span class="p">,</span> <span class="mf">1.0e-12</span><span class="p">)</span>

@@ -12,14 +12,41 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   citylearn.internal.balance_audit
    citylearn.internal.baseline
    citylearn.internal.building_ops
+   citylearn.internal.capabilities
+   citylearn.internal.comparison
+   citylearn.internal.deferrable_cycles
+   citylearn.internal.deferrable_service_audit
    citylearn.internal.demand_response
+   citylearn.internal.electrical_limits
    citylearn.internal.entity_interface
+   citylearn.internal.entity_layout
+   citylearn.internal.entity_observations
+   citylearn.internal.ev_departure_audit
+   citylearn.internal.evaluation_progress
+   citylearn.internal.experiment
    citylearn.internal.kpi
+   citylearn.internal.kpi_community
+   citylearn.internal.kpi_energy
+   citylearn.internal.kpi_equipment
+   citylearn.internal.kpi_family_audit
+   citylearn.internal.kpi_population
+   citylearn.internal.kpi_service_metrics
    citylearn.internal.loading
+   citylearn.internal.loading_components
+   citylearn.internal.loading_inputs
+   citylearn.internal.market_history
+   citylearn.internal.observation_contract
    citylearn.internal.physics_invariants
+   citylearn.internal.provenance
    citylearn.internal.robustness
+   citylearn.internal.robustness_audit
+   citylearn.internal.robustness_history
+   citylearn.internal.robustness_spaces
+   citylearn.internal.robustness_targets
    citylearn.internal.runtime
+   citylearn.internal.temporal
    citylearn.internal.topology
    citylearn.internal.units

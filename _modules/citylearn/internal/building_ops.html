@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.internal.building_ops &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.internal.building_ops &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,6 +132,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">HeatPump</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalize</span><span class="p">,</span> <span class="n">PeriodicNormalization</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">energy_kwh_to_power_kw</span><span class="p">,</span> <span class="n">power_kw_to_energy_kwh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.electrical_limits</span><span class="w"> </span><span class="kn">import</span> <span class="n">allocate_electrical_service</span><span class="p">,</span> <span class="n">electrical_service_violation_kw</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
@@ -292,7 +293,8 @@
                 <span class="k">if</span> <span class="n">req_soc_key</span> <span class="ow">in</span> <span class="n">valid_observations</span><span class="p">:</span>
                     <span class="n">observations</span><span class="p">[</span><span class="n">req_soc_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_required_soc_departure</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
                 <span class="k">if</span> <span class="n">soc_key</span> <span class="ow">in</span> <span class="n">valid_observations</span><span class="p">:</span>
-                    <span class="n">observations</span><span class="p">[</span><span class="n">soc_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">endogenous_t</span><span class="p">]</span>
+                    <span class="n">ev</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span>
+                    <span class="n">observations</span><span class="p">[</span><span class="n">soc_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">ev</span><span class="o">.</span><span class="n">observation_soc_index</span><span class="p">(</span><span class="n">endogenous_t</span><span class="p">)]</span>
                 <span class="k">if</span> <span class="n">capacity_key</span> <span class="ow">in</span> <span class="n">valid_observations</span><span class="p">:</span>
                     <span class="n">observations</span><span class="p">[</span><span class="n">capacity_key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">capacity</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -416,13 +418,15 @@
                     <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">endogenous_t</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">past_charging_action_values_kwh</span><span class="p">):</span>
                         <span class="n">last_charged_kwh</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">past_charging_action_values_kwh</span><span class="p">[</span><span class="n">endogenous_t</span><span class="p">])</span>
 
-                    <span class="n">battery_soc</span> <span class="o">=</span> <span class="n">connected_car</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">endogenous_t</span><span class="p">]</span>
+                    <span class="n">battery_soc</span> <span class="o">=</span> <span class="n">connected_car</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">connected_car</span><span class="o">.</span><span class="n">observation_soc_index</span><span class="p">(</span><span class="n">endogenous_t</span><span class="p">)]</span>
                     <span class="n">previous_battery_soc</span> <span class="o">=</span> <span class="n">connected_car</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">initial_soc</span> <span class="k">if</span> <span class="n">endogenous_t</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">connected_car</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">endogenous_t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
 
                     <span class="n">required_soc</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span><span class="o">.</span><span class="n">electric_vehicle_required_soc_departure</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
                     <span class="n">departure_steps</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span><span class="o">.</span><span class="n">electric_vehicle_departure_time</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
                     <span class="n">step_hours</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">seconds_per_time_step</span> <span class="o">/</span> <span class="mf">3600.0</span>
-                    <span class="n">hours_until_departure</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">departure_steps</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">step_hours</span>
+                    <span class="n">hours_until_departure</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="nb">float</span><span class="p">(</span><span class="n">departure_steps</span><span class="p">)</span> <span class="o">*</span> <span class="n">step_hours</span> <span class="k">if</span> <span class="n">departure_steps</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span>
+                    <span class="p">)</span>
 
                     <span class="n">battery_capacity</span> <span class="o">=</span> <span class="n">connected_car</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">capacity</span>
                     <span class="n">min_capacity</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">connected_car</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">depth_of_discharge</span><span class="p">)</span> <span class="o">*</span> <span class="n">battery_capacity</span>
@@ -1014,6 +1018,8 @@
             <span class="n">profile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deferrable_start_profile_kwh</span><span class="p">(</span><span class="n">appliance</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">profile</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">args</span>
+            <span class="k">if</span> <span class="n">building</span><span class="o">.</span><span class="n">power_outage</span> <span class="ow">and</span> <span class="n">profile</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">building</span><span class="o">.</span><span class="n">downward_electrical_flexibility</span> <span class="o">+</span> <span class="mf">1.0e-9</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,)</span>
             <span class="k">return</span> <span class="n">args</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deferrable_profile_feasible</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,)</span>
 
         <span class="k">if</span> <span class="n">action_key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'escalator_'</span><span class="p">):</span>
@@ -1399,18 +1405,6 @@
             <span class="k">return</span> <span class="mf">0.0</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">target_power_kw</span> <span class="o">/</span> <span class="n">nominal_power</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_totals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_total_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">base_phase_kw</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">controls</span><span class="p">,</span> <span class="n">scales</span><span class="p">):</span>
-        <span class="n">total_kw</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">base_total_kw</span><span class="p">)</span>
-        <span class="n">phase_kw</span> <span class="o">=</span> <span class="p">{</span><span class="n">phase</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">phase</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">base_phase_kw</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-
-        <span class="k">for</span> <span class="n">control_id</span><span class="p">,</span> <span class="n">control</span> <span class="ow">in</span> <span class="n">controls</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">control_id</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
-            <span class="n">total_kw</span> <span class="o">+=</span> <span class="n">control</span><span class="p">[</span><span class="s1">'request_total_kw'</span><span class="p">]</span> <span class="o">*</span> <span class="n">scale</span>
-            <span class="k">for</span> <span class="n">phase_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">control</span><span class="p">[</span><span class="s1">'request_phase_kw'</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">phase_kw</span><span class="p">[</span><span class="n">phase_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">phase_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase_name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">value</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">total_kw</span><span class="p">,</span> <span class="n">phase_kw</span>
-
     <span class="k">def</span><span class="w"> </span><span class="nf">_electrical_service_violation_kw</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">total_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -1419,95 +1413,9 @@
         <span class="n">per_phase_limits</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
         <span class="n">phase_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="n">violation_kw</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="n">total_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">total_kw</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-
-        <span class="n">import_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_kw'</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-        <span class="n">export_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">import_limit</span><span class="p">):</span>
-            <span class="n">violation_kw</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="n">total_kw</span> <span class="o">-</span> <span class="n">import_limit</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">export_limit</span><span class="p">):</span>
-            <span class="n">violation_kw</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">total_kw</span> <span class="o">-</span> <span class="n">export_limit</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">phase_name</span> <span class="ow">in</span> <span class="n">phase_names</span><span class="p">:</span>
-            <span class="n">phase_total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">phase_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase_name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
-            <span class="n">phase_limit</span> <span class="o">=</span> <span class="n">per_phase_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase_name</span><span class="p">,</span> <span class="p">{})</span>
-            <span class="n">phase_import_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">phase_limit</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_kw'</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-            <span class="n">phase_export_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">phase_limit</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">phase_import_limit</span><span class="p">):</span>
-                <span class="n">violation_kw</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="n">phase_total</span> <span class="o">-</span> <span class="n">phase_import_limit</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">phase_export_limit</span><span class="p">):</span>
-                <span class="n">violation_kw</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">phase_total</span> <span class="o">-</span> <span class="n">phase_export_limit</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">violation_kw</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_scale_for_import_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_value_kw</span><span class="p">,</span> <span class="n">limit_kw</span><span class="p">,</span> <span class="n">controls</span><span class="p">,</span> <span class="n">scales</span><span class="p">,</span> <span class="n">component_getter</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="n">limit_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">limit_kw</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-        <span class="n">current_value_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">current_value_kw</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">limit_kw</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">limit_kw</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">current_value_kw</span> <span class="o">&lt;=</span> <span class="n">limit_kw</span> <span class="o">+</span> <span class="mf">1e-9</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">relevant</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">control_id</span><span class="p">,</span> <span class="n">control</span> <span class="ow">in</span> <span class="n">controls</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">component_kw</span> <span class="o">=</span> <span class="n">component_getter</span><span class="p">(</span><span class="n">control</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">component_kw</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">control_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
-                <span class="n">relevant</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">control_id</span><span class="p">,</span> <span class="n">component_kw</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">relevant</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">current_relevant_kw</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">scales</span><span class="p">[</span><span class="n">control_id</span><span class="p">]</span> <span class="o">*</span> <span class="n">component_kw</span> <span class="k">for</span> <span class="n">control_id</span><span class="p">,</span> <span class="n">component_kw</span> <span class="ow">in</span> <span class="n">relevant</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">current_relevant_kw</span> <span class="o">&lt;=</span> <span class="mf">1e-9</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">fixed_kw</span> <span class="o">=</span> <span class="n">current_value_kw</span> <span class="o">-</span> <span class="n">current_relevant_kw</span>
-        <span class="n">allowed_kw</span> <span class="o">=</span> <span class="n">limit_kw</span> <span class="o">-</span> <span class="n">fixed_kw</span>
-        <span class="n">factor</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">allowed_kw</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">allowed_kw</span> <span class="o">/</span> <span class="n">current_relevant_kw</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">factor</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="k">for</span> <span class="n">control_id</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">relevant</span><span class="p">:</span>
-            <span class="n">scales</span><span class="p">[</span><span class="n">control_id</span><span class="p">]</span> <span class="o">*=</span> <span class="n">factor</span>
-
-        <span class="k">return</span> <span class="kc">True</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_scale_for_export_scope</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_value_kw</span><span class="p">,</span> <span class="n">limit_kw</span><span class="p">,</span> <span class="n">controls</span><span class="p">,</span> <span class="n">scales</span><span class="p">,</span> <span class="n">component_getter</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="n">limit_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">limit_kw</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-        <span class="n">current_value_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">current_value_kw</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">limit_kw</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">limit_kw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">current_export_kw</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">current_value_kw</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">current_export_kw</span> <span class="o">&lt;=</span> <span class="n">limit_kw</span> <span class="o">+</span> <span class="mf">1e-9</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">relevant</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">control_id</span><span class="p">,</span> <span class="n">control</span> <span class="ow">in</span> <span class="n">controls</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">component_kw</span> <span class="o">=</span> <span class="n">component_getter</span><span class="p">(</span><span class="n">control</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">component_kw</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">scales</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">control_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
-                <span class="n">relevant</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">control_id</span><span class="p">,</span> <span class="n">component_kw</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">relevant</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">current_relevant_export_kw</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">scales</span><span class="p">[</span><span class="n">control_id</span><span class="p">]</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">component_kw</span><span class="p">)</span> <span class="k">for</span> <span class="n">control_id</span><span class="p">,</span> <span class="n">component_kw</span> <span class="ow">in</span> <span class="n">relevant</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">current_relevant_export_kw</span> <span class="o">&lt;=</span> <span class="mf">1e-9</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">fixed_kw</span> <span class="o">=</span> <span class="n">current_value_kw</span> <span class="o">+</span> <span class="n">current_relevant_export_kw</span>
-        <span class="n">allowed_export_kw</span> <span class="o">=</span> <span class="n">limit_kw</span> <span class="o">+</span> <span class="n">fixed_kw</span>
-        <span class="n">factor</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">allowed_export_kw</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">allowed_export_kw</span> <span class="o">/</span> <span class="n">current_relevant_export_kw</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">factor</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="k">for</span> <span class="n">control_id</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">relevant</span><span class="p">:</span>
-            <span class="n">scales</span><span class="p">[</span><span class="n">control_id</span><span class="p">]</span> <span class="o">*=</span> <span class="n">factor</span>
-
-        <span class="k">return</span> <span class="kc">True</span>
+        <span class="c1"># Retain the internal audit entry point; the formula lives with allocation.</span>
+        <span class="k">return</span> <span class="n">electrical_service_violation_kw</span><span class="p">(</span>
+            <span class="n">total_kw</span><span class="p">,</span> <span class="n">phase_kw</span><span class="p">,</span> <span class="n">total_limits</span><span class="p">,</span> <span class="n">per_phase_limits</span><span class="p">,</span> <span class="n">phase_names</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_apply_legacy_charging_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
         <span class="n">building</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">building</span>
@@ -1663,60 +1571,13 @@
                 <span class="s1">'request_phase_kw'</span><span class="p">:</span> <span class="n">request_phase_kw</span><span class="p">,</span>
             <span class="p">}</span>
 
-        <span class="n">scales</span> <span class="o">=</span> <span class="p">{</span><span class="n">control_id</span><span class="p">:</span> <span class="mf">1.0</span> <span class="k">for</span> <span class="n">control_id</span> <span class="ow">in</span> <span class="n">controls</span><span class="p">}</span>
         <span class="n">total_limits</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_electrical_service_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'total'</span><span class="p">,</span> <span class="p">{})</span>
         <span class="n">per_phase_limits</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_electrical_service_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'per_phase'</span><span class="p">,</span> <span class="p">{})</span>
-        <span class="n">requested_total_kw</span><span class="p">,</span> <span class="n">requested_phase_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_totals</span><span class="p">(</span><span class="n">base_total_kw</span><span class="p">,</span> <span class="n">base_phase_kw</span><span class="p">,</span> <span class="n">controls</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span>
-        <span class="n">requested_violation_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electrical_service_violation_kw</span><span class="p">(</span>
-            <span class="n">requested_total_kw</span><span class="p">,</span>
-            <span class="n">requested_phase_kw</span><span class="p">,</span>
-            <span class="n">total_limits</span><span class="p">,</span>
-            <span class="n">per_phase_limits</span><span class="p">,</span>
-            <span class="n">phase_names</span><span class="p">,</span>
+        <span class="n">allocation</span> <span class="o">=</span> <span class="n">allocate_electrical_service</span><span class="p">(</span>
+            <span class="n">base_total_kw</span><span class="p">,</span> <span class="n">base_phase_kw</span><span class="p">,</span> <span class="n">controls</span><span class="p">,</span> <span class="n">total_limits</span><span class="p">,</span> <span class="n">per_phase_limits</span><span class="p">,</span> <span class="n">phase_names</span><span class="p">,</span>
         <span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
-            <span class="n">changed</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">total_kw</span><span class="p">,</span> <span class="n">phase_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_totals</span><span class="p">(</span><span class="n">base_total_kw</span><span class="p">,</span> <span class="n">base_phase_kw</span><span class="p">,</span> <span class="n">controls</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span>
-
-            <span class="n">changed</span> <span class="o">|=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_for_import_scope</span><span class="p">(</span>
-                <span class="n">total_kw</span><span class="p">,</span>
-                <span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_kw'</span><span class="p">),</span>
-                <span class="n">controls</span><span class="p">,</span>
-                <span class="n">scales</span><span class="p">,</span>
-                <span class="n">component_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s1">'request_total_kw'</span><span class="p">],</span>
-            <span class="p">)</span>
-            <span class="n">changed</span> <span class="o">|=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_for_export_scope</span><span class="p">(</span>
-                <span class="n">total_kw</span><span class="p">,</span>
-                <span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">),</span>
-                <span class="n">controls</span><span class="p">,</span>
-                <span class="n">scales</span><span class="p">,</span>
-                <span class="n">component_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s1">'request_total_kw'</span><span class="p">],</span>
-            <span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">phase_name</span> <span class="ow">in</span> <span class="n">phase_names</span><span class="p">:</span>
-                <span class="n">phase_limit</span> <span class="o">=</span> <span class="n">per_phase_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase_name</span><span class="p">,</span> <span class="p">{})</span>
-                <span class="n">changed</span> <span class="o">|=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_for_import_scope</span><span class="p">(</span>
-                    <span class="n">phase_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase_name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                    <span class="n">phase_limit</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_kw'</span><span class="p">),</span>
-                    <span class="n">controls</span><span class="p">,</span>
-                    <span class="n">scales</span><span class="p">,</span>
-                    <span class="n">component_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">phase_name</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s1">'request_phase_kw'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                <span class="p">)</span>
-                <span class="n">changed</span> <span class="o">|=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_for_export_scope</span><span class="p">(</span>
-                    <span class="n">phase_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase_name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                    <span class="n">phase_limit</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">),</span>
-                    <span class="n">controls</span><span class="p">,</span>
-                    <span class="n">scales</span><span class="p">,</span>
-                    <span class="n">component_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">phase_name</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s1">'request_phase_kw'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                <span class="p">)</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">changed</span><span class="p">:</span>
-                <span class="k">break</span>
-
-        <span class="n">total_kw</span><span class="p">,</span> <span class="n">phase_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_totals</span><span class="p">(</span><span class="n">base_total_kw</span><span class="p">,</span> <span class="n">base_phase_kw</span><span class="p">,</span> <span class="n">controls</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span>
-        <span class="n">total_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">total_kw</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="n">phase_kw</span> <span class="o">=</span> <span class="p">{</span><span class="n">phase</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">phase</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">phase_kw</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">scales</span> <span class="o">=</span> <span class="n">allocation</span><span class="o">.</span><span class="n">scales</span>
+        <span class="n">total_kw</span><span class="p">,</span> <span class="n">phase_kw</span> <span class="o">=</span> <span class="n">allocation</span><span class="o">.</span><span class="n">total_kw</span><span class="p">,</span> <span class="n">allocation</span><span class="o">.</span><span class="n">phase_kw</span>
 
         <span class="k">if</span> <span class="n">adjusted_actions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">charger_id</span> <span class="ow">in</span> <span class="n">adjusted_actions</span><span class="p">:</span>
@@ -1735,14 +1596,7 @@
 
         <span class="n">import_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_kw'</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
         <span class="n">export_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-        <span class="n">residual_violation_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electrical_service_violation_kw</span><span class="p">(</span>
-            <span class="n">total_kw</span><span class="p">,</span>
-            <span class="n">phase_kw</span><span class="p">,</span>
-            <span class="n">total_limits</span><span class="p">,</span>
-            <span class="n">per_phase_limits</span><span class="p">,</span>
-            <span class="n">phase_names</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">violation_kw</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">requested_violation_kw</span><span class="p">,</span> <span class="n">residual_violation_kw</span><span class="p">)</span>
+        <span class="n">violation_kw</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">allocation</span><span class="o">.</span><span class="n">requested_violation_kw</span><span class="p">,</span> <span class="n">allocation</span><span class="o">.</span><span class="n">residual_violation_kw</span><span class="p">)</span>
 
         <span class="n">phase_headroom</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">phase_export_headroom</span> <span class="o">=</span> <span class="p">{}</span>

@@ -1,0 +1,510 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.internal.entity_layout &mdash; CityLearn 3.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/publishing.html">Publishing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases.html">Releases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.internal.entity_layout</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.internal.entity_layout</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Build entity static rows, spaces and declarative interface specifications.</span>
+
+<span class="sd">Topology identity/reference discovery remains in the interface facade; this</span>
+<span class="sd">module constructs the layout-dependent numeric and serialisable structures.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">spaces</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.entity_interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEntityInterfaceService</span>
+
+
+<div class="viewcode-block" id="build_static_observation_rows">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_layout.html#citylearn.internal.entity_layout.build_static_observation_rows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_static_observation_rows</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Pre-fill static entity feature values for the current topology layout."""</span>
+
+    <span class="n">entity</span><span class="o">.</span><span class="n">_charger_static_obs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_obs</span><span class="p">)</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_storage_static_obs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_storage_obs</span><span class="p">)</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_pv_static_obs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_pv_obs</span><span class="p">)</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_charger_static_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">:</span>
+        <span class="n">building</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">building_index</span><span class="p">]</span>
+        <span class="n">charger</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_charger_lookup</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">charger_id</span><span class="p">]</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_static_obs</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">]</span>
+        <span class="n">max_charging_power</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">max_charging_power</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">max_discharging_power</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">max_discharging_power</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">min_charging_power</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s2">"min_charging_power"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">min_discharging_power</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s2">"min_discharging_power"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">charger_efficiency</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s2">"efficiency"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">charge_efficiency_at_max</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">get_efficiency</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">charger_efficiency</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s2">"get_efficiency"</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">charger_efficiency</span>
+        <span class="p">)</span>
+        <span class="n">discharge_efficiency_at_max</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">get_efficiency</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">charger_efficiency</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s2">"get_efficiency"</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">charger_efficiency</span>
+        <span class="p">)</span>
+        <span class="n">static_values</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"max_charging_power_kw"</span><span class="p">:</span> <span class="n">max_charging_power</span><span class="p">,</span>
+            <span class="s2">"max_discharging_power_kw"</span><span class="p">:</span> <span class="n">max_discharging_power</span><span class="p">,</span>
+            <span class="s2">"min_charging_power_kw"</span><span class="p">:</span> <span class="n">min_charging_power</span><span class="p">,</span>
+            <span class="s2">"min_discharging_power_kw"</span><span class="p">:</span> <span class="n">min_discharging_power</span><span class="p">,</span>
+            <span class="s2">"charger_efficiency_ratio"</span><span class="p">:</span> <span class="n">charger_efficiency</span><span class="p">,</span>
+            <span class="s2">"charge_efficiency_at_max_ratio"</span><span class="p">:</span> <span class="n">charge_efficiency_at_max</span><span class="p">,</span>
+            <span class="s2">"discharge_efficiency_at_max_ratio"</span><span class="p">:</span> <span class="n">discharge_efficiency_at_max</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">assigned_phase</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s2">"_charger_phase_map"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">charger_id</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">phase_name</span><span class="p">,</span> <span class="n">feature_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_phase_names</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_phase_features</span><span class="p">):</span>
+            <span class="n">static_values</span><span class="p">[</span><span class="n">feature_name</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">assigned_phase</span> <span class="ow">in</span> <span class="p">{</span><span class="n">phase_name</span><span class="p">,</span> <span class="s2">"all_phases"</span><span class="p">}</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="n">static_values</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_charger_static_values</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">static_values</span>
+
+    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_refs</span><span class="p">:</span>
+        <span class="n">building</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">building_index</span><span class="p">]</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_static_obs</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">]</span>
+        <span class="n">assigned_phase</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s2">"electrical_storage_phase_connection"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">phase_name</span><span class="p">,</span> <span class="n">feature_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_storage_phase_names</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_phase_features</span><span class="p">):</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span>
+                <span class="n">feature_name</span><span class="p">,</span>
+                <span class="mf">1.0</span> <span class="k">if</span> <span class="n">assigned_phase</span> <span class="ow">in</span> <span class="p">{</span><span class="n">phase_name</span><span class="p">,</span> <span class="s2">"all_phases"</span><span class="p">}</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_refs</span><span class="p">:</span>
+        <span class="n">building</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">building_index</span><span class="p">]</span>
+        <span class="n">installed_power</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">pv</span><span class="p">,</span> <span class="s2">"nominal_power"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_pv_static_obs</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">],</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_feature_cols</span><span class="p">,</span> <span class="s2">"installed_power_kw"</span><span class="p">,</span> <span class="n">installed_power</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_spaces">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_layout.html#citylearn.internal.entity_layout.build_spaces">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_spaces</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">district_low</span><span class="p">,</span> <span class="n">district_high</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_observation_bounds_for_features</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_district_features</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="s2">"district"</span><span class="p">)</span>
+    <span class="n">building_low</span><span class="p">,</span> <span class="n">building_high</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_observation_bounds_for_features</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_features</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="s2">"building"</span><span class="p">,</span> <span class="n">per_building</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">charger_low</span><span class="p">,</span> <span class="n">charger_high</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_observation_bounds</span><span class="p">()</span>
+    <span class="n">ev_low</span><span class="p">,</span> <span class="n">ev_high</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_observation_bounds</span><span class="p">()</span>
+    <span class="n">storage_low</span><span class="p">,</span> <span class="n">storage_high</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_observation_bounds</span><span class="p">()</span>
+    <span class="n">pv_low</span><span class="p">,</span> <span class="n">pv_high</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_observation_bounds</span><span class="p">()</span>
+    <span class="n">deferrable_appliance_low</span><span class="p">,</span> <span class="n">deferrable_appliance_high</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_observation_bounds</span><span class="p">()</span>
+
+    <span class="n">entity</span><span class="o">.</span><span class="n">_observation_space</span> <span class="o">=</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"tables"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">"district"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">district_low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">district_high</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                    <span class="s2">"building"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">building_low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">building_high</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                    <span class="s2">"charger"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">charger_low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">charger_high</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                    <span class="s2">"ev"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">ev_low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">ev_high</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                    <span class="s2">"storage"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">storage_low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">storage_high</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                    <span class="s2">"pv"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">pv_low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">pv_high</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                    <span class="s2">"deferrable_appliance"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">deferrable_appliance_low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">deferrable_appliance_high</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">),</span>
+            <span class="s2">"edges"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">"district_to_building"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                        <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_ids</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                        <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_ids</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_ids</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="s2">"building_to_charger"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                        <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                        <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                            <span class="p">[[</span><span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_ids</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]],</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="s2">"building_to_storage"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                        <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_storage_refs</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                        <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                            <span class="p">[[</span><span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_ids</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_storage_refs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]],</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_storage_refs</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="s2">"building_to_pv"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                        <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_pv_refs</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                        <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                            <span class="p">[[</span><span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_ids</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_pv_refs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]],</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_pv_refs</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="s2">"building_to_deferrable_appliance"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                        <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_refs</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                        <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                            <span class="p">[[</span><span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_ids</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_refs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]],</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_refs</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="s2">"charger_to_ev_connected"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                        <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                        <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                            <span class="p">[[</span><span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_ev_ids</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]],</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="s2">"charger_to_ev_connected_mask"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                        <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">),),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                        <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">),),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="s2">"charger_to_ev_incoming"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                        <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+                        <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                            <span class="p">[[</span><span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_ev_ids</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]],</span>
+                            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="s2">"charger_to_ev_incoming_mask"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                        <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">),),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                        <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">),),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                    <span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="n">building_action_low</span><span class="p">,</span> <span class="n">building_action_high</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_action_bounds</span><span class="p">()</span>
+    <span class="n">charger_action_low</span><span class="p">,</span> <span class="n">charger_action_high</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_action_bounds</span><span class="p">()</span>
+    <span class="n">deferrable_appliance_action_low</span><span class="p">,</span> <span class="n">deferrable_appliance_action_high</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_action_bounds</span><span class="p">()</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_action_space</span> <span class="o">=</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"tables"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">"building"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">building_action_low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">building_action_high</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                    <span class="s2">"charger"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">charger_action_low</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">charger_action_high</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                    <span class="s2">"deferrable_appliance"</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                        <span class="n">low</span><span class="o">=</span><span class="n">deferrable_appliance_action_low</span><span class="p">,</span>
+                        <span class="n">high</span><span class="o">=</span><span class="n">deferrable_appliance_action_high</span><span class="p">,</span>
+                        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                    <span class="p">),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_specs">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_layout.html#citylearn.internal.entity_layout.build_specs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_specs</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_units_for</span><span class="p">(</span><span class="n">names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">entity</span><span class="o">.</span><span class="n">_infer_unit</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_table_spec</span><span class="p">(</span><span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">features</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">feature_metadata</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_feature_metadata_for_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"ids"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">ids</span><span class="p">),</span>
+            <span class="s2">"features"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">features</span><span class="p">),</span>
+            <span class="s2">"units"</span><span class="p">:</span> <span class="n">_units_for</span><span class="p">(</span><span class="n">features</span><span class="p">),</span>
+            <span class="s2">"feature_metadata"</span><span class="p">:</span> <span class="n">feature_metadata</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">entity</span><span class="o">.</span><span class="n">_specs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"entity_v1"</span><span class="p">,</span>
+        <span class="s2">"runtime_status_contract"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"runtime_status_v1"</span><span class="p">,</span>
+            <span class="s2">"emits_health_state"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"fault_mode_semantics"</span><span class="p">:</span> <span class="s2">"raw_cause_not_health_state"</span><span class="p">,</span>
+            <span class="s2">"sparse_defaults"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"availability"</span><span class="p">:</span> <span class="s2">"AVAILABLE"</span><span class="p">,</span>
+                <span class="s2">"quality"</span><span class="p">:</span> <span class="s2">"NOMINAL"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"event_domains"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">"ASSET_CONNECTION"</span><span class="p">,</span>
+                <span class="s2">"ASSET_AVAILABILITY"</span><span class="p">,</span>
+                <span class="s2">"SENSOR_CHANNEL"</span><span class="p">,</span>
+                <span class="s2">"ACTUATOR_CHANNEL"</span><span class="p">,</span>
+                <span class="s2">"COMMUNICATION_LINK"</span><span class="p">,</span>
+                <span class="s2">"VALUE_QUALITY"</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="s2">"collections"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">"active_events"</span><span class="p">,</span>
+                <span class="s2">"asset_connections"</span><span class="p">,</span>
+                <span class="s2">"asset_availability"</span><span class="p">,</span>
+                <span class="s2">"sensor_channels"</span><span class="p">,</span>
+                <span class="s2">"actuator_channels"</span><span class="p">,</span>
+                <span class="s2">"communication_links"</span><span class="p">,</span>
+                <span class="s2">"value_quality"</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s2">"action_execution_contract"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"entity_action_execution_v1"</span><span class="p">,</span>
+            <span class="s2">"nullable_unobservable_fields"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"stages"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">"requested_value"</span><span class="p">,</span>
+                <span class="s2">"post_channel_value"</span><span class="p">,</span>
+                <span class="s2">"limited_value"</span><span class="p">,</span>
+                <span class="s2">"applied_value"</span><span class="p">,</span>
+                <span class="s2">"applied_power_kw"</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s2">"temporal_semantics"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"exogenous"</span><span class="p">:</span> <span class="s2">"t"</span><span class="p">,</span>
+            <span class="s2">"endogenous"</span><span class="p">:</span> <span class="s2">"t_minus_1_settled"</span><span class="p">,</span>
+            <span class="s2">"event_boundary"</span><span class="p">:</span> <span class="s2">"events_at_k_apply_after_transition_k_minus_1_to_k_before_observation_k"</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">"normalization"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"simulator_applies_normalization"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"policy"</span><span class="p">:</span> <span class="s2">"external_running_stats"</span><span class="p">,</span>
+            <span class="s2">"encoding"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"ids"</span><span class="p">:</span> <span class="s2">"stable_canonical_ids"</span><span class="p">,</span>
+                <span class="s2">"categorical"</span><span class="p">:</span> <span class="s2">"numeric_or_binary_from_dataset"</span><span class="p">,</span>
+                <span class="s2">"time"</span><span class="p">:</span> <span class="s2">"raw_indices_unwrapped"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"dynamic_topology"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"variable_size_tables"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">"topology_mode"</span><span class="p">,</span> <span class="s2">"static"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"dynamic"</span><span class="p">),</span>
+                <span class="s2">"stable_ids"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">"relation_masks"</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">"charger_to_ev_connected_mask"</span><span class="p">,</span>
+                    <span class="s2">"charger_to_ev_incoming_mask"</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="s2">"running_stats_recommendation"</span><span class="p">:</span> <span class="s2">"maintain_per_feature_stats_externally_and_ignore_inactive_ids"</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s2">"observation_bundles"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">BASE_BUNDLE</span><span class="p">:</span> <span class="p">{</span><span class="s2">"active"</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+            <span class="o">**</span><span class="p">{</span>
+                <span class="n">bundle_name</span><span class="p">:</span> <span class="p">{</span><span class="s2">"active"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">active</span><span class="p">)}</span>
+                <span class="k">for</span> <span class="n">bundle_name</span><span class="p">,</span> <span class="n">active</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_observation_bundles</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s2">"tables"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"district"</span><span class="p">:</span> <span class="n">_table_spec</span><span class="p">(</span><span class="s2">"district"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"district_0"</span><span class="p">],</span> <span class="n">entity</span><span class="o">.</span><span class="n">_district_features</span><span class="p">),</span>
+            <span class="s2">"building"</span><span class="p">:</span> <span class="n">_table_spec</span><span class="p">(</span><span class="s2">"building"</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_ids</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_features</span><span class="p">),</span>
+            <span class="s2">"charger"</span><span class="p">:</span> <span class="n">_table_spec</span><span class="p">(</span><span class="s2">"charger"</span><span class="p">,</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">global_id</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">],</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_features</span><span class="p">),</span>
+            <span class="s2">"ev"</span><span class="p">:</span> <span class="n">_table_spec</span><span class="p">(</span><span class="s2">"ev"</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_ids</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_features</span><span class="p">),</span>
+            <span class="s2">"storage"</span><span class="p">:</span> <span class="n">_table_spec</span><span class="p">(</span><span class="s2">"storage"</span><span class="p">,</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">global_id</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_refs</span><span class="p">],</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_features</span><span class="p">),</span>
+            <span class="s2">"pv"</span><span class="p">:</span> <span class="n">_table_spec</span><span class="p">(</span><span class="s2">"pv"</span><span class="p">,</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">global_id</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_refs</span><span class="p">],</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_features</span><span class="p">),</span>
+            <span class="s2">"deferrable_appliance"</span><span class="p">:</span> <span class="n">_table_spec</span><span class="p">(</span>
+                <span class="s2">"deferrable_appliance"</span><span class="p">,</span>
+                <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">global_id</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_refs</span><span class="p">],</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_features</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="s2">"actions"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"building"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"ids"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_ids</span><span class="p">),</span>
+                <span class="s2">"features"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_action_features</span><span class="p">),</span>
+                <span class="s2">"units"</span><span class="p">:</span> <span class="n">_units_for</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_action_features</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">"charger"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"ids"</span><span class="p">:</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">global_id</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">],</span>
+                <span class="s2">"features"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_action_features</span><span class="p">),</span>
+                <span class="s2">"units"</span><span class="p">:</span> <span class="n">_units_for</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_charger_action_features</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">"deferrable_appliance"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"ids"</span><span class="p">:</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">global_id</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_refs</span><span class="p">],</span>
+                <span class="s2">"features"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_action_features</span><span class="p">),</span>
+                <span class="s2">"units"</span><span class="p">:</span> <span class="n">_units_for</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_action_features</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s2">"edges"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"district_to_building"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"district"</span><span class="p">,</span>
+                <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"building"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"building_to_charger"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"building"</span><span class="p">,</span>
+                <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"charger"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"building_to_storage"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"building"</span><span class="p">,</span>
+                <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"storage"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"building_to_pv"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"building"</span><span class="p">,</span>
+                <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"pv"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"building_to_deferrable_appliance"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"building"</span><span class="p">,</span>
+                <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"deferrable_appliance"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"charger_to_ev_connected"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"charger"</span><span class="p">,</span>
+                <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"ev"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"charger_to_ev_incoming"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"charger"</span><span class="p">,</span>
+                <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"ev"</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s2">"topology"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"mode"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">"topology_mode"</span><span class="p">,</span> <span class="s2">"static"</span><span class="p">),</span>
+            <span class="s2">"version"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">"topology_version"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="s2">"active_ids"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"building"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_building_ids</span><span class="p">),</span>
+                <span class="s2">"ev"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_ev_ids</span><span class="p">),</span>
+                <span class="s2">"charger"</span><span class="p">:</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">global_id</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">],</span>
+                <span class="s2">"storage"</span><span class="p">:</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">global_id</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_refs</span><span class="p">],</span>
+                <span class="s2">"pv"</span><span class="p">:</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">global_id</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_refs</span><span class="p">],</span>
+                <span class="s2">"deferrable_appliance"</span><span class="p">:</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">global_id</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_refs</span><span class="p">],</span>
+            <span class="p">},</span>
+            <span class="s2">"lifecycle_fields"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"born_at"</span><span class="p">,</span> <span class="s2">"removed_at"</span><span class="p">,</span> <span class="s2">"active"</span><span class="p">],</span>
+            <span class="s2">"member_lifecycle"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">"topology_member_lifecycle"</span><span class="p">,</span> <span class="p">{}),</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

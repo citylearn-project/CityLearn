@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.exporter &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.exporter &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -288,6 +288,9 @@
         <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">'env'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">kpis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">)</span>
             <span class="n">export_env</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span>
+            <span class="n">identity</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">'comparison_identity'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">identity</span><span class="p">):</span>
+                <span class="n">export_env</span><span class="o">.</span><span class="n">set_experiment_identity</span><span class="p">(</span><span class="o">**</span><span class="n">identity</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">)</span>
             <span class="n">export_env</span> <span class="o">=</span> <span class="n">env</span>
@@ -303,6 +306,14 @@
             <span class="n">kpis</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">''</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">'utf-8'</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">include_business_as_usual</span> <span class="ow">and</span> <span class="n">export_business_as_usual_timeseries</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">export_business_as_usual_timeseries</span><span class="p">(</span><span class="n">export_env</span><span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.experiment</span><span class="w"> </span><span class="kn">import</span> <span class="n">experiment_manifest</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utils.file_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileHandler</span>
+        <span class="n">FileHandler</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">'.manifest.json'</span><span class="p">)),</span> <span class="n">experiment_manifest</span><span class="p">(</span><span class="n">export_env</span><span class="p">))</span>
+        <span class="n">FileHandler</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">'.deferrable_service.json'</span><span class="p">)),</span>
+                               <span class="n">export_env</span><span class="o">.</span><span class="n">get_deferrable_service_audit</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">export_env</span><span class="o">.</span><span class="n">_robustness_service</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="n">FileHandler</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">'.robustness.json'</span><span class="p">)),</span>
+                                   <span class="n">export_env</span><span class="o">.</span><span class="n">get_robustness_audit</span><span class="p">())</span>
         <span class="n">env</span><span class="o">.</span><span class="n">_final_kpis_exported</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 
@@ -877,6 +888,12 @@
 
         <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_render_start_datetime'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">reset_time_tracking</span><span class="p">()</span>
+
+        <span class="n">axis</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_time_axis'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">axis</span><span class="o">.</span><span class="n">utc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_render_origin_overridden'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_start_time_step</span><span class="o">+</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">current_day</span> <span class="o">=</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">day</span>
+            <span class="k">return</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
 
         <span class="n">start_datetime</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_render_start_datetime</span>
         <span class="n">timestamp_dt</span> <span class="o">=</span> <span class="n">start_datetime</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">*</span> <span class="n">env</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>

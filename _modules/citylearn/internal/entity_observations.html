@@ -1,0 +1,793 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.internal.entity_observations &mdash; CityLearn 3.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/publishing.html">Publishing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases.html">Releases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.internal.entity_observations</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.internal.entity_observations</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Populate entity observation tables and relation masks for one time boundary.</span>
+
+<span class="sd">The facade owns topology-aware buffers and feature helpers. Population uses the</span>
+<span class="sd">current exogenous index and previous settled endogenous index, then sanitises</span>
+<span class="sd">buffers and returns independent copies. Fault/information masking remains in the</span>
+<span class="sd">observation contract and robustness services at their established outer stages.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.entity_interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEntityInterfaceService</span>
+
+
+<div class="viewcode-block" id="ObservationContext">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.ObservationContext">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ObservationContext</span><span class="p">:</span>
+    <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">endogenous_time_step</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">step_hours</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">core</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">community</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">forecast</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">derived_forecast</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">temporal</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">action_feedback</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">demand_response</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">robustness</span><span class="p">:</span> <span class="nb">bool</span></div>
+
+
+
+<div class="viewcode-block" id="context_for">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.context_for">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">context_for</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ObservationContext</span><span class="p">:</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ObservationContext</span><span class="p">(</span>
+        <span class="n">t</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">entity</span><span class="o">.</span><span class="n">_step_hours</span><span class="p">(),</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_bundle_enabled</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">CORE_BUNDLE</span><span class="p">),</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_bundle_enabled</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">COMMUNITY_BUNDLE</span><span class="p">),</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_bundle_enabled</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">FORECAST_BUNDLE</span><span class="p">),</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_bundle_enabled</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">DERIVED_FORECAST_BUNDLE</span><span class="p">),</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_bundle_enabled</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">TEMPORAL_BUNDLE</span><span class="p">),</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_bundle_enabled</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">ACTION_FEEDBACK_BUNDLE</span><span class="p">),</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_bundle_enabled</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">DEMAND_RESPONSE_BUNDLE</span><span class="p">),</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_bundle_enabled</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">ROBUSTNESS_BUNDLE</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="reset_buffers">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.reset_buffers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">reset_buffers</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_district_obs</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_building_obs</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_charger_obs</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_static_obs</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_ev_obs</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_storage_obs</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_static_obs</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_pv_obs</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_static_obs</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_obs</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fill_building_rows">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.fill_building_rows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_building_rows</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ObservationContext</span><span class="p">):</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span>
+    <span class="n">t</span><span class="p">,</span> <span class="n">endogenous_t</span><span class="p">,</span> <span class="n">step_hours</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">endogenous_time_step</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">step_hours</span>
+    <span class="n">core_bundle_enabled</span><span class="p">,</span> <span class="n">community_bundle_enabled</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">core</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">community</span>
+    <span class="n">temporal_bundle_enabled</span><span class="p">,</span> <span class="n">derived_forecast_bundle_enabled</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">temporal</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">derived_forecast</span>
+    <span class="n">requires_building_electrical_metrics</span> <span class="o">=</span> <span class="n">core_bundle_enabled</span> <span class="ow">or</span> <span class="n">community_bundle_enabled</span>
+    <span class="n">building_electrical_metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">derived_forecast_community_values</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">{</span>
+            <span class="n">label</span><span class="p">:</span> <span class="p">{</span><span class="n">signal</span><span class="p">:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">signal</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">DERIVED_FORECAST_DISTRICT_SIGNALS</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">FORECAST_HORIZONS</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">derived_forecast_bundle_enabled</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="n">first_building_data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">building</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">):</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_obs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c1"># Exogenous signals are read at current t, while endogenous values come from</span>
+        <span class="c1"># the latest settled transition (max(t-1, 0)) to avoid uninitialized buffers.</span>
+        <span class="n">observation_names</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_first_building_base_observation_names</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="k">else</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_base_observation_names</span>
+        <span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">get_observations_data</span><span class="p">(</span>
+            <span class="n">include_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">observation_names</span><span class="o">=</span><span class="n">observation_names</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">first_building_data</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_feature_cols</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="n">electrical_metrics</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">requires_building_electrical_metrics</span><span class="p">:</span>
+            <span class="n">electrical_metrics</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_build_electrical_building_metrics</span><span class="p">(</span>
+                <span class="n">building</span><span class="o">=</span><span class="n">building</span><span class="p">,</span>
+                <span class="n">endogenous_t</span><span class="o">=</span><span class="n">endogenous_t</span><span class="p">,</span>
+                <span class="n">control_t</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
+                <span class="n">step_hours</span><span class="o">=</span><span class="n">step_hours</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">core_bundle_enabled</span> <span class="ow">and</span> <span class="n">electrical_metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_feature_cols</span><span class="p">,</span> <span class="n">electrical_metrics</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">community_bundle_enabled</span> <span class="ow">and</span> <span class="n">electrical_metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">building_electrical_metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">electrical_metrics</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">temporal_bundle_enabled</span><span class="p">:</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_building_feature_cols</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_build_temporal_building_metrics</span><span class="p">(</span>
+                    <span class="n">building</span><span class="o">=</span><span class="n">building</span><span class="p">,</span>
+                    <span class="n">endogenous_t</span><span class="o">=</span><span class="n">endogenous_t</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_building_feature_cols</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_build_calendar_temporal_metrics</span><span class="p">(</span><span class="n">building</span><span class="o">=</span><span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="n">t</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">derived_forecast_bundle_enabled</span><span class="p">:</span>
+            <span class="n">forecast_values</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_build_derived_forecast_building_metrics</span><span class="p">(</span><span class="n">building</span><span class="o">=</span><span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_feature_cols</span><span class="p">,</span> <span class="n">forecast_values</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">FORECAST_HORIZONS</span><span class="p">:</span>
+                <span class="n">target</span> <span class="o">=</span> <span class="n">derived_forecast_community_values</span><span class="p">[</span><span class="n">label</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">signal</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">DERIVED_FORECAST_DISTRICT_SIGNALS</span><span class="p">:</span>
+                    <span class="n">target</span><span class="p">[</span><span class="n">signal</span><span class="p">]</span> <span class="o">+=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span>
+                        <span class="n">forecast_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">"forecast_</span><span class="si">{</span><span class="n">signal</span><span class="si">}</span><span class="s2">_next_</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">_kw"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                        <span class="mf">0.0</span><span class="p">,</span>
+                    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">first_building_data</span><span class="p">,</span> <span class="n">building_electrical_metrics</span><span class="p">,</span> <span class="n">derived_forecast_community_values</span></div>
+
+
+
+<div class="viewcode-block" id="fill_district_row">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.fill_district_row">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_district_row</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ObservationContext</span><span class="p">,</span> <span class="n">building_data</span><span class="p">):</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span>
+    <span class="n">t</span><span class="p">,</span> <span class="n">endogenous_t</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">endogenous_time_step</span>
+    <span class="n">first_building_data</span><span class="p">,</span> <span class="n">building_electrical_metrics</span><span class="p">,</span> <span class="n">derived_forecast_community_values</span> <span class="o">=</span> <span class="n">building_data</span>
+    <span class="n">forecast_bundle_enabled</span><span class="p">,</span> <span class="n">derived_forecast_bundle_enabled</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">forecast</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">derived_forecast</span>
+    <span class="n">community_bundle_enabled</span><span class="p">,</span> <span class="n">temporal_bundle_enabled</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">community</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">temporal</span>
+    <span class="n">demand_response_bundle_enabled</span><span class="p">,</span> <span class="n">robustness_bundle_enabled</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">demand_response</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">robustness</span>
+    <span class="n">district_row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_district_obs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">district_row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_district_feature_cols</span><span class="p">,</span> <span class="n">first_building_data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">forecast_bundle_enabled</span><span class="p">:</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+            <span class="n">district_row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_district_feature_cols</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_build_forecast_district_metrics</span><span class="p">(</span><span class="n">first_building_data</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">derived_forecast_bundle_enabled</span><span class="p">:</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+            <span class="n">district_row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_district_feature_cols</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_build_derived_forecast_district_metrics</span><span class="p">(</span>
+                <span class="n">time_step</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
+                <span class="n">community_values</span><span class="o">=</span><span class="n">derived_forecast_community_values</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">community_bundle_enabled</span><span class="p">:</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+            <span class="n">district_row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_district_feature_cols</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_build_community_district_metrics</span><span class="p">(</span><span class="n">building_electrical_metrics</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">temporal_bundle_enabled</span><span class="p">:</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+            <span class="n">district_row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_district_feature_cols</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_build_temporal_district_metrics</span><span class="p">(</span>
+                <span class="n">endogenous_t</span><span class="o">=</span><span class="n">endogenous_t</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+                <span class="n">district_row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_district_feature_cols</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_build_calendar_temporal_metrics</span><span class="p">(</span><span class="n">building</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">time_step</span><span class="o">=</span><span class="n">t</span><span class="p">),</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">demand_response_bundle_enabled</span><span class="p">:</span>
+        <span class="n">service</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"_demand_response_service"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">observation_values</span><span class="p">()</span> <span class="k">if</span> <span class="n">service</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">district_row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_district_feature_cols</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">robustness_bundle_enabled</span><span class="p">:</span>
+        <span class="n">service</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"_robustness_service"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">observation_values</span><span class="p">()</span> <span class="k">if</span> <span class="n">service</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">district_row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_district_feature_cols</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fill_charger_rows">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.fill_charger_rows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_charger_rows</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ObservationContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span>
+    <span class="n">t</span><span class="p">,</span> <span class="n">endogenous_t</span><span class="p">,</span> <span class="n">step_hours</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">endogenous_time_step</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">step_hours</span>
+    <span class="n">core_bundle_enabled</span><span class="p">,</span> <span class="n">action_feedback_bundle_enabled</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">core</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">action_feedback</span>
+    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">:</span>
+        <span class="n">charger</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">building_index</span><span class="p">]</span><span class="o">.</span><span class="n">_charger_lookup</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">charger_id</span><span class="p">]</span>
+        <span class="n">sim</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_obs</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">]</span>
+        <span class="n">static_values</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_static_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="n">connected</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="n">incoming</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">incoming_electric_vehicle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="n">commanded_energy</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">past_charging_action_values_kwh</span><span class="p">,</span> <span class="n">endogenous_t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">applied_energy</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">electricity_consumption</span><span class="p">,</span> <span class="n">endogenous_t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">core_bundle_enabled</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="p">)</span>
+        <span class="n">required_soc</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_required_soc_departure</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">departure_steps</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_departure_time</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">max_charging_power</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">static_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_charging_power_kw"</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">max_discharging_power</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">static_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_discharging_power_kw"</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">charge_efficiency_at_max</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">static_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"charge_efficiency_at_max_ratio"</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">discharge_efficiency_at_max</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">static_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"discharge_efficiency_at_max_ratio"</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">incoming_required_soc</span> <span class="o">=</span> <span class="n">required_soc</span> <span class="k">if</span> <span class="n">incoming</span> <span class="k">else</span> <span class="o">-</span><span class="mf">0.1</span>
+        <span class="n">incoming_departure_steps</span> <span class="o">=</span> <span class="n">departure_steps</span> <span class="k">if</span> <span class="n">incoming</span> <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span>
+        <span class="n">incoming_hours_until_departure</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">incoming_departure_steps</span> <span class="o">*</span> <span class="n">step_hours</span>
+            <span class="k">if</span> <span class="n">incoming</span> <span class="ow">and</span> <span class="n">incoming_departure_steps</span> <span class="o">&gt;=</span> <span class="mf">0.0</span>
+            <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">connected</span><span class="p">:</span>
+            <span class="n">connected_ev</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span>
+            <span class="n">current_soc</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">connected_ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">connected_ev</span><span class="o">.</span><span class="n">observation_soc_index</span><span class="p">(</span><span class="n">endogenous_t</span><span class="p">)],</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">)</span>
+            <span class="n">battery_capacity</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">connected_ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">capacity</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">hours_until_departure</span> <span class="o">=</span> <span class="n">departure_steps</span> <span class="o">*</span> <span class="n">step_hours</span> <span class="k">if</span> <span class="n">departure_steps</span> <span class="o">&gt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span>
+            <span class="k">if</span> <span class="n">core_bundle_enabled</span><span class="p">:</span>
+                <span class="n">energy_to_required_soc</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">required_soc</span> <span class="o">-</span> <span class="n">current_soc</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">battery_capacity</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">required_average_power</span> <span class="o">=</span> <span class="n">energy_to_required_soc</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">hours_until_departure</span><span class="p">,</span> <span class="mf">1.0e-6</span><span class="p">)</span> <span class="k">if</span> <span class="n">energy_to_required_soc</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">0.0</span>
+                <span class="n">avg_power_to_departure</span> <span class="o">=</span> <span class="n">required_average_power</span>
+                <span class="n">charging_slack</span> <span class="o">=</span> <span class="n">max_charging_power</span> <span class="o">-</span> <span class="n">required_average_power</span>
+                <span class="k">if</span> <span class="n">hours_until_departure</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="c1"># Unknown deadline: no prescribed average rate or urgency.</span>
+                    <span class="n">required_average_power</span> <span class="o">=</span> <span class="n">avg_power_to_departure</span> <span class="o">=</span> <span class="mf">0.0</span>
+                    <span class="n">charging_slack</span> <span class="o">=</span> <span class="n">charging_priority</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="k">elif</span> <span class="n">energy_to_required_soc</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="n">charging_priority</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="k">elif</span> <span class="n">hours_until_departure</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">max_charging_power</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="n">charging_priority</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">charging_priority</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">required_average_power</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_charging_power</span><span class="p">,</span> <span class="mf">1.0e-6</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">energy_to_required_soc</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">avg_power_to_departure</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">required_average_power</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">charging_slack</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">charging_priority</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">current_soc</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span>
+            <span class="n">battery_capacity</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+            <span class="n">hours_until_departure</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+            <span class="n">energy_to_required_soc</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">avg_power_to_departure</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">required_average_power</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">charging_slack</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">charging_priority</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"connected_state"</span><span class="p">,</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">connected</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"incoming_state"</span><span class="p">,</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">incoming</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"connected_ev_soc"</span><span class="p">,</span> <span class="n">current_soc</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"connected_ev_required_soc_departure"</span><span class="p">,</span> <span class="n">required_soc</span> <span class="k">if</span> <span class="n">connected</span> <span class="k">else</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"connected_ev_battery_capacity_kwh"</span><span class="p">,</span> <span class="n">battery_capacity</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span>
+            <span class="s2">"connected_ev_departure_time_step"</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_departure_time</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span> <span class="k">if</span> <span class="n">connected</span> <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span>
+            <span class="s2">"incoming_ev_estimated_soc_arrival"</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">)</span> <span class="k">if</span> <span class="n">incoming</span> <span class="k">else</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span>
+            <span class="s2">"incoming_ev_estimated_arrival_time_step"</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_estimated_arrival_time</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span> <span class="k">if</span> <span class="n">incoming</span> <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"last_charged_kwh"</span><span class="p">,</span> <span class="n">commanded_energy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">core_bundle_enabled</span><span class="p">:</span>
+            <span class="n">charger_decision_metrics</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_core_decision_metrics</span><span class="p">(</span>
+                <span class="n">building</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">building_index</span><span class="p">],</span>
+                <span class="n">charger</span><span class="o">=</span><span class="n">charger</span><span class="p">,</span>
+                <span class="n">connected</span><span class="o">=</span><span class="n">connected</span><span class="p">,</span>
+                <span class="n">current_soc</span><span class="o">=</span><span class="n">current_soc</span><span class="p">,</span>
+                <span class="n">battery_capacity</span><span class="o">=</span><span class="n">battery_capacity</span><span class="p">,</span>
+                <span class="n">required_soc</span><span class="o">=</span><span class="n">required_soc</span><span class="p">,</span>
+                <span class="n">energy_to_required_soc</span><span class="o">=</span><span class="n">energy_to_required_soc</span><span class="p">,</span>
+                <span class="n">required_average_power</span><span class="o">=</span><span class="n">required_average_power</span><span class="p">,</span>
+                <span class="n">hours_until_departure</span><span class="o">=</span><span class="n">hours_until_departure</span><span class="p">,</span>
+                <span class="n">max_charging_power</span><span class="o">=</span><span class="n">max_charging_power</span><span class="p">,</span>
+                <span class="n">max_discharging_power</span><span class="o">=</span><span class="n">max_discharging_power</span><span class="p">,</span>
+                <span class="n">charge_efficiency_at_max</span><span class="o">=</span><span class="n">charge_efficiency_at_max</span><span class="p">,</span>
+                <span class="n">discharge_efficiency_at_max</span><span class="o">=</span><span class="n">discharge_efficiency_at_max</span><span class="p">,</span>
+                <span class="n">step_hours</span><span class="o">=</span><span class="n">step_hours</span><span class="p">,</span>
+                <span class="n">current_power_kw</span><span class="o">=</span><span class="n">applied_energy</span> <span class="o">/</span> <span class="n">step_hours</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"commanded_power_kw"</span><span class="p">,</span> <span class="n">commanded_energy</span> <span class="o">/</span> <span class="n">step_hours</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"applied_power_kw"</span><span class="p">,</span> <span class="n">applied_energy</span> <span class="o">/</span> <span class="n">step_hours</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"applied_energy_kwh_step"</span><span class="p">,</span> <span class="n">applied_energy</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"hours_until_departure"</span><span class="p">,</span> <span class="n">hours_until_departure</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span>
+                <span class="s2">"time_until_departure_ratio"</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">hours_until_departure</span> <span class="o">/</span> <span class="mf">24.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">if</span> <span class="n">connected</span> <span class="ow">and</span> <span class="n">hours_until_departure</span> <span class="o">&gt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"energy_to_required_soc_kwh"</span><span class="p">,</span> <span class="n">energy_to_required_soc</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"required_average_power_kw"</span><span class="p">,</span> <span class="n">required_average_power</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"avg_power_to_departure_kw"</span><span class="p">,</span> <span class="n">avg_power_to_departure</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"charging_slack_kw"</span><span class="p">,</span> <span class="n">charging_slack</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"charging_priority_ratio"</span><span class="p">,</span> <span class="n">charging_priority</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="n">charger_decision_metrics</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"incoming_ev_required_soc_departure"</span><span class="p">,</span> <span class="n">incoming_required_soc</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"incoming_ev_departure_time_step"</span><span class="p">,</span> <span class="n">incoming_departure_steps</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span> <span class="s2">"incoming_ev_hours_until_departure"</span><span class="p">,</span> <span class="n">incoming_hours_until_departure</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span>
+                <span class="s2">"incoming_ev_time_until_departure_ratio"</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">incoming_hours_until_departure</span> <span class="o">/</span> <span class="mf">24.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">incoming</span> <span class="ow">and</span> <span class="n">incoming_hours_until_departure</span> <span class="o">&gt;=</span> <span class="mf">0.0</span>
+                    <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">action_feedback_bundle_enabled</span><span class="p">:</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_charger_feature_cols</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_charger_action_feedback_metrics</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">endogenous_t</span><span class="p">,</span> <span class="n">step_hours</span><span class="p">),</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fill_ev_rows">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.fill_ev_rows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_ev_rows</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ObservationContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span>
+    <span class="n">endogenous_t</span><span class="p">,</span> <span class="n">core_bundle_enabled</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">endogenous_time_step</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">core</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ev</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">):</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_obs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">soc</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">ev</span><span class="o">.</span><span class="n">observation_soc_index</span><span class="p">(</span><span class="n">endogenous_t</span><span class="p">)],</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">capacity</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">capacity</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">depth_of_discharge</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">depth_of_discharge</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_feature_cols</span><span class="p">,</span> <span class="s2">"soc"</span><span class="p">,</span> <span class="n">soc</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_feature_cols</span><span class="p">,</span> <span class="s2">"battery_capacity_kwh"</span><span class="p">,</span> <span class="n">capacity</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_feature_cols</span><span class="p">,</span> <span class="s2">"depth_of_discharge_ratio"</span><span class="p">,</span> <span class="n">depth_of_discharge</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">core_bundle_enabled</span><span class="p">:</span>
+            <span class="n">soc_min</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">depth_of_discharge</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">energy_available</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">soc</span> <span class="o">-</span> <span class="n">soc_min</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">capacity</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">energy_to_full</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">soc</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">capacity</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_feature_cols</span><span class="p">,</span> <span class="s2">"soc_ratio"</span><span class="p">,</span> <span class="n">soc</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_feature_cols</span><span class="p">,</span> <span class="s2">"soc_min_ratio"</span><span class="p">,</span> <span class="n">soc_min</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_feature_cols</span><span class="p">,</span> <span class="s2">"soc_max_ratio"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_feature_cols</span><span class="p">,</span> <span class="s2">"energy_available_kwh"</span><span class="p">,</span> <span class="n">energy_available</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_feature_cols</span><span class="p">,</span> <span class="s2">"energy_to_full_kwh"</span><span class="p">,</span> <span class="n">energy_to_full</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fill_storage_rows">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.fill_storage_rows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_storage_rows</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ObservationContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span>
+    <span class="n">endogenous_t</span><span class="p">,</span> <span class="n">step_hours</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">endogenous_time_step</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">step_hours</span>
+    <span class="n">core_bundle_enabled</span><span class="p">,</span> <span class="n">action_feedback_bundle_enabled</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">core</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">action_feedback</span>
+    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_refs</span><span class="p">:</span>
+        <span class="n">building</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">building_index</span><span class="p">]</span>
+        <span class="n">storage</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_obs</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">]</span>
+        <span class="n">capacity</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"capacity"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">nominal_power</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"nominal_power"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">soc</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">storage</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">endogenous_t</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">efficiency_history</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"efficiency_history"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">efficiency_history</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">efficiency_history</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">base_efficiency</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">efficiency_history</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">base_efficiency</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"efficiency"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">round_trip_efficiency</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"round_trip_efficiency"</span><span class="p">,</span> <span class="n">base_efficiency</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">),</span>
+            <span class="n">base_efficiency</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"soc"</span><span class="p">,</span> <span class="n">soc</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"capacity_kwh"</span><span class="p">,</span> <span class="n">capacity</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"nominal_power_kw"</span><span class="p">,</span> <span class="n">nominal_power</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span>
+            <span class="s2">"electricity_consumption_kwh"</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">electrical_storage_electricity_consumption</span><span class="p">[</span><span class="n">endogenous_t</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span>
+            <span class="s2">"min_charge_power_kw"</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"min_charge_power"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span>
+            <span class="s2">"min_discharge_power_kw"</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"min_discharge_power"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"efficiency_ratio"</span><span class="p">,</span> <span class="n">base_efficiency</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"round_trip_efficiency_ratio"</span><span class="p">,</span> <span class="n">round_trip_efficiency</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">core_bundle_enabled</span><span class="p">:</span>
+            <span class="n">depth_of_discharge</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"depth_of_discharge"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">soc_min</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">depth_of_discharge</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">current_energy</span> <span class="o">=</span> <span class="n">soc</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">capacity</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">energy_to_full</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">capacity</span> <span class="o">-</span> <span class="n">current_energy</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">energy_available</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="n">soc</span> <span class="o">-</span> <span class="n">soc_min</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">capacity</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">max_charge_power</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">storage</span><span class="o">.</span><span class="n">get_max_input_power</span><span class="p">(),</span> <span class="n">nominal_power</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"get_max_input_power"</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">nominal_power</span>
+            <span class="p">)</span>
+            <span class="n">max_discharge_power</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">storage</span><span class="o">.</span><span class="n">get_max_output_power</span><span class="p">(),</span> <span class="n">nominal_power</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"get_max_output_power"</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">nominal_power</span>
+            <span class="p">)</span>
+            <span class="n">decision_metrics</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_core_decision_metrics</span><span class="p">(</span>
+                <span class="n">building</span><span class="o">=</span><span class="n">building</span><span class="p">,</span>
+                <span class="n">storage</span><span class="o">=</span><span class="n">storage</span><span class="p">,</span>
+                <span class="n">soc</span><span class="o">=</span><span class="n">soc</span><span class="p">,</span>
+                <span class="n">capacity</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+                <span class="n">nominal_power</span><span class="o">=</span><span class="n">nominal_power</span><span class="p">,</span>
+                <span class="n">soc_min</span><span class="o">=</span><span class="n">soc_min</span><span class="p">,</span>
+                <span class="n">energy_to_full</span><span class="o">=</span><span class="n">energy_to_full</span><span class="p">,</span>
+                <span class="n">energy_available</span><span class="o">=</span><span class="n">energy_available</span><span class="p">,</span>
+                <span class="n">max_charge_power</span><span class="o">=</span><span class="n">max_charge_power</span><span class="p">,</span>
+                <span class="n">max_discharge_power</span><span class="o">=</span><span class="n">max_discharge_power</span><span class="p">,</span>
+                <span class="n">efficiency</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"efficiency"</span><span class="p">,</span> <span class="n">base_efficiency</span><span class="p">),</span> <span class="n">base_efficiency</span><span class="p">),</span>
+                <span class="n">step_hours</span><span class="o">=</span><span class="n">step_hours</span><span class="p">,</span>
+                <span class="n">include_headroom</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">current_power_kw</span><span class="o">=</span><span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span>
+                    <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage_electricity_consumption</span><span class="p">[</span><span class="n">endogenous_t</span><span class="p">],</span>
+                    <span class="mf">0.0</span><span class="p">,</span>
+                <span class="p">)</span> <span class="o">/</span> <span class="n">step_hours</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"electrical_storage_soc_ratio"</span><span class="p">,</span> <span class="n">soc</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"max_charge_power_kw"</span><span class="p">,</span> <span class="n">max_charge_power</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"max_discharge_power_kw"</span><span class="p">,</span> <span class="n">max_discharge_power</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"energy_to_full_kwh"</span><span class="p">,</span> <span class="n">energy_to_full</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"energy_available_kwh"</span><span class="p">,</span> <span class="n">energy_available</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="n">decision_metrics</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span>
+                <span class="s2">"current_efficiency_ratio"</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"efficiency"</span><span class="p">,</span> <span class="n">base_efficiency</span><span class="p">),</span> <span class="n">base_efficiency</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span>
+                <span class="s2">"degraded_capacity_kwh"</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"degraded_capacity"</span><span class="p">,</span> <span class="n">capacity</span><span class="p">),</span> <span class="n">capacity</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span> <span class="s2">"soc_min_ratio"</span><span class="p">,</span> <span class="n">soc_min</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">action_feedback_bundle_enabled</span><span class="p">:</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_storage_feature_cols</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_storage_action_feedback_metrics</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">endogenous_t</span><span class="p">,</span> <span class="n">step_hours</span><span class="p">),</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fill_pv_rows">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.fill_pv_rows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_pv_rows</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ObservationContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span>
+    <span class="n">endogenous_t</span><span class="p">,</span> <span class="n">step_hours</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">endogenous_time_step</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">step_hours</span>
+    <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_features</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_refs</span><span class="p">:</span>
+            <span class="n">building</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">building_index</span><span class="p">]</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_obs</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">]</span>
+            <span class="n">generation_energy</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">,</span> <span class="n">endogenous_t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+            <span class="n">installed_power</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">pv</span><span class="p">,</span> <span class="s2">"nominal_power"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">generation_power</span> <span class="o">=</span> <span class="n">generation_energy</span> <span class="o">/</span> <span class="n">step_hours</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_feature_cols</span><span class="p">,</span> <span class="s2">"generation_power_kw"</span><span class="p">,</span> <span class="n">generation_power</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_feature_cols</span><span class="p">,</span> <span class="s2">"generation_energy_kwh_step"</span><span class="p">,</span> <span class="n">generation_energy</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_feature_cols</span><span class="p">,</span> <span class="s2">"installed_power_kw"</span><span class="p">,</span> <span class="n">installed_power</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_set_obs_value</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_pv_feature_cols</span><span class="p">,</span>
+                <span class="s2">"generation_capacity_factor_ratio"</span><span class="p">,</span>
+                <span class="n">generation_power</span> <span class="o">/</span> <span class="n">installed_power</span> <span class="k">if</span> <span class="n">installed_power</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fill_deferrable_rows">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.fill_deferrable_rows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_deferrable_rows</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ObservationContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span>
+    <span class="n">endogenous_t</span><span class="p">,</span> <span class="n">action_feedback_bundle_enabled</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">endogenous_time_step</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">action_feedback</span>
+    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_refs</span><span class="p">:</span>
+        <span class="n">building</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">building_index</span><span class="p">]</span>
+        <span class="n">appliance</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_by_building_and_id</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">ref</span><span class="o">.</span><span class="n">building_index</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">appliance_id</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">appliance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_obs</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">deferrable_appliance_observations</span><span class="p">(</span><span class="n">appliance</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_feature_cols</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_feature_cols</span><span class="p">,</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_core_decision_metrics</span><span class="p">(</span><span class="n">appliance</span><span class="p">,</span> <span class="n">values</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">action_feedback_bundle_enabled</span><span class="p">:</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_feature_cols</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_action_feedback_metrics</span><span class="p">(</span><span class="n">appliance</span><span class="p">,</span> <span class="n">endogenous_t</span><span class="p">),</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="fill_relation_masks">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.fill_relation_masks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fill_relation_masks</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ObservationContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">env</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">time_step</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_connected</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_connected_mask</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_incoming</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_incoming_mask</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_refs</span><span class="p">:</span>
+        <span class="n">charger</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">building_index</span><span class="p">]</span><span class="o">.</span><span class="n">_charger_lookup</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">charger_id</span><span class="p">]</span>
+        <span class="n">sim</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ev_row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_row_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ev_row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_connected</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">row</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_connected</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ev_row</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_connected_mask</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">charger</span><span class="o">.</span><span class="n">incoming_electric_vehicle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ev_row</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_row_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">incoming_electric_vehicle</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ev_row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_incoming</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">row</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_incoming</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ev_row</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_incoming_mask</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span></div>
+
+
+
+<div class="viewcode-block" id="sanitize_tables">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.sanitize_tables">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sanitize_tables</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_district_obs</span><span class="p">,</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_building_obs</span><span class="p">,</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_charger_obs</span><span class="p">,</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_ev_obs</span><span class="p">,</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_storage_obs</span><span class="p">,</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_pv_obs</span><span class="p">,</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_obs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nan</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">posinf</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">neginf</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="snapshot_payload">
+<a class="viewcode-back" href="../../../api/citylearn.internal.entity_observations.html#citylearn.internal.entity_observations.snapshot_payload">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">snapshot_payload</span><span class="p">(</span><span class="n">entity</span><span class="p">:</span> <span class="s2">"CityLearnEntityInterfaceService"</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">ObservationContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">env</span>
+    <span class="n">t</span><span class="p">,</span> <span class="n">endogenous_t</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">endogenous_time_step</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"tables"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"district"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_district_obs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"building"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_obs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"charger"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_obs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"ev"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_ev_obs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"storage"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_storage_obs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"pv"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_pv_obs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"deferrable_appliance"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_deferrable_appliance_obs</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="p">},</span>
+        <span class="s2">"edges"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"district_to_building"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_district_to_building</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"building_to_charger"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_to_charger</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"building_to_storage"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_to_storage</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"building_to_pv"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_to_pv</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"building_to_deferrable_appliance"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_to_deferrable_appliance</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"charger_to_ev_connected"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_connected</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"charger_to_ev_connected_mask"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_connected_mask</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"charger_to_ev_incoming"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_incoming</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="s2">"charger_to_ev_incoming_mask"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_charger_to_ev_incoming_mask</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="p">},</span>
+        <span class="s2">"meta"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"time_step"</span><span class="p">:</span> <span class="n">t</span><span class="p">,</span>
+            <span class="s2">"endogenous_time_step"</span><span class="p">:</span> <span class="n">endogenous_t</span><span class="p">,</span>
+            <span class="s2">"seconds_per_time_step"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"seconds_per_time_step"</span><span class="p">,</span> <span class="mf">3600.0</span><span class="p">)),</span>
+            <span class="s2">"spec_version"</span><span class="p">:</span> <span class="s2">"entity_v1"</span><span class="p">,</span>
+            <span class="s2">"temporal_semantics"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"exogenous"</span><span class="p">:</span> <span class="s2">"t"</span><span class="p">,</span>
+                <span class="s2">"endogenous"</span><span class="p">:</span> <span class="s2">"t_minus_1_settled"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"forecast_config"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_forecast_config_meta</span><span class="p">(),</span>
+            <span class="s2">"topology_version"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"topology_version"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="s2">"demand_response"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">env</span><span class="o">.</span><span class="n">_demand_response_service</span><span class="o">.</span><span class="n">observation_meta</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"_demand_response_service"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="p">{</span><span class="s2">"enabled"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"active_request_id"</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+            <span class="p">),</span>
+            <span class="s2">"robustness"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">env</span><span class="o">.</span><span class="n">_robustness_service</span><span class="o">.</span><span class="n">observation_meta</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"_robustness_service"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="p">{</span><span class="s2">"enabled"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"active_event_ids"</span><span class="p">:</span> <span class="p">[]}</span>
+            <span class="p">),</span>
+            <span class="s2">"runtime_status"</span><span class="p">:</span> <span class="n">entity</span><span class="o">.</span><span class="n">_runtime_status_payload</span><span class="p">(),</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">payload</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

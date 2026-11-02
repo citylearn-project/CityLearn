@@ -1,0 +1,7 @@
+citylearn.internal.ev\_departure\_audit module
+==============================================
+
+.. automodule:: citylearn.internal.ev_departure_audit
+   :members:
+   :show-inheritance:
+   :undoc-members:

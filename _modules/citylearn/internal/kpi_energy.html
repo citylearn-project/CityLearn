@@ -1,0 +1,484 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.internal.kpi_energy &mdash; CityLearn 3.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/publishing.html">Publishing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases.html">Releases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.internal.kpi_energy</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.internal.kpi_energy</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Energy, carbon, cost, comfort and grid-shape KPI records.</span>
+
+<span class="sd">The facade supplies window/unit helpers; these functions own their family</span>
+<span class="sd">calculations and return records without changing simulator state.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.cost_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">CostFunction</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnKPIService</span>
+
+
+<div class="viewcode-block" id="building_records">
+<a class="viewcode-back" href="../../../api/citylearn.internal.kpi_energy.html#citylearn.internal.kpi_energy.building_records">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">building_records</span><span class="p">(</span><span class="n">kpi</span><span class="p">:</span> <span class="s2">"CityLearnKPIService"</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">,</span>
+                     <span class="n">control_condition</span><span class="p">,</span> <span class="n">baseline_condition</span><span class="p">,</span> <span class="n">comfort_band</span><span class="p">,</span>
+                     <span class="n">evaluation_condition_cls</span><span class="p">,</span> <span class="n">dynamics_building_cls</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return legacy frame, extended rows and raw-cost relative benefit."""</span>
+    <span class="n">extended_building_rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">building_days</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_building_days</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">dynamics_building_cls</span><span class="p">):</span>
+        <span class="n">building_control_condition</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">evaluation_condition_cls</span><span class="o">.</span><span class="n">WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV</span>
+            <span class="k">if</span> <span class="n">control_condition</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">control_condition</span>
+        <span class="p">)</span>
+        <span class="n">building_baseline_condition</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">evaluation_condition_cls</span><span class="o">.</span><span class="n">WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV</span>
+            <span class="k">if</span> <span class="n">baseline_condition</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">baseline_condition</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">building_control_condition</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">evaluation_condition_cls</span><span class="o">.</span><span class="n">WITH_STORAGE_AND_PV</span>
+            <span class="k">if</span> <span class="n">control_condition</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">control_condition</span>
+        <span class="p">)</span>
+        <span class="n">building_baseline_condition</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">evaluation_condition_cls</span><span class="o">.</span><span class="n">WITHOUT_STORAGE_BUT_WITH_PV</span>
+            <span class="k">if</span> <span class="n">baseline_condition</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">baseline_condition</span>
+        <span class="p">)</span>
+
+    <span class="n">indoor</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_thermal_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">indoor_dry_bulb_temperature</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">)</span>
+    <span class="n">cooling_setpoint</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_thermal_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">indoor_dry_bulb_temperature_cooling_set_point</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">)</span>
+    <span class="n">heating_setpoint</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_thermal_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">indoor_dry_bulb_temperature_heating_set_point</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">)</span>
+    <span class="n">occupants</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_thermal_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">occupant_count</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">)</span>
+    <span class="n">discomfort_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">'indoor_dry_bulb_temperature'</span><span class="p">:</span> <span class="n">indoor</span><span class="p">,</span>
+        <span class="s1">'dry_bulb_temperature_cooling_set_point'</span><span class="p">:</span> <span class="n">cooling_setpoint</span><span class="p">,</span>
+        <span class="s1">'dry_bulb_temperature_heating_set_point'</span><span class="p">:</span> <span class="n">heating_setpoint</span><span class="p">,</span>
+        <span class="s1">'band'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_thermal_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">comfort_band</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">)</span> <span class="k">if</span> <span class="n">comfort_band</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">comfort_band</span><span class="p">,</span>
+        <span class="s1">'occupant_count'</span><span class="p">:</span> <span class="n">occupants</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">unmet</span><span class="p">,</span> <span class="n">cold</span><span class="p">,</span> <span class="n">hot</span><span class="p">,</span> \
+        <span class="n">cold_minimum_delta</span><span class="p">,</span> <span class="n">cold_maximum_delta</span><span class="p">,</span> <span class="n">cold_average_delta</span><span class="p">,</span> \
+        <span class="n">hot_minimum_delta</span><span class="p">,</span> <span class="n">hot_maximum_delta</span><span class="p">,</span> <span class="n">hot_average_delta</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">if</span> <span class="n">v</span> <span class="k">else</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">CostFunction</span><span class="o">.</span><span class="n">discomfort</span><span class="p">(</span><span class="o">**</span><span class="n">discomfort_kwargs</span><span class="p">)]</span>
+
+    <span class="n">expected_components</span><span class="p">,</span> <span class="n">served_components</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_service_energy</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">)</span>
+    <span class="n">expected_energy</span> <span class="o">=</span> <span class="n">expected_components</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Serving another demand cannot compensate a shortfall in this one.</span>
+    <span class="n">served_energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">expected_components</span><span class="p">,</span> <span class="n">served_components</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">net_c_series</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_slice_window</span><span class="p">(</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'net_electricity_consumption</span><span class="si">{</span><span class="n">building_control_condition</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">'</span><span class="p">)),</span>
+        <span class="n">t_start</span><span class="p">,</span>
+        <span class="n">t_end</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">net_b_series</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_slice_window</span><span class="p">(</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'net_electricity_consumption</span><span class="si">{</span><span class="n">building_baseline_condition</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">'</span><span class="p">)),</span>
+        <span class="n">t_start</span><span class="p">,</span>
+        <span class="n">t_end</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ec_c</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_positive_total</span><span class="p">(</span><span class="n">net_c_series</span><span class="p">)</span>
+    <span class="n">ec_b</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_positive_total</span><span class="p">(</span><span class="n">net_b_series</span><span class="p">)</span>
+    <span class="n">export_c</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="o">-</span><span class="n">net_c_series</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">export_b</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="o">-</span><span class="n">net_b_series</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">zne_c</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_net_total</span><span class="p">(</span><span class="n">net_c_series</span><span class="p">)</span>
+    <span class="n">zne_b</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_net_total</span><span class="p">(</span><span class="n">net_b_series</span><span class="p">)</span>
+    <span class="n">ce_c_series</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_slice_window</span><span class="p">(</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'net_electricity_consumption_emission</span><span class="si">{</span><span class="n">building_control_condition</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">'</span><span class="p">)),</span>
+        <span class="n">t_start</span><span class="p">,</span>
+        <span class="n">t_end</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ce_b_series</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_slice_window</span><span class="p">(</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'net_electricity_consumption_emission</span><span class="si">{</span><span class="n">building_baseline_condition</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">'</span><span class="p">)),</span>
+        <span class="n">t_start</span><span class="p">,</span>
+        <span class="n">t_end</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ce_c</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_positive_total</span><span class="p">(</span><span class="n">ce_c_series</span><span class="p">)</span>
+    <span class="n">ce_b</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_positive_total</span><span class="p">(</span><span class="n">ce_b_series</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">kpi</span><span class="o">.</span><span class="n">_slice_window</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">carbon_intensity</span><span class="o">.</span><span class="n">carbon_intensity</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="p">)</span>
+    <span class="n">control_cost_series</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_slice_window</span><span class="p">(</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'net_electricity_consumption_cost</span><span class="si">{</span><span class="n">building_control_condition</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">'</span><span class="p">)),</span>
+        <span class="n">t_start</span><span class="p">,</span>
+        <span class="n">t_end</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">baseline_cost_series</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_slice_window</span><span class="p">(</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'net_electricity_consumption_cost</span><span class="si">{</span><span class="n">building_baseline_condition</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">'</span><span class="p">)),</span>
+        <span class="n">t_start</span><span class="p">,</span>
+        <span class="n">t_end</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">cost_c_legacy</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_positive_total</span><span class="p">(</span><span class="n">control_cost_series</span><span class="p">)</span>
+    <span class="n">cost_b_legacy</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_positive_total</span><span class="p">(</span><span class="n">baseline_cost_series</span><span class="p">)</span>
+    <span class="n">cost_c_raw</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="n">control_cost_series</span><span class="p">)</span>
+    <span class="n">cost_b_raw</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="n">baseline_cost_series</span><span class="p">)</span>
+    <span class="n">equity_benefit</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_equity_relative_benefit_percent</span><span class="p">(</span><span class="n">cost_c_raw</span><span class="p">,</span> <span class="n">cost_b_raw</span><span class="p">)</span>
+
+
+    <span class="n">legacy_building_frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'electricity_consumption_total'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">ec_c</span><span class="p">,</span> <span class="n">ec_b</span><span class="p">),</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'zero_net_energy'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">zne_c</span><span class="p">,</span> <span class="n">zne_b</span><span class="p">),</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'carbon_emissions_total'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">ce_c</span><span class="p">,</span> <span class="n">ce_b</span><span class="p">),</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'cost_total'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">cost_c_legacy</span><span class="p">,</span> <span class="n">cost_b_legacy</span><span class="p">),</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'discomfort_proportion'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">unmet</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'discomfort_cold_proportion'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">cold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'discomfort_hot_proportion'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">hot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'discomfort_cold_delta_minimum'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">cold_minimum_delta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'discomfort_cold_delta_maximum'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">cold_maximum_delta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'discomfort_cold_delta_average'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">cold_average_delta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'discomfort_hot_delta_minimum'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">hot_minimum_delta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'discomfort_hot_delta_maximum'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">hot_maximum_delta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'discomfort_hot_delta_average'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">hot_average_delta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'one_minus_thermal_resilience_proportion'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_cost_last</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="n">CostFunction</span><span class="o">.</span><span class="n">one_minus_thermal_resilience</span><span class="p">(</span>
+                    <span class="n">power_outage</span><span class="o">=</span><span class="n">kpi</span><span class="o">.</span><span class="n">_thermal_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">power_outage_signal</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">),</span>
+                    <span class="o">**</span><span class="n">discomfort_kwargs</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'power_outage_normalized_unserved_energy_total'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_cost_last</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                <span class="n">CostFunction</span><span class="o">.</span><span class="n">normalized_unserved_energy</span><span class="p">(</span>
+                    <span class="n">expected_energy</span><span class="p">,</span>
+                    <span class="n">served_energy</span><span class="p">,</span>
+                    <span class="n">power_outage</span><span class="o">=</span><span class="n">kpi</span><span class="o">.</span><span class="n">_thermal_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">power_outage_signal</span><span class="p">,</span> <span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">),</span>
+                <span class="p">),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'annual_normalized_unserved_energy_total'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_cost_last</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">CostFunction</span><span class="o">.</span><span class="n">normalized_unserved_energy</span><span class="p">(</span><span class="n">expected_energy</span><span class="p">,</span> <span class="n">served_energy</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">),</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">}])</span>
+    <span class="n">legacy_building_frame</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="n">extended_building_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_control_total_kwh'</span><span class="p">,</span> <span class="n">ec_c</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_baseline_total_kwh'</span><span class="p">,</span> <span class="n">ec_b</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_delta_total_kwh'</span><span class="p">,</span> <span class="n">ec_c</span> <span class="o">-</span> <span class="n">ec_b</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_control_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ec_c</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_baseline_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ec_b</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_delta_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ec_c</span> <span class="o">-</span> <span class="n">ec_b</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_control_total_kwh'</span><span class="p">,</span> <span class="n">export_c</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_baseline_total_kwh'</span><span class="p">,</span> <span class="n">export_b</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_delta_total_kwh'</span><span class="p">,</span> <span class="n">export_c</span> <span class="o">-</span> <span class="n">export_b</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_control_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">export_c</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_baseline_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">export_b</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_delta_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">export_c</span> <span class="o">-</span> <span class="n">export_b</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_control_total_kwh'</span><span class="p">,</span> <span class="n">zne_c</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_baseline_total_kwh'</span><span class="p">,</span> <span class="n">zne_b</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_delta_total_kwh'</span><span class="p">,</span> <span class="n">zne_c</span> <span class="o">-</span> <span class="n">zne_b</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_control_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">zne_c</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_baseline_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">zne_b</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_delta_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">zne_c</span> <span class="o">-</span> <span class="n">zne_b</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_control_total_kgco2'</span><span class="p">,</span> <span class="n">ce_c</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_baseline_total_kgco2'</span><span class="p">,</span> <span class="n">ce_b</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_delta_total_kgco2'</span><span class="p">,</span> <span class="n">ce_c</span> <span class="o">-</span> <span class="n">ce_b</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_control_daily_average_kgco2'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ce_c</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_baseline_daily_average_kgco2'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ce_b</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_delta_daily_average_kgco2'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ce_c</span> <span class="o">-</span> <span class="n">ce_b</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_control_total_eur'</span><span class="p">,</span> <span class="n">cost_c_raw</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_baseline_total_eur'</span><span class="p">,</span> <span class="n">cost_b_raw</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_delta_total_eur'</span><span class="p">,</span> <span class="n">cost_c_raw</span> <span class="o">-</span> <span class="n">cost_b_raw</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_control_daily_average_eur'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">cost_c_raw</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_baseline_daily_average_eur'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">cost_b_raw</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_delta_daily_average_eur'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">cost_c_raw</span> <span class="o">-</span> <span class="n">cost_b_raw</span><span class="p">,</span> <span class="n">building_days</span><span class="p">),</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'equity_relative_benefit_percent'</span><span class="p">,</span> <span class="n">equity_benefit</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+    <span class="p">])</span>
+    <span class="k">return</span> <span class="n">legacy_building_frame</span><span class="p">,</span> <span class="n">extended_building_rows</span><span class="p">,</span> <span class="n">equity_benefit</span></div>
+
+
+
+<div class="viewcode-block" id="district_records">
+<a class="viewcode-back" href="../../../api/citylearn.internal.kpi_energy.html#citylearn.internal.kpi_energy.district_records">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">district_records</span><span class="p">(</span><span class="n">kpi</span><span class="p">:</span> <span class="s2">"CityLearnKPIService"</span><span class="p">,</span> <span class="n">legacy_building</span><span class="p">,</span> <span class="n">control_condition</span><span class="p">,</span>
+                     <span class="n">baseline_condition</span><span class="p">,</span> <span class="n">evaluation_condition_cls</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Preserve district condition selection and legacy mean aggregation."""</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">env</span>
+    <span class="n">get_net_electricity_consumption</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'net_electricity_consumption</span><span class="si">{</span><span class="n">c</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">'</span><span class="p">))</span>
+    <span class="n">get_net_electricity_consumption_cost</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'net_electricity_consumption_cost</span><span class="si">{</span><span class="n">c</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">'</span><span class="p">))</span>
+    <span class="n">get_net_electricity_consumption_emission</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'net_electricity_consumption_emission</span><span class="si">{</span><span class="n">c</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">'</span><span class="p">))</span>
+    <span class="n">daily_steps</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_window_steps</span><span class="p">(</span><span class="mf">24.0</span> <span class="o">*</span> <span class="mf">3600.0</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
+    <span class="n">monthly_steps</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_window_steps</span><span class="p">(</span><span class="mf">730.0</span> <span class="o">*</span> <span class="mf">3600.0</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
+    <span class="n">env_control_condition</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">evaluation_condition_cls</span><span class="o">.</span><span class="n">WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV</span>
+        <span class="k">if</span> <span class="n">control_condition</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">control_condition</span>
+    <span class="p">)</span>
+    <span class="n">env_baseline_condition</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">evaluation_condition_cls</span><span class="o">.</span><span class="n">WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV</span>
+        <span class="k">if</span> <span class="n">baseline_condition</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">baseline_condition</span>
+    <span class="p">)</span>
+
+    <span class="n">net_c_env_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">get_net_electricity_consumption</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_control_condition</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+    <span class="n">net_b_env_series</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">get_net_electricity_consumption</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_baseline_condition</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+    <span class="n">ramp_c</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_ramping_final</span><span class="p">(</span><span class="n">net_c_env_series</span><span class="p">)</span>
+    <span class="n">ramp_b</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_ramping_final</span><span class="p">(</span><span class="n">net_b_env_series</span><span class="p">)</span>
+    <span class="n">dlf_daily_c</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_one_minus_load_factor_final</span><span class="p">(</span><span class="n">net_c_env_series</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">daily_steps</span><span class="p">)</span>
+    <span class="n">dlf_daily_b</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_one_minus_load_factor_final</span><span class="p">(</span><span class="n">net_b_env_series</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">daily_steps</span><span class="p">)</span>
+    <span class="n">dlf_monthly_c</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_one_minus_load_factor_final</span><span class="p">(</span><span class="n">net_c_env_series</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">monthly_steps</span><span class="p">)</span>
+    <span class="n">dlf_monthly_b</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_one_minus_load_factor_final</span><span class="p">(</span><span class="n">net_b_env_series</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">monthly_steps</span><span class="p">)</span>
+    <span class="n">peak_daily_c</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_peak_final</span><span class="p">(</span><span class="n">net_c_env_series</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">daily_steps</span><span class="p">)</span>
+    <span class="n">peak_daily_b</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_peak_final</span><span class="p">(</span><span class="n">net_b_env_series</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">daily_steps</span><span class="p">)</span>
+    <span class="n">peak_all_c</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_peak_final</span><span class="p">(</span><span class="n">net_c_env_series</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">time_steps</span><span class="p">)</span>
+    <span class="n">peak_all_b</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_peak_final</span><span class="p">(</span><span class="n">net_b_env_series</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">time_steps</span><span class="p">)</span>
+
+    <span class="n">legacy_district_base</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'ramping_average'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">ramp_c</span><span class="p">,</span> <span class="n">ramp_b</span><span class="p">),</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'daily_one_minus_load_factor_average'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">dlf_daily_c</span><span class="p">,</span> <span class="n">dlf_daily_b</span><span class="p">),</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'monthly_one_minus_load_factor_average'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">dlf_monthly_c</span><span class="p">,</span> <span class="n">dlf_monthly_b</span><span class="p">),</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'daily_peak_average'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">peak_daily_c</span><span class="p">,</span> <span class="n">peak_daily_b</span><span class="p">),</span>
+    <span class="p">},</span> <span class="p">{</span>
+        <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'all_time_peak_average'</span><span class="p">,</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">peak_all_c</span><span class="p">,</span> <span class="n">peak_all_b</span><span class="p">),</span>
+    <span class="p">}])</span>
+
+    <span class="n">legacy_district</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">legacy_district_base</span><span class="p">,</span> <span class="n">legacy_building</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">legacy_district</span> <span class="o">=</span> <span class="n">legacy_district</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'cost_function'</span><span class="p">])[[</span><span class="s1">'value'</span><span class="p">]]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="n">legacy_district</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'District'</span>
+    <span class="n">legacy_district</span><span class="p">[</span><span class="s1">'level'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'district'</span>
+
+    <span class="n">legacy_cost_functions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">legacy_district</span><span class="p">,</span> <span class="n">legacy_building</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Extended KPI district-level</span>
+    <span class="n">ec_c_env</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_positive_total</span><span class="p">(</span><span class="n">net_c_env_series</span><span class="p">)</span>
+    <span class="n">ec_b_env</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_positive_total</span><span class="p">(</span><span class="n">net_b_env_series</span><span class="p">)</span>
+    <span class="n">export_c_env</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="o">-</span><span class="n">net_c_env_series</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">export_b_env</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="o">-</span><span class="n">net_b_env_series</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">zne_c_env</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_net_total</span><span class="p">(</span><span class="n">net_c_env_series</span><span class="p">)</span>
+    <span class="n">zne_b_env</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_net_total</span><span class="p">(</span><span class="n">net_b_env_series</span><span class="p">)</span>
+    <span class="n">ce_c_env</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_positive_total</span><span class="p">(</span><span class="n">get_net_electricity_consumption_emission</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_control_condition</span><span class="p">))</span>
+    <span class="n">ce_b_env</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_positive_total</span><span class="p">(</span><span class="n">get_net_electricity_consumption_emission</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_baseline_condition</span><span class="p">))</span>
+    <span class="n">env_control_cost_series</span> <span class="o">=</span> <span class="n">get_net_electricity_consumption_cost</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_control_condition</span><span class="p">)</span>
+    <span class="n">env_baseline_cost_series</span> <span class="o">=</span> <span class="n">get_net_electricity_consumption_cost</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">env_baseline_condition</span><span class="p">)</span>
+    <span class="n">cost_c_env_raw</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="n">env_control_cost_series</span><span class="p">)</span>
+    <span class="n">cost_b_env_raw</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="n">env_baseline_cost_series</span><span class="p">)</span>
+
+    <span class="n">extended_district_rows</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_control_total_kwh'</span><span class="p">,</span> <span class="n">ec_c_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_baseline_total_kwh'</span><span class="p">,</span> <span class="n">ec_b_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_delta_total_kwh'</span><span class="p">,</span> <span class="n">ec_c_env</span> <span class="o">-</span> <span class="n">ec_b_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_control_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ec_c_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_baseline_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ec_b_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_consumption_delta_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ec_c_env</span> <span class="o">-</span> <span class="n">ec_b_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_control_total_kwh'</span><span class="p">,</span> <span class="n">export_c_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_baseline_total_kwh'</span><span class="p">,</span> <span class="n">export_b_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_delta_total_kwh'</span><span class="p">,</span> <span class="n">export_c_env</span> <span class="o">-</span> <span class="n">export_b_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_control_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">export_c_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_baseline_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">export_b_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'electricity_export_delta_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">export_c_env</span> <span class="o">-</span> <span class="n">export_b_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_control_total_kwh'</span><span class="p">,</span> <span class="n">zne_c_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_baseline_total_kwh'</span><span class="p">,</span> <span class="n">zne_b_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_delta_total_kwh'</span><span class="p">,</span> <span class="n">zne_c_env</span> <span class="o">-</span> <span class="n">zne_b_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_control_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">zne_c_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_baseline_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">zne_b_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'zero_net_energy_delta_daily_average_kwh'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">zne_c_env</span> <span class="o">-</span> <span class="n">zne_b_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_control_total_kgco2'</span><span class="p">,</span> <span class="n">ce_c_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_baseline_total_kgco2'</span><span class="p">,</span> <span class="n">ce_b_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_delta_total_kgco2'</span><span class="p">,</span> <span class="n">ce_c_env</span> <span class="o">-</span> <span class="n">ce_b_env</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_control_daily_average_kgco2'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ce_c_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_baseline_daily_average_kgco2'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ce_b_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'carbon_emissions_delta_daily_average_kgco2'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">ce_c_env</span> <span class="o">-</span> <span class="n">ce_b_env</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_control_total_eur'</span><span class="p">,</span> <span class="n">cost_c_env_raw</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_baseline_total_eur'</span><span class="p">,</span> <span class="n">cost_b_env_raw</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_delta_total_eur'</span><span class="p">,</span> <span class="n">cost_c_env_raw</span> <span class="o">-</span> <span class="n">cost_b_env_raw</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_control_daily_average_eur'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">cost_c_env_raw</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_baseline_daily_average_eur'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">cost_b_env_raw</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'cost_delta_daily_average_eur'</span><span class="p">,</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_daily_average</span><span class="p">(</span><span class="n">cost_c_env_raw</span> <span class="o">-</span> <span class="n">cost_b_env_raw</span><span class="p">,</span> <span class="n">simulated_days</span><span class="p">),</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="n">legacy_cost_functions</span><span class="p">,</span> <span class="n">extended_district_rows</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.internal.physics_invariants &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.internal.physics_invariants &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -144,6 +144,46 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_battery_energy_before_actions</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="CityLearnPhysicsInvariantService.capture_battery_energy_before_actions">
+<a class="viewcode-back" href="../../../api/citylearn.internal.physics_invariants.html#citylearn.internal.physics_invariants.CityLearnPhysicsInvariantService.capture_battery_energy_before_actions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">capture_battery_energy_before_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Snapshot actual SOC after arrivals/losses and before control actions.</span>
+
+<span class="sd">        Do not read ``energy_init``: the independent check must detect a model</span>
+<span class="sd">        that silently replaces measured energy with its operational reserve.</span>
+<span class="sd">        """</span>
+        <span class="n">batteries</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">.electrical_storage'</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span>
+        <span class="p">]</span>
+        <span class="n">batteries</span><span class="o">.</span><span class="n">extend</span><span class="p">((</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">.battery'</span><span class="p">,</span> <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">)</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">snapshot</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">battery</span> <span class="ow">in</span> <span class="n">batteries</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">battery</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">id</span><span class="p">(</span><span class="n">battery</span><span class="p">)</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">battery</span><span class="p">))</span>
+            <span class="n">energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">capacity</span><span class="p">)</span>
+            <span class="n">snapshot</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">battery</span><span class="p">,</span> <span class="n">energy</span><span class="p">,</span> <span class="n">battery</span><span class="o">.</span><span class="n">stored_energy_transfer</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_battery_energy_before_actions</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time_step</span><span class="p">),</span> <span class="n">snapshot</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assert_battery_energy_changes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">snapshot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_battery_energy_before_actions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_battery_energy_before_actions</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">snapshot</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">snapshot</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">time_step</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">battery</span><span class="p">,</span> <span class="n">energy_before</span><span class="p">,</span> <span class="n">transfer_before</span> <span class="ow">in</span> <span class="n">snapshot</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">energy_after</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">capacity</span><span class="p">)</span>
+            <span class="n">expected_change</span> <span class="o">=</span> <span class="n">battery</span><span class="o">.</span><span class="n">stored_energy_transfer</span> <span class="o">-</span> <span class="n">transfer_before</span>
+            <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">energy_after</span> <span class="o">-</span> <span class="n">energy_before</span> <span class="o">-</span> <span class="n">expected_change</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Stored battery energy mismatch for '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' at t=</span><span class="si">{</span><span class="n">time_step</span><span class="si">}</span><span class="s2">: "</span>
+                <span class="sa">f</span><span class="s2">"before=</span><span class="si">{</span><span class="n">energy_before</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, after=</span><span class="si">{</span><span class="n">energy_after</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, "</span>
+                <span class="sa">f</span><span class="s2">"expected_change=</span><span class="si">{</span><span class="n">expected_change</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh."</span>
+            <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_to_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -189,7 +229,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_assert_outage_local_balance</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_assert_soc_bounds</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_assert_storage_power_bounds</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_charger_power_bounds</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_charger_power_bounds</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assert_battery_energy_changes</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_assert_building_energy_balance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
@@ -206,6 +247,7 @@
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">chargers_electricity_consumption</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">deferrable_appliances_electricity_consumption</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'escalators_electricity_consumption'</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">net</span> <span class="o">-</span> <span class="n">terms</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
@@ -235,6 +277,7 @@
             <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">storage_energy</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
             <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="n">charger_energy</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">deferrable_appliances_electricity_consumption</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'escalators_electricity_consumption'</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="k">assert</span> <span class="n">local_loads</span> <span class="o">&lt;=</span> <span class="n">local_sources</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>

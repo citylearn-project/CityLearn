@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.internal.kpi_service_metrics &mdash; CityLearn 3.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/publishing.html">Publishing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases.html">Releases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.internal.kpi_service_metrics</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.internal.kpi_service_metrics</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Executed/requested service KPI aggregation for appliances and escalators."""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnKPIService</span>
+
+
+<div class="viewcode-block" id="deferrable_records">
+<a class="viewcode-back" href="../../../api/citylearn.internal.kpi_service_metrics.html#citylearn.internal.kpi_service_metrics.deferrable_records">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">deferrable_records</span><span class="p">(</span><span class="n">kpi</span><span class="p">:</span> <span class="s2">"CityLearnKPIService"</span><span class="p">,</span> <span class="n">kpi_buildings</span><span class="p">):</span>
+    <span class="n">extended_building_rows</span><span class="p">,</span> <span class="n">extended_district_rows</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="n">service_audit</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">deferrable_service_audit</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">summary</span> <span class="ow">in</span> <span class="n">service_audit</span><span class="p">[</span><span class="s1">'buildings'</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">extended_building_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="sa">f</span><span class="s1">'deferrable_appliance_audit_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">summary</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="n">extended_district_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="sa">f</span><span class="s1">'deferrable_appliance_audit_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">service_audit</span><span class="p">[</span><span class="s1">'district'</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+    <span class="n">district_deferrable</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">'completed_cycles'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s1">'missed_cycles'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s1">'served_energy_kwh'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s1">'unserved_energy_kwh'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">delay_weighted_sum</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">delay_weight</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">kpi_buildings</span><span class="p">:</span>
+        <span class="n">building_summary</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">'completed_cycles'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s1">'missed_cycles'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s1">'served_energy_kwh'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s1">'unserved_energy_kwh'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">building_delay_weighted_sum</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">building_delay_weight</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">appliance</span> <span class="ow">in</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_deferrable_appliances_for_metrics</span><span class="p">(</span><span class="n">building</span><span class="p">):</span>
+            <span class="n">summary</span> <span class="o">=</span> <span class="n">appliance</span><span class="o">.</span><span class="n">service_summary</span><span class="p">()</span>
+            <span class="n">completed</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'completed_cycles'</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">building_summary</span><span class="p">:</span>
+                <span class="n">building_summary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">completed</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">delay</span> <span class="o">=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'average_start_delay_hours'</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">building_delay_weighted_sum</span> <span class="o">+=</span> <span class="n">delay</span> <span class="o">*</span> <span class="n">completed</span>
+                <span class="n">building_delay_weight</span> <span class="o">+=</span> <span class="n">completed</span>
+
+        <span class="n">requested</span> <span class="o">=</span> <span class="n">building_summary</span><span class="p">[</span><span class="s1">'completed_cycles'</span><span class="p">]</span> <span class="o">+</span> <span class="n">building_summary</span><span class="p">[</span><span class="s1">'missed_cycles'</span><span class="p">]</span>
+        <span class="n">service_level</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">requested</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">building_summary</span><span class="p">[</span><span class="s1">'completed_cycles'</span><span class="p">]</span> <span class="o">/</span> <span class="n">requested</span>
+        <span class="n">avg_delay</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">building_delay_weight</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">building_delay_weighted_sum</span> <span class="o">/</span> <span class="n">building_delay_weight</span>
+        <span class="n">extended_building_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_completed_cycles_count'</span><span class="p">,</span> <span class="n">building_summary</span><span class="p">[</span><span class="s1">'completed_cycles'</span><span class="p">],</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_missed_cycles_count'</span><span class="p">,</span> <span class="n">building_summary</span><span class="p">[</span><span class="s1">'missed_cycles'</span><span class="p">],</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_service_level_ratio'</span><span class="p">,</span> <span class="n">service_level</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_served_energy_total_kwh'</span><span class="p">,</span> <span class="n">building_summary</span><span class="p">[</span><span class="s1">'served_energy_kwh'</span><span class="p">],</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_unserved_energy_total_kwh'</span><span class="p">,</span> <span class="n">building_summary</span><span class="p">[</span><span class="s1">'unserved_energy_kwh'</span><span class="p">],</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_average_start_delay_hours'</span><span class="p">,</span> <span class="n">avg_delay</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">district_deferrable</span><span class="p">:</span>
+            <span class="n">district_deferrable</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="n">building_summary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">delay_weighted_sum</span> <span class="o">+=</span> <span class="n">building_delay_weighted_sum</span>
+        <span class="n">delay_weight</span> <span class="o">+=</span> <span class="n">building_delay_weight</span>
+
+    <span class="n">district_requested</span> <span class="o">=</span> <span class="n">district_deferrable</span><span class="p">[</span><span class="s1">'completed_cycles'</span><span class="p">]</span> <span class="o">+</span> <span class="n">district_deferrable</span><span class="p">[</span><span class="s1">'missed_cycles'</span><span class="p">]</span>
+    <span class="n">district_service_level</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">district_requested</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">district_deferrable</span><span class="p">[</span><span class="s1">'completed_cycles'</span><span class="p">]</span> <span class="o">/</span> <span class="n">district_requested</span>
+    <span class="n">district_avg_delay</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">delay_weight</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">delay_weighted_sum</span> <span class="o">/</span> <span class="n">delay_weight</span>
+    <span class="n">extended_district_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_completed_cycles_count'</span><span class="p">,</span> <span class="n">district_deferrable</span><span class="p">[</span><span class="s1">'completed_cycles'</span><span class="p">],</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_missed_cycles_count'</span><span class="p">,</span> <span class="n">district_deferrable</span><span class="p">[</span><span class="s1">'missed_cycles'</span><span class="p">],</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_service_level_ratio'</span><span class="p">,</span> <span class="n">district_service_level</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_served_energy_total_kwh'</span><span class="p">,</span> <span class="n">district_deferrable</span><span class="p">[</span><span class="s1">'served_energy_kwh'</span><span class="p">],</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_unserved_energy_total_kwh'</span><span class="p">,</span> <span class="n">district_deferrable</span><span class="p">[</span><span class="s1">'unserved_energy_kwh'</span><span class="p">],</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'deferrable_appliance_average_start_delay_hours'</span><span class="p">,</span> <span class="n">district_avg_delay</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+    <span class="p">])</span>
+    <span class="k">return</span> <span class="n">extended_building_rows</span><span class="p">,</span> <span class="n">extended_district_rows</span></div>
+
+
+
+<div class="viewcode-block" id="escalator_records">
+<a class="viewcode-back" href="../../../api/citylearn.internal.kpi_service_metrics.html#citylearn.internal.kpi_service_metrics.escalator_records">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">escalator_records</span><span class="p">(</span><span class="n">kpi</span><span class="p">:</span> <span class="s2">"CityLearnKPIService"</span><span class="p">,</span> <span class="n">kpi_buildings</span><span class="p">):</span>
+    <span class="n">extended_building_rows</span><span class="p">,</span> <span class="n">extended_district_rows</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="c1"># Escalators deliberately use aggregate passenger demand rather than a</span>
+    <span class="c1"># queueing model. These KPIs expose the resulting energy/service tradeoff</span>
+    <span class="c1"># alongside the existing electricity cost metrics.</span>
+    <span class="n">district_escalator</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">'requested_passengers'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s1">'served_passengers'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s1">'unserved_passengers'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s1">'electricity_consumption_kwh'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s1">'state_changes_count'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">kpi_buildings</span><span class="p">:</span>
+        <span class="n">building_escalator</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">district_escalator</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">escalator</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'escalators'</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">summary</span> <span class="o">=</span> <span class="n">escalator</span><span class="o">.</span><span class="n">service_summary</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">building_escalator</span><span class="p">:</span>
+                <span class="n">building_escalator</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="n">requested</span> <span class="o">=</span> <span class="n">building_escalator</span><span class="p">[</span><span class="s1">'requested_passengers'</span><span class="p">]</span>
+        <span class="n">service_level</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">requested</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">building_escalator</span><span class="p">[</span><span class="s1">'served_passengers'</span><span class="p">]</span> <span class="o">/</span> <span class="n">requested</span>
+        <span class="n">extended_building_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_requested_passengers_total_count'</span><span class="p">,</span> <span class="n">requested</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_served_passengers_total_count'</span><span class="p">,</span> <span class="n">building_escalator</span><span class="p">[</span><span class="s1">'served_passengers'</span><span class="p">],</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_unserved_passengers_total_count'</span><span class="p">,</span> <span class="n">building_escalator</span><span class="p">[</span><span class="s1">'unserved_passengers'</span><span class="p">],</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_service_level_ratio'</span><span class="p">,</span> <span class="n">service_level</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_electricity_consumption_total_kwh'</span><span class="p">,</span> <span class="n">building_escalator</span><span class="p">[</span><span class="s1">'electricity_consumption_kwh'</span><span class="p">],</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+            <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_state_changes_count'</span><span class="p">,</span> <span class="n">building_escalator</span><span class="p">[</span><span class="s1">'state_changes_count'</span><span class="p">],</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">),</span>
+        <span class="p">])</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">district_escalator</span><span class="p">:</span>
+            <span class="n">district_escalator</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="n">building_escalator</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="n">district_requested</span> <span class="o">=</span> <span class="n">district_escalator</span><span class="p">[</span><span class="s1">'requested_passengers'</span><span class="p">]</span>
+    <span class="n">district_service_level</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">district_requested</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="n">district_escalator</span><span class="p">[</span><span class="s1">'served_passengers'</span><span class="p">]</span> <span class="o">/</span> <span class="n">district_requested</span>
+    <span class="n">extended_district_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_requested_passengers_total_count'</span><span class="p">,</span> <span class="n">district_requested</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_served_passengers_total_count'</span><span class="p">,</span> <span class="n">district_escalator</span><span class="p">[</span><span class="s1">'served_passengers'</span><span class="p">],</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_unserved_passengers_total_count'</span><span class="p">,</span> <span class="n">district_escalator</span><span class="p">[</span><span class="s1">'unserved_passengers'</span><span class="p">],</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_service_level_ratio'</span><span class="p">,</span> <span class="n">district_service_level</span><span class="p">,</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_electricity_consumption_total_kwh'</span><span class="p">,</span> <span class="n">district_escalator</span><span class="p">[</span><span class="s1">'electricity_consumption_kwh'</span><span class="p">],</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+        <span class="n">kpi</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="s1">'escalator_state_changes_count'</span><span class="p">,</span> <span class="n">district_escalator</span><span class="p">[</span><span class="s1">'state_changes_count'</span><span class="p">],</span> <span class="s1">'District'</span><span class="p">,</span> <span class="s1">'district'</span><span class="p">),</span>
+    <span class="p">])</span>
+    <span class="k">return</span> <span class="n">extended_building_rows</span><span class="p">,</span> <span class="n">extended_district_rows</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

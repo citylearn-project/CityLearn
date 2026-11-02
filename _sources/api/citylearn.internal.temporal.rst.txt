@@ -1,0 +1,7 @@
+citylearn.internal.temporal module
+==================================
+
+.. automodule:: citylearn.internal.temporal
+   :members:
+   :show-inheritance:
+   :undoc-members:

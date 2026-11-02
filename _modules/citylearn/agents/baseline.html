@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.agents.baseline &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.agents.baseline &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,18 +130,11 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.electrical_limits</span><span class="w"> </span><span class="kn">import</span> <span class="n">allocate_electrical_service</span>
 
 
-<div class="viewcode-block" id="BusinessAsUsualAgent">
-<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Deterministic operational baseline for day-to-day equipment use.</span>
-
-<span class="sd">    The policy represents a conservative non-optimizing operator:</span>
-<span class="sd">    connected EVs charge toward their declared departure service target when</span>
-<span class="sd">    available, deferrable appliances start as soon as they can, and electrical</span>
-<span class="sd">    storage performs simple PV self-consumption.</span>
-<span class="sd">    """</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_OperationalBaselineAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Shared equipment dispatch and deadline-based EV service for native RBCs."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -175,10 +168,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">flat_action_space</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
-<div class="viewcode-block" id="BusinessAsUsualAgent.predict">
-<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
         <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span>
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dynamic'</span><span class="p">:</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">topology_version</span>
+            <span class="k">if</span> <span class="n">version</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_topology_version</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">flat_action_space</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">action_names</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_names</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">flat_observation_space</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">observation_names</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">observation_names</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">building_metadata</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()[</span><span class="s1">'buildings'</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_building_action_layout_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_topology_version</span> <span class="o">=</span> <span class="n">version</span>
         <span class="n">per_building_actions</span> <span class="o">=</span> <span class="p">[</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_building_action_vector</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span>
@@ -191,8 +194,19 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">actions</span> <span class="o">=</span> <span class="n">actions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">actions</span></div>
+        <span class="k">return</span> <span class="n">actions</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">comparison_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'ev_target_soc'</span><span class="p">,</span> <span class="s1">'ev_follow_required_soc'</span><span class="p">,</span> <span class="s1">'ev_service_margin_rate'</span><span class="p">,</span> <span class="s1">'ev_service_floor_rate'</span><span class="p">,</span>
+                <span class="s1">'storage_min_soc'</span><span class="p">,</span> <span class="s1">'storage_max_soc'</span><span class="p">,</span> <span class="s1">'storage_deadband_kw'</span><span class="p">,</span> <span class="s1">'deferrable_start_action'</span><span class="p">,</span>
+                <span class="s1">'low_price_quantile'</span><span class="p">,</span> <span class="s1">'high_price_quantile'</span><span class="p">,</span> <span class="s1">'price_charge_rate'</span><span class="p">,</span> <span class="s1">'price_discharge_rate'</span><span class="p">,</span>
+                <span class="s1">'ev_price_charge_rate'</span><span class="p">,</span> <span class="s1">'pv_charge_rate'</span><span class="p">,</span> <span class="s1">'storage_discharge_rate'</span><span class="p">,</span> <span class="s1">'import_peak_threshold_kw'</span><span class="p">,</span>
+                <span class="s1">'ev_urgency_hours'</span><span class="p">,</span> <span class="s1">'community_surplus_charge_soc_ceiling'</span><span class="p">,</span> <span class="s1">'community_import_threshold_kw'</span><span class="p">,</span>
+                <span class="s1">'community_storage_discharge_rate'</span><span class="p">,</span> <span class="s1">'community_surplus_threshold_kw'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">implementation</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span><span class="o">+</span><span class="s1">'.'</span><span class="o">+</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__qualname__</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">__version__</span><span class="p">,</span>
+                    <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)},</span>
+                    <span class="n">observation_access</span><span class="o">=</span><span class="s1">'privileged_simulator_state'</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_building_action_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
         <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building_action_layout</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
@@ -465,48 +479,14 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">controls</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">actions</span>
 
-            <span class="n">scales</span> <span class="o">=</span> <span class="p">{</span><span class="n">control_id</span><span class="p">:</span> <span class="mf">1.0</span> <span class="k">for</span> <span class="n">control_id</span> <span class="ow">in</span> <span class="n">controls</span><span class="p">}</span>
             <span class="n">limits</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'_electrical_service_limits'</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
-            <span class="n">total_limits</span> <span class="o">=</span> <span class="n">limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'total'</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
-            <span class="n">per_phase_limits</span> <span class="o">=</span> <span class="n">limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'per_phase'</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
-
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
-                <span class="n">changed</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="n">total_kw</span><span class="p">,</span> <span class="n">phase_kw</span> <span class="o">=</span> <span class="n">ops</span><span class="o">.</span><span class="n">_compute_totals</span><span class="p">(</span><span class="n">base_total_kw</span><span class="p">,</span> <span class="n">base_phase_kw</span><span class="p">,</span> <span class="n">controls</span><span class="p">,</span> <span class="n">scales</span><span class="p">)</span>
-                <span class="n">changed</span> <span class="o">|=</span> <span class="n">ops</span><span class="o">.</span><span class="n">_scale_for_import_scope</span><span class="p">(</span>
-                    <span class="n">total_kw</span><span class="p">,</span>
-                    <span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_kw'</span><span class="p">),</span>
-                    <span class="n">controls</span><span class="p">,</span>
-                    <span class="n">scales</span><span class="p">,</span>
-                    <span class="n">component_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s1">'request_total_kw'</span><span class="p">],</span>
-                <span class="p">)</span>
-                <span class="n">changed</span> <span class="o">|=</span> <span class="n">ops</span><span class="o">.</span><span class="n">_scale_for_export_scope</span><span class="p">(</span>
-                    <span class="n">total_kw</span><span class="p">,</span>
-                    <span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">),</span>
-                    <span class="n">controls</span><span class="p">,</span>
-                    <span class="n">scales</span><span class="p">,</span>
-                    <span class="n">component_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s1">'request_total_kw'</span><span class="p">],</span>
-                <span class="p">)</span>
-
-                <span class="k">for</span> <span class="n">phase_name</span> <span class="ow">in</span> <span class="n">phase_names</span><span class="p">:</span>
-                    <span class="n">phase_limit</span> <span class="o">=</span> <span class="n">per_phase_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase_name</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
-                    <span class="n">changed</span> <span class="o">|=</span> <span class="n">ops</span><span class="o">.</span><span class="n">_scale_for_import_scope</span><span class="p">(</span>
-                        <span class="n">phase_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase_name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                        <span class="n">phase_limit</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_kw'</span><span class="p">),</span>
-                        <span class="n">controls</span><span class="p">,</span>
-                        <span class="n">scales</span><span class="p">,</span>
-                        <span class="n">component_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">phase_name</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s1">'request_phase_kw'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                    <span class="p">)</span>
-                    <span class="n">changed</span> <span class="o">|=</span> <span class="n">ops</span><span class="o">.</span><span class="n">_scale_for_export_scope</span><span class="p">(</span>
-                        <span class="n">phase_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase_name</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                        <span class="n">phase_limit</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">),</span>
-                        <span class="n">controls</span><span class="p">,</span>
-                        <span class="n">scales</span><span class="p">,</span>
-                        <span class="n">component_getter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">phase_name</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s1">'request_phase_kw'</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                    <span class="p">)</span>
-
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">changed</span><span class="p">:</span>
-                    <span class="k">break</span>
+            <span class="c1"># Prediction uses prospective loads; runtime repeats this calculation</span>
+            <span class="c1"># with its own state and remains responsible for final device limits.</span>
+            <span class="n">allocation</span> <span class="o">=</span> <span class="n">allocate_electrical_service</span><span class="p">(</span>
+                <span class="n">base_total_kw</span><span class="p">,</span> <span class="n">base_phase_kw</span><span class="p">,</span> <span class="n">controls</span><span class="p">,</span>
+                <span class="n">limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'total'</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{},</span> <span class="n">limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'per_phase'</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{},</span> <span class="n">phase_names</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">scales</span> <span class="o">=</span> <span class="n">allocation</span><span class="o">.</span><span class="n">scales</span>
 
             <span class="k">for</span> <span class="n">charger_id</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">ev_action_indices</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">charger</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'_charger_lookup'</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">)</span>
@@ -661,12 +641,88 @@
 
         <span class="k">return</span> <span class="n">scalar</span>
 
-<div class="viewcode-block" id="BusinessAsUsualAgent.reset">
-<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent.reset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_building_action_layout_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
-</div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_building_action_layout_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_topology_version</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="BusinessAsUsualAgent">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">_OperationalBaselineAgent</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Immediate EV charging to 100%, earliest appliance start and PV storage.</span>
+
+<span class="sd">    The request is maximum charging power while connected, independent of the</span>
+<span class="sd">    departure target, time, price and solar forecast. Charger/battery physics</span>
+<span class="sd">    and the existing electrical-service limiter determine delivered power.</span>
+<span class="sd">    """</span>
+
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'immediate-full-charge-v1'</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">ev_target_soc</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">ev_follow_required_soc</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">ev_service_margin_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span><span class="p">,</span>
+        <span class="n">ev_service_floor_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">storage_min_soc</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.20</span><span class="p">,</span>
+        <span class="n">storage_max_soc</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.90</span><span class="p">,</span> <span class="n">storage_deadband_kw</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">deferrable_start_action</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># Keep CityLearn's explicit public signature and positional arguments.</span>
+        <span class="c1"># Departure-target scheduling belongs to RBCs; BAU requests full charge.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">ev_target_soc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="n">ev_target_soc</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ev_follow_required_soc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'BusinessAsUsualAgent always charges to 100%; use an RBC for departure targets.'</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">default</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="p">(</span><span class="s1">'ev_service_margin_rate'</span><span class="p">,</span> <span class="n">ev_service_margin_rate</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">'ev_service_floor_rate'</span><span class="p">,</span> <span class="n">ev_service_floor_rate</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="n">default</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> configures deadline charging; use an RBC instead of BAU.'</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">env</span><span class="p">,</span> <span class="n">ev_target_soc</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ev_follow_required_soc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">storage_min_soc</span><span class="o">=</span><span class="n">storage_min_soc</span><span class="p">,</span> <span class="n">storage_max_soc</span><span class="o">=</span><span class="n">storage_max_soc</span><span class="p">,</span>
+            <span class="n">storage_deadband_kw</span><span class="o">=</span><span class="n">storage_deadband_kw</span><span class="p">,</span>
+            <span class="n">deferrable_start_action</span><span class="o">=</span><span class="n">deferrable_start_action</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ev_action_for_charger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">building</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">charger</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s1">'connected_electric_vehicle'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="n">soc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_soc</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="s1">'battery'</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">soc</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">soc</span> <span class="o">&gt;=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">1.0e-6</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s1">'max_charging_power'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="c1"># Do not reduce this request to the small remaining energy: doing so can</span>
+        <span class="c1"># fall into the charger's minimum-power deadband and strand the EV below</span>
+        <span class="c1"># full charge. The battery clips the final interval to its capacity.</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">low</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">high</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_charger_requested_kw_for_charger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Estimate accepted EV power before dispatching self-consumption BESS.</span>
+
+<span class="sd">        A full-power request near 100% is clipped by the EV battery. Reserving</span>
+<span class="sd">        nominal charger power instead would discharge the house battery into</span>
+<span class="sd">        an export. Mirror the native positive-charge limits without mutating</span>
+<span class="sd">        battery SOC, efficiency, capacity history or provenance.</span>
+<span class="sd">        """</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">charger</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s1">'connected_electric_vehicle'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ev</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">action</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="n">power</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">get_requested_power_kw</span><span class="p">(</span><span class="n">action</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">power</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3600.0</span><span class="p">,</span> <span class="mf">1.0e-12</span><span class="p">)</span>
+        <span class="n">charger_efficiency</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">get_efficiency</span><span class="p">(</span><span class="n">power</span> <span class="o">/</span> <span class="n">charger</span><span class="o">.</span><span class="n">max_charging_power</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="mf">1.0e-9</span><span class="p">)</span>
+        <span class="n">battery</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">battery</span>
+        <span class="n">initial</span> <span class="o">=</span> <span class="n">battery</span><span class="o">.</span><span class="n">energy_init</span>
+        <span class="n">requested</span> <span class="o">=</span> <span class="n">power</span> <span class="o">*</span> <span class="n">hours</span> <span class="o">*</span> <span class="n">charger_efficiency</span>
+        <span class="n">maximum</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">get_max_input_power</span><span class="p">(</span><span class="n">energy_init</span><span class="o">=</span><span class="n">initial</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">hours</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">degraded_capacity</span> <span class="o">-</span> <span class="n">initial</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">accepted</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">requested</span><span class="p">,</span> <span class="n">maximum</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">efficiency</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">get_current_efficiency</span><span class="p">(</span><span class="n">accepted</span> <span class="o">/</span> <span class="n">hours</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0e-9</span><span class="p">)</span>
+            <span class="n">accepted</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">requested</span><span class="p">,</span> <span class="n">maximum</span><span class="p">,</span> <span class="n">remaining</span> <span class="o">/</span> <span class="n">efficiency</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">accepted</span> <span class="o">/</span> <span class="p">(</span><span class="n">hours</span> <span class="o">*</span> <span class="n">charger_efficiency</span><span class="p">)</span></div>
 
 
 
@@ -720,7 +776,7 @@
 
 <div class="viewcode-block" id="RBCBasicPolicy">
 <a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.RBCBasicPolicy">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">RBCBasicPolicy</span><span class="p">(</span><span class="n">BusinessAsUsualAgent</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RBCBasicPolicy</span><span class="p">(</span><span class="n">_OperationalBaselineAgent</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Basic rule-based controller with service-aware EV charging and simple price response."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>

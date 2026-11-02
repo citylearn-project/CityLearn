@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.internal.runtime &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.internal.runtime &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -345,6 +345,9 @@
         <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
         <span class="n">clear_step_electric_loads_time</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="n">building_apply_action_times</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">begin_step</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)):</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_physics_invariant_service</span><span class="o">.</span><span class="n">capture_battery_energy_before_actions</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">building</span><span class="p">,</span> <span class="n">building_actions</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">clear_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
@@ -381,6 +384,8 @@
 
         <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_variables</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_deferrable_service_interval</span><span class="p">()</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">settle</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">debug_timing</span><span class="p">:</span>
             <span class="n">timings</span><span class="p">[</span><span class="s1">'update_variables_time'</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">timer_start</span>
             <span class="n">timings</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_last_update_variables_debug_timing'</span><span class="p">,</span> <span class="p">{}))</span>
@@ -443,6 +448,7 @@
                 <span class="n">env</span><span class="o">.</span><span class="n">_refresh_action_cache</span><span class="p">()</span>
                 <span class="n">env</span><span class="o">.</span><span class="n">_entity_service</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
                 <span class="n">env</span><span class="o">.</span><span class="n">reward_function</span><span class="o">.</span><span class="n">env_metadata</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
         <span class="n">topology_events_applied</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
             <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_event_log'</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[])[</span><span class="n">topology_log_size_before</span><span class="p">:]</span>
         <span class="p">)</span>
@@ -535,7 +541,9 @@
 
         <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
         <span class="n">info</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">get_info</span><span class="p">())</span> <span class="k">if</span> <span class="n">collect_info</span> <span class="k">else</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">collect_info</span> <span class="ow">and</span> <span class="n">action_execution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.observation_contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">configuration</span>
+        <span class="n">hidden_faults</span> <span class="o">=</span> <span class="n">configuration</span><span class="p">(</span><span class="n">env</span><span class="p">)[</span><span class="s1">'mode'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'hidden_faults'</span>
+        <span class="k">if</span> <span class="n">collect_info</span> <span class="ow">and</span> <span class="n">action_execution</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">hidden_faults</span><span class="p">:</span>
             <span class="n">info</span><span class="p">[</span><span class="s1">'entity_action_execution'</span><span class="p">]</span> <span class="o">=</span> <span class="n">action_execution</span>
             <span class="n">info</span><span class="p">[</span><span class="s1">'topology_events_applied'</span><span class="p">]</span> <span class="o">=</span> <span class="n">topology_events_applied</span>
         <span class="k">if</span> <span class="n">debug_timing</span><span class="p">:</span>
@@ -873,12 +881,17 @@
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_robustness_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s1">'enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="n">actions</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_robustness_service</span><span class="o">.</span><span class="n">apply_actions</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
 
+        <span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">begin_step</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)):</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_physics_invariant_service</span><span class="o">.</span><span class="n">capture_battery_energy_before_actions</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">building</span><span class="p">,</span> <span class="n">building_actions</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">building</span><span class="o">.</span><span class="n">clear_step_electric_loads_for_action</span><span class="p">()</span>
             <span class="n">building</span><span class="o">.</span><span class="n">apply_actions</span><span class="p">(</span><span class="o">**</span><span class="n">building_actions</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">update_variables</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_deferrable_service_interval</span><span class="p">()</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">settle</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_demand_response_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s1">'enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="n">env</span><span class="o">.</span><span class="n">_demand_response_service</span><span class="o">.</span><span class="n">settle_current_time_step</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)):</span>
@@ -894,6 +907,7 @@
                 <span class="n">env</span><span class="o">.</span><span class="n">_entity_service</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
                 <span class="n">env</span><span class="o">.</span><span class="n">reward_function</span><span class="o">.</span><span class="n">env_metadata</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
 
+        <span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">truncated</span></div>
 
 
@@ -1233,6 +1247,7 @@
                             <span class="n">soc_value</span> <span class="o">=</span> <span class="n">_resolve_arrival_soc</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="n">prev_state</span><span class="p">,</span> <span class="n">prev_ev_id</span><span class="p">,</span> <span class="n">ev_id</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">soc_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                                 <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="n">soc_value</span><span class="p">)</span>
+                                <span class="n">ev</span><span class="o">.</span><span class="n">_arrival_soc_time_step</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span>
                     <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                         <span class="n">charger</span><span class="o">.</span><span class="n">associate_incoming_car</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span></div>
 
@@ -1309,6 +1324,11 @@
                 <span class="c1"># Exogenous away-from-home movement: driving can reduce SOC, offsite charging can raise it.</span>
                 <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">last_soc</span> <span class="o">*</span> <span class="n">variability</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)))</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_record_deferrable_service_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">appliance</span> <span class="ow">in</span> <span class="n">building</span><span class="o">.</span><span class="n">deferrable_appliances</span> <span class="ow">or</span> <span class="p">[]:</span>
+                <span class="n">appliance</span><span class="o">.</span><span class="n">record_service_interval</span><span class="p">()</span>
 
 <div class="viewcode-block" id="CityLearnRuntimeService.update_variables">
 <a class="viewcode-back" href="../../../api/citylearn.internal.runtime.html#citylearn.internal.runtime.CityLearnRuntimeService.update_variables">[docs]</a>
@@ -1464,7 +1484,7 @@
 
         <span class="n">total_import</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">imports</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
         <span class="n">total_export</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">exports</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
-        <span class="n">traded_kwh</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">total_import</span><span class="p">,</span> <span class="n">total_export</span><span class="p">)</span>
+        <span class="n">traded_kwh</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">total_import</span><span class="p">,</span> <span class="n">total_export</span><span class="p">)</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_local_enabled'</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span>
         <span class="n">weights_cfg</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_import_member_weights'</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
             <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">weights_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">],</span>
@@ -1485,19 +1505,25 @@
 
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">building</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">):</span>
             <span class="n">grid_import_price</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">pricing</span><span class="o">.</span><span class="n">electricity_pricing</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
-            <span class="n">local_price</span> <span class="o">=</span> <span class="n">ratio</span> <span class="o">*</span> <span class="n">grid_import_price</span>
-            <span class="n">grid_export_price</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.community_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">settlement_prices</span>
+            <span class="n">grid_export_price</span><span class="p">,</span> <span class="n">local_buy_price</span><span class="p">,</span> <span class="n">local_sell_price</span> <span class="o">=</span> <span class="n">settlement_prices</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">grid_import_price</span><span class="p">)</span>
+            <span class="n">local_price</span> <span class="o">=</span> <span class="n">local_buy_price</span>
             <span class="n">counterfactual_legacy_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span><span class="p">[</span><span class="n">t</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="c1"># Without sharing, all surplus is exported at the same external</span>
+            <span class="c1"># tariff. Export revenue is not a benefit created by local trading.</span>
+            <span class="c1"># Subtracting it preserves the historical zero-export-price case.</span>
+            <span class="n">counterfactual_grid_cost</span> <span class="o">=</span> <span class="n">counterfactual_legacy_cost</span> <span class="o">-</span> <span class="n">exports</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">grid_export_price</span>
 
             <span class="n">grid_import_remaining</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">imports</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">local_import</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
             <span class="n">grid_export_remaining</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">exports</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">local_export</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
 
             <span class="n">cost</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">grid_import_remaining</span> <span class="o">*</span> <span class="n">grid_import_price</span>
-                <span class="o">+</span> <span class="n">local_import</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">local_price</span>
-                <span class="o">-</span> <span class="n">local_export</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">local_price</span>
+                <span class="o">+</span> <span class="n">local_import</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">local_buy_price</span>
+                <span class="o">-</span> <span class="n">local_export</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">local_sell_price</span>
+                <span class="o">-</span> <span class="n">grid_export_remaining</span> <span class="o">*</span> <span class="n">grid_export_price</span>
             <span class="p">)</span>
-            <span class="n">savings</span> <span class="o">=</span> <span class="n">counterfactual_legacy_cost</span> <span class="o">-</span> <span class="n">cost</span>
+            <span class="n">savings</span> <span class="o">=</span> <span class="n">counterfactual_grid_cost</span> <span class="o">-</span> <span class="n">cost</span>
 
             <span class="n">building</span><span class="o">.</span><span class="n">set_net_electricity_consumption_cost</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
             <span class="n">market_settlement</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -1508,9 +1534,12 @@
                     <span class="s1">'grid_import_kwh'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">grid_import_remaining</span><span class="p">),</span>
                     <span class="s1">'grid_export_kwh'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">grid_export_remaining</span><span class="p">),</span>
                     <span class="s1">'local_price'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">local_price</span><span class="p">),</span>
+                    <span class="s1">'local_buy_price'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">local_buy_price</span><span class="p">),</span>
+                    <span class="s1">'local_sell_price'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">local_sell_price</span><span class="p">),</span>
+                    <span class="s1">'operator_balance_eur'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">local_import</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">*</span><span class="n">local_buy_price</span><span class="o">-</span><span class="n">local_export</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">*</span><span class="n">local_sell_price</span><span class="p">),</span>
                     <span class="s1">'grid_import_price'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">grid_import_price</span><span class="p">),</span>
                     <span class="s1">'grid_export_price'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">grid_export_price</span><span class="p">),</span>
-                    <span class="s1">'counterfactual_cost_eur'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">counterfactual_legacy_cost</span><span class="p">),</span>
+                    <span class="s1">'counterfactual_cost_eur'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">counterfactual_grid_cost</span><span class="p">),</span>
                     <span class="s1">'settled_cost_eur'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">cost</span><span class="p">),</span>
                     <span class="s1">'market_savings_eur'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">savings</span><span class="p">),</span>
                 <span class="p">}</span>

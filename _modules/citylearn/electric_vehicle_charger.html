@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.electric_vehicle_charger &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.electric_vehicle_charger &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -279,6 +279,15 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__past_charging_action_values_kwh</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">gross_energy_charge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Actual AC import before netting opposing calls in an interval."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gross_energy_charge</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">gross_energy_discharge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__gross_energy_discharge</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">electricity_consumption</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Electricity consumption time series."""</span>
 
@@ -442,10 +451,14 @@
             <span class="k">return</span> <span class="mf">0.0</span>
 
         <span class="n">requested_power_kw</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">action_value</span><span class="p">))</span> <span class="o">*</span> <span class="n">max_power_kw</span>
-        <span class="k">if</span> <span class="n">requested_power_kw</span> <span class="o">&lt;</span> <span class="n">min_power_kw</span><span class="p">:</span>
+        <span class="c1"># Entity actions are float32. A command exactly at the minimum can</span>
+        <span class="c1"># round a fraction below it; preserve that valid command without</span>
+        <span class="c1"># admitting materially sub-minimum requests.</span>
+        <span class="n">tolerance_kw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="n">max_power_kw</span>
+        <span class="k">if</span> <span class="n">requested_power_kw</span> <span class="o">+</span> <span class="n">tolerance_kw</span> <span class="o">&lt;</span> <span class="n">min_power_kw</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.0</span>
 
-        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">requested_power_kw</span><span class="p">,</span> <span class="n">max_power_kw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">requested_power_kw</span><span class="p">,</span> <span class="n">min_power_kw</span><span class="p">),</span> <span class="n">max_power_kw</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_signed_power_from_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
         <span class="k">try</span><span class="p">:</span>
@@ -499,7 +512,6 @@
             <span class="c1"># Without this, SOC at `time_step` can remain the zero-initialized default.</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected_electric_vehicle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">connected_electric_vehicle</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__past_charging_action_values_kwh</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">return</span>
 
@@ -535,12 +547,17 @@
             <span class="n">electric_vehicle</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">battery_command</span><span class="p">)</span>
 
             <span class="n">battery_energy_balance</span> <span class="o">=</span> <span class="n">electric_vehicle</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">energy_balance</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ac_energy</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">battery_energy_balance</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">efficiency</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">battery_energy_balance</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">battery_energy_balance</span> <span class="o">*</span> <span class="n">efficiency</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">+=</span> <span class="n">ac_energy</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__gross_energy_charge</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">ac_energy</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__gross_energy_discharge</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="n">ac_energy</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="c1"># Preserve charger losses at the AC boundary for passive provenance.</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="n">electric_vehicle</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">energy_provenance_events</span>
+            <span class="k">if</span> <span class="n">events</span><span class="p">:</span>
+                <span class="n">events</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">'bus'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ac_energy</span><span class="p">)</span></div>
 
 
 
@@ -564,6 +581,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">connected_electric_vehicle</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">incoming_electric_vehicle</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__gross_energy_charge</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__gross_energy_discharge</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__past_charging_action_values_kwh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__past_connected_evs</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_time_steps</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">action_feedback_requested_action_normalized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>

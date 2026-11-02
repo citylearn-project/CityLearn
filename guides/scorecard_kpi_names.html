@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Default scorecard KPI names &mdash; CityLearn 3.0.2 documentation</title>
+  <title>Default scorecard KPI names &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,11 +137,27 @@ The full evaluation table contains additional KPIs.</p>
 <section id="district">
 <h2>District<a class="headerlink" href="#district" title="Link to this heading"></a></h2>
 <ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_discomfort_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_thermal_coverage_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_outage_discomfort_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_unserved_service_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_outage_unserved_service_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_energy_coverage_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_equity_audit_coverage_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_provenance_pv_useful_building_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_provenance_pv_useful_with_mobility_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_provenance_pv_stored_kwh</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_provenance_pv_grid_export_kwh</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_provenance_external_purchase_emissions_kgco2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_provenance_external_purchase_emissions_business_as_usual_kgco2</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_cost_total_control_eur</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_cost_total_business_as_usual_eur</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_cost_total_delta_to_business_as_usual_eur</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">district_ev_performance_departure_min_acceptable_feasible_ratio</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">district_ev_performance_departure_within_tolerance_feasible_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_ev_departure_audit_min_acceptable_service_feasible_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_ev_departure_audit_within_tolerance_service_feasible_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_ev_departure_audit_target_coverage_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_ev_departure_audit_service_coverage_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_ev_departure_audit_target_unknown_count</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_electrical_service_phase_violations_energy_total_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_electrical_service_phase_requested_pressure_energy_total_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_battery_total_throughput_kwh</span></code></p></li>
@@ -173,8 +189,11 @@ The full evaluation table contains additional KPIs.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">building_cost_total_control_eur</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">building_cost_total_business_as_usual_eur</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">building_cost_total_delta_to_business_as_usual_eur</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">building_ev_performance_departure_min_acceptable_feasible_ratio</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">building_ev_performance_departure_within_tolerance_feasible_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">building_ev_departure_audit_min_acceptable_service_feasible_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">building_ev_departure_audit_within_tolerance_service_feasible_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">building_ev_departure_audit_target_coverage_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">building_ev_departure_audit_service_coverage_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">building_ev_departure_audit_target_unknown_count</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">building_electrical_service_phase_violations_energy_total_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">building_electrical_service_phase_requested_pressure_energy_total_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">building_battery_total_throughput_kwh</span></code></p></li>

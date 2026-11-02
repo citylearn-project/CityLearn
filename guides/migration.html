@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.0.2 documentation</title>
+  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,6 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-0-2-to-3-1-0">Upgrade from 3.0.2 to 3.1.0</a></li>
 </ul>
 </li>
 </ul>
@@ -173,6 +174,44 @@ local schema and files for data that are not in the public catalogue; a
 repository-relative path is not created by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>.</p>
 <p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
 development-line history.</p>
+</section>
+<section id="upgrade-from-3-0-2-to-3-1-0">
+<h2>Upgrade from 3.0.2 to 3.1.0<a class="headerlink" href="#upgrade-from-3-0-2-to-3-1-0" title="Link to this heading"></a></h2>
+<p>The distribution, import namespace and default dataset registry remain
+<code class="docutils literal notranslate"><span class="pre">citylearn</span></code>, <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> and <code class="docutils literal notranslate"><span class="pre">citylearn-project/CityLearn</span></code> at <code class="docutils literal notranslate"><span class="pre">v3.1.0</span></code>.
+All 32 public datasets are retained byte-for-byte; no CPS production datasets
+are imported, and the datasets retired in 3.0.2 remain retired.</p>
+<ul class="simple">
+<li><p><strong>BAU behavior:</strong> the native <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> now requests immediate
+maximum charging to 100% for connected EVs. Concurrent vehicles share the
+available electrical capacity proportionally. It does not schedule charging
+against PV, prices or departure targets. The existing constructor order is
+retained, but non-default EV target/deadline options are rejected explicitly;
+use the configurable RBC policies for those experiments. Saved BAU trajectories
+from 3.0.2 must not silently serve as 3.1.0 references.</p></li>
+<li><p><strong>Corrected accounting:</strong> outage dispatch shares one energy budget across
+served loads, storage reserves conserve energy, electrical limits use applied
+actions, and service/KPI denominators use executed intervals and events. Some
+previously saved KPI values can therefore change. Use version-matched runs
+when comparing experiments; keep raw energy, cost and service evidence.</p></li>
+<li><p><strong>Exports:</strong> KPI-only exports still omit episode time series but include
+manifest and deferrable-service JSON sidecars. CSV and partitioned Parquet
+output remain supported. Keep sidecars with the exported KPI file.</p></li>
+<li><p><strong>Compact histories:</strong> public market and robustness history access retains
+its legacy values and structure, reconstructed on demand. A returned market
+record is a snapshot: assign an edited record back through the history mapping
+rather than relying on nested in-place mutation. Repeatedly materializing full
+public histories can allocate substantial memory; retain compact histories
+during simulation and reconstruct them when needed.</p></li>
+<li><p><strong>Local schemas:</strong> roots are resolved from the schema location. Existing
+repository-relative roots are also accepted when found under an ancestor;
+an existing schema-relative root takes precedence. Resolution does not depend
+on the process working directory, and input files are not rewritten.</p></li>
+</ul>
+<p>The performance changes preserve trajectories and KPI values relative to the
+corrected functional implementation. They do not imply equality with all
+historical 3.0.2 results. See the <a class="reference internal" href="releases.html#v3-1-0-2026-11-02"><span class="std std-ref">3.1.0 release notes</span></a>
+for measured scope and limitations.</p>
 </section>
 </section>
 

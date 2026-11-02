@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.base module &mdash; CityLearn 3.0.2 documentation</title>
+  <title>citylearn.base module &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -28,7 +28,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="citylearn.building module" href="citylearn.building.html" />
-    <link rel="prev" title="citylearn.internal.units module" href="citylearn.internal.units.html" /> 
+    <link rel="prev" title="citylearn.utils.paths module" href="citylearn.utils.paths.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -94,6 +94,7 @@
 <li class="toctree-l4 current"><a class="current reference internal" href="#">citylearn.base module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.building.html">citylearn.building module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.citylearn.html">citylearn.citylearn module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.community_dataset.html">citylearn.community_dataset module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.cost_function.html">citylearn.cost_function module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.data.html">citylearn.data module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.dynamics.html">citylearn.dynamics module</a></li>
@@ -327,6 +328,12 @@ in steps of <cite>episode_time_steps</cite>.</p></li>
 <dd><p>Resets episode index to -1 before any simulation.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.set_next_episode_index">
+<span class="sig-name descname"><span class="pre">set_next_episode_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/base.html#EpisodeTracker.set_next_episode_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.EpisodeTracker.set_next_episode_index" title="Link to this definition"></a></dt>
+<dd><p>Select a reproducible episode split on the next environment reset.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.simulation_end_time_step">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">simulation_end_time_step</span></span><a class="headerlink" href="#citylearn.base.EpisodeTracker.simulation_end_time_step" title="Link to this definition"></a></dt>
@@ -353,7 +360,7 @@ in steps of <cite>episode_time_steps</cite>.</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="citylearn.internal.units.html" class="btn btn-neutral float-left" title="citylearn.internal.units module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="citylearn.utils.paths.html" class="btn btn-neutral float-left" title="citylearn.utils.paths module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="citylearn.building.html" class="btn btn-neutral float-right" title="citylearn.building module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

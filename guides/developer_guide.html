@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Guide &mdash; CityLearn 3.0.2 documentation</title>
+  <title>Developer Guide &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -102,6 +102,14 @@
 <li class="toctree-l2"><a class="reference internal" href="#internal-architecture">Internal Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#build-and-check-the-documentation">Build and check the documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#development-rules">Development rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#verification-and-internal-modules-in-3-1">Verification and internal modules in 3.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#evaluation-progress">Evaluation progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#market-settlement-history">Market settlement history</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#robustness-application-journal">Robustness application journal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kpi-active-populations">KPI active populations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ev-departure-replay-reuse">EV departure replay reuse</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing Guide</a></li>
@@ -289,6 +297,87 @@ build does not train learning agents.</p>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="verification-and-internal-modules-in-3-1">
+<h2>Verification and internal modules in 3.1<a class="headerlink" href="#verification-and-internal-modules-in-3-1" title="Link to this heading"></a></h2>
+<p>Run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">scripts/audit/run_full_audit.py</span> <span class="pre">--strict</span> <span class="pre">--output-dir</span> <span class="pre">/tmp/citylearn-audit</span></code>
+to verify physics, entity contracts, official datasets and six fixed-command
+reference trajectories. Missing dependencies/scripts, child failures and reference
+drift fail verification; ordinary runs do not rewrite snapshots. Algorithm audits
+remain explicit opt-in tools. Reference tests generate small temporary cases from
+existing fixtures; no SoftCPS production datasets are included.</p>
+<p>Public facades delegate to focused internal modules for energy/equipment/service/
+community KPIs, entity observation/layout preparation, loading inputs/components
+and robustness contracts/auditing. Electrical-service allocation is shared by
+control and runtime. Public imports, executable examples and the official registry
+retain CityLearn identity; internal modules are not stable extension APIs.</p>
+<section id="evaluation-progress">
+<h3>Evaluation progress<a class="headerlink" href="#evaluation-progress" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">env.evaluate_v2(progress_callback=callback)</span></code> optionally reports scalar stage events
+without adding timings to the KPI table or its attributes. Each event includes a
+sequence number, stage, status and elapsed seconds. Member stages and their equipment
+families also include the member ID, index and total. Completed/failed stages include
+the stage duration. Observers receive fresh dictionaries; they must avoid slow I/O
+and must not mutate the environment. A failing observer is logged and disabled;
+actual evaluation errors still propagate with failed-stage events.</p>
+<p>The long-run auditor writes <code class="docutils literal notranslate"><span class="pre">phase</span></code> in <code class="docutils literal notranslate"><span class="pre">summary.json</span></code>, the latest KPI stage in
+<code class="docutils literal notranslate"><span class="pre">evaluation-progress.json</span></code> and the event history in <code class="docutils literal notranslate"><span class="pre">evaluation-progress.jsonl</span></code>.
+It distinguishes loading, dispatch, final evaluation, KPI export, reconciliation
+and evidence export. <code class="docutils literal notranslate"><span class="pre">kpi_evaluation_seconds</span></code> excludes export/reconciliation;
+<code class="docutils literal notranslate"><span class="pre">final_kpi_and_export_seconds</span></code> retains its existing combined meaning. Progress is
+reported at stage boundaries, so a long individual family may stay active for some
+time. No background thread or per-step callback is installed by KPI reporting.</p>
+</section>
+<section id="market-settlement-history">
+<h3>Market settlement history<a class="headerlink" href="#market-settlement-history" title="Link to this heading"></a></h3>
+<p>The internal settlement history stores binary64 numeric columns and member IDs,
+with offsets for each executed interval. No rows are sampled or rounded. Indexing,
+slicing and iteration expose ordinary per-step lists of dictionaries as detached
+snapshots; assign an edited step back to persist it. Use a slice to read a window
+or iterate to stream the history, rather than materializing an entire long run.
+The current-step settlement and export schemas are unchanged. Legacy rows with
+additional/missing fields are retained in full. Market KPI totals are accumulated
+in chronological order and rebuilt after historical edits. Reset clears both
+history and totals.</p>
+</section>
+<section id="robustness-application-journal">
+<h3>Robustness application journal<a class="headerlink" href="#robustness-application-journal" title="Link to this heading"></a></h3>
+<p>The sparse robustness journal retains every recorded application and its order.
+Completed steps use integer references to shared descriptions; the current step
+keeps writable sets for identical deduplication. Summaries accumulate completed
+steps and handle unexecuted terminal telemetry separately. No numeric channel
+values, RNG state, event application rules or physical state are changed.
+<code class="docutils literal notranslate"><span class="pre">env._robustness_service.history</span></code> keeps its complete public dictionary contract.
+For bounded reads, use <code class="docutils literal notranslate"><span class="pre">history_window(start,</span> <span class="pre">stop)</span></code> or <code class="docutils literal notranslate"><span class="pre">iter_history(start,</span> <span class="pre">stop)</span></code>
+on that service; bounds are global step indices, start inclusive and stop exclusive.
+These window/stream records are detached snapshots. Reset clears journal and
+summary counters together. The bounded action-delay buffer remains unchanged.</p>
+</section>
+<section id="kpi-active-populations">
+<h3>KPI active populations<a class="headerlink" href="#kpi-active-populations" title="Link to this heading"></a></h3>
+<p>Dynamic KPI evaluation snapshots sparse membership transitions and lifecycle
+metadata once. Nested KPI families reuse read-only masks keyed by member, series
+horizon and semantics. Energy masking retains absent intervals as zero; thermal
+selection removes absent samples. Completed intervals still exclude the terminal
+observation, and historical assets continue to use their existing readers.
+The scope includes environment, episode window, executed horizon, history identity
+and topology version. It refreshes if those change and releases masks after each
+evaluation, including exceptions; no physical values or KPI results are cached.
+Public topology queries still return independent lists with their original rules.</p>
+</section>
+<section id="ev-departure-replay-reuse">
+<h3>EV departure replay reuse<a class="headerlink" href="#ev-departure-replay-reuse" title="Link to this heading"></a></h3>
+<p>Departure feasibility compares target, minimum acceptable and tolerance thresholds
+against one maximum-charge replay per departure/context. The existing single-
+threshold helper remains available. Legacy and audited batches stay separate: their
+arrival boundaries and outage rules can differ. The replay still runs through the
+whole connection interval, including losses after a target may have been reached.
+Physical charge/efficiency/taper/capacity/deadband/service-limit rules are unchanged.
+Missing-input permissive legacy results and audited unknown classifications keep
+their existing contracts. No memo or replay battery is retained between batches,
+sessions, evaluations or episodes; only the departure endpoint is shared within
+the three comparisons. Native BAU actions and real battery histories are untouched.</p>
+</section>
 </section>
 </section>
 

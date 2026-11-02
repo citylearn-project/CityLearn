@@ -229,8 +229,8 @@ for episode in range(episodes):
 
 | Call | Output | BAU sidecar cost |
 |---|---|---:|
-| `env.export_final_kpis(include_business_as_usual=False)` | KPI file only | no |
-| `env.export_final_kpis(include_business_as_usual=True, export_business_as_usual_timeseries=False)` | KPI file with BAU rows | yes |
+| `env.export_final_kpis(include_business_as_usual=False)` | KPI file and audit metadata | no |
+| `env.export_final_kpis(include_business_as_usual=True, export_business_as_usual_timeseries=False)` | KPI file with BAU rows and audit metadata | yes |
 | `env.export_final_kpis(include_business_as_usual=True, export_business_as_usual_timeseries=True)` | KPI file with BAU rows and BAU time-series file | yes |
 
 Normal episode time series are controlled by `render_mode`/`render_enabled`, not by `export_final_kpis()`.
@@ -276,3 +276,6 @@ for _ in range(100):
 print(env.evaluate_v2().head())
 PY
 ```
+
+KPI-only exports include a manifest and service-audit JSON sidecars. They do not
+enable episode time-series output; CityLearn UI can load the folder as before.

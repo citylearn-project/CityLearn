@@ -45,3 +45,41 @@ repository-relative path is not created by `pip install`.
 
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
+
+## Upgrade from 3.0.2 to 3.1.0
+
+The distribution, import namespace and default dataset registry remain
+`citylearn`, `citylearn` and `citylearn-project/CityLearn` at `v3.1.0`.
+All 32 public datasets are retained byte-for-byte; no CPS production datasets
+are imported, and the datasets retired in 3.0.2 remain retired.
+
+- **BAU behavior:** the native `BusinessAsUsualAgent` now requests immediate
+  maximum charging to 100% for connected EVs. Concurrent vehicles share the
+  available electrical capacity proportionally. It does not schedule charging
+  against PV, prices or departure targets. The existing constructor order is
+  retained, but non-default EV target/deadline options are rejected explicitly;
+  use the configurable RBC policies for those experiments. Saved BAU trajectories
+  from 3.0.2 must not silently serve as 3.1.0 references.
+- **Corrected accounting:** outage dispatch shares one energy budget across
+  served loads, storage reserves conserve energy, electrical limits use applied
+  actions, and service/KPI denominators use executed intervals and events. Some
+  previously saved KPI values can therefore change. Use version-matched runs
+  when comparing experiments; keep raw energy, cost and service evidence.
+- **Exports:** KPI-only exports still omit episode time series but include
+  manifest and deferrable-service JSON sidecars. CSV and partitioned Parquet
+  output remain supported. Keep sidecars with the exported KPI file.
+- **Compact histories:** public market and robustness history access retains
+  its legacy values and structure, reconstructed on demand. A returned market
+  record is a snapshot: assign an edited record back through the history mapping
+  rather than relying on nested in-place mutation. Repeatedly materializing full
+  public histories can allocate substantial memory; retain compact histories
+  during simulation and reconstruct them when needed.
+- **Local schemas:** roots are resolved from the schema location. Existing
+  repository-relative roots are also accepted when found under an ancestor;
+  an existing schema-relative root takes precedence. Resolution does not depend
+  on the process working directory, and input files are not rewritten.
+
+The performance changes preserve trajectories and KPI values relative to the
+corrected functional implementation. They do not imply equality with all
+historical 3.0.2 results. See the [3.1.0 release notes](releases.md#v310---2026-11-02)
+for measured scope and limitations.

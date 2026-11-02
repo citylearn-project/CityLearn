@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Baselines &mdash; CityLearn 3.0.2 documentation</title>
+  <title>Baselines &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=3f474186"></script>
+      <script src="../_static/documentation_options.js?v=dd1205ac"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -155,7 +155,7 @@ It is not a scenario with all equipment switched off.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>EVs</p></td>
-<td><p>Requests charging towards full SOC by default. The request uses the SOC deficit and remaining connection time, with a charging margin and the charger’s minimum charging rate. It never requests V2G.</p></td>
+<td><p>Requests maximum charging power immediately while connected, until 100% SOC. It ignores departure targets, deadlines, prices and solar forecasts, and never requests V2G. Electrical limits share available power proportionally; equal requests receive equal shares.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Stationary batteries</p></td>
 <td><p>Charges from PV surplus and discharges to serve local demand, including prospective EV and appliance demand. SOC thresholds and a power deadband control when this rule acts.</p></td>
@@ -200,11 +200,11 @@ arbitrage, optimize a planning horizon or coordinate communities.</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_service_margin_rate</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.02</span></code></p></td>
-<td><p>Margin added to the requested normalized charging rate.</p></td>
+<td><p>Compatibility spelling for the fixed legacy default; target scheduling uses an RBC.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_service_floor_rate</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></td>
-<td><p>Minimum normalized service request, in addition to the charger’s minimum rate.</p></td>
+<td><p>Compatibility spelling for the fixed legacy default; equipment minimum power still applies.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">storage_min_soc</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.20</span></code></p></td>
@@ -300,6 +300,11 @@ BAU. The <code class="docutils literal notranslate"><span class="pre">business_a
 their simulator-defined meaning.</p>
 <p>Read <a class="reference internal" href="scorecard.html"><span class="std std-doc">the scorecard</span></a> for matched-controller comparisons and
 <a class="reference external" href="../ui.html">the UI guide</a> for the visual workflow.</p>
+<p>From 3.1, BAU uses <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v1</span></code>. Explicit departure-target scheduling
+settings belong to <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code> or its variants; configure those instead of BAU.
+The public BAU parameter names and positional signature remain available, with
+the fixed EV defaults shown above. Historical BAU results may differ after corrected
+charging and shared electrical limits; compare experiments with matching versions.</p>
 </section>
 </section>
 

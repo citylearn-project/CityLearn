@@ -1,0 +1,7 @@
+citylearn.internal.kpi\_family\_audit module
+============================================
+
+.. automodule:: citylearn.internal.kpi_family_audit
+   :members:
+   :show-inheritance:
+   :undoc-members:

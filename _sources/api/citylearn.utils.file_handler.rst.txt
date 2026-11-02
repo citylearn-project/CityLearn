@@ -1,0 +1,7 @@
+citylearn.utils.file\_handler module
+====================================
+
+.. automodule:: citylearn.utils.file_handler
+   :members:
+   :show-inheritance:
+   :undoc-members:

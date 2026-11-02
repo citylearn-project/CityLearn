@@ -1,0 +1,7 @@
+citylearn.internal.comparison module
+====================================
+
+.. automodule:: citylearn.internal.comparison
+   :members:
+   :show-inheritance:
+   :undoc-members:
