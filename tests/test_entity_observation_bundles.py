@@ -239,6 +239,28 @@ def test_core_bundle_adds_ev_charging_flexibility_features():
         env.close()
 
 
+def test_core_bundle_unknown_departure_does_not_create_false_urgency():
+    env = CityLearnEnv(_schema_with_bundles(core=True), interface='entity',
+                      central_agent=True, episode_time_steps=6, random_seed=0)
+    try:
+        env.reset(seed=0)
+        for building in env.buildings:
+            for charger in building.electric_vehicle_chargers or []:
+                charger.charger_simulation.electric_vehicle_departure_time[:] = -1
+        obs = env.observations
+        features = env.entity_specs['tables']['charger']['features']
+        table = obs['tables']['charger']
+        connected = table[:, features.index('connected_state')] == 1
+        assert connected.any()
+        for name in ('hours_until_departure', 'time_until_departure_ratio', 'departure_feasibility_ratio'):
+            assert (table[connected, features.index(name)] == -1).all()
+        for name in ('required_average_power_kw', 'charging_priority_ratio', 'min_required_action_normalized'):
+            assert (table[connected, features.index(name)] == 0).all()
+        assert np.isfinite(table).all()
+    finally:
+        env.close()
+
+
 def test_base_entity_features_add_static_asset_capabilities_without_core_bundle():
     env = CityLearnEnv(_schema_with_bundles(core=False), interface="entity", central_agent=True, episode_time_steps=6, random_seed=0)
 
@@ -558,6 +580,44 @@ def test_action_feedback_bundle_distinguishes_requested_limited_and_applied(tmp_
         assert "last_applied_power_kw" in storage_features
     finally:
         env.close()
+
+
+@pytest.mark.parametrize('headroom', [10.0, 0.5])
+def test_near_full_ev_availability_allows_viable_command_only_inside_headroom(tmp_path, headroom):
+    schema_path = _minute_schema_with_bundles(tmp_path, action_feedback=True)
+    env = CityLearnEnv(str(schema_path), interface='entity', central_agent=True, random_seed=0)
+    try:
+        env.reset(seed=0)
+        charger = env.buildings[0].electric_vehicle_chargers[0]
+        charger.min_charging_power = 1.38
+        ev = charger.connected_electric_vehicle
+        ev.battery.soc[0] = 0.999
+        service = env._entity_service
+        service._headroom_power_limit_for_connection = lambda *args, **kwargs: headroom
+        obs = service.observation_payload()
+        names = env.entity_specs['tables']['charger']['features']
+        row = obs['tables']['charger'][0]
+        available_kw = row[names.index('available_charge_power_kw')]
+        action = row[names.index('available_charge_action_normalized')]
+        assert 0.0 < available_kw < charger.min_charging_power
+        if headroom < charger.min_charging_power:
+            assert action == 0.0
+            assert row[names.index('can_charge')] == 0.0
+        else:
+            assert action * charger.max_charging_power == pytest.approx(charger.min_charging_power)
+            charger.update_connected_electric_vehicle_soc(float(action))
+            assert ev.battery.soc[0] == pytest.approx(1.0, abs=1e-6)
+    finally:
+        env.close()
+
+
+def test_charger_minimum_power_survives_float32_action_roundtrip():
+    from citylearn.electric_vehicle_charger import Charger
+    maximum, minimum = 7.2, 1.38
+    at_minimum = float(np.float32(minimum / maximum))
+    assert Charger._deadband_power_kw(at_minimum, maximum, minimum) == pytest.approx(minimum)
+    assert Charger._deadband_power_kw(at_minimum * 0.99, maximum, minimum) == 0.0
+    assert Charger._deadband_power_kw(0.0, maximum, minimum) == 0.0
 
 
 def test_storage_available_charge_setpoint_keeps_current_limited_charge(tmp_path: Path):

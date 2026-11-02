@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from glob import glob
 from pathlib import Path
 
 pytest.importorskip("gymnasium")
@@ -12,8 +11,9 @@ from citylearn.citylearn import CityLearnEnv
 from citylearn.data import ChargerSimulation
 
 
-SCHEMA_PATH = "data/datasets/citylearn_challenge_2022_phase_all_plus_evs/schema.json"
-MINUTE_SCHEMA_PATH = Path("tests/data/minute_ev_demo/schema.json")
+ROOT = Path(__file__).resolve().parents[1]
+SCHEMA_PATH = str((ROOT / "data/datasets/citylearn_challenge_2022_phase_all_plus_evs/schema.json").resolve(strict=True))
+MINUTE_SCHEMA_PATH = (ROOT / "tests/data/minute_ev_demo/schema.json").resolve(strict=True)
 
 
 def _zero_actions(env: CityLearnEnv):
@@ -21,7 +21,7 @@ def _zero_actions(env: CityLearnEnv):
 
 
 def _find_transition(from_state: int):
-    for csv_path in glob("data/datasets/citylearn_challenge_2022_phase_all_plus_evs/charger_*_*.csv"):
+    for csv_path in sorted(Path(SCHEMA_PATH).parent.glob("charger_*_*.csv")):
         df = pd.read_csv(csv_path)
         for idx in range(len(df) - 1):
             if (
@@ -30,13 +30,13 @@ def _find_transition(from_state: int):
             ):
                 return csv_path, idx
 
-    raise AssertionError(f"No {from_state}->1 transition found in dataset.")
+    raise AssertionError(f"No {from_state}->1 transition found in {Path(SCHEMA_PATH).parent}.")
 
 
 @pytest.mark.parametrize("from_state", [2, 3])
 def test_ev_soc_matches_dataset_on_arrival(from_state: int):
     csv_path, transition_index = _find_transition(from_state)
-    charger_id = csv_path.split("/")[-1].replace(".csv", "")
+    charger_id = csv_path.stem
 
     env = CityLearnEnv(SCHEMA_PATH, central_agent=True, random_seed=0)
     env.reset()
@@ -63,7 +63,6 @@ def test_ev_soc_matches_dataset_on_arrival(from_state: int):
 
     step = env.time_step
     prev_state = sim.electric_vehicle_charger_state[step - 1] if step > 0 else float("nan")
-    prev_ev_id = sim.electric_vehicle_id[step - 1] if step > 0 else None
 
     candidate_index = None
     if prev_state in (2, 3):
@@ -297,7 +296,7 @@ def test_ev_kpi_evaluation_with_evs_and_chargers():
 
 def test_ev_current_soc_overrides_arrival_estimate_when_present():
     csv_path, transition_index = _find_transition(2)
-    charger_id = csv_path.split("/")[-1].replace(".csv", "")
+    charger_id = csv_path.stem
 
     env = CityLearnEnv(SCHEMA_PATH, central_agent=True, random_seed=0)
     env.reset()
@@ -324,11 +323,18 @@ def test_ev_current_soc_overrides_arrival_estimate_when_present():
     connected_ev = target_charger.connected_electric_vehicle
     assert connected_ev is not None, "Expected EV to be connected at the transition step."
     assert float(connected_ev.battery.soc[env.time_step]) == pytest.approx(forced_soc, abs=1e-6)
+    building=next(b for b in env.buildings if target_charger in (b.electric_vehicle_chargers or []))
+    key=f'connected_electric_vehicle_at_charger_{target_charger.charger_id}_soc'
+    building.observation_metadata[key]=True
+    assert building.observations()[key]==pytest.approx(forced_soc,abs=1e-6)
+    env.step(_zero_actions(env))
+    assert building.observations()[key]==pytest.approx(connected_ev.battery.soc[env.time_step-1],abs=1e-6)
+    env.close()
 
 
 def test_current_soc_initializes_runtime_reconnection_inside_occupied_window():
     csv_path, transition_index = _find_transition(2)
-    charger_id = csv_path.split("/")[-1].replace(".csv", "")
+    charger_id = csv_path.stem
     env = CityLearnEnv(SCHEMA_PATH, central_agent=True, random_seed=0)
     env.reset()
 

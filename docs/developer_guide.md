@@ -113,3 +113,18 @@ build does not train learning agents.
 | Add tests for new physics or observations. | Sub-hourly and entity behavior are easy to regress silently. |
 | Prefer additive observations in patch releases. | Avoid breaking trained algorithms and wrappers. |
 | Run audits before tagging. | They catch contract drift outside normal unit tests. |
+
+## Verification and internal modules in 3.1
+
+Run `python scripts/audit/run_full_audit.py --strict --output-dir /tmp/citylearn-audit`
+to verify physics, entity contracts, official datasets and six fixed-command
+reference trajectories. Missing dependencies/scripts, child failures and reference
+drift fail verification; ordinary runs do not rewrite snapshots. Algorithm audits
+remain explicit opt-in tools. Reference tests generate small temporary cases from
+existing fixtures; no SoftCPS production datasets are included.
+
+Public facades delegate to focused internal modules for energy/equipment/service/
+community KPIs, entity observation/layout preparation, loading inputs/components
+and robustness contracts/auditing. Electrical-service allocation is shared by
+control and runtime. Public imports, executable examples and the official registry
+retain CityLearn identity; internal modules are not stable extension APIs.

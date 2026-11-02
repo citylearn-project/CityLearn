@@ -29,9 +29,9 @@ else:
     _NUMPY_IMPORT_ERROR = None
 
 
-DATASETS_ROOT = Path("data/datasets")
+DATASETS_ROOT = REPO_ROOT / "data/datasets"
 OUTPUT_PATH = Path("outputs/audit/datasets_audit.json")
-SUPPORTED_ASSET_TYPES = {"charger", "pv", "electrical_storage"}
+SUPPORTED_ASSET_TYPES = {"charger", "pv", "electrical_storage", "deferrable_appliance"}
 
 
 class DependencyError(RuntimeError):
@@ -76,12 +76,21 @@ def parse_args() -> argparse.Namespace:
 def discover_schema_paths(root: Path) -> List[Path]:
     if not root.exists():
         return []
-    return sorted(p for p in root.glob("*/schema.json") if p.is_file())
+    paths = []
+    for directory in sorted(root.iterdir()):
+        if not directory.is_dir():
+            continue
+        evaluation = sorted((directory / "evaluation").glob("*.json"))
+        if evaluation:
+            paths.extend(evaluation)
+        elif (directory / "schema.json").is_file():
+            paths.append(directory / "schema.json")
+    return paths
 
 
 def read_json(path: Path) -> Mapping[str, Any]:
-    with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+    from citylearn.utils.file_handler import FileHandler
+    return FileHandler.read_json(path)
 
 
 def utc_now_iso() -> str:
@@ -101,11 +110,7 @@ def dataset_root_from_schema(schema: Mapping[str, Any], dataset_dir: Path) -> Pa
         return dataset_dir.resolve()
     root_path = Path(str(root))
     if not root_path.is_absolute():
-        repo_relative_path = (REPO_ROOT / root_path).resolve()
-        if repo_relative_path.exists():
-            root_path = repo_relative_path
-        else:
-            root_path = (dataset_dir / root_path).resolve()
+        root_path = (dataset_dir / root_path).resolve()
     return root_path
 
 
@@ -204,6 +209,7 @@ def _building_asset_index(schema: Mapping[str, Any]) -> Dict[str, Dict[str, Any]
             "has_pv": member_data.get("pv") is not None,
             "has_storage": member_data.get("electrical_storage") is not None,
             "chargers": set(str(c) for c in chargers.keys()),
+            "deferrable_appliances": set(str(a) for a in (member_data.get('deferrable_appliances') or {})),
         }
 
     return index
@@ -225,18 +231,15 @@ def _member_has_asset(
         return str(asset_id) in set(member.get("chargers", set()))
 
     if asset_type == "pv":
-        if not bool(member.get("has_pv", False)):
-            return False
-        if asset_id is None or str(asset_id).strip() == "":
-            return True
-        return str(asset_id).strip() == "pv"
+        # Runtime PV/storage resolution is by the member's singleton slot;
+        # event IDs are descriptive labels, not dictionary lookup keys.
+        return bool(member.get("has_pv", False))
 
     if asset_type == "electrical_storage":
-        if not bool(member.get("has_storage", False)):
-            return False
-        if asset_id is None or str(asset_id).strip() == "":
-            return True
-        return str(asset_id).strip() == "electrical_storage"
+        return bool(member.get("has_storage", False))
+
+    if asset_type == 'deferrable_appliance':
+        return asset_id in member.get('deferrable_appliances', set())
 
     return False
 
@@ -375,6 +378,9 @@ def validate_dynamic_events(schema: Mapping[str, Any]) -> Dict[str, Any]:
                 continue
             if target_asset_type == "charger" and (target_asset_id is None or target_asset_id == ""):
                 errors.append(f"topology_events[{i}] add_asset charger requires target_asset_id.")
+            if target_asset_type in {'charger', 'deferrable_appliance'} and target_asset_id:
+                collection = 'chargers' if target_asset_type == 'charger' else 'deferrable_appliances'
+                asset_index[target_member][collection].add(target_asset_id)
 
     duration_s = time.perf_counter() - start
     status = "pass" if len(errors) == 0 else "fail"
@@ -480,6 +486,19 @@ def run_rollout(
         if topology_mode is not None:
             kwargs["topology_mode"] = topology_mode
 
+        from citylearn.internal.capabilities import unsupported_reason
+        schema = read_json(Path(schema_input)) if isinstance(schema_input, (str, Path)) else schema_input
+        reason = unsupported_reason(schema, interface=interface, topology_mode=topology_mode)
+        if reason:
+            result.update(status="skip", error=reason)
+            return result
+        # A short catalogue probe must not allocate two years of episode state.
+        start_step = safe_int(schema.get('simulation_start_time_step', 0))
+        end_step = safe_int(schema.get('simulation_end_time_step', start_step+max_steps))
+        kwargs.update(episode_time_steps=min(max_steps+1, max(end_step-start_step+1, 1)),
+                      simulation_start_time_step=start_step,
+                      simulation_end_time_step=min(end_step, start_step+max_steps),
+                      rolling_episode_split=False, random_episode_split=False)
         env = citylearn_env_cls(**kwargs)
         obs, _ = env.reset()
         shape_history: List[Dict[str, List[int]]] = []
@@ -575,7 +594,7 @@ def audit_dataset(
 ) -> Dict[str, Any]:
     dataset_start = time.perf_counter()
     dataset_dir = schema_path.parent
-    dataset_name = dataset_dir.name
+    dataset_name = dataset_dir.parent.name + "/" + schema_path.stem if dataset_dir.name == "evaluation" else dataset_dir.name
     schema = read_json(schema_path)
     topology_mode = str(schema.get("topology_mode", "static")).strip().lower()
     dataset_result: Dict[str, Any] = {
@@ -737,8 +756,14 @@ def main() -> int:
             print(f"[datasets-audit] dependency error: {ctx.dependency_error}", file=sys.stderr)
 
     for schema_path in schema_paths:
-        dataset_result = audit_dataset(schema_path, ctx, citylearn_env_cls)
+        try:
+            dataset_result = audit_dataset(schema_path, ctx, citylearn_env_cls)
+        except Exception as exc:
+            dataset_result = dict(dataset=schema_path.parent.name, schema_path=str(schema_path),
+                                  status="fail", errors=[f"{type(exc).__name__}: {exc}"],
+                                  warnings=[], checks={}, duration_s=0.0)
         datasets.append(dataset_result)
+        print(f"[datasets-audit] {dataset_result['dataset']}: {dataset_result['status']}", flush=True)
         if dataset_result["status"] == "fail":
             hard_failure = True
             if ctx.fail_fast:
