@@ -545,7 +545,7 @@ class Electric_Vehicles_Reward_Function(MARL):
                 contributions["battery_limits"] += self.weights["battery_limits"] * penalty_multiplier
 
             # SoC penalties/rewards
-            if required_soc is not None:
+            if required_soc is not None and hours_until_departure >= 0:
                 soc_diff = soc_now - required_soc
                 soc_diff_kWh = soc_diff * capacity
 

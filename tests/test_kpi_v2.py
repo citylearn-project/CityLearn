@@ -1205,9 +1205,9 @@ def test_extended_cost_and_equity_use_raw_cost_series(tmp_path: Path):
         expected_legacy_cost_total = float(CostFunction.cost(control_cost[:settled_steps])[-1])
         assert float(legacy_building["cost_total"]) == pytest.approx(expected_legacy_cost_total)
 
-        assert float(district_df["district_cost_total_control_eur"]) == pytest.approx(-2.0)
-        assert float(district_df["district_cost_total_baseline_eur"]) == pytest.approx(4.0)
-        assert float(district_df["district_cost_total_delta_eur"]) == pytest.approx(-6.0)
+        assert float(district_df["district_cost_total_control_eur"]) == pytest.approx(building_control_total * env_count)
+        assert float(district_df["district_cost_total_baseline_eur"]) == pytest.approx(building_baseline_total * env_count)
+        assert float(district_df["district_cost_total_delta_eur"]) == pytest.approx(building_delta_total * env_count)
     finally:
         env.close()
 

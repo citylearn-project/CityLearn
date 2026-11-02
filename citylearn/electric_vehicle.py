@@ -76,6 +76,11 @@ class ElectricVehicle(Environment):
 
         super().reset()
         self.battery.reset()
+        self._arrival_soc_time_step = None
+
+    def observation_soc_index(self, previous_index):
+        """An exogenous arrival SOC is known before this step's control action."""
+        return self.time_step if getattr(self, '_arrival_soc_time_step', None) == self.time_step else previous_index
 
     def observations(self) -> Mapping[str, float]:
         r"""Observations at current time step.

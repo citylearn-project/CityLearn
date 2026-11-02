@@ -1,3 +1,4 @@
+import hashlib
 import random
 from typing import Any, List, Mapping, Tuple, Union
 import uuid
@@ -132,7 +133,9 @@ class EpisodeTracker:
             raise ValueError('No valid episode splits could be created from the provided episode_time_steps.')
 
         if random_episode_split:
-            seed = int(random_seed*(self.episode + 1))
+            # A bounded seed per episode also varies for zero and cannot overflow.
+            payload = f'{int(random_seed)}:{self.episode}'.encode('ascii')
+            seed = int.from_bytes(hashlib.sha256(payload).digest()[:4], 'big')
             nprs = np.random.RandomState(seed)
             ix = 0 if len(splits) == 1 else int(nprs.choice(len(splits)))
 
@@ -145,6 +148,12 @@ class EpisodeTracker:
         """Resets episode index to -1 before any simulation."""
 
         self.__episode = -1
+
+    def set_next_episode_index(self, index):
+        """Select a reproducible episode split on the next environment reset."""
+        if isinstance(index, bool) or int(index) != index or index < 0:
+            raise ValueError('episode_index must be a nonnegative integer')
+        self.__episode = int(index)-1
 
 class Environment:
     """Base class for all `citylearn` classes that have a spatio-temporal dimension.

@@ -24,7 +24,7 @@ class FileHandler:
             JSON document converted to dictionary.
         """
 
-        with open(filepath) as f:
+        with open(filepath, encoding='utf-8-sig') as f:
             json_file = json.load(f, **kwargs)
 
         return json_file

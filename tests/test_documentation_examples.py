@@ -154,7 +154,12 @@ def test_kpi_only_ui_export(tmp_path):
             observations, _, _, _, _ = env.step(agent.predict(observations))
         env.export_final_kpis(export_business_as_usual_timeseries=False)
         output = Path(env.new_folder_path)
-        assert list(output.iterdir()) == [output / "exported_kpis.csv"]
+        assert {path.name for path in output.iterdir()} == {
+            "exported_kpis.csv", "exported_kpis.deferrable_service.json",
+            "exported_kpis.manifest.json",
+        }
+        assert not list(output.glob("exported_data_*"))
+        assert json.loads((output / "exported_kpis.manifest.json").read_text())
         assert "District" in pd.read_csv(output / "exported_kpis.csv").columns
     finally:
         env.close()

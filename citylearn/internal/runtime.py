@@ -213,6 +213,9 @@ class CityLearnRuntimeService:
         timer_start = time.perf_counter() if debug_timing else 0.0
         clear_step_electric_loads_time = 0.0
         building_apply_action_times = []
+        env._provenance_service.begin_step()
+        if bool(getattr(env, 'physics_invariant_checks', False)):
+            env._physics_invariant_service.capture_battery_energy_before_actions(int(env.time_step))
         for building, building_actions in zip(env.buildings, actions):
             if int(env.time_step) == 0:
                 clear_start = time.perf_counter() if debug_timing else 0.0
@@ -249,6 +252,8 @@ class CityLearnRuntimeService:
 
         timer_start = time.perf_counter() if debug_timing else 0.0
         self.update_variables()
+        self._record_deferrable_service_interval()
+        env._provenance_service.settle()
         if debug_timing:
             timings['update_variables_time'] = time.perf_counter() - timer_start
             timings.update(getattr(env, '_last_update_variables_debug_timing', {}))
@@ -311,6 +316,7 @@ class CityLearnRuntimeService:
                 env._refresh_action_cache()
                 env._entity_service.invalidate()
                 env.reward_function.env_metadata = env.get_metadata()
+        env._provenance_service.synchronize()
         topology_events_applied = list(
             (getattr(env, 'topology_event_log', []) or [])[topology_log_size_before:]
         )
@@ -403,7 +409,9 @@ class CityLearnRuntimeService:
 
         timer_start = time.perf_counter() if debug_timing else 0.0
         info = dict(env.get_info()) if collect_info else {}
-        if collect_info and action_execution is not None:
+        from citylearn.internal.observation_contract import configuration
+        hidden_faults = configuration(env)['mode'] == 'hidden_faults'
+        if collect_info and action_execution is not None and not hidden_faults:
             info['entity_action_execution'] = action_execution
             info['topology_events_applied'] = topology_events_applied
         if debug_timing:
@@ -739,12 +747,17 @@ class CityLearnRuntimeService:
         if getattr(getattr(env, '_robustness_service', None), 'enabled', False):
             actions = env._robustness_service.apply_actions(actions)
 
+        env._provenance_service.begin_step()
+        if bool(getattr(env, 'physics_invariant_checks', False)):
+            env._physics_invariant_service.capture_battery_energy_before_actions(int(env.time_step))
         for building, building_actions in zip(env.buildings, actions):
             if int(env.time_step) == 0:
                 building.clear_step_electric_loads_for_action()
             building.apply_actions(**building_actions)
 
         self.update_variables()
+        self._record_deferrable_service_interval()
+        env._provenance_service.settle()
         if getattr(getattr(env, '_demand_response_service', None), 'enabled', False):
             env._demand_response_service.settle_current_time_step()
         if bool(getattr(env, 'physics_invariant_checks', False)):
@@ -760,6 +773,7 @@ class CityLearnRuntimeService:
                 env._entity_service.invalidate()
                 env.reward_function.env_metadata = env.get_metadata()
 
+        env._provenance_service.synchronize()
         return env.terminated, env.truncated
 
     def parse_actions(self, actions) -> List[Mapping[str, float]]:
@@ -1090,6 +1104,7 @@ class CityLearnRuntimeService:
                             soc_value = _resolve_arrival_soc(sim, env.time_step, prev_state, prev_ev_id, ev_id)
                             if soc_value is not None:
                                 ev.battery.force_set_soc(soc_value)
+                                ev._arrival_soc_time_step = env.time_step
                     elif state == 2:
                         charger.associate_incoming_car(ev)
 
@@ -1162,6 +1177,11 @@ class CityLearnRuntimeService:
                 variability = np.clip(random_state.normal(1.0, drift_std), 0.6, 1.4)
                 # Exogenous away-from-home movement: driving can reduce SOC, offsite charging can raise it.
                 ev.battery.force_set_soc(float(np.clip(last_soc * variability, 0.0, 1.0)))
+
+    def _record_deferrable_service_interval(self):
+        for building in self.env.buildings:
+            for appliance in building.deferrable_appliances or []:
+                appliance.record_service_interval()
 
     def update_variables(self):
         """Update district aggregate series from current building states."""
@@ -1314,7 +1334,7 @@ class CityLearnRuntimeService:
 
         total_import = float(imports.sum())
         total_export = float(exports.sum())
-        traded_kwh = min(total_import, total_export)
+        traded_kwh = min(total_import, total_export) if getattr(env, 'community_market_local_enabled', True) else 0.0
         weights_cfg = getattr(env, 'community_market_import_member_weights', {}) or {}
         weights = np.array(
             [self._to_scalar(weights_cfg.get(building.name, 1.0), 1.0) for building in env.buildings],
@@ -1335,19 +1355,25 @@ class CityLearnRuntimeService:
 
         for idx, building in enumerate(env.buildings):
             grid_import_price = self._to_scalar(building.pricing.electricity_pricing[t], 0.0)
-            local_price = ratio * grid_import_price
-            grid_export_price = 0.0
+            from citylearn.community_dataset import settlement_prices
+            grid_export_price, local_buy_price, local_sell_price = settlement_prices(env, building.name, t, grid_import_price)
+            local_price = local_buy_price
             counterfactual_legacy_cost = self._to_scalar(building.net_electricity_consumption_cost[t], 0.0)
+            # Without sharing, all surplus is exported at the same external
+            # tariff. Export revenue is not a benefit created by local trading.
+            # Subtracting it preserves the historical zero-export-price case.
+            counterfactual_grid_cost = counterfactual_legacy_cost - exports[idx] * grid_export_price
 
             grid_import_remaining = max(imports[idx] - local_import[idx], 0.0)
             grid_export_remaining = max(exports[idx] - local_export[idx], 0.0)
 
             cost = (
                 grid_import_remaining * grid_import_price
-                + local_import[idx] * local_price
-                - local_export[idx] * local_price
+                + local_import[idx] * local_buy_price
+                - local_export[idx] * local_sell_price
+                - grid_export_remaining * grid_export_price
             )
-            savings = counterfactual_legacy_cost - cost
+            savings = counterfactual_grid_cost - cost
 
             building.set_net_electricity_consumption_cost(cost, time_step=t)
             market_settlement.append(
@@ -1358,9 +1384,12 @@ class CityLearnRuntimeService:
                     'grid_import_kwh': float(grid_import_remaining),
                     'grid_export_kwh': float(grid_export_remaining),
                     'local_price': float(local_price),
+                    'local_buy_price': float(local_buy_price),
+                    'local_sell_price': float(local_sell_price),
+                    'operator_balance_eur': float(local_import[idx]*local_buy_price-local_export[idx]*local_sell_price),
                     'grid_import_price': float(grid_import_price),
                     'grid_export_price': float(grid_export_price),
-                    'counterfactual_cost_eur': float(counterfactual_legacy_cost),
+                    'counterfactual_cost_eur': float(counterfactual_grid_cost),
                     'settled_cost_eur': float(cost),
                     'market_savings_eur': float(savings),
                 }

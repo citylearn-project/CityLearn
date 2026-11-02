@@ -18,6 +18,43 @@ class CityLearnPhysicsInvariantService:
 
     def __init__(self, env: "CityLearnEnv"):
         self.env = env
+        self._battery_energy_before_actions = None
+
+    def capture_battery_energy_before_actions(self, time_step: int):
+        """Snapshot actual SOC after arrivals/losses and before control actions.
+
+        Do not read ``energy_init``: the independent check must detect a model
+        that silently replaces measured energy with its operational reserve.
+        """
+        batteries = [
+            (f'{building.name}.electrical_storage', building.electrical_storage)
+            for building in self.env.buildings
+        ]
+        batteries.extend((f'{ev.name}.battery', ev.battery)
+                         for ev in self.env.electric_vehicles)
+        seen = set()
+        snapshot = []
+        for name, battery in batteries:
+            if battery is None or id(battery) in seen:
+                continue
+            seen.add(id(battery))
+            energy = float(battery.soc[time_step]) * float(battery.capacity)
+            snapshot.append((name, battery, energy, battery.stored_energy_transfer))
+        self._battery_energy_before_actions = (int(time_step), snapshot)
+
+    def _assert_battery_energy_changes(self, time_step: int):
+        snapshot = self._battery_energy_before_actions
+        self._battery_energy_before_actions = None
+        if snapshot is None or snapshot[0] != time_step:
+            return
+        for name, battery, energy_before, transfer_before in snapshot[1]:
+            energy_after = float(battery.soc[time_step]) * float(battery.capacity)
+            expected_change = battery.stored_energy_transfer - transfer_before
+            assert abs(energy_after - energy_before - expected_change) <= self.ENERGY_EPS, (
+                f"Stored battery energy mismatch for '{name}' at t={time_step}: "
+                f"before={energy_before:.6f} kWh, after={energy_after:.6f} kWh, "
+                f"expected_change={expected_change:.6f} kWh."
+            )
 
     @staticmethod
     def _to_scalar(value, default: float = 0.0) -> float:
@@ -62,6 +99,7 @@ class CityLearnPhysicsInvariantService:
             self._assert_soc_bounds(building, t)
             self._assert_storage_power_bounds(building, t)
             self._assert_charger_power_bounds(building, t)
+        self._assert_battery_energy_changes(t)
 
     def _assert_building_energy_balance(self, building, t: int):
         if bool(getattr(building, "power_outage", False)):
@@ -77,6 +115,7 @@ class CityLearnPhysicsInvariantService:
             + self._safe_index(building.solar_generation, t, 0.0)
             + self._safe_index(building.chargers_electricity_consumption, t, 0.0)
             + self._safe_index(building.deferrable_appliances_electricity_consumption, t, 0.0)
+            + self._safe_index(getattr(building, 'escalators_electricity_consumption', []), t, 0.0)
         )
 
         assert abs(net - terms) <= self.ENERGY_EPS, (
@@ -106,6 +145,7 @@ class CityLearnPhysicsInvariantService:
             + max(storage_energy, 0.0)
             + max(charger_energy, 0.0)
             + self._safe_index(building.deferrable_appliances_electricity_consumption, t, 0.0)
+            + self._safe_index(getattr(building, 'escalators_electricity_consumption', []), t, 0.0)
         )
 
         assert local_loads <= local_sources + self.ENERGY_EPS, (

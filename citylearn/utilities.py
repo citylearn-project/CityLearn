@@ -194,9 +194,22 @@ class FileHandler:
 
         return url
     
+class IndexedNoise:
+    """Owned per-channel streams indexed by the absolute source-row offset."""
+    def __init__(self, seed, offset):
+        self.seed, self.offset, self.channel = int(seed), int(offset), 0
+
+    def normal(self, loc, scale, size):
+        import hashlib
+        key = f'{self.seed}:{self.channel}'.encode()
+        self.channel += 1
+        seed = int.from_bytes(hashlib.sha256(key).digest()[:4], 'big')
+        count = int(np.prod(size))
+        return np.random.RandomState(seed).normal(loc, scale, self.offset+count)[self.offset:].reshape(size)
+
 class NoiseUtils:
     @staticmethod
-    def generate_gaussian_noise(input_data: Union[np.ndarray, Iterable[float]], noise_std: float) -> np.ndarray:
+    def generate_gaussian_noise(input_data: Union[np.ndarray, Iterable[float]], noise_std: float, random_state=None) -> np.ndarray:
         """Generates Gaussian noise matching input shape.
         
         Parameters
@@ -215,7 +228,7 @@ class NoiseUtils:
         arr = np.asarray(input_data)  # Handles both ndarray and Iterable
         if noise_std <= 0:
             return np.zeros(arr.shape, dtype=np.float32)
-        return np.random.normal(loc=0, scale=noise_std, size=arr.shape).astype(np.float32, copy=False)
+        return (np.random if random_state is None else random_state).normal(loc=0, scale=noise_std, size=arr.shape).astype(np.float32, copy=False)
 
     @staticmethod
     def generate_scaled_noise(input_data: Union[np.ndarray, Iterable[float]], noise_std: float, scale: float = 1.0) -> np.ndarray:

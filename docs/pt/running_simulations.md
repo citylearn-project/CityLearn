@@ -274,3 +274,7 @@ for _ in range(100):
 print(env.evaluate_v2().head())
 PY
 ```
+
+Os exports apenas de KPIs incluem o manifesto e os metadados JSON de auditoria
+de serviço. Estes ficheiros não ativam séries temporais do episódio; a pasta
+continua compatível com a CityLearn UI.

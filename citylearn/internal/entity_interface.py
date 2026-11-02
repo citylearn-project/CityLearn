@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 from gymnasium import spaces
 import numpy as np
 
+from citylearn.internal import entity_layout, entity_observations
+
 
 @dataclass(frozen=True)
 class ChargerRef:
@@ -398,13 +400,10 @@ class CityLearnEntityInterfaceService:
         return self._specs
 
     def observation_payload(self) -> Mapping[str, Any]:
-        """Return canonical entity observations for current env time step."""
-
+        """Build canonical observations, preserving timing and copy ownership."""
         self._ensure_initialized()
         env = self.env
-        t = int(env.time_step)
-        endogenous_t = max(t - 1, 0)
-        step_hours = self._step_hours()
+        context = entity_observations.context_for(self)
         debug_timing = bool(getattr(env, "debug_timing", False))
         timings: Dict[str, float] = {}
         section_start = time.perf_counter() if debug_timing else 0.0
@@ -413,537 +412,37 @@ class CityLearnEntityInterfaceService:
             nonlocal section_start
             if not debug_timing:
                 return
-
             now = time.perf_counter()
             timings[f"entity_observation_{name}_time"] = now - section_start
             section_start = now
 
-        core_bundle_enabled = self._bundle_enabled(self.CORE_BUNDLE)
-        community_bundle_enabled = self._bundle_enabled(self.COMMUNITY_BUNDLE)
-        forecast_bundle_enabled = self._bundle_enabled(self.FORECAST_BUNDLE)
-        derived_forecast_bundle_enabled = self._bundle_enabled(self.DERIVED_FORECAST_BUNDLE)
-        temporal_bundle_enabled = self._bundle_enabled(self.TEMPORAL_BUNDLE)
-        action_feedback_bundle_enabled = self._bundle_enabled(self.ACTION_FEEDBACK_BUNDLE)
-        demand_response_bundle_enabled = self._bundle_enabled(self.DEMAND_RESPONSE_BUNDLE)
-        robustness_bundle_enabled = self._bundle_enabled(self.ROBUSTNESS_BUNDLE)
-        requires_building_electrical_metrics = core_bundle_enabled or community_bundle_enabled
-
-        self._district_obs.fill(0.0)
-        self._building_obs.fill(0.0)
-        self._charger_obs[...] = self._charger_static_obs
-        self._ev_obs.fill(0.0)
-        self._storage_obs[...] = self._storage_static_obs
-        self._pv_obs[...] = self._pv_static_obs
-        self._deferrable_appliance_obs.fill(0.0)
+        entity_observations.reset_buffers(self)
         finish_section("buffer_reset")
-
-        building_electrical_metrics: List[Mapping[str, float]] = []
-        derived_forecast_community_values = (
-            {
-                label: {signal: 0.0 for signal in self.DERIVED_FORECAST_DISTRICT_SIGNALS}
-                for label, _ in self.FORECAST_HORIZONS
-            }
-            if derived_forecast_bundle_enabled else None
-        )
-        first_building_data: Mapping[str, Any] = {}
-
-        for i, building in enumerate(env.buildings):
-            row = self._building_obs[i]
-            # Exogenous signals are read at current t, while endogenous values come from
-            # the latest settled transition (max(t-1, 0)) to avoid uninitialized buffers.
-            observation_names = (
-                self._first_building_base_observation_names
-                if i == 0
-                else self._building_base_observation_names
-            )
-            data = building._ops_service.get_observations_data(
-                include_all=False,
-                observation_names=observation_names,
-            )
-
-            if i == 0:
-                first_building_data = data
-
-            self._fill_obs_row_sparse(row, self._building_feature_cols, data)
-            electrical_metrics = None
-            if requires_building_electrical_metrics:
-                electrical_metrics = self._build_electrical_building_metrics(
-                    building=building,
-                    endogenous_t=endogenous_t,
-                    control_t=t,
-                    step_hours=step_hours,
-                )
-
-            if core_bundle_enabled and electrical_metrics is not None:
-                self._fill_obs_row_sparse(row, self._building_feature_cols, electrical_metrics)
-
-            if community_bundle_enabled and electrical_metrics is not None:
-                building_electrical_metrics.append(electrical_metrics)
-
-            if temporal_bundle_enabled:
-                self._fill_obs_row_sparse(
-                    row,
-                    self._building_feature_cols,
-                    self._build_temporal_building_metrics(
-                        building=building,
-                        endogenous_t=endogenous_t,
-                    ),
-                )
-                self._fill_obs_row_sparse(
-                    row,
-                    self._building_feature_cols,
-                    self._build_calendar_temporal_metrics(building=building, time_step=t),
-                )
-
-            if derived_forecast_bundle_enabled:
-                forecast_values = self._build_derived_forecast_building_metrics(building=building, time_step=t)
-                self._fill_obs_row_sparse(row, self._building_feature_cols, forecast_values)
-                for label, _ in self.FORECAST_HORIZONS:
-                    target = derived_forecast_community_values[label]
-                    for signal in self.DERIVED_FORECAST_DISTRICT_SIGNALS:
-                        target[signal] += self._safe_scalar(
-                            forecast_values.get(f"forecast_{signal}_next_{label}_kw", 0.0),
-                            0.0,
-                        )
+        building_data = entity_observations.fill_building_rows(self, context)
         finish_section("building")
-
-        district_row = self._district_obs[0]
-        self._fill_obs_row_sparse(district_row, self._district_feature_cols, first_building_data)
-
-        if forecast_bundle_enabled:
-            self._fill_obs_row_sparse(
-                district_row,
-                self._district_feature_cols,
-                self._build_forecast_district_metrics(first_building_data),
-            )
-
-        if derived_forecast_bundle_enabled:
-            self._fill_obs_row_sparse(
-                district_row,
-                self._district_feature_cols,
-                self._build_derived_forecast_district_metrics(
-                    time_step=t,
-                    community_values=derived_forecast_community_values,
-                ),
-            )
-
-        if community_bundle_enabled:
-            self._fill_obs_row_sparse(
-                district_row,
-                self._district_feature_cols,
-                self._build_community_district_metrics(building_electrical_metrics),
-            )
-
-        if temporal_bundle_enabled:
-            self._fill_obs_row_sparse(
-                district_row,
-                self._district_feature_cols,
-                self._build_temporal_district_metrics(
-                    endogenous_t=endogenous_t,
-                ),
-            )
-            if len(env.buildings) > 0:
-                self._fill_obs_row_sparse(
-                    district_row,
-                    self._district_feature_cols,
-                    self._build_calendar_temporal_metrics(building=env.buildings[0], time_step=t),
-                )
-
-        if demand_response_bundle_enabled:
-            service = getattr(env, "_demand_response_service", None)
-            values = service.observation_values() if service is not None else {}
-            self._fill_obs_row_sparse(district_row, self._district_feature_cols, values)
-
-        if robustness_bundle_enabled:
-            service = getattr(env, "_robustness_service", None)
-            values = service.observation_values() if service is not None else {}
-            self._fill_obs_row_sparse(district_row, self._district_feature_cols, values)
+        entity_observations.fill_district_row(self, context, building_data)
         finish_section("district")
-
-        for ref in self._charger_refs:
-            charger = env.buildings[ref.building_index]._charger_lookup[ref.charger_id]
-            sim = charger.charger_simulation
-            row = self._charger_obs[ref.row]
-            static_values = self._charger_static_values.get(ref.row, {})
-            state = self._safe_index(sim.electric_vehicle_charger_state, t, np.nan)
-            connected = charger.connected_electric_vehicle is not None and state == 1
-            incoming = charger.incoming_electric_vehicle is not None and state == 2
-            commanded_energy = self._safe_index(charger.past_charging_action_values_kwh, endogenous_t, 0.0)
-            applied_energy = (
-                self._safe_index(charger.electricity_consumption, endogenous_t, 0.0)
-                if core_bundle_enabled else 0.0
-            )
-            required_soc = self._safe_index(sim.electric_vehicle_required_soc_departure, t, -0.1)
-            departure_steps = self._safe_index(sim.electric_vehicle_departure_time, t, -1.0)
-            max_charging_power = self._safe_scalar(static_values.get("max_charging_power_kw"), 0.0)
-            max_discharging_power = self._safe_scalar(static_values.get("max_discharging_power_kw"), 0.0)
-            charge_efficiency_at_max = self._safe_scalar(static_values.get("charge_efficiency_at_max_ratio"), 1.0)
-            discharge_efficiency_at_max = self._safe_scalar(static_values.get("discharge_efficiency_at_max_ratio"), 1.0)
-            incoming_required_soc = required_soc if incoming else -0.1
-            incoming_departure_steps = departure_steps if incoming else -1.0
-            incoming_hours_until_departure = (
-                incoming_departure_steps * step_hours
-                if incoming and incoming_departure_steps >= 0.0
-                else -1.0
-            )
-
-            if connected:
-                connected_ev = charger.connected_electric_vehicle
-                current_soc = self._safe_scalar(connected_ev.battery.soc[endogenous_t], -0.1)
-                battery_capacity = self._safe_scalar(connected_ev.battery.capacity, -1.0)
-                hours_until_departure = max(departure_steps, 0.0) * step_hours
-                if core_bundle_enabled:
-                    energy_to_required_soc = max((required_soc - current_soc) * max(battery_capacity, 0.0), 0.0)
-                    required_average_power = energy_to_required_soc / max(hours_until_departure, 1.0e-6) if energy_to_required_soc > 0.0 else 0.0
-                    avg_power_to_departure = required_average_power
-                    charging_slack = max_charging_power - required_average_power
-                    if energy_to_required_soc <= 0.0:
-                        charging_priority = 0.0
-                    elif hours_until_departure <= 0.0 or max_charging_power <= 0.0:
-                        charging_priority = 1.0
-                    else:
-                        charging_priority = np.clip(required_average_power / max(max_charging_power, 1.0e-6), 0.0, 1.0)
-                else:
-                    energy_to_required_soc = 0.0
-                    avg_power_to_departure = 0.0
-                    required_average_power = 0.0
-                    charging_slack = 0.0
-                    charging_priority = 0.0
-            else:
-                current_soc = -0.1
-                battery_capacity = -1.0
-                hours_until_departure = -1.0
-                energy_to_required_soc = 0.0
-                avg_power_to_departure = 0.0
-                required_average_power = 0.0
-                charging_slack = 0.0
-                charging_priority = 0.0
-
-            self._set_obs_value(row, self._charger_feature_cols, "connected_state", 1.0 if connected else 0.0)
-            self._set_obs_value(row, self._charger_feature_cols, "incoming_state", 1.0 if incoming else 0.0)
-            self._set_obs_value(row, self._charger_feature_cols, "connected_ev_soc", current_soc)
-            self._set_obs_value(row, self._charger_feature_cols, "connected_ev_required_soc_departure", required_soc if connected else -0.1)
-            self._set_obs_value(row, self._charger_feature_cols, "connected_ev_battery_capacity_kwh", battery_capacity)
-            self._set_obs_value(
-                row,
-                self._charger_feature_cols,
-                "connected_ev_departure_time_step",
-                self._safe_index(sim.electric_vehicle_departure_time, t, -1.0) if connected else -1.0,
-            )
-            self._set_obs_value(
-                row,
-                self._charger_feature_cols,
-                "incoming_ev_estimated_soc_arrival",
-                self._safe_index(sim.electric_vehicle_estimated_soc_arrival, t, -0.1) if incoming else -0.1,
-            )
-            self._set_obs_value(
-                row,
-                self._charger_feature_cols,
-                "incoming_ev_estimated_arrival_time_step",
-                self._safe_index(sim.electric_vehicle_estimated_arrival_time, t, -1.0) if incoming else -1.0,
-            )
-            self._set_obs_value(row, self._charger_feature_cols, "last_charged_kwh", commanded_energy)
-            if core_bundle_enabled:
-                charger_decision_metrics = self._charger_core_decision_metrics(
-                    building=env.buildings[ref.building_index],
-                    charger=charger,
-                    connected=connected,
-                    current_soc=current_soc,
-                    battery_capacity=battery_capacity,
-                    required_soc=required_soc,
-                    energy_to_required_soc=energy_to_required_soc,
-                    required_average_power=required_average_power,
-                    hours_until_departure=hours_until_departure,
-                    max_charging_power=max_charging_power,
-                    max_discharging_power=max_discharging_power,
-                    charge_efficiency_at_max=charge_efficiency_at_max,
-                    discharge_efficiency_at_max=discharge_efficiency_at_max,
-                    step_hours=step_hours,
-                    current_power_kw=applied_energy / step_hours,
-                )
-                self._set_obs_value(row, self._charger_feature_cols, "commanded_power_kw", commanded_energy / step_hours)
-                self._set_obs_value(row, self._charger_feature_cols, "applied_power_kw", applied_energy / step_hours)
-                self._set_obs_value(row, self._charger_feature_cols, "applied_energy_kwh_step", applied_energy)
-                self._set_obs_value(row, self._charger_feature_cols, "hours_until_departure", hours_until_departure)
-                self._set_obs_value(
-                    row,
-                    self._charger_feature_cols,
-                    "time_until_departure_ratio",
-                    np.clip(hours_until_departure / 24.0, 0.0, 1.0) if connected else -1.0,
-                )
-                self._set_obs_value(row, self._charger_feature_cols, "energy_to_required_soc_kwh", energy_to_required_soc)
-                self._set_obs_value(row, self._charger_feature_cols, "required_average_power_kw", required_average_power)
-                self._set_obs_value(row, self._charger_feature_cols, "avg_power_to_departure_kw", avg_power_to_departure)
-                self._set_obs_value(row, self._charger_feature_cols, "charging_slack_kw", charging_slack)
-                self._set_obs_value(row, self._charger_feature_cols, "charging_priority_ratio", charging_priority)
-                self._fill_obs_row_sparse(row, self._charger_feature_cols, charger_decision_metrics)
-                self._set_obs_value(row, self._charger_feature_cols, "incoming_ev_required_soc_departure", incoming_required_soc)
-                self._set_obs_value(row, self._charger_feature_cols, "incoming_ev_departure_time_step", incoming_departure_steps)
-                self._set_obs_value(row, self._charger_feature_cols, "incoming_ev_hours_until_departure", incoming_hours_until_departure)
-                self._set_obs_value(
-                    row,
-                    self._charger_feature_cols,
-                    "incoming_ev_time_until_departure_ratio",
-                    (
-                        np.clip(incoming_hours_until_departure / 24.0, 0.0, 1.0)
-                        if incoming and incoming_hours_until_departure >= 0.0
-                        else -1.0
-                    ),
-                )
-            if action_feedback_bundle_enabled:
-                self._fill_obs_row_sparse(
-                    row,
-                    self._charger_feature_cols,
-                    self._charger_action_feedback_metrics(charger, endogenous_t, step_hours),
-                )
+        entity_observations.fill_charger_rows(self, context)
         finish_section("charger")
-
-        for i, ev in enumerate(env.electric_vehicles):
-            row = self._ev_obs[i]
-            soc = self._safe_scalar(ev.battery.soc[endogenous_t], 0.0)
-            capacity = self._safe_scalar(ev.battery.capacity, 0.0)
-            depth_of_discharge = self._safe_scalar(ev.battery.depth_of_discharge, 0.0)
-            self._set_obs_value(row, self._ev_feature_cols, "soc", soc)
-            self._set_obs_value(row, self._ev_feature_cols, "battery_capacity_kwh", capacity)
-            self._set_obs_value(row, self._ev_feature_cols, "depth_of_discharge_ratio", depth_of_discharge)
-            if core_bundle_enabled:
-                soc_min = max(1.0 - depth_of_discharge, 0.0)
-                energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
-                energy_to_full = max((1.0 - soc) * max(capacity, 0.0), 0.0)
-                self._set_obs_value(row, self._ev_feature_cols, "soc_ratio", soc)
-                self._set_obs_value(row, self._ev_feature_cols, "soc_min_ratio", soc_min)
-                self._set_obs_value(row, self._ev_feature_cols, "soc_max_ratio", 1.0)
-                self._set_obs_value(row, self._ev_feature_cols, "energy_available_kwh", energy_available)
-                self._set_obs_value(row, self._ev_feature_cols, "energy_to_full_kwh", energy_to_full)
+        entity_observations.fill_ev_rows(self, context)
         finish_section("ev")
-
-        for ref in self._storage_refs:
-            building = env.buildings[ref.building_index]
-            storage = building.electrical_storage
-            row = self._storage_obs[ref.row]
-            capacity = self._safe_scalar(getattr(storage, "capacity", 0.0), 0.0)
-            nominal_power = self._safe_scalar(getattr(storage, "nominal_power", 0.0), 0.0)
-            soc = self._safe_scalar(storage.soc[endogenous_t], 0.0)
-            efficiency_history = getattr(storage, "efficiency_history", None)
-            if efficiency_history is not None and len(efficiency_history) > 0:
-                base_efficiency = self._safe_scalar(efficiency_history[0], 1.0)
-            else:
-                base_efficiency = self._safe_scalar(getattr(storage, "efficiency", 1.0), 1.0)
-            round_trip_efficiency = self._safe_scalar(
-                getattr(storage, "round_trip_efficiency", base_efficiency ** 0.5),
-                base_efficiency ** 0.5,
-            )
-            self._set_obs_value(row, self._storage_feature_cols, "soc", soc)
-            self._set_obs_value(row, self._storage_feature_cols, "capacity_kwh", capacity)
-            self._set_obs_value(row, self._storage_feature_cols, "nominal_power_kw", nominal_power)
-            self._set_obs_value(
-                row,
-                self._storage_feature_cols,
-                "electricity_consumption_kwh",
-                self._safe_scalar(building.electrical_storage_electricity_consumption[endogenous_t], 0.0),
-            )
-            self._set_obs_value(
-                row,
-                self._storage_feature_cols,
-                "min_charge_power_kw",
-                self._safe_scalar(getattr(storage, "min_charge_power", 0.0), 0.0),
-            )
-            self._set_obs_value(
-                row,
-                self._storage_feature_cols,
-                "min_discharge_power_kw",
-                self._safe_scalar(getattr(storage, "min_discharge_power", 0.0), 0.0),
-            )
-            self._set_obs_value(row, self._storage_feature_cols, "efficiency_ratio", base_efficiency)
-            self._set_obs_value(row, self._storage_feature_cols, "round_trip_efficiency_ratio", round_trip_efficiency)
-            if core_bundle_enabled:
-                depth_of_discharge = self._safe_scalar(getattr(storage, "depth_of_discharge", 1.0), 1.0)
-                soc_min = max(1.0 - depth_of_discharge, 0.0)
-                current_energy = soc * max(capacity, 0.0)
-                energy_to_full = max(capacity - current_energy, 0.0)
-                energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
-                max_charge_power = (
-                    self._safe_scalar(storage.get_max_input_power(), nominal_power)
-                    if hasattr(storage, "get_max_input_power")
-                    else nominal_power
-                )
-                max_discharge_power = (
-                    self._safe_scalar(storage.get_max_output_power(), nominal_power)
-                    if hasattr(storage, "get_max_output_power")
-                    else nominal_power
-                )
-                decision_metrics = self._storage_core_decision_metrics(
-                    building=building,
-                    storage=storage,
-                    soc=soc,
-                    capacity=capacity,
-                    nominal_power=nominal_power,
-                    soc_min=soc_min,
-                    energy_to_full=energy_to_full,
-                    energy_available=energy_available,
-                    max_charge_power=max_charge_power,
-                    max_discharge_power=max_discharge_power,
-                    efficiency=self._safe_scalar(getattr(storage, "efficiency", base_efficiency), base_efficiency),
-                    step_hours=step_hours,
-                    include_headroom=True,
-                    current_power_kw=self._safe_scalar(
-                        building.electrical_storage_electricity_consumption[endogenous_t],
-                        0.0,
-                    ) / step_hours,
-                )
-                self._set_obs_value(row, self._storage_feature_cols, "electrical_storage_soc_ratio", soc)
-                self._set_obs_value(row, self._storage_feature_cols, "max_charge_power_kw", max_charge_power)
-                self._set_obs_value(row, self._storage_feature_cols, "max_discharge_power_kw", max_discharge_power)
-                self._set_obs_value(row, self._storage_feature_cols, "energy_to_full_kwh", energy_to_full)
-                self._set_obs_value(row, self._storage_feature_cols, "energy_available_kwh", energy_available)
-                self._fill_obs_row_sparse(row, self._storage_feature_cols, decision_metrics)
-                self._set_obs_value(
-                    row,
-                    self._storage_feature_cols,
-                    "current_efficiency_ratio",
-                    self._safe_scalar(getattr(storage, "efficiency", base_efficiency), base_efficiency),
-                )
-                self._set_obs_value(
-                    row,
-                    self._storage_feature_cols,
-                    "degraded_capacity_kwh",
-                    self._safe_scalar(getattr(storage, "degraded_capacity", capacity), capacity),
-                )
-                self._set_obs_value(row, self._storage_feature_cols, "soc_min_ratio", soc_min)
-            if action_feedback_bundle_enabled:
-                self._fill_obs_row_sparse(
-                    row,
-                    self._storage_feature_cols,
-                    self._storage_action_feedback_metrics(building, endogenous_t, step_hours),
-                )
+        entity_observations.fill_storage_rows(self, context)
         finish_section("storage")
-
-        if self._pv_features:
-            for ref in self._pv_refs:
-                building = env.buildings[ref.building_index]
-                row = self._pv_obs[ref.row]
-                generation_energy = abs(self._safe_index(building.solar_generation, endogenous_t, 0.0))
-                installed_power = self._safe_scalar(getattr(building.pv, "nominal_power", 0.0), 0.0)
-                generation_power = generation_energy / step_hours
-                self._set_obs_value(row, self._pv_feature_cols, "generation_power_kw", generation_power)
-                self._set_obs_value(row, self._pv_feature_cols, "generation_energy_kwh_step", generation_energy)
-                self._set_obs_value(row, self._pv_feature_cols, "installed_power_kw", installed_power)
-                self._set_obs_value(
-                    row,
-                    self._pv_feature_cols,
-                    "generation_capacity_factor_ratio",
-                    generation_power / installed_power if installed_power > 0.0 else 0.0,
-                )
+        entity_observations.fill_pv_rows(self, context)
         finish_section("pv")
-
-        for ref in self._deferrable_appliance_refs:
-            building = env.buildings[ref.building_index]
-            appliance = self._deferrable_appliance_by_building_and_id.get((ref.building_index, ref.appliance_id))
-            if appliance is None:
-                continue
-            row = self._deferrable_appliance_obs[ref.row]
-            values = building._ops_service.deferrable_appliance_observations(appliance)
-            self._fill_obs_row_sparse(row, self._deferrable_appliance_feature_cols, values)
-            self._fill_obs_row_sparse(
-                row,
-                self._deferrable_appliance_feature_cols,
-                self._deferrable_core_decision_metrics(appliance, values),
-            )
-            if action_feedback_bundle_enabled:
-                self._fill_obs_row_sparse(
-                    row,
-                    self._deferrable_appliance_feature_cols,
-                    self._deferrable_action_feedback_metrics(appliance, endogenous_t),
-                )
+        entity_observations.fill_deferrable_rows(self, context)
         finish_section("deferrable_appliance")
-
-        self._charger_to_ev_connected.fill(-1)
-        self._charger_to_ev_connected_mask.fill(0.0)
-        self._charger_to_ev_incoming.fill(-1)
-        self._charger_to_ev_incoming_mask.fill(0.0)
-        for ref in self._charger_refs:
-            charger = env.buildings[ref.building_index]._charger_lookup[ref.charger_id]
-            sim = charger.charger_simulation
-            state = self._safe_index(sim.electric_vehicle_charger_state, t, np.nan)
-            if state == 1 and charger.connected_electric_vehicle is not None:
-                ev_row = self._ev_row_by_name.get(charger.connected_electric_vehicle.name)
-                if ev_row is not None:
-                    self._charger_to_ev_connected[ref.row, 0] = ref.row
-                    self._charger_to_ev_connected[ref.row, 1] = ev_row
-                    self._charger_to_ev_connected_mask[ref.row] = 1.0
-
-            if state == 2 and charger.incoming_electric_vehicle is not None:
-                ev_row = self._ev_row_by_name.get(charger.incoming_electric_vehicle.name)
-                if ev_row is not None:
-                    self._charger_to_ev_incoming[ref.row, 0] = ref.row
-                    self._charger_to_ev_incoming[ref.row, 1] = ev_row
-                    self._charger_to_ev_incoming_mask[ref.row] = 1.0
+        entity_observations.fill_relation_masks(self, context)
         finish_section("edges")
-
-        for table in (
-            self._district_obs,
-            self._building_obs,
-            self._charger_obs,
-            self._ev_obs,
-            self._storage_obs,
-            self._pv_obs,
-            self._deferrable_appliance_obs,
-        ):
-            np.nan_to_num(table, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
+        entity_observations.sanitize_tables(self)
         finish_section("sanitize")
-
         copy_start = time.perf_counter() if debug_timing else 0.0
-        payload = {
-            "tables": {
-                "district": self._district_obs.copy(),
-                "building": self._building_obs.copy(),
-                "charger": self._charger_obs.copy(),
-                "ev": self._ev_obs.copy(),
-                "storage": self._storage_obs.copy(),
-                "pv": self._pv_obs.copy(),
-                "deferrable_appliance": self._deferrable_appliance_obs.copy(),
-            },
-            "edges": {
-                "district_to_building": self._district_to_building.copy(),
-                "building_to_charger": self._building_to_charger.copy(),
-                "building_to_storage": self._building_to_storage.copy(),
-                "building_to_pv": self._building_to_pv.copy(),
-                "building_to_deferrable_appliance": self._building_to_deferrable_appliance.copy(),
-                "charger_to_ev_connected": self._charger_to_ev_connected.copy(),
-                "charger_to_ev_connected_mask": self._charger_to_ev_connected_mask.copy(),
-                "charger_to_ev_incoming": self._charger_to_ev_incoming.copy(),
-                "charger_to_ev_incoming_mask": self._charger_to_ev_incoming_mask.copy(),
-            },
-            "meta": {
-                "time_step": t,
-                "endogenous_time_step": endogenous_t,
-                "seconds_per_time_step": float(getattr(env, "seconds_per_time_step", 3600.0)),
-                "spec_version": "entity_v1",
-                "temporal_semantics": {
-                    "exogenous": "t",
-                    "endogenous": "t_minus_1_settled",
-                },
-                "forecast_config": self._forecast_config_meta(),
-                "topology_version": int(getattr(env, "topology_version", 0)),
-                "demand_response": (
-                    env._demand_response_service.observation_meta()
-                    if getattr(env, "_demand_response_service", None) is not None
-                    else {"enabled": False, "active_request_id": None}
-                ),
-                "robustness": (
-                    env._robustness_service.observation_meta()
-                    if getattr(env, "_robustness_service", None) is not None
-                    else {"enabled": False, "active_event_ids": []}
-                ),
-                "runtime_status": self._runtime_status_payload(),
-            },
-        }
+        payload = entity_observations.snapshot_payload(self, context)
         if debug_timing:
             timings["entity_observation_copy_time"] = time.perf_counter() - copy_start
             env._last_entity_observation_debug_timing = timings
         else:
             env._last_entity_observation_debug_timing = {}
-
         return payload
 
     def _runtime_status_payload(self) -> Mapping[str, Any]:
@@ -1776,6 +1275,20 @@ class CityLearnEntityInterfaceService:
 
         available_charge_power = 0.0 if outage else max(min(charge_candidates), 0.0)
         available_discharge_power = 0.0 if outage else max(min(discharge_candidates), 0.0)
+        # Battery headroom limits energy actually accepted in the last interval,
+        # not the minimum viable charger command. Below the charger deadband a
+        # positive command produces no energy at all. Permit the minimum command
+        # when the electrical envelope allows it; battery physics clips the fill.
+        available_charge_request = available_charge_power
+        minimum_charge_power = max(self._safe_scalar(getattr(charger, 'min_charging_power', 0.0), 0.0), 0.0)
+        command_limit = max(max_charging_power, 0.0)
+        if np.isfinite(import_limit):
+            command_limit = min(command_limit, max(import_limit, 0.0))
+        if available_charge_power > 0.0:
+            if command_limit + 1.0e-9 < minimum_charge_power:
+                available_charge_request = 0.0
+            else:
+                available_charge_request = min(max(available_charge_power, minimum_charge_power), command_limit)
         max_deliverable = min(
             available_charge_power * max(hours_until_departure, 0.0) * charge_efficiency,
             energy_to_full,
@@ -1791,16 +1304,19 @@ class CityLearnEntityInterfaceService:
             if required_average_power > 0.0
             else 0.0
         )
+        if hours_until_departure < 0.0:
+            max_deliverable = departure_margin = min_required_action = 0.0
+            departure_feasibility = -1.0
 
         return {
             "connected_ev_soc_min_ratio": soc_min,
             "connected_ev_energy_available_kwh": energy_available,
             "connected_ev_energy_to_full_kwh": energy_to_full,
-            "can_charge": 1.0 if available_charge_power > 1.0e-9 else 0.0,
+            "can_charge": 1.0 if available_charge_request > 1.0e-9 else 0.0,
             "can_discharge": 1.0 if available_discharge_power > 1.0e-9 else 0.0,
             "available_charge_power_kw": available_charge_power,
             "available_discharge_power_kw": available_discharge_power,
-            "available_charge_action_normalized": available_charge_power / max(max_charging_power, 1.0e-6),
+            "available_charge_action_normalized": available_charge_request / max(max_charging_power, 1.0e-6),
             "available_discharge_action_normalized": available_discharge_power / max(max_discharging_power, 1.0e-6),
             "max_deliverable_energy_until_departure_kwh": max_deliverable,
             "departure_energy_margin_kwh": departure_margin,
@@ -2888,332 +2404,13 @@ class CityLearnEntityInterfaceService:
         self._charger_to_ev_incoming_mask = np.zeros((len(self._charger_refs),), dtype=np.float32)
 
     def _build_static_observation_rows(self):
-        """Pre-fill static entity feature values for the current topology layout."""
-
-        self._charger_static_obs = np.zeros_like(self._charger_obs)
-        self._storage_static_obs = np.zeros_like(self._storage_obs)
-        self._pv_static_obs = np.zeros_like(self._pv_obs)
-        self._charger_static_values: Dict[int, Mapping[str, float]] = {}
-
-        for ref in self._charger_refs:
-            building = self.env.buildings[ref.building_index]
-            charger = building._charger_lookup[ref.charger_id]
-            row = self._charger_static_obs[ref.row]
-            max_charging_power = self._safe_scalar(charger.max_charging_power, 0.0)
-            max_discharging_power = self._safe_scalar(charger.max_discharging_power, 0.0)
-            min_charging_power = self._safe_scalar(getattr(charger, "min_charging_power", 0.0), 0.0)
-            min_discharging_power = self._safe_scalar(getattr(charger, "min_discharging_power", 0.0), 0.0)
-            charger_efficiency = self._safe_scalar(getattr(charger, "efficiency", 1.0), 1.0)
-            charge_efficiency_at_max = (
-                self._safe_scalar(charger.get_efficiency(1.0, True), charger_efficiency)
-                if hasattr(charger, "get_efficiency")
-                else charger_efficiency
-            )
-            discharge_efficiency_at_max = (
-                self._safe_scalar(charger.get_efficiency(1.0, False), charger_efficiency)
-                if hasattr(charger, "get_efficiency")
-                else charger_efficiency
-            )
-            static_values = {
-                "max_charging_power_kw": max_charging_power,
-                "max_discharging_power_kw": max_discharging_power,
-                "min_charging_power_kw": min_charging_power,
-                "min_discharging_power_kw": min_discharging_power,
-                "charger_efficiency_ratio": charger_efficiency,
-                "charge_efficiency_at_max_ratio": charge_efficiency_at_max,
-                "discharge_efficiency_at_max_ratio": discharge_efficiency_at_max,
-            }
-            assigned_phase = getattr(building, "_charger_phase_map", {}).get(ref.charger_id)
-            for phase_name, feature_name in zip(self._charger_phase_names, self._charger_phase_features):
-                static_values[feature_name] = 1.0 if assigned_phase in {phase_name, "all_phases"} else 0.0
-            self._fill_obs_row_sparse(row, self._charger_feature_cols, static_values)
-            self._charger_static_values[ref.row] = static_values
-
-        for ref in self._storage_refs:
-            building = self.env.buildings[ref.building_index]
-            row = self._storage_static_obs[ref.row]
-            assigned_phase = getattr(building, "electrical_storage_phase_connection", None)
-            for phase_name, feature_name in zip(self._storage_phase_names, self._storage_phase_features):
-                self._set_obs_value(
-                    row,
-                    self._storage_feature_cols,
-                    feature_name,
-                    1.0 if assigned_phase in {phase_name, "all_phases"} else 0.0,
-                )
-
-        for ref in self._pv_refs:
-            building = self.env.buildings[ref.building_index]
-            installed_power = self._safe_scalar(getattr(building.pv, "nominal_power", 0.0), 0.0)
-            self._set_obs_value(self._pv_static_obs[ref.row], self._pv_feature_cols, "installed_power_kw", installed_power)
+        entity_layout.build_static_observation_rows(self)
 
     def _build_spaces(self):
-        district_low, district_high = self._observation_bounds_for_features(self._district_features, owner="district")
-        building_low, building_high = self._observation_bounds_for_features(self._building_features, owner="building", per_building=True)
-        charger_low, charger_high = self._charger_observation_bounds()
-        ev_low, ev_high = self._ev_observation_bounds()
-        storage_low, storage_high = self._storage_observation_bounds()
-        pv_low, pv_high = self._pv_observation_bounds()
-        deferrable_appliance_low, deferrable_appliance_high = self._deferrable_appliance_observation_bounds()
-
-        self._observation_space = spaces.Dict(
-            {
-                "tables": spaces.Dict(
-                    {
-                        "district": spaces.Box(low=district_low, high=district_high, dtype=np.float32),
-                        "building": spaces.Box(low=building_low, high=building_high, dtype=np.float32),
-                        "charger": spaces.Box(low=charger_low, high=charger_high, dtype=np.float32),
-                        "ev": spaces.Box(low=ev_low, high=ev_high, dtype=np.float32),
-                        "storage": spaces.Box(low=storage_low, high=storage_high, dtype=np.float32),
-                        "pv": spaces.Box(low=pv_low, high=pv_high, dtype=np.float32),
-                        "deferrable_appliance": spaces.Box(low=deferrable_appliance_low, high=deferrable_appliance_high, dtype=np.float32),
-                    }
-                ),
-                "edges": spaces.Dict(
-                    {
-                        "district_to_building": spaces.Box(
-                            low=np.zeros((len(self._building_ids), 2), dtype=np.int32),
-                            high=np.maximum(np.array([[0, max(len(self._building_ids) - 1, 0)]], dtype=np.int32), 0).repeat(len(self._building_ids), axis=0),
-                            dtype=np.int32,
-                        ),
-                        "building_to_charger": spaces.Box(
-                            low=np.full((len(self._charger_refs), 2), -1, dtype=np.int32),
-                            high=np.array(
-                                [[max(len(self._building_ids) - 1, 0), max(len(self._charger_refs) - 1, 0)]],
-                                dtype=np.int32,
-                            ).repeat(len(self._charger_refs), axis=0),
-                            dtype=np.int32,
-                        ),
-                        "building_to_storage": spaces.Box(
-                            low=np.full((len(self._storage_refs), 2), -1, dtype=np.int32),
-                            high=np.array(
-                                [[max(len(self._building_ids) - 1, 0), max(len(self._storage_refs) - 1, 0)]],
-                                dtype=np.int32,
-                            ).repeat(len(self._storage_refs), axis=0),
-                            dtype=np.int32,
-                        ),
-                        "building_to_pv": spaces.Box(
-                            low=np.full((len(self._pv_refs), 2), -1, dtype=np.int32),
-                            high=np.array(
-                                [[max(len(self._building_ids) - 1, 0), max(len(self._pv_refs) - 1, 0)]],
-                                dtype=np.int32,
-                            ).repeat(len(self._pv_refs), axis=0),
-                            dtype=np.int32,
-                        ),
-                        "building_to_deferrable_appliance": spaces.Box(
-                            low=np.full((len(self._deferrable_appliance_refs), 2), -1, dtype=np.int32),
-                            high=np.array(
-                                [[max(len(self._building_ids) - 1, 0), max(len(self._deferrable_appliance_refs) - 1, 0)]],
-                                dtype=np.int32,
-                            ).repeat(len(self._deferrable_appliance_refs), axis=0),
-                            dtype=np.int32,
-                        ),
-                        "charger_to_ev_connected": spaces.Box(
-                            low=np.full((len(self._charger_refs), 2), -1, dtype=np.int32),
-                            high=np.array(
-                                [[max(len(self._charger_refs) - 1, 0), max(len(self._ev_ids) - 1, 0)]],
-                                dtype=np.int32,
-                            ).repeat(len(self._charger_refs), axis=0),
-                            dtype=np.int32,
-                        ),
-                        "charger_to_ev_connected_mask": spaces.Box(
-                            low=np.zeros((len(self._charger_refs),), dtype=np.float32),
-                            high=np.ones((len(self._charger_refs),), dtype=np.float32),
-                            dtype=np.float32,
-                        ),
-                        "charger_to_ev_incoming": spaces.Box(
-                            low=np.full((len(self._charger_refs), 2), -1, dtype=np.int32),
-                            high=np.array(
-                                [[max(len(self._charger_refs) - 1, 0), max(len(self._ev_ids) - 1, 0)]],
-                                dtype=np.int32,
-                            ).repeat(len(self._charger_refs), axis=0),
-                            dtype=np.int32,
-                        ),
-                        "charger_to_ev_incoming_mask": spaces.Box(
-                            low=np.zeros((len(self._charger_refs),), dtype=np.float32),
-                            high=np.ones((len(self._charger_refs),), dtype=np.float32),
-                            dtype=np.float32,
-                        ),
-                    }
-                ),
-            }
-        )
-
-        building_action_low, building_action_high = self._building_action_bounds()
-        charger_action_low, charger_action_high = self._charger_action_bounds()
-        deferrable_appliance_action_low, deferrable_appliance_action_high = self._deferrable_appliance_action_bounds()
-        self._action_space = spaces.Dict(
-            {
-                "tables": spaces.Dict(
-                    {
-                        "building": spaces.Box(low=building_action_low, high=building_action_high, dtype=np.float32),
-                        "charger": spaces.Box(low=charger_action_low, high=charger_action_high, dtype=np.float32),
-                        "deferrable_appliance": spaces.Box(
-                            low=deferrable_appliance_action_low,
-                            high=deferrable_appliance_action_high,
-                            dtype=np.float32,
-                        ),
-                    }
-                )
-            }
-        )
+        entity_layout.build_spaces(self)
 
     def _build_specs(self):
-        def _units_for(names: Sequence[str]) -> List[str]:
-            return [self._infer_unit(name) for name in names]
-
-        def _table_spec(table_name: str, ids: Sequence[str], features: Sequence[str]) -> Mapping[str, Any]:
-            feature_metadata = self._feature_metadata_for_table(table_name, features)
-            return {
-                "ids": list(ids),
-                "features": list(features),
-                "units": _units_for(features),
-                "feature_metadata": feature_metadata,
-            }
-
-        self._specs = {
-            "version": "entity_v1",
-            "runtime_status_contract": {
-                "version": "runtime_status_v1",
-                "emits_health_state": False,
-                "fault_mode_semantics": "raw_cause_not_health_state",
-                "sparse_defaults": {
-                    "availability": "AVAILABLE",
-                    "quality": "NOMINAL",
-                },
-                "event_domains": [
-                    "ASSET_CONNECTION",
-                    "ASSET_AVAILABILITY",
-                    "SENSOR_CHANNEL",
-                    "ACTUATOR_CHANNEL",
-                    "COMMUNICATION_LINK",
-                    "VALUE_QUALITY",
-                ],
-                "collections": [
-                    "active_events",
-                    "asset_connections",
-                    "asset_availability",
-                    "sensor_channels",
-                    "actuator_channels",
-                    "communication_links",
-                    "value_quality",
-                ],
-            },
-            "action_execution_contract": {
-                "version": "entity_action_execution_v1",
-                "nullable_unobservable_fields": True,
-                "stages": [
-                    "requested_value",
-                    "post_channel_value",
-                    "limited_value",
-                    "applied_value",
-                    "applied_power_kw",
-                ],
-            },
-            "temporal_semantics": {
-                "exogenous": "t",
-                "endogenous": "t_minus_1_settled",
-                "event_boundary": "events_at_k_apply_after_transition_k_minus_1_to_k_before_observation_k",
-            },
-            "normalization": {
-                "simulator_applies_normalization": False,
-                "policy": "external_running_stats",
-                "encoding": {
-                    "ids": "stable_canonical_ids",
-                    "categorical": "numeric_or_binary_from_dataset",
-                    "time": "raw_indices_unwrapped",
-                },
-                "dynamic_topology": {
-                    "variable_size_tables": bool(getattr(self.env, "topology_mode", "static") == "dynamic"),
-                    "stable_ids": True,
-                    "relation_masks": [
-                        "charger_to_ev_connected_mask",
-                        "charger_to_ev_incoming_mask",
-                    ],
-                    "running_stats_recommendation": "maintain_per_feature_stats_externally_and_ignore_inactive_ids",
-                },
-            },
-            "observation_bundles": {
-                self.BASE_BUNDLE: {"active": True},
-                **{
-                    bundle_name: {"active": bool(active)}
-                    for bundle_name, active in self._observation_bundles.items()
-                },
-            },
-            "tables": {
-                "district": _table_spec("district", ["district_0"], self._district_features),
-                "building": _table_spec("building", self._building_ids, self._building_features),
-                "charger": _table_spec("charger", [ref.global_id for ref in self._charger_refs], self._charger_features),
-                "ev": _table_spec("ev", self._ev_ids, self._ev_features),
-                "storage": _table_spec("storage", [ref.global_id for ref in self._storage_refs], self._storage_features),
-                "pv": _table_spec("pv", [ref.global_id for ref in self._pv_refs], self._pv_features),
-                "deferrable_appliance": _table_spec(
-                    "deferrable_appliance",
-                    [ref.global_id for ref in self._deferrable_appliance_refs],
-                    self._deferrable_appliance_features,
-                ),
-            },
-            "actions": {
-                "building": {
-                    "ids": list(self._building_ids),
-                    "features": list(self._building_action_features),
-                    "units": _units_for(self._building_action_features),
-                },
-                "charger": {
-                    "ids": [ref.global_id for ref in self._charger_refs],
-                    "features": list(self._charger_action_features),
-                    "units": _units_for(self._charger_action_features),
-                },
-                "deferrable_appliance": {
-                    "ids": [ref.global_id for ref in self._deferrable_appliance_refs],
-                    "features": list(self._deferrable_appliance_action_features),
-                    "units": _units_for(self._deferrable_appliance_action_features),
-                },
-            },
-            "edges": {
-                "district_to_building": {
-                    "source": "district",
-                    "target": "building",
-                },
-                "building_to_charger": {
-                    "source": "building",
-                    "target": "charger",
-                },
-                "building_to_storage": {
-                    "source": "building",
-                    "target": "storage",
-                },
-                "building_to_pv": {
-                    "source": "building",
-                    "target": "pv",
-                },
-                "building_to_deferrable_appliance": {
-                    "source": "building",
-                    "target": "deferrable_appliance",
-                },
-                "charger_to_ev_connected": {
-                    "source": "charger",
-                    "target": "ev",
-                },
-                "charger_to_ev_incoming": {
-                    "source": "charger",
-                    "target": "ev",
-                },
-            },
-            "topology": {
-                "mode": getattr(self.env, "topology_mode", "static"),
-                "version": int(getattr(self.env, "topology_version", 0)),
-                "active_ids": {
-                    "building": list(self._building_ids),
-                    "ev": list(self._ev_ids),
-                    "charger": [ref.global_id for ref in self._charger_refs],
-                    "storage": [ref.global_id for ref in self._storage_refs],
-                    "pv": [ref.global_id for ref in self._pv_refs],
-                    "deferrable_appliance": [ref.global_id for ref in self._deferrable_appliance_refs],
-                },
-                "lifecycle_fields": ["born_at", "removed_at", "active"],
-                "member_lifecycle": getattr(self.env, "topology_member_lifecycle", {}),
-            },
-        }
+        entity_layout.build_specs(self)
 
     def _default_bounds_for_feature(self, name: str) -> Tuple[float, float]:
         key = str(name).lower()

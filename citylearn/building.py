@@ -519,8 +519,19 @@ class Building(Environment):
     def electrical_storage_electricity_consumption(self) -> np.ndarray:
         """Energy supply from grid and/or `PV` to `electrical_storage` time series, in [kWh]."""
 
-        return self.electrical_storage.electricity_consumption[:self.time_step + 1]
+        values = self.electrical_storage.electricity_consumption[:self.time_step + 1]
+        prefix = getattr(self, '_archived_storage_electricity', None)
+        if prefix is not None:
+            values = values.copy()
+            size = min(len(prefix), len(values))
+            values[:size] = prefix[:size]
+        return values
     
+    @property
+    def pv_curtailment(self) -> np.ndarray:
+        """Available PV not admitted to the islanded AC bus, in kWh/interval."""
+        return self.__pv_curtailment[:self.time_step + 1]
+
     @property
     def chargers_electricity_consumption(self) -> np.ndarray:
         """Electricity consumption of chargers time series, in [kWh]."""
@@ -711,7 +722,8 @@ class Building(Environment):
         """Available distributed energy resource capacity to satisfy electric loads while considering power outage at current time step.
         
         It is the sum of solar generation and any discharge from electrical storage, less electricity consumption by cooling, heating, 
-        dhw and non-shfitable load devices as well as charging electrical storage. When there is no power outage, the returned value 
+        dhw and non-shiftable load devices, electrical storage and already served
+        controllable devices. When there is no power outage, the returned value
         is `np.inf`.
         """
 
@@ -725,6 +737,15 @@ class Building(Environment):
             + self.non_shiftable_load_device.electricity_consumption[self.time_step]
             + self.electrical_storage.electricity_consumption[self.time_step]
         )
+
+        # Read live device values: building-level aggregates are only refreshed
+        # after all actions. Each subsequent load must see the remaining supply.
+        for devices in (
+            self.electric_vehicle_chargers,
+            self.deferrable_appliances,
+            self.escalators,
+        ):
+            capacity -= sum(device.electricity_consumption[self.time_step] for device in devices or [])
 
         return max(0.0, capacity)
 
@@ -2704,6 +2725,7 @@ class Building(Environment):
 
         # object reset
         super().reset()
+        self._archived_storage_electricity = None
         self.cooling_storage.reset()
         self.heating_storage.reset()
         self.dhw_storage.reset()
@@ -2735,6 +2757,7 @@ class Building(Environment):
         self.__energy_from_heating_device = self.energy_simulation.heating_demand.copy()
         self.__energy_from_dhw_device = self.energy_simulation.dhw_demand.copy()
         self.__energy_to_non_shiftable_load = self.energy_simulation.non_shiftable_load.copy()
+        self.__pv_curtailment = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.__net_electricity_consumption = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.__net_electricity_consumption_emission = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.__net_electricity_consumption_cost = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
@@ -2903,6 +2926,18 @@ class Building(Environment):
             building_escalators_total_electricity_consumption += escalator.electricity_consumption[self.time_step]
 
         self.__escalators_electricity_consumption[self.time_step] = building_escalators_total_electricity_consumption
+
+        # A disconnected surplus is curtailed, not useful consumption. Keep
+        # available PV unchanged and report the rejected energy explicitly.
+        served = (self.cooling_device.electricity_consumption[self.time_step]
+                  + self.heating_device.electricity_consumption[self.time_step]
+                  + self.dhw_device.electricity_consumption[self.time_step]
+                  + self.non_shiftable_load_device.electricity_consumption[self.time_step]
+                  + self.electrical_storage.electricity_consumption[self.time_step]
+                  + self.__chargers_electricity_consumption[self.time_step]
+                  + self.__deferrable_appliances_electricity_consumption[self.time_step]
+                  + self.__escalators_electricity_consumption[self.time_step])
+        self.__pv_curtailment[self.time_step] = max(-self.solar_generation[self.time_step] - served, 0.0) if self.power_outage else 0.0
 
         # net electricity consumption
         net_electricity_consumption = 0.0
