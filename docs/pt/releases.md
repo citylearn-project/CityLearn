@@ -58,6 +58,73 @@ Release owner: [@calofonseca](https://github.com/calofonseca).
 - ...
 ```
 
+## v3.1.0 - 2026-11-02
+
+Responsável pela integração e manutenção: **Tiago Fonseca**
+([@calofonseca](https://github.com/calofonseca)).
+
+Integra as correções de física, KPIs, robustez e organização interna e as
+otimizações validadas no SoftCPS Simulator 2.0.0. Mantém o nome `citylearn`, o
+registo oficial `citylearn-project/CityLearn` e os 32 datasets existentes.
+Nenhum dataset de produção CPS é importado; 1.254 ficheiros protegidos de dados,
+fixtures e imagens permanecem iguais por SHA-256.
+
+### Correções e compatibilidade
+
+- Orçamento partilhado durante cortes de rede com vários carregadores,
+  conservação de energia nas reservas das baterias e limites elétricos aplicados.
+- Auditorias independentes de balanço, serviço EV/máquinas diferíveis,
+  populações e janelas efetivamente executadas dos KPIs, robustez e proveniência.
+- Caminhos dos schemas locais independentes da pasta de execução, incluindo os
+  Parquet oficiais com caminhos relativos ao repositório.
+- Exports CSV/Parquet e manifestos de contexto/serviço mantidos. Os históricos
+  compactos permitem reconstruir os valores públicos quando necessário.
+- BAU explícito `immediate-full-charge-v1`: carga imediata até 100%, com potência
+  disponível partilhada proporcionalmente, sem gestão por PV/preços/partida.
+  A ordem dos argumentos mantém-se; opções EV com alvos/prazos personalizados
+  passam a ser rejeitadas e devem usar políticas RBC configuráveis. Os pedidos
+  BAU antigos e alguns KPIs corrigidos podem diferir de 3.0.2; comparar versões
+  equivalentes. Ver o [guia de migração](../migration.md#upgrade-from-302-to-310).
+
+### Medições de desempenho
+
+Medianas de três repetições em janelas de 1.200/1.400/1.200 transições dos casos
+oficiais estático, topologia dinâmica e robustez. Verificações físicas ativas,
+ações zero, mercado ativado e eventos prolongados apenas em ficheiros temporários.
+Comparação com a integração funcional corrigida **antes das otimizações**:
+
+| Caso | ms por step antes → depois | s de KPIs antes → depois | RAM após KPIs, MiB antes → depois |
+|---|---:|---:|---:|
+| Estático | 6,304 → 6,162 | 2,241 → 1,168 (−47,9%) | 658 → 641 |
+| Dinâmico | 9,965 → 9,235 | 7,225 → 1,653 (−77,1%) | 668 → 646 |
+| Robustez prolongada | 15,449 → 13,442 | 1,683 → 0,724 (−57,0%) | 1.365 → 662 (−51,5%) |
+
+O armazenamento do mercado diminui cerca de 87%; o da robustez prolongada,
+98,0% (699,61 → 13,72 MB). As 16.737 linhas de KPI e todas as trajetórias de
+energia/custo coincidem exatamente antes/depois em cada uma das três repetições.
+O protocolo e as medições brutas acompanham a release GitHub.
+
+A comparação direta com 3.0.2 dá 5,298 → 6,162, 8,885 → 9,235 e
+14,548 → 13,442 ms por step. As novas verificações e a cobertura adicional dos
+KPIs têm custo; não há aceleração em todos os casos face a 3.0.2. Estas medições
+locais não substituem campanhas anuais de todo o catálogo nem calibração real.
+A RAM é medida antes da inspeção profunda ou reconstrução dos históricos públicos.
+
+### Validação
+
+- Suite completa: **1.138 testes passaram**, sem falhas nem skips; 44 avisos de precisão float32 do Gymnasium.
+- Auditorias estritas: 16 cenários físicos, 32 datasets oficiais em sondagens
+  curtas, contratos de entidades e seis referências de ações fixas passaram.
+  As referências existentes não foram atualizadas para acomodar diferenças.
+- Lint crítico, wheel/sdist, `twine check` e export do pacote instalado passaram.
+- Documentação: 208 páginas HTML e 19.096 ligações/recursos locais, zero erros
+  de ligação (40 avisos Sphinx retidos).
+- Medições: 27 execuções, 34.200 transições, física ativa e equivalência exata
+  de KPIs e trajetórias entre a versão funcional corrigida e a otimizada.
+
+Os incumprimentos de SOC fisicamente inviáveis continuam visíveis. Não se
+promete que todos os alvos de partida sejam atingíveis.
+
 ## v3.0.2 - 2026-09-09
 
 Responsavel pela release: [@calofonseca](https://github.com/calofonseca).

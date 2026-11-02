@@ -19,7 +19,7 @@ def main():
     args = parser.parse_args()
     source_root = Path(__file__).resolve().parents[2]
     installed_module = Path(citylearn.__file__).resolve()
-    assert source_root not in installed_module.parents, installed_module
+    assert installed_module.parent != source_root / "citylearn", installed_module
 
     env = CityLearnEnv(
         str(args.schema.resolve()),

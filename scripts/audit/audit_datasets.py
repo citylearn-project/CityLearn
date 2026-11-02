@@ -105,13 +105,8 @@ def safe_int(value: Any, default: int = 0) -> int:
 
 
 def dataset_root_from_schema(schema: Mapping[str, Any], dataset_dir: Path) -> Path:
-    root = schema.get("root_directory")
-    if root is None or str(root).strip() == "":
-        return dataset_dir.resolve()
-    root_path = Path(str(root))
-    if not root_path.is_absolute():
-        root_path = (dataset_dir / root_path).resolve()
-    return root_path
+    from citylearn.utils.file_handler import FileHandler
+    return FileHandler.resolve_schema_root(schema, dataset_dir / 'schema.json')
 
 
 def collect_csv_references(obj: Any, path: str = "$", out: Optional[List[Tuple[str, str]]] = None) -> List[Tuple[str, str]]:

@@ -21,6 +21,8 @@ setuptools.setup(
     version=get_version(),
     author='Soft-CPS Research Group, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy',
     author_email='jose@isep.ipp.pt',
+    maintainer='Tiago Fonseca',
+    maintainer_email='calof@isep.ipp.pt',
     description=(
         'CityLearn: an energy-community reinforcement-learning environment focused on EV/BESS/PV, '
         'electrical-service constraints, dynamic topology and community-market experimentation.'),

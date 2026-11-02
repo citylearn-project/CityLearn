@@ -1157,14 +1157,7 @@ class CityLearnEnv(Environment, Env):
 
             if schema_path.is_file():
                 schema = FileHandler.read_json(schema_path)
-                configured_root = schema.get('root_directory')
-                if configured_root is None:
-                    schema['root_directory'] = os.path.split(schema_path.absolute())[0]
-                else:
-                    configured_root = Path(configured_root).expanduser()
-                    if not configured_root.is_absolute():
-                        configured_root = schema_path.absolute().parent / configured_root
-                    schema['root_directory'] = str(configured_root.resolve())
+                schema['root_directory'] = str(FileHandler.resolve_schema_root(schema, schema_path))
 
             elif isinstance(schema, str):
                 try:

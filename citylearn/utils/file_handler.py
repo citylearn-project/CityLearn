@@ -1,13 +1,38 @@
 import pickle
+from pathlib import Path
 from typing import Any
 import simplejson as json
 import yaml
 
 class FileHandler:
     @staticmethod
+    def resolve_schema_root(schema: dict, schema_filepath: str) -> Path:
+        """Resolve local data roots independently of the process directory.
+
+        Prefer schema-relative roots. Older repository schemas include their
+        full repository-relative directory; resolve those against an existing
+        ancestor without changing the stored schema or consulting the cwd.
+        """
+        schema_dir = Path(schema_filepath).expanduser().resolve().parent
+        configured = schema.get('root_directory')
+        if configured is None:
+            return schema_dir
+        root = Path(configured).expanduser()
+        if root.is_absolute():
+            return root.resolve()
+        candidate = (schema_dir / root).resolve()
+        if candidate.is_dir():
+            return candidate
+        for ancestor in schema_dir.parents:
+            legacy_candidate = (ancestor / root).resolve()
+            if legacy_candidate.is_dir():
+                return legacy_candidate
+        return candidate
+
+    @staticmethod
     def read_json(filepath: str, **kwargs) -> dict:
         """Return JSON document as dictionary.
-        
+
         Parameters
         ----------
         filepath : str
@@ -17,7 +42,7 @@ class FileHandler:
         ----------------
         **kwargs : dict
             Other infrequently used keyword arguments to be parsed to `simplejson.load`.
-        
+
         Returns
         -------
         dict
@@ -32,7 +57,7 @@ class FileHandler:
     @staticmethod
     def write_json(filepath: str, dictionary: dict, **kwargs):
         """Write dictionary to JSON file.
-        
+
         Parameters
         ----------
         filepath : str
@@ -47,19 +72,19 @@ class FileHandler:
         """
 
         kwargs = {'ignore_nan': True, 'sort_keys': False, 'default': str, 'indent': 2, **kwargs}
-        
+
         with open(filepath,'w') as f:
             json.dump(dictionary, f, **kwargs)
 
     @staticmethod
     def read_yaml(filepath: str) -> dict:
         """Return YAML document as dictionary.
-        
+
         Parameters
         ----------
         filepath : str
         pathname of YAML document.
-        
+
         Returns
         -------
         dict
@@ -73,8 +98,8 @@ class FileHandler:
 
     @staticmethod
     def write_yaml(filepath: str, dictionary: dict, **kwargs):
-        """Write dictionary to YAML file. 
-        
+        """Write dictionary to YAML file.
+
         Parameters
         ----------
         filepath : str
@@ -89,14 +114,14 @@ class FileHandler:
         """
 
         kwargs = {'sort_keys': False, 'indent': 2, **kwargs}
-        
+
         with open(filepath, 'w') as f:
             yaml.safe_dump(dictionary, f, **kwargs)
 
     @staticmethod
     def read_pickle(filepath: str, **kwargs) -> Any:
         """Return pickle file as some Python class object.
-        
+
         Parameters
         ----------
         filepath : str
@@ -106,7 +131,7 @@ class FileHandler:
         ----------------
         **kwargs : dict
             Other infrequently used keyword arguments to be parsed to `pickle.load`.
-        
+
         Returns
         -------
         Any
@@ -120,8 +145,8 @@ class FileHandler:
 
     @staticmethod
     def write_pickle(filepath: str, data: Any, **kwargs):
-        """Write Python object to pickle file. 
-        
+        """Write Python object to pickle file.
+
         Parameters
         ----------
         filepath : str
@@ -143,4 +168,4 @@ class FileHandler:
         url = '/'.join([a.strip('/') for a in args])
 
         return url
-    
+

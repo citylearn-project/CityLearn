@@ -92,3 +92,31 @@ jobs:
           name: perf-smoke-report
           path: ${{ runner.temp }}/perf/perf_smoke_report.json
           if-no-files-found: ignore
+
+      - name: Verify installed wheel exports outside the checkout
+        run: |
+          python -m pip wheel --no-deps . --wheel-dir "${{ runner.temp }}/citylearn-wheel"
+          python -m pip install --no-deps --force-reinstall "${{ runner.temp }}"/citylearn-wheel/*.whl
+          cd "${{ runner.temp }}"
+          python -I "$GITHUB_WORKSPACE/scripts/ci/installed_export_smoke.py" \
+            --schema "$GITHUB_WORKSPACE/tests/data/minute_ev_demo/schema.json" \
+            --output "${{ runner.temp }}/citylearn-installed-export"
+
+  runtime-audits:
+    needs: lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install audit dependencies
+        run: pip install -r requirements.txt -r test_requirements.txt pyarrow nrel-pysam -e .
+      - name: Verify physics, entities, official datasets and fixed-command references
+        run: python scripts/audit/run_full_audit.py --strict --output-dir "${{ runner.temp }}/citylearn-audits"
+      - name: Upload runtime audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: citylearn-runtime-audits
+          path: ${{ runner.temp }}/citylearn-audits/*.json

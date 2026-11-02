@@ -55,6 +55,11 @@ def parse_bool(value: Any, default: Any = None, path: str = 'value'):
 
 class FileHandler:
     @staticmethod
+    def resolve_schema_root(schema: dict, schema_filepath: str):
+        from citylearn.utils.file_handler import FileHandler as SharedFileHandler
+        return SharedFileHandler.resolve_schema_root(schema, schema_filepath)
+
+    @staticmethod
     def read_json(filepath: str, **kwargs) -> dict:
         """Return JSON document as dictionary.
         
