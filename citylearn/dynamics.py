@@ -136,6 +136,9 @@ class LSTMDynamics(Dynamics, (torch.nn if torch is not None else _TorchNNPlaceho
         except:
             self.load_state_dict(torch.load(self.filepath))
 
+        # Simulation is inference: without eval() the dropout layer stays active and every prediction
+        # drops random units (unseeded), making the temperature dynamics noisy and non-reproducible.
+        self.eval()
         self._hidden_state = self.init_hidden(1)
         self._model_input = [[None]*(self.lookback + 1) for _ in self.input_observation_names]
 

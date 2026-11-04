@@ -66,3 +66,31 @@ def test_simulated_trajectory_does_not_read_next_step_placeholder():
 
     for held_series, restored_series in zip(held, restored):
         np.testing.assert_array_equal(held_series, restored_series)
+
+
+class _NoInteraction:
+    def predict(self, x):
+        return [0]
+
+
+def _quebec_temperatures(monkeypatch, steps=30):
+    import citylearn.utilities as utilities
+
+    original = utilities.FileHandler.read_pickle
+    monkeypatch.setattr(
+        utilities.FileHandler, 'read_pickle',
+        staticmethod(lambda path, **kwargs: _NoInteraction() if str(path).endswith('.pkl') else original(path, **kwargs)),
+    )
+    env = CityLearnEnv('quebec_neighborhood_without_demand_response_set_points', central_agent=True, random_seed=0)
+    env.reset()
+
+    for _ in range(steps):
+        env.step([[0.5] * env.action_space[0].shape[0]])
+
+    assert all(not b.dynamics.training for b in env.buildings), 'dynamics must run in inference mode'
+    return np.concatenate([b.energy_simulation.indoor_dry_bulb_temperature[:b.time_step].copy() for b in env.buildings])
+
+
+def test_lstm_dynamics_with_dropout_are_deterministic(monkeypatch):
+    # Quebec dynamics models are configured with dropout 0.1-0.5, which must not act during simulation.
+    np.testing.assert_array_equal(_quebec_temperatures(monkeypatch), _quebec_temperatures(monkeypatch))

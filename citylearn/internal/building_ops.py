@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import numpy as np
+from citylearn.internal.scalars import clip_scalar
 
 from citylearn.energy_model import HeatPump
 from citylearn.preprocessing import Normalize, PeriodicNormalization
@@ -773,8 +774,8 @@ class BuildingOpsService:
         return reasons
 
     def _record_charger_action_feedback(self, charger, requested_action: float, limited_action: float):
-        requested_action = float(np.clip(self._safe_scalar(requested_action, 0.0), -1.0, 1.0))
-        limited_action = float(np.clip(self._safe_scalar(limited_action, 0.0), -1.0, 1.0))
+        requested_action = clip_scalar(self._safe_scalar(requested_action, 0.0), -1.0, 1.0)
+        limited_action = clip_scalar(self._safe_scalar(limited_action, 0.0), -1.0, 1.0)
         requested_power = self._charger_requested_power_kw(charger, requested_action)
         limited_power = self._charger_requested_power_kw(charger, limited_action)
 
@@ -805,8 +806,8 @@ class BuildingOpsService:
     def _record_storage_action_feedback(self, requested_action: float, limited_action: float):
         building = self.building
         prefix = 'action_feedback_electrical_storage_'
-        requested_action = float(np.clip(self._safe_scalar(requested_action, 0.0), -1.0, 1.0))
-        limited_action = float(np.clip(self._safe_scalar(limited_action, 0.0), -1.0, 1.0))
+        requested_action = clip_scalar(self._safe_scalar(requested_action, 0.0), -1.0, 1.0)
+        limited_action = clip_scalar(self._safe_scalar(limited_action, 0.0), -1.0, 1.0)
         requested_power = self._storage_requested_power_kw(requested_action)
         limited_power = self._storage_requested_power_kw(limited_action)
 
@@ -1215,8 +1216,7 @@ class BuildingOpsService:
         if callable(charger_request):
             return self._safe_scalar(charger_request(action), 0.0)
 
-        action = self._safe_scalar(action, 0.0)
-        action = float(np.clip(action, -1.0, 1.0))
+        action = clip_scalar(self._safe_scalar(action, 0.0), -1.0, 1.0)
         if action > 0.0:
             max_power = self._safe_scalar(getattr(charger, 'max_charging_power', 0.0), 0.0)
             min_power = self._safe_scalar(getattr(charger, 'min_charging_power', 0.0), 0.0)
@@ -1239,7 +1239,7 @@ class BuildingOpsService:
                 return 0.0
             if min_power > 0.0 and target_power_kw < min_power:
                 return 0.0
-            return float(np.clip(target_power_kw / max_power, 0.0, 1.0))
+            return clip_scalar(target_power_kw / max_power, 0.0, 1.0)
 
         if target_power_kw < 0.0:
             max_power = self._safe_scalar(getattr(charger, 'max_discharging_power', 0.0), 0.0)
@@ -1249,7 +1249,7 @@ class BuildingOpsService:
                 return 0.0
             if min_power > 0.0 and requested < min_power:
                 return 0.0
-            return float(-np.clip(requested / max_power, 0.0, 1.0))
+            return -clip_scalar(requested / max_power, 0.0, 1.0)
 
         return 0.0
 
@@ -1257,8 +1257,7 @@ class BuildingOpsService:
         building = self.building
         if action is None:
             return 0.0
-        action = self._safe_scalar(action, 0.0)
-        action = float(np.clip(action, -1.0, 1.0))
+        action = clip_scalar(self._safe_scalar(action, 0.0), -1.0, 1.0)
         nominal_power = self._safe_scalar(getattr(building.electrical_storage, 'nominal_power', 0.0), 0.0)
         return action * nominal_power if nominal_power > 0.0 else 0.0
 
@@ -1267,7 +1266,7 @@ class BuildingOpsService:
         nominal_power = self._safe_scalar(getattr(building.electrical_storage, 'nominal_power', 0.0), 0.0)
         if nominal_power <= 0.0:
             return 0.0
-        return float(np.clip(target_power_kw / nominal_power, -1.0, 1.0))
+        return clip_scalar(target_power_kw / nominal_power, -1.0, 1.0)
 
     def _electrical_service_violation_kw(
         self,

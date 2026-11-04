@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 import numpy as np
+from citylearn.internal.scalars import clip_scalar
 import pandas as pd
 try:
     from PySAM import Pvwattsv8
@@ -887,7 +888,7 @@ class StorageDevice(Device):
         super().next_time_step()
 
         if np.isfinite(previous_soc) and self.time_step < len(self.__soc):
-            next_soc = float(np.clip(previous_soc * (1.0 - self.loss_coefficient), 0.0, 1.0))
+            next_soc = clip_scalar(previous_soc * (1.0 - self.loss_coefficient), 0.0, 1.0)
             self.__soc[self.time_step] = next_soc
             self.__soc_initialized[self.time_step] = True
             self._record_energy_event('standby', previous_soc*self.capacity,
@@ -1301,7 +1302,7 @@ class Battery(StorageDevice, ElectricDevice):
         self.update_electricity_consumption(dataset_resolution_balance, enforce_polarity=False)
 
     def _minimum_soc(self) -> float:
-        return float(np.clip(1.0 - self.depth_of_discharge, 0.0, 1.0))
+        return clip_scalar(1.0 - self.depth_of_discharge, 0.0, 1.0)
 
     def next_time_step(self):
         super().next_time_step()
