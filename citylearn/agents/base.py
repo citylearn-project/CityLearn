@@ -7,6 +7,17 @@ from citylearn.citylearn import CityLearnEnv
 
 LOGGER = logging.getLogger()
 
+def get_env_attr(env, name: str):
+    """Read an attribute from the outermost wrapper that defines it, else from the base environment.
+
+    Gymnasium 1.x removed implicit attribute forwarding through wrappers; ``get_wrapper_attr`` replaces it
+    (older gymnasium versions forward attributes through ``Wrapper.__getattr__``).
+    """
+
+    getter = getattr(env, 'get_wrapper_attr', None)
+    return getter(name) if callable(getter) else getattr(env, name)
+
+
 class Agent(Environment):
     r"""Base agent class.
 
@@ -23,7 +34,7 @@ class Agent(Environment):
     
     def __init__(self, env: CityLearnEnv, **kwargs: Any):
         self.env = env
-        self.observation_names = self.env.observation_names
+        self.observation_names = get_env_attr(self.env, 'observation_names')
         self.action_names = self.env.unwrapped.action_names
         self.observation_space = self.env.observation_space
         self.action_space = self.env.action_space
@@ -176,8 +187,8 @@ class Agent(Environment):
                 deterministic = deterministic or (deterministic_finish and episode >= episodes - 1)
                 observations, _ = self.env.reset()
                 self.episode_time_steps = self.episode_tracker.episode_time_steps
-                terminated = self.env.terminated
-                truncated = self.env.truncated
+                terminated = env.terminated
+                truncated = env.truncated
                 time_step = 0
                 rewards_list = []
                 rewards_by_member = {}

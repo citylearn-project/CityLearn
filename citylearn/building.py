@@ -3,6 +3,7 @@ import warnings
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 from gymnasium import spaces
 import numpy as np
+from citylearn.internal.scalars import clip_scalar
 import pandas as pd
 try:
     import torch
@@ -1767,7 +1768,7 @@ class Building(Environment):
             Normalized charging or discharging action (range [-1, 1]).
         """
 
-        action = float(np.clip(action, -1.0, 1.0))
+        action = clip_scalar(action, -1.0, 1.0)
         energy = normalized_power_action_to_energy_kwh(
             action,
             self.electrical_storage.nominal_power,
@@ -3374,6 +3375,7 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
         model_input_tensor = torch.tensor(self.get_dynamics_input().T)
         model_input_tensor = model_input_tensor[np.newaxis, :, :]
         hidden_state = tuple([h.data for h in self.dynamics._hidden_state])
+
         indoor_dry_bulb_temperature_norm, self.dynamics._hidden_state = self.dynamics(model_input_tensor.float(), hidden_state)
 
         # update dry bulb temperature for current time step in model input
@@ -3415,6 +3417,28 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
 
         return model_input
 
+    def _dynamics_input_source_observation_names(self) -> List[str]:
+        """Raw observation names needed to build the model inputs (``hour_sin`` needs ``hour``)."""
+
+        input_names = tuple(self.dynamics.input_observation_names)
+        cached = getattr(self, '_dynamics_input_source_names_cache', None)
+
+        if cached is None or cached[0] != input_names:
+            periodic = self.get_periodic_observation_metadata()
+            names = []
+
+            for name in input_names:
+                base, _, suffix = name.rpartition('_')
+                source = base if suffix in ('sin', 'cos') and base in periodic else name
+
+                if source not in names:
+                    names.append(source)
+
+            cached = (input_names, names)
+            self._dynamics_input_source_names_cache = cached
+
+        return cached[1]
+
     def _update_dynamics_input(self):
         """Updates and returns the input time series for the dynmaics prediction model.
 
@@ -3422,8 +3446,11 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
         The variables in the input will have length of lookback + 1.
         """
 
-        # get relevant observations for the current time step
-        observations = self.observations(include_all=True, normalize=False, periodic_normalization=True)
+        # get relevant observations for the current time step (only the model inputs, not every observation)
+        observations = self.observations(
+            include_all=True, normalize=False, periodic_normalization=True,
+            observation_names=self._dynamics_input_source_observation_names(),
+        )
 
         # append current time step observations to model input
         # leave out the oldest set of observations and keep only the previous n

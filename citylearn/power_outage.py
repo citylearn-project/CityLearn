@@ -151,7 +151,8 @@ class ReliabilityMetricsPowerOutage(PowerOutage):
         day_count = time_steps/time_steps_per_day
         daily_outage_probability = self.saifi/days_per_year
         outage_days = nprs.binomial(n=1, p=daily_outage_probability, size=int(day_count))
-        outage_day_ixs = outage_days*np.arange(day_count)
+        # One index per drawn day; a float `day_count` (partial last day) would add an extra index.
+        outage_day_ixs = outage_days*np.arange(outage_days.shape[0])
         outage_day_ixs = outage_day_ixs[outage_day_ixs != 0]
         outage_day_count = outage_days[outage_days == 1].shape[0]
         start_time_steps = list(range(int(time_steps_per_day))) if self.start_time_steps is None else self.start_time_steps

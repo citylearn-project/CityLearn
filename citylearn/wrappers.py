@@ -98,7 +98,7 @@ class NormalizedObservationWrapper(ObservationWrapper):
             observation_names = [observation_names]
         
         else:
-            observation_names = [list(b.observations(normalize=True, periodic_normalization=True).keys()) for b in self.env.buildings]
+            observation_names = [list(b.observations(normalize=True, periodic_normalization=True).keys()) for b in self.env.unwrapped.buildings]
 
         return observation_names
 
@@ -312,13 +312,13 @@ class DiscreteObservationWrapper(ObservationWrapper):
 
             for i, b in enumerate(self.bin_sizes):
                 for k, v in b.items():
-                    if i == 0 or k not in self.env.shared_observations or k not in shared_observations:
+                    if i == 0 or k not in self.env.unwrapped.shared_observations or k not in shared_observations:
                         bin_sizes.append(v)
 
                     else:
                         pass
 
-                    if k in self.env.shared_observations and k not in shared_observations:
+                    if k in self.env.unwrapped.shared_observations and k not in shared_observations:
                         shared_observations.append(k)
 
                     else:
@@ -716,7 +716,7 @@ class RLlibMultiAgentObservationWrapper(ObservationWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
-        assert not env.central_agent, 'RLlibMultiAgentObservationWrapper is'\
+        assert not env.unwrapped.central_agent, 'RLlibMultiAgentObservationWrapper is'\
             ' compatible only when env.central_agent = False.'\
                 ' First set env.central_agent = False to use this wrapper.'
 
@@ -751,7 +751,7 @@ class RLlibMultiAgentActionWrapper(ActionWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
-        assert not env.central_agent, 'RLlibMultiAgentActionWrapper is'\
+        assert not env.unwrapped.central_agent, 'RLlibMultiAgentActionWrapper is'\
             ' compatible only when env.central_agent = False.'\
                 ' First set env.central_agent = False to use this wrapper.'
 
@@ -781,7 +781,7 @@ class RLlibMultiAgentRewardWrapper(RewardWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
-        assert not env.central_agent, 'RLlibMultiAgentRewardWrapper is'\
+        assert not env.unwrapped.central_agent, 'RLlibMultiAgentRewardWrapper is'\
             ' compatible only when env.central_agent = False.'\
                 ' First set env.central_agent = False to use this wrapper.'
 
