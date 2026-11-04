@@ -1,126 +1,96 @@
-# Simulator Features
+# Funcionalidades do simulador
 
-Esta pagina resume o que o simulador tem de bom, incluindo funcionalidades que nao sao obvias quando se olha so para o README.
+Configure os equipamentos e serviços no [schema](schema_reference.md), escolha
+as [ações](actions_reference.md) e as [observações](observations_reference.md),
+e execute a simulação pelo [guia de utilização](running_simulations.md).
 
-## Core
+## Edifícios, produção e armazenamento
 
-| Feature | O que oferece |
+| Componente | Funcionalidade |
 |---|---|
-| Gymnasium environment | API `reset/step`, action/observation spaces e compatibilidade RL. |
-| Multi-building district | Simula comunidade de buildings com DERs. |
-| Multi-agent ou central-agent | Pode devolver um vetor por building ou um vetor centralizado. |
-| HVAC e thermal storage | Cooling, heating e DHW com storage termico. |
-| BESS | Storage eletrico com SOC, eficiencia, power curves e degradacao. |
-| PV | Geracao em modo perfil por kW ou absoluto `kWh/step`. |
-| EVs e chargers | Schedules por charger, EV connected/incoming, V2G e eficiencia. |
-| Deferrable appliances | Ciclos normalizados, janelas de flexibilidade e KPIs de servico. |
-| Demand response | Pedidos DSO/TSO orientados por dataset com observacoes entity, settlement e KPIs. |
-| Multi-comunidade | Orquestra varias comunidades `CityLearnEnv` sincronizadas e reporta KPIs de portfolio. |
-| Eventos de robustez | Degradacao opcional e orientada por dataset para observations, forecasts, actions e disponibilidade logica de assets. |
+| Edifícios | Comunidades com vários edifícios, controlo por agente ou centralizado e API Gymnasium `reset/step`. |
+| Sistemas térmicos | Arrefecimento, aquecimento e água quente com armazenamento térmico. |
+| Baterias | SOC, eficiência, curvas de potência e degradação. |
+| Fotovoltaico | Perfil por kW instalado ou produção medida em `kWh/step`. |
+| Veículos elétricos | Calendários por carregador, veículos ligados ou previstos, eficiência e V2G. |
+| Máquinas diferíveis | Ciclos normalizados, janelas de início, prazos e indicadores de serviço. |
 
-## Fisica e Unidades
+## Tempo e unidades
 
-| Feature | O que resolve |
-|---|---|
-| Sub-hourly support | 1h, 15min, 5min, 1min, 15s e outras resolucoes via `seconds_per_time_step`. |
-| Contrato kWh/step vs kW | Datasets energeticos em `kWh/step`; limites e potencias em `kW`. |
-| Conversoes por step | Acoes de potencia sao convertidas para energia com a duracao do step. |
-| PV absolute | Permite usar dados reais de geracao diretamente. |
-| Physics invariant checks | Checks opcionais de sanidade durante runtime. |
-| Audit scripts | `audit_physics.py` e `audit_entity_contract.py --strict`. |
+A duração dos passos é configurada por `seconds_per_time_step`, incluindo
+1 h, 15 min, 5 min, 1 min e 15 s. Os dados de energia usam `kWh/step`; os limites
+e potências usam `kW`. A conversão das ações considera a duração do passo.
+As verificações físicas opcionais e os testes de baixa energia ajudam a detetar
+erros de escala e arredondamento. Consultar o [contrato de unidades](data_unit_contract.md).
 
-## Entity Interface
+## Observações e interfaces
 
-| Feature | Porque importa |
-|---|---|
-| Tabelas por entidade | `district`, `building`, `charger`, `ev`, `storage`, `pv`, `deferrable_appliance`. |
-| Edges relacionais | Pronto para GNN/GraphRL. |
-| IDs estaveis | Permite memoria por entidade e topology dynamic. |
-| Bundles | Permite controlar custo/riqueza das observacoes. |
-| Bundle demand response | Adiciona pedido ativo, baseline, precos e delivery/shortfall anterior a tabela district. |
-| Bundle robustez | Adiciona estado de robustez ativo e contadores de corrupcao do step anterior a tabela district. |
-| Specs machine-readable | `env.entity_specs` descreve ids, features, unidades e bundles. |
-| Copias nas observacoes | Evita mutacao acidental do estado interno pelo agente. |
+A interface vetorial devolve observações por edifício ou para um agente central.
+A interface de entidades fornece tabelas `district`, `building`, `charger`, `ev`,
+`storage`, `pv` e `deferrable_appliance`, com relações e identificadores estáveis.
+`env.entity_specs` descreve os campos, unidades e grupos de observações.
+As cópias devolvidas impedem a alteração acidental do estado interno pelo agente.
 
-## Dynamic Topology
+Os grupos opcionais permitem selecionar previsões, pedidos de resposta à procura
+e informação de robustez. O grupo de resposta à procura inclui o pedido ativo,
+a referência, os preços e o serviço ou défice anterior. O de robustez inclui o
+estado e os contadores de perturbações. Ver o [guia de interfaces](interfaces_flat_entity.md).
 
-| Feature | O que faz |
-|---|---|
-| `add_member`/`remove_member` | Buildings podem entrar/sair da comunidade. |
-| `add_asset`/`remove_asset` | Chargers, PV, BESS e deferrables podem mudar durante o episodio. |
-| Refresh de spaces/specs | Action/observation spaces acompanham topology version. |
-| Lifecycle | `born_at`, `removed_at`, `active` em `entity_specs`. |
-| Remocao segura de deferrables | Cancela ciclos futuros sem deixar consumo pendente. |
+## Topologia dinâmica
 
-## Three Phase e Electrical Service
+`add_member` e `remove_member` alteram os membros. `add_asset` e `remove_asset`
+alteram carregadores, PV, baterias e máquinas durante o episódio. Os espaços de
+ações e observações acompanham a versão da topologia; `born_at`, `removed_at` e
+`active` registam o ciclo de vida das entidades. A remoção de máquinas cancela os
+ciclos futuros sem deixar consumo pendente.
 
-| Feature | O que mede/controla |
-|---|---|
-| Phase connection | Chargers e storage podem ter `L1`, `L2`, `L3`, `all_phases`. |
-| Headroom | Observacoes de headroom import/export. |
-| Phase power | Potencia atual por fase no bundle core. |
-| Violations | KPIs de violacao total e contagem. |
-| Phase imbalance | KPI de desequilibrio medio. |
-| Phase peaks | Picos import/export por fase. |
+## Limites elétricos e fases
 
-## Community Market e KPIs
+Carregadores e baterias podem ligar-se a `L1`, `L2`, `L3` ou `all_phases`.
+As observações e os KPIs expõem potência, margem de importação/exportação,
+violações residuais, desequilíbrio e picos por fase. Estes são limites de potência
+ativa na ligação; não representam um cálculo de tensão ou fluxo de potência AC.
 
-| Feature | O que oferece |
-|---|---|
-| Local settlement | Matching local entre exportadores/importadores. |
-| Weighted imports | Reparticao por pesos de membros. |
-| Savings | Compara settled cost contra counterfactual. |
-| Self-consumption community | Mede share local/import. |
-| KPI v2 naming tree | Nomes estruturados por level/family/subfamily/metric/unit. |
-| Golden tests | Testes com valores calculados a mao para KPIs criticos. |
+## Mercado local e indicadores
 
-## Multi-Comunidade
+O mercado faz a correspondência entre excedentes e procura no mesmo intervalo,
+com repartição por pesos dos membros. Os resultados incluem custos liquidados,
+poupança face à referência sem partilha e autoconsumo comunitário.
+Os KPIs v2 têm nomes estruturados por nível, família, métrica e unidade;
+os testes de referência incluem valores calculados à mão.
+Ver as [definições dos KPIs](kpis_reference.md).
 
-| Feature | O que oferece |
-|---|---|
-| `MultiCommunityEnv` | Wrapper publico em `citylearn.multi_community` para varias comunidades independentes. |
-| Step sincronizado | Todas as comunidades tem de partilhar `seconds_per_time_step`, episode length, interface e modo `central_agent`. |
-| DR independente | Cada comunidade mantem os seus pedidos, observations, settlement e KPIs de demand response. |
-| KPIs portfolio | `evaluate_v2()` adiciona linhas `level="portfolio"` com somas e ratios ponderados. |
-| Layout de export | KPIs locais em subpastas por comunidade e CSV global `exported_kpis_multi_community.csv`. |
+## Resposta à procura e várias comunidades
 
-## Robustez
+Pedidos DSO/TSO definidos nos dados expõem objetivos de flexibilidade,
+remuneração, entrega e défice através da interface de entidades.
+Cada comunidade mantém os seus pedidos, liquidação e indicadores.
 
-| Feature | O que oferece |
-|---|---|
-| Eventos por dataset | Ficheiros CSV/Parquet configuram perturbacoes deterministicas. |
-| Switches modulares | Observations, forecasts, actions e assets podem ser ligados separadamente. |
-| Separacao do estado real | Corrupcao de observation/forecast nao altera rewards, settlement DR nem KPIs fisicos. |
-| Canal de acao imperfeito | Dropout, noise, bias, stuck, delay e clip podem alterar a acao aplicada. |
-| Outage logico de asset | Assets ficam na topologia, mas telemetria e/ou controlo podem ficar indisponiveis. |
-| KPIs de robustez | Contam eventos, corrupcoes, observations missing e action dropouts. |
+`MultiCommunityEnv`, em `citylearn.multi_community`, sincroniza comunidades
+independentes com a mesma duração de passo, episódio, interface e modo
+`central_agent`. `evaluate_v2()` acrescenta linhas `level="portfolio"` com somas
+e rácios ponderados. Os exports incluem subpastas locais e
+`exported_kpis_multi_community.csv`. Consultar o [guia de várias comunidades](multi_community_reference.md).
 
-## Dataset e Performance
+## Eventos de robustez
 
-| Feature | O que melhora |
-|---|---|
-| CSV e Parquet | Mesmo contrato de dados com storage eficiente. |
-| Windowed loader | Carrega apenas a janela necessaria. |
-| Shared time-series cache | Reusa weather/pricing/carbon comuns. |
-| 15s fixtures | Testes especificos para energia pequena e arredondamentos. |
-| Render modes | `none`, `during`, `end` para equilibrar performance e debug. |
+Ficheiros CSV/Parquet configuram perturbações determinísticas nas observações,
+previsões, ações e disponibilidade lógica dos equipamentos. Cada grupo é opcional.
+Perturbar observações ou previsões não altera o estado físico usado nos KPIs,
+recompensas e liquidação. Falhas no canal de ação podem alterar o comando aplicado.
+Um equipamento logicamente indisponível mantém a sua identidade na topologia.
+Os indicadores distinguem eventos, dados ausentes e ações afetadas.
+Consultar o [guia de robustez](robustness_reference.md).
 
-## UI e Export
+## Dados, desempenho e visualização
 
-| Feature | O que permite |
-|---|---|
-| Render/export CSV | Inspecao posterior de episodios. |
-| KPI export | Integracao com dashboards. |
-| CityLearn UI compatibility | Consumo de `evaluate_v2()` por workflows visuais. |
-| Start date | Timestamps humanos em outputs. |
+CSV e Parquet partilham o contrato de dados. O carregamento por janela e a cache
+comum de meteorologia, preços e carbono reduzem carregamento repetido.
+Os modos de renderização `none`, `during` e `end` controlam quando são escritos
+os resultados. Os exports de séries temporais e KPIs permitem a análise na
+CityLearn UI; a data inicial configura os timestamps apresentados.
 
-## Testing e Producao
-
-| Area | Cobertura |
-|---|---|
-| Sub-hourly | 1min/5min/15min/1h/15s. |
-| KPIs | Golden e sanity tests. |
-| Entity contract | Strict audit e snapshots. |
-| Dynamic topology | Add/remove member/assets e refresh de action space. |
-| Deferrables | Parser, actions, KPIs, topology add/remove. |
-| Market/phases | Conservacao e coerencia de import/export/fases. |
+O [guia de validação e desempenho](../validation.md), em inglês, reúne as
+verificações físicas, de KPIs e de interfaces, os testes de topologia e os
+resultados medidos. Os testes cobrem os cenários executados, sem substituir a
+calibração com equipamentos reais.

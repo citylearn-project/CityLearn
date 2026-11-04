@@ -125,9 +125,11 @@ for the bibliography.
    publications
    references
    contributing
+   guides/validation
    guides/developer_guide
    guides/publishing
    guides/releases
+   Earlier releases <guides/releases_archive>
 
 .. _cite-citylearn:
 

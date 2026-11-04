@@ -11,6 +11,7 @@ Visit the `CityLearn GitHub repository <https://github.com/citylearn-project/Cit
 Refer to our `bug report template <https://github.com/citylearn-project/CityLearn/blob/master/.github/ISSUE_TEMPLATE/bug_report.md>`_ for guidelines on how to report bugs or `feature request template <https://github.com/citylearn-project/CityLearn/blob/master/.github/ISSUE_TEMPLATE/feature_request.md>`_ to propose enhancements and functionalities that you will like to be implemented.
 
 For local setup, tests and documentation builds, see :doc:`guides/developer_guide`.
+Use :doc:`guides/validation` to choose simulation audits and find measured results.
 
 Main Contributors
 *****************

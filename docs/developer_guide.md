@@ -1,6 +1,8 @@
 # Developer Guide
 
-This page collects local development commands, validation checks, performance smoke tests and the current internal architecture map.
+Set up a development environment, run regression checks and profile the runtime.
+For simulation-level checks and published measurements, start with
+[Validation and performance](validation.md).
 
 Portuguese version: [pt/developer_guide.md](pt/developer_guide.md).
 

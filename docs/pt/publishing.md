@@ -1,61 +1,48 @@
-# Guia de Publicacao
+# Publicar o CityLearn
 
-O CityLearn e publicado no PyPI como `citylearn` e importado como `citylearn`.
+O pacote e o módulo Python chamam-se `citylearn`.
+O responsável pela manutenção é [Tiago Fonseca](https://github.com/calofonseca).
+Versão inglesa: [Publishing CityLearn](../publishing.md).
 
-Versao inglesa: [../publishing.md](../publishing.md).
+## Preparar a versão
 
-## Responsavel por Releases
-
-Responsavel default por releases: [@calofonseca](https://github.com/calofonseca).
-
-## Bump de Versao
-
-1. Atualizar `citylearn/__init__.py`.
-2. Atualizar [releases.md](releases.md).
-3. Atualizar paginas de referencia afetadas quando mudarem schema, acoes, observacoes, KPIs ou datasets.
-4. Correr a validacao em [developer_guide.md](developer_guide.md).
-5. Fazer commit e tag.
-
-Exemplo:
+1. Atualizar a versão em `citylearn/__init__.py`.
+2. Acrescentar às [notas da versão](releases.md) as alterações para utilizadores,
+   compatibilidade, impacto nos dados, validação e instruções de migração.
+3. Atualizar os guias afetados e as [instruções de migração](../migration.md).
+4. Executar os testes e auditores do [guia de desenvolvimento](developer_guide.md).
+   Construir também o site Sphinx e verificar ligações e exemplos.
+5. Construir e verificar o wheel e o arquivo de código, incluindo uma instalação
+   isolada fora do repositório e a verificação dos exports.
 
 ```console
-git add citylearn/__init__.py README.md docs
-git commit -m "Release v0.4.3"
-git tag -a v0.4.3 -m "Release v0.4.3"
-git push --follow-tags origin master
+python -m build
+python -m twine check dist/*
 ```
 
-## Workflow PyPI
+Guardar os relatórios de execução nos artefactos do CI ou da versão. As medições
+devem identificar a referência, os dados, as repetições, as unidades e os limites.
+Mover as versões antigas para o [arquivo](releases_archive.md), preservando a
+evidência de validação.
 
-1. Usar o projeto PyPI existente chamado `citylearn`.
-2. Confirmar que o environment `pypi` do GitHub tem secrets `PYPI_USERNAME` e `PYPI_PASSWORD` validos.
-3. Fazer push do commit e da tag.
-4. Criar uma GitHub Release ou correr manualmente o workflow `Publish Python Package`.
-5. O workflow `.github/workflows/pypi_deploy.yml` cria `dist/*` e envia para o PyPI.
+## CI e publicação
 
-## Check Local de Build
+Criar o commit com a identidade do mantenedor, fazer um único push e aguardar pelo
+CI. A tag `vX.Y.Z` deve apontar para o commit aprovado.
 
-```console
-.venv/bin/python -m pip install --upgrade pip build twine
-.venv/bin/python -m build
-.venv/bin/python -m twine check dist/*
-```
+O [workflow de publicação](https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/pypi_deploy.yml) é acionado pela
+publicação de uma GitHub Release ou por execução manual. Escolher um único
+acionamento por versão; o push da tag, por si só, não publica no PyPI.
 
-## Disciplina de Release
+Confirmar que a construção, a verificação dos exports instalados e a publicação
+passaram para o commit pretendido. Instalar depois a versão exata do PyPI num
+ambiente limpo e verificar o pacote. As credenciais configuradas no ambiente
+`pypi` não devem ser copiadas para a documentação.
 
-| Tipo de versao | Quando usar |
+## Política de versões
+
+| Tipo | Utilização |
 |---|---|
-| Patch | Features aditivas compativeis, fixes, docs e testes. |
-| Minor | Nova capacidade grande do simulador ou mudanca de schema/API. |
-| Major | Breaking changes amplos. |
-
-Antes de publicar, garantir que `docs/releases.md` tem:
-
-| Campo | Objetivo |
-|---|---|
-| Summary | O que mudou e porquê. |
-| Release owner | Tag GitHub da pessoa responsavel pela release. |
-| Dataset/schema impact | Risco de migracao para datasets e configs existentes. |
-| Compatibility | Se algoritmos/wrappers precisam de mudancas. |
-| Validation | Comandos ou simulacoes que passaram. |
-| Migration notes | Acoes necessarias depois do upgrade. |
+| Patch | Correções compatíveis, documentação e pequenas adições. |
+| Minor | Nova capacidade substancial ou alteração de schema/API. |
+| Major | Alterações incompatíveis abrangentes. |
