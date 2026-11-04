@@ -559,9 +559,10 @@
 <span class="sd">        outdoor_dry_bulb_temperature : Union[float, Iterable[float]]</span>
 <span class="sd">            Outdoor dry bulb temperature in [C].</span>
 <span class="sd">        cooling_demand : Union[float, Iterable[float]], optional</span>
-<span class="sd">            Cooling demand in [kWh].</span>
+<span class="sd">            Cooling energy in [kWh] at dataset resolution, converted to average</span>
+<span class="sd">            control-step power in [kW] for sizing.</span>
 <span class="sd">        heating_demand : Union[float, Iterable[float]], optional</span>
-<span class="sd">            Heating demand in [kWh].</span>
+<span class="sd">            Heating energy in [kWh] at dataset resolution.</span>
 <span class="sd">        safety_factor : Union[float, Tuple[float, float]], default: 1.0</span>
 <span class="sd">            `nominal_power` is oversized by factor of `safety_factor`.</span>
 
@@ -579,13 +580,13 @@
 
 
         <span class="k">if</span> <span class="n">cooling_demand</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cooling_demand</span> <span class="o">=</span> <span class="n">cooling_demand</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> 
+            <span class="n">cooling_demand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cooling_demand</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="o">/</span> <span class="n">seconds_to_hours</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
             <span class="n">cooling_nominal_power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cooling_demand</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_cop</span><span class="p">(</span><span class="n">outdoor_dry_bulb_temperature</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cooling_nominal_power</span> <span class="o">=</span> <span class="mi">0</span>
         
         <span class="k">if</span> <span class="n">heating_demand</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">heating_demand</span> <span class="o">=</span> <span class="n">heating_demand</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> 
+            <span class="n">heating_demand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">heating_demand</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="o">/</span> <span class="n">seconds_to_hours</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
             <span class="n">heating_nominal_power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">heating_demand</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">get_cop</span><span class="p">(</span><span class="n">outdoor_dry_bulb_temperature</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">heating_nominal_power</span> <span class="o">=</span> <span class="mi">0</span>
@@ -685,7 +686,8 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        demand : Union[float, Iterable[float]], optional</span>
-<span class="sd">            Heating demand in [kWh].</span>
+<span class="sd">            Heating energy in [kWh] at dataset resolution, converted to average</span>
+<span class="sd">            control-step power in [kW] for sizing.</span>
 <span class="sd">        safety_factor : Union[float, Tuple[float, float]], default: 1.0</span>
 <span class="sd">            `nominal_power` is oversized by factor of `safety_factor`.</span>
 
@@ -698,8 +700,8 @@
 <span class="sd">        -----</span>
 <span class="sd">        `nominal_power` = max(demand/`efficiency`)*safety_factor</span>
 <span class="sd">        """</span>
-        <span class="n">demand</span> <span class="o">=</span> <span class="n">demand</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span>
-        <span class="n">safety_factor</span> <span class="o">=</span> <span class="n">safety_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property_value</span><span class="p">(</span><span class="n">safety_factor</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">demand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">demand</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="o">/</span> <span class="n">seconds_to_hours</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
+        <span class="n">safety_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property_value</span><span class="p">(</span><span class="n">safety_factor</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="n">nominal_power</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">demand</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">efficiency</span><span class="p">)</span><span class="o">*</span><span class="n">safety_factor</span>
 
         <span class="k">return</span> <span class="n">nominal_power</span></div>
@@ -955,10 +957,10 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">loss_coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Effective standby loss ratio for the active physical timestep."""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Effective step loss, compounded from the configured hourly fraction."""</span>
 
         <span class="n">step_hours</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3600.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loss_coefficient</span> <span class="o">*</span> <span class="n">step_hours</span>
+        <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">__loss_coefficient</span><span class="p">)</span><span class="o">**</span><span class="n">step_hours</span>
     
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">initial_soc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -1191,20 +1193,21 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        demand : Union[float, Iterable[float]], optional</span>
-<span class="sd">            Heating demand in [kWh].</span>
+<span class="sd">            Thermal energy in [kWh] at dataset resolution. Capacity covers the</span>
+<span class="sd">            largest control-step demand, rather than a power in [kW].</span>
 <span class="sd">        safety_factor : Union[float, Tuple[float, float]], default: (1.0, 2.0)</span>
 <span class="sd">            The `capacity` is oversized by factor of `safety_factor`.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        capacity : float</span>
-<span class="sd">            Autosized cpacity.</span>
+<span class="sd">            Autosized capacity in [kWh].</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        `capacity` = max(demand/`efficiency`)*safety_factor</span>
+<span class="sd">        `capacity` = max(control-step demand)*safety_factor</span>
 <span class="sd">        """</span>
-        <span class="n">demand</span> <span class="o">=</span> <span class="n">demand</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span>
+        <span class="n">demand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">demand</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span>
         <span class="n">safety_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property_value</span><span class="p">(</span><span class="n">safety_factor</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">))</span>
         <span class="n">capacity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">demand</span><span class="p">)</span><span class="o">*</span><span class="n">safety_factor</span>
 
@@ -1651,13 +1654,14 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Randomly selects a battery from the internally defined real world manufacturer model and autosizes its parameters.</span>
 
-<span class="sd">        The total capacity and nominal power are autosized to meet the hourly demand for a specified duration. It is assumed that</span>
+<span class="sd">        The total capacity and nominal power are autosized using average demand power for a specified duration. It is assumed that</span>
 <span class="sd">        there is no limit on the number of batteries that can be connected in series or parallel for any of the battery models.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        demand : float</span>
-<span class="sd">            Hourly, building demand to be met for duration.</span>
+<span class="sd">            Building energy demand in [kWh] at dataset resolution. Converted</span>
+<span class="sd">            to average control-step power in [kW] before applying duration.</span>
 <span class="sd">        duration : Union[float, Tuple[float, float]], default : (1.5, 3.5)</span>
 <span class="sd">            Number of hours the sized battery should be able to meet demand.</span>
 <span class="sd">        parallel : bool, default : False</span>
@@ -1693,7 +1697,7 @@
 <span class="sd">        Data source: https://github.com/intelligent-environments-lab/CityLearn/tree/master/citylearn/data/misc/battery_choices.yaml.</span>
 <span class="sd">        """</span>
 
-        <span class="n">demand</span> <span class="o">=</span> <span class="n">demand</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span>
+        <span class="n">demand</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">demand</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="o">/</span> <span class="n">seconds_to_hours</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
         <span class="n">duration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property_value</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
         <span class="n">safety_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property_value</span><span class="p">(</span><span class="n">safety_factor</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="n">parallel</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">parallel</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">parallel</span>

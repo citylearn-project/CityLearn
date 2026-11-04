@@ -188,12 +188,13 @@
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.autosize">
 <span class="sig-name descname"><span class="pre">autosize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">demand</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizing_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#Battery.autosize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.Battery.autosize" title="Link to this definition"></a></dt>
 <dd><p>Randomly selects a battery from the internally defined real world manufacturer model and autosizes its parameters.</p>
-<p>The total capacity and nominal power are autosized to meet the hourly demand for a specified duration. It is assumed that
+<p>The total capacity and nominal power are autosized using average demand power for a specified duration. It is assumed that
 there is no limit on the number of batteries that can be connected in series or parallel for any of the battery models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>demand</strong> (<em>float</em>) – Hourly, building demand to be met for duration.</p></li>
+<li><p><strong>demand</strong> (<em>float</em>) – Building energy demand in [kWh] at dataset resolution. Converted
+to average control-step power in [kW] before applying duration.</p></li>
 <li><p><strong>duration</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default :</em><em> (</em><em>1.5</em><em>, </em><em>3.5</em><em>)</em>) – Number of hours the sized battery should be able to meet demand.</p></li>
 <li><p><strong>parallel</strong> (<em>bool</em><em>, </em><em>default : False</em>) – Whether to assume multiple batteries are connected in parallel so
 that the maximum nominal power is the product of the unit count and
@@ -636,7 +637,8 @@ allow electricity discharge thus, cause negative electricity consumption.</p></l
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Heating demand in [kWh].</p></li>
+<li><p><strong>demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Heating energy in [kWh] at dataset resolution, converted to average
+control-step power in [kW] for sizing.</p></li>
 <li><p><strong>safety_factor</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default: 1.0</em>) – <cite>nominal_power</cite> is oversized by factor of <cite>safety_factor</cite>.</p></li>
 </ul>
 </dd>
@@ -806,8 +808,9 @@ explicit to an agent.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>outdoor_dry_bulb_temperature</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em>) – Outdoor dry bulb temperature in [C].</p></li>
-<li><p><strong>cooling_demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Cooling demand in [kWh].</p></li>
-<li><p><strong>heating_demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Heating demand in [kWh].</p></li>
+<li><p><strong>cooling_demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Cooling energy in [kWh] at dataset resolution, converted to average
+control-step power in [kW] for sizing.</p></li>
+<li><p><strong>heating_demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Heating energy in [kWh] at dataset resolution.</p></li>
 <li><p><strong>safety_factor</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default: 1.0</em>) – <cite>nominal_power</cite> is oversized by factor of <cite>safety_factor</cite>.</p></li>
 </ul>
 </dd>
@@ -1033,19 +1036,20 @@ when <code class="docutils literal notranslate"><span class="pre">generation_mod
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Heating demand in [kWh].</p></li>
+<li><p><strong>demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Thermal energy in [kWh] at dataset resolution. Capacity covers the
+largest control-step demand, rather than a power in [kW].</p></li>
 <li><p><strong>safety_factor</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default:</em><em> (</em><em>1.0</em><em>, </em><em>2.0</em><em>)</em>) – The <cite>capacity</cite> is oversized by factor of <cite>safety_factor</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>capacity</strong> – Autosized cpacity.</p>
+<dd class="field-even"><p><strong>capacity</strong> – Autosized capacity in [kWh].</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p><cite>capacity</cite> = max(demand/<cite>efficiency</cite>)*safety_factor</p>
+<p><cite>capacity</cite> = max(control-step demand)*safety_factor</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1115,7 +1119,7 @@ when <code class="docutils literal notranslate"><span class="pre">generation_mod
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.loss_coefficient">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loss_coefficient</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.StorageDevice.loss_coefficient" title="Link to this definition"></a></dt>
-<dd><p>Effective standby loss ratio for the active physical timestep.</p>
+<dd><p>Effective step loss, compounded from the configured hourly fraction.</p>
 </dd></dl>
 
 <dl class="py method">
