@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Publishing Guide &mdash; CityLearn 3.1.0 documentation</title>
+  <title>Publishing CityLearn &mdash; CityLearn 3.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -95,22 +95,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Publishing Guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#release-owner">Release Owner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#version-bump">Version Bump</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pypi-workflow">PyPI Workflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#local-build-check">Local Build Check</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#release-discipline">Release Discipline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#release-note-checklist-and-template">Release-note checklist and template</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#version-policy">Version policy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#release-checklist">Release checklist</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#template">Template</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Publishing CityLearn</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prepare-the-release">Prepare the release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ci-tagging-and-publication">CI, tagging and publication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-policy">Version policy</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
 </ul>
 
         </div>
@@ -127,7 +121,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Publishing Guide</li>
+      <li class="breadcrumb-item active">Publishing CityLearn</li>
       <li class="wy-breadcrumbs-aside">
               <!-- User defined GitHub URL -->
               <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/publishing.md" class="fa fa-github"> Edit on GitHub</a>
@@ -138,175 +132,67 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="publishing-guide">
-<h1>Publishing Guide<a class="headerlink" href="#publishing-guide" title="Link to this heading"></a></h1>
-<p>CityLearn is published on PyPI as <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> and imports as <code class="docutils literal notranslate"><span class="pre">citylearn</span></code>.</p>
-<section id="release-owner">
-<h2>Release Owner<a class="headerlink" href="#release-owner" title="Link to this heading"></a></h2>
-<p>Default release owner: <a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>.</p>
-</section>
-<section id="version-bump">
-<h2>Version Bump<a class="headerlink" href="#version-bump" title="Link to this heading"></a></h2>
+  <section id="publishing-citylearn">
+<h1>Publishing CityLearn<a class="headerlink" href="#publishing-citylearn" title="Link to this heading"></a></h1>
+<p>CityLearn is distributed as <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> and imports as <code class="docutils literal notranslate"><span class="pre">citylearn</span></code>.
+The release maintainer is <a class="reference external" href="https://github.com/calofonseca">Tiago Fonseca</a>.</p>
+<section id="prepare-the-release">
+<h2>Prepare the release<a class="headerlink" href="#prepare-the-release" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
-<li><p>Update <code class="docutils literal notranslate"><span class="pre">citylearn/__init__.py</span></code>.</p></li>
-<li><p>Update <a class="reference internal" href="releases.html"><span class="std std-doc">releases.md</span></a>.</p></li>
-<li><p>Update affected reference pages when schema, actions, observations, KPIs or dataset contracts change.</p></li>
-<li><p>Run validation from <a class="reference internal" href="developer_guide.html"><span class="std std-doc">developer_guide.md</span></a>.</p></li>
-<li><p>Commit and tag.</p></li>
+<li><p>Update the version in <code class="docutils literal notranslate"><span class="pre">citylearn/__init__.py</span></code>.</p></li>
+<li><p>Add a user-facing entry to <a class="reference internal" href="releases.html"><span class="std std-doc">releases.md</span></a>, including compatibility,
+dataset/schema impact, validation scope and migration instructions.</p></li>
+<li><p>Update the affected guides and <a class="reference internal" href="migration.html"><span class="std std-doc">migration notes</span></a>.</p></li>
+<li><p>Run the tests and auditors in the <a class="reference internal" href="developer_guide.html"><span class="std std-doc">developer guide</span></a>,
+build the Sphinx site and check its links and examples.</p></li>
+<li><p>Build and validate wheel/source distributions, then verify the installed wheel
+outside the checkout. The workflow’s installed-export check demonstrates this.</p></li>
 </ol>
-<p>Example:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git add citylearn/__init__.py README.md docs</span>
-<span class="go">git commit -m "Release v0.4.3"</span>
-<span class="go">git tag -a v0.4.3 -m "Release v0.4.3"</span>
-<span class="go">git push --follow-tags origin master</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m build</span>
+<span class="go">python -m twine check dist/*</span>
 </pre></div>
 </div>
+<p>Keep raw validation output in CI or release artifacts. Document measured
+improvements with the baseline, inputs, repetitions, metric units and limitations.
+Move older entries to the <a class="reference internal" href="releases_archive.html"><span class="std std-doc">release archive</span></a> without dropping
+their validation evidence. Keep the latest release and its migration information
+on the current page.</p>
 </section>
-<section id="pypi-workflow">
-<h2>PyPI Workflow<a class="headerlink" href="#pypi-workflow" title="Link to this heading"></a></h2>
-<ol class="arabic simple">
-<li><p>Use the existing PyPI project named <code class="docutils literal notranslate"><span class="pre">citylearn</span></code>.</p></li>
-<li><p>Confirm the GitHub <code class="docutils literal notranslate"><span class="pre">pypi</span></code> environment has valid <code class="docutils literal notranslate"><span class="pre">PYPI_USERNAME</span></code> and <code class="docutils literal notranslate"><span class="pre">PYPI_PASSWORD</span></code> secrets.</p></li>
-<li><p>Push the release commit and tag.</p></li>
-<li><p>Create a GitHub Release or run the <code class="docutils literal notranslate"><span class="pre">Publish</span> <span class="pre">Python</span> <span class="pre">Package</span></code> workflow manually.</p></li>
-<li><p>Workflow <code class="docutils literal notranslate"><span class="pre">.github/workflows/pypi_deploy.yml</span></code> builds <code class="docutils literal notranslate"><span class="pre">dist/*</span></code> and uploads to PyPI.</p></li>
-</ol>
+<section id="ci-tagging-and-publication">
+<h2>CI, tagging and publication<a class="headerlink" href="#ci-tagging-and-publication" title="Link to this heading"></a></h2>
+<p>Commit the reviewed changes with the maintainer’s identity, push once and wait for
+the relevant CI to pass. Tag the approved commit as <code class="docutils literal notranslate"><span class="pre">vX.Y.Z</span></code>.</p>
+<p>The <a class="reference external" href="https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/pypi_deploy.yml">publication workflow</a> runs when a GitHub
+Release is published or when explicitly dispatched. Choose one trigger per release.
+A tag push by itself does not publish the package.</p>
+<p>The build job checks the distributions and installed exports. The publish job
+uses the existing <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> PyPI project and the GitHub <code class="docutils literal notranslate"><span class="pre">pypi</span></code> environment’s
+configured credentials. Confirm both jobs succeeded for the intended commit and
+verify the pinned package from PyPI in a clean environment.</p>
 </section>
-<section id="local-build-check">
-<h2>Local Build Check<a class="headerlink" href="#local-build-check" title="Link to this heading"></a></h2>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python -m pip install --upgrade pip build twine</span>
-<span class="go">.venv/bin/python -m build</span>
-<span class="go">.venv/bin/python -m twine check dist/*</span>
-</pre></div>
-</div>
-</section>
-<section id="release-discipline">
-<h2>Release Discipline<a class="headerlink" href="#release-discipline" title="Link to this heading"></a></h2>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Version type</p></th>
-<th class="head"><p>When to use</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Patch</p></td>
-<td><p>Additive compatible features, fixes, docs and tests.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Minor</p></td>
-<td><p>New simulator capability or schema/API change.</p></td>
-</tr>
-<tr class="row-even"><td><p>Major</p></td>
-<td><p>Broad breaking changes.</p></td>
-</tr>
-</tbody>
-</table>
-<p>Before publishing, make sure <code class="docutils literal notranslate"><span class="pre">docs/releases.md</span></code> states:</p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Field</p></th>
-<th class="head"><p>Purpose</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Summary</p></td>
-<td><p>What changed and why.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Release owner</p></td>
-<td><p>GitHub tag of the person responsible for the release.</p></td>
-</tr>
-<tr class="row-even"><td><p>Dataset/schema impact</p></td>
-<td><p>Migration risk for existing datasets and configs.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Compatibility</p></td>
-<td><p>Whether algorithms/wrappers need changes.</p></td>
-</tr>
-<tr class="row-even"><td><p>Validation</p></td>
-<td><p>Commands or simulations that passed.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Migration notes</p></td>
-<td><p>User-facing actions required after upgrade.</p></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="release-note-checklist-and-template">
-<h2>Release-note checklist and template<a class="headerlink" href="#release-note-checklist-and-template" title="Link to this heading"></a></h2>
 <section id="version-policy">
-<h3>Version policy<a class="headerlink" href="#version-policy" title="Link to this heading"></a></h3>
+<h2>Version policy<a class="headerlink" href="#version-policy" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Type</p></th>
 <th class="head"><p>Use when</p></th>
-<th class="head"><p>Example</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Patch</p></td>
-<td><p>Compatible fixes and additive features.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0.4.1</span> <span class="pre">-&gt;</span> <span class="pre">0.4.2</span></code>.</p></td>
+<td><p>Compatible fixes, documentation or small additive changes.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Minor</p></td>
-<td><p>New major capability or schema/API change.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0.3.x</span> <span class="pre">-&gt;</span> <span class="pre">0.4.0</span></code>.</p></td>
+<td><p>A substantial capability or schema/API change.</p></td>
 </tr>
 <tr class="row-even"><td><p>Major</p></td>
 <td><p>Broad breaking changes.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0.x</span> <span class="pre">-&gt;</span> <span class="pre">1.0</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="release-checklist">
-<h3>Release checklist<a class="headerlink" href="#release-checklist" title="Link to this heading"></a></h3>
-<ol class="arabic simple">
-<li><p>Update <code class="docutils literal notranslate"><span class="pre">citylearn/__init__.py</span></code>.</p></li>
-<li><p>Update this file.</p></li>
-<li><p>Update README when relevant features change.</p></li>
-<li><p>Update affected reference pages when schema/action/observation/KPI contracts change.</p></li>
-<li><p>Run validation:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pytest</span> <span class="pre">-q</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">scripts/audit/audit_entity_contract.py</span> <span class="pre">--strict</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">scripts/audit/audit_physics.py</span></code></p></li>
-</ul>
-</li>
-<li><p>Run at least one representative smoke simulation.</p></li>
-<li><p>Commit and tag.</p></li>
-<li><p>Publish package when applicable.</p></li>
-</ol>
-</section>
-<section id="template">
-<h3>Template<a class="headerlink" href="#template" title="Link to this heading"></a></h3>
-<div class="highlight-markdown notranslate"><div class="highlight"><pre><span></span><span class="gu">## vX.Y.Z - YYYY-MM-DD</span>
-
-Release owner: [<span class="nt">@calofonseca</span>](<span class="na">https://github.com/calofonseca</span>).
-
-<span class="gu">### Summary</span>
-<span class="k">-</span><span class="w"> </span>...
-
-<span class="gu">### Added</span>
-<span class="k">-</span><span class="w"> </span>...
-
-<span class="gu">### Changed</span>
-<span class="k">-</span><span class="w"> </span>...
-
-<span class="gu">### Fixed</span>
-<span class="k">-</span><span class="w"> </span>...
-
-<span class="gu">### Dataset/Schema Impact</span>
-<span class="k">-</span><span class="w"> </span>...
-
-<span class="gu">### Compatibility</span>
-<span class="k">-</span><span class="w"> </span>...
-
-<span class="gu">### Validation</span>
-<span class="k">-</span><span class="w"> </span><span class="sb">`...`</span>: pass
-
-<span class="gu">### Migration Notes</span>
-<span class="k">-</span><span class="w"> </span>...
-</pre></div>
-</div>
-</section>
+<p>Release entries should explain what changes for users, required migration,
+validation performed and its limits. A local documentation edit does not require
+publication or imply that a new version already exists.</p>
 </section>
 </section>
 

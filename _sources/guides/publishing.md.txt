@@ -1,115 +1,52 @@
-# Publishing Guide
+# Publishing CityLearn
 
-CityLearn is published on PyPI as `citylearn` and imports as `citylearn`.
+CityLearn is distributed as `citylearn` and imports as `citylearn`.
+The release maintainer is [Tiago Fonseca](https://github.com/calofonseca).
 
-## Release Owner
+## Prepare the release
 
-Default release owner: [@calofonseca](https://github.com/calofonseca).
-
-## Version Bump
-
-1. Update `citylearn/__init__.py`.
-2. Update [releases.md](releases.md).
-3. Update affected reference pages when schema, actions, observations, KPIs or dataset contracts change.
-4. Run validation from [developer_guide.md](developer_guide.md).
-5. Commit and tag.
-
-Example:
+1. Update the version in `citylearn/__init__.py`.
+2. Add a user-facing entry to [releases.md](releases.md), including compatibility,
+   dataset/schema impact, validation scope and migration instructions.
+3. Update the affected guides and [migration notes](migration.md).
+4. Run the tests and auditors in the [developer guide](developer_guide.md),
+   build the Sphinx site and check its links and examples.
+5. Build and validate wheel/source distributions, then verify the installed wheel
+   outside the checkout. The workflow's installed-export check demonstrates this.
 
 ```console
-git add citylearn/__init__.py README.md docs
-git commit -m "Release v0.4.3"
-git tag -a v0.4.3 -m "Release v0.4.3"
-git push --follow-tags origin master
+python -m build
+python -m twine check dist/*
 ```
 
-## PyPI Workflow
+Keep raw validation output in CI or release artifacts. Document measured
+improvements with the baseline, inputs, repetitions, metric units and limitations.
+Move older entries to the [release archive](releases_archive.md) without dropping
+their validation evidence. Keep the latest release and its migration information
+on the current page.
 
-1. Use the existing PyPI project named `citylearn`.
-2. Confirm the GitHub `pypi` environment has valid `PYPI_USERNAME` and `PYPI_PASSWORD` secrets.
-3. Push the release commit and tag.
-4. Create a GitHub Release or run the `Publish Python Package` workflow manually.
-5. Workflow `.github/workflows/pypi_deploy.yml` builds `dist/*` and uploads to PyPI.
+## CI, tagging and publication
 
-## Local Build Check
+Commit the reviewed changes with the maintainer's identity, push once and wait for
+the relevant CI to pass. Tag the approved commit as `vX.Y.Z`.
 
-```console
-.venv/bin/python -m pip install --upgrade pip build twine
-.venv/bin/python -m build
-.venv/bin/python -m twine check dist/*
-```
+The [publication workflow](https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/pypi_deploy.yml) runs when a GitHub
+Release is published or when explicitly dispatched. Choose one trigger per release.
+A tag push by itself does not publish the package.
 
-## Release Discipline
+The build job checks the distributions and installed exports. The publish job
+uses the existing `citylearn` PyPI project and the GitHub `pypi` environment's
+configured credentials. Confirm both jobs succeeded for the intended commit and
+verify the pinned package from PyPI in a clean environment.
 
-| Version type | When to use |
+## Version policy
+
+| Type | Use when |
 |---|---|
-| Patch | Additive compatible features, fixes, docs and tests. |
-| Minor | New simulator capability or schema/API change. |
+| Patch | Compatible fixes, documentation or small additive changes. |
+| Minor | A substantial capability or schema/API change. |
 | Major | Broad breaking changes. |
 
-Before publishing, make sure `docs/releases.md` states:
-
-| Field | Purpose |
-|---|---|
-| Summary | What changed and why. |
-| Release owner | GitHub tag of the person responsible for the release. |
-| Dataset/schema impact | Migration risk for existing datasets and configs. |
-| Compatibility | Whether algorithms/wrappers need changes. |
-| Validation | Commands or simulations that passed. |
-| Migration notes | User-facing actions required after upgrade. |
-
-## Release-note checklist and template
-
-### Version policy
-
-| Type | Use when | Example |
-|---|---|---|
-| Patch | Compatible fixes and additive features. | `0.4.1 -> 0.4.2`. |
-| Minor | New major capability or schema/API change. | `0.3.x -> 0.4.0`. |
-| Major | Broad breaking changes. | `0.x -> 1.0`. |
-
-### Release checklist
-
-1. Update `citylearn/__init__.py`.
-2. Update this file.
-3. Update README when relevant features change.
-4. Update affected reference pages when schema/action/observation/KPI contracts change.
-5. Run validation:
-   - `.venv/bin/pytest -q`
-   - `.venv/bin/python scripts/audit/audit_entity_contract.py --strict`
-   - `.venv/bin/python scripts/audit/audit_physics.py`
-6. Run at least one representative smoke simulation.
-7. Commit and tag.
-8. Publish package when applicable.
-
-### Template
-
-```markdown
-## vX.Y.Z - YYYY-MM-DD
-
-Release owner: [@calofonseca](https://github.com/calofonseca).
-
-### Summary
-- ...
-
-### Added
-- ...
-
-### Changed
-- ...
-
-### Fixed
-- ...
-
-### Dataset/Schema Impact
-- ...
-
-### Compatibility
-- ...
-
-### Validation
-- `...`: pass
-
-### Migration Notes
-- ...
-```
+Release entries should explain what changes for users, required migration,
+validation performed and its limits. A local documentation edit does not require
+publication or imply that a new version already exists.
