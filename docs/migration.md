@@ -46,6 +46,22 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Upgrade from 3.1.0 to 3.1.1
+
+No dataset, schema or export-file migration is required. Dataset names resolve
+against the `v3.1.1` tag by default; its dataset files are unchanged from 3.1.0.
+
+- Explicit `random_episode_split` constructor values now take precedence over the
+  schema. Pass `None` to retain the schema's setting.
+- Standby loss is an hourly fraction compounded over elapsed physical time.
+  Subhourly SOC trajectories and their derived KPIs can therefore differ slightly.
+- Autosizing converts energy demand to power before sizing power-rated devices
+  and batteries. Recheck automatically chosen equipment in subhourly experiments;
+  explicitly configured equipment and thermal capacity in step kWh are retained.
+- Public energy-command interfaces and native BAU control logic are unchanged.
+  Compare experiments using matching versions and resolved equipment settings;
+  corrected results must not be labelled identical to old subhourly references.
+
 ## Upgrade from 3.0.2 to 3.1.0
 
 The distribution, import namespace and default dataset registry remain
