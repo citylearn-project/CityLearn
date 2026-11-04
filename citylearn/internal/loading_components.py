@@ -227,6 +227,10 @@ def configure_devices(building, building_name, building_type, building_schema, s
                 path=f'buildings.{building.name}.{device_name}.autosize',
             )
             building.__setattr__(device_name, device)
+            # Schema-built devices do not know the dataset/control-step ratio yet, but the autosizers
+            # convert dataset-resolution demand with it. Without this, hourly data run at 15-minute
+            # control sizes thermal devices and batteries 4x too large.
+            device.time_step_ratio = building.time_step_ratio
 
             if autosize:
                 autosizer = device_metadata[device_name]['autosizer']

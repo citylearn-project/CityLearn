@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import numpy as np
@@ -93,6 +94,22 @@ class BuildingOpsService:
                     }
                     LOGGER.debug(f'Observation outside space limit: {report}')
 
+        return self.transform_observations(observations, normalize=normalize, periodic_normalization=periodic_normalization)
+
+    def transform_observations(
+        self,
+        observations: Mapping[str, float],
+        normalize: bool = False,
+        periodic_normalization: bool = False,
+    ) -> Mapping[str, float]:
+        """Apply periodic encoding and min-max normalization to raw observations, preserving their order."""
+
+        if not (normalize or periodic_normalization):
+            return observations
+
+        building = self.building
+        observations = dict(observations)
+
         if periodic_normalization:
             periodic_observations = building.get_periodic_observation_metadata()
             observations_copy = {k: v for k, v in observations.items()}
@@ -101,7 +118,7 @@ class BuildingOpsService:
 
             for key, value in observations_copy.items():
                 if key in periodic_observations:
-                    periodic_normalizer.x_max = max(periodic_observations[key])
+                    periodic_normalizer.x_max = building.periodic_cycle_length(periodic_observations[key])
                     sin_x, cos_x = value * periodic_normalizer
                     observations[f'{key}_cos'] = cos_x
                     observations[f'{key}_sin'] = sin_x
@@ -334,6 +351,10 @@ class BuildingOpsService:
                 observations[key] = series[t]
 
         for key, series in building._carbon_observation_sources:
+            if wants(key) and t < len(series):
+                observations[key] = series[t]
+
+        for key, series in getattr(building, '_additional_observation_sources', ()):
             if wants(key) and t < len(series):
                 observations[key] = series[t]
 
@@ -675,36 +696,29 @@ class BuildingOpsService:
             return float(default)
 
     def _ensure_feedback_array(self, owner, name: str):
+        # Always resolve the live attribute: ``reset()`` replaces these arrays, so a
+        # cached reference would keep writing into the previous episode's array.
         expected = int(getattr(self.building.episode_tracker, 'episode_time_steps', 0) or 0)
-        cache = getattr(owner, '_action_feedback_array_cache', None)
-        if cache is None:
-            cache = {}
-            setattr(owner, '_action_feedback_array_cache', cache)
-
         dtype = self._feedback_array_dtype(name)
-        cache_key = (name, expected, np.dtype(dtype).str)
-        values = cache.get(cache_key)
-        if values is not None:
-            return values
-
         values = getattr(owner, name, None)
-        if values is None or len(values) != expected or getattr(values, 'dtype', None) != np.dtype(dtype):
+        if values is None or len(values) != expected or getattr(values, 'dtype', None) != dtype:
             values = np.zeros(expected, dtype=dtype)
             setattr(owner, name, values)
-        cache[cache_key] = values
+
         return values
 
     @staticmethod
-    def _feedback_array_dtype(name: str):
+    @lru_cache(maxsize=None)
+    def _feedback_array_dtype(name: str) -> np.dtype:
         if (
             'clip_reason_' in name
             or name.endswith('last_start_requested')
             or name.endswith('last_start_applied')
             or name.endswith('start_blocked')
         ):
-            return np.bool_
+            return np.dtype(np.bool_)
 
-        return np.float32
+        return np.dtype(np.float32)
 
     def _set_feedback_value(self, owner, name: str, value: float):
         t = int(self.building.time_step)
