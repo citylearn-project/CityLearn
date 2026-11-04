@@ -26,7 +26,8 @@ try:
     from stable_baselines3.common.base_class import BaseAlgorithm as StableBaselines3Agent
 
 except (ImportError, ModuleNotFoundError):
-    pass
+    # stable-baselines3 is optional; the name is still used in annotations evaluated at import time.
+    StableBaselines3Agent = Any
 
 def run_work_order(work_order_filepath, max_workers=None, start_index=None, end_index=None, virtual_environment_path=None, windows_system=None):
     work_order_filepath = Path(work_order_filepath)

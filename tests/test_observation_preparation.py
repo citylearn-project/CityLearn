@@ -208,9 +208,10 @@ def test_multi_building_reward_keeps_unknown_child_requirements_unrestricted():
     children = {name: RewardFunction(metadata) for name in ('A', 'B')}
     reward = MultiBuildingRewardFunction(metadata, children)
     assert tuple(reward.get_required_observation_names()) == ('net_electricity_consumption',)
-    assert reward.calculate([{'net_electricity_consumption': 1.}, {'net_electricity_consumption': 2.}]) == [[-1.], [-2.]]
+    # One flat value per building, like every other reward function (CityLearnEnv.step returns List[float]).
+    assert reward.calculate([{'net_electricity_consumption': 1.}, {'net_electricity_consumption': 2.}]) == [-1., -2.]
     class ExternalReward(RewardFunction):
         def calculate(self, observations):return [o['solar_generation'] for o in observations]
     children['B'] = ExternalReward(metadata)
     assert reward.get_required_observation_names() is None
-    assert reward.calculate([{'net_electricity_consumption': 1.}, {'solar_generation': 3.}]) == [[-1.], [3.]]
+    assert reward.calculate([{'net_electricity_consumption': 1.}, {'solar_generation': 3.}]) == [-1., 3.]
