@@ -314,7 +314,7 @@ class CityLearnEnv(Environment, Env):
                 simulation_end_time_step=simulation_end_time_step,
                 episode_time_steps=episode_time_steps,
                 rolling_episode_split=rolling_episode_split,
-                random_episode=random_episode_split,
+                random_episode_split=random_episode_split,
                 seconds_per_time_step=seconds_per_time_step,
                 time_step_ratio=time_step_ratio,
                 reward_function=reward_function,
