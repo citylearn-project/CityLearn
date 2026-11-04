@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.1.0 documentation</title>
+  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=dd1205ac"></script>
+      <script src="../_static/documentation_options.js?v=796a81b5"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,6 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-1-0-to-3-1-1">Upgrade from 3.1.0 to 3.1.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-0-2-to-3-1-0">Upgrade from 3.0.2 to 3.1.0</a></li>
 </ul>
 </li>
@@ -176,6 +177,23 @@ local schema and files for data that are not in the public catalogue; a
 repository-relative path is not created by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>.</p>
 <p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
 development-line history.</p>
+</section>
+<section id="upgrade-from-3-1-0-to-3-1-1">
+<h2>Upgrade from 3.1.0 to 3.1.1<a class="headerlink" href="#upgrade-from-3-1-0-to-3-1-1" title="Link to this heading"></a></h2>
+<p>No dataset, schema or export-file migration is required. Dataset names resolve
+against the <code class="docutils literal notranslate"><span class="pre">v3.1.1</span></code> tag by default; its dataset files are unchanged from 3.1.0.</p>
+<ul class="simple">
+<li><p>Explicit <code class="docutils literal notranslate"><span class="pre">random_episode_split</span></code> constructor values now take precedence over the
+schema. Pass <code class="docutils literal notranslate"><span class="pre">None</span></code> to retain the schema’s setting.</p></li>
+<li><p>Standby loss is an hourly fraction compounded over elapsed physical time.
+Subhourly SOC trajectories and their derived KPIs can therefore differ slightly.</p></li>
+<li><p>Autosizing converts energy demand to power before sizing power-rated devices
+and batteries. Recheck automatically chosen equipment in subhourly experiments;
+explicitly configured equipment and thermal capacity in step kWh are retained.</p></li>
+<li><p>Public energy-command interfaces and native BAU control logic are unchanged.
+Compare experiments using matching versions and resolved equipment settings;
+corrected results must not be labelled identical to old subhourly references.</p></li>
+</ul>
 </section>
 <section id="upgrade-from-3-0-2-to-3-1-0">
 <h2>Upgrade from 3.0.2 to 3.1.0<a class="headerlink" href="#upgrade-from-3-0-2-to-3-1-0" title="Link to this heading"></a></h2>
