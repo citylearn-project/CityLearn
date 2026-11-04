@@ -18,7 +18,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-DEFINITION = "refactor-parity-v1"
+DEFINITION = "refactor-parity-v2-compounded-standby"
 DEFAULT_REFERENCE = ROOT / "scripts/audit/snapshots/refactor_parity.json"
 CASES = {
     "flat_900s": dict(seconds=900, interface="flat"),

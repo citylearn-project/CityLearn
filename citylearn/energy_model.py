@@ -764,10 +764,10 @@ class StorageDevice(Device):
 
     @property
     def loss_coefficient(self) -> float:
-        r"""Effective standby loss ratio for the active physical timestep."""
+        r"""Effective step loss, compounded from the configured hourly fraction."""
 
         step_hours = max(float(self.seconds_per_time_step) / 3600.0, 0.0)
-        return self.__loss_coefficient * step_hours
+        return 1.0 - (1.0 - self.__loss_coefficient)**step_hours
     
     @property
     def initial_soc(self) -> float:

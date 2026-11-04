@@ -427,7 +427,7 @@ def test_battery_degradation_uses_step_energy_without_extra_ratio_scaling():
     assert battery.degrade() == pytest.approx(expected)
 
 
-def test_storage_loss_coefficient_scales_with_physical_step_hours():
+def test_storage_loss_coefficient_compounds_with_physical_step_hours():
     hourly_loss = 0.0036
 
     for seconds_per_time_step in [15, 900, 3600, 7200]:
@@ -451,7 +451,7 @@ def test_storage_loss_coefficient_scales_with_physical_step_hours():
             episode_tracker=tracker,
         )
 
-        expected_step_loss = hourly_loss * seconds_per_time_step / 3600.0
+        expected_step_loss = 1.0 - (1.0 - hourly_loss)**(seconds_per_time_step / 3600.0)
         assert battery.loss_coefficient == pytest.approx(expected_step_loss)
         assert tank.loss_coefficient == pytest.approx(expected_step_loss)
 
@@ -653,7 +653,7 @@ def test_ev_loader_scales_explicit_hourly_loss_for_native_15_second_schema(tmp_p
     env = CityLearnEnv(str(schema_path), central_agent=True, episode_time_steps=8, random_seed=0)
 
     try:
-        expected_step_loss = hourly_loss * 15 / 3600
+        expected_step_loss = 1.0 - (1.0 - hourly_loss)**(15 / 3600.0)
 
         assert env.time_step_ratio == pytest.approx(1.0)
         assert env.electric_vehicles[0].battery.loss_coefficient == pytest.approx(expected_step_loss)
