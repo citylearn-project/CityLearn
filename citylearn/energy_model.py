@@ -396,9 +396,10 @@ class HeatPump(ElectricDevice):
         outdoor_dry_bulb_temperature : Union[float, Iterable[float]]
             Outdoor dry bulb temperature in [C].
         cooling_demand : Union[float, Iterable[float]], optional
-            Cooling demand in [kWh].
+            Cooling energy in [kWh] at dataset resolution, converted to average
+            control-step power in [kW] for sizing.
         heating_demand : Union[float, Iterable[float]], optional
-            Heating demand in [kWh].
+            Heating energy in [kWh] at dataset resolution.
         safety_factor : Union[float, Tuple[float, float]], default: 1.0
             `nominal_power` is oversized by factor of `safety_factor`.
 
@@ -416,13 +417,13 @@ class HeatPump(ElectricDevice):
 
 
         if cooling_demand is not None:
-            cooling_demand = cooling_demand * self.time_step_ratio 
+            cooling_demand = np.asarray(cooling_demand) * self.time_step_ratio / seconds_to_hours(self.seconds_per_time_step)
             cooling_nominal_power = np.array(cooling_demand)/self.get_cop(outdoor_dry_bulb_temperature, False)
         else:
             cooling_nominal_power = 0
         
         if heating_demand is not None:
-            heating_demand = heating_demand * self.time_step_ratio 
+            heating_demand = np.asarray(heating_demand) * self.time_step_ratio / seconds_to_hours(self.seconds_per_time_step)
             heating_nominal_power = np.array(heating_demand)/self.get_cop(outdoor_dry_bulb_temperature, True)
         else:
             heating_nominal_power = 0
@@ -510,7 +511,8 @@ class ElectricHeater(ElectricDevice):
         Parameters
         ----------
         demand : Union[float, Iterable[float]], optional
-            Heating demand in [kWh].
+            Heating energy in [kWh] at dataset resolution, converted to average
+            control-step power in [kW] for sizing.
         safety_factor : Union[float, Tuple[float, float]], default: 1.0
             `nominal_power` is oversized by factor of `safety_factor`.
 
@@ -523,8 +525,8 @@ class ElectricHeater(ElectricDevice):
         -----
         `nominal_power` = max(demand/`efficiency`)*safety_factor
         """
-        demand = demand * self.time_step_ratio
-        safety_factor = safety_factor = self._get_property_value(safety_factor, 1.0)
+        demand = np.asarray(demand) * self.time_step_ratio / seconds_to_hours(self.seconds_per_time_step)
+        safety_factor = self._get_property_value(safety_factor, 1.0)
         nominal_power = np.nanmax(np.array(demand)/self.efficiency)*safety_factor
 
         return nominal_power
@@ -983,20 +985,21 @@ class StorageDevice(Device):
         Parameters
         ----------
         demand : Union[float, Iterable[float]], optional
-            Heating demand in [kWh].
+            Thermal energy in [kWh] at dataset resolution. Capacity covers the
+            largest control-step demand, rather than a power in [kW].
         safety_factor : Union[float, Tuple[float, float]], default: (1.0, 2.0)
             The `capacity` is oversized by factor of `safety_factor`.
 
         Returns
         -------
         capacity : float
-            Autosized cpacity.
+            Autosized capacity in [kWh].
 
         Notes
         -----
-        `capacity` = max(demand/`efficiency`)*safety_factor
+        `capacity` = max(control-step demand)*safety_factor
         """
-        demand = demand * self.time_step_ratio
+        demand = np.asarray(demand) * self.time_step_ratio
         safety_factor = self._get_property_value(safety_factor, (1.0, 2.0))
         capacity = np.nanmax(demand)*safety_factor
 
@@ -1404,13 +1407,14 @@ class Battery(StorageDevice, ElectricDevice):
     ) -> Tuple[float, float, float, float, float, float]:
         r"""Randomly selects a battery from the internally defined real world manufacturer model and autosizes its parameters.
 
-        The total capacity and nominal power are autosized to meet the hourly demand for a specified duration. It is assumed that
+        The total capacity and nominal power are autosized using average demand power for a specified duration. It is assumed that
         there is no limit on the number of batteries that can be connected in series or parallel for any of the battery models.
 
         Parameters
         ----------
         demand : float
-            Hourly, building demand to be met for duration.
+            Building energy demand in [kWh] at dataset resolution. Converted
+            to average control-step power in [kW] before applying duration.
         duration : Union[float, Tuple[float, float]], default : (1.5, 3.5)
             Number of hours the sized battery should be able to meet demand.
         parallel : bool, default : False
@@ -1446,7 +1450,7 @@ class Battery(StorageDevice, ElectricDevice):
         Data source: https://github.com/intelligent-environments-lab/CityLearn/tree/master/citylearn/data/misc/battery_choices.yaml.
         """
 
-        demand = demand * self.time_step_ratio
+        demand = float(demand) * self.time_step_ratio / seconds_to_hours(self.seconds_per_time_step)
         duration = self._get_property_value(duration, (1.5, 3.5))
         safety_factor = self._get_property_value(safety_factor, 1.0)
         parallel = False if parallel is None else parallel

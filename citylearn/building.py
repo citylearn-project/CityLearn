@@ -2607,7 +2607,7 @@ class Building(Environment):
         """
 
         demand = pd.DataFrame(self._estimate_baseline_electricity_consumption(), columns=['value'])
-        demand['day'] = (demand.index / (self.seconds_per_time_step * 24 / self.seconds_per_time_step)).astype(int)
+        demand['day'] = (demand.index * self.seconds_per_time_step // (24 * 3600)).astype(int)
         demand = demand.groupby('day')['value'].max().mean()
 
         self.electrical_storage.capacity, \
