@@ -94,16 +94,21 @@ def building_records(kpi: "CityLearnKPIService", building, t_start, t_end,
         if np.sum(kpi._slice_window(building.carbon_intensity.carbon_intensity, t_start, t_end)) != 0
         else 0.0
     )
-    control_cost_series = kpi._slice_window(
-        kpi._energy_values(building, getattr(building, f'net_electricity_consumption_cost{building_control_condition.value}')),
-        t_start,
-        t_end,
-    )
-    baseline_cost_series = kpi._slice_window(
-        kpi._energy_values(building, getattr(building, f'net_electricity_consumption_cost{building_baseline_condition.value}')),
-        t_start,
-        t_end,
-    )
+    if getattr(kpi.env, 'community_market_enabled', False):
+        # Settle the reference flows too; only the control series is settled during simulation.
+        control_costs, baseline_costs = kpi._market_cost_series(
+            control_condition, baseline_condition,
+            evaluation_condition_cls=evaluation_condition_cls, dynamics_building_cls=dynamics_building_cls,
+        )
+        control_cost_values = control_costs[building.name]
+        baseline_cost_values = baseline_costs[building.name]
+    else:
+        control_cost_values = kpi._energy_values(
+            building, getattr(building, f'net_electricity_consumption_cost{building_control_condition.value}'))
+        baseline_cost_values = kpi._energy_values(
+            building, getattr(building, f'net_electricity_consumption_cost{building_baseline_condition.value}'))
+    control_cost_series = kpi._slice_window(control_cost_values, t_start, t_end)
+    baseline_cost_series = kpi._slice_window(baseline_cost_values, t_start, t_end)
     cost_c_legacy = kpi._positive_total(control_cost_series)
     cost_b_legacy = kpi._positive_total(baseline_cost_series)
     cost_c_raw = kpi._sum_finite(control_cost_series)
@@ -284,8 +289,18 @@ def district_records(kpi: "CityLearnKPIService", legacy_building, control_condit
     zne_b_env = kpi._net_total(net_b_env_series)
     ce_c_env = kpi._positive_total(get_net_electricity_consumption_emission(env, env_control_condition))
     ce_b_env = kpi._positive_total(get_net_electricity_consumption_emission(env, env_baseline_condition))
-    env_control_cost_series = get_net_electricity_consumption_cost(env, env_control_condition)
-    env_baseline_cost_series = get_net_electricity_consumption_cost(env, env_baseline_condition)
+    if getattr(env, 'community_market_enabled', False):
+        from citylearn.building import DynamicsBuilding
+        control_costs, baseline_costs = kpi._market_cost_series(
+            control_condition, baseline_condition,
+            evaluation_condition_cls=evaluation_condition_cls, dynamics_building_cls=DynamicsBuilding,
+        )
+        step_count = max(int(getattr(env, 'time_step', 0)), 0)
+        env_control_cost_series = np.sum([np.zeros(step_count), *control_costs.values()], axis=0)
+        env_baseline_cost_series = np.sum([np.zeros(step_count), *baseline_costs.values()], axis=0)
+    else:
+        env_control_cost_series = get_net_electricity_consumption_cost(env, env_control_condition)
+        env_baseline_cost_series = get_net_electricity_consumption_cost(env, env_baseline_condition)
     cost_c_env_raw = kpi._sum_finite(env_control_cost_series)
     cost_b_env_raw = kpi._sum_finite(env_baseline_cost_series)
 

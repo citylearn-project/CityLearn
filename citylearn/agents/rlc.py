@@ -1,4 +1,5 @@
 from typing import Any, List
+import warnings
 import numpy as np
 from citylearn.citylearn import CityLearnEnv
 from citylearn.preprocessing import Encoder, PeriodicNormalization, Normalize, OnehotEncoding
@@ -53,9 +54,24 @@ class RLC(Agent):
         self, env: CityLearnEnv, hidden_dimension: List[float] = None, 
         discount: float = None, tau: float = None, alpha: float = None, lr: float = None, batch_size: int = None,
         replay_buffer_capacity: int = None, standardize_start_time_step: int = None, end_exploration_time_step: int = None, 
-        action_scaling_coefficienct: float = None, reward_scaling: float = None, 
+        action_scaling_coefficient: float = None, reward_scaling: float = None,
         update_per_time_step: int = None, **kwargs: Any
     ):
+        # Earlier releases only accepted the misspelled keyword, so the documented
+        # spelling was swallowed by **kwargs and the 0.5 default always applied.
+        misspelled = kwargs.pop('action_scaling_coefficienct', None)
+        if misspelled is not None:
+            warnings.warn(
+                '`action_scaling_coefficienct` is deprecated; use `action_scaling_coefficient`.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if action_scaling_coefficient is not None and action_scaling_coefficient != misspelled:
+                raise TypeError(
+                    'Got conflicting `action_scaling_coefficient` and deprecated `action_scaling_coefficienct` values.'
+                )
+            action_scaling_coefficient = misspelled
+
         super().__init__(env, **kwargs)
         self.hidden_dimension = hidden_dimension
         self.discount = discount
@@ -66,7 +82,7 @@ class RLC(Agent):
         self.replay_buffer_capacity = replay_buffer_capacity
         self.standardize_start_time_step = standardize_start_time_step
         self.end_exploration_time_step = end_exploration_time_step
-        self.action_scaling_coefficient = action_scaling_coefficienct
+        self.action_scaling_coefficient = action_scaling_coefficient
         self.reward_scaling = reward_scaling
         self.update_per_time_step = update_per_time_step
         self.encoders = self.set_encoders()

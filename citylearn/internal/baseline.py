@@ -131,6 +131,7 @@ class CityLearnBusinessAsUsualBaselineService:
             ev_departure_service_tolerance=env.ev_departure_service_tolerance,
             check_observation_limits=False,
             physics_invariant_checks=bool(getattr(env, 'physics_invariant_checks', False)),
+            **deepcopy(getattr(env, '_constructor_overrides', {})),
         )
         baseline_env._business_as_usual_sidecar = True
         return baseline_env

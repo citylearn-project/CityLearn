@@ -1191,6 +1191,32 @@ class Battery(StorageDevice, ElectricDevice):
         StorageDevice.efficiency.fset(self, efficiency)
         self._efficiency_history.append(super().efficiency)
 
+    def set_rated_efficiency(self, efficiency: Union[float, Tuple[float, float]]):
+        r"""Replace the rated efficiency outside a simulation, e.g. with a datasheet value after autosizing.
+
+        During simulation `efficiency` is read from `power_efficiency_curve` at every charge or discharge,
+        and :py:meth:`reset` restores the first recorded value. Assigning `efficiency` directly therefore
+        neither changes the simulated efficiency nor survives a reset. This method makes `efficiency`
+        the reset value and rescales a generated `power_efficiency_curve` so that its rated point equals
+        it. A user-supplied curve is left unchanged.
+
+        Parameters
+        ----------
+        efficiency : Union[float, Tuple[float, float]]
+            Rated efficiency. `None` or NaN draws the default, as the `efficiency` setter does.
+        """
+
+        StorageDevice.efficiency.fset(self, efficiency)
+        rated = float(super().efficiency)
+        self._efficiency_history = array('d', [rated])
+        reference = getattr(self, '_curve_reference_efficiency', None)
+
+        if reference is not None and reference > 0.0 and rated != reference:
+            curve = np.array(self.__power_efficiency_curve, dtype=float)
+            curve[1] = curve[1]*(rated/reference)
+            self.__power_efficiency_curve = curve
+            self._curve_reference_efficiency = rated
+
     @capacity_loss_coefficient.setter
     def capacity_loss_coefficient(self, capacity_loss_coefficient: Union[float, Tuple[float, float]]):
         capacity_loss_coefficient = self._get_property_value(capacity_loss_coefficient, (1e-5, 1e-4))
@@ -1199,6 +1225,10 @@ class Battery(StorageDevice, ElectricDevice):
 
     @power_efficiency_curve.setter
     def power_efficiency_curve(self, power_efficiency_curve: List[List[float]]):
+        # A generated curve is expressed relative to the rated efficiency it was drawn from,
+        # so `set_rated_efficiency` can rescale it; a user-supplied curve is kept as given.
+        self._curve_reference_efficiency = float(self.efficiency) if power_efficiency_curve is None else None
+
         if power_efficiency_curve is None:
             power_efficiency_curve = [
                 [0, self.numpy_random_state.uniform(self.efficiency*0.85, self.efficiency*0.90)],

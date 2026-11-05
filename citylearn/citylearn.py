@@ -304,6 +304,16 @@ class CityLearnEnv(Environment, Env):
                 raise ValueError('render_session_name must be a relative path. Use render_directory to choose an absolute location.')
             elif '..' in Path(self.render_session_name).parts:
                 raise ValueError('render_session_name cannot contain parent directory references (“..”).')
+        # The business-as-usual sidecar is rebuilt from `schema`, which these overrides do not
+        # modify, so it must re-apply them to simulate the same devices, PV and outages.
+        self._constructor_overrides = deepcopy({
+            'active_observations': active_observations,
+            'inactive_observations': inactive_observations,
+            'active_actions': active_actions,
+            'inactive_actions': inactive_actions,
+            'simulate_power_outage': simulate_power_outage,
+            'solar_generation': solar_generation,
+        })
         self._loading_service = CityLearnLoadingService(self)
         self._runtime_service = CityLearnRuntimeService(self)
         self._kpi_service = CityLearnKPIService(self)
