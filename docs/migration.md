@@ -46,6 +46,41 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Changes after 3.1.1 (unreleased)
+
+No dataset, schema or export-file migration is required.
+
+- **Per-building reward functions:** `MultiBuildingRewardFunction.calculate()`
+  (used when the schema's `reward_function.type` maps buildings to functions)
+  now returns one float per building, e.g. `[-1.0, -2.0]` instead of the nested
+  `[[-1.0], [-2.0]]`, like every other reward function. With
+  `central_agent=True` it returns their sum as `[total]`. Replace indexing such
+  as `reward[i][0]` with `reward[i]`.
+- **KPI exports:** the manifest records `energy_provenance`. With
+  `energy_provenance=False` its `provenance_summary` and `source_destinations`
+  are `null` instead of failing the export, and the native BAU reference uses the
+  same setting.
+
+Fixes that **change results** where they apply:
+
+- Observations: LSTM dynamics buildings report the simulated indoor temperature
+  (#165); zero-based minute and second features use a 60-step cycle; occupant
+  set-point deltas and EV/deferrable consumption bounds are corrected.
+- Dynamics: LSTM dropout is disabled at inference, so Quebec-model trajectories
+  are deterministic for a seed and differ from earlier, noisy runs.
+- Subhourly control with hourly data (`time_step_ratio` other than 1): LSTM
+  heating and cooling actions request the stated fraction of nominal power,
+  converted to energy once; thermal-storage charging and discharge limits use the
+  same conversion, and autosizing uses each building's dataset/control ratio.
+- Episodes: thermal-storage discharge at the first step is counted once, and
+  action feedback, constraint penalties and dynamic series reset with each
+  episode, which changes second and later episodes.
+
+Changes that **preserve trajectories and KPI values**: the `energy_provenance`
+option (default on), LSTM input trimming and scalar fast paths; gymnasium 1.x
+support; and crash fixes for `hvac_mode` 0, partial-day outage signals and the
+CLI without stable-baselines3.
+
 ## Upgrade from 3.1.0 to 3.1.1
 
 No dataset, schema or export-file migration is required. Dataset names resolve

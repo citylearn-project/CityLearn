@@ -55,7 +55,11 @@ def experiment_manifest(env):
         files = {name:r['sha256'] for name,r in snapshot.items()}
     metadata = env.get_metadata()
     tracker = env.episode_tracker
-    members, district = env._provenance_service.summary()
+    provenance = env._provenance_service
+    # With `energy_provenance=False` no ledger exists; record that instead of failing the export.
+    provenance_summary = (dict(zip(('buildings', 'district'), provenance.summary()))
+                          if provenance.enabled else None)
+    source_destinations = provenance.source_destinations() if provenance.enabled else None
     return dict(simulator_version=__version__, git_commit=revision, tracked_worktree_dirty=dirty,
                 business_as_usual_definition=BusinessAsUsualAgent.DEFINITION_VERSION,
                 business_as_usual_reference=native_reference(env),
@@ -74,5 +78,6 @@ def experiment_manifest(env):
                 kpi_family_audit=metadata['kpi_family_audit'],
                 demand_response=metadata['demand_response'],
                 reward=metadata['reward_evidence'],
-                provenance_summary=dict(buildings=members, district=district),
-                source_destinations=env._provenance_service.source_destinations())
+                energy_provenance=provenance.enabled,
+                provenance_summary=provenance_summary,
+                source_destinations=source_destinations)
