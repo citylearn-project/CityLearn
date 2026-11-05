@@ -142,20 +142,13 @@ to the version and features used in your study.
 CityLearn v2
 ------------
 
-.. code-block:: bibtex
+The article first appeared online in 2024 and is included in the 2025 journal
+issue. Use the final journal reference below.
 
-   @article{doi:10.1080/19401493.2024.2418813,
-      author = {Nweye, Kingsley and Kaspar, Kathryn and Buscemi, Giacomo and Fonseca, Tiago and Pinto, Giuseppe and Ghose, Dipanjan and Duddukuru, Satvik and Pratapa, Pavani and Li, Han and Mohammadi, Javad and Lino Ferreira, Luis and Hong, Tianzhen and Ouf, Mohamed and Capozzoli, Alfonso and Nagy, Zoltan},
-      title = {CityLearn v2: energy-flexible, resilient, occupant-centric, and carbon-aware management of grid-interactive communities},
-      journal = {Journal of Building Performance Simulation},
-      volume = {0},
-      number = {0},
-      pages = {1--22},
-      year = {2024},
-      publisher = {Taylor \& Francis},
-      doi = {10.1080/19401493.2024.2418813},
-      url = {https://doi.org/10.1080/19401493.2024.2418813},
-   }
+.. literalinclude:: references.bib
+   :language: bibtex
+   :start-at: @article{doi:10.1080/19401493.2024.2418813,
+   :end-before: @inproceedings{10.1145/3360322.3360998,
 
 CityLearn v3
 ------------
