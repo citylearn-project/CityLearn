@@ -8,6 +8,34 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## v3.1.1 - 2026-11-04
+
+Release owner: **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)).
+
+- Honor explicit `random_episode_split=True` and `False` constructor overrides;
+  `None` continues to inherit the schema setting (PR #166).
+- Compound the configured hourly standby-loss fraction over the physical step,
+  independently of dataset cadence (PR #164). A 1% hourly loss now leaves 99%
+  after one hour at both hourly and 15-minute resolution, within float precision.
+- Convert dataset energy to average step power when autosizing heat pumps,
+  electric heaters and batteries. Battery daily peaks use physical 24-hour
+  periods. Thermal storage capacity remains energy for one control step.
+- Preserve public energy-command interfaces, explicit equipment settings, BAU
+  control logic, KPI definitions, dataset files and export schemas. Subhourly SOC,
+  derived KPIs and automatically selected equipment may change because of the
+  corrections; no file migration is required. See [migration notes](migration.md#upgrade-from-310-to-311).
+- Simplify user documentation and correct tutorial prose/docstring typos (PR #154),
+  retaining notebook execution logic, stored outputs and metadata.
+
+Validation of the corrected runtime: 1,249 tests, 16 physical scenarios, 32 bounded
+official-dataset checks, entity contracts and six fixed-command reference cases
+passed. The reviewed standby reference reproduces the old baseline exactly when
+only the old loss formula is restored; hourly reference results are unchanged.
+Release CI, distribution checks and installed-package evidence accompany the
+GitHub release. No new annual campaign, equipment calibration or performance
+improvement is claimed for this patch. The 3.1.0 performance evidence below remains
+historical evidence for that release.
+
 ## v3.1.0 - 2026-11-02
 
 Release owner and integration maintainer: **Tiago Fonseca**

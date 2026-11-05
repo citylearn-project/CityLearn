@@ -1795,6 +1795,16 @@ class Building(Environment):
         ratio = getattr(storage, 'time_step_ratio', None)
         return to_dataset_resolution_energy(energy, ratio)
 
+    def _dataset_step_hours(self) -> float:
+        """Duration of one dataset step in hours.
+
+        Equals the control step for native-resolution data; for hourly data at a 900 s control step
+        (`time_step_ratio` 0.25) it is one hour.
+        """
+
+        ratio = 1.0 if self.time_step_ratio in (None, 0) else float(self.time_step_ratio)
+        return self.seconds_per_time_step/3600.0/ratio
+
     def _dataset_energy_to_control_step(self, energy: float) -> float:
         """Convert dataset-resolution kWh to the active control-step kWh."""
 
@@ -3506,7 +3516,10 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
 
         if ('cooling_device' in self.active_actions or 'cooling_or_heating_device' in self.active_actions) and self.simulate_dynamics:
             if self.energy_simulation.hvac_mode[self.time_step] in [1, 3]:
-                electric_power = action * self.cooling_device.nominal_power * self.algorithm_action_based_time_step_hours_ratio
+                # The demand series holds energy per dataset step, which is converted to the control step
+                # later. Scale the requested power by the dataset step's duration only, so the conversion
+                # is applied once; the control-step duration would scale it a second time.
+                electric_power = action * self.cooling_device.nominal_power * self._dataset_step_hours()
                 demand = self.cooling_device.get_max_output_power(
                     self.weather.outdoor_dry_bulb_temperature[self.time_step],
                     heating=False,
@@ -3542,9 +3555,8 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
         
         if ('heating_device' in self.active_actions or 'cooling_or_heating_device' in self.active_actions) and self.simulate_dynamics:
             if self.energy_simulation.hvac_mode[self.time_step] in [2, 3]:
-                # Same per-step scaling as `update_cooling_demand`: the action is a fraction of nominal power
-                # sustained over the control step.
-                electric_power = action * self.heating_device.nominal_power * self.algorithm_action_based_time_step_hours_ratio
+                # Same scaling as `update_cooling_demand`: energy per dataset step.
+                electric_power = action * self.heating_device.nominal_power * self._dataset_step_hours()
                 demand = self.heating_device.get_max_output_power(
                     self.weather.outdoor_dry_bulb_temperature[self.time_step],
                     heating=True,

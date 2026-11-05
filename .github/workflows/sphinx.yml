@@ -30,6 +30,8 @@ jobs:
         sudo apt-get install -y pandoc
         python -m pip install --upgrade pip
         python -m pip install -r requirements.txt -r test_requirements.txt -r docs/requirements.txt
+        # autodoc imports citylearn.end_use_load_profiles, whose dependencies are an optional extra.
+        python -m pip install -e ".[end_use_load_profiles]"
     - name: Test documentation examples
       run: python -m pytest -q tests/test_documentation_examples.py
     - name: Build and check HTML
