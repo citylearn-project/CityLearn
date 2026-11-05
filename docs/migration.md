@@ -60,6 +60,9 @@ No dataset, schema or export-file migration is required.
   `energy_provenance=False` its `provenance_summary` and `source_destinations`
   are `null` instead of failing the export, and the native BAU reference uses the
   same setting.
+- **RL agent keyword:** pass `action_scaling_coefficient=` to `SAC`, `MARLISA`
+  and other `RLC` agents. The misspelled `action_scaling_coefficienct=` still
+  works with a `DeprecationWarning`; before, only the misspelling took effect.
 
 Fixes that **change results** where they apply:
 
@@ -75,6 +78,16 @@ Fixes that **change results** where they apply:
 - Episodes: thermal-storage discharge at the first step is counted once, and
   action feedback, constraint penalties and dynamic series reset with each
   episode, which changes second and later episodes.
+- Agents: MARLISA's coordinated actions use each building's own policy;
+  `TabularQLearning` bootstraps on the best next-state value; an explicit
+  `action_scaling_coefficient` now takes effect (the default stays 0.5).
+- KPI references: the native BAU reference re-applies `simulate_power_outage`,
+  `solar_generation` and active/inactive action and observation overrides; with
+  the community market enabled, legacy cost and the equity audit settle the
+  counterfactual too.
+- Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
+  ca neighbourhood datasets), and an EV connects to at most one charger per step,
+  which affects charger clones in the dynamic-topology demos.
 
 Changes that **preserve trajectories and KPI values**: the `energy_provenance`
 option (default on), LSTM input trimming and scalar fast paths; gymnasium 1.x
