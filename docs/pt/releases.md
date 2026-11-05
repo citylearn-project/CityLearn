@@ -3,6 +3,30 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## v3.1.1 - 2026-11-04
+
+Responsável: **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)).
+
+- Corrige as opções explícitas `True`/`False` de `random_episode_split`; `None`
+  continua a herdar o schema (PR #166).
+- Aplica perdas em repouso por composição da fração horária, usando a duração
+  física do passo, independentemente da cadência dos dados (PR #164).
+- Dimensiona bombas de calor, aquecedores e baterias a partir da potência média;
+  os picos diários da bateria passam a usar períodos físicos de 24 horas.
+  Os depósitos térmicos mantêm capacidade em energia para um passo de controlo.
+- Mantém interfaces de energia, equipamentos explícitos, lógica BAU, definições
+  dos KPIs, datasets e exports. SOC, KPIs derivados e equipamentos dimensionados
+  automaticamente podem diferir devido às correções; não há migração de ficheiros.
+- Simplifica a documentação e corrige o texto do tutorial (PR #154), sem alterar
+  a lógica executável, os resultados guardados ou os metadados do notebook.
+
+O runtime corrigido passou 1.249 testes, 16 cenários físicos, 32 verificações
+limitadas dos datasets oficiais, contratos de entidades e seis referências de
+ações fixas. A atualização da referência foi verificada contra a fórmula antiga;
+o caso horário mantém os resultados. O CI da release e os comprovativos do pacote
+instalado acompanham a release GitHub. Não se reivindicam uma nova campanha anual,
+calibração real ou novos ganhos de desempenho nesta atualização.
+
 ## v3.1.0 - 2026-11-02
 
 Responsável pela integração e manutenção: **Tiago Fonseca**
