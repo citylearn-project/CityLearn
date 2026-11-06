@@ -6,6 +6,49 @@ CityLearn release. Older notes are retained in the [release archive](releases_ar
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## v3.2.0 - 2026-11-06
+
+Release maintainer: **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)).
+Simulator changes contributed by **Mark Colley** in [PR #169](https://github.com/citylearn-project/CityLearn/pull/169).
+
+- Support Gymnasium 1.x alongside 0.28.1. Stacked wrappers and agents use the
+  environment's public attribute access. The CLI starts without Stable-Baselines3.
+- Return simulated indoor temperatures to agents using LSTM dynamics. Use
+  deterministic LSTM inference, correct periodic and occupant observations,
+  and reset action feedback, constraint violations and dynamic series at each episode.
+- Convert LSTM heating and cooling actions, thermal storage and autosizing
+  between dataset and control resolutions. Count initial thermal storage
+  discharge once, and support outage signals in partial-day episodes.
+- Keep the energy provenance ledger enabled by default. When disabled, skip
+  optional provenance KPIs and carry the setting into BAU and the export manifest.
+  CSV and partitioned Parquet, BAU control logic and dataset files are retained.
+- Return one float per building for per-building reward functions. See the
+  [migration guide](migration.md#upgrade-from-311-to-320) for the required
+  indexing change, corrected trajectories and optional EULP dependencies.
+- Reduce observation preparation for LSTM inference and use scalar clipping
+  on frequently executed paths. The minute-encoding regression test reads a
+  short window of the same 15-second dataset.
+
+### Validation and performance
+
+The runtime passed CI on Python 3.9 and 3.10, the installed-wheel export smoke
+and the Sphinx build. The runtime audit covered 16 physical scenarios (12,000
+intervals), 32 official dataset probes, entity contracts and six fixed-command
+reference cases. Six real exports opened in the CityLearn UI. The two controlled
+comparisons matched all 10,274 KPI records and retained the same BAU series and
+scorecards.
+
+| Bounded case | Mean step before → after (ms) | Peak process RSS before → after (MiB) |
+|---|---:|---:|
+| EVs, 400 steps | 7.27 → 7.24 | 637.95 → 636.25 |
+| LSTM, 120 steps | 2.47 → 2.27 | 646.88 → 646.97 |
+| Dynamic topology, 1,840 steps | 11.90 → 11.25 | 655.30 → 654.55 |
+
+The table gives medians of three runs against the pre-merge 3.1.1 development
+head, with identical inputs, fixed commands and physical checks enabled. The
+dynamic case applied all five events at the same steps, and KPI evaluation
+took 2.36 → 2.26 seconds. These measurements cover the stated windows.
+
 ## v3.1.1 - 2026-11-04
 
 Release owner: **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)).

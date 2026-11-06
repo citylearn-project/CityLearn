@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Releases &mdash; CityLearn 3.1.1 documentation</title>
+  <title>Releases &mdash; CityLearn 3.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=796a81b5"></script>
+      <script src="../_static/documentation_options.js?v=4f6ddb47"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -99,6 +99,10 @@
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Releases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#v3-2-0-2026-11-06">v3.2.0 - 2026-11-06</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#validation-and-performance">Validation and performance</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-1-1-2026-11-04">v3.1.1 - 2026-11-04</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-1-0-2026-11-02">v3.1.0 - 2026-11-02</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#summary">Summary</a></li>
@@ -144,6 +148,65 @@
 CityLearn release. Older notes are retained in the <a class="reference internal" href="releases_archive.html"><span class="std std-doc">release archive</span></a>.</p>
 <p>For package publication, version policy and the release checklist, see the
 <a class="reference internal" href="publishing.html"><span class="std std-doc">publishing guide</span></a>.</p>
+<section id="v3-2-0-2026-11-06">
+<h2>v3.2.0 - 2026-11-06<a class="headerlink" href="#v3-2-0-2026-11-06" title="Link to this heading"></a></h2>
+<p>Release maintainer: <strong>Tiago Fonseca</strong> (<a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>).
+Simulator changes contributed by <strong>Mark Colley</strong> in <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/169">PR #169</a>.</p>
+<ul class="simple">
+<li><p>Support Gymnasium 1.x alongside 0.28.1. Stacked wrappers and agents use the
+environment’s public attribute access. The CLI starts without Stable-Baselines3.</p></li>
+<li><p>Return simulated indoor temperatures to agents using LSTM dynamics. Use
+deterministic LSTM inference, correct periodic and occupant observations,
+and reset action feedback, constraint violations and dynamic series at each episode.</p></li>
+<li><p>Convert LSTM heating and cooling actions, thermal storage and autosizing
+between dataset and control resolutions. Count initial thermal storage
+discharge once, and support outage signals in partial-day episodes.</p></li>
+<li><p>Keep the energy provenance ledger enabled by default. When disabled, skip
+optional provenance KPIs and carry the setting into BAU and the export manifest.
+CSV and partitioned Parquet, BAU control logic and dataset files are retained.</p></li>
+<li><p>Return one float per building for per-building reward functions. See the
+<a class="reference internal" href="migration.html#upgrade-from-3-1-1-to-3-2-0"><span class="std std-ref">migration guide</span></a> for the required
+indexing change, corrected trajectories and optional EULP dependencies.</p></li>
+<li><p>Reduce observation preparation for LSTM inference and use scalar clipping
+on frequently executed paths. The minute-encoding regression test reads a
+short window of the same 15-second dataset.</p></li>
+</ul>
+<section id="validation-and-performance">
+<h3>Validation and performance<a class="headerlink" href="#validation-and-performance" title="Link to this heading"></a></h3>
+<p>The runtime passed CI on Python 3.9 and 3.10, the installed-wheel export smoke
+and the Sphinx build. The runtime audit covered 16 physical scenarios (12,000
+intervals), 32 official dataset probes, entity contracts and six fixed-command
+reference cases. Six real exports opened in the CityLearn UI. The two controlled
+comparisons matched all 10,274 KPI records and retained the same BAU series and
+scorecards.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Bounded case</p></th>
+<th class="head text-right"><p>Mean step before → after (ms)</p></th>
+<th class="head text-right"><p>Peak process RSS before → after (MiB)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>EVs, 400 steps</p></td>
+<td class="text-right"><p>7.27 → 7.24</p></td>
+<td class="text-right"><p>637.95 → 636.25</p></td>
+</tr>
+<tr class="row-odd"><td><p>LSTM, 120 steps</p></td>
+<td class="text-right"><p>2.47 → 2.27</p></td>
+<td class="text-right"><p>646.88 → 646.97</p></td>
+</tr>
+<tr class="row-even"><td><p>Dynamic topology, 1,840 steps</p></td>
+<td class="text-right"><p>11.90 → 11.25</p></td>
+<td class="text-right"><p>655.30 → 654.55</p></td>
+</tr>
+</tbody>
+</table>
+<p>The table gives medians of three runs against the pre-merge 3.1.1 development
+head, with identical inputs, fixed commands and physical checks enabled. The
+dynamic case applied all five events at the same steps, and KPI evaluation
+took 2.36 → 2.26 seconds. These measurements cover the stated windows.</p>
+</section>
+</section>
 <section id="v3-1-1-2026-11-04">
 <h2>v3.1.1 - 2026-11-04<a class="headerlink" href="#v3-1-1-2026-11-04" title="Link to this heading"></a></h2>
 <p>Release owner: <strong>Tiago Fonseca</strong> (<a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>).</p>
