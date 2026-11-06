@@ -45,14 +45,24 @@ def test_minute_encoding_distinguishes_last_minute_and_matches_space_limits():
     first, last = PeriodicNormalization(cycle) * 0, PeriodicNormalization(cycle) * 59
     assert not np.allclose(first, last)
 
-    env = CityLearnEnv('citylearn_three_phase_electrical_service_demo_15s_parquet', central_agent=False)
-    env.reset()
-    building = env.buildings[0]
-    minutes = float(building.energy_simulation.minutes[building.time_step])
-    observations = building.observations(include_all=True, normalize=False, periodic_normalization=True)
+    # Start at minute 59 without loading the full year of 15-second inputs.
+    env = CityLearnEnv(
+        'citylearn_three_phase_electrical_service_demo_15s_parquet',
+        central_agent=False,
+        simulation_start_time_step=236,
+        simulation_end_time_step=244,
+    )
+    try:
+        env.reset()
+        building = env.buildings[0]
+        minutes = float(building.energy_simulation.minutes[building.time_step])
+        observations = building.observations(include_all=True, normalize=False, periodic_normalization=True)
 
-    assert observations['minutes_sin'] == pytest.approx(np.sin(2.0 * np.pi * minutes / 60.0), abs=1.0e-6)
-    assert observations['minutes_cos'] == pytest.approx(np.cos(2.0 * np.pi * minutes / 60.0), abs=1.0e-6)
+        assert minutes == 59
+        assert observations['minutes_sin'] == pytest.approx(np.sin(2.0 * np.pi * minutes / 60.0), abs=1.0e-6)
+        assert observations['minutes_cos'] == pytest.approx(np.cos(2.0 * np.pi * minutes / 60.0), abs=1.0e-6)
+    finally:
+        env.close()
 
 
 class _NoInteraction:
