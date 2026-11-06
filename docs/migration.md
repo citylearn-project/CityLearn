@@ -62,7 +62,11 @@ Fixes that **change results** where they apply:
 - KPI references: the native BAU reference re-applies `simulate_power_outage`,
   `solar_generation` and active/inactive action and observation overrides; with
   the community market enabled, legacy cost and the equity audit settle the
-  counterfactual too.
+  counterfactual too. Autosized equipment in the reference is sized over the
+  same data as the evaluated env, not only the current episode: `evaluate_v2()`
+  no longer fails on the tx, vt and ca neighbourhood datasets when episodes are
+  shorter than the data, and BAU KPIs of the 2020 and 2021 challenge datasets
+  change because their reference heat pumps and storage now match.
 - Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
   ca neighbourhood datasets), and an EV connects to at most one charger per step,
   which affects charger clones in the dynamic-topology demos.

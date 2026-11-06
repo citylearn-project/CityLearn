@@ -1,6 +1,7 @@
 """KPI references must simulate and price the same world as the evaluated control."""
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -50,6 +51,85 @@ def test_business_as_usual_agent_scores_one_against_its_own_reference():
     # Without the overrides the reference kept PV, storage control and grid supply: cost ratio 2.08.
     np.testing.assert_allclose(ratio_values, 1.0, atol=1.0e-6)
     np.testing.assert_allclose(delta_values, 0.0, atol=1.0e-6)
+
+
+AUTOSIZED_DATASETS = ('tx_travis_county_neighborhood', 'vt_chittenden_county_neighborhood', 'ca_alameda_county_neighborhood')
+# What each autosizer resolves (PV is left out: it needs PySAM).
+AUTOSIZED_ATTRIBUTES = {
+    'cooling_device': ('nominal_power',), 'heating_device': ('nominal_power',), 'dhw_device': ('nominal_power',),
+    'cooling_storage': ('capacity',), 'heating_storage': ('capacity',), 'dhw_storage': ('capacity',),
+    'electrical_storage': ('capacity', 'nominal_power', 'efficiency', 'depth_of_discharge', 'loss_coefficient',
+                           'capacity_loss_coefficient'),
+}
+
+
+def _autosized_equipment(env, schema):
+    return [
+        (building.name, device, attribute, float(getattr(getattr(building, device), attribute)))
+        for building in env.buildings
+        for device, attributes in AUTOSIZED_ATTRIBUTES.items()
+        if (schema['buildings'][building.name].get(device) or {}).get('autosize')
+        for attribute in attributes
+    ]
+
+
+@pytest.mark.parametrize('dataset', AUTOSIZED_DATASETS)
+def test_business_as_usual_reference_keeps_equipment_autosized_over_the_loaded_data(dataset):
+    path = Path(__file__).resolve().parents[1] / 'data' / 'datasets' / dataset / 'schema.json'
+    schema = json.loads(path.read_text(encoding='utf-8'))
+    schema['root_directory'] = str(path.parent)
+    names = [name for name, building in schema['buildings'].items()
+             if (building.get('electrical_storage') or {}).get('autosize')][:4]
+    assert names, 'dataset no longer autosizes batteries'
+    # PV autosizing needs PySAM; batteries, heat pumps and DHW heaters still autosize.
+    kwargs = dict(buildings=names, central_agent=True, random_seed=0, solar_generation=False)
+    env = CityLearnEnv(schema, episode_time_steps=24, **kwargs)
+    agent = BusinessAsUsualAgent(env)
+    observations, _ = env.reset(seed=0, options={'episode_index': 2})
+    start, end = env.episode_tracker.episode_start_time_step, env.episode_tracker.episode_end_time_step
+    assert (start, end) == (48, 71)
+
+    # Sizing over the episode alone picks other equipment, as the reference used to.
+    episode_only = CityLearnEnv(schema, simulation_start_time_step=start, simulation_end_time_step=end, **kwargs)
+    equipment = _autosized_equipment(env, schema)
+    assert len(equipment) > 0
+    assert _autosized_equipment(episode_only, schema) != equipment
+
+    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar.reset()
+    tracker = sidecar.episode_tracker
+    assert (tracker.simulation_start_time_step, tracker.simulation_end_time_step) == (0, 8759)
+    assert (tracker.episode_start_time_step, tracker.episode_end_time_step) == (start, end)
+    assert _autosized_equipment(sidecar, schema) == equipment
+
+    while not env.terminated:
+        observations, *_ = env.step(agent.predict(observations, deterministic=True))
+
+    # Raised "Native BAU initial inventory differs from the evaluated episode".
+    kpis = env.evaluate_v2()
+    cost_functions = kpis['cost_function']
+    ratios = kpis[cost_functions.str.contains('to_business_as_usual') & cost_functions.str.endswith('ratio')
+                  & ~cost_functions.str.contains('delta')]
+    deltas = kpis[cost_functions.str.contains('delta_to_business_as_usual')]
+    ratio_values = pd.to_numeric(ratios['value'], errors='coerce').dropna()
+    delta_values = pd.to_numeric(deltas['value'], errors='coerce').dropna()
+
+    assert len(ratio_values) > 0 and len(delta_values) > 0
+    # Same equipment and the same agent: the reference reproduces the control exactly.
+    np.testing.assert_array_equal(ratio_values, 1.0)
+    np.testing.assert_array_equal(delta_values, 0.0)
+
+
+def test_business_as_usual_reference_loads_only_the_episode_without_autosizing():
+    env = CityLearnEnv(BAU_DATASET, central_agent=True, episode_time_steps=24, random_seed=0)
+    env.reset(seed=0, options={'episode_index': 2})
+    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar.reset()
+    tracker = sidecar.episode_tracker
+
+    # Equipment does not depend on the data here, so the cheaper episode-only load is kept.
+    assert (tracker.simulation_start_time_step, tracker.simulation_end_time_step) == (48, 71)
+    assert (tracker.episode_start_time_step, tracker.episode_end_time_step) == (48, 71)
 
 
 @pytest.fixture

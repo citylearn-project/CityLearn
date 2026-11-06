@@ -99,9 +99,17 @@ class CityLearnBusinessAsUsualBaselineService:
         building_names: Optional[List[str]] = [building.name for building in source_buildings] if source_buildings else None
         ev_names: Optional[List[str]] = [ev.name for ev in source_evs] if source_evs else None
 
-        start = int(getattr(env.episode_tracker, 'episode_start_time_step', 0) or 0)
-        end = int(getattr(env.episode_tracker, 'episode_end_time_step', max(start, getattr(env, 'time_steps', 1) - 1)) or start)
-        episode_steps = int(getattr(env.episode_tracker, 'episode_time_steps', max(end - start + 1, 1)) or max(end - start + 1, 1))
+        tracker = env.episode_tracker
+        start = int(getattr(tracker, 'episode_start_time_step', 0) or 0)
+        end = int(getattr(tracker, 'episode_end_time_step', max(start, getattr(env, 'time_steps', 1) - 1)) or start)
+        simulation_start, simulation_end = start, end
+
+        if self._autosizes_equipment(schema, building_names):
+            # Autosizing (batteries, PV, heat pumps, storage) reads the whole loaded data window, so
+            # loading only this episode sizes different equipment than the evaluated env. Load the
+            # source's window instead; the one explicit split still restricts the run to the episode.
+            simulation_start = int(getattr(tracker, 'simulation_start_time_step', start))
+            simulation_end = int(getattr(tracker, 'simulation_end_time_step', end))
 
         requires_entity_interface = (
             getattr(env, 'topology_mode', None) == 'dynamic'
@@ -113,9 +121,9 @@ class CityLearnBusinessAsUsualBaselineService:
             root_directory=getattr(env, 'root_directory', None),
             buildings=building_names,
             electric_vehicles=ev_names,
-            simulation_start_time_step=start,
-            simulation_end_time_step=end,
-            episode_time_steps=episode_steps,
+            simulation_start_time_step=simulation_start,
+            simulation_end_time_step=simulation_end,
+            episode_time_steps=[(start, end)],
             rolling_episode_split=False,
             random_episode_split=False,
             seconds_per_time_step=float(getattr(env, 'seconds_per_time_step', 3600.0)),
@@ -137,3 +145,27 @@ class CityLearnBusinessAsUsualBaselineService:
         )
         baseline_env._business_as_usual_sidecar = True
         return baseline_env
+
+    @staticmethod
+    def _autosizes_equipment(schema, building_names: Optional[List[str]]) -> bool:
+        """Whether a building the sidecar loads sizes a device from its data.
+
+        Without autosizing, equipment does not depend on the loaded window, so the sidecar can
+        load just the episode, which is much cheaper for long or fine-grained datasets.
+        """
+        from citylearn.utilities import parse_bool
+
+        buildings = schema.get('buildings', {}) if isinstance(schema, dict) else {}
+        for name in (buildings if building_names is None else building_names):
+            config = buildings.get(name)
+            if not isinstance(config, dict):
+                return True  # Unknown configuration: load the source's window to be safe.
+            for device in config.values():
+                if not isinstance(device, dict):
+                    continue
+                try:
+                    if parse_bool(device.get('autosize', False), default=False):
+                        return True
+                except (TypeError, ValueError):
+                    return True
+        return False
