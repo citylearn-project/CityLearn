@@ -9,6 +9,8 @@ import pytest
 
 from citylearn.agents.baseline import BusinessAsUsualAgent
 from citylearn.citylearn import CityLearnEnv
+from citylearn.internal.baseline import CityLearnBusinessAsUsualBaselineService
+from citylearn.internal.comparison import inventory
 from test_market_phase_invariants import _rollout_zero_actions, _write_residual_market_schema
 
 BAU_DATASET = 'citylearn_challenge_2023_phase_1'
@@ -139,6 +141,35 @@ def test_business_as_usual_cache_keeps_only_the_latest_reference():
     assert [(result.time_step, result.env.time_step) for result in results] == [(4, 4), (8, 8), (12, 12)]
     env.reset(seed=0)
     assert env._business_as_usual_baseline_cache == {}
+
+
+def test_business_as_usual_reference_rejects_other_equipment_even_with_the_same_batteries(monkeypatch):
+    # The 2020 challenge autosizes heat pumps, heaters and storage tanks, not batteries. Sized over the
+    # episode alone, as the reference used to be, they differed silently: the inventory checks batteries.
+    monkeypatch.setattr(CityLearnBusinessAsUsualBaselineService, '_autosizes_equipment', staticmethod(lambda *_: False))
+    env = CityLearnEnv('citylearn_challenge_2020_climate_zone_1', buildings=['Building_1', 'Building_2'],
+                       central_agent=True, episode_time_steps=24, random_seed=0)
+    env.reset(seed=0, options={'episode_index': 2})
+    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar.reset()
+    assert inventory(sidecar) == env._comparison_initial_inventory
+
+    with pytest.raises(ValueError, match=r'equipment differs .* Building_1/cooling_device: nominal_power'):
+        env.run_business_as_usual_baseline()
+
+
+def test_business_as_usual_reference_rejects_devices_changed_after_loading():
+    env = CityLearnEnv(BAU_DATASET, central_agent=True, episode_time_steps=24, random_seed=0)
+    building = env.buildings[0]
+    # The reference rebuilds devices from the schema, so it would simulate the original heat pump.
+    building.cooling_device.nominal_power = building.cooling_device.nominal_power + 1.0
+    env.reset(seed=0)
+    env.step([[0.0] * len(env.action_names[0])])
+
+    with pytest.raises(ValueError, match=rf'equipment differs .* {building.name}/cooling_device: nominal_power'):
+        env.evaluate_v2()
+
+    assert not env.evaluate_v2(include_business_as_usual=False).empty
 
 
 def test_business_as_usual_reference_loads_only_the_episode_without_autosizing():

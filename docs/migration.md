@@ -53,6 +53,12 @@ No dataset, schema or export-file migration is required.
 - **RL agent keyword:** pass `action_scaling_coefficient=` to `SAC`, `MARLISA`
   and other `RLC` agents. The misspelled `action_scaling_coefficienct=` still
   works with a `DeprecationWarning`; before, only the misspelling took effect.
+- **Native BAU reference check:** `evaluate_v2()` checks that every device of
+  the reference (heat pumps, heaters, storage tanks, PV, batteries, chargers,
+  appliances and EV batteries) matches the evaluated env, not only battery
+  capacities. The reference rebuilds devices from the schema, so a device
+  changed after loading now raises a `ValueError` that names the parameter;
+  evaluate with `include_business_as_usual=False` in that case.
 
 Fixes that **change results** where they apply:
 

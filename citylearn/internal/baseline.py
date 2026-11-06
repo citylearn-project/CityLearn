@@ -59,9 +59,19 @@ class CityLearnBusinessAsUsualBaselineService:
         baseline_env._ev_drift_seed = env._ev_drift_seed
         baseline_env._ev_drift_random_state = np.random.RandomState(env._ev_drift_seed)
         from citylearn import __version__
-        from citylearn.internal.comparison import inventory
+        from citylearn.internal.comparison import equipment, equipment_differences, inventory
         if inventory(baseline_env) != env._comparison_initial_inventory:
             raise ValueError('Native BAU initial inventory differs from the evaluated episode')
+        # The inventory covers batteries and EVs only; heat pumps, heaters and storage tanks are sized too.
+        differences = equipment_differences(env._comparison_initial_equipment, equipment(baseline_env))
+        if differences:
+            shown = '; '.join(differences[:3]) + ('; ...' if len(differences) > 3 else '')
+            raise ValueError(
+                f'Native BAU equipment differs from the evaluated env in {len(differences)} parameter(s) '
+                f'(evaluated vs reference): {shown}. The reference rebuilds devices from the schema, so it '
+                'cannot follow devices changed after loading; evaluate without the native reference '
+                '(include_business_as_usual=False) in that case.'
+            )
         baseline_env._native_reference_metadata = dict(
             implementation='citylearn.agents.baseline.BusinessAsUsualAgent', simulator_version=__version__,
             definition_version=agent.DEFINITION_VERSION, observation_access='privileged_simulator_state',

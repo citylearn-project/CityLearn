@@ -1669,8 +1669,10 @@ class CityLearnEnv(Environment, Env):
         self._robustness_service.reset()
         self.associate_chargers_to_electric_vehicles()
         self._provenance_service.reset()
-        from citylearn.internal.comparison import inventory
+        from citylearn.internal.comparison import equipment, inventory
         self._comparison_initial_inventory = inventory(self)
+        # Taken here because the dynamic topology adds and removes devices during the episode.
+        self._comparison_initial_equipment = equipment(self)
 
         # reset reward function (does nothing by default)
         self.reward_function.reset()
