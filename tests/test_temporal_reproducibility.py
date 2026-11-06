@@ -1,5 +1,6 @@
 import hashlib
 import json
+import random
 from pathlib import Path
 from types import SimpleNamespace
 import numpy as np
@@ -237,6 +238,49 @@ def test_noise_uses_owned_rng_and_global_window_coordinates(tmp_path):
         np.random.set_state(before)
         for e in environments:
             e.close()
+
+
+PLACEHOLDER_DEVICES = (
+    "cooling_device", "heating_device", "dhw_device", "cooling_storage",
+    "heating_storage", "dhw_storage", "electrical_storage", "pv",
+)
+
+
+def _device_metadata(env):
+    return [
+        sorted((key, repr(value)) for key, value in getattr(building, device).get_metadata().items() if key != "uid")
+        for building in env.buildings
+        for device in PLACEHOLDER_DEVICES
+    ]
+
+
+def test_absent_devices_and_chargers_do_not_draw_from_global_random():
+    before = random.getstate()
+    metadata = []
+    try:
+        for global_seed in (1, 2):
+            random.seed(global_seed)
+            state = random.getstate()
+            env = CityLearnEnv(
+                "citylearn_challenge_2022_phase_all_plus_evs",
+                central_agent=True, episode_time_steps=24, random_seed=0,
+            )
+            env.reset(seed=0)
+            # Previously every zero-size placeholder and charger drew its seed here.
+            assert random.getstate() == state
+            assert any(b.cooling_storage.capacity == 0.0 for b in env.buildings), "no placeholder to check"
+            assert any(b.electric_vehicle_chargers for b in env.buildings), "no charger to check"
+            metadata.append(_device_metadata(env))
+            building = env.buildings[0]
+            building.cooling_storage = None
+            assert random.getstate() == state
+            metadata.append((building.cooling_storage.efficiency, building.cooling_storage.loss_coefficient))
+            env.close()
+    finally:
+        random.setstate(before)
+
+    # Placeholder efficiencies, losses and curves no longer change between constructions.
+    assert metadata[:2] == metadata[2:]
 
 
 @pytest.mark.parametrize(

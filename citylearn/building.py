@@ -13,7 +13,10 @@ from citylearn.base import Environment, EpisodeTracker
 from citylearn.data import CarbonIntensity, EnergySimulation, Pricing, TOLERANCE, Weather, ZERO_DIVISION_PLACEHOLDER
 from citylearn.dynamics import Dynamics, LSTMDynamics
 from citylearn.electric_vehicle_charger import Charger
-from citylearn.energy_model import Battery, DeferrableAppliance, ElectricDevice, ElectricHeater, Escalator, HeatPump, PV, StorageDevice, StorageTank, WashingMachine
+from citylearn.energy_model import (
+    Battery, DeferrableAppliance, ElectricDevice, ElectricHeater, Escalator, HeatPump, PLACEHOLDER_DEVICE_RANDOM_SEED, PV,
+    StorageDevice, StorageTank, WashingMachine,
+)
 from citylearn.internal.building_ops import BuildingOpsService
 from citylearn.internal.units import (
     normalized_capacity_action_to_energy_kwh,
@@ -799,35 +802,35 @@ class Building(Environment):
 
     @dhw_storage.setter
     def dhw_storage(self, dhw_storage: StorageTank):
-        self.__dhw_storage = StorageTank(0.0) if dhw_storage is None else dhw_storage
+        self.__dhw_storage = StorageTank(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if dhw_storage is None else dhw_storage
 
     @cooling_storage.setter
     def cooling_storage(self, cooling_storage: StorageTank):
-        self.__cooling_storage = StorageTank(0.0) if cooling_storage is None else cooling_storage
+        self.__cooling_storage = StorageTank(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if cooling_storage is None else cooling_storage
 
     @heating_storage.setter
     def heating_storage(self, heating_storage: StorageTank):
-        self.__heating_storage = StorageTank(0.0) if heating_storage is None else heating_storage
+        self.__heating_storage = StorageTank(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if heating_storage is None else heating_storage
 
     @electrical_storage.setter
     def electrical_storage(self, electrical_storage: Battery):
-        self.__electrical_storage = Battery(0.0, 0.0) if electrical_storage is None else electrical_storage
+        self.__electrical_storage = Battery(0.0, 0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if electrical_storage is None else electrical_storage
 
     @dhw_device.setter
     def dhw_device(self, dhw_device: Union[HeatPump, ElectricHeater]):
-        self.__dhw_device = ElectricHeater(0.0) if dhw_device is None else dhw_device
+        self.__dhw_device = ElectricHeater(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if dhw_device is None else dhw_device
 
     @cooling_device.setter
     def cooling_device(self, cooling_device: HeatPump):
-        self.__cooling_device = HeatPump(0.0) if cooling_device is None else cooling_device
+        self.__cooling_device = HeatPump(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if cooling_device is None else cooling_device
 
     @heating_device.setter
     def heating_device(self, heating_device: Union[HeatPump, ElectricHeater]):
-        self.__heating_device = HeatPump(0.0) if heating_device is None else heating_device
+        self.__heating_device = HeatPump(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if heating_device is None else heating_device
 
     @pv.setter
     def pv(self, pv: PV):
-        self.__pv = PV(0.0) if pv is None else pv
+        self.__pv = PV(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if pv is None else pv
 
     @electric_vehicle_chargers.setter
     def electric_vehicle_chargers(self, electric_vehicle_chargers: List[Charger]):

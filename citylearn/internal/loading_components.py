@@ -164,6 +164,8 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
             charger_class = component_constructor(charger_type, f'buildings.{building_name}.chargers.{charger_name}.type')
             charger_attributes = dict(charger_config.get('attributes', {}) or {})
             charger_attributes['episode_tracker'] = episode_tracker
+            # Chargers draw no random values, but an unseeded one draws its seed from Python's global `random`.
+            charger_attributes.setdefault('random_seed', schema['random_seed'])
             charger_object = charger_class(
                 charger_simulation=charger_simulation,
                 charger_id=charger_name,
