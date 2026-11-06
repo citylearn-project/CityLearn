@@ -2767,7 +2767,7 @@ class CityLearnEntityInterfaceService:
                 elif feature == "generation_capacity_factor_ratio":
                     max_generation_power = 0.0
                     try:
-                        max_generation_power = float(np.nanmax(np.abs(building.solar_generation)) / step_hours)
+                        max_generation_power = float(np.nanmax(np.abs(building.solar_generation))) / step_hours
                     except Exception:
                         max_generation_power = installed_power
                     high_ratio = max_generation_power / installed_power if installed_power > 0.0 else 1.0

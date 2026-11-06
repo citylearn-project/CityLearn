@@ -1,0 +1,92 @@
+"""Occupant tree classifiers evaluated with NumPy, without unpickling scikit-learn objects."""
+
+import os
+import pickle
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from citylearn.internal.occupant_models import TreeClassifierModel, UnsupportedModelError, load_occupant_model
+
+DATASET = Path(__file__).resolve().parents[2]/'data'/'datasets'/'quebec_neighborhood_with_demand_response_set_points'
+MODEL = 'resstock-amy2018-2021-release-1-199613_setpoint_{}.pkl'
+
+# Inputs and outputs of scikit-learn 1.2.2 (the version the bundled pickles were last loadable with).
+# The first rows put a feature exactly on a split threshold.
+FROZEN = {
+    'decrease': dict(
+        x=[[19.58333206, -18.622, -1.779], [29.257, 19.58333206, -1.426], [18.47222137, 6.907, 1.502],
+           [29.23, -3.513, -1.318], [19.677, 19.421, -0.089], [21.35, -4.84, 2.884], [27.416, 2.675, 2.77],
+           [21.138, -13.298, 1.349], [23.244, 0.156, 0.247]],
+        predict=[0, 0, 1, 0, 0, 1, 0, 1, 0],
+        proba=[0.4209479251685091, 0.4595127763121018, 0.5818348250671012, 0.4661242627514074, 0.2826977352084767,
+               0.5249616627354494, 0.4577690642198599, 0.5022497397160998, 0.43834713062923364],
+    ),
+    'increase': dict(
+        x=[[22.677, -18.622, 0.58333337], [22.25, 17.676, -1.426], [17.162, 20.08333206, 1.502], [29.23, -3.513, -1.318],
+           [19.677, 19.421, -0.089], [21.35, -4.84, 2.884], [27.416, 2.675, 2.77], [21.138, -13.298, 1.349],
+           [23.244, 0.156, 0.247]],
+        predict=[1, 1, 0, 1, 0, 1, 1, 1, 1],
+        proba=[0.7965109463623379, 0.8102129432803262, 0.2956343089163401, 0.8178157894736843, 0.132358454582459,
+               0.7916956612856343, 0.9240138782785842, 0.7930511509077168, 0.9551781802407452],
+    ),
+}
+
+
+@pytest.mark.parametrize('direction', list(FROZEN))
+def test_bundled_occupant_model_reproduces_scikit_learn_1_2_2(direction):
+    model = TreeClassifierModel.from_pickle(DATASET/MODEL.format(direction))
+    frozen = FROZEN[direction]
+
+    assert model.classes_.tolist() == [0, 1]
+    np.testing.assert_array_equal(model.predict(frozen['x']), frozen['predict'])
+    np.testing.assert_allclose(model.predict_proba(frozen['x'])[:, 1], frozen['proba'], rtol=0.0, atol=1.0e-15)
+
+
+@pytest.mark.parametrize('estimator', ['forest', 'tree'])
+def test_matches_installed_scikit_learn(tmp_path, estimator):
+    sklearn = pytest.importorskip('sklearn')
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.tree import DecisionTreeClassifier
+
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=(400, 3))
+    y = np.where(x[:, 0] + 0.5*x[:, 1] > 0.2, 'up', np.where(x[:, 2] > 0.8, 'hold', 'down'))
+    reference = (RandomForestClassifier(n_estimators=15, max_depth=6, random_state=0) if estimator == 'forest'
+                 else DecisionTreeClassifier(max_depth=6, random_state=0)).fit(x, y)
+    path = tmp_path/'model.pkl'
+    path.write_bytes(pickle.dumps(reference))
+    model = TreeClassifierModel.from_pickle(path)
+    test = np.vstack([rng.normal(size=(300, 3)), x[:50]])
+
+    np.testing.assert_array_equal(model.predict(test), reference.predict(test))
+    np.testing.assert_allclose(model.predict_proba(test), reference.predict_proba(test), rtol=0.0, atol=1.0e-12)
+    assert sklearn.__version__  # the comparison ran against the installed release
+
+
+class _Payload:
+    def __reduce__(self):
+        return os.system, ('echo should-not-run',)
+
+
+def test_tree_loader_never_calls_other_globals(tmp_path):
+    path = tmp_path/'payload.pkl'
+    path.write_bytes(pickle.dumps(_Payload()))
+
+    with pytest.raises(UnsupportedModelError, match='system'):
+        TreeClassifierModel.from_pickle(path)
+
+
+def test_other_models_fall_back_to_pickle(tmp_path):
+    path = tmp_path/'custom.pkl'
+    path.write_bytes(pickle.dumps({'kind': 'custom'}))
+
+    assert load_occupant_model(path) == {'kind': 'custom'}
+
+
+def test_rejects_wrong_feature_count():
+    model = TreeClassifierModel.from_pickle(DATASET/MODEL.format('increase'))
+
+    with pytest.raises(ValueError, match='features'):
+        model.predict([[1.0, 2.0]])

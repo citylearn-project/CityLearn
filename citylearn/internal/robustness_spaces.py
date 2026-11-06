@@ -25,9 +25,10 @@ def _envelope(service, event, low, high, dtype):
     lower, upper = min(low, candidate_low), max(high, candidate_high)
     with np.errstate(over="ignore"):
         rounded_low, rounded_high = np.asarray([lower, upper], dtype=dtype)
-    if rounded_low > lower:
+    # Compare in float64: NumPy 2 (NEP 50) would compare a float32 scalar with a Python float in float32.
+    if float(rounded_low) > lower:
         rounded_low = np.nextafter(rounded_low, dtype.type(-np.inf))
-    if rounded_high < upper:
+    if float(rounded_high) < upper:
         rounded_high = np.nextafter(rounded_high, dtype.type(np.inf))
     return float(rounded_low), float(rounded_high)
 

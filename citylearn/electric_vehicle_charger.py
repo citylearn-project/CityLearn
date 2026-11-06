@@ -319,7 +319,7 @@ class Charger(Environment):
         # Entity actions are float32. A command exactly at the minimum can
         # round a fraction below it; preserve that valid command without
         # admitting materially sub-minimum requests.
-        tolerance_kw = np.finfo(np.float32).eps * max_power_kw
+        tolerance_kw = float(np.finfo(np.float32).eps) * max_power_kw
         if requested_power_kw + tolerance_kw < min_power_kw:
             return 0.0
 
@@ -406,14 +406,15 @@ class Charger(Environment):
             battery_command = to_dataset_resolution_energy(battery_energy_kwh, ratio)
             electric_vehicle.battery.charge(battery_command)
 
-            battery_energy_balance = electric_vehicle.battery.energy_balance[self.time_step]
+            battery_energy_balance = float(electric_vehicle.battery.energy_balance[self.time_step])
             ac_energy = (
                 battery_energy_balance / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
                 if battery_energy_balance >= 0 else battery_energy_balance * efficiency
             )
-            self.__electricity_consumption[self.time_step] += ac_energy
-            self.__gross_energy_charge[self.time_step] += max(float(ac_energy), 0.0)
-            self.__gross_energy_discharge[self.time_step] += max(-float(ac_energy), 0.0)
+            # Add in float64 before storing, as NumPy 1 did; NEP 50 would add a Python float in float32.
+            self.__electricity_consumption[self.time_step] = float(self.__electricity_consumption[self.time_step]) + ac_energy
+            self.__gross_energy_charge[self.time_step] = float(self.__gross_energy_charge[self.time_step]) + max(float(ac_energy), 0.0)
+            self.__gross_energy_discharge[self.time_step] = float(self.__gross_energy_discharge[self.time_step]) + max(-float(ac_energy), 0.0)
             # Preserve charger losses at the AC boundary for passive provenance.
             events = electric_vehicle.battery.energy_provenance_events
             if events:

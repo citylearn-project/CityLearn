@@ -837,9 +837,9 @@ class CityLearnRobustnessService:
             return self._event_replacement_value(event)
         if event.mode == "noise":
             std = 0.0 if event.std is None else float(event.std)
-            return float(original + self._noise(event, target_key, step, std))
+            return float(original) + float(self._noise(event, target_key, step, std))
         if event.mode == "bias":
-            return float(original + (0.0 if event.value is None else float(event.value)))
+            return float(original) + (0.0 if event.value is None else float(event.value))
         if event.mode == "stuck":
             key = (event.event_id, target_key)
             if key not in self._stuck_values:
@@ -857,9 +857,9 @@ class CityLearnRobustnessService:
             return 0.0
         if event.mode == "noise":
             std = 0.0 if event.std is None else float(event.std)
-            return float(original + self._noise(event, target_key, step, std))
+            return float(original) + float(self._noise(event, target_key, step, std))
         if event.mode == "bias":
-            return float(original + (0.0 if event.value is None else float(event.value)))
+            return float(original) + (0.0 if event.value is None else float(event.value))
         if event.mode == "stuck":
             key = (event.event_id, target_key)
             if key not in self._stuck_values:
