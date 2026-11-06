@@ -25,6 +25,20 @@ Optional dependencies:
 | PV autosizing | `.venv/bin/pip install ".[pysam]"` |
 | Build checks | `.venv/bin/pip install build twine` |
 
+`.gitattributes` makes every checkout byte-identical to the repository: text
+files use LF and files under `data/` and `tests/data/` are never converted, even
+with Git for Windows' default `core.autocrlf=true`. Experiment manifests hash
+these files, so the hashes then agree on all platforms. A checkout made before
+`.gitattributes` existed may still hold CRLF copies; `git status` lists converted
+data files as modified. Refresh such a checkout once (this discards uncommitted
+changes to tracked files) and clear the dataset cache, which may hold copies made
+from the old checkout:
+
+```console
+git rm --cached -r -q . && git reset -q --hard
+python -c "from citylearn.data import DataSet; DataSet().clear_cache()"
+```
+
 ## Core Validation
 
 | Check | Command |

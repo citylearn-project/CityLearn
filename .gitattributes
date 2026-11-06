@@ -1,0 +1,36 @@
+# Every checkout must have the same bytes on Windows, macOS and Linux. Experiment
+# manifests record SHA-256 hashes of the input files and engine source, and a Windows
+# checkout with core.autocrlf=true used to rewrite text files to CRLF, so those hashes
+# did not match a Linux checkout of the same commit. These attributes override
+# core.autocrlf and core.eol.
+
+# Text files: LF in the repository and in every working tree.
+* text=auto eol=lf
+
+# Input data: checked out byte for byte as committed and never converted. These are the
+# bytes that `data_files_sha256` hashes, so they are identical to the git blob and to a
+# GitHub download on every platform.
+data/** -text
+tests/data/** -text
+
+# Binary formats: never converted.
+*.parquet binary
+*.pq binary
+*.pkl binary
+*.pickle binary
+*.pt binary
+*.pth binary
+*.joblib binary
+*.npy binary
+*.npz binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.pptx binary
+*.xlsx binary
+*.zip binary
+
+# Windows batch files need CRLF.
+*.bat text eol=crlf
