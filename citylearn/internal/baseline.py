@@ -45,6 +45,10 @@ class CityLearnBusinessAsUsualBaselineService:
         if not force and cache_key in cache:
             return cache[cache_key]
 
+        # Keep only the latest result. Within an episode the time step only moves forward and reset
+        # clears the cache, so an earlier entry is never read again, yet each holds a whole sidecar
+        # env. Dropping it before building the next one also keeps at most one sidecar alive.
+        self.clear()
         baseline_env = self._new_sidecar_env()
         baseline_env.random_seed = env.random_seed
         agent = BusinessAsUsualAgent(baseline_env)
@@ -77,8 +81,7 @@ class CityLearnBusinessAsUsualBaselineService:
             episode=episode,
             time_step=target_time_step,
         )
-        cache[cache_key] = result
-        env._business_as_usual_baseline_cache = cache
+        env._business_as_usual_baseline_cache = {cache_key: result}
         return result
 
     def clear(self):

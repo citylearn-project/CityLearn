@@ -71,6 +71,12 @@ Fixes that **change results** where they apply:
   ca neighbourhood datasets), and an EV connects to at most one charger per step,
   which affects charger clones in the dynamic-topology demos.
 
+Changes that **preserve trajectories and KPI values**: the zero-size placeholders
+for absent devices, and EV chargers, are seeded, so the placeholders' unused
+parameters are reproducible and building an env no longer advances Python's
+global `random` stream; the native BAU cache keeps only the latest reference, so
+repeated mid-episode `evaluate_v2()` calls no longer each keep a reference env.
+
 ## Upgrade from 3.1.1 to 3.2.0
 
 CityLearn supports Gymnasium from 0.28.1 up to, but excluding, 2.0. Dataset names

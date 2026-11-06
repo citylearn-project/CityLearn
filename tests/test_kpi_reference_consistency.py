@@ -120,6 +120,27 @@ def test_business_as_usual_reference_keeps_equipment_autosized_over_the_loaded_d
     np.testing.assert_array_equal(delta_values, 0.0)
 
 
+def test_business_as_usual_cache_keeps_only_the_latest_reference():
+    env = CityLearnEnv(BAU_DATASET, central_agent=True, episode_time_steps=24, random_seed=0)
+    agent = BusinessAsUsualAgent(env)
+    observations, _ = env.reset(seed=0)
+    results = []
+
+    for _ in range(3):
+        for _ in range(4):
+            observations, *_ = env.step(agent.predict(observations, deterministic=True))
+
+        results.append(env.run_business_as_usual_baseline())
+        # Each entry holds a whole sidecar env; earlier time steps are never read again.
+        assert list(env._business_as_usual_baseline_cache) == [(env.episode_tracker.episode, env.time_step)]
+        assert env.run_business_as_usual_baseline() is results[-1]
+
+    # Results already handed out are left intact.
+    assert [(result.time_step, result.env.time_step) for result in results] == [(4, 4), (8, 8), (12, 12)]
+    env.reset(seed=0)
+    assert env._business_as_usual_baseline_cache == {}
+
+
 def test_business_as_usual_reference_loads_only_the_episode_without_autosizing():
     env = CityLearnEnv(BAU_DATASET, central_agent=True, episode_time_steps=24, random_seed=0)
     env.reset(seed=0, options={'episode_index': 2})
