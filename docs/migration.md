@@ -46,9 +46,35 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
-## Changes after 3.1.1 (unreleased)
+## Changes after 3.2.0 (unreleased)
 
 No dataset, schema or export-file migration is required.
+
+- **RL agent keyword:** pass `action_scaling_coefficient=` to `SAC`, `MARLISA`
+  and other `RLC` agents. The misspelled `action_scaling_coefficienct=` still
+  works with a `DeprecationWarning`; before, only the misspelling took effect.
+
+Fixes that **change results** where they apply:
+
+- Agents: MARLISA's coordinated actions use each building's own policy;
+  `TabularQLearning` bootstraps on the best next-state value; an explicit
+  `action_scaling_coefficient` now takes effect (the default stays 0.5).
+- KPI references: the native BAU reference re-applies `simulate_power_outage`,
+  `solar_generation` and active/inactive action and observation overrides; with
+  the community market enabled, legacy cost and the equity audit settle the
+  counterfactual too.
+- Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
+  ca neighbourhood datasets), and an EV connects to at most one charger per step,
+  which affects charger clones in the dynamic-topology demos.
+
+## Upgrade from 3.1.1 to 3.2.0
+
+CityLearn supports Gymnasium from 0.28.1 up to, but excluding, 2.0. Dataset names
+now resolve against the `v3.2.0` tag. Existing dataset files and export formats
+remain compatible.
+
+Install `citylearn[end_use_load_profiles]` when generating datasets with the
+EULP/EnergyPlus tools. Standard simulations use the core installation.
 
 - **Per-building reward functions:** `MultiBuildingRewardFunction.calculate()`
   (used when the schema's `reward_function.type` maps buildings to functions)
@@ -60,9 +86,6 @@ No dataset, schema or export-file migration is required.
   `energy_provenance=False` its `provenance_summary` and `source_destinations`
   are `null` instead of failing the export, and the native BAU reference uses the
   same setting.
-- **RL agent keyword:** pass `action_scaling_coefficient=` to `SAC`, `MARLISA`
-  and other `RLC` agents. The misspelled `action_scaling_coefficienct=` still
-  works with a `DeprecationWarning`; before, only the misspelling took effect.
 
 Fixes that **change results** where they apply:
 
@@ -78,16 +101,6 @@ Fixes that **change results** where they apply:
 - Episodes: thermal-storage discharge at the first step is counted once, and
   action feedback, constraint penalties and dynamic series reset with each
   episode, which changes second and later episodes.
-- Agents: MARLISA's coordinated actions use each building's own policy;
-  `TabularQLearning` bootstraps on the best next-state value; an explicit
-  `action_scaling_coefficient` now takes effect (the default stays 0.5).
-- KPI references: the native BAU reference re-applies `simulate_power_outage`,
-  `solar_generation` and active/inactive action and observation overrides; with
-  the community market enabled, legacy cost and the equity audit settle the
-  counterfactual too.
-- Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
-  ca neighbourhood datasets), and an EV connects to at most one charger per step,
-  which affects charger clones in the dynamic-topology demos.
 
 Changes that **preserve trajectories and KPI values**: the `energy_provenance`
 option (default on), LSTM input trimming and scalar fast paths; gymnasium 1.x
