@@ -5,7 +5,8 @@ Installation
 ============
 
 CityLearn v3 is distributed as ``citylearn`` on PyPI and requires Python 3.9 or
-newer. Use a virtual environment to keep its dependencies separate.
+newer. It supports NumPy 1.x and 2.x and gives bit-identical simulation results
+on both. Use a virtual environment to keep its dependencies separate.
 
 .. code-block:: console
 

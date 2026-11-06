@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, 
 
 import numpy as np
 
+from citylearn.internal.scalars import numpy1_scalar
+
 from citylearn.base import Environment
 from citylearn.data import ChargerSimulation
 
@@ -1224,13 +1226,14 @@ class CityLearnRuntimeService:
                 lst.append(value)
 
         timer_start = time.perf_counter() if debug_timing else 0.0
-        total = sum(building.net_electricity_consumption[env.time_step] for building in env.buildings)
+        # NumPy 1 summed these float32 values from an int start in float64; keep that under NEP 50.
+        total = sum((building.net_electricity_consumption[env.time_step] for building in env.buildings), numpy1_scalar(0))
         _set_or_append(env.net_electricity_consumption, total)
 
-        total_cost = sum(building.net_electricity_consumption_cost[env.time_step] for building in env.buildings)
+        total_cost = sum((building.net_electricity_consumption_cost[env.time_step] for building in env.buildings), numpy1_scalar(0))
         _set_or_append(env.net_electricity_consumption_cost, total_cost)
 
-        total_emission = sum(building.net_electricity_consumption_emission[env.time_step] for building in env.buildings)
+        total_emission = sum((building.net_electricity_consumption_emission[env.time_step] for building in env.buildings), numpy1_scalar(0))
         _set_or_append(env.net_electricity_consumption_emission, total_emission)
         if debug_timing:
             timings['district_aggregate_update_time'] = time.perf_counter() - timer_start
