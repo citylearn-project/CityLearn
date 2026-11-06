@@ -3,6 +3,7 @@ from copy import deepcopy
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 
 DEFINITION_VERSION = 'paired-experiment-v1'
@@ -26,14 +27,47 @@ def inventory(env):
     return sorted(rows, key=lambda r: (r['kind'], r['id']))
 
 
+def relative_to_root(value, root, path=os.path):
+    """Return ``value`` relative to ``root`` with ``/`` separators, or None if it is not under ``root``.
+
+    ``path`` is the platform path module (``ntpath`` or ``posixpath``; tests pass both). On Windows
+    ``/`` and ``\\`` are the same separator and case is ignored, so a file under the dataset root gets
+    the same text on every platform and at every location. With ``posixpath`` this is exactly the
+    string-prefix test of ``paired-experiment-v1``, so POSIX evidence does not change.
+    """
+    if path.altsep:
+        value, root = value.replace(path.altsep, path.sep), root.replace(path.altsep, path.sep)
+    prefix = root.rstrip(path.sep) + path.sep
+    if path.normcase(value[:len(prefix)]) != path.normcase(prefix):
+        return None
+    return value[len(prefix):].replace(path.sep, '/')
+
+
 def canonical(value, root):
     if isinstance(value, dict):
         return {k: canonical(v, root) for k, v in value.items()}
     if isinstance(value, (tuple, list)):
         return [canonical(v, root) for v in value]
-    if isinstance(value, str) and root and value.startswith(root.rstrip('/')+'/'):
-        return value[len(root.rstrip('/'))+1:]
+    if isinstance(value, str) and root:
+        relative = relative_to_root(value, root)
+        if relative is not None:
+            return relative
     return value
+
+
+def source_sha256(source_root):
+    """Digest of the engine's Python source that does not depend on how it was checked out.
+
+    Keys are POSIX paths relative to ``source_root``. Line endings are normalised the way Python
+    reads source (CRLF and lone CR become LF; the compiled code is identical), so a Windows
+    checkout with ``core.autocrlf`` hashes like the committed blobs and the wheel. Files without
+    CR bytes, which includes every committed engine file, hash exactly as before.
+    """
+    source_root = Path(source_root)
+    code = {p.relative_to(source_root).as_posix():
+            hashlib.sha256(p.read_bytes().replace(b'\r\n', b'\n').replace(b'\r', b'\n')).hexdigest()
+            for p in sorted(source_root.rglob('*.py'))}
+    return digest(code)
 
 
 def context(env, data_files):
@@ -53,15 +87,13 @@ def context(env, data_files):
         physical['robustness'].pop('agent_observation_contract', None)
     observation = {k: schema.get(k) for k in ('observations', 'observation_bundles', 'derived_forecasts')}
     observation.update(interface=env.interface, agent_contract=configuration(env))
-    source_root = Path(__file__).resolve().parents[1]
-    code = {str(p.relative_to(source_root)): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in sorted(source_root.rglob('*.py'))}
     tracker = env.episode_tracker
     from citylearn.internal.temporal import axis_metadata, runtime_versions
     axis = axis_metadata(env)
     temporal = {key:axis[key] for key in ('definition_version','initialization_seed','clock_source','dataset_seconds_per_time_step','control_seconds_per_time_step','terminal_padding','data_noise_generator','episode_split_rng')}
     return dict(temporal=temporal,definition_version=DEFINITION_VERSION,
-                engine=dict(version=__version__, source_sha256=digest(code), runtime_versions=runtime_versions()),
+                engine=dict(version=__version__, source_sha256=source_sha256(Path(__file__).resolve().parents[1]),
+                            runtime_versions=runtime_versions()),
                 physical_configuration_sha256=digest(canonical(physical, root)),
                 data_files_sha256={canonical(k, root): v for k, v in data_files.items()},
                 episode_start_time_step=tracker.episode_start_time_step,
