@@ -3,7 +3,7 @@ import warnings
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 from gymnasium import spaces
 import numpy as np
-from citylearn.internal.scalars import clip_scalar
+from citylearn.internal.scalars import as_float, clip_scalar
 import pandas as pd
 try:
     import torch
@@ -1402,13 +1402,13 @@ class Building(Environment):
             'dhw_storage': self.dhw_storage.get_metadata(),
             'electrical_storage': self.electrical_storage.get_metadata(),
             'pv': self.pv.get_metadata(),
-            'annual_cooling_demand_estimate': self.energy_simulation.cooling_demand.sum() / n_years,
-            'annual_heating_demand_estimate': self.energy_simulation.heating_demand.sum() / n_years,
-            'annual_dhw_demand_estimate': self.energy_simulation.dhw_demand.sum() / n_years,
-            'annual_non_shiftable_load_estimate': self.energy_simulation.non_shiftable_load.sum() / n_years,
-            'annual_solar_generation_estimate': self._pv_generation_to_control_step(
+            'annual_cooling_demand_estimate': as_float(self.energy_simulation.cooling_demand.sum()) / n_years,
+            'annual_heating_demand_estimate': as_float(self.energy_simulation.heating_demand.sum()) / n_years,
+            'annual_dhw_demand_estimate': as_float(self.energy_simulation.dhw_demand.sum()) / n_years,
+            'annual_non_shiftable_load_estimate': as_float(self.energy_simulation.non_shiftable_load.sum()) / n_years,
+            'annual_solar_generation_estimate': as_float(self._pv_generation_to_control_step(
                 self.energy_simulation.solar_generation
-            ).sum() / n_years,
+            ).sum()) / n_years,
             'charging_constraints': self._charging_constraints_config,
             'electrical_service': self._electrical_service_config,
             'electrical_storage_phase_connection': self._electrical_storage_phase_connection,
@@ -1586,7 +1586,7 @@ class Building(Environment):
     def update_energy_from_cooling_device(self):
         r"""Update cooling device electricity consumption and energy tranfer for current time step's cooling demand."""
 
-        demand = self.cooling_demand[self.time_step]
+        demand = float(self.cooling_demand[self.time_step])
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
         # Storage balances are control-step kWh; demand and device output are dataset-resolution kWh.
         storage_output = to_dataset_resolution_energy(self.energy_from_cooling_storage[self.time_step], self.time_step_ratio)
@@ -1649,7 +1649,7 @@ class Building(Environment):
     def update_energy_from_heating_device(self):
         r"""Update heating device electricity consumption and energy tranfer for current time step's heating demand."""
 
-        demand = self.heating_demand[self.time_step]
+        demand = float(self.heating_demand[self.time_step])
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
         # Storage balances are control-step kWh; demand and device output are dataset-resolution kWh.
         storage_output = to_dataset_resolution_energy(self.energy_from_heating_storage[self.time_step], self.time_step_ratio)
@@ -1703,7 +1703,7 @@ class Building(Environment):
     def update_energy_from_dhw_device(self):
         r"""Update dhw device electricity consumption and energy tranfer for current time step's dhw demand."""
 
-        demand = self.dhw_demand[self.time_step]
+        demand = float(self.dhw_demand[self.time_step])
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
         # Storage balances are control-step kWh; demand and device output are dataset-resolution kWh.
         storage_output = to_dataset_resolution_energy(self.energy_from_dhw_storage[self.time_step], self.time_step_ratio)
@@ -2119,8 +2119,8 @@ class Building(Environment):
                 high_limit[key] = high_limits.max()
 
             elif key == 'net_electricity_consumption_without_storage':
-                low_limit[key] = min(low_limit['net_electricity_consumption'] + electrical_storage_energy_limit, 0.0)
-                high_limit[key] = high_limit['net_electricity_consumption'] - electrical_storage_energy_limit
+                low_limit[key] = min(as_float(low_limit['net_electricity_consumption']) + electrical_storage_energy_limit, 0.0)
+                high_limit[key] = as_float(high_limit['net_electricity_consumption']) - electrical_storage_energy_limit
 
             elif key == 'net_electricity_consumption_without_storage_and_partial_load':
                 low_limit[key] = low_limit['net_electricity_consumption_without_storage']
@@ -2238,8 +2238,8 @@ class Building(Environment):
                     high_limit[key] = self.dhw_device.efficiency
 
             elif key == 'indoor_dry_bulb_temperature':
-                low_limit[key] = data['indoor_dry_bulb_temperature'].min() - self.maximum_temperature_delta
-                high_limit[key] = data['indoor_dry_bulb_temperature'].max() + self.maximum_temperature_delta
+                low_limit[key] = as_float(data['indoor_dry_bulb_temperature'].min()) - self.maximum_temperature_delta
+                high_limit[key] = as_float(data['indoor_dry_bulb_temperature'].max()) + self.maximum_temperature_delta
 
             elif key in ['indoor_dry_bulb_temperature_cooling_delta', 'indoor_dry_bulb_temperature_heating_delta']:
                 low_limit[key] = -self.maximum_temperature_delta
@@ -2252,7 +2252,7 @@ class Building(Environment):
             elif key in ['cooling_demand', 'heating_demand', 'dhw_demand']:
                 low_limit[key] = 0.0
                 max_demand = data[key].max()
-                high_limit[key] = max_demand * self.demand_observation_limit_factor
+                high_limit[key] = as_float(max_demand) * self.demand_observation_limit_factor
 
             elif key == 'cooling_electricity_consumption':
                 low_limit[key] = 0.0
@@ -2323,8 +2323,8 @@ class Building(Environment):
                 low_limit[key] = self._series_bound(data[key], upper=False)
                 high_limit[key] = self._series_bound(data[key], upper=True)
 
-        low_limit = {k: v - self.observation_space_limit_delta for k, v in low_limit.items()}
-        high_limit = {k: v + self.observation_space_limit_delta for k, v in high_limit.items()}
+        low_limit = {k: as_float(v) - self.observation_space_limit_delta for k, v in low_limit.items()}
+        high_limit = {k: as_float(v) + self.observation_space_limit_delta for k, v in high_limit.items()}
 
         return low_limit, high_limit
     
@@ -2508,7 +2508,7 @@ class Building(Environment):
                     else:
                         raise Exception(f'Unknown action: {key}')
 
-                    limit = power/max(capacity, ZERO_DIVISION_PLACEHOLDER)
+                    limit = as_float(power)/max(as_float(capacity), ZERO_DIVISION_PLACEHOLDER)
 
                 limit = min(limit, 1.0)
                 low_limit.append(-limit)
@@ -2961,14 +2961,14 @@ class Building(Environment):
             # device output here; adding a negative balance would subtract the discharge twice.
             cooling_demand = self._dataset_energy_to_control_step(
                 self.__energy_from_cooling_device[self.time_step]
-            ) + max(self.cooling_storage.energy_balance[self.time_step], 0.0)
+            ) + max(float(self.cooling_storage.energy_balance[self.time_step]), 0.0)
             cooling_electricity_consumption = self.cooling_device.get_input_power(cooling_demand, temperature, heating=False)
             self.cooling_device.set_electricity_consumption(cooling_electricity_consumption)
 
             # heating electricity consumption
             heating_demand = self._dataset_energy_to_control_step(
                 self.__energy_from_heating_device[self.time_step]
-            ) + max(self.heating_storage.energy_balance[self.time_step], 0.0)
+            ) + max(float(self.heating_storage.energy_balance[self.time_step]), 0.0)
 
             if isinstance(self.heating_device, HeatPump):
                 heating_electricity_consumption = self.heating_device.get_input_power(heating_demand, temperature, heating=True)
@@ -2980,7 +2980,7 @@ class Building(Environment):
             # dhw electricity consumption
             dhw_demand = self._dataset_energy_to_control_step(
                 self.__energy_from_dhw_device[self.time_step]
-            ) + max(self.dhw_storage.energy_balance[self.time_step], 0.0)
+            ) + max(float(self.dhw_storage.energy_balance[self.time_step]), 0.0)
 
             if isinstance(self.dhw_device, HeatPump):
                 dhw_electricity_consumption = self.dhw_device.get_input_power(dhw_demand, temperature, heating=True)
@@ -3013,7 +3013,7 @@ class Building(Environment):
             for c in self.electric_vehicle_chargers:
                 # include charger electricity consumption for current timestep
                 building_chargers_total_electricity_consumption = (
-                    building_chargers_total_electricity_consumption + c.electricity_consumption[self.time_step]
+                    building_chargers_total_electricity_consumption + float(c.electricity_consumption[self.time_step])
                 )
         else:
             pass
@@ -3022,13 +3022,13 @@ class Building(Environment):
 
         building_deferrable_appliances_total_electricity_consumption = 0.0
         for appliance in self.deferrable_appliances or []:
-            building_deferrable_appliances_total_electricity_consumption += appliance.electricity_consumption[self.time_step]
+            building_deferrable_appliances_total_electricity_consumption += float(appliance.electricity_consumption[self.time_step])
 
         self.__deferrable_appliances_electricity_consumption[self.time_step] = building_deferrable_appliances_total_electricity_consumption
 
         building_escalators_total_electricity_consumption = 0.0
         for escalator in self.escalators or []:
-            building_escalators_total_electricity_consumption += escalator.electricity_consumption[self.time_step]
+            building_escalators_total_electricity_consumption += float(escalator.electricity_consumption[self.time_step])
 
         self.__escalators_electricity_consumption[self.time_step] = building_escalators_total_electricity_consumption
 
@@ -3064,8 +3064,8 @@ class Building(Environment):
 
         # net electriciy consumption cost
         self.__net_electricity_consumption_cost[self.time_step] = (
-            max(net_electricity_consumption, 0.0)
-            * self.pricing.electricity_pricing[self.time_step]
+            as_float(max(net_electricity_consumption, 0.0))
+            * float(self.pricing.electricity_pricing[self.time_step])
         )
 
         # net electriciy consumption emission
@@ -3489,7 +3489,7 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
         # leave out the oldest set of observations and keep only the previous n
         # where n is the lookback + 1 (to include current time step observations)
         self.dynamics._model_input = [
-            l[-self.dynamics.lookback:] + [(observations[k] - min_) / (max_ - min_)]
+            l[-self.dynamics.lookback:] + [(as_float(observations[k]) - min_) / (max_ - min_)]
             for l, k, min_, max_ in zip(
                 self.dynamics._model_input,
                 self.dynamics.input_observation_names,
@@ -3531,7 +3531,7 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
                 # The demand series holds energy per dataset step, which is converted to the control step
                 # later. Scale the requested power by the dataset step's duration only, so the conversion
                 # is applied once; the control-step duration would scale it a second time.
-                electric_power = action * self.cooling_device.nominal_power * self._dataset_step_hours()
+                electric_power = as_float(action) * self.cooling_device.nominal_power * self._dataset_step_hours()
                 demand = self.cooling_device.get_max_output_power(
                     self.weather.outdoor_dry_bulb_temperature[self.time_step],
                     heating=False,
@@ -3568,7 +3568,7 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
         if ('heating_device' in self.active_actions or 'cooling_or_heating_device' in self.active_actions) and self.simulate_dynamics:
             if self.energy_simulation.hvac_mode[self.time_step] in [2, 3]:
                 # Same scaling as `update_cooling_demand`: energy per dataset step.
-                electric_power = action * self.heating_device.nominal_power * self._dataset_step_hours()
+                electric_power = as_float(action) * self.heating_device.nominal_power * self._dataset_step_hours()
                 demand = self.heating_device.get_max_output_power(
                     self.weather.outdoor_dry_bulb_temperature[self.time_step],
                     heating=True,
@@ -3713,10 +3713,10 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
 
         if abs(setpoint_delta) > 0.0 and not self.ignore_occupant:
             if hvac_mode == 1:
-                self.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[self.time_step:] = current_set_point + setpoint_delta
+                self.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[self.time_step:] = as_float(current_set_point) + setpoint_delta
 
             elif hvac_mode == 2:
-                self.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[self.time_step:] = current_set_point + setpoint_delta
+                self.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[self.time_step:] = as_float(current_set_point) + setpoint_delta
             
             else:
                 pass

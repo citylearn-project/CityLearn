@@ -50,6 +50,13 @@ development-line history.
 
 No dataset, schema or export-file migration is required.
 
+- **NumPy 2 and Python 3.12+:** `numpy<2` and `scikit-learn<=1.2.2` are no
+  longer pinned. The occupant models of the Quebec datasets are read from their
+  pickles without scikit-learn and evaluated with NumPy, giving predictions
+  bit-identical to scikit-learn 1.2.2; loading them no longer runs code from the
+  file. Arithmetic whose type NumPy 2 changed (NEP 50 promotion of float32
+  scalars with Python numbers) is written to give NumPy 1's result, so simulations
+  are identical on both versions.
 - **Experiment evidence:** KPI-export manifests written on Windows record input
   files and the engine source as on Linux and macOS (file paths below the dataset
   root with `/`, engine source hashed with LF line endings), so Windows exports

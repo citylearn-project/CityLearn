@@ -1,9 +1,9 @@
 gymnasium>=0.28.1,<2.0.0
-numpy<2.0.0
+numpy<3.0.0
 pandas
 platformdirs
 pyyaml
 requests
-scikit-learn<=1.2.2
+scikit-learn
 simplejson
 torch

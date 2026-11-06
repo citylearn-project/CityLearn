@@ -5,7 +5,7 @@ import math
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 import numpy as np
-from citylearn.internal.scalars import clip_scalar
+from citylearn.internal.scalars import as_float, clip_scalar
 import pandas as pd
 try:
     from PySAM import Pvwattsv8
@@ -149,8 +149,8 @@ class ElectricDevice(Device):
         if self.nominal_power is None:
             return None
 
-        consumption = self.__electricity_consumption[self.time_step] * self._electricity_consumption_ratio()
-        return self.nominal_power - consumption
+        consumption = float(self.__electricity_consumption[self.time_step]) * self._electricity_consumption_ratio()
+        return as_float(self.nominal_power) - consumption
 
 
     def get_metadata(self) -> Mapping[str, Any]:
@@ -175,7 +175,8 @@ class ElectricDevice(Device):
         enforce_polarity = True if enforce_polarity is None else enforce_polarity
         assert not enforce_polarity or electricity_consumption >= 0.0,\
             f'electricity_consumption must be >= 0 but value: {electricity_consumption} was provided.'
-        self.__electricity_consumption[self.time_step] += electricity_consumption
+        # Add in float64 before storing: NumPy 2 (NEP 50) would otherwise add a Python float in float32.
+        self.__electricity_consumption[self.time_step] = float(self.__electricity_consumption[self.time_step]) + as_float(electricity_consumption)
 
     def set_electricity_consumption(
         self,
@@ -362,7 +363,7 @@ class HeatPump(ElectricDevice):
         if max_electric_power is None:
             return available_nominal_power*cop
         if np.isscalar(max_electric_power) and np.isscalar(available_nominal_power):
-            return min(max_electric_power, available_nominal_power)*cop
+            return as_float(min(max_electric_power, available_nominal_power))*cop
 
         return np.minimum(max_electric_power, available_nominal_power)*cop
 
@@ -390,7 +391,7 @@ class HeatPump(ElectricDevice):
         input_power = output_power/cop
         """
 
-        return output_power/self.get_cop(outdoor_dry_bulb_temperature, heating)
+        return as_float(output_power)/self.get_cop(outdoor_dry_bulb_temperature, heating)
 
     def autosize(self, outdoor_dry_bulb_temperature: Iterable[float], cooling_demand: Iterable[float] = None, heating_demand: Iterable[float] = None, safety_factor: Union[float, Tuple[float, float]] = None) -> float:
         r"""Autosize `nominal_power`.
@@ -423,18 +424,18 @@ class HeatPump(ElectricDevice):
 
 
         if cooling_demand is not None:
-            cooling_demand = np.asarray(cooling_demand) * self.time_step_ratio / seconds_to_hours(self.seconds_per_time_step)
+            cooling_demand = np.asarray(cooling_demand) * float(self.time_step_ratio) / seconds_to_hours(self.seconds_per_time_step)
             cooling_nominal_power = np.array(cooling_demand)/self.get_cop(outdoor_dry_bulb_temperature, False)
         else:
             cooling_nominal_power = 0
         
         if heating_demand is not None:
-            heating_demand = np.asarray(heating_demand) * self.time_step_ratio / seconds_to_hours(self.seconds_per_time_step)
+            heating_demand = np.asarray(heating_demand) * float(self.time_step_ratio) / seconds_to_hours(self.seconds_per_time_step)
             heating_nominal_power = np.array(heating_demand)/self.get_cop(outdoor_dry_bulb_temperature, True)
         else:
             heating_nominal_power = 0
 
-        nominal_power = np.nanmax(cooling_nominal_power + heating_nominal_power)*safety_factor
+        nominal_power = as_float(np.nanmax(cooling_nominal_power + heating_nominal_power))*safety_factor
 
         return nominal_power
 
@@ -507,7 +508,8 @@ class ElectricHeater(ElectricDevice):
         input_power = output_power/`efficiency`
         """
 
-        return np.array(output_power)/self.efficiency
+        # A scalar stays a float64 scalar, as under NumPy 1; NEP 50 would keep a float32 input in float32.
+        return as_float(output_power)/self.efficiency if np.ndim(output_power) == 0 else np.array(output_power)/self.efficiency
 
     def autosize(self, demand: Iterable[float], safety_factor: Union[float, Tuple[float, float]] = None) -> float:
         r"""Autosize `nominal_power`.
@@ -531,9 +533,9 @@ class ElectricHeater(ElectricDevice):
         -----
         `nominal_power` = max(demand/`efficiency`)*safety_factor
         """
-        demand = np.asarray(demand) * self.time_step_ratio / seconds_to_hours(self.seconds_per_time_step)
+        demand = np.asarray(demand) * float(self.time_step_ratio) / seconds_to_hours(self.seconds_per_time_step)
         safety_factor = self._get_property_value(safety_factor, 1.0)
-        nominal_power = np.nanmax(np.array(demand)/self.efficiency)*safety_factor
+        nominal_power = as_float(np.nanmax(np.array(demand)/self.efficiency))*safety_factor
 
         return nominal_power
 
@@ -799,8 +801,8 @@ class StorageDevice(Device):
             and self.time_step < len(initialized)
             and not bool(initialized[self.time_step])
         ):
-            return max(0.0, self.__soc[self.time_step - 1]*self.capacity)
-        return max(0.0, self.__soc[self.time_step]*self.capacity)
+            return max(0.0, float(self.__soc[self.time_step - 1])*as_float(self.capacity))
+        return max(0.0, float(self.__soc[self.time_step])*as_float(self.capacity))
 
     @property
     def stored_energy_transfer(self) -> float:
@@ -839,8 +841,8 @@ class StorageDevice(Device):
         self._energy_events.append(dict(kind=kind, before=float(before), after=float(after),
                                        terminal=float(terminal), bus=float(terminal)))
         if kind == 'transfer' and self.__gross_energy_charge is not None:
-            self.__gross_energy_charge[self.time_step] += max(float(terminal), 0.0)
-            self.__gross_energy_discharge[self.time_step] += max(-float(terminal), 0.0)
+            self.__gross_energy_charge[self.time_step] = float(self.__gross_energy_charge[self.time_step]) + max(float(terminal), 0.0)
+            self.__gross_energy_discharge[self.time_step] = float(self.__gross_energy_discharge[self.time_step]) + max(-float(terminal), 0.0)
 
     @property
     def energy_balance(self) -> np.ndarray:
@@ -886,7 +888,7 @@ class StorageDevice(Device):
 
     def next_time_step(self):
         try:
-            previous_soc = self.__soc[self.time_step] if self.time_step < len(self.__soc) else np.nan
+            previous_soc = float(self.__soc[self.time_step]) if self.time_step < len(self.__soc) else np.nan
         except AttributeError:
             previous_soc = np.nan
 
@@ -896,8 +898,8 @@ class StorageDevice(Device):
             next_soc = clip_scalar(previous_soc * (1.0 - self.loss_coefficient), 0.0, 1.0)
             self.__soc[self.time_step] = next_soc
             self.__soc_initialized[self.time_step] = True
-            self._record_energy_event('standby', previous_soc*self.capacity,
-                                      float(self.__soc[self.time_step])*self.capacity)
+            self._record_energy_event('standby', previous_soc*as_float(self.capacity),
+                                      float(self.__soc[self.time_step])*as_float(self.capacity))
 
     def get_metadata(self) -> Mapping[str, Any]:
         return {
@@ -924,14 +926,14 @@ class StorageDevice(Device):
         If charging, soc = min(`soc_init` + energy*`round_trip_efficiency`, `capacity`)
         If discharging, soc = max(0, `soc_init` + energy/`round_trip_efficiency`)
         """
-        energy = energy * self.time_step_ratio
-        energy_init = self.energy_init if energy_init is None else energy_init
+        energy = float(energy) * self.time_step_ratio
+        energy_init = self.energy_init if energy_init is None else float(energy_init)
         round_trip_efficiency = self.round_trip_efficiency
         # A reserve limits discharge; it must never raise the measured stored energy.
-        energy_final = min(energy_init + energy*round_trip_efficiency, self.capacity) if energy >= 0\
+        energy_final = min(energy_init + energy*round_trip_efficiency, as_float(self.capacity)) if energy >= 0\
             else max(min(self._minimum_energy(), energy_init), energy_init + energy/round_trip_efficiency)
 
-        self.__soc[self.time_step] = energy_final/max(self.capacity, ZERO_DIVISION_PLACEHOLDER)
+        self.__soc[self.time_step] = energy_final/max(as_float(self.capacity), ZERO_DIVISION_PLACEHOLDER)
         self.__soc_initialized[self.time_step] = True
         delta_energy = energy_final - energy_init
         self.__energy_balance[self.time_step] = (
@@ -981,7 +983,7 @@ class StorageDevice(Device):
         return 0.0
 
     def _minimum_energy(self) -> float:
-        return self._minimum_soc() * self.capacity
+        return self._minimum_soc() * as_float(self.capacity)
 
     def autosize(self, demand: Iterable[float], safety_factor: Union[float, Tuple[float, float]] = None) -> float:
         r"""Autosize `capacity`.
@@ -1005,9 +1007,9 @@ class StorageDevice(Device):
         -----
         `capacity` = max(control-step demand)*safety_factor
         """
-        demand = np.asarray(demand) * self.time_step_ratio
+        demand = np.asarray(demand) * float(self.time_step_ratio)
         safety_factor = self._get_property_value(safety_factor, (1.0, 2.0))
-        capacity = np.nanmax(demand)*safety_factor
+        capacity = as_float(np.nanmax(demand))*safety_factor
 
         return capacity
 
@@ -1434,7 +1436,7 @@ class Battery(StorageDevice, ElectricDevice):
         """
 
         # Calculating the degradation of the battery: new max. capacity of the battery after charge/discharge
-        capacity_degrade = self.capacity_loss_coefficient*self.capacity*np.abs(self.energy_balance[self.time_step])/(2*max(self.degraded_capacity, ZERO_DIVISION_PLACEHOLDER))
+        capacity_degrade = self.capacity_loss_coefficient*self.capacity*abs(float(self.energy_balance[self.time_step]))/(2*max(self.degraded_capacity, ZERO_DIVISION_PLACEHOLDER))
         return capacity_degrade
     
     def autosize(
@@ -1705,7 +1707,9 @@ class DeferrableAppliance(ElectricDevice):
             step = self.time_step + offset
             if 0 <= step < self.episode_tracker.episode_time_steps:
                 ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
-                self._ElectricDevice__electricity_consumption[step] += float(energy_kwh) / ratio
+                self._ElectricDevice__electricity_consumption[step] = (
+                    float(self._ElectricDevice__electricity_consumption[step]) + float(energy_kwh) / ratio
+                )
 
     def preview_start_energy_kwh(self, action_value: float) -> float:
         """Return current-step energy that would be added if ``action_value`` starts a cycle."""
