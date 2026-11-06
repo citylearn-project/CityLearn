@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Optional, 
 
 import numpy as np
 
-from citylearn.energy_model import Battery, DeferrableAppliance, PV
+from citylearn.energy_model import Battery, DeferrableAppliance, PLACEHOLDER_DEVICE_RANDOM_SEED, PV
 from citylearn.utilities import parse_bool
 
 if TYPE_CHECKING:
@@ -826,7 +826,7 @@ class CityLearnTopologyService:
             return True
 
         if asset_type == 'pv':
-            building.pv = PV(0.0, seconds_per_time_step=building.seconds_per_time_step)
+            building.pv = PV(0.0, seconds_per_time_step=building.seconds_per_time_step, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED)
             self._bind_building_runtime_context(building)
             building.pv.reset()
             self._set_building_time_step(building, time_step)
@@ -836,7 +836,9 @@ class CityLearnTopologyService:
             return True
 
         if asset_type == 'electrical_storage':
-            building.electrical_storage = Battery(0.0, 0.0, seconds_per_time_step=building.seconds_per_time_step)
+            building.electrical_storage = Battery(
+                0.0, 0.0, seconds_per_time_step=building.seconds_per_time_step, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED,
+            )
             self._bind_building_runtime_context(building)
             building.electrical_storage.reset()
             self._set_building_time_step(building, time_step)
@@ -866,6 +868,9 @@ class CityLearnTopologyService:
         cloned.time_step_ratio = building.time_step_ratio
         cloned.reset()
         cloned.time_step = time_step
+        # The clone repeats its source's EV schedule; EV association gives chargers that
+        # existed earlier precedence, so one EV is never plugged into both.
+        cloned._topology_added_time_step = int(time_step)
 
         chargers = list(building.electric_vehicle_chargers or [])
         chargers.append(cloned)

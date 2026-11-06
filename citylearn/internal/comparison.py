@@ -26,6 +26,69 @@ def inventory(env):
     return sorted(rows, key=lambda r: (r['kind'], r['id']))
 
 
+EQUIPMENT_SLOTS = ('cooling_device', 'heating_device', 'dhw_device', 'cooling_storage', 'heating_storage',
+                   'dhw_storage', 'electrical_storage', 'pv')
+CHARGER_ATTRIBUTES = ('efficiency', 'max_charging_power', 'min_charging_power', 'max_discharging_power',
+                      'min_discharging_power', 'charge_efficiency_curve', 'discharge_efficiency_curve')
+# Identity and window bookkeeping: they differ between envs that simulate the same devices.
+_NOT_EQUIPMENT = frozenset({'uid', 'random_seed', 'simulation_time_steps'})
+
+
+def _exact(value):
+    """Plain copy of `value` whose `==` is exact, NaN included."""
+    if isinstance(value, dict):
+        return {str(k): _exact(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_exact(v) for v in value]
+    if hasattr(value, 'tolist'):
+        return _exact(value.tolist())
+    if isinstance(value, float) and math.isnan(value):
+        return 'nan'
+    return value
+
+
+def equipment(env):
+    """Sizes and parameters of every simulated device, keyed by building and device.
+
+    :func:`inventory` records stored energy; this records what autosizing and random draws resolve
+    (heat pump and heater power, storage capacity, PV, battery curves, chargers, appliances, EV
+    batteries), so a reference can show that it simulates the same devices as the evaluated env.
+    """
+    def parameters(device):
+        return _exact({'type': type(device).__name__, **{
+            k: v for k, v in device.get_metadata().items() if k not in _NOT_EQUIPMENT}})
+
+    devices = {}
+    for building in env.buildings:
+        for slot in EQUIPMENT_SLOTS:
+            device = getattr(building, slot, None)
+            if device is not None:
+                devices[f'{building.name}/{slot}'] = parameters(device)
+        for i, device in enumerate(building.deferrable_appliances or []):
+            devices[f'{building.name}/deferrable_appliances[{i}]'] = parameters(device)
+        for i, device in enumerate(building.escalators or []):
+            devices[f'{building.name}/escalators[{i}]'] = parameters(device)
+        for charger in building.electric_vehicle_chargers or []:
+            devices[f'{building.name}/charger {charger.charger_id}'] = _exact(
+                {k: getattr(charger, k, None) for k in CHARGER_ATTRIBUTES})
+    for ev in getattr(env, '_all_electric_vehicles', None) or env.electric_vehicles:
+        devices[f'{ev.name}/battery'] = parameters(ev.battery)
+    return devices
+
+
+def equipment_differences(left, right):
+    """`device: parameter (left vs right)` for each parameter that differs, devices in order."""
+    differences = []
+    for device in sorted(set(left) | set(right)):
+        a, b = left.get(device), right.get(device)
+        if a is None or b is None:
+            differences.append(f"{device}: {'absent' if a is None else 'present'} vs {'absent' if b is None else 'present'}")
+            continue
+        differences.extend(f'{device}: {k} ({a.get(k)!r} vs {b.get(k)!r})'
+                           for k in sorted(set(a) | set(b)) if a.get(k) != b.get(k))
+    return differences
+
+
 def canonical(value, root):
     if isinstance(value, dict):
         return {k: canonical(v, root) for k, v in value.items()}
