@@ -66,9 +66,13 @@ parameters from a separate agent created by the user.
 
 `env.evaluate_v2()` runs or reuses a separate BAU simulation up to the current
 evaluation timestep. That simulation is rebuilt from the source schema, selected
-members/EVs, episode window, timestep, topology mode and seed. It uses entity
-mode when dynamic topology or demand response requires it. Rendering is disabled
-for this internal comparison.
+members/EVs, episode window, timestep, topology mode and seed. It also re-applies
+the environment's constructor overrides `simulate_power_outage`,
+`solar_generation`, `active_actions`/`inactive_actions` and
+`active_observations`/`inactive_observations`, so the reference simulates the
+same equipment, generation and outages. It uses entity mode when dynamic
+topology or demand response requires it. Rendering is disabled for this
+internal comparison.
 
 Results are cached for the current episode and timestep. The output adds
 `business_as_usual` values, `delta_to_business_as_usual` differences and
@@ -98,6 +102,11 @@ models, without partial-load control, while retaining PV.
 This is a counterfactual calculation, not a second `BusinessAsUsualAgent` run.
 `EvaluationCondition` also exposes alternatives, including removing PV.
 Choose the same evaluation condition when comparing controllers.
+
+With the community market enabled, both the control and the counterfactual
+costs are settled with the scenario's market rules, in the legacy, v2 and
+equity-audit KPIs alike. Savings from local trading are then not credited to
+the controller.
 
 For example, `district_cost_ratio_to_baseline_total_ratio` and
 `district_cost_ratio_to_business_as_usual_total_ratio` have different

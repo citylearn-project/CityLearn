@@ -2690,12 +2690,23 @@ class Building(Environment):
         demand['day'] = (demand.index * self.seconds_per_time_step // (24 * 3600)).astype(int)
         demand = demand.groupby('day')['value'].max().mean()
 
-        self.electrical_storage.capacity, \
-            self.electrical_storage.nominal_power, \
-                self.electrical_storage.depth_of_discharge, \
-                    self.electrical_storage.efficiency, \
-                        self.electrical_storage.loss_coefficient, \
-                            self.electrical_storage.capacity_loss_coefficient = self.electrical_storage.autosize(demand, **kwargs)
+        storage = self.electrical_storage
+        capacity, nominal_power, depth_of_discharge, efficiency, loss_coefficient, capacity_loss_coefficient = \
+            storage.autosize(demand, **kwargs)
+        # Same assignment order as before, so random defaults for missing datasheet values are unchanged.
+        storage.capacity = capacity
+        storage.nominal_power = nominal_power
+        storage.depth_of_discharge = depth_of_discharge
+
+        # A plain `efficiency` assignment is lost at reset and ignored by the power-efficiency curve
+        # that sets the simulated efficiency, so the datasheet value never took effect.
+        if hasattr(storage, 'set_rated_efficiency'):
+            storage.set_rated_efficiency(efficiency)
+        else:
+            storage.efficiency = efficiency
+
+        storage.loss_coefficient = loss_coefficient
+        storage.capacity_loss_coefficient = capacity_loss_coefficient
 
     def autosize_pv(self, **kwargs):
         """Autosize `pv` `nominal_power` and set `energy_simulation.solar_generation` using sampled PV data from

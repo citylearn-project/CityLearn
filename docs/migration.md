@@ -46,6 +46,27 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Changes after 3.2.0 (unreleased)
+
+No dataset, schema or export-file migration is required.
+
+- **RL agent keyword:** pass `action_scaling_coefficient=` to `SAC`, `MARLISA`
+  and other `RLC` agents. The misspelled `action_scaling_coefficienct=` still
+  works with a `DeprecationWarning`; before, only the misspelling took effect.
+
+Fixes that **change results** where they apply:
+
+- Agents: MARLISA's coordinated actions use each building's own policy;
+  `TabularQLearning` bootstraps on the best next-state value; an explicit
+  `action_scaling_coefficient` now takes effect (the default stays 0.5).
+- KPI references: the native BAU reference re-applies `simulate_power_outage`,
+  `solar_generation` and active/inactive action and observation overrides; with
+  the community market enabled, legacy cost and the equity audit settle the
+  counterfactual too.
+- Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
+  ca neighbourhood datasets), and an EV connects to at most one charger per step,
+  which affects charger clones in the dynamic-topology demos.
+
 ## Upgrade from 3.1.1 to 3.2.0
 
 CityLearn supports Gymnasium from 0.28.1 up to, but excluding, 2.0. Dataset names
