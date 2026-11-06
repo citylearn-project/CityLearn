@@ -332,6 +332,14 @@ business-as-usual baseline that charges EVs, starts deferrables, and controls BE
 
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.agents.base.get_env_attr">
+<span class="sig-prename descclassname"><span class="pre">citylearn.agents.base.</span></span><span class="sig-name descname"><span class="pre">get_env_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/base.html#get_env_attr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.base.get_env_attr" title="Link to this definition"></a></dt>
+<dd><p>Read an attribute from the outermost wrapper that defines it, else from the base environment.</p>
+<p>Gymnasium 1.x removed implicit attribute forwarding through wrappers; <code class="docutils literal notranslate"><span class="pre">get_wrapper_attr</span></code> replaces it
+(older gymnasium versions forward attributes through <code class="docutils literal notranslate"><span class="pre">Wrapper.__getattr__</span></code>).</p>
+</dd></dl>
+
 </section>
 
 

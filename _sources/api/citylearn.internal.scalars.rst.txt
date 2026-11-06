@@ -1,0 +1,7 @@
+citylearn.internal.scalars module
+=================================
+
+.. automodule:: citylearn.internal.scalars
+   :members:
+   :show-inheritance:
+   :undoc-members:

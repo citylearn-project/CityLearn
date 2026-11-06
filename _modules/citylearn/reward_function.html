@@ -243,13 +243,16 @@
 <div class="viewcode-block" id="MultiBuildingRewardFunction.calculate">
 <a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.MultiBuildingRewardFunction.calculate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="c1"># Each building's function sees only that building, so it yields one value; collect them flat</span>
+        <span class="c1"># and aggregate for a central agent like every other reward function.</span>
         <span class="n">rewards</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">obs</span><span class="p">,</span> <span class="p">(</span><span class="n">building_name</span><span class="p">,</span> <span class="n">rf</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_functions</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
             <span class="k">if</span> <span class="n">rf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No reward function for building '</span><span class="si">{</span><span class="n">building_name</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
 
-            <span class="n">rewards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rf</span><span class="o">.</span><span class="n">calculate</span><span class="p">([</span><span class="n">obs</span><span class="p">]))</span>
-        <span class="k">return</span> <span class="n">rewards</span></div>
+            <span class="n">rewards</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rf</span><span class="o">.</span><span class="n">calculate</span><span class="p">([</span><span class="n">obs</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">)]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span> <span class="k">else</span> <span class="n">rewards</span></div>
 
 
 <div class="viewcode-block" id="MultiBuildingRewardFunction.reset">

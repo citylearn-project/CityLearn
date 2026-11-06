@@ -872,6 +872,15 @@ and self generation time series, in [kWh].</p>
 <dd><p>Building occupant count time series, in [people].</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.building.Building.periodic_cycle_length">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">periodic_cycle_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/citylearn/building.html#Building.periodic_cycle_length"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.building.Building.periodic_cycle_length" title="Link to this definition"></a></dt>
+<dd><p>Cycle length used to encode a periodic observation as sine/cosine.</p>
+<p>One-based cycles (hour 1-24, month 1-12) wrap their last value onto zero, so the cycle is the maximum.
+Zero-based cycles (minutes/seconds 0-59) need one more step, otherwise the last value would encode
+identically to the first.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.building.Building.power_outage">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power_outage</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#citylearn.building.Building.power_outage" title="Link to this definition"></a></dt>
@@ -995,6 +1004,12 @@ building’s downward flexibility resources.</p>
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.building.Building.time_step_ratio" title="Link to this definition"></a></dt>
 <dd><p><a class="reference internal" href="citylearn.base.html#citylearn.base.EpisodeTracker" title="citylearn.base.EpisodeTracker"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.base.EpisodeTracker</span></code></a> object used to keep track of
 current episode time steps for reading observations from data files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.building.Building.transform_observations">
+<span class="sig-name descname"><span class="pre">transform_observations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">periodic_normalization</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/building.html#Building.transform_observations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.building.Building.transform_observations" title="Link to this definition"></a></dt>
+<dd><p>Encode periodic and min-max normalize raw observation values, e.g. ones altered by sensor faults.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1228,6 +1243,10 @@ partial load cooling and heating devices and self generation time series, in [kW
 <dd><p>Resets data file variables that change during control to their initial values.</p>
 <p>Resets cooling demand, heating deamand and indoor temperature time series to their initial value
 at the beginning of an episode.</p>
+<p class="rubric">Notes</p>
+<p>Called before the data window moves to the next episode, so it restores the whole window that was
+just simulated. Restoring only the next episode’s length would leave controlled values behind when
+episode lengths differ, and they would be read as dataset values when that window is used again.</p>
 </dd></dl>
 
 <dl class="py property">

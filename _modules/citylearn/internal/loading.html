@@ -129,6 +129,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -148,6 +149,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.reward_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiBuildingRewardFunction</span><span class="p">,</span> <span class="n">RewardFunction</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_bool</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal</span><span class="w"> </span><span class="kn">import</span> <span class="n">loading_inputs</span><span class="p">,</span> <span class="n">loading_components</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
@@ -445,8 +448,16 @@
         <span class="n">reward_type</span> <span class="o">=</span> <span class="n">reward_schema</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span>
         <span class="n">reward_attrs</span> <span class="o">=</span> <span class="n">reward_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'attributes'</span><span class="p">,</span> <span class="p">{})</span>
         <span class="n">is_multi</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reward_type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="n">reward_override</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'reward_function'</span><span class="p">)</span>
+        <span class="n">reward_override_kwargs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'reward_function_kwargs'</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">is_multi</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">reward_override</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># The constructor argument overrides the schema definition, including per-building ones.</span>
+            <span class="n">reward_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_reward_override</span><span class="p">(</span>
+                <span class="n">reward_override</span><span class="p">,</span> <span class="n">reward_override_kwargs</span><span class="p">,</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">is_multi</span> <span class="k">else</span> <span class="n">reward_type</span><span class="p">,</span> <span class="n">reward_attrs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">is_multi</span><span class="p">:</span>
             <span class="n">default_type</span> <span class="o">=</span> <span class="n">reward_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'default'</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">default_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">reward_type</span><span class="p">:</span>
                 <span class="n">default_type</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">reward_type</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
@@ -473,20 +484,8 @@
             <span class="n">reward_function</span> <span class="o">=</span> <span class="n">MultiBuildingRewardFunction</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">reward_functions</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s1">'reward_function'</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">'reward_function'</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">reward_function_type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">'reward_function'</span><span class="p">]</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reward_function_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                    <span class="n">reward_function_type</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">reward_function_type</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">reward_function_type</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">reward_function_type</span> <span class="o">=</span> <span class="n">reward_type</span>
-
-            <span class="n">reward_function_attributes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'reward_function_kwargs'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">reward_attrs</span> <span class="ow">or</span> <span class="p">{}</span>
-
-            <span class="n">module_name</span> <span class="o">=</span> <span class="s1">'.'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">reward_function_type</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">class_name</span> <span class="o">=</span> <span class="n">reward_function_type</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
-            <span class="n">constructor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
-            <span class="n">reward_function</span> <span class="o">=</span> <span class="n">constructor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">reward_function_attributes</span><span class="p">)</span>
+            <span class="n">reward_function_attributes</span> <span class="o">=</span> <span class="n">reward_attrs</span> <span class="k">if</span> <span class="n">reward_override_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">reward_override_kwargs</span>
+            <span class="n">reward_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_import_object</span><span class="p">(</span><span class="n">reward_type</span><span class="p">)(</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">reward_function_attributes</span> <span class="ow">or</span> <span class="p">{}))</span>
 
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">schema</span><span class="p">[</span><span class="s1">'root_directory'</span><span class="p">],</span>
@@ -502,6 +501,48 @@
             <span class="n">episode_tracker</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_import_object</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">module_name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">attribute_name</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">),</span> <span class="n">attribute_name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_construct_reward_override</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reward_override</span><span class="p">,</span> <span class="n">reward_override_kwargs</span><span class="p">,</span> <span class="n">schema_type</span><span class="p">,</span> <span class="n">schema_attributes</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Build the reward function passed to the constructor.</span>
+
+<span class="sd">        An instance is used as given (the environment sets its metadata). A class or import path is</span>
+<span class="sd">        constructed with ``reward_override_kwargs`` when provided. Otherwise the schema's attributes are</span>
+<span class="sd">        used only if the override is the schema's own reward type, because they parameterize that type.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reward_override</span><span class="p">,</span> <span class="n">RewardFunction</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">reward_override_kwargs</span><span class="p">:</span>
+                <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'reward_function_kwargs are ignored when reward_function is an instance.'</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">reward_override</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reward_override</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">reward_override</span>
+            <span class="n">constructor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_import_object</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">constructor</span> <span class="o">=</span> <span class="n">reward_override</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">constructor</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">constructor</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">'</span>
+
+        <span class="k">if</span> <span class="n">reward_override_kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">attributes</span> <span class="o">=</span> <span class="n">reward_override_kwargs</span>
+        <span class="k">elif</span> <span class="n">schema_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">path</span> <span class="o">==</span> <span class="n">schema_type</span><span class="p">:</span>
+            <span class="n">attributes</span> <span class="o">=</span> <span class="n">schema_attributes</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">schema_attributes</span><span class="p">:</span>
+                <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s1">'Schema reward_function attributes </span><span class="si">%s</span><span class="s1"> belong to </span><span class="si">%s</span><span class="s1"> and are not applied to the override </span><span class="si">%s</span><span class="s1">; '</span>
+                    <span class="s1">'pass reward_function_kwargs to configure it.'</span><span class="p">,</span>
+                    <span class="nb">sorted</span><span class="p">(</span><span class="n">schema_attributes</span><span class="p">),</span> <span class="n">schema_type</span> <span class="ow">or</span> <span class="s1">'the per-building schema reward functions'</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="n">attributes</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">return</span> <span class="n">constructor</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">attributes</span> <span class="ow">or</span> <span class="p">{}))</span>
 
 <div class="viewcode-block" id="CityLearnLoadingService.load_building">
 <a class="viewcode-back" href="../../../api/citylearn.internal.loading.html#citylearn.internal.loading.CityLearnLoadingService.load_building">[docs]</a>

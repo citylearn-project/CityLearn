@@ -47,6 +47,7 @@ Submodules
    citylearn.internal.robustness_spaces
    citylearn.internal.robustness_targets
    citylearn.internal.runtime
+   citylearn.internal.scalars
    citylearn.internal.temporal
    citylearn.internal.topology
    citylearn.internal.units

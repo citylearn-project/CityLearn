@@ -212,6 +212,9 @@ If not provided, defaults to the effective rendering setting (enabled when rende
 <li><p><strong>export_only_final_episode</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether automatic exports should run only on the final planned episode. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><strong>ev_departure_within_tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Symmetric SOC target accuracy tolerance used by EV departure within-tolerance KPIs. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
 <li><p><strong>ev_departure_service_tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower SOC service tolerance used by EV departure minimum-acceptable KPIs. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
+<li><p><strong>energy_provenance</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to keep the per-step electricity provenance ledger (<code class="docutils literal notranslate"><span class="pre">*_energy_provenance_*</span></code> KPIs and
+provenance audits). Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>. Disabling it does not change any simulated quantity and
+makes <code class="docutils literal notranslate"><span class="pre">step()</span></code> substantially faster, e.g. for training runs that do not report provenance KPIs.</p></li>
 <li><p><strong>**kwargs</strong> (<em>dict</em>) – Other keyword arguments used to initialize super classes.</p></li>
 </ul>
 </dd>

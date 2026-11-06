@@ -268,6 +268,8 @@
             <span class="n">ev_departure_service_tolerance</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">ev_departure_service_tolerance</span><span class="p">,</span>
             <span class="n">check_observation_limits</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">physics_invariant_checks</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+            <span class="c1"># The effective setting, which a constructor override may have changed from the schema's.</span>
+            <span class="n">energy_provenance</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'energy_provenance'</span><span class="p">,</span> <span class="kc">True</span><span class="p">)),</span>
         <span class="p">)</span>
         <span class="n">baseline_env</span><span class="o">.</span><span class="n">_business_as_usual_sidecar</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">baseline_env</span></div>

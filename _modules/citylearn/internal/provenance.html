@@ -188,6 +188,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">empty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether the ledger is kept; ``CityLearnEnv(energy_provenance=False)`` turns it off."""</span>
+
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s1">'energy_provenance'</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_require_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">'Energy provenance is disabled; construct CityLearnEnv with energy_provenance=True.'</span><span class="p">)</span>
+
 <div class="viewcode-block" id="CityLearnProvenanceService.reset">
 <a class="viewcode-back" href="../../../api/citylearn.internal.provenance.html#citylearn.internal.provenance.CityLearnProvenanceService.reset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">empty</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -241,6 +251,9 @@
 <span class="sd">        Departure inventory leaves as mobility delivery, not inferred trip use.</span>
 <span class="sd">        Imposed arrival SOC replaces the old cohort with unknown external energy.</span>
 <span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="k">return</span>
+
         <span class="n">assets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="p">()</span>
         <span class="n">active_chargers</span> <span class="o">=</span> <span class="p">{</span><span class="nb">id</span><span class="p">(</span><span class="n">charger</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span>
                            <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s1">'electric_vehicle_chargers'</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[])}</span>
@@ -309,6 +322,10 @@
 <span class="w">        </span><span class="sd">"""Record one completed interval, idempotently, before topology advances."""</span>
         <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_step</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="c1"># Keep the completed-interval counter that temporal/comparison metadata report.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">+</span><span class="mi">1</span>
             <span class="k">return</span>
         <span class="n">nets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">[</span><span class="n">t</span><span class="p">])</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">])</span>
         <span class="n">sharing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sharing</span><span class="p">(</span><span class="n">nets</span><span class="p">)</span>
@@ -428,6 +445,7 @@
 <span class="sd">        The cohort identity is all PV generated since reset. Initial/external</span>
 <span class="sd">        inventories are unknown, even if their historical origin was renewable.</span>
 <span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_enabled</span><span class="p">()</span>
         <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">owner</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
         <span class="n">names</span> <span class="o">|=</span> <span class="p">{</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sinks</span><span class="p">}</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
@@ -480,6 +498,7 @@
 <a class="viewcode-back" href="../../../api/citylearn.internal.provenance.html#citylearn.internal.provenance.CityLearnProvenanceService.source_destinations">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">source_destinations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Sparse producer/recipient evidence, without an episode-sized matrix."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_enabled</span><span class="p">()</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">bags</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sinks</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">stock</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
@@ -497,7 +516,7 @@
 <div class="viewcode-block" id="CityLearnProvenanceService.get_metadata">
 <a class="viewcode-back" href="../../../api/citylearn.internal.provenance.html#citylearn.internal.provenance.CityLearnProvenanceService.get_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">definition_version</span><span class="o">=</span><span class="n">DEFINITION_VERSION</span><span class="p">,</span> <span class="n">kpi_definition_version</span><span class="o">=</span><span class="n">KPI_DEFINITION_VERSION</span><span class="p">,</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">definition_version</span><span class="o">=</span><span class="n">DEFINITION_VERSION</span><span class="p">,</span> <span class="n">kpi_definition_version</span><span class="o">=</span><span class="n">KPI_DEFINITION_VERSION</span><span class="p">,</span>
                     <span class="n">ev_feasibility</span><span class="o">=</span><span class="s1">'individual_conditioned_on_service_headroom_physical_replay_v2'</span><span class="p">,</span>
                     <span class="n">ev_departure_audit</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
                         <span class="n">definition_version</span><span class="o">=</span><span class="s1">'ev-departure-audit-v1'</span><span class="p">,</span>
@@ -518,7 +537,13 @@
                     <span class="n">pv_generation</span><span class="o">=</span><span class="s1">'available_including_reported_curtailment'</span><span class="p">,</span>
                     <span class="n">reported_energy_intervals</span><span class="o">=</span><span class="s1">'executed_active_intervals_v1'</span><span class="p">,</span>
                     <span class="n">equipment_throughput</span><span class="o">=</span><span class="s1">'gross_terminal_movements_before_interval_netting'</span><span class="p">,</span>
-                    <span class="n">completed_intervals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span></div>
+                    <span class="n">completed_intervals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="c1"># Only reported when off, so default exports keep their established contract.</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="s1">'enabled'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="n">metadata</span></div>
 </div>
 
 </pre></div>

@@ -60,6 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changes-after-3-1-1-unreleased">Changes after 3.1.1 (unreleased)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-1-0-to-3-1-1">Upgrade from 3.1.0 to 3.1.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-0-2-to-3-1-0">Upgrade from 3.0.2 to 3.1.0</a></li>
 </ul>
@@ -177,6 +178,41 @@ local schema and files for data that are not in the public catalogue; a
 repository-relative path is not created by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>.</p>
 <p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
 development-line history.</p>
+</section>
+<section id="changes-after-3-1-1-unreleased">
+<h2>Changes after 3.1.1 (unreleased)<a class="headerlink" href="#changes-after-3-1-1-unreleased" title="Link to this heading"></a></h2>
+<p>No dataset, schema or export-file migration is required.</p>
+<ul class="simple">
+<li><p><strong>Per-building reward functions:</strong> <code class="docutils literal notranslate"><span class="pre">MultiBuildingRewardFunction.calculate()</span></code>
+(used when the schema’s <code class="docutils literal notranslate"><span class="pre">reward_function.type</span></code> maps buildings to functions)
+now returns one float per building, e.g. <code class="docutils literal notranslate"><span class="pre">[-1.0,</span> <span class="pre">-2.0]</span></code> instead of the nested
+<code class="docutils literal notranslate"><span class="pre">[[-1.0],</span> <span class="pre">[-2.0]]</span></code>, like every other reward function. With
+<code class="docutils literal notranslate"><span class="pre">central_agent=True</span></code> it returns their sum as <code class="docutils literal notranslate"><span class="pre">[total]</span></code>. Replace indexing such
+as <code class="docutils literal notranslate"><span class="pre">reward[i][0]</span></code> with <code class="docutils literal notranslate"><span class="pre">reward[i]</span></code>.</p></li>
+<li><p><strong>KPI exports:</strong> the manifest records <code class="docutils literal notranslate"><span class="pre">energy_provenance</span></code>. With
+<code class="docutils literal notranslate"><span class="pre">energy_provenance=False</span></code> its <code class="docutils literal notranslate"><span class="pre">provenance_summary</span></code> and <code class="docutils literal notranslate"><span class="pre">source_destinations</span></code>
+are <code class="docutils literal notranslate"><span class="pre">null</span></code> instead of failing the export, and the native BAU reference uses the
+same setting.</p></li>
+</ul>
+<p>Fixes that <strong>change results</strong> where they apply:</p>
+<ul class="simple">
+<li><p>Observations: LSTM dynamics buildings report the simulated indoor temperature
+(#165); zero-based minute and second features use a 60-step cycle; occupant
+set-point deltas and EV/deferrable consumption bounds are corrected.</p></li>
+<li><p>Dynamics: LSTM dropout is disabled at inference, so Quebec-model trajectories
+are deterministic for a seed and differ from earlier, noisy runs.</p></li>
+<li><p>Subhourly control with hourly data (<code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code> other than 1): LSTM
+heating and cooling actions request the stated fraction of nominal power,
+converted to energy once; thermal-storage charging and discharge limits use the
+same conversion, and autosizing uses each building’s dataset/control ratio.</p></li>
+<li><p>Episodes: thermal-storage discharge at the first step is counted once, and
+action feedback, constraint penalties and dynamic series reset with each
+episode, which changes second and later episodes.</p></li>
+</ul>
+<p>Changes that <strong>preserve trajectories and KPI values</strong>: the <code class="docutils literal notranslate"><span class="pre">energy_provenance</span></code>
+option (default on), LSTM input trimming and scalar fast paths; gymnasium 1.x
+support; and crash fixes for <code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 0, partial-day outage signals and the
+CLI without stable-baselines3.</p>
 </section>
 <section id="upgrade-from-3-1-0-to-3-1-1">
 <h2>Upgrade from 3.1.0 to 3.1.1<a class="headerlink" href="#upgrade-from-3-1-0-to-3-1-1" title="Link to this heading"></a></h2>

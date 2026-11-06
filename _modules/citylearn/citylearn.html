@@ -281,6 +281,10 @@
 <span class="sd">        Symmetric SOC target accuracy tolerance used by EV departure within-tolerance KPIs. Defaults to ``0.05``.</span>
 <span class="sd">    ev_departure_service_tolerance: float, optional</span>
 <span class="sd">        Lower SOC service tolerance used by EV departure minimum-acceptable KPIs. Defaults to ``0.05``.</span>
+<span class="sd">    energy_provenance: bool, optional</span>
+<span class="sd">        Whether to keep the per-step electricity provenance ledger (``*_energy_provenance_*`` KPIs and</span>
+<span class="sd">        provenance audits). Defaults to ``True``. Disabling it does not change any simulated quantity and</span>
+<span class="sd">        makes ``step()`` substantially faster, e.g. for training runs that do not report provenance KPIs.</span>
 <span class="sd">    **kwargs : dict</span>
 <span class="sd">        Other keyword arguments used to initialize super classes.</span>
 
@@ -316,6 +320,7 @@
         <span class="n">debug_timing</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'debug_timing'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">check_observation_limits</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'check_observation_limits'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">physics_invariant_checks</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">energy_provenance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'energy_provenance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">metrics_log_interval</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'metrics_log_interval'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">ev_departure_within_tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ev_departure_within_tolerance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">ev_departure_service_tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ev_departure_service_tolerance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -389,6 +394,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="k">if</span> <span class="n">physics_invariant_checks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">physics_invariant_checks</span><span class="p">,</span>
             <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">path</span><span class="o">=</span><span class="s1">'physics_invariant_checks'</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energy_provenance</span> <span class="o">=</span> <span class="n">parse_bool</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'energy_provenance'</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">energy_provenance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">energy_provenance</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s1">'energy_provenance'</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics_log_interval</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'metrics_log_interval'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">metrics_log_interval</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">metrics_log_interval</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ev_departure_within_tolerance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_non_negative_float</span><span class="p">(</span>
@@ -1811,6 +1821,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="n">seed</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">pass</span>
+
+        <span class="c1"># Gymnasium API: reset(seed=...) also seeds the environment's own `np_random` generator.</span>
+        <span class="n">Env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
 
         <span class="c1"># update time steps for time series</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_episode_index_explicit</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">options</span> <span class="ow">and</span> <span class="s1">'episode_index'</span> <span class="ow">in</span> <span class="n">options</span><span class="p">)</span>

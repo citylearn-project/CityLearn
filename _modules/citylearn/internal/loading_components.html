@@ -370,6 +370,10 @@
                 <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s1">'buildings.</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">device_name</span><span class="si">}</span><span class="s1">.autosize'</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">building</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">device_name</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+            <span class="c1"># Schema-built devices do not know the dataset/control-step ratio yet, but the autosizers</span>
+            <span class="c1"># convert dataset-resolution demand with it. Without this, hourly data run at 15-minute</span>
+            <span class="c1"># control sizes thermal devices and batteries 4x too large.</span>
+            <span class="n">device</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">time_step_ratio</span>
 
             <span class="k">if</span> <span class="n">autosize</span><span class="p">:</span>
                 <span class="n">autosizer</span> <span class="o">=</span> <span class="n">device_metadata</span><span class="p">[</span><span class="n">device_name</span><span class="p">][</span><span class="s1">'autosizer'</span><span class="p">]</span>

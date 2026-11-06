@@ -133,6 +133,20 @@
 
 <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
 
+<div class="viewcode-block" id="get_env_attr">
+<a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.get_env_attr">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_env_attr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Read an attribute from the outermost wrapper that defines it, else from the base environment.</span>
+
+<span class="sd">    Gymnasium 1.x removed implicit attribute forwarding through wrappers; ``get_wrapper_attr`` replaces it</span>
+<span class="sd">    (older gymnasium versions forward attributes through ``Wrapper.__getattr__``).</span>
+<span class="sd">    """</span>
+
+    <span class="n">getter</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'get_wrapper_attr'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">getter</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">getter</span><span class="p">)</span> <span class="k">else</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="Agent">
 <a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.Agent">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Agent</span><span class="p">(</span><span class="n">Environment</span><span class="p">):</span>
@@ -151,7 +165,7 @@
     
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">observation_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_names</span> <span class="o">=</span> <span class="n">get_env_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s1">'observation_names'</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">action_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">action_names</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span>
@@ -306,8 +320,8 @@
                 <span class="n">deterministic</span> <span class="o">=</span> <span class="n">deterministic</span> <span class="ow">or</span> <span class="p">(</span><span class="n">deterministic_finish</span> <span class="ow">and</span> <span class="n">episode</span> <span class="o">&gt;=</span> <span class="n">episodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
                 <span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">episode_time_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_time_steps</span>
-                <span class="n">terminated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">terminated</span>
-                <span class="n">truncated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">truncated</span>
+                <span class="n">terminated</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span>
+                <span class="n">truncated</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">truncated</span>
                 <span class="n">time_step</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="n">rewards_list</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="n">rewards_by_member</span> <span class="o">=</span> <span class="p">{}</span>

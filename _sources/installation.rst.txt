@@ -49,6 +49,13 @@ For PV autosizing from EPW weather using PySAM:
 
    python -m pip install "citylearn[pysam]"
 
+For building new datasets from End-Use Load Profiles with
+``citylearn.end_use_load_profiles`` (installs ``doe_xstock`` and OpenStudio):
+
+.. code-block:: console
+
+   python -m pip install "citylearn[end_use_load_profiles]"
+
 Datasets
 ********
 
