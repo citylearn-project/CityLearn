@@ -101,7 +101,9 @@ def test_numerical_failure_reports_the_member_and_family_and_propagates(tmp_path
 
 
 def test_long_audit_writes_current_and_historical_evaluation_progress(tmp_path):
-    from scripts.audit.audit_long_run import run
+    from scripts.audit.audit_long_run import RESOURCE_METERS_AVAILABLE, run
+    if not RESOURCE_METERS_AVAILABLE:
+        pytest.skip('RSS meters need Linux /proc and resource')
     initial = scenario(tmp_path, phase_limits=True)
     schema = deepcopy(initial.schema)
     initial.close()

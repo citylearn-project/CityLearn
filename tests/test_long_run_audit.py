@@ -78,6 +78,13 @@ def test_observer_samples_before_equipment_is_replaced_at_next_boundary():
     assert env._runtime_service.update_variables is update
 
 
+def test_run_refuses_platforms_without_resource_meters_before_writing(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit,'RESOURCE_METERS_AVAILABLE',False)
+    with pytest.raises(RuntimeError,match='/proc/self/statm'):audit.run(NS(output=tmp_path/'run'))
+    assert not (tmp_path/'run').exists()
+
+
+@pytest.mark.skipif(not audit.RESOURCE_METERS_AVAILABLE, reason='RSS meters need Linux /proc and resource')
 @pytest.mark.parametrize('dynamic', [False, True])
 def test_real_cli_exports_evidence_and_enforces_measured_resource_limit(tmp_path, dynamic):
     source=(ROOT/'tests/data/minute_ev_demo/schema.json').resolve()
