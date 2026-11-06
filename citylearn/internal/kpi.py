@@ -2585,7 +2585,7 @@ class CityLearnKPIService:
         put('district', 'District', v2('district', 'equity', 'distribution', 'bpr_asset_poor_over_rich', None, 'ratio'), equity_bpr)
 
         provenance = getattr(env, '_provenance_service', None)
-        if provenance is not None:
+        if provenance is not None and getattr(provenance, 'enabled', True):
             members, district = run(progress, 'provenance', provenance.summary)
             for name, metrics in members.items():
                 for metric, value in metrics.items():

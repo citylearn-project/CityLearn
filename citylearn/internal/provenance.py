@@ -48,6 +48,16 @@ class CityLearnProvenanceService:
         self.env = env
         self.reset(empty=True)
 
+    @property
+    def enabled(self) -> bool:
+        """Whether the ledger is kept; ``CityLearnEnv(energy_provenance=False)`` turns it off."""
+
+        return bool(getattr(self.env, 'energy_provenance', True))
+
+    def _require_enabled(self):
+        if not self.enabled:
+            raise RuntimeError('Energy provenance is disabled; construct CityLearnEnv with energy_provenance=True.')
+
     def reset(self, empty=False):
         self.stocks = {}
         self.sources = defaultdict(dict)
@@ -87,6 +97,9 @@ class CityLearnProvenanceService:
         Departure inventory leaves as mobility delivery, not inferred trip use.
         Imposed arrival SOC replaces the old cohort with unknown external energy.
         """
+        if not self.enabled:
+            return
+
         assets = self.assets()
         active_chargers = {id(charger) for b in self.env.buildings
                            for charger in (getattr(b, 'electric_vehicle_chargers', []) or [])}
@@ -149,6 +162,10 @@ class CityLearnProvenanceService:
         """Record one completed interval, idempotently, before topology advances."""
         t = int(self.env.time_step)
         if t <= self.last_step:
+            return
+        if not self.enabled:
+            # Keep the completed-interval counter that temporal/comparison metadata report.
+            self.last_step, self.steps = t, self.steps+1
             return
         nets = np.array([float(b.net_electricity_consumption[t]) for b in self.env.buildings])
         sharing = self._sharing(nets)
@@ -265,6 +282,7 @@ class CityLearnProvenanceService:
         The cohort identity is all PV generated since reset. Initial/external
         inventories are unknown, even if their historical origin was renewable.
         """
+        self._require_enabled()
         names = set(self.sources) | {s.owner for s in self.stocks.values()}
         names |= {name for name, _ in self.sinks}
         result = {}
@@ -314,6 +332,7 @@ class CityLearnProvenanceService:
 
     def source_destinations(self):
         """Sparse producer/recipient evidence, without an episode-sized matrix."""
+        self._require_enabled()
         rows = []
         bags = dict(self.sinks)
         for stock in self.stocks.values():
@@ -328,7 +347,7 @@ class CityLearnProvenanceService:
         return rows
 
     def get_metadata(self):
-        return dict(definition_version=DEFINITION_VERSION, kpi_definition_version=KPI_DEFINITION_VERSION,
+        metadata = dict(definition_version=DEFINITION_VERSION, kpi_definition_version=KPI_DEFINITION_VERSION,
                     ev_feasibility='individual_conditioned_on_service_headroom_physical_replay_v2',
                     ev_departure_audit=dict(
                         definition_version='ev-departure-audit-v1',
@@ -350,3 +369,9 @@ class CityLearnProvenanceService:
                     reported_energy_intervals='executed_active_intervals_v1',
                     equipment_throughput='gross_terminal_movements_before_interval_netting',
                     completed_intervals=self.steps)
+
+        if not self.enabled:
+            # Only reported when off, so default exports keep their established contract.
+            metadata['enabled'] = False
+
+        return metadata

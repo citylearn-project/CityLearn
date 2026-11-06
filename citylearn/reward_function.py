@@ -101,13 +101,16 @@ class MultiBuildingRewardFunction(RewardFunction):
         super().__init__(env)
 
     def calculate(self, observations: list[dict]) -> list[float]:
+        # Each building's function sees only that building, so it yields one value; collect them flat
+        # and aggregate for a central agent like every other reward function.
         rewards = []
         for obs, (building_name, rf) in zip(observations, self.reward_functions.items()):
             if rf is None:
                 raise ValueError(f"No reward function for building '{building_name}'")
 
-            rewards.append(rf.calculate([obs]))
-        return rewards
+            rewards.extend(float(value) for value in np.asarray(rf.calculate([obs]), dtype=float).reshape(-1))
+
+        return [sum(rewards)] if self.central_agent else rewards
 
     def reset(self):
         for rf in self.reward_functions.values():

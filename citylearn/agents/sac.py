@@ -305,7 +305,7 @@ class SACRBC(SAC):
             pass
 
         elif isinstance(rbc, str):
-            rbc = self.env.load_agent(rbc, env=self.env, **kwargs)
+            rbc = self.env.unwrapped.load_agent(rbc, env=self.env, **kwargs)
 
         else:
             rbc = rbc(self.env, **kwargs)

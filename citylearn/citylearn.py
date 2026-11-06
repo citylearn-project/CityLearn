@@ -150,6 +150,10 @@ class CityLearnEnv(Environment, Env):
         Symmetric SOC target accuracy tolerance used by EV departure within-tolerance KPIs. Defaults to ``0.05``.
     ev_departure_service_tolerance: float, optional
         Lower SOC service tolerance used by EV departure minimum-acceptable KPIs. Defaults to ``0.05``.
+    energy_provenance: bool, optional
+        Whether to keep the per-step electricity provenance ledger (``*_energy_provenance_*`` KPIs and
+        provenance audits). Defaults to ``True``. Disabling it does not change any simulated quantity and
+        makes ``step()`` substantially faster, e.g. for training runs that do not report provenance KPIs.
     **kwargs : dict
         Other keyword arguments used to initialize super classes.
 
@@ -185,6 +189,7 @@ class CityLearnEnv(Environment, Env):
         debug_timing = kwargs.pop('debug_timing', None)
         check_observation_limits = kwargs.pop('check_observation_limits', None)
         physics_invariant_checks = kwargs.pop('physics_invariant_checks', None)
+        energy_provenance = kwargs.pop('energy_provenance', None)
         metrics_log_interval = kwargs.pop('metrics_log_interval', None)
         ev_departure_within_tolerance = kwargs.pop('ev_departure_within_tolerance', None)
         ev_departure_service_tolerance = kwargs.pop('ev_departure_service_tolerance', None)
@@ -258,6 +263,11 @@ class CityLearnEnv(Environment, Env):
             self.schema.get('physics_invariant_checks', False) if physics_invariant_checks is None else physics_invariant_checks,
             default=False,
             path='physics_invariant_checks',
+        )
+        self.energy_provenance = parse_bool(
+            self.schema.get('energy_provenance', True) if energy_provenance is None else energy_provenance,
+            default=True,
+            path='energy_provenance',
         )
         self.metrics_log_interval = int(self.schema.get('metrics_log_interval', 0) if metrics_log_interval is None else metrics_log_interval)
         self.ev_departure_within_tolerance = self._parse_non_negative_float(
@@ -1621,6 +1631,9 @@ class CityLearnEnv(Environment, Env):
             self.random_seed = seed
         else:
             pass
+
+        # Gymnasium API: reset(seed=...) also seeds the environment's own `np_random` generator.
+        Env.reset(self, seed=seed)
 
         # update time steps for time series
         self._episode_index_explicit = bool(options and 'episode_index' in options)

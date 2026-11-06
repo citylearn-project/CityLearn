@@ -36,6 +36,8 @@ setuptools.setup(
     extras_require={
         'parquet': ['pyarrow'],
         'pysam': ['nrel-pysam'],
+        # Only citylearn.end_use_load_profiles (building new datasets from EULP/EnergyPlus) needs these.
+        'end_use_load_profiles': ['doe_xstock>=2.0.0', 'openstudio<=3.10.0'],
     },
     entry_points={'console_scripts': ['citylearn = citylearn.__main__:main']},
     project_urls={

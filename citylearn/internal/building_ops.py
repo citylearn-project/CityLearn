@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import numpy as np
+from citylearn.internal.scalars import clip_scalar
 
 from citylearn.energy_model import HeatPump
 from citylearn.preprocessing import Normalize, PeriodicNormalization
@@ -93,6 +95,22 @@ class BuildingOpsService:
                     }
                     LOGGER.debug(f'Observation outside space limit: {report}')
 
+        return self.transform_observations(observations, normalize=normalize, periodic_normalization=periodic_normalization)
+
+    def transform_observations(
+        self,
+        observations: Mapping[str, float],
+        normalize: bool = False,
+        periodic_normalization: bool = False,
+    ) -> Mapping[str, float]:
+        """Apply periodic encoding and min-max normalization to raw observations, preserving their order."""
+
+        if not (normalize or periodic_normalization):
+            return observations
+
+        building = self.building
+        observations = dict(observations)
+
         if periodic_normalization:
             periodic_observations = building.get_periodic_observation_metadata()
             observations_copy = {k: v for k, v in observations.items()}
@@ -101,7 +119,7 @@ class BuildingOpsService:
 
             for key, value in observations_copy.items():
                 if key in periodic_observations:
-                    periodic_normalizer.x_max = max(periodic_observations[key])
+                    periodic_normalizer.x_max = building.periodic_cycle_length(periodic_observations[key])
                     sin_x, cos_x = value * periodic_normalizer
                     observations[f'{key}_cos'] = cos_x
                     observations[f'{key}_sin'] = sin_x
@@ -334,6 +352,10 @@ class BuildingOpsService:
                 observations[key] = series[t]
 
         for key, series in building._carbon_observation_sources:
+            if wants(key) and t < len(series):
+                observations[key] = series[t]
+
+        for key, series in getattr(building, '_additional_observation_sources', ()):
             if wants(key) and t < len(series):
                 observations[key] = series[t]
 
@@ -675,36 +697,29 @@ class BuildingOpsService:
             return float(default)
 
     def _ensure_feedback_array(self, owner, name: str):
+        # Always resolve the live attribute: ``reset()`` replaces these arrays, so a
+        # cached reference would keep writing into the previous episode's array.
         expected = int(getattr(self.building.episode_tracker, 'episode_time_steps', 0) or 0)
-        cache = getattr(owner, '_action_feedback_array_cache', None)
-        if cache is None:
-            cache = {}
-            setattr(owner, '_action_feedback_array_cache', cache)
-
         dtype = self._feedback_array_dtype(name)
-        cache_key = (name, expected, np.dtype(dtype).str)
-        values = cache.get(cache_key)
-        if values is not None:
-            return values
-
         values = getattr(owner, name, None)
-        if values is None or len(values) != expected or getattr(values, 'dtype', None) != np.dtype(dtype):
+        if values is None or len(values) != expected or getattr(values, 'dtype', None) != dtype:
             values = np.zeros(expected, dtype=dtype)
             setattr(owner, name, values)
-        cache[cache_key] = values
+
         return values
 
     @staticmethod
-    def _feedback_array_dtype(name: str):
+    @lru_cache(maxsize=None)
+    def _feedback_array_dtype(name: str) -> np.dtype:
         if (
             'clip_reason_' in name
             or name.endswith('last_start_requested')
             or name.endswith('last_start_applied')
             or name.endswith('start_blocked')
         ):
-            return np.bool_
+            return np.dtype(np.bool_)
 
-        return np.float32
+        return np.dtype(np.float32)
 
     def _set_feedback_value(self, owner, name: str, value: float):
         t = int(self.building.time_step)
@@ -759,8 +774,8 @@ class BuildingOpsService:
         return reasons
 
     def _record_charger_action_feedback(self, charger, requested_action: float, limited_action: float):
-        requested_action = float(np.clip(self._safe_scalar(requested_action, 0.0), -1.0, 1.0))
-        limited_action = float(np.clip(self._safe_scalar(limited_action, 0.0), -1.0, 1.0))
+        requested_action = clip_scalar(self._safe_scalar(requested_action, 0.0), -1.0, 1.0)
+        limited_action = clip_scalar(self._safe_scalar(limited_action, 0.0), -1.0, 1.0)
         requested_power = self._charger_requested_power_kw(charger, requested_action)
         limited_power = self._charger_requested_power_kw(charger, limited_action)
 
@@ -791,8 +806,8 @@ class BuildingOpsService:
     def _record_storage_action_feedback(self, requested_action: float, limited_action: float):
         building = self.building
         prefix = 'action_feedback_electrical_storage_'
-        requested_action = float(np.clip(self._safe_scalar(requested_action, 0.0), -1.0, 1.0))
-        limited_action = float(np.clip(self._safe_scalar(limited_action, 0.0), -1.0, 1.0))
+        requested_action = clip_scalar(self._safe_scalar(requested_action, 0.0), -1.0, 1.0)
+        limited_action = clip_scalar(self._safe_scalar(limited_action, 0.0), -1.0, 1.0)
         requested_power = self._storage_requested_power_kw(requested_action)
         limited_power = self._storage_requested_power_kw(limited_action)
 
@@ -1201,8 +1216,7 @@ class BuildingOpsService:
         if callable(charger_request):
             return self._safe_scalar(charger_request(action), 0.0)
 
-        action = self._safe_scalar(action, 0.0)
-        action = float(np.clip(action, -1.0, 1.0))
+        action = clip_scalar(self._safe_scalar(action, 0.0), -1.0, 1.0)
         if action > 0.0:
             max_power = self._safe_scalar(getattr(charger, 'max_charging_power', 0.0), 0.0)
             min_power = self._safe_scalar(getattr(charger, 'min_charging_power', 0.0), 0.0)
@@ -1225,7 +1239,7 @@ class BuildingOpsService:
                 return 0.0
             if min_power > 0.0 and target_power_kw < min_power:
                 return 0.0
-            return float(np.clip(target_power_kw / max_power, 0.0, 1.0))
+            return clip_scalar(target_power_kw / max_power, 0.0, 1.0)
 
         if target_power_kw < 0.0:
             max_power = self._safe_scalar(getattr(charger, 'max_discharging_power', 0.0), 0.0)
@@ -1235,7 +1249,7 @@ class BuildingOpsService:
                 return 0.0
             if min_power > 0.0 and requested < min_power:
                 return 0.0
-            return float(-np.clip(requested / max_power, 0.0, 1.0))
+            return -clip_scalar(requested / max_power, 0.0, 1.0)
 
         return 0.0
 
@@ -1243,8 +1257,7 @@ class BuildingOpsService:
         building = self.building
         if action is None:
             return 0.0
-        action = self._safe_scalar(action, 0.0)
-        action = float(np.clip(action, -1.0, 1.0))
+        action = clip_scalar(self._safe_scalar(action, 0.0), -1.0, 1.0)
         nominal_power = self._safe_scalar(getattr(building.electrical_storage, 'nominal_power', 0.0), 0.0)
         return action * nominal_power if nominal_power > 0.0 else 0.0
 
@@ -1253,7 +1266,7 @@ class BuildingOpsService:
         nominal_power = self._safe_scalar(getattr(building.electrical_storage, 'nominal_power', 0.0), 0.0)
         if nominal_power <= 0.0:
             return 0.0
-        return float(np.clip(target_power_kw / nominal_power, -1.0, 1.0))
+        return clip_scalar(target_power_kw / nominal_power, -1.0, 1.0)
 
     def _electrical_service_violation_kw(
         self,

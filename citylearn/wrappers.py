@@ -62,7 +62,7 @@ class NormalizedObservationWrapper(ObservationWrapper):
         shared_observations = []
         periodic_observation_names = list(Building.get_periodic_observation_metadata().keys())
 
-        for o in self.env.shared_observations:
+        for o in self.env.unwrapped.shared_observations:
             if o in periodic_observation_names:
                 shared_observations += [f'{o}_cos', f'{o}_sin']
             
@@ -98,7 +98,7 @@ class NormalizedObservationWrapper(ObservationWrapper):
             observation_names = [observation_names]
         
         else:
-            observation_names = [list(b.observations(normalize=True, periodic_normalization=True).keys()) for b in self.env.buildings]
+            observation_names = [list(b.observations(normalize=True, periodic_normalization=True).keys()) for b in self.env.unwrapped.buildings]
 
         return observation_names
 
@@ -139,31 +139,71 @@ class NormalizedObservationWrapper(ObservationWrapper):
         return observation_space
 
     def observation(self, observations: List[List[float]]) -> List[List[float]]:
-        """Returns normalized observations."""
+        """Returns normalized observations.
 
-        if self.env.unwrapped.central_agent:
+        Normalizes the values received from the wrapped environment, so changes made upstream (robustness
+        sensor faults, other wrappers) reach the agent instead of being replaced by fresh building values.
+        """
+
+        env = self.env.unwrapped
+        buildings = env.buildings
+        raw_names = [list(b.observations(normalize=False, periodic_normalization=False).keys()) for b in buildings]
+
+        if env.central_agent:
+            values = list(observations[0])
+            env_shared_observations = set(env.shared_observations)
+            shared_values = {}
+            building_observations = []
+            cursor = 0
+
+            # Mirror CityLearnEnv.observations: shared values appear once, in the first building that has them.
+            for i, names in enumerate(raw_names):
+                building_values = {}
+
+                for k in names:
+                    if i == 0 or k not in env_shared_observations or k not in shared_values:
+                        if cursor >= len(values):
+                            raise ValueError('Observation vector is shorter than the environment observation names.')
+
+                        building_values[k] = values[cursor]
+                        cursor += 1
+
+                        if k in env_shared_observations:
+                            shared_values.setdefault(k, building_values[k])
+
+                    else:
+                        building_values[k] = shared_values[k]
+
+                building_observations.append(building_values)
+
+            if cursor != len(values):
+                raise ValueError('Observation vector is longer than the environment observation names.')
+
+        else:
+            building_observations = [dict(zip(names, values)) for names, values in zip(raw_names, observations)]
+
+        normalized = [
+            b.transform_observations(o, normalize=True, periodic_normalization=True)
+            for b, o in zip(buildings, building_observations)
+        ]
+
+        if env.central_agent:
             norm_observations = []
             shared_observations = []
 
-            for i, b in enumerate(self.env.unwrapped.buildings):
-                for k, v in b.observations(normalize=True, periodic_normalization=True).items():
-                    if i==0 or k not in self.shared_observations or k not in shared_observations:
+            for i, building_values in enumerate(normalized):
+                for k, v in building_values.items():
+                    if i == 0 or k not in self.shared_observations or k not in shared_observations:
                         norm_observations.append(v)
-
-                    else:
-                        pass
 
                     if k in self.shared_observations and k not in shared_observations:
                         shared_observations.append(k)
-                    
-                    else:
-                        pass
-            
+
             norm_observations = [norm_observations]
 
         else:
-            norm_observations = [list(b.observations(normalize=True, periodic_normalization=True).values()) for b in self.env.unwrapped.buildings]
-        
+            norm_observations = [list(building_values.values()) for building_values in normalized]
+
         return norm_observations
     
 class NormalizedActionWrapper(ActionWrapper):
@@ -272,13 +312,13 @@ class DiscreteObservationWrapper(ObservationWrapper):
 
             for i, b in enumerate(self.bin_sizes):
                 for k, v in b.items():
-                    if i == 0 or k not in self.env.shared_observations or k not in shared_observations:
+                    if i == 0 or k not in self.env.unwrapped.shared_observations or k not in shared_observations:
                         bin_sizes.append(v)
 
                     else:
                         pass
 
-                    if k in self.env.shared_observations and k not in shared_observations:
+                    if k in self.env.unwrapped.shared_observations and k not in shared_observations:
                         shared_observations.append(k)
 
                     else:
@@ -676,7 +716,7 @@ class RLlibMultiAgentObservationWrapper(ObservationWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
-        assert not env.central_agent, 'RLlibMultiAgentObservationWrapper is'\
+        assert not env.unwrapped.central_agent, 'RLlibMultiAgentObservationWrapper is'\
             ' compatible only when env.central_agent = False.'\
                 ' First set env.central_agent = False to use this wrapper.'
 
@@ -711,7 +751,7 @@ class RLlibMultiAgentActionWrapper(ActionWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
-        assert not env.central_agent, 'RLlibMultiAgentActionWrapper is'\
+        assert not env.unwrapped.central_agent, 'RLlibMultiAgentActionWrapper is'\
             ' compatible only when env.central_agent = False.'\
                 ' First set env.central_agent = False to use this wrapper.'
 
@@ -741,7 +781,7 @@ class RLlibMultiAgentRewardWrapper(RewardWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
-        assert not env.central_agent, 'RLlibMultiAgentRewardWrapper is'\
+        assert not env.unwrapped.central_agent, 'RLlibMultiAgentRewardWrapper is'\
             ' compatible only when env.central_agent = False.'\
                 ' First set env.central_agent = False to use this wrapper.'
 
