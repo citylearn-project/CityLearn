@@ -46,9 +46,14 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
-## Changes after 3.1.1 (unreleased)
+## Upgrade from 3.1.1 to 3.2.0
 
-No dataset, schema or export-file migration is required.
+CityLearn supports Gymnasium from 0.28.1 up to, but excluding, 2.0. Dataset names
+now resolve against the `v3.2.0` tag. Existing dataset files and export formats
+remain compatible.
+
+Install `citylearn[end_use_load_profiles]` when generating datasets with the
+EULP/EnergyPlus tools. Standard simulations use the core installation.
 
 - **Per-building reward functions:** `MultiBuildingRewardFunction.calculate()`
   (used when the schema's `reward_function.type` maps buildings to functions)

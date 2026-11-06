@@ -3,6 +3,22 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## v3.2.0 - 2026-11-06
+
+Responsável pela versão: **Tiago Fonseca**. Contribuição de **Mark Colley** no
+[PR #169](https://github.com/citylearn-project/CityLearn/pull/169).
+
+- Suporta Gymnasium 1.x e mantém compatibilidade com 0.28.1.
+- Corrige as observações de temperatura, a inferência LSTM, a reposição do
+  estado entre episódios e as conversões físicas em passos sub-horários.
+- Mantém a proveniência ativa por defeito. Quando é desligada, os indicadores
+  opcionais são omitidos e a configuração é aplicada ao BAU e ao manifesto.
+- As recompensas por edifício passam a ser uma lista de valores simples.
+  Ver o [guia de migração](../migration.md#upgrade-from-311-to-320).
+- Passaram a CI, 16 cenários físicos e as verificações dos 32 datasets. Os
+  seis exports abriram na UI e coincidiram os 10.274 registos de KPI comparados.
+  As [notas em inglês](../releases.md#v320---2026-11-06) incluem as medições.
+
 ## v3.1.1 - 2026-11-04
 
 Responsável: **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)).
