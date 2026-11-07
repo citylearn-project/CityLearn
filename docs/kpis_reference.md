@@ -102,6 +102,11 @@ so 1 still means no change and a higher control total gives a higher ratio.
 For a positive reference this is the plain ratio. Import, export and emission
 totals are never negative and use the plain ratio.
 
+The conventional `baseline` counterfactual follows the grid outage of the
+controlled run: at power-outage time steps the `*_without_storage*` net series,
+and their cost and emission series, are zero. Neither run exchanges energy with
+the grid while it is down.
+
 ## KPI Families
 
 | Family | Level | Measures |

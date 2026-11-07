@@ -383,7 +383,27 @@ class Building(Environment):
         `net_electricity_consumption_without_storage` - `solar_generation`
         """
 
-        return self.net_electricity_consumption_without_storage - self.solar_generation
+        return self._without_grid_during_outage(self.net_electricity_consumption_without_storage - self.solar_generation)
+
+    def _without_grid_during_outage(self, values: np.ndarray) -> np.ndarray:
+        """Set a counterfactual net electricity consumption series to zero at power outage time steps.
+
+        The controlled building exchanges no energy with the grid while it is down (see
+        `update_variables`), so counterfactual series follow the same rule to stay comparable.
+        """
+
+        if not self.simulate_power_outage:
+            return values
+
+        outage = np.asarray(self.power_outage_signal) != 0
+
+        if not outage.any():
+            return values
+
+        values = np.array(values, copy=True)
+        values[outage] = 0.0
+
+        return values
 
     @property
     def net_electricity_consumption_emission_without_storage(self) -> np.ndarray:
@@ -415,14 +435,16 @@ class Building(Environment):
         So, the first one is subtracted from the net_electricity_consumption, obtaining the energy consumption as if the cars were not used at all.
         However, if there are chargers and EVs, they need to charge per usual, so that consumption is added
         This is what allows to check if the control mechanism affects the grid balancing scheme for EVs for example.
+
+        Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.
         """
-        return self.net_electricity_consumption - np.sum([
+        return self._without_grid_during_outage(self.net_electricity_consumption - np.sum([
             self.cooling_storage_electricity_consumption,
             self.heating_storage_electricity_consumption,
             self.dhw_storage_electricity_consumption,
             self.electrical_storage_electricity_consumption,
             self.chargers_electricity_consumption,
-        ], axis=0)
+        ], axis=0))
 
     @property
     def net_electricity_consumption_emission(self) -> np.ndarray:
@@ -3231,7 +3253,7 @@ class DynamicsBuilding(Building):
         `net_electricity_consumption_without_storage_and_partial_load` - `solar_generation`
         """
 
-        return self.net_electricity_consumption_without_storage_and_partial_load - self.solar_generation
+        return self._without_grid_during_outage(self.net_electricity_consumption_without_storage_and_partial_load - self.solar_generation)
 
     @property
     def net_electricity_consumption_emission_without_storage_and_partial_load(self) -> np.ndarray:
@@ -3284,7 +3306,9 @@ class DynamicsBuilding(Building):
         ], axis=0))
 
         # net electricity consumption without storage and partial load
-        return self.net_electricity_consumption_without_storage + partial_load_electricity_consumption
+        return self._without_grid_during_outage(
+            self.net_electricity_consumption_without_storage + partial_load_electricity_consumption
+        )
 
     @property
     def heating_demand_without_partial_load(self) -> np.ndarray:

@@ -97,7 +97,10 @@ models, without partial-load control, while retaining PV.
 
 This is a counterfactual calculation, not a second `BusinessAsUsualAgent` run.
 `EvaluationCondition` also exposes alternatives, including removing PV.
-Choose the same evaluation condition when comparing controllers.
+Choose the same evaluation condition when comparing controllers. During a
+simulated power outage the counterfactual, like the controlled run, exchanges
+no energy with the grid: its net, cost and emission values are zero at those
+time steps.
 
 For example, `district_cost_ratio_to_baseline_total_ratio` and
 `district_cost_ratio_to_business_as_usual_total_ratio` have different
