@@ -1072,6 +1072,55 @@ class ChargerSimulation(TimeSeriesData):
         )
 
     @staticmethod
+    def arrival_soc_index(
+        charger_state: Iterable[float],
+        electric_vehicle_id: Iterable[str],
+        estimated_soc_arrival: Iterable[float],
+        time_step: int,
+    ) -> Union[int, None]:
+        """Row that holds the estimated arrival SOC of an EV that connects at `time_step`.
+
+        The estimate is given on the incoming (state 2) rows before the connection, usually on the
+        last one (`time_step` - 1). Some sessions give it only on an earlier incoming row, e.g. the
+        row one step before arrival followed by a row without an estimate. When the previous row is
+        incoming or away (state 2 or 3), the latest valid estimate is taken from `time_step` - 1 back
+        through the contiguous incoming rows of the same EV. Otherwise, e.g. at the first step, the
+        `time_step` row itself is used. Returns `None` when no such row holds a value in [0, 1].
+        """
+
+        def valid(index: int) -> bool:
+            if estimated_soc_arrival is None or not 0 <= index < len(estimated_soc_arrival):
+                return False
+
+            value = estimated_soc_arrival[index]
+            return isinstance(value, (float, np.floating)) and 0.0 <= value <= 1.0
+
+        time_step = int(time_step)
+        previous_state = (
+            charger_state[time_step - 1]
+            if charger_state is not None and 0 < time_step <= len(charger_state) else np.nan
+        )
+
+        if previous_state not in (2, 3):
+            return time_step if valid(time_step) else None
+
+        index = time_step - 1
+
+        while not valid(index):
+            if not (
+                index > 0
+                and charger_state[index] == 2
+                and charger_state[index - 1] == 2
+                and electric_vehicle_id is not None
+                and electric_vehicle_id[index - 1] == electric_vehicle_id[index]
+            ):
+                return None
+
+            index -= 1
+
+        return index
+
+    @staticmethod
     def normalize_soc_series(
         values: Iterable[float],
         default_soc_value: float = -0.1,

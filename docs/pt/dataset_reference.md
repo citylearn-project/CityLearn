@@ -115,7 +115,7 @@ Cooling e heating demand nao podem ser positivos no mesmo timestep.
 | `electric_vehicle_departure_time` | steps | Steps ate departure. Default interno `-1`. |
 | `electric_vehicle_required_soc_departure` | percent | SOC requerido. Convertido para ratio. Default interno `-0.1`. |
 | `electric_vehicle_estimated_arrival_time` | steps | Steps ate chegada. Default interno `-1`. |
-| `electric_vehicle_estimated_soc_arrival` | percent | SOC estimado na chegada. Convertido para ratio. |
+| `electric_vehicle_estimated_soc_arrival` | percent | SOC estimado na chegada, nas linhas incoming (estado 2). Convertido para ratio. Na ligacao o EV parte da estimativa mais recente nas linhas incoming do mesmo EV imediatamente anteriores, normalmente a ultima; uma estimativa antes de um intervalo away (estado 3) nao e usada. |
 | `electric_vehicle_current_soc` | percent ou ratio | Opcional. Telemetria de SOC atual. Na suite REC anual é uma referência neutra de inicialização de fronteira, com serviço a taxa constante, usada apenas quando um episódio começa dentro de uma sessão ocupada; não substitui a evolução do SOC num rollout ininterrupto. |
 
 Para datasets sub-horarios, os campos `*_time` devem estar em numero de timesteps da resolucao do dataset. Ex.: 1 hora em 15s = 240 steps.

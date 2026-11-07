@@ -93,7 +93,7 @@ Cooling and heating demand cannot both be positive in the same timestep.
 | `electric_vehicle_departure_time` | steps | Steps until departure. Internal default `-1`. |
 | `electric_vehicle_required_soc_departure` | percent | Required departure SOC. Converted to ratio. |
 | `electric_vehicle_estimated_arrival_time` | steps | Steps until arrival. Internal default `-1`. |
-| `electric_vehicle_estimated_soc_arrival` | percent | Estimated arrival SOC. Converted to ratio. |
+| `electric_vehicle_estimated_soc_arrival` | percent | Estimated arrival SOC on the incoming (state 2) rows. Converted to ratio. At connection the EV starts from the latest estimate in the incoming rows of the same EV just before it, usually the last one; an estimate on rows before an away (state 3) gap is not used. |
 | `electric_vehicle_current_soc` | percent or ratio | Optional current-SOC telemetry. In the annual REC suite this is a neutral constant-rate boundary-initialization reference, used only when an episode starts inside an occupied session; it does not override SOC during an uninterrupted rollout. |
 
 For sub-hourly datasets, countdown fields must be expressed in timesteps at the dataset resolution. Example: 1 hour at 15s is 240 steps.

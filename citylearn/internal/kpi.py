@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Sequence, Tuple
 import numpy as np
 import pandas as pd
 
-from citylearn.data import ZERO_DIVISION_PLACEHOLDER
+from citylearn.data import ZERO_DIVISION_PLACEHOLDER, ChargerSimulation
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
@@ -328,7 +328,10 @@ class CityLearnKPIService:
                     or previous_ev_id == current_ev_id
                 )
             ):
-                candidates.append(self._safe_sequence_value(estimated_soc_arrival, interval_start - 1))
+                # Same incoming-row lookup as the runtime arrival.
+                index = ChargerSimulation.arrival_soc_index(states, ev_ids, estimated_soc_arrival, interval_start)
+                index = interval_start - 1 if index is None else index
+                candidates.append(self._safe_sequence_value(estimated_soc_arrival, index))
 
         candidates.append(self._safe_sequence_value(estimated_soc_arrival, interval_start))
 

@@ -3,6 +3,7 @@ from collections import Counter
 
 import numpy as np
 
+from citylearn.data import ChargerSimulation
 from citylearn.energy_model import Battery
 
 
@@ -55,7 +56,9 @@ def arrival_soc(service, sim, battery, states, start):
         previous = service._normal_ev_id(value(ids, start - 1))
         current = service._normal_ev_id(value(ids, start))
         if previous is None or current is None or previous == current:
-            candidates.append(value(estimated, start - 1))
+            # Same incoming-row lookup as the runtime arrival.
+            index = ChargerSimulation.arrival_soc_index(states, ids, estimated, start)
+            candidates.append(value(estimated, start - 1 if index is None else index))
     candidates.append(value(estimated, start))
     if start == 0:
         candidates.append(getattr(battery, 'initial_soc', None))

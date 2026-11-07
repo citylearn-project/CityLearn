@@ -89,6 +89,49 @@ def test_ev_soc_matches_dataset_on_arrival(from_state: int):
     assert pytest.approx(expected_soc, abs=1e-6) == float(ev.battery.soc[env.time_step])
 
 
+def test_arrival_soc_estimate_found_on_earlier_incoming_row():
+    # charger_12_1: Electric_Vehicle_4 is incoming at rows 705 (one step to arrival, estimate 17 %) and
+    # 706 (no estimate), then connects at 707.
+    env = CityLearnEnv(
+        SCHEMA_PATH, central_agent=True, simulation_start_time_step=695, simulation_end_time_step=730, random_seed=1,
+    )
+    env.reset()
+    charger = next(
+        c for b in env.buildings for c in (b.electric_vehicle_chargers or []) if c.charger_id == 'charger_12_1'
+    )
+    sim = charger.charger_simulation
+    ev = next(e for e in env.electric_vehicles if e.name == 'Electric_Vehicle_4')
+    arrival = 707 - 695
+    assert sim.electric_vehicle_charger_state[arrival - 2:arrival + 1].tolist() == [2, 2, 1]
+    assert sim.electric_vehicle_estimated_soc_arrival[arrival - 1] < 0.0, 'last incoming row has no estimate'
+    estimate = float(sim.electric_vehicle_estimated_soc_arrival[arrival - 2])
+    assert estimate == pytest.approx(0.17, abs=0.05)
+
+    while env.time_step < arrival:
+        env.step(_zero_actions(env))
+
+    assert charger.connected_electric_vehicle is ev
+    assert float(ev.battery.soc[arrival]) == pytest.approx(estimate, abs=1e-6)
+    states = np.asarray(sim.electric_vehicle_charger_state, dtype='float64')
+    assert env._kpi_service._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(estimate, abs=1e-6)
+    env.close()
+
+
+def test_arrival_soc_index_reads_only_the_incoming_rows_of_the_arriving_ev():
+    index = ChargerSimulation.arrival_soc_index
+    states = np.array([1, 2, 2, 2, 1, 3, 2, 3, 1, 2, 2, 1], dtype='float32')
+    ids = np.array(['A', 'A', 'A', 'A', 'A', None, 'A', None, 'A', 'A', 'B', 'B'], dtype=object)
+    soc = np.array([-0.1, 0.3, 0.4, -0.1, -0.1, -0.1, 0.5, -0.1, -0.1, 0.6, -0.1, -0.1], dtype='float32')
+
+    assert index(states, ids, soc, 4) == 2  # latest estimate of the incoming block
+    soc[3] = 0.45
+    assert index(states, ids, soc, 4) == 3  # the usual case: the last incoming row
+    assert index(states, ids, soc, 8) is None  # an announcement behind away rows is stale
+    assert index(states, ids, soc, 11) is None  # never another EV's estimate
+    soc[0] = 0.2
+    assert index(states, ids, soc, 0) == 0  # no preceding row: the arrival row itself
+
+
 def test_connected_ev_without_arrival_soc_uses_initial_soc_on_reset():
     env = CityLearnEnv(str(MINUTE_SCHEMA_PATH), central_agent=True, random_seed=0)
     env.reset()

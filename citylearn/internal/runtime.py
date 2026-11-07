@@ -976,24 +976,18 @@ class CityLearnRuntimeService:
                 if isinstance(current_value, (float, np.floating)) and not np.isnan(current_value) and 0.0 <= current_value <= 1.0:
                     return float(current_value)
 
-            candidate_index = None
-
             if prev_state in (2, 3) and step > 0:
                 if isinstance(prev_id, str) and prev_id.strip() not in {'', 'nan'} and prev_id != ev_identifier:
                     raise ValueError(
                         f"Charger dataset EV mismatch: expected '{ev_identifier}' but found '{prev_id}' at time step {step - 1}."
                     )
-                candidate_index = step - 1
 
-            elif 0 <= step < len(simulation.electric_vehicle_estimated_soc_arrival):
-                candidate_index = step
-
-            soc_value = None
-
-            if candidate_index is not None and 0 <= candidate_index < len(simulation.electric_vehicle_estimated_soc_arrival):
-                candidate = simulation.electric_vehicle_estimated_soc_arrival[candidate_index]
-                if isinstance(candidate, (float, np.floating)) and not np.isnan(candidate) and 0.0 <= candidate <= 1.0:
-                    soc_value = float(candidate)
+            # The estimate sits on the incoming rows before the connection, not always on the last one.
+            estimated_soc_arrival = simulation.electric_vehicle_estimated_soc_arrival
+            index = ChargerSimulation.arrival_soc_index(
+                simulation.electric_vehicle_charger_state, simulation.electric_vehicle_id, estimated_soc_arrival, step,
+            )
+            soc_value = None if index is None else float(estimated_soc_arrival[index])
 
             return soc_value
 
