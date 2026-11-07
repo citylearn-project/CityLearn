@@ -1852,6 +1852,19 @@ class Building(Environment):
         if upper < len(self.__solar_generation):
             self.__solar_generation[max(start, upper):] = 0.0
 
+    def _set_pv_out_of_service(self, time_step: int) -> None:
+        """Zero PV production at ``time_step`` because the array is out of service.
+
+        Used by robustness asset-unavailability events. It must run before that
+        step's physics so net consumption, energy provenance and KPIs all see
+        the same zero production. Other steps are left unchanged and ``reset``
+        restores the dataset production.
+        """
+
+        time_step = int(time_step)
+        if 0 <= time_step < len(self.__solar_generation):
+            self.__solar_generation[time_step] = 0.0
+
     def _clip_outage_electric_loads_to_local_supply(self):
         """Clip initial electric loads to locally available islanded supply."""
 
