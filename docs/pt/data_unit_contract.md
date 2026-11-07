@@ -21,6 +21,12 @@ conversão de compatibilidade existente e imprime um aviso explícito
 `[CityLearn][unit-conversion]`. Esse modo é suportado, mas o caminho preferido é
 gerar o dataset já na mesma resolução do schema.
 
+Com essa conversão, as séries de eletricidade simuladas ficam em kWh por passo de
+controlo. Isto inclui as baselines `net_electricity_consumption_without_storage_and_partial_load*`:
+a eletricidade dos equipamentos para o aquecimento e arrefecimento extra da procura
+ideal (sem controlo) é convertida uma única vez de kWh por passo do dataset para kWh
+por passo de controlo, tal como a eletricidade dos equipamentos controlados.
+
 ## Séries temporais principais
 
 | Campo | Unidade | Notas |

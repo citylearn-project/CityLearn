@@ -11,6 +11,7 @@ import pytest
 
 from citylearn.citylearn import CityLearnEnv
 from citylearn.data import DataSet
+from citylearn.energy_model import HeatPump
 
 HOURLY_2021 = 'data/datasets/citylearn_challenge_2021/schema.json'
 
@@ -57,6 +58,44 @@ def test_thermal_storage_charging_electricity_matches_delivered_heat():
 
         assert stored > 0.0, 'scenario must charge the tank'
         assert electricity * cop == pytest.approx(demand + stored, rel=1.0e-4)
+
+
+def test_partial_load_baseline_top_up_is_control_step_energy():
+    env = CityLearnEnv(
+        'data/datasets/citylearn_challenge_2023_phase_1/schema.json', central_agent=True,
+        seconds_per_time_step=900, simulation_start_time_step=200, episode_time_steps=24, random_seed=0,
+    )
+    env.reset()
+    names = env.action_names[0]
+    partial = [0.3 if 'cooling_device' in name or 'heating_device' in name else 0.0 for name in names]
+
+    while not env.terminated:
+        env.step([partial])
+
+    building = env.buildings[0]
+    ratio = building.time_step_ratio
+    temperature = building.weather.outdoor_dry_bulb_temperature[0:building.time_step + 1]
+    cooling_cop = building.cooling_device.get_cop(temperature, heating=False)
+    cooling_difference = building.cooling_demand_without_partial_load - building.cooling_demand
+    heating_difference = building.heating_demand_without_partial_load - building.heating_demand
+    assert ratio == pytest.approx(0.25)
+    assert np.abs(cooling_difference).sum() > 0.0, 'scenario must use partial cooling'
+
+    # The controlled device books dataset-step kWh of heat as control-step kWh of electricity ...
+    served = building.energy_from_cooling_device > 0.0
+    np.testing.assert_allclose(
+        building.cooling_electricity_consumption[served],
+        (building.energy_from_cooling_device / cooling_cop * ratio)[served],
+        rtol=1.0e-5,
+    )
+    # ... and the partial-load baseline must convert its extra heat the same way, exactly once.
+    heating_device = building.heating_device
+    heating_input = heating_device.get_input_power(heating_difference, temperature, heating=True) \
+        if isinstance(heating_device, HeatPump) else heating_device.get_input_power(heating_difference)
+    expected = (cooling_difference / cooling_cop + heating_input) * ratio
+    top_up = building.net_electricity_consumption_without_storage_and_partial_load \
+        - building.net_electricity_consumption_without_storage
+    np.testing.assert_allclose(top_up, expected, rtol=1.0e-5, atol=1.0e-6)
 
 
 def test_thermal_storage_discharge_is_limited_by_control_step_demand():

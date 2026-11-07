@@ -1805,11 +1805,15 @@ class Building(Environment):
         ratio = 1.0 if self.time_step_ratio in (None, 0) else float(self.time_step_ratio)
         return self.seconds_per_time_step/3600.0/ratio
 
-    def _dataset_energy_to_control_step(self, energy: float) -> float:
-        """Convert dataset-resolution kWh to the active control-step kWh."""
+    def _dataset_energy_to_control_step(self, energy: Union[float, Iterable[float]]) -> Union[float, np.ndarray]:
+        """Convert dataset-resolution kWh (a value or a time series) to the active control-step kWh."""
 
         ratio = 1.0 if self.time_step_ratio in (None, 0) else float(self.time_step_ratio)
-        return float(energy) * ratio
+
+        if np.ndim(energy) == 0:
+            return float(energy) * ratio
+
+        return np.asarray(energy) * ratio
 
     def _pv_generation_to_control_step(self, solar_generation: Union[float, Iterable[float]]) -> np.ndarray:
         """Convert PV inputs to control-step kWh."""
@@ -3257,11 +3261,15 @@ class DynamicsBuilding(Building):
         else:
             heating_electricity_consumption_difference = self.heating_device.get_input_power(heating_demand_difference)
 
-        # net electricity consumption without storage and partial load
-        return self.net_electricity_consumption_without_storage + np.sum([
+        # The demand series are dataset-resolution kWh, so the device input energy for their difference is too;
+        # convert it to control-step kWh like the device electricity in the rest of the baseline.
+        partial_load_electricity_consumption = self._dataset_energy_to_control_step(np.sum([
             cooling_electricity_consumption_difference,
             heating_electricity_consumption_difference,
-        ], axis=0)
+        ], axis=0))
+
+        # net electricity consumption without storage and partial load
+        return self.net_electricity_consumption_without_storage + partial_load_electricity_consumption
 
     @property
     def heating_demand_without_partial_load(self) -> np.ndarray:

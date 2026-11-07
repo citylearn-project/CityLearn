@@ -19,6 +19,8 @@ The physical engine accounts for energy per simulation step.
 
 `seconds_per_time_step` in the schema must represent the physical cadence of the dataset. If the dataset resolution and schema resolution differ, the simulator applies the compatibility conversion and prints an explicit `[CityLearn][unit-conversion]` warning. This is supported, but the preferred production path is to generate the dataset at the same resolution declared by the schema.
 
+With that conversion, simulated electricity series are control-step kWh. This includes the `net_electricity_consumption_without_storage_and_partial_load*` baselines: the device electricity for the extra heating and cooling of the ideal (uncontrolled) demand is converted once from dataset-step to control-step kWh, like the controlled device electricity.
+
 ## Main Time Series
 
 | Field | Unit | Notes |
