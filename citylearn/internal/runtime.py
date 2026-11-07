@@ -938,6 +938,13 @@ class CityLearnRuntimeService:
         if debug_timing:
             timings['next_time_step_environment_time'] = time.perf_counter() - timer_start
 
+        if reached_terminal_transition:
+            # Buildings stay on the last executed interval so their series hold only
+            # committed intervals. The terminal observation is still for the new
+            # environment time step: exogenous data at it, endogenous at the last interval.
+            for building in env.buildings:
+                building._terminal_observation_time_step = int(env.time_step)
+
         if not reached_terminal_transition:
             timer_start = time.perf_counter() if debug_timing else 0.0
             self.simulate_unconnected_ev_soc()

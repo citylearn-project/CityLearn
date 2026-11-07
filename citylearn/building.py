@@ -2823,6 +2823,8 @@ class Building(Environment):
         # object reset
         super().reset()
         self._archived_storage_electricity = None
+        # Row of the agent-facing terminal observation; set by the runtime after the last transition.
+        self._terminal_observation_time_step = None
         self.cooling_storage.reset()
         self.heating_storage.reset()
         self.dhw_storage.reset()

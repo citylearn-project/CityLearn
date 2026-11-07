@@ -145,8 +145,7 @@ class BuildingOpsService:
         for charger in ev_chargers:
             charger_id = charger.charger_id
             sim = charger.charger_simulation
-            t = building.time_step
-            endogenous_t = t if include_all else max(t - 1, 0)
+            t, endogenous_t = self._observation_time_steps(include_all)
 
             connected_state_key = f'electric_vehicle_charger_{charger_id}_connected_state'
             incoming_state_key = f'electric_vehicle_charger_{charger_id}_incoming_state'
@@ -277,8 +276,7 @@ class BuildingOpsService:
 
         electric_vehicle_chargers_dict = {}
         deferrable_appliances_dict = {}
-        t = building.time_step
-        endogenous_t = t if include_all else max(t - 1, 0)
+        t, endogenous_t = self._observation_time_steps(include_all)
 
         if wants('electric_vehicles_chargers_dict'):
             for charger in building.electric_vehicle_chargers or []:
@@ -359,8 +357,9 @@ class BuildingOpsService:
             if wants(key) and t < len(series):
                 observations[key] = series[t]
 
+        # Full series: the terminal observation reads one row past the last executed interval.
         if wants('solar_generation'):
-            observations['solar_generation'] = abs(building.solar_generation[t])
+            observations['solar_generation'] = abs(building._Building__solar_generation[t])
         if wants('cooling_storage_soc'):
             observations['cooling_storage_soc'] = building.cooling_storage.soc[endogenous_t]
         if wants('heating_storage_soc'):
@@ -416,7 +415,7 @@ class BuildingOpsService:
         if wants('occupant_count'):
             observations['occupant_count'] = building.energy_simulation.occupant_count[t]
         if wants('power_outage'):
-            observations['power_outage'] = building.power_outage_signal[t]
+            observations['power_outage'] = building._Building__power_outage_signal[t]
         if wants('electric_vehicles_chargers_dict'):
             observations['electric_vehicles_chargers_dict'] = electric_vehicle_chargers_dict
         if wants('deferrable_appliances_dict'):
@@ -689,6 +688,25 @@ class BuildingOpsService:
             return float(default)
 
         return scalar
+
+    def _observation_time_steps(self, include_all: bool = False) -> Tuple[int, int]:
+        """Rows read by an observation: exogenous `t` and endogenous (settled `t - 1`).
+
+        `include_all` (reward/KPI) observations read the current transition at both. After the
+        terminal transition the building stays on the last executed interval, but the agent-facing
+        terminal observation is for the environment's new time step, like every other observation.
+        """
+
+        building = self.building
+        t = int(building.time_step)
+
+        if include_all:
+            return t, t
+
+        terminal_time_step = getattr(building, '_terminal_observation_time_step', None)
+        t = t if terminal_time_step is None else int(terminal_time_step)
+
+        return t, max(t - 1, 0)
 
     def _safe_index(self, values, idx: int, default: float = 0.0) -> float:
         try:

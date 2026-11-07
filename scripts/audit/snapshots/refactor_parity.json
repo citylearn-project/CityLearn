@@ -12536,10 +12536,10 @@
                       "charging_phase_L2_headroom_kw": 1.102186918258667,
                       "charging_phase_L3_export_headroom_kw": 20.39781379699707,
                       "charging_phase_L3_headroom_kw": 1.102186918258667,
-                      "electrical_storage_soc": 0.0,
-                      "net_electricity_consumption": -1.7170453071594238,
-                      "non_shiftable_load": 0.20000000298023224,
-                      "solar_generation": 0.10000000149011612
+                      "electrical_storage_soc": 0.19681908190250397,
+                      "net_electricity_consumption": 1.1934393644332886,
+                      "non_shiftable_load": 0.30000001192092896,
+                      "solar_generation": 0.20000000298023224
                     }
                   },
                   {
@@ -12554,10 +12554,10 @@
                       "charging_phase_L2_headroom_kw": 2.0,
                       "charging_phase_L3_export_headroom_kw": 19.5,
                       "charging_phase_L3_headroom_kw": 2.0,
-                      "electrical_storage_soc": 0.9822915196418762,
-                      "net_electricity_consumption": 2.5,
-                      "non_shiftable_load": 0.10000000149011612,
-                      "solar_generation": 0.6000000238418579
+                      "electrical_storage_soc": 0.7502464056015015,
+                      "net_electricity_consumption": -1.5,
+                      "non_shiftable_load": 0.30000001192092896,
+                      "solar_generation": 0.20000000298023224
                     }
                   }
                 ],
@@ -12715,23 +12715,23 @@
                   {
                     "id": "district_0",
                     "values": {
-                      "carbon_intensity": 0.10000000149011612,
+                      "carbon_intensity": 0.20000000298023224,
                       "day_type": 1.0,
-                      "diffuse_solar_irradiance": 70.0,
-                      "diffuse_solar_irradiance_predicted_1": 50.0,
-                      "direct_solar_irradiance": 40.0,
-                      "direct_solar_irradiance_predicted_1": 30.0,
-                      "electricity_pricing": 0.10999999940395355,
-                      "electricity_pricing_predicted_1": 0.11999999731779099,
-                      "electricity_pricing_predicted_2": 0.12999999523162842,
-                      "electricity_pricing_predicted_3": 0.14000000059604645,
-                      "hour": 6.0,
+                      "diffuse_solar_irradiance": 20.0,
+                      "diffuse_solar_irradiance_predicted_1": 20.0,
+                      "direct_solar_irradiance": 10.0,
+                      "direct_solar_irradiance_predicted_1": 15.0,
+                      "electricity_pricing": 0.10000000149011612,
+                      "electricity_pricing_predicted_1": 0.10999999940395355,
+                      "electricity_pricing_predicted_2": 0.11999999731779099,
+                      "electricity_pricing_predicted_3": 0.12999999523162842,
+                      "hour": 7.0,
                       "minutes": 0.0,
                       "month": 1.0,
-                      "outdoor_dry_bulb_temperature": 6.099999904632568,
-                      "outdoor_dry_bulb_temperature_predicted_1": 5.800000190734863,
-                      "outdoor_relative_humidity": 57.0,
-                      "outdoor_relative_humidity_predicted_1": 57.5
+                      "outdoor_dry_bulb_temperature": 5.800000190734863,
+                      "outdoor_dry_bulb_temperature_predicted_1": 5.5,
+                      "outdoor_relative_humidity": 56.5,
+                      "outdoor_relative_humidity_predicted_1": 57.0
                     }
                   }
                 ],
@@ -25451,10 +25451,10 @@
                       "charging_phase_L2_headroom_kw": -0.5,
                       "charging_phase_L3_export_headroom_kw": 22.0,
                       "charging_phase_L3_headroom_kw": -0.5,
-                      "electrical_storage_soc": 0.24988199770450592,
-                      "net_electricity_consumption": -0.8999999761581421,
-                      "non_shiftable_load": 0.20000000298023224,
-                      "solar_generation": 0.10000000149011612
+                      "electrical_storage_soc": 0.2498401403427124,
+                      "net_electricity_consumption": 0.10000000149011612,
+                      "non_shiftable_load": 0.30000001192092896,
+                      "solar_generation": 0.20000000298023224
                     }
                   },
                   {
@@ -25469,10 +25469,10 @@
                       "charging_phase_L2_headroom_kw": 11.833333969116211,
                       "charging_phase_L3_export_headroom_kw": 9.666666030883789,
                       "charging_phase_L3_headroom_kw": 11.833333969116211,
-                      "electrical_storage_soc": 0.5957971215248108,
-                      "net_electricity_consumption": 0.5,
-                      "non_shiftable_load": 0.10000000149011612,
-                      "solar_generation": 0.6000000238418579
+                      "electrical_storage_soc": 0.5919936299324036,
+                      "net_electricity_consumption": -0.5166667103767395,
+                      "non_shiftable_load": 0.30000001192092896,
+                      "solar_generation": 0.20000000298023224
                     }
                   }
                 ],
@@ -25630,23 +25630,23 @@
                   {
                     "id": "district_0",
                     "values": {
-                      "carbon_intensity": 0.10000000149011612,
+                      "carbon_intensity": 0.20000000298023224,
                       "day_type": 1.0,
-                      "diffuse_solar_irradiance": 70.0,
-                      "diffuse_solar_irradiance_predicted_1": 50.0,
-                      "direct_solar_irradiance": 40.0,
-                      "direct_solar_irradiance_predicted_1": 30.0,
-                      "electricity_pricing": 0.10999999940395355,
-                      "electricity_pricing_predicted_1": 0.11999999731779099,
-                      "electricity_pricing_predicted_2": 0.12999999523162842,
-                      "electricity_pricing_predicted_3": 0.14000000059604645,
+                      "diffuse_solar_irradiance": 20.0,
+                      "diffuse_solar_irradiance_predicted_1": 20.0,
+                      "direct_solar_irradiance": 10.0,
+                      "direct_solar_irradiance_predicted_1": 15.0,
+                      "electricity_pricing": 0.10000000149011612,
+                      "electricity_pricing_predicted_1": 0.10999999940395355,
+                      "electricity_pricing_predicted_2": 0.11999999731779099,
+                      "electricity_pricing_predicted_3": 0.12999999523162842,
                       "hour": 0.0,
-                      "minutes": 6.0,
+                      "minutes": 7.0,
                       "month": 1.0,
-                      "outdoor_dry_bulb_temperature": 6.099999904632568,
-                      "outdoor_dry_bulb_temperature_predicted_1": 5.800000190734863,
-                      "outdoor_relative_humidity": 57.0,
-                      "outdoor_relative_humidity_predicted_1": 57.5
+                      "outdoor_dry_bulb_temperature": 5.800000190734863,
+                      "outdoor_dry_bulb_temperature_predicted_1": 5.5,
+                      "outdoor_relative_humidity": 56.5,
+                      "outdoor_relative_humidity_predicted_1": 57.0
                     }
                   }
                 ],
@@ -38345,10 +38345,10 @@
                       "charging_phase_L2_headroom_kw": 1.0270377397537231,
                       "charging_phase_L3_export_headroom_kw": 20.47296142578125,
                       "charging_phase_L3_headroom_kw": 1.0270377397537231,
-                      "electrical_storage_soc": 0.09084507077932358,
-                      "net_electricity_consumption": -1.399999976158142,
-                      "non_shiftable_load": 0.20000000298023224,
-                      "solar_generation": 0.10000000149011612
+                      "electrical_storage_soc": 0.13646699488162994,
+                      "net_electricity_consumption": 0.35472169518470764,
+                      "non_shiftable_load": 0.30000001192092896,
+                      "solar_generation": 0.20000000298023224
                     }
                   },
                   {
@@ -38363,10 +38363,10 @@
                       "charging_phase_L2_headroom_kw": 2.5,
                       "charging_phase_L3_export_headroom_kw": 19.0,
                       "charging_phase_L3_headroom_kw": 2.5,
-                      "electrical_storage_soc": 0.6244616508483887,
-                      "net_electricity_consumption": 1.0,
-                      "non_shiftable_load": 0.10000000149011612,
-                      "solar_generation": 0.6000000238418579
+                      "electrical_storage_soc": 0.5673390030860901,
+                      "net_electricity_consumption": -0.75,
+                      "non_shiftable_load": 0.30000001192092896,
+                      "solar_generation": 0.20000000298023224
                     }
                   }
                 ],
@@ -38524,23 +38524,23 @@
                   {
                     "id": "district_0",
                     "values": {
-                      "carbon_intensity": 0.10000000149011612,
+                      "carbon_intensity": 0.20000000298023224,
                       "day_type": 1.0,
-                      "diffuse_solar_irradiance": 70.0,
-                      "diffuse_solar_irradiance_predicted_1": 50.0,
-                      "direct_solar_irradiance": 40.0,
-                      "direct_solar_irradiance_predicted_1": 30.0,
-                      "electricity_pricing": 0.10999999940395355,
-                      "electricity_pricing_predicted_1": 0.11999999731779099,
-                      "electricity_pricing_predicted_2": 0.12999999523162842,
-                      "electricity_pricing_predicted_3": 0.14000000059604645,
+                      "diffuse_solar_irradiance": 20.0,
+                      "diffuse_solar_irradiance_predicted_1": 20.0,
+                      "direct_solar_irradiance": 10.0,
+                      "direct_solar_irradiance_predicted_1": 15.0,
+                      "electricity_pricing": 0.10000000149011612,
+                      "electricity_pricing_predicted_1": 0.10999999940395355,
+                      "electricity_pricing_predicted_2": 0.11999999731779099,
+                      "electricity_pricing_predicted_3": 0.12999999523162842,
                       "hour": 1.0,
-                      "minutes": 30.0,
+                      "minutes": 45.0,
                       "month": 1.0,
-                      "outdoor_dry_bulb_temperature": 6.099999904632568,
-                      "outdoor_dry_bulb_temperature_predicted_1": 5.800000190734863,
-                      "outdoor_relative_humidity": 57.0,
-                      "outdoor_relative_humidity_predicted_1": 57.5
+                      "outdoor_dry_bulb_temperature": 5.800000190734863,
+                      "outdoor_dry_bulb_temperature_predicted_1": 5.5,
+                      "outdoor_relative_humidity": 56.5,
+                      "outdoor_relative_humidity_predicted_1": 57.0
                     }
                   }
                 ],
@@ -56640,10 +56640,10 @@
                       "charging_phase_L2_headroom_kw": 1.0270377397537231,
                       "charging_phase_L3_export_headroom_kw": 20.47296142578125,
                       "charging_phase_L3_headroom_kw": 1.0270377397537231,
-                      "electrical_storage_soc": 0.2792123854160309,
-                      "net_electricity_consumption": -1.399999976158142,
-                      "non_shiftable_load": 0.20000000298023224,
-                      "solar_generation": 0.10000000149011612
+                      "electrical_storage_soc": 0.3243616223335266,
+                      "net_electricity_consumption": 0.35472169518470764,
+                      "non_shiftable_load": 0.30000001192092896,
+                      "solar_generation": 0.20000000298023224
                     }
                   },
                   {
@@ -56658,10 +56658,10 @@
                       "charging_phase_L2_headroom_kw": 2.5,
                       "charging_phase_L3_export_headroom_kw": 19.0,
                       "charging_phase_L3_headroom_kw": 2.5,
-                      "electrical_storage_soc": 0.0,
-                      "net_electricity_consumption": 0.0,
-                      "non_shiftable_load": 0.3499999940395355,
-                      "solar_generation": 0.6000000238418579
+                      "electrical_storage_soc": 0.5444444417953491,
+                      "net_electricity_consumption": -0.75,
+                      "non_shiftable_load": 0.550000011920929,
+                      "solar_generation": 0.20000000298023224
                     }
                   }
                 ],
@@ -56819,23 +56819,23 @@
                   {
                     "id": "district_0",
                     "values": {
-                      "carbon_intensity": 0.10000000149011612,
+                      "carbon_intensity": 0.20000000298023224,
                       "day_type": 1.0,
-                      "diffuse_solar_irradiance": 70.0,
-                      "diffuse_solar_irradiance_predicted_1": 50.0,
-                      "direct_solar_irradiance": 40.0,
-                      "direct_solar_irradiance_predicted_1": 30.0,
-                      "electricity_pricing": 0.10999999940395355,
-                      "electricity_pricing_predicted_1": 0.11999999731779099,
-                      "electricity_pricing_predicted_2": 0.12999999523162842,
-                      "electricity_pricing_predicted_3": 0.14000000059604645,
+                      "diffuse_solar_irradiance": 20.0,
+                      "diffuse_solar_irradiance_predicted_1": 20.0,
+                      "direct_solar_irradiance": 10.0,
+                      "direct_solar_irradiance_predicted_1": 15.0,
+                      "electricity_pricing": 0.10000000149011612,
+                      "electricity_pricing_predicted_1": 0.10999999940395355,
+                      "electricity_pricing_predicted_2": 0.11999999731779099,
+                      "electricity_pricing_predicted_3": 0.12999999523162842,
                       "hour": 1.0,
-                      "minutes": 30.0,
+                      "minutes": 45.0,
                       "month": 1.0,
-                      "outdoor_dry_bulb_temperature": 6.099999904632568,
-                      "outdoor_dry_bulb_temperature_predicted_1": 5.800000190734863,
-                      "outdoor_relative_humidity": 57.0,
-                      "outdoor_relative_humidity_predicted_1": 57.5
+                      "outdoor_dry_bulb_temperature": 5.800000190734863,
+                      "outdoor_dry_bulb_temperature_predicted_1": 5.5,
+                      "outdoor_relative_humidity": 56.5,
+                      "outdoor_relative_humidity_predicted_1": 57.0
                     }
                   }
                 ],
@@ -69538,10 +69538,10 @@
                       "charging_phase_L2_headroom_kw": 0.8266401290893555,
                       "charging_phase_L3_export_headroom_kw": 20.673358917236328,
                       "charging_phase_L3_headroom_kw": 0.8266401290893555,
-                      "electrical_storage_soc": 0.2123483568429947,
-                      "net_electricity_consumption": -1.0666667222976685,
-                      "non_shiftable_load": 0.20000000298023224,
-                      "solar_generation": 0.10000000149011612
+                      "electrical_storage_soc": 0.224471777677536,
+                      "net_electricity_consumption": 0.16833996772766113,
+                      "non_shiftable_load": 0.30000001192092896,
+                      "solar_generation": 0.20000000298023224
                     }
                   },
                   {
@@ -69556,10 +69556,10 @@
                       "charging_phase_L2_headroom_kw": 3.8333334922790527,
                       "charging_phase_L3_export_headroom_kw": 17.66666603088379,
                       "charging_phase_L3_headroom_kw": 3.8333334922790527,
-                      "electrical_storage_soc": 0.5605485439300537,
-                      "net_electricity_consumption": 0.5,
-                      "non_shiftable_load": 0.10000000149011612,
-                      "solar_generation": 0.6000000238418579
+                      "electrical_storage_soc": 0.5415607690811157,
+                      "net_electricity_consumption": -0.5833333730697632,
+                      "non_shiftable_load": 0.30000001192092896,
+                      "solar_generation": 0.20000000298023224
                     }
                   }
                 ],
@@ -69717,23 +69717,23 @@
                   {
                     "id": "district_0",
                     "values": {
-                      "carbon_intensity": 0.10000000149011612,
+                      "carbon_intensity": 0.20000000298023224,
                       "day_type": 1.0,
-                      "diffuse_solar_irradiance": 70.0,
-                      "diffuse_solar_irradiance_predicted_1": 50.0,
-                      "direct_solar_irradiance": 40.0,
-                      "direct_solar_irradiance_predicted_1": 30.0,
-                      "electricity_pricing": 0.10999999940395355,
-                      "electricity_pricing_predicted_1": 0.11999999731779099,
-                      "electricity_pricing_predicted_2": 0.12999999523162842,
-                      "electricity_pricing_predicted_3": 0.14000000059604645,
+                      "diffuse_solar_irradiance": 20.0,
+                      "diffuse_solar_irradiance_predicted_1": 20.0,
+                      "direct_solar_irradiance": 10.0,
+                      "direct_solar_irradiance_predicted_1": 15.0,
+                      "electricity_pricing": 0.10000000149011612,
+                      "electricity_pricing_predicted_1": 0.10999999940395355,
+                      "electricity_pricing_predicted_2": 0.11999999731779099,
+                      "electricity_pricing_predicted_3": 0.12999999523162842,
                       "hour": 0.0,
-                      "minutes": 30.0,
+                      "minutes": 35.0,
                       "month": 1.0,
-                      "outdoor_dry_bulb_temperature": 6.099999904632568,
-                      "outdoor_dry_bulb_temperature_predicted_1": 5.800000190734863,
-                      "outdoor_relative_humidity": 57.0,
-                      "outdoor_relative_humidity_predicted_1": 57.5
+                      "outdoor_dry_bulb_temperature": 5.800000190734863,
+                      "outdoor_dry_bulb_temperature_predicted_1": 5.5,
+                      "outdoor_relative_humidity": 56.5,
+                      "outdoor_relative_humidity_predicted_1": 57.0
                     }
                   }
                 ],
@@ -77771,7 +77771,7 @@
                 "charging_constraint_violation_kwh"
               ],
               "values": {
-                "carbon_intensity": 0.10000000149011612,
+                "carbon_intensity": 0.20000000298023224,
                 "charging_building_export_headroom_kw": 46.99999989569187,
                 "charging_building_headroom_kw": 7.000000104308128,
                 "charging_constraint_violation_kwh": 0.0,
@@ -77811,28 +77811,28 @@
                 "deferrable_appliance_washer_1_slack_ratio": -1.0,
                 "deferrable_appliance_washer_1_slack_steps": -1.0,
                 "deferrable_appliance_washer_1_urgency_ratio": -1.0,
-                "diffuse_solar_irradiance": 70.0,
-                "diffuse_solar_irradiance_predicted_1": 50.0,
-                "direct_solar_irradiance": 40.0,
-                "direct_solar_irradiance_predicted_1": 30.0,
+                "diffuse_solar_irradiance": 20.0,
+                "diffuse_solar_irradiance_predicted_1": 20.0,
+                "direct_solar_irradiance": 10.0,
+                "direct_solar_irradiance_predicted_1": 15.0,
                 "electric_vehicle_charger_charger_1_1_connected_state": 0,
                 "electric_vehicle_charger_charger_1_1_incoming_state": 1,
-                "electrical_storage_soc": 0.6244616508483887,
-                "electricity_pricing": 0.10999999940395355,
-                "electricity_pricing_predicted_1": 0.11999999731779099,
-                "electricity_pricing_predicted_2": 0.12999999523162842,
-                "electricity_pricing_predicted_3": 0.14000000059604645,
+                "electrical_storage_soc": 0.5673390030860901,
+                "electricity_pricing": 0.10000000149011612,
+                "electricity_pricing_predicted_1": 0.10999999940395355,
+                "electricity_pricing_predicted_2": 0.11999999731779099,
+                "electricity_pricing_predicted_3": 0.12999999523162842,
                 "hour": 1,
-                "incoming_electric_vehicle_at_charger_charger_1_1_estimated_arrival_time": 3,
-                "minutes": 30,
+                "incoming_electric_vehicle_at_charger_charger_1_1_estimated_arrival_time": 2,
+                "minutes": 45,
                 "month": 1,
-                "net_electricity_consumption": 1.0,
-                "non_shiftable_load": 0.10000000149011612,
-                "outdoor_dry_bulb_temperature": 6.099999904632568,
-                "outdoor_dry_bulb_temperature_predicted_1": 5.800000190734863,
-                "outdoor_relative_humidity": 57.0,
-                "outdoor_relative_humidity_predicted_1": 57.5,
-                "solar_generation": 0.6000000238418579
+                "net_electricity_consumption": -0.75,
+                "non_shiftable_load": 0.30000001192092896,
+                "outdoor_dry_bulb_temperature": 5.800000190734863,
+                "outdoor_dry_bulb_temperature_predicted_1": 5.5,
+                "outdoor_relative_humidity": 56.5,
+                "outdoor_relative_humidity_predicted_1": 57.0,
+                "solar_generation": 0.20000000298023224
               }
             }
           ],
