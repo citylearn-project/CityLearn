@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from platformdirs import user_cache_dir
 import shutil
+import tempfile
 from typing import Any, Dict, Iterable, Mapping, List, Optional, Union
 import numpy as np
 import pandas as pd
@@ -239,10 +240,9 @@ class DataSet:
             local_root_directory = self._find_local_dataset_root(str(name))
 
             if local_root_directory is not None:
-                if os.path.isdir(root_directory):
-                    shutil.rmtree(root_directory)
-
-                shutil.copytree(local_root_directory, root_directory)
+                self._publish_directory(
+                    root_directory, lambda staging: shutil.copytree(local_root_directory, staging, dirs_exist_ok=True)
+                )
 
             else:
                 if self.offline:
@@ -261,27 +261,103 @@ class DataSet:
                     'from cache unless DataSet.clear_cache is run first.'
                 )
                 contents = self.get_github_contents(path)
+                session = self.get_requests_session()
 
-                if os.path.isdir(root_directory):
-                    shutil.rmtree(root_directory)
+                def download(staging: str):
+                    for c in contents:
+                        if c['type'] == 'file':
+                            relative_directory_content = c['path'].split(f'{dataset_name}/')[-1].split('/')[:-1]
+                            filepath = os.path.join(staging, *relative_directory_content, c['name'])
+                            self._download_file(c['download_url'], filepath, session=session)
 
-                for c in contents:
-                    if c['type'] == 'file':
-                        relative_directory_content = c['path'].split(f'{dataset_name}/')[-1].split('/')[:-1]
-                        content_directory = os.path.join(root_directory, *relative_directory_content)
-                        filepath = os.path.join(content_directory, c['name'])
-                        os.makedirs(content_directory, exist_ok=True)
-                        response = self.get_requests_session().get(c['download_url'])
-
-                        with open(filepath, 'wb') as f:
-                            f.write(response.content)
+                self._publish_directory(root_directory, download)
 
         if directory is not None:
-            os.makedirs(directory, exist_ok=True)
-            shutil.copytree(root_directory, directory, dirs_exist_ok=True)
-            schema_filepath = os.path.join(directory, dataset_name, 'schema.json')
-    
+            # Copy into `directory/<dataset name>`, the location of the returned schema.
+            target_directory = os.path.join(directory, dataset_name)
+            os.makedirs(target_directory, exist_ok=True)
+            shutil.copytree(root_directory, target_directory, dirs_exist_ok=True)
+            schema_filepath = os.path.join(target_directory, 'schema.json')
+
         return schema_filepath
+
+    @staticmethod
+    def _publish_directory(target_directory: str, populate) -> None:
+        """Fill a dataset folder in a private staging folder, then move it into place.
+
+        Concurrent first downloads used to write into, and delete, the same cache folder. A dataset
+        now appears under `target_directory` only when complete; a process that loses the race to
+        publish keeps the complete copy that won.
+        """
+
+        parent = os.path.dirname(target_directory)
+        os.makedirs(parent, exist_ok=True)
+        staging = tempfile.mkdtemp(prefix=f'.{os.path.basename(target_directory)}-', dir=parent)
+
+        try:
+            populate(staging)
+            schema_filepath = os.path.join(target_directory, 'schema.json')
+
+            if os.path.isdir(target_directory) and not os.path.isfile(schema_filepath):
+                # Incomplete folder left by an interrupted download of an earlier version.
+                shutil.rmtree(target_directory, ignore_errors=True)
+
+            try:
+                os.rename(staging, target_directory)
+                staging = None
+
+            except OSError:
+                if not os.path.isfile(schema_filepath):
+                    raise
+
+        finally:
+            if staging is not None:
+                shutil.rmtree(staging, ignore_errors=True)
+
+    @staticmethod
+    def _copy_file(source: str, filepath: str) -> None:
+        """Copy under a temporary name, then move into place, so readers never see a partial file."""
+
+        directory = os.path.dirname(filepath)
+        os.makedirs(directory, exist_ok=True)
+        descriptor, temporary = tempfile.mkstemp(prefix='.copy-', dir=directory)
+        os.close(descriptor)
+
+        try:
+            shutil.copyfile(source, temporary)
+            os.replace(temporary, filepath)
+
+        except BaseException:
+            if os.path.exists(temporary):
+                os.remove(temporary)
+
+            raise
+
+    def _download_file(self, url: str, filepath: str, session: requests.Session = None) -> None:
+        """Download `url` to `filepath`, raising on an error response instead of caching it as data.
+
+        The content is written under a temporary name and then moved into place, so an interrupted
+        download never leaves a partial file under the cached name.
+        """
+
+        session = self.get_requests_session() if session is None else session
+        response = session.get(url)
+        response.raise_for_status()
+        directory = os.path.dirname(filepath)
+        os.makedirs(directory, exist_ok=True)
+        descriptor, temporary = tempfile.mkstemp(prefix='.download-', dir=directory)
+
+        try:
+            with os.fdopen(descriptor, 'wb') as f:
+                f.write(response.content)
+
+            os.replace(temporary, filepath)
+
+        except BaseException:
+            if os.path.exists(temporary):
+                os.remove(temporary)
+
+            raise
 
     def get_dataset_names(self) -> List[str]:
         filepath = os.path.join(self.cache_directory, 'dataset_names.json')
@@ -337,7 +413,7 @@ class DataSet:
             local_filepath = self._find_local_misc_filepath(self.PV_CHOICES_FILENAME)
 
             if local_filepath is not None:
-                shutil.copy(local_filepath, filepath)
+                self._copy_file(local_filepath, filepath)
 
         # check that file DNE
         if not os.path.isfile(filepath):
@@ -355,10 +431,7 @@ class DataSet:
                         'from cache unless DataSet.clear_cache is run first.')
             contents = self.get_github_contents(path)
             url = [f['download_url'] for f in contents if f['name'] == self.PV_CHOICES_FILENAME][0]
-            response = self.get_requests_session().get(url)
-
-            with open(filepath, 'wb') as f:
-                f.write(response.content)
+            self._download_file(url, filepath)
 
         else:
             pass
@@ -385,7 +458,7 @@ class DataSet:
             local_filepath = self._find_local_misc_filepath(self.BATTERY_CHOICES_FILENAME)
 
             if local_filepath is not None:
-                shutil.copy(local_filepath, filepath)
+                self._copy_file(local_filepath, filepath)
 
         # check that file DNE
         if not os.path.isfile(filepath):
@@ -403,10 +476,7 @@ class DataSet:
                         'from cache unless DataSet.clear_cache is run first.')
             contents = self.get_github_contents(path)
             url = [f['download_url'] for f in contents if f['name'] == self.BATTERY_CHOICES_FILENAME][0]
-            response = self.get_requests_session().get(url)
-
-            with open(filepath, 'wb') as f:
-                f.write(response.content)
+            self._download_file(url, filepath)
 
         else:
             pass
@@ -450,7 +520,8 @@ class DataSet:
         kwargs = {
             'total': 5,
             'backoff_factor': 1,
-            'status_forcelist': [400, 502, 503, 504],
+            # 429: GitHub rate limiting; Retry honours its Retry-After header.
+            'status_forcelist': [400, 429, 500, 502, 503, 504],
             **kwargs
         }
         retries = Retry(**kwargs)
