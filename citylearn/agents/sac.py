@@ -1,4 +1,3 @@
-import logging
 from typing import Any, List, Union
 import numpy as np
 import numpy.typing as npt
@@ -32,6 +31,12 @@ class SAC(RLC):
 
         Notes
         -----
+        Defaults adapt to short episodes. If the default schedule cannot standardize the replay buffer before
+        exploration ends, the default `batch_size` shrinks to the transitions collected by
+        `standardize_start_time_step`, and the default `end_exploration_time_step` (and, for MARLISA's PCA, the
+        default `standardize_start_time_step`) moves later as needed. Given values are never changed; an
+        inconsistent combination raises :py:class:`ValueError` (see :meth:`set_training_schedule`).
+
         Exploration actions (from action spaces that are not already seeded), replay mini-batches and policy noise
         are drawn from generators derived from :attr:`random_seed`, the environment's seed, so runs are repeatable.
         """
@@ -61,6 +66,10 @@ class SAC(RLC):
         self.r_norm_mean = [None for _ in self.action_space]
         self.r_norm_std = [None for _ in self.action_space]
         self.set_networks()
+        self.set_training_schedule(
+            batch_size=kwargs.get('batch_size'), standardize_start_time_step=kwargs.get('standardize_start_time_step'),
+            end_exploration_time_step=kwargs.get('end_exploration_time_step'),
+        )
 
     def update(self, observations: List[List[float]], actions: List[List[float]], reward: List[float], next_observations: List[List[float]], terminated: bool, truncated: bool):
         r"""Update replay buffer.
@@ -229,15 +238,16 @@ class SAC(RLC):
         return (reward - self.r_norm_mean[index])/self.r_norm_std[index]
 
     def get_normalized_observations(self, index: int, observations: List[float]) -> npt.NDArray[np.float64]:
-        try:
-            return (np.array(observations, dtype = float) - self.norm_mean[index])/self.norm_std[index]
-        except:
-            # self.time_step >= self.standardize_start_time_step and self.batch_size <= len(self.replay_buffer[i])
-            logging.debug('obs:',observations)
-            logging.debug('mean:',self.norm_mean[index])
-            logging.debug('std:',self.norm_std[index])
-            logging.debug(self.time_step, self.standardize_start_time_step, self.batch_size, len(self.replay_buffer[0]))
-            assert False
+        if self.norm_mean[index] is None:
+            raise RuntimeError(
+                f'{type(self).__name__} cannot use its policy at time step {self.time_step}: the policy needs observations'
+                f' standardized with statistics from the replay buffer, which are computed once time step >='
+                f' standardize_start_time_step ({self.standardize_start_time_step}) and the buffer holds batch_size'
+                f' ({self.batch_size}) transitions, i.e. at time step {self._get_standardization_time_step()} when learning'
+                ' from every time step. Learn with deterministic=False until then.'
+            )
+
+        return (np.array(observations, dtype = float) - self.norm_mean[index])/self.norm_std[index]
 
     @staticmethod
     def get_normalization_scale(std: Union[float, npt.NDArray[np.float64]]) -> Union[float, npt.NDArray[np.float64]]:
@@ -266,6 +276,93 @@ class SAC(RLC):
         for i, space in enumerate(self.action_space):
             if getattr(space, '_np_random', None) is None:
                 space.seed(self._get_seed(0, i))
+
+    @property
+    def _replay_buffer_delay(self) -> int:
+        """Number of initial :meth:`update` calls that add no transition to the replay buffer."""
+
+        return 0
+
+    @property
+    def _minimum_standardization_size(self) -> int:
+        """Fewest transitions the replay buffer must hold when it is standardized."""
+
+        return 1
+
+    def _get_standardization_time_step(self) -> int:
+        """Time step of the :meth:`update` that standardizes the replay buffer, when every time step is learned from."""
+
+        return max(self.standardize_start_time_step, self.batch_size + self._replay_buffer_delay)
+
+    def set_training_schedule(
+        self, batch_size: int = None, standardize_start_time_step: int = None, end_exploration_time_step: int = None
+    ):
+        r"""Adapt the default training schedule to the episode, then validate it.
+
+        The policy acts from time step `end_exploration_time_step` + 1 and needs the standardization statistics,
+        which :meth:`update` computes at the first time step >= `standardize_start_time_step` at which the replay
+        buffer holds `batch_size` transitions (and, for MARLISA, at least as many as its PCA has components).
+        Only if the schedule cannot meet this are defaults adapted, in order: the default
+        `standardize_start_time_step` waits for the minimum number of transitions, the default `batch_size` shrinks
+        to the transitions collected by `standardize_start_time_step`, and the default `end_exploration_time_step`
+        moves to the time step before standardization. Schedules that already meet it are left unchanged.
+
+        Parameters
+        ----------
+        batch_size: int, optional
+            User-given batch size, None if it is the default.
+        standardize_start_time_step: int, optional
+            User-given earliest standardization time step, None if it is the default.
+        end_exploration_time_step: int, optional
+            User-given end of exploration, None if it is the default.
+
+        Raises
+        ------
+        ValueError
+            If the schedule cannot be met without changing given values.
+        """
+
+        delay = self._replay_buffer_delay
+        minimum = self._minimum_standardization_size
+        capacity = int(self.replay_buffer_capacity)
+
+        def is_consistent() -> bool:
+            time_step = self._get_standardization_time_step()
+
+            return 1 <= self.batch_size <= capacity\
+                and time_step <= self.end_exploration_time_step + 1\
+                    and min(time_step - delay, capacity) >= minimum
+
+        if standardize_start_time_step is None and not is_consistent():
+            self.standardize_start_time_step = max(self.standardize_start_time_step, minimum + delay)
+
+        if batch_size is None and not is_consistent():
+            self.batch_size = int(min(self.batch_size, capacity, max(self.standardize_start_time_step - delay, 1)))
+
+        if end_exploration_time_step is None and not is_consistent():
+            self.end_exploration_time_step = max(self.end_exploration_time_step, self._get_standardization_time_step() - 1)
+
+        name = type(self).__name__
+        time_step = self._get_standardization_time_step()
+
+        if not 1 <= self.batch_size <= capacity:
+            raise ValueError(f'{name}: batch_size ({self.batch_size}) must be between 1 and replay_buffer_capacity ({capacity}).')
+
+        if time_step > self.end_exploration_time_step + 1:
+            raise ValueError(
+                f'{name} uses its policy after end_exploration_time_step ({self.end_exploration_time_step}) but cannot'
+                f' standardize observations before time step {time_step}: that needs time step >= standardize_start_time_step'
+                f' ({self.standardize_start_time_step}) and batch_size ({self.batch_size}) transitions in the replay buffer'
+                + (f', which receives its first transition at time step {delay + 1}' if delay > 0 else '')
+                + f'. Set end_exploration_time_step >= {time_step - 1}, or lower standardize_start_time_step or batch_size.'
+            )
+
+        if min(time_step - delay, capacity) < minimum:
+            raise ValueError(
+                f'{name} would standardize its replay buffer at time step {time_step} with'
+                f' {min(time_step - delay, capacity)} transitions, but needs at least {minimum} (PCA n_components).'
+                ' Raise standardize_start_time_step, batch_size or replay_buffer_capacity, or lower pca_compression.'
+            )
 
     def get_encoded_observations(self, index: int, observations: List[float]) -> npt.NDArray[np.float64]:
         return np.array([j for j in np.hstack(self.encoders[index]*np.array(observations, dtype=float)) if j != None], dtype = float)

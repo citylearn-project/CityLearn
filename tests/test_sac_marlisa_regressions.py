@@ -18,6 +18,8 @@ from citylearn.citylearn import CityLearnEnv
 DATASET = Path(__file__).resolve().parents[1] / 'data' / 'datasets' / 'citylearn_challenge_2022_phase_all'
 # Encoded SAC/MARLISA observation layout for this dataset: month -> (sin, cos), day_type -> 8 one-hot, hour -> (sin, cos), ...
 MONTH_COLUMNS = [0, 1]
+# 36 encoded observations + 2 coordination variables: MARLISA's PCA (default pca_compression=1) needs 38 transitions.
+MARLISA_PCA_COMPONENTS = 38
 
 
 @pytest.fixture(autouse=True)
@@ -103,6 +105,76 @@ def test_marlisa_standardisation_centres_but_does_not_amplify_warm_up_constants(
     assert agent.pca_flag[0]
     np.testing.assert_array_equal(agent.norm_std[0][MONTH_COLUMNS], 1.0)
     assert agent.r_norm_std[0] == 1.0
+
+
+# --- training schedule (defaults and validation) -----------------------------------------------------------------
+
+def test_sac_defaults_learn_on_episodes_shorter_than_the_default_batch():
+    env = _env(episode_time_steps=24)
+    agent = SAC(env, hidden_dimension=[8, 8])
+
+    # The default batch (256) shrinks to the 23 transitions of the first episode, so the default schedule
+    # (standardise after the first episode, then use the policy) works as for long episodes.
+    assert (agent.batch_size, agent.standardize_start_time_step, agent.end_exploration_time_step) == (23, 23, 24)
+    agent.learn(episodes=3, deterministic_finish=True)
+
+    assert agent.normalized[0]
+    assert agent.time_step == 3*23
+
+
+def test_marlisa_defaults_learn_on_short_episodes():
+    env = _env(episode_time_steps=24, buildings=(0, 1))
+    agent = MARLISA(env, hidden_dimension=[8, 8])
+
+    # PCA needs as many transitions as components, which the replay buffer holds 4 steps later (it fills after the
+    # state estimator's first two fits plus one step of coordination look-ahead); exploration lasts until then.
+    assert agent.standardize_start_time_step == MARLISA_PCA_COMPONENTS + 4
+    assert agent.batch_size == MARLISA_PCA_COMPONENTS
+    assert agent.end_exploration_time_step == MARLISA_PCA_COMPONENTS + 4 - 1
+    agent.learn(episodes=3)
+
+    assert all(agent.pca_flag)
+    assert agent.time_step > agent.end_exploration_time_step
+
+
+def test_rl_default_schedule_unchanged_for_long_episodes():
+    env = _env(episode_time_steps=None)
+    sac = SAC(env, hidden_dimension=[8, 8])
+    marlisa = MARLISA(env, hidden_dimension=[8, 8])
+
+    assert (sac.batch_size, sac.standardize_start_time_step, sac.end_exploration_time_step) \
+        == (256, env.time_steps - 1, env.time_steps)
+    assert (marlisa.batch_size, marlisa.standardize_start_time_step, marlisa.end_exploration_time_step) \
+        == (100, env.time_steps - 1, env.time_steps)
+
+
+@pytest.mark.parametrize('kwargs, match', [
+    ({'batch_size': 64}, 'end_exploration_time_step'),
+    ({'standardize_start_time_step': 40, 'end_exploration_time_step': 30}, 'standardize_start_time_step'),
+    ({'batch_size': 512, 'replay_buffer_capacity': 100}, 'replay_buffer_capacity'),
+])
+def test_sac_inconsistent_schedule_raises_value_error(kwargs, match):
+    env = _env(episode_time_steps=24)
+    kwargs = {'end_exploration_time_step': 24, **kwargs}
+
+    with pytest.raises(ValueError, match=match):
+        SAC(env, hidden_dimension=[8, 8], **kwargs)
+
+
+def test_marlisa_schedule_with_too_few_transitions_for_pca_raises_value_error():
+    env = _env(episode_time_steps=24, buildings=(0, 1))
+
+    with pytest.raises(ValueError, match='n_components'):
+        MARLISA(env, hidden_dimension=[8, 8], batch_size=8, standardize_start_time_step=12, end_exploration_time_step=15)
+
+
+def test_sac_policy_before_standardisation_raises_clear_error():
+    env = _env(episode_time_steps=24)
+    agent = SAC(env, hidden_dimension=[8, 8])
+    observations, _ = env.reset()
+
+    with pytest.raises(RuntimeError, match='standardi'):
+        agent.predict(observations, deterministic=True)
 
 
 # --- reproducibility from the environment seed --------------------------------------------------------------------

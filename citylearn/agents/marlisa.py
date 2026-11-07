@@ -29,6 +29,7 @@ class MARLISA(SAC):
     ):
         self.__coordination_variables_history = None
         self.__pending_transitions = None
+        self.__start_regression_time_step = None
         self.information_sharing = information_sharing
 
         super().__init__(*args, **kwargs)
@@ -51,6 +52,10 @@ class MARLISA(SAC):
         self.regression_encoders = self.set_regression_encoders()
         self.set_energy_coefficients()
         self.set_pca()
+        self.set_training_schedule(
+            batch_size=kwargs.get('batch_size'), standardize_start_time_step=kwargs.get('standardize_start_time_step'),
+            end_exploration_time_step=kwargs.get('end_exploration_time_step'),
+        )
 
     @property
     def regression_buffer_capacity(self) -> int:
@@ -477,6 +482,26 @@ class MARLISA(SAC):
     def set_networks(self):
         internal_observation_count = self.__COORDINATION_VARIABLE_COUNT if self.information_sharing else 0
         return super().set_networks(internal_observation_count=internal_observation_count)
+
+    def set_training_schedule(self, *args, **kwargs):
+        # SAC.__init__ calls this before start_regression_time_step exists; MARLISA.__init__ calls it again afterwards.
+        if self.start_regression_time_step is not None:
+            super().set_training_schedule(*args, **kwargs)
+
+        else:
+            pass
+
+    @property
+    def _replay_buffer_delay(self) -> int:
+        # Transitions enter the replay buffer once the state estimator has been fitted twice (regression_flag > 1),
+        # i.e. from the update at time step max(start_regression_time_step, 1) + 2; with information sharing, each
+        # waits one more update for the coordination variables of its next observation.
+        return max(self.start_regression_time_step, 1) + 1 + int(self.information_sharing)
+
+    @property
+    def _minimum_standardization_size(self) -> int:
+        # PCA is fitted on the standardized replay buffer and needs at least n_components samples.
+        return max([1] + [p.n_components for p in self.pca])
 
     def __push_transition(self, index: int, o, a, r, n, terminated: bool):
         # Executed during the training phase. States and rewards pushed into the replay buffer are normalized and processed using PCA.
