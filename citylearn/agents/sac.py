@@ -93,10 +93,10 @@ class SAC(RLC):
                     # calculate normalized observations and rewards
                     X = np.array([j[0] for j in self.replay_buffer[i].buffer], dtype = float)
                     self.norm_mean[i] = np.nanmean(X, axis=0)
-                    self.norm_std[i] = np.nanstd(X, axis=0) + 1e-5
+                    self.norm_std[i] = self.get_normalization_scale(np.nanstd(X, axis=0))
                     R = np.array([j[2] for j in self.replay_buffer[i].buffer], dtype = float)
                     self.r_norm_mean[i] = np.nanmean(R, dtype = float)
-                    self.r_norm_std[i] = np.nanstd(R, dtype = float)/self.reward_scaling + 1e-5
+                    self.r_norm_std[i] = self.get_normalization_scale(np.nanstd(R, dtype = float)/self.reward_scaling)
                     
                     # update buffer with normalization
                     self.replay_buffer[i].buffer = [(
@@ -229,6 +229,18 @@ class SAC(RLC):
             logging.debug('std:',self.norm_std[index])
             logging.debug(self.time_step, self.standardize_start_time_step, self.batch_size, len(self.replay_buffer[0]))
             assert False
+
+    @staticmethod
+    def get_normalization_scale(std: Union[float, npt.NDArray[np.float64]]) -> Union[float, npt.NDArray[np.float64]]:
+        r"""Divisor used to standardize observations and rewards: `std` + 1e-5, or 1 where `std` <= 1e-5.
+
+        A feature (or reward) that does not vary in the replay buffer when the statistics are computed, e.g. `month`
+        in a warm-up that stays within one month, has no usable scale. Dividing by ~1e-5 would turn any later change
+        into a z-score of ~1e5 and saturate the policy, so such features are centred but not rescaled.
+        """
+
+        std = np.asarray(std, dtype=float)
+        return np.where(std > 1e-5, std + 1e-5, 1.0)[()]
 
     def get_encoded_observations(self, index: int, observations: List[float]) -> npt.NDArray[np.float64]:
         return np.array([j for j in np.hstack(self.encoders[index]*np.array(observations, dtype=float)) if j != None], dtype = float)

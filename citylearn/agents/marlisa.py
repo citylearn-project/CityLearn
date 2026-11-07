@@ -198,13 +198,13 @@ class MARLISA(SAC):
                     # calculate normalized observations and rewards
                     X = np.array([j[0] for j in self.replay_buffer[i].buffer], dtype=float)
                     self.norm_mean[i] = np.nanmean(X, axis=0)
-                    self.norm_std[i] = np.nanstd(X, axis=0) + 1e-5
+                    self.norm_std[i] = self.get_normalization_scale(np.nanstd(X, axis=0))
                     X = self.get_normalized_observations(i, X)
                     self.pca[i].fit(X)
 
                     R = np.array([j[2] for j in self.replay_buffer[i].buffer], dtype=float)
                     self.r_norm_mean[i] = np.nanmean(R, dtype=float)
-                    self.r_norm_std[i] = np.nanstd(R, dtype=float)/self.reward_scaling + 1e-5
+                    self.r_norm_std[i] = self.get_normalization_scale(np.nanstd(R, dtype=float)/self.reward_scaling)
 
                     # update buffer with normalization
                     self.replay_buffer[i].buffer = [(
