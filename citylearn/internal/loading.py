@@ -644,6 +644,13 @@ class CityLearnLoadingService:
         else:
             loss_coefficient = float(loss_coefficient)
 
+        # Each EV draws its unspecified battery parameters (efficiency, curves, capacity fade) from
+        # its own seed, as `initial_soc` above does; a shared seed gave every EV identical values.
+        battery_random_seed = attrs.get('random_seed')
+        if battery_random_seed is None:
+            seed_source = f"{schema['random_seed']}:{electric_vehicle_name}:battery"
+            battery_random_seed = int(hashlib.md5(seed_source.encode('utf-8')).hexdigest()[:8], 16)
+
         battery_kwargs = {
             'capacity': capacity,
             'nominal_power': nominal_power,
@@ -651,7 +658,7 @@ class CityLearnLoadingService:
             'loss_coefficient': loss_coefficient,
             'seconds_per_time_step': schema['seconds_per_time_step'],
             'time_step_ratio': time_step_ratio,
-            'random_seed': schema['random_seed'],
+            'random_seed': battery_random_seed,
             'episode_tracker': episode_tracker,
             'depth_of_discharge': depth_of_discharge,
         }
