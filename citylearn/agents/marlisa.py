@@ -399,7 +399,7 @@ class MARLISA(SAC):
         
         for i, s in enumerate(self.observation_space):
             n_components = int((self.pca_compression)*(addition + len(self.get_encoded_observations(i, s.low))))
-            self.pca[i] = PCA(n_components=n_components)
+            self.pca[i] = PCA(n_components=n_components, random_state=self._get_seed(3, i))
 
     def set_energy_coefficients(self):
         self.energy_size_coefficient = []

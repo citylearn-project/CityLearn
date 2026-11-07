@@ -103,3 +103,47 @@ def test_marlisa_standardisation_centres_but_does_not_amplify_warm_up_constants(
     assert agent.pca_flag[0]
     np.testing.assert_array_equal(agent.norm_std[0][MONTH_COLUMNS], 1.0)
     assert agent.r_norm_std[0] == 1.0
+
+
+# --- reproducibility from the environment seed --------------------------------------------------------------------
+
+def _policy_parameters(agent):
+    return [p.detach().clone() for net in agent.policy_net for p in net.parameters()]
+
+
+def _actions(agent):
+    return [[list(a) for a in history if len(a)] for history in agent.actions]
+
+
+@pytest.mark.parametrize('agent_class, buildings, episodes, kwargs', [
+    (SAC, (0,), 2, {'batch_size': 8, 'standardize_start_time_step': 10, 'end_exploration_time_step': 15}),
+    (MARLISA, (0, 1), 3, {
+        'batch_size': 8, 'start_regression_time_step': 2, 'standardize_start_time_step': 42,
+        'end_exploration_time_step': 45,
+    }),
+])
+def test_agents_with_identically_seeded_envs_act_and_learn_identically(agent_class, buildings, episodes, kwargs):
+    agents = [agent_class(_env(buildings=buildings, random_seed=7), hidden_dimension=[8, 8], **kwargs) for _ in range(2)]
+
+    agents[0].learn(episodes=episodes)
+    # Global generators are consumed between the runs; a seeded agent must not depend on them.
+    random.random(), np.random.random(), torch.rand(3)
+    agents[1].learn(episodes=episodes)
+
+    assert agents[0].time_step > agents[0].end_exploration_time_step
+    assert _actions(agents[0]) == _actions(agents[1])
+
+    for a, b in zip(_policy_parameters(agents[0]), _policy_parameters(agents[1])):
+        assert torch.equal(a, b)
+
+
+def test_sac_exploration_honours_explicitly_seeded_action_spaces():
+    env = _env()
+    agent = SAC(env, hidden_dimension=[8, 8])
+    agent.action_space[0].seed(123)
+    reference = copy.deepcopy(agent.action_space[0])
+    observations, _ = env.reset()
+
+    actions = agent.predict(observations)
+
+    np.testing.assert_array_equal(actions[0], agent.action_scaling_coefficient*reference.sample())

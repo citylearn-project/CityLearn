@@ -29,6 +29,11 @@ class SAC(RLC):
         ----------------
         **kwargs : Any
             Other keyword arguments used to initialize super class.
+
+        Notes
+        -----
+        Exploration actions (from action spaces that are not already seeded), replay mini-batches and policy noise
+        are drawn from generators derived from :attr:`random_seed`, the environment's seed, so runs are repeatable.
         """
 
         super().__init__(env, **kwargs)
@@ -37,7 +42,11 @@ class SAC(RLC):
         self.normalized = [False for _ in self.action_space]
         self.soft_q_criterion = nn.SmoothL1Loss()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.replay_buffer = [ReplayBuffer(int(self.replay_buffer_capacity)) for _ in self.action_space]
+        self._seed_action_spaces()
+        self.replay_buffer = [
+            ReplayBuffer(int(self.replay_buffer_capacity), seed=self._get_seed(1, i)) for i in range(len(self.action_space))
+        ]
+        self._torch_generator = torch.Generator(device=self.device).manual_seed(self._get_seed(2))
         self.soft_q_net1 = [None for _ in self.action_space]
         self.soft_q_net2 = [None for _ in self.action_space]
         self.target_soft_q_net1 = [None for _ in self.action_space]
@@ -242,6 +251,22 @@ class SAC(RLC):
         std = np.asarray(std, dtype=float)
         return np.where(std > 1e-5, std + 1e-5, 1.0)[()]
 
+    def _get_seed(self, *key: int) -> int:
+        """Seed of one of the agent's random streams, derived from :attr:`random_seed` and `key`."""
+
+        return int(np.random.SeedSequence(int(self.random_seed), spawn_key=key).generate_state(1)[0])
+
+    def _seed_action_spaces(self):
+        """Seed the action spaces that exploration samples from, unless they are already seeded.
+
+        An unseeded gymnasium space seeds itself from OS entropy on first use. Spaces the caller has seeded keep
+        their stream.
+        """
+
+        for i, space in enumerate(self.action_space):
+            if getattr(space, '_np_random', None) is None:
+                space.seed(self._get_seed(0, i))
+
     def get_encoded_observations(self, index: int, observations: List[float]) -> npt.NDArray[np.float64]:
         return np.array([j for j in np.hstack(self.encoders[index]*np.array(observations, dtype=float)) if j != None], dtype = float)
 
@@ -263,7 +288,7 @@ class SAC(RLC):
                 target_param.data.copy_(param.data)
 
             # Policy
-            self.policy_net[i] = PolicyNetwork(observation_dimension, self.action_dimension[i], self.action_space[i], self.action_scaling_coefficient, self.hidden_dimension).to(self.device)
+            self.policy_net[i] = PolicyNetwork(observation_dimension, self.action_dimension[i], self.action_space[i], self.action_scaling_coefficient, self.hidden_dimension, generator=self._torch_generator).to(self.device)
             self.soft_q_optimizer1[i] = optim.Adam(self.soft_q_net1[i].parameters(), lr=self.lr)
             self.soft_q_optimizer2[i] = optim.Adam(self.soft_q_net2[i].parameters(), lr=self.lr)
             self.policy_optimizer[i] = optim.Adam(self.policy_net[i].parameters(), lr=self.lr)
