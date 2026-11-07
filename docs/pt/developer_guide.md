@@ -20,6 +20,21 @@ Dependencias opcionais:
 | PV autosizing | `.venv/bin/pip install ".[pysam]"` |
 | Checks de build | `.venv/bin/pip install build twine` |
 
+O `.gitattributes` torna cada checkout identico ao repositorio byte a byte: os
+ficheiros de texto usam LF e os ficheiros em `data/` e `tests/data/` nunca sao
+convertidos, mesmo com o `core.autocrlf=true` por omissao do Git for Windows. Os
+manifestos de experiencias calculam hashes destes ficheiros, que assim coincidem
+em todas as plataformas. Um checkout anterior ao `.gitattributes` pode ainda ter
+copias CRLF; o `git status` mostra os ficheiros de dados convertidos como
+modificados. Atualizar esse checkout uma vez (descarta alteracoes nao commitadas
+em ficheiros versionados) e limpar a cache de datasets, que pode conter copias
+feitas a partir do checkout antigo:
+
+```console
+git rm --cached -r -q . && git reset -q --hard
+python -c "from citylearn.data import DataSet; DataSet().clear_cache()"
+```
+
 ## Validacao Principal
 
 | Check | Comando |
