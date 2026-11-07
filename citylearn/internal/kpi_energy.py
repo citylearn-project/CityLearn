@@ -116,7 +116,7 @@ def building_records(kpi: "CityLearnKPIService", building, t_start, t_end,
         'value': kpi._safe_div(ec_c, ec_b),
     }, {
         'cost_function': 'zero_net_energy',
-        'value': kpi._safe_div(zne_c, zne_b),
+        'value': kpi._signed_ratio(zne_c, zne_b),
     }, {
         'cost_function': 'carbon_emissions_total',
         'value': kpi._safe_div(ce_c, ce_b),

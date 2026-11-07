@@ -166,6 +166,22 @@ class CityLearnKPIService:
         return c / b
 
     @staticmethod
+    def _signed_ratio(control_value: float, baseline_value: float):
+        """Lower-is-better ratio for totals that can be negative, e.g. net exchange.
+
+        Equals `control / baseline` for a positive baseline. For a negative
+        baseline (a net exporter) it is `1 + (control - baseline) / |baseline|`,
+        so a higher control total never reads as an improvement.
+        """
+        ratio = CityLearnKPIService._safe_div(control_value, baseline_value)
+        b = CityLearnKPIService._to_scalar(baseline_value, 0.0)
+
+        if ratio is None or b >= -float(ZERO_DIVISION_PLACEHOLDER):
+            return ratio
+
+        return 2.0 - ratio
+
+    @staticmethod
     def _window_steps(window_seconds: float, seconds_per_time_step: float) -> int:
         step_seconds = max(float(seconds_per_time_step), 1.0)
         return max(1, int(round(float(window_seconds) / step_seconds)))
@@ -1832,6 +1848,7 @@ class CityLearnKPIService:
             control_variant: Optional[str] = None,
             bau_variant: Optional[str] = None,
             delta_variant: Optional[str] = None,
+            signed: bool = False,
         ):
             control_total_key = v2(level, family, total_subfamily, control_total_metric, control_variant, unit)
             bau_total = bau(level, name, control_total_key)
@@ -1847,7 +1864,7 @@ class CityLearnKPIService:
                 level,
                 name,
                 v2(level, family, 'ratio_to_business_as_usual', ratio_metric, None, 'ratio'),
-                self._safe_div(control_total, bau_total),
+                (self._signed_ratio if signed else self._safe_div)(control_total, bau_total),
             )
 
             control_daily_key = v2(level, family, daily_subfamily, control_daily_metric, control_variant, unit)
@@ -1908,6 +1925,7 @@ class CityLearnKPIService:
                     delta_daily_metric='delta_to_business_as_usual',
                     ratio_metric='total',
                     unit='eur',
+                    signed=True,
                 )
                 add_total_daily_ratio(
                     level,
@@ -1947,6 +1965,7 @@ class CityLearnKPIService:
                         control_variant='control',
                         bau_variant='business_as_usual',
                         delta_variant='delta_to_business_as_usual',
+                        signed=metric == 'net_exchange',
                     )
 
                 for metric, unit in [
@@ -2550,7 +2569,7 @@ class CityLearnKPIService:
             put('building', building_name, v2('building', 'cost', 'daily_average', 'control', None, 'eur'), self._daily_average(control_total, building_days))
             put('building', building_name, v2('building', 'cost', 'daily_average', 'baseline', None, 'eur'), self._daily_average(baseline_total, building_days))
             put('building', building_name, v2('building', 'cost', 'daily_average', 'delta', None, 'eur'), self._daily_average(delta_total, building_days))
-            put('building', building_name, v2('building', 'cost', 'ratio_to_baseline', 'total', None, 'ratio'), self._safe_div(control_total, baseline_total))
+            put('building', building_name, v2('building', 'cost', 'ratio_to_baseline', 'total', None, 'ratio'), self._signed_ratio(control_total, baseline_total))
 
         district_delta_total = district_control_total - district_baseline_total
         put('district', 'District', v2('district', 'cost', 'total', 'control', None, 'eur'), district_control_total)
@@ -2559,7 +2578,7 @@ class CityLearnKPIService:
         put('district', 'District', v2('district', 'cost', 'daily_average', 'control', None, 'eur'), self._daily_average(district_control_total, simulated_days))
         put('district', 'District', v2('district', 'cost', 'daily_average', 'baseline', None, 'eur'), self._daily_average(district_baseline_total, simulated_days))
         put('district', 'District', v2('district', 'cost', 'daily_average', 'delta', None, 'eur'), self._daily_average(district_delta_total, simulated_days))
-        put('district', 'District', v2('district', 'cost', 'ratio_to_baseline', 'total', None, 'ratio'), self._safe_div(district_control_total, district_baseline_total))
+        put('district', 'District', v2('district', 'cost', 'ratio_to_baseline', 'total', None, 'ratio'), self._signed_ratio(district_control_total, district_baseline_total))
 
         # Equity metrics are recomputed from cost totals for consistency.
         equity_valid_benefits: Dict[str, float] = {}

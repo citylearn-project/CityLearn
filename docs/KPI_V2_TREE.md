@@ -37,7 +37,7 @@ Examples:
 - `total_net_exchange_kwh = Σ_t net_t`
 - `daily_average_x = total_x / simulated_days`
 - `delta_x = control_x - baseline_x`
-- `ratio_to_baseline_x = control_x / baseline_x` (safe division)
+- `ratio_to_baseline_x = control_x / baseline_x` (safe division); for a negative net-exchange or cost baseline, `1 + (control_x - baseline_x) / |baseline_x|` (see the [KPI reference](kpis_reference.md#core-equations))
 - `solar_self_consumption = (generation_total - export_total) / generation_total`
 
 ---
