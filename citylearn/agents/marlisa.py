@@ -28,6 +28,7 @@ class MARLISA(SAC):
         regression_frequency: int = None, information_sharing: bool = None, pca_compression: float = None, iterations: int = None, **kwargs
     ):
         self.__coordination_variables_history = None
+        self.__pending_transitions = None
         self.information_sharing = information_sharing
 
         super().__init__(*args, **kwargs)
@@ -44,6 +45,7 @@ class MARLISA(SAC):
         self.pca = [None for _ in self.action_space]
         self.pca_flag = [False for _ in self.action_dimension]
         self.regression_flag = [0 for _ in self.action_dimension]
+        self.__regression_sample_count = [0 for _ in self.action_dimension]
         self.energy_size_coefficient = None
         self.total_coefficient = None
         self.regression_encoders = self.set_regression_encoders()
@@ -137,14 +139,24 @@ class MARLISA(SAC):
         # Run once the regression model has been fitted
         # Normalize all the observations using periodical normalization, one-hot encoding, or -1, 1 scaling. It also removes observations that are not necessary (solar irradiance if there are no solar PV panels).
 
-        for i, (o, a, r, n, c0, c1) in enumerate(zip(observations, actions, reward, next_observations, self.coordination_variables_history[0], self.coordination_variables_history[1])):
+        # The coordination variables in history[1] were computed with the actions for `observations` (latest predict),
+        # so they belong to `observations`, and to the next observation of the transition held back at the last step.
+        for i, (o, a, r, n, c) in enumerate(zip(observations, actions, reward, next_observations, self.coordination_variables_history[1])):
             if self.information_sharing:
                 # update regression buffer
                 variables = np.hstack(np.concatenate((self.get_encoded_regression_variables(i, o), a)))
                 # The targets are the net electricity consumption.
                 target = self.get_encoded_regression_targets(i, n)
                 self.regression_buffer[i].push(variables, target)
-            
+
+                if self.__pending_transitions[i] is not None:
+                    po, pa, pr, pn, pd = self.__pending_transitions[i]
+                    self.__pending_transitions[i] = None
+                    self.__push_transition(i, po, pa, pr, np.hstack(np.concatenate((pn, c), dtype=float)), pd)
+
+                else:
+                    pass
+
             else:
                 pass
 
@@ -152,34 +164,37 @@ class MARLISA(SAC):
                 o = self.get_encoded_observations(i, o)
                 n = self.get_encoded_observations(i, n)
 
-                # Only executed during the random exploration phase. Pushes unnormalized tuples into the replay buffer.
                 if self.information_sharing:
-                    o = np.hstack(np.concatenate((o, c0), dtype=float))
-                    n = np.hstack(np.concatenate((n, c1), dtype=float))
-                
-                else:
-                    pass
+                    o = np.hstack(np.concatenate((o, c), dtype=float))
 
-                # Executed during the training phase. States and rewards pushed into the replay buffer are normalized and processed using PCA.
-                if self.pca_flag[i]:
-                    o = self.get_normalized_observations(i, o)
-                    o = self.pca[i].transform(o.reshape(1, -1))[0]
-                    n = self.get_normalized_observations(i, n)
-                    n = self.pca[i].transform(n.reshape(1, -1))[0]
-                    r = self.get_normalized_reward(i, r)
-                else:
-                    pass
+                    if terminated or truncated:
+                        # No action, hence no coordination variables, is computed for the episode's final observation,
+                        # so c stands in for them (as before); they do not enter the TD target when terminated.
+                        self.__push_transition(i, o, a, r, np.hstack(np.concatenate((n, c), dtype=float)), terminated)
 
-                self.replay_buffer[i].push(o, a, r, n, terminated)
+                    else:
+                        # The coordination variables of n are computed with the next action: push at the next update.
+                        self.__pending_transitions[i] = (o, a, r, n, terminated)
+
+                else:
+                    self.__push_transition(i, o, a, r, n, terminated)
 
             else:
                 pass
 
+            # Refit whenever the regression buffer has doubled since the last fit, until a fit has used
+            # regression_frequency samples; from then on every regression_frequency time steps.
+            sample_count = len(self.regression_buffer[i])
+            sparse_refit = self.information_sharing\
+                and self.__regression_sample_count[i] < self.regression_frequency\
+                    and sample_count >= 2*self.__regression_sample_count[i]
+
             if self.time_step >= self.start_regression_time_step\
-                and (self.regression_flag[i] < 2 or self.time_step%self.regression_frequency == 0):
+                and (self.regression_flag[i] < 2 or self.time_step%self.regression_frequency == 0 or sparse_refit):
                 if self.information_sharing:
                     self.state_estimator[i].fit(self.regression_buffer[i].x, self.regression_buffer[i].y)
-                
+                    self.__regression_sample_count[i] = sample_count
+
                 else:
                     pass
 
@@ -463,11 +478,26 @@ class MARLISA(SAC):
         internal_observation_count = self.__COORDINATION_VARIABLE_COUNT if self.information_sharing else 0
         return super().set_networks(internal_observation_count=internal_observation_count)
 
+    def __push_transition(self, index: int, o, a, r, n, terminated: bool):
+        # Executed during the training phase. States and rewards pushed into the replay buffer are normalized and processed using PCA.
+        if self.pca_flag[index]:
+            o = self.get_normalized_observations(index, o)
+            o = self.pca[index].transform(o.reshape(1, -1))[0]
+            n = self.get_normalized_observations(index, n)
+            n = self.pca[index].transform(n.reshape(1, -1))[0]
+            r = self.get_normalized_reward(index, r)
+
+        else:
+            pass
+
+        self.replay_buffer[index].push(o, a, r, n, terminated)
+
     def reset(self):
         super().reset()
         self.__coordination_variables_history = [
             [[0.0]*self.__COORDINATION_VARIABLE_COUNT for _ in self.action_dimension] for _ in range(2)
         ]
+        self.__pending_transitions = [None for _ in self.action_dimension]
 
 class MARLISARBC(MARLISA, SACRBC):
     r"""Uses :py:class:`citylearn.agents.rbc.RBC` to select action during exploration before using :py:class:`citylearn.agents.marlisa.MARLISA`.

@@ -147,3 +147,86 @@ def test_sac_exploration_honours_explicitly_seeded_action_spaces():
     actions = agent.predict(observations)
 
     np.testing.assert_array_equal(actions[0], agent.action_scaling_coefficient*reference.sample())
+
+
+# --- MARLISA coordination variables and state-estimator schedule -------------------------------------------------
+
+def test_marlisa_replay_transitions_carry_their_own_coordination_variables():
+    env = _env(episode_time_steps=40, buildings=(0, 1, 2))
+    # Exploration only, so every transition is stored raw and can be compared with the predictions.
+    agent = MARLISA(
+        env, hidden_dimension=[8, 8], batch_size=8, start_regression_time_step=3, standardize_start_time_step=60,
+        end_exploration_time_step=60,
+    )
+    predicted = []  # (observations at t, coordination variables computed with the action for t)
+    predict = agent.predict
+
+    def recording_predict(observations, deterministic=None):
+        actions = predict(observations, deterministic=deterministic)
+        predicted.append((copy.deepcopy(observations), copy.deepcopy(agent.coordination_variables_history[1])))
+        return actions
+
+    agent.predict = recording_predict
+    pushed = {i: [] for i in range(len(agent.replay_buffer))}
+
+    for i, buffer in enumerate(agent.replay_buffer):
+        push = buffer.push
+
+        def recording_push(o, a, r, n, d, _i=i, _push=push):
+            if not agent.pca_flag[_i]:
+                pushed[_i].append((np.array(o, dtype=float), np.array(n, dtype=float), d))
+            return _push(o, a, r, n, d)
+
+        buffer.push = recording_push
+
+    agent.learn(episodes=1)
+    checked = 0
+
+    for i, transitions in pushed.items():
+        encoded = [agent.get_encoded_observations(i, o[i]) for o, _ in predicted]
+
+        for o, n, terminal in transitions:
+            t = next(t for t, e in enumerate(encoded) if np.array_equal(o[:-2], e))
+            assert list(o[-2:]) == pytest.approx(predicted[t][1][i])
+
+            if not terminal:
+                assert list(n[-2:]) == pytest.approx(predicted[t + 1][1][i])
+
+            checked += 1
+
+    assert checked > 3*20
+    assert any(abs(c[0]) > 0 for _, coordination in predicted for c in coordination)
+
+
+def _record_fits(agent, index=0):
+    fits = []
+    fit = agent.state_estimator[index].fit
+
+    def recording_fit(X, y):
+        fits.append(len(X))
+        return fit(X, y)
+
+    agent.state_estimator[index].fit = recording_fit
+    return fits
+
+
+def test_marlisa_default_regression_schedule_refits_as_samples_accumulate():
+    env = _env(episode_time_steps=40, buildings=(0, 1))
+    agent = MARLISA(env, hidden_dimension=[8, 8])
+    assert (agent.start_regression_time_step, agent.regression_frequency) == (2, 2500)
+    fits = _record_fits(agent)
+
+    agent.learn(episodes=1)
+
+    # Previously fitted on 2 and 3 samples only, then not again until time step 2500.
+    assert fits == [2, 3, 6, 12, 24]
+
+
+def test_marlisa_regression_refits_every_regression_frequency_once_buffer_is_large():
+    env = _env(episode_time_steps=40, buildings=(0, 1))
+    agent = MARLISA(env, hidden_dimension=[8, 8], regression_frequency=10)
+    fits = _record_fits(agent)
+
+    agent.learn(episodes=1)
+
+    assert fits == [2, 3, 6, 10, 20, 30]
