@@ -139,8 +139,27 @@ Only district-level child KPIs are aggregated:
 | KPI suffix | Portfolio rule |
 |---|---|
 | `_kwh`, `_eur`, `_kgco2`, `_count` | Sum across communities. |
-| `_ratio`, `_percent` | Weighted mean using community `weight`. |
+| `_ratio` of a control total to a reference total | Ratio of the summed totals, e.g. `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
+| Other `_ratio`, `_percent` | Weighted mean using community `weight`. |
 | `_kw`, `_c`, `_hours` and other point metrics | Not aggregated in v1. |
+
+Ratios rebuilt from summed totals are the `ratio_to_baseline` and
+`ratio_to_business_as_usual` ratios of cost, emissions, grid import, export and
+net exchange, and the `ratio_to_business_as_usual` ratios of solar generation
+and export, EV charge and V2G export, battery charge, discharge and throughput,
+and deferrable-appliance cycle and energy counts. They use only communities that
+report both totals, ignore `weight` like the summed totals, and keep the
+lower-is-better rule of the [KPI reference](kpis_reference.md#core-equations)
+for negative net-exchange and cost totals. A district `ratio_to_baseline` of
+import, net exchange or emissions is the mean of its building ratios, so a
+one-community portfolio ratio can differ from it.
+
+Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
+ramping and load-factor penalties), comfort and resilience proportions, EV
+departure rates, service levels, shares, equity, audit and coverage ratios,
+battery capacity fade, and the `ratio_to_business_as_usual` ratios of battery
+capacity fade and equivalent full cycles, self-consumption, service level and
+start delay.
 
 Portfolio KPI names replace a leading `district_` prefix with `portfolio_`, for example `district_demand_response_revenue_total_eur` becomes `portfolio_demand_response_revenue_total_eur`.
 

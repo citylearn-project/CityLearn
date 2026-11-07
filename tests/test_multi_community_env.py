@@ -308,6 +308,63 @@ def test_evaluate_v2_includes_portfolio_sum_and_weighted_ratio_rows():
         env.close()
 
 
+@pytest.mark.parametrize("weight_b", [3.0, 0.0])
+def test_portfolio_ratios_to_a_reference_are_ratios_of_summed_totals(weight_b):
+    env = MultiCommunityEnv(
+        communities=[
+            {**_community("community_a"), "weight": 1.0},
+            {**_community("community_b"), "weight": weight_b},
+        ]
+    )
+
+    def full_charge(child: CityLearnEnv):
+        return [np.ones(space.shape, dtype="float32") for space in child.action_space]
+
+    try:
+        env.reset(seed=0)
+        while not env.terminated:
+            env.step({"community_a": _zero_actions(env.envs["community_a"]), "community_b": full_charge(env.envs["community_b"])})
+
+        kpis = env.evaluate_v2(include_business_as_usual=False)
+        portfolio = MultiCommunityEnv.PORTFOLIO_COMMUNITY_ID
+        pooled_differs_from_mean = False
+
+        for family, control, reference, ratio in [
+            ("cost", "total_control_eur", "total_baseline_eur", "ratio_to_baseline_total_ratio"),
+            ("emissions", "total_control_kgco2", "total_baseline_kgco2", "ratio_to_baseline_total_ratio"),
+            ("energy_grid", "total_import_control_kwh", "total_import_baseline_kwh", "ratio_to_baseline_import_total_ratio"),
+            ("energy_grid", "total_net_exchange_control_kwh", "total_net_exchange_baseline_kwh", "ratio_to_baseline_net_exchange_total_ratio"),
+        ]:
+            totals = [
+                _kpi_value(kpis, f"portfolio_{family}_{name}", community_id=portfolio, level="portfolio")
+                for name in (control, reference)
+            ]
+            assert totals[1] > 0.0
+            pooled = _kpi_value(kpis, f"portfolio_{family}_{ratio}", community_id=portfolio, level="portfolio")
+            assert pooled == pytest.approx(totals[0] / totals[1])
+
+            local = [
+                _kpi_value(kpis, f"district_{family}_{ratio}", community_id=community_id, level="district")
+                for community_id in ("community_a", "community_b")
+            ]
+            mean = (local[0] + weight_b * local[1]) / (1.0 + weight_b)
+            pooled_differs_from_mean |= abs(pooled - mean) > 1.0e-6
+
+        assert pooled_differs_from_mean
+
+        # Grid-shape ratios have no additive totals and remain weighted means.
+        shape = "energy_grid_shape_quality_peak_daily_average_to_baseline_ratio"
+        local = [
+            _kpi_value(kpis, f"district_{shape}", community_id=community_id, level="district")
+            for community_id in ("community_a", "community_b")
+        ]
+        assert _kpi_value(kpis, f"portfolio_{shape}", community_id=portfolio, level="portfolio") == pytest.approx(
+            (local[0] + weight_b * local[1]) / (1.0 + weight_b)
+        )
+    finally:
+        env.close()
+
+
 def test_export_final_kpis_writes_child_subfolders_and_global_csv(tmp_path: Path):
     env = MultiCommunityEnv(
         communities=[

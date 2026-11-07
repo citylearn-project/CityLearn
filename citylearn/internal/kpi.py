@@ -1758,6 +1758,55 @@ class CityLearnKPIService:
 
         return '_'.join(tokens)
 
+    @classmethod
+    def total_ratio_components(cls, level: str) -> Dict[str, Tuple[str, str, bool]]:
+        """V2 ratio KPIs defined as a control total over a reference total.
+
+        Maps each ratio name to `(control_total_name, reference_total_name, signed)`.
+        Only ratios whose two totals add up across members are listed, so a pooled
+        ratio can be rebuilt from summed totals. `signed` totals can be negative and
+        use `_signed_ratio`; the others use `_safe_div`.
+        """
+        v2 = cls._v2_name
+        components: Dict[str, Tuple[str, str, bool]] = {}
+
+        for reference, subfamily in (('baseline', 'ratio_to_baseline'), ('business_as_usual', 'ratio_to_business_as_usual')):
+            for family, unit, signed in (('cost', 'eur', True), ('emissions', 'kgco2', False)):
+                components[v2(level, family, subfamily, 'total', None, 'ratio')] = (
+                    v2(level, family, 'total', 'control', None, unit),
+                    v2(level, family, 'total', reference, None, unit),
+                    signed,
+                )
+
+            for metric in ('import', 'export', 'net_exchange'):
+                components[v2(level, 'energy_grid', subfamily, f'{metric}_total', None, 'ratio')] = (
+                    v2(level, 'energy_grid', 'total', metric, 'control', 'kwh'),
+                    v2(level, 'energy_grid', 'total', metric, reference, 'kwh'),
+                    metric == 'net_exchange',
+                )
+
+        # Business-as-usual references of additive equipment and service totals.
+        for family, subfamily, metric, unit, ratio_metric in (
+            ('solar_self_consumption', 'total', 'generation', 'kwh', 'generation_total'),
+            ('solar_self_consumption', 'total', 'export', 'kwh', 'export_total'),
+            ('ev', 'total', 'charge', 'kwh', 'charge_total'),
+            ('ev', 'total', 'v2g_export', 'kwh', 'v2g_export_total'),
+            ('battery', 'total', 'charge', 'kwh', 'charge'),
+            ('battery', 'total', 'discharge', 'kwh', 'discharge'),
+            ('battery', 'total', 'throughput', 'kwh', 'throughput'),
+            ('deferrable_appliance', 'service', 'completed_cycles', 'count', 'completed_cycles'),
+            ('deferrable_appliance', 'service', 'missed_cycles', 'count', 'missed_cycles'),
+            ('deferrable_appliance', 'service', 'served_energy_total', 'kwh', 'served_energy_total'),
+            ('deferrable_appliance', 'service', 'unserved_energy_total', 'kwh', 'unserved_energy_total'),
+        ):
+            components[v2(level, family, 'ratio_to_business_as_usual', ratio_metric, None, 'ratio')] = (
+                v2(level, family, subfamily, metric, None, unit),
+                v2(level, family, subfamily, metric, 'business_as_usual', unit),
+                False,
+            )
+
+        return components
+
     def evaluate_legacy(
         self,
         control_condition=None,

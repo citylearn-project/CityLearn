@@ -13,6 +13,7 @@ import pandas as pd
 from gymnasium import Env
 
 from citylearn.citylearn import CityLearnEnv, EvaluationCondition
+from citylearn.internal.kpi import CityLearnKPIService
 
 
 __all__ = ["MultiCommunityEnv"]
@@ -564,12 +565,15 @@ class MultiCommunityEnv(Env):
 
         district["numeric_value"] = pd.to_numeric(district.get("value"), errors="coerce")
         rows: List[Dict[str, Any]] = []
+        total_ratios = CityLearnKPIService.total_ratio_components("district")
 
         for cost_function, group in district.groupby("cost_function", sort=True):
             metric = str(cost_function)
             aggregate: Optional[float]
 
-            if metric.endswith(self._SUM_SUFFIXES):
+            if metric in total_ratios:
+                aggregate = self._pooled_ratio(district, *total_ratios[metric])
+            elif metric.endswith(self._SUM_SUFFIXES):
                 values = group["numeric_value"].dropna()
                 if values.empty:
                     aggregate = np.nan
@@ -591,6 +595,25 @@ class MultiCommunityEnv(Env):
             rows.append(row)
 
         return pd.DataFrame(rows, columns=list(local.columns))
+
+    @staticmethod
+    def _pooled_ratio(district: pd.DataFrame, control_name: str, reference_name: str, signed: bool) -> float:
+        """Ratio of control and reference totals summed over communities that report both."""
+
+        def totals(name: str) -> pd.Series:
+            rows = district[district["cost_function"] == name]
+            return rows.set_index("community_id")["numeric_value"]
+
+        paired = pd.concat(
+            [totals(control_name), totals(reference_name)], axis=1, keys=["control", "reference"], join="inner",
+        ).dropna()
+
+        if paired.empty:
+            return np.nan
+
+        ratio = CityLearnKPIService._signed_ratio if signed else CityLearnKPIService._safe_div
+        value = ratio(float(paired["control"].sum()), float(paired["reference"].sum()))
+        return np.nan if value is None else float(value)
 
     def _weighted_mean(self, group: pd.DataFrame) -> Optional[float]:
         weighted_sum = 0.0
