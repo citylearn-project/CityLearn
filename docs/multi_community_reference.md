@@ -120,6 +120,12 @@ All child environments must use:
 
 The wrapper validates these conditions at construction and again after reset.
 
+Calendar windows are not part of the contract. Each child selects its episode
+split from its own simulation window, `random_episode_split` setting and
+`random_seed`, so communities can simulate different dates at the same step.
+To share windows, give the children the same window settings and the same
+`random_seed`, or pass a seed to `reset(seed=...)`, which reaches every child.
+
 ## Demand Response
 
 Demand response remains local to each community. If a child schema has `demand_response.enabled=true`, that child loads its own `requests_file`, exposes its own request metadata in entity observations, and computes local settlement/KPIs. `MultiCommunityEnv` does not coordinate DSO/TSO requests across communities in v1.

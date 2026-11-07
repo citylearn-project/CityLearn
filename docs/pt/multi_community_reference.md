@@ -118,6 +118,8 @@ Todas as comunidades filhas tem de usar:
 
 O wrapper valida isto no constructor e depois de cada reset.
 
+As janelas de calendario nao fazem parte do contrato. Cada filho escolhe o seu episode split a partir da sua propria janela de simulacao, do `random_episode_split` e do `random_seed`, por isso as comunidades podem simular datas diferentes no mesmo step. Para partilhar janelas, de aos filhos as mesmas definicoes de janela e o mesmo `random_seed`, ou passe uma seed a `reset(seed=...)`, que chega a todos os filhos.
+
 ## Demand Response
 
 Demand response continua local a cada comunidade. Se o schema filho tiver `demand_response.enabled=true`, esse filho le o seu proprio `requests_file`, expoe o seu proprio pedido nas observations entity e calcula settlement/KPIs locais. A v1 do `MultiCommunityEnv` nao coordena pedidos DSO/TSO entre comunidades.
