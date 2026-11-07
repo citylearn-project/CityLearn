@@ -46,6 +46,40 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Changes after 3.2.0 (unreleased)
+
+No dataset, schema or export-file migration is required.
+
+- **Dataset downloads:** `DataSet.get_dataset(name, directory=...)` copies the
+  dataset into `directory/<name>` and returns that schema path. Failed
+  downloads raise instead of being cached, and concurrent first downloads no
+  longer interfere.
+- **SAC and MARLISA:** default schedules now work on episodes shorter than the
+  default batch; inconsistent given values raise `ValueError` instead of
+  `assert False`. Runs are repeatable from the environment seed.
+
+Fixes that **change results** where they apply:
+
+- EV datasets: each EV draws its own unspecified battery parameters
+  (efficiency, curves, capacity fade) instead of all sharing one set, and the
+  dataset's arrival state of charge is also read from earlier incoming rows.
+- SAC/MARLISA: features or rewards constant during warm-up are centred but no
+  longer scaled by ~1e5; exploration, replay sampling and policy noise use
+  seeded generators; MARLISA stores each transition with its own coordination
+  variables and refits its demand model as data accumulates.
+- KPIs: net-exchange and cost ratios with a negative (net-exporting or
+  market-credited) reference use `1 + (control - reference) / |reference|`, so
+  lower stays better; the counterfactual baseline exchanges no energy with the
+  grid during power outages; multi-community ratios to a reference are ratios
+  of summed totals.
+- Subhourly control with hourly data: the partial-load baseline top-up is
+  converted to the control step.
+- Robustness: a PV `asset` `unavailable` event with the `control` or `both`
+  part stops generation, not only its telemetry.
+- Terminal observation: calendar, weather and prices come from the terminal
+  row, and endogenous values from the last executed step, as for every other
+  observation. Episode length and termination are unchanged.
+
 ## Upgrade from 3.1.1 to 3.2.0
 
 CityLearn supports Gymnasium from 0.28.1 up to, but excluding, 2.0. Dataset names
