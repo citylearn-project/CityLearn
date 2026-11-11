@@ -12,6 +12,7 @@ from copy import deepcopy
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -52,7 +53,9 @@ def canonical(value, directory):
     if isinstance(value, Path):
         value = str(value)
     if isinstance(value, str):
-        return value.replace(str(directory), "<CASE>").replace(str(ROOT), "<REPO>")
+        portable = value.replace(str(directory), "<CASE>").replace(str(ROOT), "<REPO>")
+        # A placeholder marks a filesystem path: POSIX separators keep references OS-independent.
+        return portable.replace(os.sep, "/") if portable != value else portable
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     raise TypeError(f"Unsupported reference value: {type(value).__name__}")
@@ -181,7 +184,7 @@ def run_case(name, directory):
                  target_feature="non_shiftable_load", mode="bias", value=0.25, start_time_step=0, end_time_step=7),
         ]).to_csv(path, index=False)
         schema["robustness"] = dict(enabled=True, events_file=str(path), random_seed=7)
-    inputs = {str(p.relative_to(directory)): pd.read_csv(p).to_dict("list")
+    inputs = {p.relative_to(directory).as_posix(): pd.read_csv(p).to_dict("list")
               for p in sorted(directory.rglob("*.csv"))}
     fingerprint = hashlib.sha256(json.dumps(canonical(dict(schema=schema, inputs=inputs), directory),
                                             sort_keys=True, allow_nan=False).encode()).hexdigest()

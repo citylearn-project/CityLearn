@@ -14,24 +14,24 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def python_blocks(path):
-    return re.findall(r"```python\n(.*?)\n```", path.read_text(), re.S)
+    return re.findall(r"```python\n(.*?)\n```", path.read_text(encoding="utf-8"), re.S)
 
 
 def test_readme_matches_runnable_example():
-    readme = (ROOT / "README.md").read_text()
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert python_blocks(ROOT / "README.md") == [
-        (ROOT / "examples/first_simulation.py").read_text().strip()
+        (ROOT / "examples/first_simulation.py").read_text(encoding="utf-8").strip()
     ]
     assert "releases.md" not in readme
     assert "Current source release:" not in readme
     assert (ROOT / "assets/images/citylearn-v3-overview.png").is_file()
-    assert "Tiago Fonseca" in (ROOT / "assets/tables/citylearn_contributors.csv").read_text()
+    assert "Tiago Fonseca" in (ROOT / "assets/tables/citylearn_contributors.csv").read_text(encoding="utf-8")
 
 
 def test_first_simulation_and_scorecard(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     scope = {}
-    exec(compile((ROOT / "examples/first_simulation.py").read_text(), "first_simulation.py", "exec"), scope)
+    exec(compile((ROOT / "examples/first_simulation.py").read_text(encoding="utf-8"), "first_simulation.py", "exec"), scope)
     assert scope["env"].time_step == 23
     assert scope["terminated"] or scope["truncated"]
     assert set(("cost_function", "value", "name", "level")) <= set(scope["kpis"].columns)
@@ -68,7 +68,7 @@ def test_multi_community_example(directory, monkeypatch, tmp_path):
 
 
 def test_feature_examples_are_public():
-    content = (ROOT / "docs/features.md").read_text()
+    content = (ROOT / "docs/features.md").read_text(encoding="utf-8")
     for name in re.findall(r"`(citylearn_[a-z0-9_]+)`", content):
         assert (ROOT / "data/datasets" / name / "schema.json").is_file(), name
 
@@ -87,7 +87,7 @@ def test_website_omits_repository_translation_links():
     spec.loader.exec_module(module)
     source = "# Guide\n\nPortuguese version: [pt/guide.md](pt/guide.md).\n\n## Details\n\nText.\n"
     assert module.website_guide_content(source) == "# Guide\n\n## Details\n\nText.\n"
-    index = (ROOT / "docs/source/index.rst").read_text()
+    index = (ROOT / "docs/source/index.rst").read_text(encoding="utf-8")
     assert "guides/pt/" not in index
     assert "guides/retired_datasets" not in index
 
@@ -126,7 +126,7 @@ def test_ui_export_example(monkeypatch, tmp_path):
 def test_documented_bau_defaults():
     from citylearn.agents.baseline import BusinessAsUsualAgent
 
-    content = (ROOT / "docs/baselines.md").read_text()
+    content = (ROOT / "docs/baselines.md").read_text(encoding="utf-8")
     rows = re.findall(r"\| `([a-z_]+)` \| `([^`]+)` \|", content)
     defaults = inspect.signature(BusinessAsUsualAgent).parameters
     assert len(rows) == 8
@@ -159,14 +159,14 @@ def test_kpi_only_ui_export(tmp_path):
             "exported_kpis.manifest.json",
         }
         assert not list(output.glob("exported_data_*"))
-        assert json.loads((output / "exported_kpis.manifest.json").read_text())
+        assert json.loads((output / "exported_kpis.manifest.json").read_text(encoding="utf-8"))
         assert "District" in pd.read_csv(output / "exported_kpis.csv").columns
     finally:
         env.close()
 
 
 def test_navigation_and_current_ui():
-    index = (ROOT / "docs/source/index.rst").read_text()
+    index = (ROOT / "docs/source/index.rst").read_text(encoding="utf-8")
     evaluate = index.split(":caption: Evaluate")[1].split(".. toctree::")[0]
     assert "guides/baselines" in evaluate
     assert "kpis" in evaluate
@@ -175,12 +175,12 @@ def test_navigation_and_current_ui():
     assert "publications" in index
     assert "assets/images/citylearn-v3-overview.png" in index
     assert "assets/images/dr.jpg" not in index
-    overview = (ROOT / "docs/source/overview/index.rst").read_text()
+    overview = (ROOT / "docs/source/overview/index.rst").read_text(encoding="utf-8")
     assert "Core concepts\n=============" in overview
     assert ".. _overview:" in overview
     assert ".. figure:: ../../../assets/images/dr.jpg" in overview
     assert (ROOT / "assets/images/dr.jpg").is_file()
-    ui = (ROOT / "docs/source/ui.rst").read_text()
+    ui = (ROOT / "docs/source/ui.rst").read_text(encoding="utf-8")
     for text in ("Create Schema", "v2.5.0", "/admin/help", "schema-structure.png"):
         assert text not in ui
     for text in ("Choose folders", "Timeseries", "KPIs", "Compare baseline"):
@@ -194,12 +194,12 @@ def test_feature_diagrams(name):
     path = ROOT / "assets/images" / (name + ".svg")
     svg = ET.parse(path).getroot()
     assert svg.find("{http://www.w3.org/2000/svg}title") is not None
-    assert f"../assets/images/{name}.svg" in (ROOT / "docs/features.md").read_text()
+    assert f"../assets/images/{name}.svg" in (ROOT / "docs/features.md").read_text(encoding="utf-8")
 
 
 def test_load_environment_notebook(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
-    notebook = json.loads((ROOT / "examples/load_environment.ipynb").read_text())
+    notebook = json.loads((ROOT / "examples/load_environment.ipynb").read_text(encoding="utf-8"))
     scope = {}
     for cell in notebook["cells"]:
         if cell["cell_type"] == "code":
@@ -214,7 +214,7 @@ def test_load_environment_notebook(monkeypatch, tmp_path):
 
 @pytest.mark.parametrize("name", ["quickstart", "load_environment", "cli"])
 def test_tutorials_have_no_stale_outputs(name):
-    notebook = json.loads((ROOT / "examples" / f"{name}.ipynb").read_text())
+    notebook = json.loads((ROOT / "examples" / f"{name}.ipynb").read_text(encoding="utf-8"))
     for cell in notebook["cells"]:
         if cell["cell_type"] == "code":
             assert cell["outputs"] == []
@@ -222,7 +222,7 @@ def test_tutorials_have_no_stale_outputs(name):
 
 
 def test_v3_citation_added_alongside_v2():
-    bibliography = (ROOT / "docs/source/references.bib").read_text()
+    bibliography = (ROOT / "docs/source/references.bib").read_text(encoding="utf-8")
     entry = re.search(r"@misc\{fonseca2026citylearnv3,\n(.*?)\n\}", bibliography, re.S)
     assert entry is not None
     fields = dict(re.findall(r"^\s*(\w+)\s*=\s*\{(.*)\},?$", entry[1], re.M))
@@ -234,7 +234,7 @@ def test_v3_citation_added_alongside_v2():
         "Mohammadi, Ava", "Nagy, Zoltan",
     ]
     assert "@article{doi:10.1080/19401493.2024.2418813," in bibliography
-    index = (ROOT / "docs/source/index.rst").read_text()
+    index = (ROOT / "docs/source/index.rst").read_text(encoding="utf-8")
     assert "@article{doi:10.1080/19401493.2024.2418813," in index
     assert ":start-at: @misc{fonseca2026citylearnv3," in index
-    assert "fonseca2026citylearnv3" in (ROOT / "docs/source/publications.rst").read_text()
+    assert "fonseca2026citylearnv3" in (ROOT / "docs/source/publications.rst").read_text(encoding="utf-8")
