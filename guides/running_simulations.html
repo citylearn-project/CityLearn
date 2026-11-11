@@ -498,7 +498,7 @@
 <p>The alias <code class="docutils literal notranslate"><span class="pre">required_observations</span></code> and method <code class="docutils literal notranslate"><span class="pre">get_required_observation_names()</span></code> are also supported. If a custom reward does not declare requirements, CityLearn falls back to full <code class="docutils literal notranslate"><span class="pre">include_all</span></code> observations for backward compatibility.</p>
 </section>
 <section id="macro-steps-action-repeat">
-<h2>Macro-Steps / Action Repeat<a class="headerlink" href="#macro-steps-action-repeat" title="Link to this heading"></a></h2>
+<span id="macro-steps--action-repeat"></span><h2>Macro-Steps / Action Repeat<a class="headerlink" href="#macro-steps-action-repeat" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">step_many()</span></code> repeats one selected action across multiple internal simulator steps and returns one macro transition for RL replay buffers:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obs</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step_many</span><span class="p">(</span>
     <span class="n">action</span><span class="p">,</span>
