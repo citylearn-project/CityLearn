@@ -101,8 +101,11 @@ def test_rlc_accepts_documented_action_scaling_coefficient(sac_env):
     policy = agent.policy_net[0]
 
     assert agent.action_scaling_coefficient == 1.0
-    np.testing.assert_allclose((policy.action_bias + policy.action_scale).numpy(), sac_env.action_space[0].high)
-    np.testing.assert_allclose((policy.action_bias - policy.action_scale).numpy(), sac_env.action_space[0].low)
+    # The policy lives on the agent's device (CUDA when available); compare on the host.
+    high = (policy.action_bias + policy.action_scale).detach().cpu().numpy()
+    low = (policy.action_bias - policy.action_scale).detach().cpu().numpy()
+    np.testing.assert_allclose(high, sac_env.action_space[0].high)
+    np.testing.assert_allclose(low, sac_env.action_space[0].low)
 
 
 def test_rlc_misspelled_action_scaling_coefficient_is_deprecated_alias(sac_env):

@@ -260,3 +260,39 @@ def inventory_differences(left, right):
                  delta_right_minus_left_kwh=(maps[1][kind,name]-maps[0][kind,name])
                  if (kind,name) in maps[0] and (kind,name) in maps[1] else None)
             for kind,name in sorted(set(maps[0])|set(maps[1]))]
+
+
+def reference_configuration(env):
+    """Building order and the per-building settings that the native BAU reference must reproduce.
+
+    The reference is rebuilt from the schema and the constructor arguments. This records what they
+    resolve to for each building, in the env's building order: the outage setting, the active actions
+    and the chargers' power limits and efficiencies, all of which setters can change after loading.
+    """
+    return [dict(
+        name=building.name,
+        simulate_power_outage=bool(building.simulate_power_outage),
+        active_actions=sorted(building.active_actions),
+        chargers={str(charger.charger_id): _exact({k: getattr(charger, k, None) for k in CHARGER_ATTRIBUTES})
+                  for charger in building.electric_vehicle_chargers or []},
+    ) for building in getattr(env, '_all_buildings', None) or env.buildings]
+
+
+def configuration_differences(left, right):
+    """`setting (left vs right)` for each :func:`reference_configuration` entry that differs."""
+    names = [[row['name'] for row in rows] for rows in (left, right)]
+    if names[0] != names[1]:
+        return [f'building order ({names[0]!r} vs {names[1]!r})']
+    differences = []
+    for a, b in zip(left, right):
+        differences.extend(f"{a['name']}: {key} ({a[key]!r} vs {b[key]!r})"
+                           for key in ('simulate_power_outage', 'active_actions') if a[key] != b[key])
+        for charger in sorted(set(a['chargers']) | set(b['chargers'])):
+            x, y = a['chargers'].get(charger), b['chargers'].get(charger)
+            if x is None or y is None:
+                differences.append(f"{a['name']}/charger {charger}: "
+                                   f"{'absent' if x is None else 'present'} vs {'absent' if y is None else 'present'}")
+                continue
+            differences.extend(f"{a['name']}/charger {charger}: {k} ({x.get(k)!r} vs {y.get(k)!r})"
+                               for k in CHARGER_ATTRIBUTES if x.get(k) != y.get(k))
+    return differences

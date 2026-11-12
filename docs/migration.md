@@ -53,12 +53,15 @@ No dataset, schema or export-file migration is required.
 - **RL agent keyword:** pass `action_scaling_coefficient=` to `SAC`, `MARLISA`
   and other `RLC` agents. The misspelled `action_scaling_coefficienct=` still
   works with a `DeprecationWarning`; before, only the misspelling took effect.
-- **Native BAU reference check:** `evaluate_v2()` checks that every device of
-  the reference (heat pumps, heaters, storage tanks, PV, batteries, chargers,
-  appliances and EV batteries) matches the evaluated env, not only battery
-  capacities. The reference rebuilds devices from the schema, so a device
-  changed after loading now raises a `ValueError` that names the parameter;
-  evaluate with `include_business_as_usual=False` in that case.
+- **Native BAU reference check:** `evaluate_v2()` raises a `ValueError` naming
+  the setting when the reference, which is rebuilt from the schema and the
+  constructor arguments, differs from the evaluated env as captured at its last
+  `reset()`: the building order, a building's `simulate_power_outage` or active
+  actions, or any parameter of its devices (heat pumps, heaters, storage tanks,
+  PV, batteries, chargers, appliances and EV batteries), not only battery
+  capacities. Before, the reference silently simulated the schema's values. A
+  change made after `reset()` is not detected. Evaluate with
+  `include_business_as_usual=False` in that case.
 
 Fixes that **change results** where they apply:
 
@@ -66,13 +69,15 @@ Fixes that **change results** where they apply:
   `TabularQLearning` bootstraps on the best next-state value; an explicit
   `action_scaling_coefficient` now takes effect (the default stays 0.5).
 - KPI references: the native BAU reference re-applies `simulate_power_outage`,
-  `solar_generation` and active/inactive action and observation overrides; with
-  the community market enabled, legacy cost and the equity audit settle the
-  counterfactual too. Autosized equipment in the reference is sized over the
-  same data as the evaluated env, not only the current episode: `evaluate_v2()`
-  no longer fails on the tx, vt and ca neighbourhood datasets when episodes are
-  shorter than the data, and BAU KPIs of the 2020 and 2021 challenge datasets
-  change because their reference heat pumps and storage now match.
+  `solar_generation` and active/inactive action and observation overrides, to
+  the same buildings when `buildings=` lists them in another order than the
+  schema; with the community market enabled, legacy cost and the equity audit
+  settle the counterfactual too. Autosized equipment in the reference is sized
+  over the same data as the evaluated env, not only the current episode:
+  `evaluate_v2()` no longer fails on the tx, vt and ca neighbourhood datasets
+  when episodes are shorter than the data, and BAU KPIs of the 2020 and 2021
+  challenge datasets change because their reference heat pumps and storage now
+  match.
 - Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
   ca neighbourhood datasets), and an EV connects to at most one charger per step,
   which affects charger clones in the dynamic-topology demos.
