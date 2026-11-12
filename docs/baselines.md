@@ -88,6 +88,12 @@ capacity and initial energy of batteries and EVs. A difference raises a
 `include_business_as_usual=False` in that case. A change made after `reset()`
 is not detected: the comparison covers the configuration captured at reset.
 
+For stochastic power outages, CityLearn uses the model's explicit
+`random_seed` when provided. Otherwise the built-in models derive their
+seed from the environment seed, episode window and building name. The
+controller and its native BAU reference therefore face the same outages
+when they use the same model configuration.
+
 Results are cached for the current episode and timestep. The output adds
 `business_as_usual` values, `delta_to_business_as_usual` differences and
 `ratio_to_business_as_usual` ratios for supported metrics:

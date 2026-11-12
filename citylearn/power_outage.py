@@ -1,3 +1,4 @@
+import hashlib
 from typing import List
 import numpy as np
 from citylearn.base import Environment
@@ -18,11 +19,21 @@ class PowerOutage:
 
     @property
     def random_seed(self) -> int:
-        return np.random.randint(*Environment.DEFAULT_RANDOM_SEED_RANGE) if self.__random_seed is None else self.__random_seed
+        if self.__random_seed is not None:
+            return self.__random_seed
+
+        episode_seed = getattr(self, '_episode_seed', None)
+        return np.random.randint(*Environment.DEFAULT_RANDOM_SEED_RANGE) if episode_seed is None else episode_seed
 
     @random_seed.setter
     def random_seed(self, value: int):
         self.__random_seed = value
+
+    def _set_episode_seed(self, seed: int, building_name: str, start: int, end: int) -> None:
+        """Give an unseeded model a stable stream shared by the controller and BAU."""
+
+        payload = f'power-outage:{seed}:{start}:{end}:{building_name}'.encode('utf-8')
+        self._episode_seed = int.from_bytes(hashlib.sha256(payload).digest()[:4], 'big')
 
     def get_signals(self, time_steps: int, **kwargs) -> np.ndarray:
         """Returns power outage signal time series.

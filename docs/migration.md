@@ -74,6 +74,9 @@ No dataset, schema or export-file migration is required.
 
 Fixes that **change results** where they apply:
 
+- Stochastic power outages: built-in models without an explicit seed now
+  derive one from the environment seed, episode window and building name.
+  The native BAU reference uses the same seed and outage signal.
 - Agents: MARLISA's coordinated actions use each building's own policy;
   `TabularQLearning` bootstraps on the best next-state value; an explicit
   `action_scaling_coefficient` now takes effect (the default stays 0.5).

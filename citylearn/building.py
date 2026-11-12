@@ -2897,7 +2897,16 @@ class Building(Environment):
 
         if self.simulate_power_outage:
             if self.stochastic_power_outage:
-                power_outage_signal = self.stochastic_power_outage_model.get_signals(
+                model = self.stochastic_power_outage_model
+                tracker = self.episode_tracker
+                if isinstance(model, PowerOutage):
+                    seed = tracker.episode_random_seed
+                    model._set_episode_seed(
+                        self.random_seed if seed is None else seed, self.name,
+                        tracker.episode_start_time_step, tracker.episode_end_time_step,
+                    )
+
+                power_outage_signal = model.get_signals(
                     self.episode_tracker.episode_time_steps,
                     seconds_per_time_step=self.seconds_per_time_step,
                     weather=self.weather
