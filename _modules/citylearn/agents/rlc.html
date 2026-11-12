@@ -125,6 +125,7 @@
              
   <h1>Source code for citylearn.agents.rlc</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Encoder</span><span class="p">,</span> <span class="n">PeriodicNormalization</span><span class="p">,</span> <span class="n">Normalize</span><span class="p">,</span> <span class="n">OnehotEncoding</span>
@@ -181,9 +182,24 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">hidden_dimension</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
         <span class="n">discount</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">replay_buffer_capacity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">standardize_start_time_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end_exploration_time_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
-        <span class="n">action_scaling_coefficienct</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reward_scaling</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">action_scaling_coefficient</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reward_scaling</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">update_per_time_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">):</span>
+        <span class="c1"># Earlier releases only accepted the misspelled keyword, so the documented</span>
+        <span class="c1"># spelling was swallowed by **kwargs and the 0.5 default always applied.</span>
+        <span class="n">misspelled</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'action_scaling_coefficienct'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">misspelled</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s1">'`action_scaling_coefficienct` is deprecated; use `action_scaling_coefficient`.'</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">action_scaling_coefficient</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">action_scaling_coefficient</span> <span class="o">!=</span> <span class="n">misspelled</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s1">'Got conflicting `action_scaling_coefficient` and deprecated `action_scaling_coefficienct` values.'</span>
+                <span class="p">)</span>
+            <span class="n">action_scaling_coefficient</span> <span class="o">=</span> <span class="n">misspelled</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hidden_dimension</span> <span class="o">=</span> <span class="n">hidden_dimension</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discount</span> <span class="o">=</span> <span class="n">discount</span>
@@ -194,7 +210,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">replay_buffer_capacity</span> <span class="o">=</span> <span class="n">replay_buffer_capacity</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">standardize_start_time_step</span> <span class="o">=</span> <span class="n">standardize_start_time_step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">end_exploration_time_step</span> <span class="o">=</span> <span class="n">end_exploration_time_step</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">action_scaling_coefficient</span> <span class="o">=</span> <span class="n">action_scaling_coefficienct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_scaling_coefficient</span> <span class="o">=</span> <span class="n">action_scaling_coefficient</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reward_scaling</span> <span class="o">=</span> <span class="n">reward_scaling</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_per_time_step</span> <span class="o">=</span> <span class="n">update_per_time_step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">encoders</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_encoders</span><span class="p">()</span>

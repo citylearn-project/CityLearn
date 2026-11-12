@@ -128,6 +128,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">copy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi_population</span><span class="w"> </span><span class="kn">import</span> <span class="n">current_population</span><span class="p">,</span> <span class="n">population_scope</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.market_history</span><span class="w"> </span><span class="kn">import</span> <span class="n">MarketSettlementHistory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.evaluation_progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvaluationProgress</span><span class="p">,</span> <span class="n">run</span><span class="p">,</span> <span class="n">span</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleNamespace</span>
@@ -146,6 +147,23 @@
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+
+<div class="viewcode-block" id="settled_cost_scope">
+<a class="viewcode-back" href="../../../api/citylearn.internal.kpi.html#citylearn.internal.kpi.settled_cost_scope">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">settled_cost_scope</span><span class="p">(</span><span class="n">function</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Share market-settled cost series across the KPI readers of one evaluation call."""</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="s1">'_settled_cost_cache'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">service</span><span class="o">.</span><span class="n">_settled_cost_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">function</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">service</span><span class="o">.</span><span class="n">_settled_cost_cache</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
 
 
 <div class="viewcode-block" id="CityLearnKPIService">
@@ -1617,6 +1635,7 @@
 <div class="viewcode-block" id="CityLearnKPIService.family_audit">
 <a class="viewcode-back" href="../../../api/citylearn.internal.kpi.html#citylearn.internal.kpi.CityLearnKPIService.family_audit">[docs]</a>
     <span class="nd">@population_scope</span>
+    <span class="nd">@settled_cost_scope</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">family_audit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comfort_band</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">control_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">baseline_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi_family_audit</span><span class="w"> </span><span class="kn">import</span> <span class="n">thermal_counts</span><span class="p">,</span> <span class="n">thermal_metrics</span><span class="p">,</span> <span class="n">pool_thermal</span><span class="p">,</span> <span class="n">equity_metrics</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvaluationCondition</span>
@@ -1636,8 +1655,16 @@
                 <span class="n">control</span> <span class="o">=</span> <span class="n">control_condition</span> <span class="k">if</span> <span class="n">control_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">EvaluationCondition</span><span class="o">.</span><span class="n">WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV</span> <span class="k">if</span> <span class="n">dynamic</span> <span class="k">else</span> <span class="n">EvaluationCondition</span><span class="o">.</span><span class="n">WITH_STORAGE_AND_PV</span><span class="p">)</span>
                 <span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline_condition</span> <span class="k">if</span> <span class="n">baseline_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">EvaluationCondition</span><span class="o">.</span><span class="n">WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV</span> <span class="k">if</span> <span class="n">dynamic</span> <span class="k">else</span> <span class="n">EvaluationCondition</span><span class="o">.</span><span class="n">WITHOUT_STORAGE_BUT_WITH_PV</span><span class="p">)</span>
                 <span class="n">conditions</span><span class="p">[</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">control</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">control</span><span class="p">,</span><span class="s1">'name'</span><span class="p">,</span><span class="n">control</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="n">reference</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">baseline</span><span class="p">,</span><span class="s1">'name'</span><span class="p">,</span><span class="n">baseline</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
-                <span class="n">costs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span><span class="s1">'net_electricity_consumption_cost'</span><span class="o">+</span><span class="n">control</span><span class="o">.</span><span class="n">value</span><span class="p">))),</span>
-                              <span class="bp">self</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span><span class="s1">'net_electricity_consumption_cost'</span><span class="o">+</span><span class="n">baseline</span><span class="o">.</span><span class="n">value</span><span class="p">)))))</span>
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+                    <span class="n">control_costs</span><span class="p">,</span> <span class="n">baseline_costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_market_cost_series</span><span class="p">(</span>
+                        <span class="n">control_condition</span><span class="p">,</span> <span class="n">baseline_condition</span><span class="p">,</span>
+                        <span class="n">evaluation_condition_cls</span><span class="o">=</span><span class="n">EvaluationCondition</span><span class="p">,</span> <span class="n">dynamics_building_cls</span><span class="o">=</span><span class="n">DynamicsBuilding</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">costs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="n">control_costs</span><span class="p">[</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">]),</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="n">baseline_costs</span><span class="p">[</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">])))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">costs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span><span class="s1">'net_electricity_consumption_cost'</span><span class="o">+</span><span class="n">control</span><span class="o">.</span><span class="n">value</span><span class="p">))),</span>
+                                  <span class="bp">self</span><span class="o">.</span><span class="n">_sum_finite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_energy_values</span><span class="p">(</span><span class="n">building</span><span class="p">,</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span><span class="s1">'net_electricity_consumption_cost'</span><span class="o">+</span><span class="n">baseline</span><span class="o">.</span><span class="n">value</span><span class="p">)))))</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">buildings</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span><span class="n">district</span><span class="o">=</span><span class="n">thermal_metrics</span><span class="p">(</span><span class="n">pool_thermal</span><span class="p">(</span><span class="n">counts</span><span class="p">)),</span><span class="n">equity</span><span class="o">=</span><span class="n">equity_metrics</span><span class="p">(</span><span class="n">costs</span><span class="p">),</span><span class="n">equity_conditions</span><span class="o">=</span><span class="n">conditions</span><span class="p">)</span></div>
 
 
@@ -1693,13 +1720,71 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">condition_by_building</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settled_cost_series</span><span class="p">(</span><span class="n">condition_by_building</span><span class="o">=</span><span class="n">condition_by_building</span><span class="p">)</span>
+        <span class="n">totals</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">series</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">total</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="c1"># Sequential sum in step order, as the totals were accumulated before; inactive steps add 0.0.</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
+                <span class="n">total</span> <span class="o">+=</span> <span class="n">value</span>
+            <span class="n">totals</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">total</span>
+
+        <span class="n">district_total</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">totals</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">totals</span><span class="p">,</span> <span class="n">district_total</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_market_cost_series</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">control_condition</span><span class="p">,</span>
+        <span class="n">baseline_condition</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">evaluation_condition_cls</span><span class="p">,</span>
+        <span class="n">dynamics_building_cls</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Control and reference cost series per member, both settled by the community market."""</span>
+        <span class="n">control_condition_by_building</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">baseline_condition_by_building</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_kpi_buildings</span><span class="p">():</span>
+            <span class="n">c_cond</span><span class="p">,</span> <span class="n">b_cond</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_building_conditions</span><span class="p">(</span>
+                <span class="n">building</span><span class="p">,</span>
+                <span class="n">control_condition</span><span class="p">,</span>
+                <span class="n">baseline_condition</span><span class="p">,</span>
+                <span class="n">evaluation_condition_cls</span><span class="o">=</span><span class="n">evaluation_condition_cls</span><span class="p">,</span>
+                <span class="n">dynamics_building_cls</span><span class="o">=</span><span class="n">dynamics_building_cls</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">control_condition_by_building</span><span class="p">[</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">c_cond</span>
+            <span class="n">baseline_condition_by_building</span><span class="p">[</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">b_cond</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_settled_cost_series</span><span class="p">(</span><span class="n">condition_by_building</span><span class="o">=</span><span class="n">control_condition_by_building</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_settled_cost_series</span><span class="p">(</span><span class="n">condition_by_building</span><span class="o">=</span><span class="n">baseline_condition_by_building</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_settled_cost_series</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">condition_by_building</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Per-member cost series with the community market settled over each member's condition flows.</span>
+
+<span class="sd">        The stored control cost is settled during simulation, but reference conditions are not;</span>
+<span class="sd">        comparing the two would credit the market's savings to the controller. Every cost</span>
+<span class="sd">        comparison therefore settles both sides here with the same rules.</span>
+<span class="sd">        """</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_settled_cost_cache'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">cache_key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">,</span> <span class="n">condition</span><span class="p">))</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">condition_by_building</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">))</span>
+        <span class="k">if</span> <span class="n">cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span>
+
         <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
         <span class="n">buildings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_kpi_buildings</span><span class="p">()</span>
         <span class="n">building_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">buildings</span><span class="p">]</span>
         <span class="n">windows</span> <span class="o">=</span> <span class="p">{</span><span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building_active_window</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">buildings</span><span class="p">}</span>
-        <span class="n">totals</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">building_names</span><span class="p">}</span>
+        <span class="n">step_count</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">step_count</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">building_names</span><span class="p">}</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">building_names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">totals</span><span class="p">,</span> <span class="mf">0.0</span>
+            <span class="k">return</span> <span class="n">series</span>
 
         <span class="n">final_t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
         <span class="n">ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_sell_ratio'</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">),</span> <span class="mf">0.8</span><span class="p">)</span>
@@ -1794,14 +1879,17 @@
                     <span class="o">-</span> <span class="n">local_export</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">local_sell_price</span>
                     <span class="o">-</span> <span class="n">grid_export_remaining</span> <span class="o">*</span> <span class="n">grid_export_price</span>
                 <span class="p">)</span>
-                <span class="n">totals</span><span class="p">[</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span>
+                <span class="n">series</span><span class="p">[</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">][</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cost</span><span class="p">)</span>
 
-        <span class="n">district_total</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">totals</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-        <span class="k">return</span> <span class="n">totals</span><span class="p">,</span> <span class="n">district_total</span>
+        <span class="k">if</span> <span class="n">cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">series</span>
+
+        <span class="k">return</span> <span class="n">series</span>
 
 <div class="viewcode-block" id="CityLearnKPIService.evaluate">
 <a class="viewcode-back" href="../../../api/citylearn.internal.kpi.html#citylearn.internal.kpi.CityLearnKPIService.evaluate">[docs]</a>
     <span class="nd">@population_scope</span>
+    <span class="nd">@settled_cost_scope</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">control_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -2238,6 +2326,7 @@
 <div class="viewcode-block" id="CityLearnKPIService.evaluate_v2">
 <a class="viewcode-back" href="../../../api/citylearn.internal.kpi.html#citylearn.internal.kpi.CityLearnKPIService.evaluate_v2">[docs]</a>
     <span class="nd">@population_scope</span>
+    <span class="nd">@settled_cost_scope</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_v2</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">control_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">baseline_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">comfort_band</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">include_business_as_usual</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">evaluation_condition_cls</span><span class="p">,</span>

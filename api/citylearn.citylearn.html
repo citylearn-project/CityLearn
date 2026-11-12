@@ -458,6 +458,9 @@ current episode time steps for reading observations from data files.</p>
 <dd><p>Evaluate v2 KPIs; optional progress callback receives scalar stage events.</p>
 <p>Callback failures are logged and disable reporting, preserving evaluation.
 No progress events or timings are added to the returned KPI table.</p>
+<p>With <cite>include_business_as_usual</cite>, the native BAU reference is rebuilt from the schema and
+the constructor arguments. A <cite>ValueError</cite> names the setting when it differs from this env as
+captured at its last <cite>reset()</cite>; see the baselines guide for the settings that are compared.</p>
 </dd></dl>
 
 <dl class="py method">

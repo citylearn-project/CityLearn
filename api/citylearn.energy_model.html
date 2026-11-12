@@ -384,6 +384,22 @@ bypassing restrictions such as efficiency losses, power limits, and degradation.
 <dd><p>Reset <cite>Battery</cite> to initial state.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.energy_model.Battery.set_rated_efficiency">
+<span class="sig-name descname"><span class="pre">set_rated_efficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">efficiency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/energy_model.html#Battery.set_rated_efficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.Battery.set_rated_efficiency" title="Link to this definition"></a></dt>
+<dd><p>Replace the rated efficiency outside a simulation, e.g. with a datasheet value after autosizing.</p>
+<p>During simulation <cite>efficiency</cite> is read from <cite>power_efficiency_curve</cite> at every charge or discharge,
+and <a class="reference internal" href="#citylearn.energy_model.Battery.reset" title="citylearn.energy_model.Battery.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> restores the first recorded value. Assigning <cite>efficiency</cite> directly therefore
+neither changes the simulated efficiency nor survives a reset. This method makes <cite>efficiency</cite>
+the reset value and rescales a generated <cite>power_efficiency_curve</cite> so that its rated point equals
+it. A user-supplied curve is left unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>efficiency</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – Rated efficiency. <cite>None</cite> or NaN draws the default, as the <cite>efficiency</cite> setter does.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.time_step_ratio">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.time_step_ratio" title="Link to this definition"></a></dt>

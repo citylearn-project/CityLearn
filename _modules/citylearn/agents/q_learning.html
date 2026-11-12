@@ -269,12 +269,10 @@
             <span class="n">current_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">o</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span>
             <span class="n">current_q</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">current_q</span><span class="p">)</span> <span class="k">else</span> <span class="n">current_q</span>
 
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">next_max_q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">n</span><span class="p">])</span>
-            
-            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                <span class="c1"># when all values for observation are still NaN</span>
-                <span class="n">next_max_q</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">next_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>
+            <span class="c1"># Bellman target uses the best next-state value, not its action index;</span>
+            <span class="c1"># unvisited (all-NaN) states contribute zero.</span>
+            <span class="n">next_max_q</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">next_q</span><span class="p">))</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">next_q</span><span class="p">))</span>
             
             <span class="c1"># update q</span>
             <span class="n">new_q</span> <span class="o">=</span> <span class="n">current_q</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span><span class="o">*</span><span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">discount_factor</span><span class="o">*</span><span class="n">next_max_q</span> <span class="o">-</span> <span class="n">current_q</span><span class="p">)</span>

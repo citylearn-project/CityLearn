@@ -1412,6 +1412,35 @@
         <span class="n">StorageDevice</span><span class="o">.</span><span class="n">efficiency</span><span class="o">.</span><span class="n">fset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">efficiency</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_efficiency_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">efficiency</span><span class="p">)</span>
 
+<div class="viewcode-block" id="Battery.set_rated_efficiency">
+<a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.Battery.set_rated_efficiency">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_rated_efficiency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">efficiency</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Replace the rated efficiency outside a simulation, e.g. with a datasheet value after autosizing.</span>
+
+<span class="sd">        During simulation `efficiency` is read from `power_efficiency_curve` at every charge or discharge,</span>
+<span class="sd">        and :py:meth:`reset` restores the first recorded value. Assigning `efficiency` directly therefore</span>
+<span class="sd">        neither changes the simulated efficiency nor survives a reset. This method makes `efficiency`</span>
+<span class="sd">        the reset value and rescales a generated `power_efficiency_curve` so that its rated point equals</span>
+<span class="sd">        it. A user-supplied curve is left unchanged.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        efficiency : Union[float, Tuple[float, float]]</span>
+<span class="sd">            Rated efficiency. `None` or NaN draws the default, as the `efficiency` setter does.</span>
+<span class="sd">        """</span>
+
+        <span class="n">StorageDevice</span><span class="o">.</span><span class="n">efficiency</span><span class="o">.</span><span class="n">fset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">efficiency</span><span class="p">)</span>
+        <span class="n">rated</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">efficiency</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_efficiency_history</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="s1">'d'</span><span class="p">,</span> <span class="p">[</span><span class="n">rated</span><span class="p">])</span>
+        <span class="n">reference</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_curve_reference_efficiency'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">reference</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">reference</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">rated</span> <span class="o">!=</span> <span class="n">reference</span><span class="p">:</span>
+            <span class="n">curve</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__power_efficiency_curve</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">curve</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">curve</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">rated</span><span class="o">/</span><span class="n">reference</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__power_efficiency_curve</span> <span class="o">=</span> <span class="n">curve</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_curve_reference_efficiency</span> <span class="o">=</span> <span class="n">rated</span></div>
+
+
     <span class="nd">@capacity_loss_coefficient</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">capacity_loss_coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">capacity_loss_coefficient</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]):</span>
         <span class="n">capacity_loss_coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property_value</span><span class="p">(</span><span class="n">capacity_loss_coefficient</span><span class="p">,</span> <span class="p">(</span><span class="mf">1e-5</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">))</span>
@@ -1420,6 +1449,10 @@
 
     <span class="nd">@power_efficiency_curve</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">power_efficiency_curve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">power_efficiency_curve</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]):</span>
+        <span class="c1"># A generated curve is expressed relative to the rated efficiency it was drawn from,</span>
+        <span class="c1"># so `set_rated_efficiency` can rescale it; a user-supplied curve is kept as given.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_curve_reference_efficiency</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">efficiency</span><span class="p">)</span> <span class="k">if</span> <span class="n">power_efficiency_curve</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
         <span class="k">if</span> <span class="n">power_efficiency_curve</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">power_efficiency_curve</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">numpy_random_state</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">efficiency</span><span class="o">*</span><span class="mf">0.85</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">efficiency</span><span class="o">*</span><span class="mf">0.90</span><span class="p">)],</span>

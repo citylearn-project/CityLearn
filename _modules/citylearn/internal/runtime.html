@@ -128,6 +128,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -1142,117 +1143,168 @@
 
             <span class="k">return</span> <span class="n">soc_value</span>
 
-        <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">building</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">chargers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">charger</span>
+            <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span>
+            <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span> <span class="ow">or</span> <span class="p">[])</span>
+        <span class="p">]</span>
+        <span class="c1"># One EV can be plugged into only one charger. Overlapping charger schedules, e.g. a</span>
+        <span class="c1"># charger cloned by a topology event while its source is still active, would otherwise</span>
+        <span class="c1"># charge the same battery through two chargers at once. The charger that held the EV in</span>
+        <span class="c1"># the previous step keeps it; otherwise chargers loaded from the schema come before</span>
+        <span class="c1"># chargers added by topology events (earliest first), then building order.</span>
+        <span class="n">holder_by_ev</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">chargers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">holder_by_ev</span><span class="p">[</span><span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">charger</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_continues_session</span><span class="p">(</span><span class="n">charger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">t</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">past_connected_evs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">previous</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">past_connected_evs</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">previous</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">previous</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+
+        <span class="n">chargers</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">(</span>
+            <span class="mi">0</span> <span class="k">if</span> <span class="n">_continues_session</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s1">'_topology_added_time_step'</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+        <span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">chargers</span><span class="p">:</span>
+            <span class="n">sim</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="ow">or</span> <span class="n">state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
                 <span class="k">continue</span>
 
-            <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">building</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span><span class="p">:</span>
-                <span class="n">sim</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span>
-                <span class="n">state</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span>
+            <span class="n">ev_id</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span>
+            <span class="n">prev_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">prev_ev_id</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">):</span>
+                    <span class="n">prev_state</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">):</span>
+                    <span class="n">prev_ev_id</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
-                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="ow">or</span> <span class="n">state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ev_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ev_id</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">''</span><span class="p">,</span> <span class="s1">'nan'</span><span class="p">]:</span>
+                <span class="n">ev</span> <span class="o">=</span> <span class="n">ev_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ev_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">continue</span>
 
-                <span class="n">ev_id</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span>
-                <span class="n">prev_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-                <span class="n">prev_ev_id</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">idx</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span>
-                    <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">):</span>
-                        <span class="n">prev_state</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">):</span>
-                        <span class="n">prev_ev_id</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ev_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ev_id</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">''</span><span class="p">,</span> <span class="s1">'nan'</span><span class="p">]:</span>
-                    <span class="n">ev</span> <span class="o">=</span> <span class="n">ev_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ev_id</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">ev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">holder</span> <span class="o">=</span> <span class="n">holder_by_ev</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">holder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">holder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">charger</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_warn_ev_double_booking</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">charger</span><span class="p">,</span> <span class="n">holder</span><span class="p">)</span>
                         <span class="k">continue</span>
 
-                    <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="c1"># Idempotent behavior: the method may be called again in the same</span>
-                        <span class="c1"># time step when topology changed and action/observation layouts are refreshed.</span>
-                        <span class="n">just_connected</span> <span class="o">=</span> <span class="kc">False</span>
-                        <span class="k">if</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                            <span class="n">charger</span><span class="o">.</span><span class="n">plug_car</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
-                            <span class="n">just_connected</span> <span class="o">=</span> <span class="kc">True</span>
-                        <span class="k">elif</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ev</span><span class="p">:</span>
-                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                                <span class="sa">f</span><span class="s2">"Charger '</span><span class="si">{</span><span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span><span class="si">}</span><span class="s2">' already connected to "</span>
-                                <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' but dataset requires '</span><span class="si">{</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' "</span>
-                                <span class="sa">f</span><span class="s2">"at time step </span><span class="si">{</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="si">}</span><span class="s2">."</span>
+                    <span class="c1"># Idempotent behavior: the method may be called again in the same</span>
+                    <span class="c1"># time step when topology changed and action/observation layouts are refreshed.</span>
+                    <span class="n">just_connected</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">if</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">charger</span><span class="o">.</span><span class="n">plug_car</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+                        <span class="n">holder_by_ev</span><span class="p">[</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">charger</span>
+                        <span class="n">just_connected</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">elif</span> <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ev</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Charger '</span><span class="si">{</span><span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span><span class="si">}</span><span class="s2">' already connected to "</span>
+                            <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' but dataset requires '</span><span class="si">{</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' "</span>
+                            <span class="sa">f</span><span class="s2">"at time step </span><span class="si">{</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="si">}</span><span class="s2">."</span>
+                        <span class="p">)</span>
+                    <span class="c1"># ``Charger.next_time_step`` clears the live object</span>
+                    <span class="c1"># reference before association, so ``just_connected``</span>
+                    <span class="c1"># is true on every connected control step.  It must not</span>
+                    <span class="c1"># be used as the session boundary: doing so would force</span>
+                    <span class="c1"># a dataset current-SOC reference at every step and</span>
+                    <span class="c1"># overwrite the controller's charging decision.  The</span>
+                    <span class="c1"># committed runtime history distinguishes a continuing</span>
+                    <span class="c1"># session from a true arrival or from a charger/member</span>
+                    <span class="c1"># that has just appeared mid-session.</span>
+                    <span class="n">previous_runtime_ev</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">charger</span><span class="o">.</span><span class="n">past_connected_evs</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                        <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">past_connected_evs</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="kc">None</span>
+                    <span class="p">)</span>
+                    <span class="n">session_ids</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+                        <span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_session_id'</span><span class="p">,</span> <span class="kc">None</span>
+                    <span class="p">)</span>
+                    <span class="n">session_id</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">session_ids</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">session_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                        <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">session_ids</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="kc">None</span>
+                    <span class="p">)</span>
+                    <span class="n">previous_session_id</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">session_ids</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">session_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                        <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                        <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">session_ids</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="kc">None</span>
+                    <span class="p">)</span>
+                    <span class="n">has_session_identity</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="nb">isinstance</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                        <span class="ow">and</span> <span class="n">session_id</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">''</span><span class="p">,</span> <span class="s1">'nan'</span><span class="p">}</span>
+                    <span class="p">)</span>
+                    <span class="n">session_changed</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">has_session_identity</span>
+                        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous_session_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                        <span class="ow">and</span> <span class="n">previous_session_id</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">''</span><span class="p">,</span> <span class="s1">'nan'</span><span class="p">}</span>
+                        <span class="ow">and</span> <span class="n">session_id</span> <span class="o">!=</span> <span class="n">previous_session_id</span>
+                    <span class="p">)</span>
+                    <span class="c1"># Legacy charger files do not expose session identity.</span>
+                    <span class="c1"># A countdown reset after a value of one is the exact</span>
+                    <span class="c1"># boundary-compatible fallback for a back-to-back</span>
+                    <span class="c1"># session of the same EV.</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">session_changed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_session_identity</span> <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">departure_time</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+                            <span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_departure_time'</span><span class="p">,</span> <span class="kc">None</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="p">(</span>
+                            <span class="n">departure_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                            <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">departure_time</span><span class="p">)</span>
+                        <span class="p">):</span>
+                            <span class="n">previous_countdown</span> <span class="o">=</span> <span class="n">departure_time</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                            <span class="n">current_countdown</span> <span class="o">=</span> <span class="n">departure_time</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span>
+                            <span class="n">session_changed</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">previous_countdown</span><span class="p">)</span>
+                                <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">current_countdown</span><span class="p">)</span>
+                                <span class="ow">and</span> <span class="n">previous_countdown</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+                                <span class="ow">and</span> <span class="n">current_countdown</span> <span class="o">&gt;</span> <span class="n">previous_countdown</span>
                             <span class="p">)</span>
-                        <span class="c1"># ``Charger.next_time_step`` clears the live object</span>
-                        <span class="c1"># reference before association, so ``just_connected``</span>
-                        <span class="c1"># is true on every connected control step.  It must not</span>
-                        <span class="c1"># be used as the session boundary: doing so would force</span>
-                        <span class="c1"># a dataset current-SOC reference at every step and</span>
-                        <span class="c1"># overwrite the controller's charging decision.  The</span>
-                        <span class="c1"># committed runtime history distinguishes a continuing</span>
-                        <span class="c1"># session from a true arrival or from a charger/member</span>
-                        <span class="c1"># that has just appeared mid-session.</span>
-                        <span class="n">previous_runtime_ev</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="n">charger</span><span class="o">.</span><span class="n">past_connected_evs</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
-                            <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                            <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">past_connected_evs</span><span class="p">)</span>
-                            <span class="k">else</span> <span class="kc">None</span>
-                        <span class="p">)</span>
-                        <span class="n">session_ids</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
-                            <span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_session_id'</span><span class="p">,</span> <span class="kc">None</span>
-                        <span class="p">)</span>
-                        <span class="n">session_id</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="n">session_ids</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span>
-                            <span class="k">if</span> <span class="n">session_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                            <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">session_ids</span><span class="p">)</span>
-                            <span class="k">else</span> <span class="kc">None</span>
-                        <span class="p">)</span>
-                        <span class="n">previous_session_id</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="n">session_ids</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
-                            <span class="k">if</span> <span class="n">session_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                            <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                            <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">session_ids</span><span class="p">)</span>
-                            <span class="k">else</span> <span class="kc">None</span>
-                        <span class="p">)</span>
-                        <span class="n">has_session_identity</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="nb">isinstance</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
-                            <span class="ow">and</span> <span class="n">session_id</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">''</span><span class="p">,</span> <span class="s1">'nan'</span><span class="p">}</span>
-                        <span class="p">)</span>
-                        <span class="n">session_changed</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="n">has_session_identity</span>
-                            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous_session_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
-                            <span class="ow">and</span> <span class="n">previous_session_id</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">''</span><span class="p">,</span> <span class="s1">'nan'</span><span class="p">}</span>
-                            <span class="ow">and</span> <span class="n">session_id</span> <span class="o">!=</span> <span class="n">previous_session_id</span>
-                        <span class="p">)</span>
-                        <span class="c1"># Legacy charger files do not expose session identity.</span>
-                        <span class="c1"># A countdown reset after a value of one is the exact</span>
-                        <span class="c1"># boundary-compatible fallback for a back-to-back</span>
-                        <span class="c1"># session of the same EV.</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">session_changed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_session_identity</span> <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                            <span class="n">departure_time</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
-                                <span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_departure_time'</span><span class="p">,</span> <span class="kc">None</span>
-                            <span class="p">)</span>
-                            <span class="k">if</span> <span class="p">(</span>
-                                <span class="n">departure_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                                <span class="ow">and</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">departure_time</span><span class="p">)</span>
-                            <span class="p">):</span>
-                                <span class="n">previous_countdown</span> <span class="o">=</span> <span class="n">departure_time</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
-                                <span class="n">current_countdown</span> <span class="o">=</span> <span class="n">departure_time</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span>
-                                <span class="n">session_changed</span> <span class="o">=</span> <span class="p">(</span>
-                                    <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">previous_countdown</span><span class="p">)</span>
-                                    <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">current_countdown</span><span class="p">)</span>
-                                    <span class="ow">and</span> <span class="n">previous_countdown</span> <span class="o">&lt;=</span> <span class="mi">1</span>
-                                    <span class="ow">and</span> <span class="n">current_countdown</span> <span class="o">&gt;</span> <span class="n">previous_countdown</span>
-                                <span class="p">)</span>
-                        <span class="n">is_new_connection</span> <span class="o">=</span> <span class="n">just_connected</span> <span class="ow">and</span> <span class="p">(</span>
-                            <span class="n">previous_runtime_ev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ev</span> <span class="ow">or</span> <span class="n">session_changed</span>
-                        <span class="p">)</span>
-                        <span class="k">if</span> <span class="n">is_new_connection</span><span class="p">:</span>
-                            <span class="n">soc_value</span> <span class="o">=</span> <span class="n">_resolve_arrival_soc</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="n">prev_state</span><span class="p">,</span> <span class="n">prev_ev_id</span><span class="p">,</span> <span class="n">ev_id</span><span class="p">)</span>
-                            <span class="k">if</span> <span class="n">soc_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                                <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="n">soc_value</span><span class="p">)</span>
-                                <span class="n">ev</span><span class="o">.</span><span class="n">_arrival_soc_time_step</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span>
-                    <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                        <span class="n">charger</span><span class="o">.</span><span class="n">associate_incoming_car</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span></div>
+                    <span class="n">is_new_connection</span> <span class="o">=</span> <span class="n">just_connected</span> <span class="ow">and</span> <span class="p">(</span>
+                        <span class="n">previous_runtime_ev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ev</span> <span class="ow">or</span> <span class="n">session_changed</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">is_new_connection</span><span class="p">:</span>
+                        <span class="n">soc_value</span> <span class="o">=</span> <span class="n">_resolve_arrival_soc</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="n">prev_state</span><span class="p">,</span> <span class="n">prev_ev_id</span><span class="p">,</span> <span class="n">ev_id</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">soc_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="n">soc_value</span><span class="p">)</span>
+                            <span class="n">ev</span><span class="o">.</span><span class="n">_arrival_soc_time_step</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span>
+                <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">charger</span><span class="o">.</span><span class="n">associate_incoming_car</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_warn_ev_double_booking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">charger</span><span class="p">,</span> <span class="n">holder</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Warn once per charger pair that a schedule asked for an EV plugged in elsewhere."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="n">warned</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_ev_double_booking_warnings'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">warned</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warned</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_ev_double_booking_warnings</span> <span class="o">=</span> <span class="n">warned</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span><span class="p">,</span> <span class="n">holder</span><span class="o">.</span><span class="n">charger_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">warned</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">warned</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Charger '</span><span class="si">{</span><span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span><span class="si">}</span><span class="s2">' is scheduled to connect '</span><span class="si">{</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' at time step </span><span class="si">{</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"but it is already plugged into charger '</span><span class="si">{</span><span class="n">holder</span><span class="o">.</span><span class="n">charger_id</span><span class="si">}</span><span class="s2">'; '</span><span class="si">{</span><span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span><span class="si">}</span><span class="s2">' stays idle "</span>
+            <span class="s2">"while that session lasts."</span><span class="p">,</span>
+            <span class="ne">RuntimeWarning</span><span class="p">,</span>
+            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
 
 <div class="viewcode-block" id="CityLearnRuntimeService.simulate_unconnected_ev_soc">
 <a class="viewcode-back" href="../../../api/citylearn.internal.runtime.html#citylearn.internal.runtime.CityLearnRuntimeService.simulate_unconnected_ev_soc">[docs]</a>

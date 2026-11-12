@@ -250,9 +250,25 @@ parameters from a separate agent created by the user.</p>
 <h3>Automatic BAU evaluation<a class="headerlink" href="#automatic-bau-evaluation" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">env.evaluate_v2()</span></code> runs or reuses a separate BAU simulation up to the current
 evaluation timestep. That simulation is rebuilt from the source schema, selected
-members/EVs, episode window, timestep, topology mode and seed. It uses entity
-mode when dynamic topology or demand response requires it. Rendering is disabled
-for this internal comparison.</p>
+members/EVs, episode window, timestep, topology mode and seed. It also re-applies
+the environment’s constructor overrides <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code>,
+<code class="docutils literal notranslate"><span class="pre">solar_generation</span></code>, <code class="docutils literal notranslate"><span class="pre">active_actions</span></code>/<code class="docutils literal notranslate"><span class="pre">inactive_actions</span></code> and
+<code class="docutils literal notranslate"><span class="pre">active_observations</span></code>/<code class="docutils literal notranslate"><span class="pre">inactive_observations</span></code>, so the reference simulates the
+same equipment, generation and outages. It loads the buildings in the evaluated
+environment’s order, so per-building override lists reach the same buildings
+when <code class="docutils literal notranslate"><span class="pre">buildings=[1,</span> <span class="pre">0]</span></code> selects them in another order than the schema. It uses
+entity mode when dynamic topology or demand response requires it. Rendering is
+disabled for this internal comparison.</p>
+<p>The reference reproduces what the schema and these constructor arguments define.
+It cannot follow buildings, devices or chargers changed after loading, for
+example a new charger <code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code> or building <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code>.
+Before it runs, it is compared with the evaluated environment as captured at its
+last <code class="docutils literal notranslate"><span class="pre">reset()</span></code>: the building order, each building’s <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code> and
+active actions, each charger’s power limits and efficiencies, and the capacity
+and initial energy of batteries and EVs. A difference raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that
+names the setting; evaluate with <code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> in that case.
+Other device parameters, such as heat pump or PV sizes, are not compared, and a
+change made after <code class="docutils literal notranslate"><span class="pre">reset()</span></code> is not detected.</p>
 <p>Results are cached for the current episode and timestep. The output adds
 <code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code> values, <code class="docutils literal notranslate"><span class="pre">delta_to_business_as_usual</span></code> differences and
 <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios for supported metrics:</p>
@@ -279,6 +295,10 @@ models, without partial-load control, while retaining PV.</p>
 <p>This is a counterfactual calculation, not a second <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> run.
 <code class="docutils literal notranslate"><span class="pre">EvaluationCondition</span></code> also exposes alternatives, including removing PV.
 Choose the same evaluation condition when comparing controllers.</p>
+<p>With the community market enabled, both the control and the counterfactual
+costs are settled with the scenario’s market rules, in the legacy, v2 and
+equity-audit KPIs alike. Savings from local trading are then not credited to
+the controller.</p>
 <p>For example, <code class="docutils literal notranslate"><span class="pre">district_cost_ratio_to_baseline_total_ratio</span></code> and
 <code class="docutils literal notranslate"><span class="pre">district_cost_ratio_to_business_as_usual_total_ratio</span></code> have different
 denominators. A value below one means lower cost than the named reference.</p>

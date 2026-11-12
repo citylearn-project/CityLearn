@@ -2913,12 +2913,23 @@
         <span class="n">demand</span><span class="p">[</span><span class="s1">'day'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">demand</span><span class="o">.</span><span class="n">index</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span> <span class="o">//</span> <span class="p">(</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
         <span class="n">demand</span> <span class="o">=</span> <span class="n">demand</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'day'</span><span class="p">)[</span><span class="s1">'value'</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">capacity</span><span class="p">,</span> \
-            <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">nominal_power</span><span class="p">,</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">depth_of_discharge</span><span class="p">,</span> \
-                    <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">efficiency</span><span class="p">,</span> \
-                        <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">loss_coefficient</span><span class="p">,</span> \
-                            <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">capacity_loss_coefficient</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="n">storage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage</span>
+        <span class="n">capacity</span><span class="p">,</span> <span class="n">nominal_power</span><span class="p">,</span> <span class="n">depth_of_discharge</span><span class="p">,</span> <span class="n">efficiency</span><span class="p">,</span> <span class="n">loss_coefficient</span><span class="p">,</span> <span class="n">capacity_loss_coefficient</span> <span class="o">=</span> \
+            <span class="n">storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># Same assignment order as before, so random defaults for missing datasheet values are unchanged.</span>
+        <span class="n">storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="n">capacity</span>
+        <span class="n">storage</span><span class="o">.</span><span class="n">nominal_power</span> <span class="o">=</span> <span class="n">nominal_power</span>
+        <span class="n">storage</span><span class="o">.</span><span class="n">depth_of_discharge</span> <span class="o">=</span> <span class="n">depth_of_discharge</span>
+
+        <span class="c1"># A plain `efficiency` assignment is lost at reset and ignored by the power-efficiency curve</span>
+        <span class="c1"># that sets the simulated efficiency, so the datasheet value never took effect.</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'set_rated_efficiency'</span><span class="p">):</span>
+            <span class="n">storage</span><span class="o">.</span><span class="n">set_rated_efficiency</span><span class="p">(</span><span class="n">efficiency</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">storage</span><span class="o">.</span><span class="n">efficiency</span> <span class="o">=</span> <span class="n">efficiency</span>
+
+        <span class="n">storage</span><span class="o">.</span><span class="n">loss_coefficient</span> <span class="o">=</span> <span class="n">loss_coefficient</span>
+        <span class="n">storage</span><span class="o">.</span><span class="n">capacity_loss_coefficient</span> <span class="o">=</span> <span class="n">capacity_loss_coefficient</span></div>
 
 
 <div class="viewcode-block" id="Building.autosize_pv">

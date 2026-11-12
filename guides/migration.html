@@ -193,6 +193,29 @@ operating systems still do not pair: <code class="docutils literal notranslate">
 <a class="reference internal" href="developer_guide.html#portable-experiment-evidence"><span class="std std-ref">Portable experiment evidence</span></a>
 lists the file-reference spellings that are normalised and how to update a
 checkout made before <code class="docutils literal notranslate"><span class="pre">.gitattributes</span></code>.</p></li>
+<li><p><strong>RL agent keyword:</strong> pass <code class="docutils literal notranslate"><span class="pre">action_scaling_coefficient=</span></code> to <code class="docutils literal notranslate"><span class="pre">SAC</span></code>, <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code>
+and other <code class="docutils literal notranslate"><span class="pre">RLC</span></code> agents. The misspelled <code class="docutils literal notranslate"><span class="pre">action_scaling_coefficienct=</span></code> still
+works with a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>; before, only the misspelling took effect.</p></li>
+<li><p><strong>Native BAU reference check:</strong> <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> naming
+the setting when the building order, a building’s <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code> or
+active actions, or a charger’s power limits or efficiencies differ between the
+evaluated env at its last <code class="docutils literal notranslate"><span class="pre">reset()</span></code> and the reference, which is rebuilt from
+the schema and constructor arguments; before, the reference silently simulated
+the schema’s values. Evaluate with <code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> then.</p></li>
+</ul>
+<p>Fixes that <strong>change results</strong> where they apply:</p>
+<ul class="simple">
+<li><p>Agents: MARLISA’s coordinated actions use each building’s own policy;
+<code class="docutils literal notranslate"><span class="pre">TabularQLearning</span></code> bootstraps on the best next-state value; an explicit
+<code class="docutils literal notranslate"><span class="pre">action_scaling_coefficient</span></code> now takes effect (the default stays 0.5).</p></li>
+<li><p>KPI references: the native BAU reference re-applies <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code>,
+<code class="docutils literal notranslate"><span class="pre">solar_generation</span></code> and active/inactive action and observation overrides, to
+the same buildings when <code class="docutils literal notranslate"><span class="pre">buildings=</span></code> lists them in another order than the
+schema; with the community market enabled, legacy cost and the equity audit
+settle the counterfactual too.</p></li>
+<li><p>Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
+ca neighbourhood datasets), and an EV connects to at most one charger per step,
+which affects charger clones in the dynamic-topology demos.</p></li>
 </ul>
 </section>
 <section id="upgrade-from-3-1-1-to-3-2-0">

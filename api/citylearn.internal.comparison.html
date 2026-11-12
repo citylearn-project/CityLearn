@@ -163,6 +163,12 @@
 <dd></dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.comparison.configuration_differences">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.comparison.</span></span><span class="sig-name descname"><span class="pre">configuration_differences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/comparison.html#configuration_differences"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.comparison.configuration_differences" title="Link to this definition"></a></dt>
+<dd><p><cite>setting (left vs right)</cite> for each <a class="reference internal" href="#citylearn.internal.comparison.reference_configuration" title="citylearn.internal.comparison.reference_configuration"><code class="xref py py-func docutils literal notranslate"><span class="pre">reference_configuration()</span></code></a> entry that differs.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="citylearn.internal.comparison.context">
 <span class="sig-prename descclassname"><span class="pre">citylearn.internal.comparison.</span></span><span class="sig-name descname"><span class="pre">context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/comparison.html#context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.comparison.context" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -206,6 +212,15 @@ name one file may fail to pair. With <code class="docutils literal notranslate">
 <dt class="sig sig-object py" id="citylearn.internal.comparison.native_reference">
 <span class="sig-prename descclassname"><span class="pre">citylearn.internal.comparison.</span></span><span class="sig-name descname"><span class="pre">native_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/comparison.html#native_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.comparison.native_reference" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.comparison.reference_configuration">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.comparison.</span></span><span class="sig-name descname"><span class="pre">reference_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/comparison.html#reference_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.comparison.reference_configuration" title="Link to this definition"></a></dt>
+<dd><p>Building order and the per-building settings that the native BAU reference must reproduce.</p>
+<p>The reference is rebuilt from the schema and the constructor arguments. This records what they
+resolve to for each building, in the env’s building order: the outage setting, the active actions
+and the chargers’ power limits and efficiencies, all of which setters can change after loading.</p>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="citylearn.internal.comparison.relative_to_root">
