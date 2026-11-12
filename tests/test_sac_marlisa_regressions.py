@@ -1,7 +1,9 @@
-"""Regressions in the bundled SAC and MARLISA agents (normalisation, schedule, seeding, MARLISA coordination)."""
+"""Regressions in the bundled SAC and MARLISA agents (normalisation, schedule, seeding, MARLISA coordination, saved agents)."""
 
 import copy
+import gzip
 import json
+import pickle
 import random
 from pathlib import Path
 
@@ -14,8 +16,11 @@ pytest.importorskip('sklearn')
 from citylearn.agents.marlisa import MARLISA
 from citylearn.agents.sac import SAC
 from citylearn.citylearn import CityLearnEnv
+from citylearn.utilities import FileHandler
 
 DATASET = Path(__file__).resolve().parents[1] / 'data' / 'datasets' / 'citylearn_challenge_2022_phase_all'
+# Agents saved with CityLearn 3.2.0 by data/checkpoints_3_2_0/generate.py.
+CHECKPOINTS_3_2_0 = Path(__file__).resolve().parent / 'data' / 'checkpoints_3_2_0'
 # Encoded SAC/MARLISA observation layout for this dataset: month -> (sin, cos), day_type -> 8 one-hot, hour -> (sin, cos), ...
 MONTH_COLUMNS = [0, 1]
 # 36 encoded observations + 2 coordination variables: MARLISA's PCA (default pca_compression=1) needs 38 transitions.
@@ -180,7 +185,7 @@ def test_sac_policy_before_standardisation_raises_clear_error():
 # --- reproducibility from the environment seed --------------------------------------------------------------------
 
 def _policy_parameters(agent):
-    return [p.detach().clone() for net in agent.policy_net for p in net.parameters()]
+    return [p.detach().cpu().clone() for net in agent.policy_net for p in net.parameters()]
 
 
 def _actions(agent):
@@ -302,3 +307,94 @@ def test_marlisa_regression_refits_every_regression_frequency_once_buffer_is_lar
     agent.learn(episodes=1)
 
     assert fits == [2, 3, 6, 10, 20, 30]
+
+
+# --- saved agents ---------------------------------------------------------------------------------------------------
+
+# Agents and schedules of the checkpoints in data/checkpoints_3_2_0.
+CHECKPOINT_AGENTS = {
+    'sac': (SAC, (0,), {'batch_size': 8, 'standardize_start_time_step': 10, 'end_exploration_time_step': 15}),
+    'marlisa': (MARLISA, (0, 1), {
+        'batch_size': 8, 'start_regression_time_step': 2, 'standardize_start_time_step': 42,
+        'end_exploration_time_step': 45,
+    }),
+}
+
+
+def _load_3_2_0_checkpoint(name, tmp_path):
+    """Load an agent saved with CityLearn 3.2.0 as `citylearn simulate` loads one: unpickle it, then attach the env."""
+
+    path = tmp_path / f'{name}.pkl'
+    path.write_bytes(gzip.decompress((CHECKPOINTS_3_2_0 / f'{name}.pkl.gz').read_bytes()))
+    agent = FileHandler.read_pickle(path)
+    agent.env = _env(buildings=CHECKPOINT_AGENTS[name][1])
+    return agent
+
+
+def _attributes(obj):
+    """Instance attribute names, without those that every torch module has."""
+
+    names = set(vars(obj))
+    return names - set(vars(torch.nn.Module())) if isinstance(obj, torch.nn.Module) else names
+
+
+@pytest.mark.parametrize('name', ['sac', 'marlisa'])
+def test_agents_saved_with_3_2_0_resume_training_repeatably(name, tmp_path):
+    agent_class, buildings, kwargs = CHECKPOINT_AGENTS[name]
+    new = agent_class(_env(buildings=buildings), hidden_dimension=[8, 8], **kwargs)
+    agents = [_load_3_2_0_checkpoint(name, tmp_path) for _ in range(2)]
+
+    # Attributes added since 3.2.0 (e.g. ReplayBuffer.random, MARLISA's regression sample count) have defaults.
+    for agent in agents:
+        assert _attributes(new) <= _attributes(agent)
+
+        for components in ['replay_buffer', 'policy_net']:
+            for n, a in zip(getattr(new, components), getattr(agent, components)):
+                assert _attributes(n) <= _attributes(a)
+
+    time_step = agents[0].time_step
+    assert time_step > agents[0].end_exploration_time_step and all(agents[0].normalized)
+    parameters = _policy_parameters(agents[0])
+
+    agents[0].learn(episodes=1)
+    random.random(), np.random.random(), torch.rand(3)
+    agents[1].learn(episodes=1)
+
+    # Training resumed: replay mini-batches were sampled and the policy updated ...
+    assert agents[0].time_step == time_step + 23
+    assert any(not torch.equal(a, b) for a, b in zip(parameters, _policy_parameters(agents[0])))
+    # ... repeatably: the random streams a 3.2.0 checkpoint lacks are derived from its seed, as for a new agent.
+    assert _actions(agents[0]) == _actions(agents[1])
+
+    for a, b in zip(_policy_parameters(agents[0]), _policy_parameters(agents[1])):
+        assert torch.equal(a, b)
+
+
+def test_marlisa_saved_with_3_2_0_refits_state_estimator_on_the_whole_buffer(tmp_path):
+    agent = _load_3_2_0_checkpoint('marlisa', tmp_path)
+    samples = len(agent.regression_buffer[0])
+    fits = _record_fits(agent)
+
+    agent.learn(episodes=1)
+
+    # 3.2.0 fitted the state estimator on 2 and 3 samples (start_regression_time_step=2). With no fit counted, it is
+    # refitted at the first update, on the whole buffer, and next when the buffer has doubled (not in this episode).
+    assert samples == 46
+    assert fits == [samples + 1]
+
+
+@pytest.mark.parametrize('name', ['sac', 'marlisa'])
+def test_saved_agents_resume_where_they_stopped(name):
+    agent_class, buildings, kwargs = CHECKPOINT_AGENTS[name]
+    agent = agent_class(_env(buildings=buildings), hidden_dimension=[8, 8], **kwargs)
+    agent.learn(episodes=2)
+    resumed = pickle.loads(pickle.dumps(agent))  # with its env and random streams, as `--save_agent` saves it
+
+    agent.learn(episodes=1)
+    random.random(), np.random.random(), torch.rand(3)
+    resumed.learn(episodes=1)
+
+    assert _actions(resumed) == _actions(agent)
+
+    for a, b in zip(_policy_parameters(agent), _policy_parameters(resumed)):
+        assert torch.equal(a, b)

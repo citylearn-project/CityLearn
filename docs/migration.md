@@ -56,7 +56,10 @@ No dataset, schema or export-file migration is required.
   longer interfere.
 - **SAC and MARLISA:** default schedules now work on episodes shorter than the
   default batch; inconsistent given values raise `ValueError` instead of
-  `assert False`. Runs are repeatable from the environment seed.
+  `assert False`. Runs are repeatable from the environment seed. Agents saved
+  with 3.2.0 resume training: the random streams they lack are derived from
+  their seed, and MARLISA refits its demand model on its whole buffer at the
+  first update.
 
 Fixes that **change results** where they apply:
 

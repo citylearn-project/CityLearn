@@ -105,6 +105,10 @@ class ReplayBuffer:
     def __len__(self):
         return len(self.buffer)
         
+    def __setstate__(self, state):
+        # Buffers saved before `random` existed (CityLearn <= 3.2.0) sample from the global `random` module, as then.
+        self.__dict__.update({'random': None, **state})
+
 class RegressionBuffer:
     def __init__(self, capacity):
         self.capacity = capacity

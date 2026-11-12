@@ -1,4 +1,5 @@
-from typing import Any, List, Union
+import random
+from typing import Any, List, Mapping, Union
 import numpy as np
 import numpy.typing as npt
 
@@ -276,6 +277,19 @@ class SAC(RLC):
         for i, space in enumerate(self.action_space):
             if getattr(space, '_np_random', None) is None:
                 space.seed(self._get_seed(0, i))
+
+    def __setstate__(self, state: Mapping[str, Any]):
+        self.__dict__.update(state)
+
+        if '_torch_generator' not in state:
+            # Saved before the agent had its own random streams (CityLearn <= 3.2.0): derive them from random_seed as
+            # __init__ does, so that training resumed from the checkpoint is repeatable.
+            self._seed_action_spaces()
+            self._torch_generator = torch.Generator(device=self.device).manual_seed(self._get_seed(2))
+
+            for i, (buffer, policy) in enumerate(zip(self.replay_buffer, self.policy_net)):
+                buffer.random = random.Random(self._get_seed(1, i))
+                policy.generator = self._torch_generator
 
     @property
     def _replay_buffer_delay(self) -> int:

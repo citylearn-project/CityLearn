@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any, List, Tuple
+from typing import Any, List, Mapping, Tuple
 import numpy as np
 from citylearn.agents.rbc import RBC
 from citylearn.agents.sac import SACRBC
@@ -516,6 +516,18 @@ class MARLISA(SAC):
             pass
 
         self.replay_buffer[index].push(o, a, r, n, terminated)
+
+    def __setstate__(self, state: Mapping[str, Any]):
+        super().__setstate__(state)
+
+        # Checkpoints from CityLearn <= 3.2.0 lack these. Their state estimator may have been fitted on as few as 2
+        # samples: with no fit counted, it is refitted on the whole regression buffer at the next update, then as the
+        # buffer grows. No transition is held back.
+        if '_MARLISA__regression_sample_count' not in state:
+            self.__regression_sample_count = [0 for _ in self.action_dimension]
+
+        if '_MARLISA__pending_transitions' not in state:
+            self.__pending_transitions = [None for _ in self.action_dimension]
 
     def reset(self):
         super().reset()
