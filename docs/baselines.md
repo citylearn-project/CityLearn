@@ -70,9 +70,22 @@ members/EVs, episode window, timestep, topology mode and seed. It also re-applie
 the environment's constructor overrides `simulate_power_outage`,
 `solar_generation`, `active_actions`/`inactive_actions` and
 `active_observations`/`inactive_observations`, so the reference simulates the
-same equipment, generation and outages. It uses entity mode when dynamic
-topology or demand response requires it. Rendering is disabled for this
-internal comparison.
+same equipment, generation and outages. It loads the buildings in the evaluated
+environment's order, so per-building override lists reach the same buildings
+when `buildings=[1, 0]` selects them in another order than the schema. It uses
+entity mode when dynamic topology or demand response requires it. Rendering is
+disabled for this internal comparison.
+
+The reference reproduces what the schema and these constructor arguments define.
+It cannot follow buildings, devices or chargers changed after loading, for
+example a new charger `max_charging_power` or building `simulate_power_outage`.
+Before it runs, it is compared with the evaluated environment as captured at its
+last `reset()`: the building order, each building's `simulate_power_outage` and
+active actions, each charger's power limits and efficiencies, and the capacity
+and initial energy of batteries and EVs. A difference raises a `ValueError` that
+names the setting; evaluate with `include_business_as_usual=False` in that case.
+Other device parameters, such as heat pump or PV sizes, are not compared, and a
+change made after `reset()` is not detected.
 
 Results are cached for the current episode and timestep. The output adds
 `business_as_usual` values, `delta_to_business_as_usual` differences and

@@ -55,9 +55,19 @@ class CityLearnBusinessAsUsualBaselineService:
         baseline_env._ev_drift_seed = env._ev_drift_seed
         baseline_env._ev_drift_random_state = np.random.RandomState(env._ev_drift_seed)
         from citylearn import __version__
-        from citylearn.internal.comparison import inventory
+        from citylearn.internal.comparison import configuration_differences, inventory, reference_configuration
         if inventory(baseline_env) != env._comparison_initial_inventory:
             raise ValueError('Native BAU initial inventory differs from the evaluated episode')
+        differences = configuration_differences(env._comparison_initial_configuration, reference_configuration(baseline_env))
+        if differences:
+            shown = '; '.join(differences[:3]) + ('; ...' if len(differences) > 3 else '')
+            raise ValueError(
+                f'Native BAU configuration differs from the evaluated env, as captured at its last reset, in '
+                f'{len(differences)} setting(s) (evaluated vs reference): {shown}. The reference is rebuilt from '
+                'the schema and the constructor arguments, so it cannot follow buildings, outage settings, actions '
+                'or chargers changed after loading; evaluate without the native reference '
+                '(include_business_as_usual=False) in that case.'
+            )
         baseline_env._native_reference_metadata = dict(
             implementation='citylearn.agents.baseline.BusinessAsUsualAgent', simulator_version=__version__,
             definition_version=agent.DEFINITION_VERSION, observation_access='privileged_simulator_state',
@@ -98,6 +108,10 @@ class CityLearnBusinessAsUsualBaselineService:
         source_evs = list(getattr(env, '_all_electric_vehicles', None) or env.electric_vehicles)
         building_names: Optional[List[str]] = [building.name for building in source_buildings] if source_buildings else None
         ev_names: Optional[List[str]] = [ev.name for ev in source_evs] if source_evs else None
+        # Per-building constructor overrides are lists in the evaluated env's building order, but
+        # `buildings=` names load in schema order. Indices keep the given order, so each list entry
+        # reaches the same building and the reference steps its buildings in the same order.
+        building_selection = self._schema_indices(schema, building_names)
 
         start = int(getattr(env.episode_tracker, 'episode_start_time_step', 0) or 0)
         end = int(getattr(env.episode_tracker, 'episode_end_time_step', max(start, getattr(env, 'time_steps', 1) - 1)) or start)
@@ -111,7 +125,7 @@ class CityLearnBusinessAsUsualBaselineService:
         baseline_env = env.__class__(
             schema,
             root_directory=getattr(env, 'root_directory', None),
-            buildings=building_names,
+            buildings=building_selection,
             electric_vehicles=ev_names,
             simulation_start_time_step=start,
             simulation_end_time_step=end,
@@ -137,3 +151,14 @@ class CityLearnBusinessAsUsualBaselineService:
         )
         baseline_env._business_as_usual_sidecar = True
         return baseline_env
+
+    @staticmethod
+    def _schema_indices(schema, building_names: Optional[List[str]]):
+        """Schema positions of `building_names` in their order, or the names if one is not in the schema."""
+        buildings = schema.get('buildings') if isinstance(schema, dict) else None
+        if building_names is None or not isinstance(buildings, dict):
+            return building_names
+        positions = {name: i for i, name in enumerate(buildings)}
+        if any(name not in positions for name in building_names):
+            return building_names  # The configuration check then reports what the reference lacks.
+        return [positions[name] for name in building_names]

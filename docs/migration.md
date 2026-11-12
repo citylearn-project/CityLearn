@@ -53,6 +53,12 @@ No dataset, schema or export-file migration is required.
 - **RL agent keyword:** pass `action_scaling_coefficient=` to `SAC`, `MARLISA`
   and other `RLC` agents. The misspelled `action_scaling_coefficienct=` still
   works with a `DeprecationWarning`; before, only the misspelling took effect.
+- **Native BAU reference check:** `evaluate_v2()` raises a `ValueError` naming
+  the setting when the building order, a building's `simulate_power_outage` or
+  active actions, or a charger's power limits or efficiencies differ between the
+  evaluated env at its last `reset()` and the reference, which is rebuilt from
+  the schema and constructor arguments; before, the reference silently simulated
+  the schema's values. Evaluate with `include_business_as_usual=False` then.
 
 Fixes that **change results** where they apply:
 
@@ -60,9 +66,10 @@ Fixes that **change results** where they apply:
   `TabularQLearning` bootstraps on the best next-state value; an explicit
   `action_scaling_coefficient` now takes effect (the default stays 0.5).
 - KPI references: the native BAU reference re-applies `simulate_power_outage`,
-  `solar_generation` and active/inactive action and observation overrides; with
-  the community market enabled, legacy cost and the equity audit settle the
-  counterfactual too.
+  `solar_generation` and active/inactive action and observation overrides, to
+  the same buildings when `buildings=` lists them in another order than the
+  schema; with the community market enabled, legacy cost and the equity audit
+  settle the counterfactual too.
 - Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
   ca neighbourhood datasets), and an EV connects to at most one charger per step,
   which affects charger clones in the dynamic-topology demos.

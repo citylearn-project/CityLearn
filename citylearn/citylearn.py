@@ -1471,6 +1471,10 @@ class CityLearnEnv(Environment, Env):
 
         Callback failures are logged and disable reporting, preserving evaluation.
         No progress events or timings are added to the returned KPI table.
+
+        With `include_business_as_usual`, the native BAU reference is rebuilt from the schema and
+        the constructor arguments. A `ValueError` names the setting when it differs from this env as
+        captured at its last `reset()`; see the baselines guide for the settings that are compared.
         """
 
         return self._kpi_service.evaluate_v2(
@@ -1669,8 +1673,9 @@ class CityLearnEnv(Environment, Env):
         self._robustness_service.reset()
         self.associate_chargers_to_electric_vehicles()
         self._provenance_service.reset()
-        from citylearn.internal.comparison import inventory
+        from citylearn.internal.comparison import inventory, reference_configuration
         self._comparison_initial_inventory = inventory(self)
+        self._comparison_initial_configuration = reference_configuration(self)
 
         # reset reward function (does nothing by default)
         self.reward_function.reset()
