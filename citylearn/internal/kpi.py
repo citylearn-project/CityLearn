@@ -324,32 +324,21 @@ class CityLearnKPIService:
     def _ev_arrival_soc_for_interval(self, sim, ev, states: np.ndarray, interval_start: int) -> Optional[float]:
         estimated_soc_arrival = getattr(sim, 'electric_vehicle_estimated_soc_arrival', None)
         current_soc_reference = getattr(sim, 'electric_vehicle_current_soc', None)
-        ev_ids = getattr(sim, 'electric_vehicle_id', None)
-        current_ev_id = self._normal_ev_id(self._safe_sequence_value(ev_ids, interval_start))
         # This is the same boundary reference used by the runtime for a normal
         # arrival, a partial-window reset, or a topology activation that exposes
         # an already occupied charger.  It is a boundary value only, not an
         # exogenous trajectory that may overwrite subsequent control.
         candidates = [self._safe_sequence_value(current_soc_reference, interval_start)]
-
-        if interval_start > 0:
-            previous_state = self._to_scalar(states[interval_start - 1], np.nan)
-            previous_ev_id = self._normal_ev_id(self._safe_sequence_value(ev_ids, interval_start - 1))
-
-            if (
-                previous_state in (2, 3)
-                and (
-                    current_ev_id is None
-                    or previous_ev_id is None
-                    or previous_ev_id == current_ev_id
-                )
-            ):
-                # Same incoming-row lookup as the runtime arrival.
-                index = ChargerSimulation.arrival_soc_index(states, ev_ids, estimated_soc_arrival, interval_start)
-                index = interval_start - 1 if index is None else index
-                candidates.append(self._safe_sequence_value(estimated_soc_arrival, index))
-
-        candidates.append(self._safe_sequence_value(estimated_soc_arrival, interval_start))
+        # Same estimate row as the runtime arrival. Without one the runtime
+        # keeps the simulated SOC, which the battery candidates below give.
+        index = ChargerSimulation.arrival_soc_index(
+            states,
+            getattr(sim, 'electric_vehicle_id', None),
+            estimated_soc_arrival,
+            interval_start,
+            getattr(sim, 'electric_vehicle_session_id', None),
+        )
+        candidates.append(self._safe_sequence_value(estimated_soc_arrival, index))
 
         battery = getattr(ev, 'battery', None)
         battery_soc = getattr(battery, 'soc', None)

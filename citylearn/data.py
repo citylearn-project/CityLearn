@@ -1077,15 +1077,23 @@ class ChargerSimulation(TimeSeriesData):
         electric_vehicle_id: Iterable[str],
         estimated_soc_arrival: Iterable[float],
         time_step: int,
+        electric_vehicle_session_id: Iterable[str] = None,
     ) -> Union[int, None]:
-        """Row that holds the estimated arrival SOC of an EV that connects at `time_step`.
+        """Row whose estimated SOC initializes an EV that connects at `time_step`.
+
+        The runtime arrival, the KPI arrival reference and the departure audit all use this row, so
+        they agree on the SOC the EV starts the session with.
 
         The estimate is given on the incoming (state 2) rows before the connection, usually on the
         last one (`time_step` - 1). Some sessions give it only on an earlier incoming row, e.g. the
         row one step before arrival followed by a row without an estimate. When the previous row is
         incoming or away (state 2 or 3), the latest valid estimate is taken from `time_step` - 1 back
-        through the contiguous incoming rows of the same EV. Otherwise, e.g. at the first step, the
-        `time_step` row itself is used. Returns `None` when no such row holds a value in [0, 1].
+        through the contiguous incoming rows of the same EV and session. The search stops at a row of
+        another EV and at an explicit session boundary, i.e. a row whose session ID differs from the
+        one of the rows after it; a missing or empty session ID is not a boundary. When these rows hold
+        no estimate, and always at the first step or after a connected or empty row, the `time_step`
+        row itself is used. Returns `None` when no such row holds a value in [0, 1]; the EV then keeps
+        its simulated SOC.
         """
 
         def valid(index: int) -> bool:
@@ -1095,18 +1103,41 @@ class ChargerSimulation(TimeSeriesData):
             value = estimated_soc_arrival[index]
             return isinstance(value, (float, np.floating)) and 0.0 <= value <= 1.0
 
+        def label(values: Iterable[str], index: int) -> Union[str, None]:
+            value = values[index] if values is not None and 0 <= index < len(values) else None
+            value = value.strip() if isinstance(value, str) else ''
+            return None if value.lower() in ('', 'nan') else value
+
         time_step = int(time_step)
+        fallback = time_step if valid(time_step) else None
         previous_state = (
             charger_state[time_step - 1]
             if charger_state is not None and 0 < time_step <= len(charger_state) else np.nan
         )
 
         if previous_state not in (2, 3):
-            return time_step if valid(time_step) else None
+            return fallback
 
         index = time_step - 1
+        electric_vehicle = label(electric_vehicle_id, time_step)
 
-        while not valid(index):
+        if electric_vehicle is not None and label(electric_vehicle_id, index) not in (None, electric_vehicle):
+            return fallback
+
+        session = label(electric_vehicle_session_id, time_step)
+
+        while True:
+            row_session = label(electric_vehicle_session_id, index)
+
+            if row_session is not None:
+                if session not in (None, row_session):
+                    return fallback
+
+                session = row_session
+
+            if valid(index):
+                return index
+
             if not (
                 index > 0
                 and charger_state[index] == 2
@@ -1114,11 +1145,9 @@ class ChargerSimulation(TimeSeriesData):
                 and electric_vehicle_id is not None
                 and electric_vehicle_id[index - 1] == electric_vehicle_id[index]
             ):
-                return None
+                return fallback
 
             index -= 1
-
-        return index
 
     @staticmethod
     def normalize_soc_series(

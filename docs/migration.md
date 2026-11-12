@@ -61,8 +61,12 @@ No dataset, schema or export-file migration is required.
 Fixes that **change results** where they apply:
 
 - EV datasets: each EV draws its own unspecified battery parameters
-  (efficiency, curves, capacity fade) instead of all sharing one set, and the
-  dataset's arrival state of charge is also read from earlier incoming rows.
+  (efficiency, curves, capacity fade) instead of all sharing one set. An
+  arriving EV starts from the latest arrival state of charge on the incoming
+  rows of its own session, also when only an earlier incoming row holds it, or
+  else from the one on its connection row. It never takes an estimate across a
+  change of `electric_vehicle_session_id`, and the KPI and departure-audit
+  arrival references use the same value.
 - SAC/MARLISA: features or rewards constant during warm-up are centred but no
   longer scaled by ~1e5; exploration, replay sampling and policy noise use
   seeded generators; MARLISA stores each transition with its own coordination

@@ -989,10 +989,12 @@ class CityLearnRuntimeService:
                         f"Charger dataset EV mismatch: expected '{ev_identifier}' but found '{prev_id}' at time step {step - 1}."
                     )
 
-            # The estimate sits on the incoming rows before the connection, not always on the last one.
+            # The estimate sits on the incoming rows of this session, not always on the last one, or
+            # else on the connection row; the KPI and departure-audit references use the same row.
             estimated_soc_arrival = simulation.electric_vehicle_estimated_soc_arrival
             index = ChargerSimulation.arrival_soc_index(
                 simulation.electric_vehicle_charger_state, simulation.electric_vehicle_id, estimated_soc_arrival, step,
+                getattr(simulation, 'electric_vehicle_session_id', None),
             )
             soc_value = None if index is None else float(estimated_soc_arrival[index])
 
@@ -1150,13 +1152,12 @@ class CityLearnRuntimeService:
                 if not is_connecting:
                     continue
 
-                is_incoming = isinstance(curr_id, str) and curr_id == next_id and curr_state == 2
-                soc_index = t if is_incoming else t + 1
-                soc = (
-                    sim.electric_vehicle_estimated_soc_arrival[soc_index]
-                    if soc_index < len(sim.electric_vehicle_estimated_soc_arrival)
-                    else np.nan
+                # The same estimate the connection at t + 1 starts from.
+                soc_index = ChargerSimulation.arrival_soc_index(
+                    sim.electric_vehicle_charger_state, sim.electric_vehicle_id,
+                    sim.electric_vehicle_estimated_soc_arrival, t + 1, getattr(sim, 'electric_vehicle_session_id', None),
                 )
+                soc = np.nan if soc_index is None else sim.electric_vehicle_estimated_soc_arrival[soc_index]
                 charger_event_by_ev_id.setdefault(next_id, ('connecting', soc))
 
         for ev in env.electric_vehicles:

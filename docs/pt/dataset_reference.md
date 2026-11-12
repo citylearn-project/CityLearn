@@ -112,10 +112,11 @@ Cooling e heating demand nao podem ser positivos no mesmo timestep.
 |---|---:|---|
 | `electric_vehicle_charger_state` | enum | 1 connected, 2 incoming, 3 away/commuting. |
 | `electric_vehicle_id` | string | ID do EV. |
+| `electric_vehicle_session_id` | string | Opcional. ID da sessao de carregamento. Uma mudanca separa duas sessoes do mesmo EV, incluindo sessoes consecutivas. Valores em falta ou vazios nao sao uma mudanca. |
 | `electric_vehicle_departure_time` | steps | Steps ate departure. Default interno `-1`. |
 | `electric_vehicle_required_soc_departure` | percent | SOC requerido. Convertido para ratio. Default interno `-0.1`. |
 | `electric_vehicle_estimated_arrival_time` | steps | Steps ate chegada. Default interno `-1`. |
-| `electric_vehicle_estimated_soc_arrival` | percent | SOC estimado na chegada, nas linhas incoming (estado 2). Convertido para ratio. Na ligacao o EV parte da estimativa mais recente nas linhas incoming do mesmo EV imediatamente anteriores, normalmente a ultima; uma estimativa antes de um intervalo away (estado 3) nao e usada. |
+| `electric_vehicle_estimated_soc_arrival` | percent | SOC estimado na chegada, nas linhas incoming (estado 2). Convertido para ratio. Na ligacao o EV parte da estimativa mais recente na linha imediatamente anterior e nas linhas incoming contiguas do mesmo EV e da mesma sessao antes dessa linha, normalmente a ultima linha incoming. A procura nao passa uma linha away (estado 3), outro EV nem uma mudanca de `electric_vehicle_session_id`. Sem essa estimativa o EV parte da estimativa na sua linha de ligacao, se existir, e caso contrario mantem o SOC simulado. As referencias de chegada dos KPIs e da auditoria de partida usam o mesmo valor. |
 | `electric_vehicle_current_soc` | percent ou ratio | Opcional. Telemetria de SOC atual. Na suite REC anual é uma referência neutra de inicialização de fronteira, com serviço a taxa constante, usada apenas quando um episódio começa dentro de uma sessão ocupada; não substitui a evolução do SOC num rollout ininterrupto. |
 
 Para datasets sub-horarios, os campos `*_time` devem estar em numero de timesteps da resolucao do dataset. Ex.: 1 hora em 15s = 240 steps.
