@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from citylearn.internal.comparison import canonical, compare_exports, digest, relative_to_root, source_sha256
+from citylearn.internal.comparison import canonical, compare_exports, digest, file_key, relative_to_root, source_sha256
 from test_deferrable_appliance_integration import _schema_with_deferrable_appliance
 from test_experiment_comparison import export_run
 
@@ -56,11 +56,67 @@ def test_windows_root_stripping_accepts_both_separators_and_any_case(value, expe
     assert relative_to_root(value, 'C:\\data\\set\\', path=ntpath) == expected
 
 
+# `file_key(reference, resolved, root)`: `resolved` stands in for the filesystem's answer, which
+# `snapshot_inputs` records as the file's resolved path (spelled as on disk on Windows).
+@pytest.mark.parametrize('reference,resolved', [
+    ('Building_1.csv', '/data/set/Building_1.csv'),
+    ('sub/x.csv', '/data/set/sub/x.csv'),
+    ('./x.csv', '/data/set/x.csv'),
+    ('sub/../x.csv', '/data/set/x.csv'),
+    ('sub//x.csv', '/data/set/sub/x.csv'),
+    ('Weather.csv', '/data/set/Weather.csv'),  # macOS: realpath keeps the case of the reference
+    ('a\\b.csv', '/data/set/a\\b.csv'),  # `\` is part of a POSIX file name
+    ('link.csv', '/elsewhere/target.csv'),
+    ('/data/set/sub/x.csv', '/data/set/sub/x.csv'),
+    ('/data/set/link.csv', '/elsewhere/x.csv'),
+    ('/Data/Set/x.csv', '/Data/Set/x.csv'),
+    ('/elsewhere/x.csv', '/elsewhere/x.csv'),
+])
+def test_posix_file_keys_are_the_v1_text(reference, resolved):
+    v1 = _v1_posix(reference, '/data/set')
+    assert file_key(reference, resolved, '/data/set', path=posixpath) == (reference if v1 is None else v1)
+
+
+WINDOWS_ROOT = 'C:\\datasets\\demo'
+WEATHER = WINDOWS_ROOT + '\\sub\\weather.csv'
+
+
+@pytest.mark.parametrize('reference', [
+    'sub/weather.csv', 'sub\\weather.csv', 'sub\\Weather.csv', 'SUB/WEATHER.CSV',
+    'C:\\datasets\\demo\\sub\\weather.csv', 'C:\\datasets\\demo\\sub\\Weather.csv',
+    'c:/DATASETS/Demo/Sub/weather.csv',
+])
+def test_windows_spellings_of_one_file_get_its_on_disk_key(reference):
+    assert file_key(reference, WEATHER, WINDOWS_ROOT, path=ntpath) == 'sub/weather.csv'
+
+
+@pytest.mark.parametrize('reference,resolved,key', [
+    ('.\\sub\\weather.csv', WEATHER, './sub/weather.csv'),
+    ('sub\\..\\sub\\Weather.csv', WEATHER, 'sub/../sub/Weather.csv'),
+    ('sub\\\\weather.csv', WEATHER, 'sub//weather.csv'),
+    ('SUB\\WEATHE~1.CSV', WEATHER, 'SUB/WEATHE~1.CSV'),
+    ('sub\\link.csv', 'D:\\elsewhere\\weather.csv', 'sub/link.csv'),
+    ('D:\\elsewhere\\Weather.csv', 'D:\\elsewhere\\weather.csv', 'D:/elsewhere/Weather.csv'),
+    # In a folder with case sensitivity enabled both files can exist; each keeps its own name.
+    ('Weather.csv', WINDOWS_ROOT + '\\Weather.csv', 'Weather.csv'),
+    ('weather.csv', WINDOWS_ROOT + '\\weather.csv', 'weather.csv'),
+])
+def test_windows_other_spellings_keep_their_text(reference, resolved, key):
+    assert file_key(reference, resolved, WINDOWS_ROOT, path=ntpath) == key
+
+
 def test_canonical_strips_the_platform_root(tmp_path):
     root = str(tmp_path.resolve())
     value = os.path.join(root, 'sub', 'x.csv')
     assert canonical({'file': value, 'name': 'Building_1', 'files': [value]}, root) == \
         {'file': 'sub/x.csv', 'name': 'Building_1', 'files': ['sub/x.csv']}
+
+
+def test_canonical_writes_input_file_references_as_their_keys():
+    files = {'sub\\Weather.csv': 'sub/weather.csv'}
+    schema = {'weather': 'sub\\Weather.csv', 'pricing': ['sub\\Weather.csv'], 'name': 'sub\\Weather'}
+    assert canonical(schema, '/data/set', files) == \
+        {'weather': 'sub/weather.csv', 'pricing': ['sub/weather.csv'], 'name': 'sub\\Weather'}
 
 
 def test_source_digest_ignores_separators_and_line_endings(tmp_path):
@@ -120,6 +176,24 @@ def test_absolute_references_pair_across_locations_and_converted_data_does_not(t
     report = compare_exports(a, c)
     assert report['status'] == 'incompatible' and report['mismatches'] == ['data_files_sha256'], report
     assert all(r['delta_right_minus_left'] in (None, 0.) for r in report['kpis'])
+
+
+@pytest.mark.skipif(os.name != 'nt', reason='Only Windows reads `\\` as a separator and ignores case')
+def test_windows_spellings_of_one_data_file_pair(tmp_path):
+    root = _schema_with_deferrable_appliance(tmp_path).parent.resolve()
+    (root / 'sub').mkdir()
+    (root / 'weather.csv').rename(root / 'sub' / 'weather.csv')
+    schema = json.loads((root / 'schema.json').read_text())
+    exports = []
+    for i, reference in enumerate(('sub/weather.csv', 'SUB\\Weather.CSV', str(root).upper() + '\\sub\\WEATHER.csv')):
+        schema['buildings']['Building_1']['weather'] = reference
+        (root / f'schema_{i}.json').write_text(json.dumps(schema))
+        exports.append(export_run(root / f'schema_{i}.json', tmp_path / f'out-{i}', identity=f'controller-{i}'))
+        context = json.loads(exports[-1].with_suffix('.manifest.json').read_text())['comparison_context']
+        assert 'sub/weather.csv' in context['data_files_sha256'], context['data_files_sha256']
+    for export in exports[1:]:
+        report = compare_exports(exports[0], export)
+        assert report['status'] == 'paired', report
 
 
 def _git(*args):

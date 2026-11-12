@@ -31,9 +31,10 @@ def relative_to_root(value, root, path=os.path):
     """Return ``value`` relative to ``root`` with ``/`` separators, or None if it is not under ``root``.
 
     ``path`` is the platform path module (``ntpath`` or ``posixpath``; tests pass both). On Windows
-    ``/`` and ``\\`` are the same separator and case is ignored, so a file under the dataset root gets
-    the same text on every platform and at every location. With ``posixpath`` this is exactly the
-    string-prefix test of ``paired-experiment-v1``, so POSIX evidence does not change.
+    ``/`` and ``\\`` are the same separator and the case of ``root`` is ignored, so the dataset root
+    is removed however it is spelled; the rest keeps its text (``file_key`` gives input files their
+    on-disk spelling). With ``posixpath`` this is exactly the string-prefix test of
+    ``paired-experiment-v1``, so POSIX evidence does not change.
     """
     if path.altsep:
         value, root = value.replace(path.altsep, path.sep), root.replace(path.altsep, path.sep)
@@ -43,11 +44,37 @@ def relative_to_root(value, root, path=os.path):
     return value[len(prefix):].replace(path.sep, '/')
 
 
-def canonical(value, root):
+def file_key(reference, resolved, root, path=os.path):
+    """Manifest key of the input file that the schema string ``reference`` names.
+
+    ``resolved`` is the file's resolved path, as ``snapshot_inputs`` records it, and ``root`` the
+    resolved dataset root. If ``reference`` spells ``resolved`` apart from what the platform ignores
+    (on Windows: ``/`` versus ``\\`` and letter case), the key is the file's path below ``root`` as
+    the filesystem spells it: on Windows ``sub\\Weather.csv`` and ``sub/weather.csv`` both become
+    ``sub/weather.csv``. Other spellings (``.`` or ``..`` components, repeated separators, links,
+    8.3 short names) keep their text, with ``\\`` written as ``/`` on Windows, so two of them that
+    name one file may fail to pair. With ``posixpath`` the key is exactly the
+    ``paired-experiment-v1`` text.
+    """
+    if path.normcase(path.join(root, reference)) == path.normcase(resolved):
+        relative = relative_to_root(resolved, root, path)
+        if relative is not None:
+            return relative
+    relative = relative_to_root(reference, root, path)
+    if relative is not None:
+        return relative
+    return reference.replace(path.sep, '/') if path.altsep else reference
+
+
+def canonical(value, root, files=None):
+    """``value`` without machine-specific paths: input-file references in ``files`` become their
+    ``file_key`` and other paths under ``root`` become relative to it."""
     if isinstance(value, dict):
-        return {k: canonical(v, root) for k, v in value.items()}
+        return {k: canonical(v, root, files) for k, v in value.items()}
     if isinstance(value, (tuple, list)):
-        return [canonical(v, root) for v in value]
+        return [canonical(v, root, files) for v in value]
+    if isinstance(value, str) and files and value in files:
+        return files[value]
     if isinstance(value, str) and root:
         relative = relative_to_root(value, root)
         if relative is not None:
@@ -87,6 +114,8 @@ def context(env, data_files):
         physical['robustness'].pop('agent_observation_contract', None)
     observation = {k: schema.get(k) for k in ('observations', 'observation_bundles', 'derived_forecasts')}
     observation.update(interface=env.interface, agent_contract=configuration(env))
+    snapshot = getattr(env, '_input_snapshot', None) or {}
+    files = {name: file_key(name, row['path'], root) for name, row in snapshot.items()}
     tracker = env.episode_tracker
     from citylearn.internal.temporal import axis_metadata, runtime_versions
     axis = axis_metadata(env)
@@ -94,8 +123,8 @@ def context(env, data_files):
     return dict(temporal=temporal,definition_version=DEFINITION_VERSION,
                 engine=dict(version=__version__, source_sha256=source_sha256(Path(__file__).resolve().parents[1]),
                             runtime_versions=runtime_versions()),
-                physical_configuration_sha256=digest(canonical(physical, root)),
-                data_files_sha256={canonical(k, root): v for k, v in data_files.items()},
+                physical_configuration_sha256=digest(canonical(physical, root, files)),
+                data_files_sha256={canonical(k, root, files): v for k, v in data_files.items()},
                 episode_start_time_step=tracker.episode_start_time_step,
                 episode_end_time_step=tracker.episode_end_time_step,
                 completed_intervals=env._provenance_service.steps,
@@ -104,7 +133,7 @@ def context(env, data_files):
                 initial_inventory=getattr(env, '_comparison_initial_inventory', None),
                 service_tolerances=dict(ev_within=env.ev_departure_within_tolerance,
                                         ev_service=env.ev_departure_service_tolerance),
-                observation=canonical(observation, root),
+                observation=canonical(observation, root, files),
                 market=env.get_metadata()['community_market'])
 
 
