@@ -177,6 +177,16 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
     return chargers_list
 
 
+def solar_generation_enabled(solar_generation, index: int) -> bool:
+    """Whether the `solar_generation` constructor argument keeps the PV of the building loaded at `index`.
+
+    It is one value for every building or a list in the env's building order; None keeps the PV.
+    """
+    solar_generation = True if solar_generation is None else solar_generation
+    solar_generation = solar_generation[index] if isinstance(solar_generation, list) else solar_generation
+    return bool(solar_generation)
+
+
 def configure_devices(building, building_name, building_type, building_schema, schema,
                       index, kwargs, pv_sizing_data, battery_sizing_data):
     device_metadata = {
@@ -189,9 +199,7 @@ def configure_devices(building, building_name, building_type, building_schema, s
         'electrical_storage': {'autosizer': building.autosize_electrical_storage},
         'pv': {'autosizer': building.autosize_pv},
     }
-    solar_generation = kwargs.get('solar_generation')
-    solar_generation = True if solar_generation is None else solar_generation
-    solar_generation = solar_generation[index] if isinstance(solar_generation, list) else solar_generation
+    solar_generation = solar_generation_enabled(kwargs.get('solar_generation'), index)
 
     for device_name in device_metadata:
         if building_schema.get(device_name, None) is None:

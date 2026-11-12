@@ -213,6 +213,40 @@ def test_business_as_usual_reference_loads_only_the_episode_without_autosizing()
     assert (tracker.episode_start_time_step, tracker.episode_end_time_step) == (48, 71)
 
 
+@pytest.mark.parametrize('solar_generation', [False, [False, False, False]])
+def test_business_as_usual_reference_loads_only_the_episode_when_disabled_pv_is_the_only_autosized_device(
+    solar_generation,
+):
+    path = Path(__file__).resolve().parents[1] / 'data' / 'datasets' / BAU_DATASET / 'schema.json'
+    schema = json.loads(path.read_text(encoding='utf-8'))
+    schema['root_directory'] = str(path.parent)
+    for building in schema['buildings'].values():
+        building['pv']['autosize'] = True
+
+    env = CityLearnEnv(schema, central_agent=True, episode_time_steps=24, random_seed=0, solar_generation=solar_generation)
+    env.reset(seed=0, options={'episode_index': 2})
+    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar.reset()
+    tracker = sidecar.episode_tracker
+
+    # Disabled PV is not loaded and sizes nothing; the reference used to load the source's window, 0 to 719.
+    assert (tracker.simulation_start_time_step, tracker.simulation_end_time_step) == (48, 71)
+    assert (tracker.episode_start_time_step, tracker.episode_end_time_step) == (48, 71)
+
+
+def test_autosizing_check_follows_each_buildings_solar_generation_setting():
+    schema = {'buildings': {'A': {'pv': {'autosize': True}}, 'B': {'pv': {'autosize': False}}}}
+    autosizes = CityLearnBusinessAsUsualBaselineService._autosizes_equipment
+
+    assert autosizes(schema, ['A', 'B'])
+    assert not autosizes(schema, ['A', 'B'], False)
+    assert not autosizes(schema, ['A', 'B'], [False, True])
+    assert autosizes(schema, ['A', 'B'], [True, False])
+    # Per-building values follow the evaluated env's building order.
+    assert autosizes(schema, ['B', 'A'], [False, True])
+    assert not autosizes(schema, ['B', 'A'], [True, False])
+
+
 @pytest.fixture
 def market_env_with_identical_flows(tmp_path):
     """Two-member market without storage: control and reference flows are identical."""

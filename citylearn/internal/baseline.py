@@ -124,7 +124,8 @@ class CityLearnBusinessAsUsualBaselineService:
         end = int(getattr(tracker, 'episode_end_time_step', max(start, getattr(env, 'time_steps', 1) - 1)) or start)
         simulation_start, simulation_end = start, end
 
-        if self._autosizes_equipment(schema, building_names):
+        solar_generation = (getattr(env, '_constructor_overrides', None) or {}).get('solar_generation')
+        if self._autosizes_equipment(schema, building_names, solar_generation):
             # Autosizing (batteries, PV, heat pumps, storage) reads the whole loaded data window, so
             # loading only this episode sizes different equipment than the evaluated env. Load the
             # source's window instead; the one explicit split still restricts the run to the episode.
@@ -167,21 +168,28 @@ class CityLearnBusinessAsUsualBaselineService:
         return baseline_env
 
     @staticmethod
-    def _autosizes_equipment(schema, building_names: Optional[List[str]]) -> bool:
+    def _autosizes_equipment(schema, building_names: Optional[List[str]], solar_generation=None) -> bool:
         """Whether a building the sidecar loads sizes a device from its data.
 
         Without autosizing, equipment does not depend on the loaded window, so the sidecar can
-        load just the episode, which is much cheaper for long or fine-grained datasets.
+        load just the episode, which is much cheaper for long or fine-grained datasets. PV that the
+        `solar_generation` constructor argument disables is not loaded, so it sizes nothing.
+        `building_names` are in the evaluated env's order, which `solar_generation` lists follow.
         """
+        from citylearn.internal.loading_components import solar_generation_enabled
         from citylearn.utilities import parse_bool
 
         buildings = schema.get('buildings', {}) if isinstance(schema, dict) else {}
-        for name in (buildings if building_names is None else building_names):
+        for index, name in enumerate(buildings if building_names is None else building_names):
             config = buildings.get(name)
             if not isinstance(config, dict):
                 return True  # Unknown configuration: load the source's window to be safe.
-            for device in config.values():
-                if not isinstance(device, dict):
+            try:
+                pv_loaded = solar_generation_enabled(solar_generation, index)
+            except (IndexError, TypeError):
+                pv_loaded = True  # Unknown setting: count the PV, which loads the source's window.
+            for device_name, device in config.items():
+                if not isinstance(device, dict) or (device_name == 'pv' and not pv_loaded):
                     continue
                 try:
                     if parse_bool(device.get('autosize', False), default=False):
