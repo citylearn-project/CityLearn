@@ -53,7 +53,9 @@ No dataset, schema or export-file migration is required.
 - **Dataset downloads:** `DataSet.get_dataset(name, directory=...)` copies the
   dataset into `directory/<name>` and returns that schema path. Failed
   downloads raise instead of being cached, and concurrent first downloads no
-  longer interfere.
+  longer interfere, also when they replace an incomplete folder left by an
+  earlier version. `filelock`, already installed with `torch`, is now a
+  declared requirement.
 - **SAC and MARLISA:** default schedules now work on episodes shorter than the
   default batch; inconsistent given values raise `ValueError` instead of
   `assert False`. Runs are repeatable from the environment seed. Agents saved
