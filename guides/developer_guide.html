@@ -98,6 +98,7 @@
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Developer Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#local-environment">Local Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#portable-experiment-evidence">Portable experiment evidence</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#core-validation">Core Validation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#manual-simulation-scripts">Manual Simulation Scripts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#internal-architecture">Internal Architecture</a></li>
@@ -176,6 +177,38 @@ For simulation-level checks and published measurements, start with
 </tr>
 </tbody>
 </table>
+</section>
+<section id="portable-experiment-evidence">
+<h2>Portable experiment evidence<a class="headerlink" href="#portable-experiment-evidence" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">.gitattributes</span></code> makes every checkout byte-identical to the repository: text
+files use LF and files under <code class="docutils literal notranslate"><span class="pre">data/</span></code> and <code class="docutils literal notranslate"><span class="pre">tests/data/</span></code> are never converted, even
+with Git for Windows’ default <code class="docutils literal notranslate"><span class="pre">core.autocrlf=true</span></code>. Experiment manifests hash
+these files, so the hashes then agree on all platforms. A checkout made before
+<code class="docutils literal notranslate"><span class="pre">.gitattributes</span></code> existed may still hold CRLF copies; <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">status</span></code> lists converted
+data files as modified. Make a fresh clone and set it up as in
+<a class="reference internal" href="#local-environment"><span class="std std-ref">Local Environment</span></a>: the clone applies the new checkout
+rules and leaves the existing working copy, including uncommitted changes,
+untouched. Then clear the dataset cache, which may hold copies made from the old
+checkout:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/citylearn-project/CityLearn.git</span>
+<span class="go">python -c "from citylearn.data import DataSet; DataSet().clear_cache()"</span>
+</pre></div>
+</div>
+<p>Manifests record each input file by its path below the dataset root, with <code class="docutils literal notranslate"><span class="pre">/</span></code>
+separators, so a moved or copied dataset keeps its evidence. On Windows, where
+<code class="docutils literal notranslate"><span class="pre">\</span></code> and <code class="docutils literal notranslate"><span class="pre">/</span></code> are both separators and file names ignore case, a reference that
+differs from the file’s path only in separators or case records the file’s
+on-disk spelling: with the dataset root <code class="docutils literal notranslate"><span class="pre">C:\data\demo</span></code> and the file
+<code class="docutils literal notranslate"><span class="pre">C:\data\demo\sub\weather.csv</span></code>, the references <code class="docutils literal notranslate"><span class="pre">sub\Weather.csv</span></code>,
+<code class="docutils literal notranslate"><span class="pre">SUB/weather.csv</span></code> and <code class="docutils literal notranslate"><span class="pre">C:\Data\Demo\sub\WEATHER.csv</span></code> all record
+<code class="docutils literal notranslate"><span class="pre">sub/weather.csv</span></code>. Other spellings of an input file keep their text, with <code class="docutils literal notranslate"><span class="pre">/</span></code>
+for <code class="docutils literal notranslate"><span class="pre">\</span></code> on Windows: <code class="docutils literal notranslate"><span class="pre">.</span></code> or <code class="docutils literal notranslate"><span class="pre">..</span></code> components, repeated separators, links, 8.3
+short names and files outside the dataset root. Strings that are not hashed
+input files (see <code class="docutils literal notranslate"><span class="pre">FILE_TYPES</span></code> in <code class="docutils literal notranslate"><span class="pre">citylearn/internal/temporal.py</span></code>) keep their
+text without the dataset root. On Linux and macOS every reference keeps its
+text, without the dataset root; macOS file names ignore case by default, but the
+evidence does not. If two runs spell one file in ways that are not normalised,
+the comparison reports <code class="docutils literal notranslate"><span class="pre">incompatible</span></code> rather than a pair.</p>
 </section>
 <section id="core-validation">
 <h2>Core Validation<a class="headerlink" href="#core-validation" title="Link to this heading"></a></h2>

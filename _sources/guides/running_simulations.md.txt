@@ -279,3 +279,6 @@ PY
 
 KPI-only exports include a manifest and service-audit JSON sidecars. They do not
 enable episode time-series output; CityLearn UI can load the folder as before.
+The manifest identifies input files by their path below the dataset root;
+[Portable experiment evidence](developer_guide.md#portable-experiment-evidence)
+lists which spellings of a file reference record the same evidence.

@@ -23,6 +23,40 @@ Optional dependencies:
 | PV autosizing | `.venv/bin/pip install ".[pysam]"` |
 | Build checks | `.venv/bin/pip install build twine` |
 
+## Portable experiment evidence
+
+`.gitattributes` makes every checkout byte-identical to the repository: text
+files use LF and files under `data/` and `tests/data/` are never converted, even
+with Git for Windows' default `core.autocrlf=true`. Experiment manifests hash
+these files, so the hashes then agree on all platforms. A checkout made before
+`.gitattributes` existed may still hold CRLF copies; `git status` lists converted
+data files as modified. Make a fresh clone and set it up as in
+[Local Environment](#local-environment): the clone applies the new checkout
+rules and leaves the existing working copy, including uncommitted changes,
+untouched. Then clear the dataset cache, which may hold copies made from the old
+checkout:
+
+```console
+git clone https://github.com/citylearn-project/CityLearn.git
+python -c "from citylearn.data import DataSet; DataSet().clear_cache()"
+```
+
+Manifests record each input file by its path below the dataset root, with `/`
+separators, so a moved or copied dataset keeps its evidence. On Windows, where
+`\` and `/` are both separators and file names ignore case, a reference that
+differs from the file's path only in separators or case records the file's
+on-disk spelling: with the dataset root `C:\data\demo` and the file
+`C:\data\demo\sub\weather.csv`, the references `sub\Weather.csv`,
+`SUB/weather.csv` and `C:\Data\Demo\sub\WEATHER.csv` all record
+`sub/weather.csv`. Other spellings of an input file keep their text, with `/`
+for `\` on Windows: `.` or `..` components, repeated separators, links, 8.3
+short names and files outside the dataset root. Strings that are not hashed
+input files (see `FILE_TYPES` in `citylearn/internal/temporal.py`) keep their
+text without the dataset root. On Linux and macOS every reference keeps its
+text, without the dataset root; macOS file names ignore case by default, but the
+evidence does not. If two runs spell one file in ways that are not normalised,
+the comparison reports `incompatible` rather than a pair.
+
 ## Core Validation
 
 | Check | Command |

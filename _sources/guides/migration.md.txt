@@ -46,6 +46,20 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Changes after 3.2.0 (unreleased)
+
+No dataset, schema or export-file migration is required.
+
+- **Experiment evidence:** KPI-export manifests written on Windows record input
+  files and the engine source as on Linux and macOS (file paths below the dataset
+  root with `/`, engine source hashed with LF line endings), so Windows exports
+  of one dataset pair across locations and their hashes can be checked against
+  the committed files. Linux and macOS evidence is unchanged. Runs on different
+  operating systems still do not pair: `engine.runtime_versions` records the OS.
+  [Portable experiment evidence](developer_guide.md#portable-experiment-evidence)
+  lists the file-reference spellings that are normalised and how to update a
+  checkout made before `.gitattributes`.
+
 ## Upgrade from 3.1.1 to 3.2.0
 
 CityLearn supports Gymnasium from 0.28.1 up to, but excluding, 2.0. Dataset names

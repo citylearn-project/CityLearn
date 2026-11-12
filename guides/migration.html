@@ -60,6 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changes-after-3-2-0-unreleased">Changes after 3.2.0 (unreleased)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-1-1-to-3-2-0">Upgrade from 3.1.1 to 3.2.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-1-0-to-3-1-1">Upgrade from 3.1.0 to 3.1.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-0-2-to-3-1-0">Upgrade from 3.0.2 to 3.1.0</a></li>
@@ -178,6 +179,21 @@ local schema and files for data that are not in the public catalogue; a
 repository-relative path is not created by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>.</p>
 <p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
 development-line history.</p>
+</section>
+<section id="changes-after-3-2-0-unreleased">
+<span id="changes-after-320-unreleased"></span><h2>Changes after 3.2.0 (unreleased)<a class="headerlink" href="#changes-after-3-2-0-unreleased" title="Link to this heading"></a></h2>
+<p>No dataset, schema or export-file migration is required.</p>
+<ul class="simple">
+<li><p><strong>Experiment evidence:</strong> KPI-export manifests written on Windows record input
+files and the engine source as on Linux and macOS (file paths below the dataset
+root with <code class="docutils literal notranslate"><span class="pre">/</span></code>, engine source hashed with LF line endings), so Windows exports
+of one dataset pair across locations and their hashes can be checked against
+the committed files. Linux and macOS evidence is unchanged. Runs on different
+operating systems still do not pair: <code class="docutils literal notranslate"><span class="pre">engine.runtime_versions</span></code> records the OS.
+<a class="reference internal" href="developer_guide.html#portable-experiment-evidence"><span class="std std-ref">Portable experiment evidence</span></a>
+lists the file-reference spellings that are normalised and how to update a
+checkout made before <code class="docutils literal notranslate"><span class="pre">.gitattributes</span></code>.</p></li>
+</ul>
 </section>
 <section id="upgrade-from-3-1-1-to-3-2-0">
 <span id="upgrade-from-311-to-320"></span><h2>Upgrade from 3.1.1 to 3.2.0<a class="headerlink" href="#upgrade-from-3-1-1-to-3-2-0" title="Link to this heading"></a></h2>
