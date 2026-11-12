@@ -3,6 +3,7 @@ from copy import deepcopy
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 
 DEFINITION_VERSION = 'paired-experiment-v1'
@@ -26,14 +27,74 @@ def inventory(env):
     return sorted(rows, key=lambda r: (r['kind'], r['id']))
 
 
-def canonical(value, root):
+def relative_to_root(value, root, path=os.path):
+    """Return ``value`` relative to ``root`` with ``/`` separators, or None if it is not under ``root``.
+
+    ``path`` is the platform path module (``ntpath`` or ``posixpath``; tests pass both). On Windows
+    ``/`` and ``\\`` are the same separator and the case of ``root`` is ignored, so the dataset root
+    is removed however it is spelled; the rest keeps its text (``file_key`` gives input files their
+    on-disk spelling). With ``posixpath`` this is exactly the string-prefix test of
+    ``paired-experiment-v1``, so POSIX evidence does not change.
+    """
+    if path.altsep:
+        value, root = value.replace(path.altsep, path.sep), root.replace(path.altsep, path.sep)
+    prefix = root.rstrip(path.sep) + path.sep
+    if path.normcase(value[:len(prefix)]) != path.normcase(prefix):
+        return None
+    return value[len(prefix):].replace(path.sep, '/')
+
+
+def file_key(reference, resolved, root, path=os.path):
+    """Manifest key of the input file that the schema string ``reference`` names.
+
+    ``resolved`` is the file's resolved path, as ``snapshot_inputs`` records it, and ``root`` the
+    resolved dataset root. If ``reference`` spells ``resolved`` apart from what the platform ignores
+    (on Windows: ``/`` versus ``\\`` and letter case), the key is the file's path below ``root`` as
+    the filesystem spells it: on Windows ``sub\\Weather.csv`` and ``sub/weather.csv`` both become
+    ``sub/weather.csv``. Other spellings (``.`` or ``..`` components, repeated separators, links,
+    8.3 short names) keep their text, with ``\\`` written as ``/`` on Windows, so two of them that
+    name one file may fail to pair. With ``posixpath`` the key is exactly the
+    ``paired-experiment-v1`` text.
+    """
+    if path.normcase(path.join(root, reference)) == path.normcase(resolved):
+        relative = relative_to_root(resolved, root, path)
+        if relative is not None:
+            return relative
+    relative = relative_to_root(reference, root, path)
+    if relative is not None:
+        return relative
+    return reference.replace(path.sep, '/') if path.altsep else reference
+
+
+def canonical(value, root, files=None):
+    """``value`` without machine-specific paths: input-file references in ``files`` become their
+    ``file_key`` and other paths under ``root`` become relative to it."""
     if isinstance(value, dict):
-        return {k: canonical(v, root) for k, v in value.items()}
+        return {k: canonical(v, root, files) for k, v in value.items()}
     if isinstance(value, (tuple, list)):
-        return [canonical(v, root) for v in value]
-    if isinstance(value, str) and root and value.startswith(root.rstrip('/')+'/'):
-        return value[len(root.rstrip('/'))+1:]
+        return [canonical(v, root, files) for v in value]
+    if isinstance(value, str) and files and value in files:
+        return files[value]
+    if isinstance(value, str) and root:
+        relative = relative_to_root(value, root)
+        if relative is not None:
+            return relative
     return value
+
+
+def source_sha256(source_root):
+    """Digest of the engine's Python source that does not depend on how it was checked out.
+
+    Keys are POSIX paths relative to ``source_root``. Line endings are normalised the way Python
+    reads source (CRLF and lone CR become LF; the compiled code is identical), so a Windows
+    checkout with ``core.autocrlf`` hashes like the committed blobs and the wheel. Files without
+    CR bytes, which includes every committed engine file, hash exactly as before.
+    """
+    source_root = Path(source_root)
+    code = {p.relative_to(source_root).as_posix():
+            hashlib.sha256(p.read_bytes().replace(b'\r\n', b'\n').replace(b'\r', b'\n')).hexdigest()
+            for p in sorted(source_root.rglob('*.py'))}
+    return digest(code)
 
 
 def context(env, data_files):
@@ -53,17 +114,17 @@ def context(env, data_files):
         physical['robustness'].pop('agent_observation_contract', None)
     observation = {k: schema.get(k) for k in ('observations', 'observation_bundles', 'derived_forecasts')}
     observation.update(interface=env.interface, agent_contract=configuration(env))
-    source_root = Path(__file__).resolve().parents[1]
-    code = {str(p.relative_to(source_root)): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in sorted(source_root.rglob('*.py'))}
+    snapshot = getattr(env, '_input_snapshot', None) or {}
+    files = {name: file_key(name, row['path'], root) for name, row in snapshot.items()}
     tracker = env.episode_tracker
     from citylearn.internal.temporal import axis_metadata, runtime_versions
     axis = axis_metadata(env)
     temporal = {key:axis[key] for key in ('definition_version','initialization_seed','clock_source','dataset_seconds_per_time_step','control_seconds_per_time_step','terminal_padding','data_noise_generator','episode_split_rng')}
     return dict(temporal=temporal,definition_version=DEFINITION_VERSION,
-                engine=dict(version=__version__, source_sha256=digest(code), runtime_versions=runtime_versions()),
-                physical_configuration_sha256=digest(canonical(physical, root)),
-                data_files_sha256={canonical(k, root): v for k, v in data_files.items()},
+                engine=dict(version=__version__, source_sha256=source_sha256(Path(__file__).resolve().parents[1]),
+                            runtime_versions=runtime_versions()),
+                physical_configuration_sha256=digest(canonical(physical, root, files)),
+                data_files_sha256={canonical(k, root, files): v for k, v in data_files.items()},
                 episode_start_time_step=tracker.episode_start_time_step,
                 episode_end_time_step=tracker.episode_end_time_step,
                 completed_intervals=env._provenance_service.steps,
@@ -72,7 +133,7 @@ def context(env, data_files):
                 initial_inventory=getattr(env, '_comparison_initial_inventory', None),
                 service_tolerances=dict(ev_within=env.ev_departure_within_tolerance,
                                         ev_service=env.ev_departure_service_tolerance),
-                observation=canonical(observation, root),
+                observation=canonical(observation, root, files),
                 market=env.get_metadata()['community_market'])
 
 

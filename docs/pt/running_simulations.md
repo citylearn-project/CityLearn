@@ -277,4 +277,7 @@ PY
 
 Os exports apenas de KPIs incluem o manifesto e os metadados JSON de auditoria
 de serviço. Estes ficheiros não ativam séries temporais do episódio; a pasta
-continua compatível com a CityLearn UI.
+continua compatível com a CityLearn UI. O manifesto identifica os ficheiros de
+entrada pelo caminho abaixo da raiz do dataset; a secção
+[Evidência portátil de experiências](developer_guide.md#evidência-portátil-de-experiências)
+indica que grafias de uma referência a um ficheiro registam a mesma evidência.
