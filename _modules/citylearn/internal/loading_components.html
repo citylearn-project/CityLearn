@@ -304,6 +304,8 @@
             <span class="n">charger_class</span> <span class="o">=</span> <span class="n">component_constructor</span><span class="p">(</span><span class="n">charger_type</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'buildings.</span><span class="si">{</span><span class="n">building_name</span><span class="si">}</span><span class="s1">.chargers.</span><span class="si">{</span><span class="n">charger_name</span><span class="si">}</span><span class="s1">.type'</span><span class="p">)</span>
             <span class="n">charger_attributes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">charger_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'attributes'</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{})</span>
             <span class="n">charger_attributes</span><span class="p">[</span><span class="s1">'episode_tracker'</span><span class="p">]</span> <span class="o">=</span> <span class="n">episode_tracker</span>
+            <span class="c1"># Chargers draw no random values, but an unseeded one draws its seed from Python's global `random`.</span>
+            <span class="n">charger_attributes</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">'random_seed'</span><span class="p">,</span> <span class="n">schema</span><span class="p">[</span><span class="s1">'random_seed'</span><span class="p">])</span>
             <span class="n">charger_object</span> <span class="o">=</span> <span class="n">charger_class</span><span class="p">(</span>
                 <span class="n">charger_simulation</span><span class="o">=</span><span class="n">charger_simulation</span><span class="p">,</span>
                 <span class="n">charger_id</span><span class="o">=</span><span class="n">charger_name</span><span class="p">,</span>
@@ -313,6 +315,19 @@
             <span class="p">)</span>
             <span class="n">chargers_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">charger_object</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">chargers_list</span></div>
+
+
+
+<div class="viewcode-block" id="solar_generation_enabled">
+<a class="viewcode-back" href="../../../api/citylearn.internal.loading_components.html#citylearn.internal.loading_components.solar_generation_enabled">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">solar_generation_enabled</span><span class="p">(</span><span class="n">solar_generation</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether the `solar_generation` constructor argument keeps the PV of the building loaded at `index`.</span>
+
+<span class="sd">    It is one value for every building or a list in the env's building order; None keeps the PV.</span>
+<span class="sd">    """</span>
+    <span class="n">solar_generation</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">solar_generation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">solar_generation</span>
+    <span class="n">solar_generation</span> <span class="o">=</span> <span class="n">solar_generation</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">solar_generation</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">solar_generation</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">solar_generation</span><span class="p">)</span></div>
 
 
 
@@ -330,9 +345,7 @@
         <span class="s1">'electrical_storage'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'autosizer'</span><span class="p">:</span> <span class="n">building</span><span class="o">.</span><span class="n">autosize_electrical_storage</span><span class="p">},</span>
         <span class="s1">'pv'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'autosizer'</span><span class="p">:</span> <span class="n">building</span><span class="o">.</span><span class="n">autosize_pv</span><span class="p">},</span>
     <span class="p">}</span>
-    <span class="n">solar_generation</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'solar_generation'</span><span class="p">)</span>
-    <span class="n">solar_generation</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">solar_generation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">solar_generation</span>
-    <span class="n">solar_generation</span> <span class="o">=</span> <span class="n">solar_generation</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">solar_generation</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">solar_generation</span>
+    <span class="n">solar_generation</span> <span class="o">=</span> <span class="n">solar_generation_enabled</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'solar_generation'</span><span class="p">),</span> <span class="n">index</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">device_name</span> <span class="ow">in</span> <span class="n">device_metadata</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">building_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">device_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

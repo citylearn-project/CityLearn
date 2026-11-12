@@ -264,11 +264,17 @@ It cannot follow buildings, devices or chargers changed after loading, for
 example a new charger <code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code> or building <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code>.
 Before it runs, it is compared with the evaluated environment as captured at its
 last <code class="docutils literal notranslate"><span class="pre">reset()</span></code>: the building order, each building’s <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code> and
-active actions, each charger’s power limits and efficiencies, and the capacity
-and initial energy of batteries and EVs. A difference raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that
-names the setting; evaluate with <code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> in that case.
-Other device parameters, such as heat pump or PV sizes, are not compared, and a
-change made after <code class="docutils literal notranslate"><span class="pre">reset()</span></code> is not detected.</p>
+active actions, the sizes and parameters of every device (heat pumps, heaters,
+storage tanks, PV, batteries, chargers, appliances and EV batteries), and the
+capacity and initial energy of batteries and EVs. A difference raises a
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the setting; evaluate with
+<code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> in that case. A change made after <code class="docutils literal notranslate"><span class="pre">reset()</span></code>
+is not detected: the comparison covers the configuration captured at reset.</p>
+<p>For stochastic power outages, CityLearn uses the model’s explicit
+<code class="docutils literal notranslate"><span class="pre">random_seed</span></code> when provided. Otherwise the built-in models derive their
+seed from the environment seed, episode window and building name. The
+controller and its native BAU reference therefore face the same outages
+when they use the same model configuration.</p>
 <p>Results are cached for the current episode and timestep. The output adds
 <code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code> values, <code class="docutils literal notranslate"><span class="pre">delta_to_business_as_usual</span></code> differences and
 <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios for supported metrics:</p>

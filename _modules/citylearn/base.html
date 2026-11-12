@@ -156,6 +156,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__episode</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__episode_start_time_step</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__episode_end_time_step</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode_random_seed</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_start_time_step</span> <span class="o">=</span> <span class="n">simulation_start_time_step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_end_time_step</span> <span class="o">=</span> <span class="n">simulation_end_time_step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset_episode_index</span><span class="p">()</span>
@@ -165,6 +166,12 @@
 <span class="w">        </span><span class="sd">"""Current episode index"""</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">episode_random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Environment seed captured when the current episode was selected."""</span>
+
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_EpisodeTracker__episode_random_seed'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">episode_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -226,7 +233,8 @@
             <span class="n">rolling_episode_split</span><span class="p">,</span>
             <span class="n">random_episode_split</span><span class="p">,</span>
             <span class="n">random_seed</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode_random_seed</span> <span class="o">=</span> <span class="n">random_seed</span></div>
 
         
     <span class="k">def</span><span class="w"> </span><span class="nf">__next_episode_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span> <span class="n">rolling_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>

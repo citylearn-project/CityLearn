@@ -197,14 +197,20 @@ checkout made before <code class="docutils literal notranslate"><span class="pre
 and other <code class="docutils literal notranslate"><span class="pre">RLC</span></code> agents. The misspelled <code class="docutils literal notranslate"><span class="pre">action_scaling_coefficienct=</span></code> still
 works with a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>; before, only the misspelling took effect.</p></li>
 <li><p><strong>Native BAU reference check:</strong> <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> naming
-the setting when the building order, a building’s <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code> or
-active actions, or a charger’s power limits or efficiencies differ between the
-evaluated env at its last <code class="docutils literal notranslate"><span class="pre">reset()</span></code> and the reference, which is rebuilt from
-the schema and constructor arguments; before, the reference silently simulated
-the schema’s values. Evaluate with <code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> then.</p></li>
+the setting when the reference, which is rebuilt from the schema and the
+constructor arguments, differs from the evaluated env as captured at its last
+<code class="docutils literal notranslate"><span class="pre">reset()</span></code>: the building order, a building’s <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code> or active
+actions, or any parameter of its devices (heat pumps, heaters, storage tanks,
+PV, batteries, chargers, appliances and EV batteries), not only battery
+capacities. Before, the reference silently simulated the schema’s values. A
+change made after <code class="docutils literal notranslate"><span class="pre">reset()</span></code> is not detected. Evaluate with
+<code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> in that case.</p></li>
 </ul>
 <p>Fixes that <strong>change results</strong> where they apply:</p>
 <ul class="simple">
+<li><p>Stochastic power outages: built-in models without an explicit seed now
+derive one from the environment seed, episode window and building name.
+The native BAU reference uses the same seed and outage signal.</p></li>
 <li><p>Agents: MARLISA’s coordinated actions use each building’s own policy;
 <code class="docutils literal notranslate"><span class="pre">TabularQLearning</span></code> bootstraps on the best next-state value; an explicit
 <code class="docutils literal notranslate"><span class="pre">action_scaling_coefficient</span></code> now takes effect (the default stays 0.5).</p></li>
@@ -212,11 +218,24 @@ the schema’s values. Evaluate with <code class="docutils literal notranslate">
 <code class="docutils literal notranslate"><span class="pre">solar_generation</span></code> and active/inactive action and observation overrides, to
 the same buildings when <code class="docutils literal notranslate"><span class="pre">buildings=</span></code> lists them in another order than the
 schema; with the community market enabled, legacy cost and the equity audit
-settle the counterfactual too.</p></li>
+settle the counterfactual too. Autosized equipment in the reference is sized
+over the same data as the evaluated env, not only the current episode:
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> no longer fails on the tx, vt and ca neighbourhood datasets
+when episodes are shorter than the data, and BAU KPIs of the 2020 and 2021
+challenge datasets change because their reference heat pumps and storage now
+match.</p></li>
 <li><p>Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
 ca neighbourhood datasets), and an EV connects to at most one charger per step,
 which affects charger clones in the dynamic-topology demos.</p></li>
 </ul>
+<p>Changes that <strong>preserve trajectories and KPI values</strong>: the zero-size placeholders
+for absent devices, and EV chargers, are seeded, so the placeholders’ unused
+parameters are reproducible and building an env no longer advances Python’s
+global <code class="docutils literal notranslate"><span class="pre">random</span></code> stream; the native BAU cache keeps only the latest reference and
+releases it before building the next, so repeated mid-episode <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>
+calls hold at most one reference env; and the reference loads only the episode,
+not the whole data window, when the only device marked for autosizing is PV that
+<code class="docutils literal notranslate"><span class="pre">solar_generation</span></code> disables.</p>
 </section>
 <section id="upgrade-from-3-1-1-to-3-2-0">
 <span id="upgrade-from-311-to-320"></span><h2>Upgrade from 3.1.1 to 3.2.0<a class="headerlink" href="#upgrade-from-3-1-1-to-3-2-0" title="Link to this heading"></a></h2>

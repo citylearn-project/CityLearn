@@ -179,6 +179,21 @@
 <dd></dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.comparison.equipment">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.comparison.</span></span><span class="sig-name descname"><span class="pre">equipment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/comparison.html#equipment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.comparison.equipment" title="Link to this definition"></a></dt>
+<dd><p>Sizes and parameters of every simulated device, keyed by building and device.</p>
+<p><a class="reference internal" href="#citylearn.internal.comparison.inventory" title="citylearn.internal.comparison.inventory"><code class="xref py py-func docutils literal notranslate"><span class="pre">inventory()</span></code></a> records stored energy; this records what autosizing and random draws resolve
+(heat pump and heater power, storage capacity, PV, battery curves, chargers, appliances, EV
+batteries), so a reference can show that it simulates the same devices as the evaluated env.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.comparison.equipment_differences">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.comparison.</span></span><span class="sig-name descname"><span class="pre">equipment_differences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/comparison.html#equipment_differences"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.comparison.equipment_differences" title="Link to this definition"></a></dt>
+<dd><p><cite>device: parameter (left vs right)</cite> for each parameter that differs, devices in order.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="citylearn.internal.comparison.file_key">
 <span class="sig-prename descclassname"><span class="pre">citylearn.internal.comparison.</span></span><span class="sig-name descname"><span class="pre">file_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolved</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path=&lt;module</span> <span class="pre">'posixpath'</span> <span class="pre">(frozen)&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/comparison.html#file_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.comparison.file_key" title="Link to this definition"></a></dt>
 <dd><p>Manifest key of the input file that the schema string <code class="docutils literal notranslate"><span class="pre">reference</span></code> names.</p>
@@ -218,8 +233,8 @@ name one file may fail to pair. With <code class="docutils literal notranslate">
 <span class="sig-prename descclassname"><span class="pre">citylearn.internal.comparison.</span></span><span class="sig-name descname"><span class="pre">reference_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/comparison.html#reference_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.comparison.reference_configuration" title="Link to this definition"></a></dt>
 <dd><p>Building order and the per-building settings that the native BAU reference must reproduce.</p>
 <p>The reference is rebuilt from the schema and the constructor arguments. This records what they
-resolve to for each building, in the env’s building order: the outage setting, the active actions
-and the chargers’ power limits and efficiencies, all of which setters can change after loading.</p>
+resolve to for each building, in the env’s building order: the outage setting and the active
+actions, which setters can change after loading. <a class="reference internal" href="#citylearn.internal.comparison.equipment" title="citylearn.internal.comparison.equipment"><code class="xref py py-func docutils literal notranslate"><span class="pre">equipment()</span></code></a> records the devices.</p>
 </dd></dl>
 
 <dl class="py function">

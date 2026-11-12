@@ -1863,9 +1863,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_robustness_service</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">associate_chargers_to_electric_vehicles</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.comparison</span><span class="w"> </span><span class="kn">import</span> <span class="n">inventory</span><span class="p">,</span> <span class="n">reference_configuration</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.comparison</span><span class="w"> </span><span class="kn">import</span> <span class="n">equipment</span><span class="p">,</span> <span class="n">inventory</span><span class="p">,</span> <span class="n">reference_configuration</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_comparison_initial_inventory</span> <span class="o">=</span> <span class="n">inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_comparison_initial_configuration</span> <span class="o">=</span> <span class="n">reference_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># Taken here because the dynamic topology adds and removes devices during the episode.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_comparison_initial_equipment</span> <span class="o">=</span> <span class="n">equipment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
         <span class="c1"># reset reward function (does nothing by default)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reward_function</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>

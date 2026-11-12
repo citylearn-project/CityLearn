@@ -126,6 +126,7 @@
   <h1>Source code for citylearn.internal.baseline</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
@@ -178,6 +179,16 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">force</span> <span class="ow">and</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span>
 
+        <span class="c1"># Keep only the latest result. Within an episode the time step only moves forward and reset</span>
+        <span class="c1"># clears the cache, so an earlier entry is never read again, yet each holds a whole sidecar</span>
+        <span class="c1"># env. Release it before building the next one, this frame's handle on the cache included,</span>
+        <span class="c1"># so at most one sidecar is alive. An env holds reference cycles, so dropping the last</span>
+        <span class="c1"># reference does not free it; collect now rather than when the collector next runs.</span>
+        <span class="n">released</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">cache</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">cache</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">released</span><span class="p">:</span>
+            <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
         <span class="n">baseline_env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_sidecar_env</span><span class="p">()</span>
         <span class="n">baseline_env</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">random_seed</span>
         <span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">)</span>
@@ -188,7 +199,9 @@
         <span class="n">baseline_env</span><span class="o">.</span><span class="n">_ev_drift_seed</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_ev_drift_seed</span>
         <span class="n">baseline_env</span><span class="o">.</span><span class="n">_ev_drift_random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_ev_drift_seed</span><span class="p">)</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.comparison</span><span class="w"> </span><span class="kn">import</span> <span class="n">configuration_differences</span><span class="p">,</span> <span class="n">inventory</span><span class="p">,</span> <span class="n">reference_configuration</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.comparison</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">configuration_differences</span><span class="p">,</span> <span class="n">equipment</span><span class="p">,</span> <span class="n">equipment_differences</span><span class="p">,</span> <span class="n">inventory</span><span class="p">,</span> <span class="n">reference_configuration</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="n">inventory</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">)</span> <span class="o">!=</span> <span class="n">env</span><span class="o">.</span><span class="n">_comparison_initial_inventory</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Native BAU initial inventory differs from the evaluated episode'</span><span class="p">)</span>
         <span class="n">differences</span> <span class="o">=</span> <span class="n">configuration_differences</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_comparison_initial_configuration</span><span class="p">,</span> <span class="n">reference_configuration</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">))</span>
@@ -197,8 +210,18 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s1">'Native BAU configuration differs from the evaluated env, as captured at its last reset, in '</span>
                 <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">differences</span><span class="p">)</span><span class="si">}</span><span class="s1"> setting(s) (evaluated vs reference): </span><span class="si">{</span><span class="n">shown</span><span class="si">}</span><span class="s1">. The reference is rebuilt from '</span>
-                <span class="s1">'the schema and the constructor arguments, so it cannot follow buildings, outage settings, actions '</span>
-                <span class="s1">'or chargers changed after loading; evaluate without the native reference '</span>
+                <span class="s1">'the schema and the constructor arguments, so it cannot follow buildings, outage settings or actions '</span>
+                <span class="s1">'changed after loading; evaluate without the native reference '</span>
+                <span class="s1">'(include_business_as_usual=False) in that case.'</span>
+            <span class="p">)</span>
+        <span class="c1"># The inventory covers batteries and EVs only; heat pumps, heaters and storage tanks are sized too.</span>
+        <span class="n">differences</span> <span class="o">=</span> <span class="n">equipment_differences</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_comparison_initial_equipment</span><span class="p">,</span> <span class="n">equipment</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">differences</span><span class="p">:</span>
+            <span class="n">shown</span> <span class="o">=</span> <span class="s1">'; '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">differences</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="s1">'; ...'</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">differences</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="k">else</span> <span class="s1">''</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">'Native BAU equipment differs from the evaluated env, as captured at its last reset, in '</span>
+                <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">differences</span><span class="p">)</span><span class="si">}</span><span class="s1"> parameter(s) (evaluated vs reference): </span><span class="si">{</span><span class="n">shown</span><span class="si">}</span><span class="s1">. The reference rebuilds devices '</span>
+                <span class="s1">'from the schema, so it cannot follow devices changed after loading; evaluate without the native reference '</span>
                 <span class="s1">'(include_business_as_usual=False) in that case.'</span>
             <span class="p">)</span>
         <span class="n">baseline_env</span><span class="o">.</span><span class="n">_native_reference_metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
@@ -220,8 +243,7 @@
             <span class="n">episode</span><span class="o">=</span><span class="n">episode</span><span class="p">,</span>
             <span class="n">time_step</span><span class="o">=</span><span class="n">target_time_step</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
-        <span class="n">env</span><span class="o">.</span><span class="n">_business_as_usual_baseline_cache</span> <span class="o">=</span> <span class="n">cache</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">_business_as_usual_baseline_cache</span> <span class="o">=</span> <span class="p">{</span><span class="n">cache_key</span><span class="p">:</span> <span class="n">result</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
 
@@ -250,9 +272,18 @@
         <span class="c1"># reaches the same building and the reference steps its buildings in the same order.</span>
         <span class="n">building_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema_indices</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">building_names</span><span class="p">)</span>
 
-        <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span> <span class="s1">'episode_start_time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span> <span class="s1">'episode_end_time_step'</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'time_steps'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="ow">or</span> <span class="n">start</span><span class="p">)</span>
-        <span class="n">episode_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span> <span class="s1">'episode_time_steps'</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">max</span><span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">tracker</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">tracker</span><span class="p">,</span> <span class="s1">'episode_start_time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">tracker</span><span class="p">,</span> <span class="s1">'episode_end_time_step'</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'time_steps'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="ow">or</span> <span class="n">start</span><span class="p">)</span>
+        <span class="n">simulation_start</span><span class="p">,</span> <span class="n">simulation_end</span> <span class="o">=</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span>
+
+        <span class="n">solar_generation</span> <span class="o">=</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_constructor_overrides'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'solar_generation'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_autosizes_equipment</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">building_names</span><span class="p">,</span> <span class="n">solar_generation</span><span class="p">):</span>
+            <span class="c1"># Autosizing (batteries, PV, heat pumps, storage) reads the whole loaded data window, so</span>
+            <span class="c1"># loading only this episode sizes different equipment than the evaluated env. Load the</span>
+            <span class="c1"># source's window instead; the one explicit split still restricts the run to the episode.</span>
+            <span class="n">simulation_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">tracker</span><span class="p">,</span> <span class="s1">'simulation_start_time_step'</span><span class="p">,</span> <span class="n">start</span><span class="p">))</span>
+            <span class="n">simulation_end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">tracker</span><span class="p">,</span> <span class="s1">'simulation_end_time_step'</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
 
         <span class="n">requires_entity_interface</span> <span class="o">=</span> <span class="p">(</span>
             <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dynamic'</span>
@@ -264,9 +295,9 @@
             <span class="n">root_directory</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'root_directory'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
             <span class="n">buildings</span><span class="o">=</span><span class="n">building_selection</span><span class="p">,</span>
             <span class="n">electric_vehicles</span><span class="o">=</span><span class="n">ev_names</span><span class="p">,</span>
-            <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
-            <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
-            <span class="n">episode_time_steps</span><span class="o">=</span><span class="n">episode_steps</span><span class="p">,</span>
+            <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="n">simulation_start</span><span class="p">,</span>
+            <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">simulation_end</span><span class="p">,</span>
+            <span class="n">episode_time_steps</span><span class="o">=</span><span class="p">[(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)],</span>
             <span class="n">rolling_episode_split</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">random_episode_split</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">seconds_per_time_step</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'seconds_per_time_step'</span><span class="p">,</span> <span class="mf">3600.0</span><span class="p">)),</span>
@@ -288,6 +319,37 @@
         <span class="p">)</span>
         <span class="n">baseline_env</span><span class="o">.</span><span class="n">_business_as_usual_sidecar</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">baseline_env</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_autosizes_equipment</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">building_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">solar_generation</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether a building the sidecar loads sizes a device from its data.</span>
+
+<span class="sd">        Without autosizing, equipment does not depend on the loaded window, so the sidecar can</span>
+<span class="sd">        load just the episode, which is much cheaper for long or fine-grained datasets. PV that the</span>
+<span class="sd">        `solar_generation` constructor argument disables is not loaded, so it sizes nothing.</span>
+<span class="sd">        `building_names` are in the evaluated env's order, which `solar_generation` lists follow.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.loading_components</span><span class="w"> </span><span class="kn">import</span> <span class="n">solar_generation_enabled</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_bool</span>
+
+        <span class="n">buildings</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'buildings'</span><span class="p">,</span> <span class="p">{})</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">buildings</span> <span class="k">if</span> <span class="n">building_names</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">building_names</span><span class="p">):</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">buildings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Unknown configuration: load the source's window to be safe.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">pv_loaded</span> <span class="o">=</span> <span class="n">solar_generation_enabled</span><span class="p">(</span><span class="n">solar_generation</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="n">pv_loaded</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Unknown setting: count the PV, which loads the source's window.</span>
+            <span class="k">for</span> <span class="n">device_name</span><span class="p">,</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">device_name</span> <span class="o">==</span> <span class="s1">'pv'</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pv_loaded</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">parse_bool</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'autosize'</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="kc">True</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_schema_indices</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">building_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]):</span>
