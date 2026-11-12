@@ -1,5 +1,6 @@
 """Occupant tree classifiers evaluated with NumPy, without unpickling scikit-learn objects."""
 
+import json
 import os
 import pickle
 from pathlib import Path
@@ -11,6 +12,10 @@ from citylearn.internal.occupant_models import TreeClassifierModel, UnsupportedM
 
 DATASET = Path(__file__).resolve().parents[2]/'data'/'datasets'/'quebec_neighborhood_with_demand_response_set_points'
 MODEL = 'resstock-amy2018-2021-release-1-199613_setpoint_{}.pkl'
+# Tiny models pickled by scikit-learn 1.2.2, with that release's predictions; see
+# tests/data/occupant_models/make_fixtures.py.
+FIXTURES = Path(__file__).resolve().parents[1]/'data'/'occupant_models'
+EXPECTED = json.loads((FIXTURES/'expected.json').read_text(encoding='utf-8'))
 
 # Inputs and outputs of scikit-learn 1.2.2 (the version the bundled pickles were last loadable with).
 # The first rows put a feature exactly on a split threshold.
@@ -44,8 +49,21 @@ def test_bundled_occupant_model_reproduces_scikit_learn_1_2_2(direction):
     np.testing.assert_allclose(model.predict_proba(frozen['x'])[:, 1], frozen['proba'], rtol=0.0, atol=1.0e-15)
 
 
+@pytest.mark.parametrize('name', sorted(EXPECTED))
+def test_fixture_reproduces_the_scikit_learn_that_wrote_it(name):
+    expected = EXPECTED[name]
+    model = load_occupant_model(FIXTURES/f'{name}.pkl')
+    x = np.array(expected['x'], dtype='float64')  # null marks a missing value
+
+    assert isinstance(model, TreeClassifierModel)  # read without scikit-learn, not by the pickle fallback
+    np.testing.assert_array_equal(model.predict(x), expected['predict'])
+    np.testing.assert_array_equal(model.predict_proba(x), expected['predict_proba'])
+
+
+@pytest.mark.parametrize('random_state', ['seed', 'RandomState'])
+@pytest.mark.parametrize('protocol', [0, 2, 4, 5])
 @pytest.mark.parametrize('estimator', ['forest', 'tree'])
-def test_matches_installed_scikit_learn(tmp_path, estimator):
+def test_matches_installed_scikit_learn(tmp_path, estimator, protocol, random_state):
     sklearn = pytest.importorskip('sklearn')
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.tree import DecisionTreeClassifier
@@ -53,10 +71,11 @@ def test_matches_installed_scikit_learn(tmp_path, estimator):
     rng = np.random.default_rng(0)
     x = rng.normal(size=(400, 3))
     y = np.where(x[:, 0] + 0.5*x[:, 1] > 0.2, 'up', np.where(x[:, 2] > 0.8, 'hold', 'down'))
-    reference = (RandomForestClassifier(n_estimators=15, max_depth=6, random_state=0) if estimator == 'forest'
-                 else DecisionTreeClassifier(max_depth=6, random_state=0)).fit(x, y)
+    seed = 0 if random_state == 'seed' else np.random.RandomState(0)
+    reference = (RandomForestClassifier(n_estimators=15, max_depth=6, random_state=seed) if estimator == 'forest'
+                 else DecisionTreeClassifier(max_depth=6, random_state=seed)).fit(x, y)
     path = tmp_path/'model.pkl'
-    path.write_bytes(pickle.dumps(reference))
+    path.write_bytes(pickle.dumps(reference, protocol=protocol))
     model = TreeClassifierModel.from_pickle(path)
     test = np.vstack([rng.normal(size=(300, 3)), x[:50]])
 
@@ -83,6 +102,14 @@ def test_other_models_fall_back_to_pickle(tmp_path):
     path.write_bytes(pickle.dumps({'kind': 'custom'}))
 
     assert load_occupant_model(path) == {'kind': 'custom'}
+
+
+def test_unreadable_model_reports_both_failures(tmp_path):
+    path = tmp_path/'custom.pkl'
+    path.write_bytes(b'cmissing_citylearn_test_module\nModel\n.')  # protocol 0: GLOBAL, STOP
+
+    with pytest.raises(UnsupportedModelError, match=r'missing_citylearn_test_module\.Model.*ModuleNotFoundError'):
+        load_occupant_model(path)
 
 
 def test_rejects_wrong_feature_count():

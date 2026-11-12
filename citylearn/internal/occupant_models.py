@@ -4,12 +4,15 @@ The bundled Quebec datasets ship ``RandomForestClassifier`` pickles written by s
 1.0.2. scikit-learn 1.3 changed the tree node layout and cannot unpickle them, which used to
 pin scikit-learn to <=1.2.2 and, through it, NumPy to <2 and Python to <3.12.
 
-These files are read by a restricted unpickler. It rebuilds only NumPy arrays and records the
-state of the three scikit-learn classes involved, so no scikit-learn installation is needed and
-no other callable named in the file can run. Predictions reproduce
-``RandomForestClassifier.predict`` and ``DecisionTreeClassifier.predict`` for single-output
-classifiers: inputs are cast to float32 as scikit-learn does, trees are traversed with the stored
-thresholds, and leaf class weights are normalised and averaged in estimator order.
+These files are read by a restricted unpickler, whichever pickle protocol (0 to 5) wrote them.
+It rebuilds only NumPy arrays and records the state of the three scikit-learn classes involved,
+so no scikit-learn installation is needed and no other callable named in the file can run. A
+``numpy.random.RandomState`` passed as ``random_state`` is recorded as an inert placeholder,
+since prediction never draws from it.
+Predictions reproduce ``RandomForestClassifier.predict`` and ``DecisionTreeClassifier.predict``
+for single-output classifiers: inputs are cast to float32 as scikit-learn does, trees are
+traversed with the stored thresholds, and leaf class weights are normalised and averaged in
+estimator order.
 """
 from __future__ import annotations
 
@@ -20,9 +23,9 @@ from typing import Any, List, Mapping, Union
 import numpy as np
 
 try:  # NumPy >= 2
-    from numpy._core import multiarray as _multiarray
+    from numpy._core import multiarray as _multiarray, numeric as _numeric
 except ImportError:  # pragma: no cover - NumPy 1.x
-    from numpy.core import multiarray as _multiarray
+    from numpy.core import multiarray as _multiarray, numeric as _numeric
 
 
 class _PickledObject:
@@ -47,6 +50,30 @@ class _Tree(_PickledObject):
     pass
 
 
+class _RandomState(_PickledObject):
+    """Stands in for a pickled ``numpy.random.RandomState`` and its bit generator; never draws."""
+
+
+class UnsupportedModelError(pickle.UnpicklingError):
+    """The file holds something other than a scikit-learn decision tree or random forest."""
+
+
+def _latin1_bytes(text: str, encoding: str) -> bytes:
+    # Protocols 0 to 2 store bytes as _codecs.encode(text, 'latin1').
+    if encoding != 'latin1':
+        raise UnsupportedModelError(f"'_codecs.encode' to {encoding!r} is not part of a tree classifier pickle.")
+
+    return text.encode('latin1')
+
+
+def _reconstructor(cls, base, state):
+    # Protocols 0 and 1 rebuild Python objects with copyreg._reconstructor(cls, object, None).
+    if base is not object or state is not None or not (isinstance(cls, type) and issubclass(cls, _PickledObject)):
+        raise UnsupportedModelError("'copyreg._reconstructor' only rebuilds scikit-learn tree objects here.")
+
+    return cls.__new__(cls)
+
+
 _ALLOWED_GLOBALS = {
     ('numpy', 'ndarray'): np.ndarray,
     ('numpy', 'dtype'): np.dtype,
@@ -54,14 +81,22 @@ _ALLOWED_GLOBALS = {
     ('numpy._core.multiarray', '_reconstruct'): _multiarray._reconstruct,
     ('numpy.core.multiarray', 'scalar'): _multiarray.scalar,
     ('numpy._core.multiarray', 'scalar'): _multiarray.scalar,
+    # Pickle protocol 5 stores contiguous arrays as raw buffers.
+    ('numpy.core.numeric', '_frombuffer'): _numeric._frombuffer,
+    ('numpy._core.numeric', '_frombuffer'): _numeric._frombuffer,
+    # Protocols 0 to 2; find_class receives the Python 2 module names they are written with.
+    ('_codecs', 'encode'): _latin1_bytes,
+    ('copy_reg', '_reconstructor'): _reconstructor,
+    ('copyreg', '_reconstructor'): _reconstructor,
+    ('__builtin__', 'object'): object,
+    ('builtins', 'object'): object,
+    ('numpy.random._pickle', '__randomstate_ctor'): _RandomState,
+    ('numpy.random._pickle', '__bit_generator_ctor'): _RandomState,
+    ('numpy.random._mt19937', 'MT19937'): _RandomState,
     ('sklearn.ensemble._forest', 'RandomForestClassifier'): _RandomForestClassifier,
     ('sklearn.tree._classes', 'DecisionTreeClassifier'): _DecisionTreeClassifier,
     ('sklearn.tree._tree', 'Tree'): _Tree,
 }
-
-
-class UnsupportedModelError(pickle.UnpicklingError):
-    """The file holds something other than a scikit-learn decision tree or random forest."""
 
 
 class _RestrictedUnpickler(pickle.Unpickler):
@@ -180,6 +215,13 @@ def load_occupant_model(filepath: Union[str, Path]):
 
     try:
         return TreeClassifierModel.from_pickle(filepath)
-    except UnsupportedModelError:
+    except UnsupportedModelError as reason:
         with open(filepath, 'rb') as stream:
-            return pickle.load(stream)
+            try:
+                return pickle.load(stream)
+            except Exception as error:
+                raise UnsupportedModelError(
+                    f'{filepath} is not a tree classifier CityLearn reads without scikit-learn ({reason}), and '
+                    f'unpickling it failed: {error!r}. Install the library release that saved the model, or refit '
+                    'and save it with the installed one.'
+                ) from error
