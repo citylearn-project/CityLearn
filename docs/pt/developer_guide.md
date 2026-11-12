@@ -22,18 +22,20 @@ Dependencias opcionais:
 
 ## Evidência portátil de experiências
 
-O `.gitattributes` torna cada checkout identico ao repositorio byte a byte: os
-ficheiros de texto usam LF e os ficheiros em `data/` e `tests/data/` nunca sao
-convertidos, mesmo com o `core.autocrlf=true` por omissao do Git for Windows. Os
-manifestos de experiencias calculam hashes destes ficheiros, que assim coincidem
+O `.gitattributes` torna cada checkout idêntico ao repositório byte a byte: os
+ficheiros de texto usam LF e os ficheiros em `data/` e `tests/data/` nunca são
+convertidos, mesmo com o `core.autocrlf=true` por omissão do Git for Windows. Os
+manifestos de experiências calculam hashes destes ficheiros, que assim coincidem
 em todas as plataformas. Um checkout anterior ao `.gitattributes` pode ainda ter
-copias CRLF; o `git status` mostra os ficheiros de dados convertidos como
-modificados. Atualizar esse checkout uma vez (descarta alteracoes nao commitadas
-em ficheiros versionados) e limpar a cache de datasets, que pode conter copias
-feitas a partir do checkout antigo:
+cópias CRLF; o `git status` mostra os ficheiros de dados convertidos como
+modificados. Fazer um clone novo e configurá-lo como em
+[Ambiente Local](#ambiente-local): o clone aplica as novas regras de checkout e
+deixa intacta a cópia de trabalho existente, incluindo as alterações não
+commitadas. Depois, limpar a cache de datasets, que pode conter cópias feitas a
+partir do checkout antigo:
 
 ```console
-git rm --cached -r -q . && git reset -q --hard
+git clone https://github.com/citylearn-project/CityLearn.git
 python -c "from citylearn.data import DataSet; DataSet().clear_cache()"
 ```
 

@@ -232,4 +232,5 @@ def test_checked_out_data_files_are_the_committed_bytes(checkout):
     assert not converted, (
         f'{len(converted)} data files differ from the committed bytes (e.g. {converted[:3]}), so '
         'data_files_sha256 will not match other checkouts. This checkout predates .gitattributes; '
-        'refresh it as described in docs/developer_guide.md.')
+        'make a fresh clone as described in "Portable experiment evidence" '
+        '(docs/developer_guide.md#portable-experiment-evidence).')
