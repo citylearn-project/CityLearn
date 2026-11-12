@@ -12,12 +12,13 @@ Run the script once in each environment; a run replaces only its own set:
   one whose node layout has no ``missing_go_to_left``. Forests and trees pickled with protocols
   1, 2, 4 and 5 and fitted with an integer seed or a ``numpy.random.RandomState``. scikit-learn
   1.2.2 rejects missing values, so only finite inputs are recorded.
-- ``missing_counts``: scikit-learn 1.3.x, a tree fitted on data with missing values. Its nodes
-  store ``missing_go_to_left`` and its leaves still hold class counts.
+- ``missing_counts``: scikit-learn 1.3.x, a best-split tree fitted on data with missing values,
+  plus a forest and a random-split tree fitted on finite data. All store
+  ``missing_go_to_left`` and class counts, but only the best-split tree accepts missing inputs.
 - ``missing``: scikit-learn >= 1.4, a tree and a forest fitted on data with missing values. The
   leaves hold class fractions.
 
-In the last two sets, NaN inputs go left at some splits and right at others.
+For models that accept NaN inputs, they go left at some splits and right at others.
 
     python tests/data/occupant_models/make_fixtures.py
 """
@@ -90,25 +91,24 @@ def _nan_rejected(model, row):
 def _record(name, model, protocol, random_state, x, kind, expected):
     path = HERE/f'{name}.pkl'
     path.write_bytes(pickle.dumps(model, protocol=protocol))
-    missing = kind != 'legacy'
-    inputs = _inputs(model, x, missing)
+    nan_rejected = _nan_rejected(model, np.array([[np.nan, 1.0, 1.0]]))
+    inputs = _inputs(model, x, not nan_rejected)
     expected[name] = {
         'set': kind,
         'written_with': {'python': platform.python_version(), 'numpy': np.__version__, 'scikit-learn': sklearn.__version__},
         'estimator': type(model).__name__,
         'random_state': random_state,
         'protocol': protocol,
-        'nan_rejected': _nan_rejected(model, np.array([[np.nan, 1.0, 1.0]])),
+        'nan_rejected': nan_rejected,
         'x': [[None if np.isnan(v) else float(v) for v in row] for row in inputs],
         'predict': model.predict(inputs).tolist(),
         'predict_proba': model.predict_proba(inputs).tolist(),
     }
 
-    if missing:
+    if not nan_rejected:
         trees = model.estimators_ if hasattr(model, 'estimators_') else [model]
         routing = {bool(t.tree_.missing_go_to_left[n]) for t in trees for n in np.flatnonzero(t.tree_.children_left != -1)}
         assert routing == {False, True}, 'the fixture must route missing values both ways'
-        assert not expected[name]['nan_rejected']
 
     print(f'{path.name}: {path.stat().st_size} bytes')
 
@@ -133,7 +133,11 @@ def main():
     elif version == (1, 3):
         kind = 'missing_counts'
         x, y = _missing_data()
-        models = [('missing_counts_tree_seed_protocol5', DecisionTreeClassifier(max_depth=3, random_state=0), 5, '0')]
+        models = [
+            ('missing_counts_tree_seed_protocol5', DecisionTreeClassifier(max_depth=3, random_state=0), 5, '0'),
+            ('missing_counts_forest_seed_protocol5', RandomForestClassifier(n_estimators=3, max_depth=3, random_state=0), 5, '0'),
+            ('missing_counts_random_tree_seed_protocol5', DecisionTreeClassifier(splitter='random', max_depth=3, random_state=0), 5, '0'),
+        ]
     elif version >= (1, 4):
         kind = 'missing'
         x, y = _missing_data()
@@ -152,11 +156,15 @@ def main():
 
     fitted = set()
     for name, model, protocol, random_state in models:
+        requires_finite = version == (1, 3) and (
+            isinstance(model, RandomForestClassifier) or model.splitter == 'random'
+        )
+        train_x, train_y = _legacy_data() if requires_finite else (x, y)
         if id(model) not in fitted:
-            model.fit(x, y)
+            model.fit(train_x, train_y)
             fitted.add(id(model))
 
-        _record(name, model, protocol, random_state, x, kind, expected)
+        _record(name, model, protocol, random_state, train_x, kind, expected)
 
     lines = [f' {json.dumps(name)}: {json.dumps(entry)}' for name, entry in sorted(expected.items())]
     EXPECTED.write_text('{\n' + ',\n'.join(lines) + '\n}\n', encoding='utf-8')

@@ -13,7 +13,7 @@ from citylearn.internal.occupant_models import TreeClassifierModel, UnsupportedM
 DATASET = Path(__file__).resolve().parents[2]/'data'/'datasets'/'quebec_neighborhood_with_demand_response_set_points'
 MODEL = 'resstock-amy2018-2021-release-1-199613_setpoint_{}.pkl'
 # Tiny models pickled by scikit-learn 1.2.2, 1.3 and a current release, with the predictions of the
-# release that wrote them, NaN inputs included from 1.3; see tests/data/occupant_models/make_fixtures.py.
+# release that wrote them; see tests/data/occupant_models/make_fixtures.py.
 FIXTURES = Path(__file__).resolve().parents[1]/'data'/'occupant_models'
 EXPECTED = json.loads((FIXTURES/'expected.json').read_text(encoding='utf-8'))
 
@@ -64,9 +64,10 @@ def test_fixture_reproduces_the_scikit_learn_that_wrote_it(name):
 def test_fixture_accepts_missing_values_only_where_its_scikit_learn_did(name):
     model = load_occupant_model(FIXTURES/f'{name}.pkl')
 
-    if EXPECTED[name]['nan_rejected']:  # scikit-learn < 1.3
-        with pytest.raises(ValueError, match='NaN'):
-            model.predict([[np.nan, 1.0, 1.0]])
+    if EXPECTED[name]['nan_rejected']:
+        for predict in (model.predict, model.predict_proba):
+            with pytest.raises(ValueError, match='NaN'):
+                predict([[np.nan, 1.0, 1.0]])
     else:
         assert model.predict([[np.nan, 1.0, 1.0]]).shape == (1,)
 
@@ -92,6 +93,36 @@ def test_unknown_node_layout_is_left_to_scikit_learn(tmp_path):
 
 def _release(version: str) -> tuple:
     return tuple(int(part) for part in version.split('.')[:2])
+
+
+@pytest.mark.parametrize('estimator', ['forest', 'tree'])
+def test_models_with_monotonic_constraints_match_missing_value_validation(tmp_path, estimator):
+    sklearn = pytest.importorskip('sklearn')
+    release = _release(sklearn.__version__)
+    if release < (1, 4):
+        pytest.skip('scikit-learn 1.4 introduced monotonic constraints')
+
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.tree import DecisionTreeClassifier
+
+    model_type = RandomForestClassifier if estimator == 'forest' else DecisionTreeClassifier
+    training = [[-2.0], [-1.0], [1.0], [2.0]]
+    reference = model_type(monotonic_cst=[1], random_state=0).fit(training, [0, 0, 1, 1])
+    path = tmp_path / 'monotonic.pkl'
+    path.write_bytes(pickle.dumps(reference, protocol=5))
+    model = TreeClassifierModel.from_pickle(path)
+    np.testing.assert_array_equal(model.predict(training), reference.predict(training))
+    for name in ('predict', 'predict_proba'):
+        expected = getattr(reference, name)
+        actual = getattr(model, name)
+        missing = [[np.nan]]
+        if release < (1, 9):
+            with pytest.raises(ValueError, match='NaN'):
+                expected(missing)
+            with pytest.raises(ValueError, match='NaN'):
+                actual(missing)
+        else:
+            np.testing.assert_array_equal(actual(missing), expected(missing))
 
 
 @pytest.mark.parametrize('random_state', ['seed', 'RandomState'])

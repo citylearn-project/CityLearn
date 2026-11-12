@@ -119,10 +119,9 @@ _NODE_FIELDS = ('left_child', 'right_child', 'feature', 'threshold', 'impurity',
 _NODE_LAYOUTS = (frozenset(_NODE_FIELDS), frozenset(_NODE_FIELDS + ('missing_go_to_left',)))
 
 
-def _stores_class_fractions(state: Mapping[str, Any]) -> bool:
-    # scikit-learn 1.4 changed classifier leaf values from weighted class counts to class fractions.
+def _sklearn_release(state: Mapping[str, Any]) -> tuple:
     version = re.match(r'(\d+)\.(\d+)', str(state.get('_sklearn_version', '')))
-    return version is not None and (int(version.group(1)), int(version.group(2))) >= (1, 4)
+    return tuple(map(int, version.groups())) if version is not None else ()
 
 
 class _TreeArrays:
@@ -183,11 +182,13 @@ class _TreeArrays:
 class TreeClassifierModel:
     """NumPy evaluation of a pickled scikit-learn ``RandomForestClassifier`` or ``DecisionTreeClassifier``."""
 
-    def __init__(self, classes: np.ndarray, trees: List[_TreeArrays], n_features: int, forest: bool):
+    def __init__(self, classes: np.ndarray, trees: List[_TreeArrays], n_features: int, forest: bool, *,
+                 accepts_missing: bool = True):
         self.classes_ = np.asarray(classes)
         self.trees = trees
         self.n_features_in_ = n_features
         self.forest = forest
+        self._accepts_missing = accepts_missing and all(tree.missing_go_to_left is not None for tree in trees)
 
     @classmethod
     def from_pickle(cls, filepath: Union[str, Path]) -> 'TreeClassifierModel':
@@ -207,12 +208,19 @@ class TreeClassifierModel:
         if int(state.get('n_outputs_', 1)) != 1:
             raise UnsupportedModelError('Only single-output tree classifiers are supported.')
 
+        # scikit-learn 1.4 switched from weighted class counts to class fractions.
         trees = [
-            _TreeArrays(estimator.state['tree_'], normalize=not _stores_class_fractions(estimator.state))
+            _TreeArrays(estimator.state['tree_'], normalize=_sklearn_release(estimator.state) < (1, 4))
             for estimator in estimators
         ]
         n_features = int(state.get('n_features_in_', state.get('n_features_', -1)))
-        return cls(state['classes_'], trees, n_features, forest)
+        # Stored routes do not imply that the writing estimator accepts NaN.
+        release = _sklearn_release(state)
+        legacy_random_split = not forest and state.get('splitter') == 'random' and bool(release) and release < (1, 6)
+        legacy_monotonic = (1, 4) <= release < (1, 9) and state.get('monotonic_cst') is not None
+        requires_finite = (forest and release == (1, 3)) or legacy_random_split or legacy_monotonic
+        accepts_missing = not requires_finite
+        return cls(state['classes_'], trees, n_features, forest, accepts_missing=accepts_missing)
 
     def _validate(self, x) -> np.ndarray:
         # scikit-learn evaluates trees on float32 inputs against float64 thresholds.
@@ -224,12 +232,10 @@ class TreeClassifierModel:
         if self.n_features_in_ >= 0 and x.shape[1] != self.n_features_in_:
             raise ValueError(f'X has {x.shape[1]} features, but the model expects {self.n_features_in_}.')
 
-        # As in scikit-learn: infinite inputs are rejected, and so is NaN unless the nodes store
-        # where missing values go (scikit-learn >= 1.3).
         if np.isinf(x).any():
             raise ValueError("Input X contains infinity or a value too large for dtype('float32').")
 
-        if any(tree.missing_go_to_left is None for tree in self.trees) and np.isnan(x).any():
+        if not self._accepts_missing and np.isnan(x).any():
             raise ValueError('Input X contains NaN.')
 
         return x.astype('float64')

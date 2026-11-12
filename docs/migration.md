@@ -66,9 +66,12 @@ No dataset, schema or export-file migration is required.
   `DecisionTreeClassifier` pickles are read the same way, with any pickle
   protocol (0 to 5) and when the model was fitted with a
   `numpy.random.RandomState` as `random_state`. Predictions are those of the
-  scikit-learn release that saved the model. Releases before 1.3 reject missing
-  (NaN) inputs; from 1.3 a NaN input goes to the child each split stores for it
-  (`missing_go_to_left`). Other pickled models are unpickled with the installed
+  scikit-learn release that saved the model. Best-split decision trees from
+  1.3, random forests from 1.4 and random-split decision trees from 1.6 route
+  missing (NaN) inputs using `missing_go_to_left`. Older versions of each
+  estimator reject those inputs, as do models with monotonic constraints
+  saved with scikit-learn 1.4 through 1.8.
+  Other pickled models are unpickled with the installed
   scikit-learn. If it cannot read one saved with scikit-learn 1.2.2 or earlier,
   install `scikit-learn==1.2.2` with `numpy<2` (Python 3.11 or older), or refit
   the model and save it with the installed release.
