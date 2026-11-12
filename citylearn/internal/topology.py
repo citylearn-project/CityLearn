@@ -866,6 +866,9 @@ class CityLearnTopologyService:
         cloned.time_step_ratio = building.time_step_ratio
         cloned.reset()
         cloned.time_step = time_step
+        # The clone repeats its source's EV schedule; EV association gives chargers that
+        # existed earlier precedence, so one EV is never plugged into both.
+        cloned._topology_added_time_step = int(time_step)
 
         chargers = list(building.electric_vehicle_chargers or [])
         chargers.append(cloned)

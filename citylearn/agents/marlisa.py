@@ -313,7 +313,8 @@ class MARLISA(SAC):
                 o = self.get_normalized_observations(c, o)
                 o = self.pca[c].transform(o.reshape(1,-1))[0]
                 o = torch.FloatTensor(o).unsqueeze(0).to(self.device)
-                result = self.policy_net[i].sample(o)
+                # `i` counts coordination iterations; `c` is the building whose policy acts.
+                result = self.policy_net[c].sample(o)
                 a = result[2] if deterministic else result[0]
                 a = list(a.detach().cpu().numpy()[0])
                 actions[c] = a
