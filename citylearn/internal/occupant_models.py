@@ -9,14 +9,21 @@ It rebuilds only NumPy arrays and records the state of the three scikit-learn cl
 so no scikit-learn installation is needed and no other callable named in the file can run. A
 ``numpy.random.RandomState`` passed as ``random_state`` is recorded as an inert placeholder,
 since prediction never draws from it.
-Predictions reproduce ``RandomForestClassifier.predict`` and ``DecisionTreeClassifier.predict``
-for single-output classifiers: inputs are cast to float32 as scikit-learn does, trees are
-traversed with the stored thresholds, and leaf class weights are normalised and averaged in
-estimator order.
+
+Predictions reproduce ``predict`` and ``predict_proba`` of single-output
+``RandomForestClassifier`` and ``DecisionTreeClassifier`` as the scikit-learn release that wrote
+the file computes them: inputs are cast to float32, trees are traversed with the stored
+thresholds, and leaf values are averaged in estimator order. Releases before 1.4 store weighted
+class counts in the leaves and normalise them per tree; later releases store class fractions and
+use them as stored. Releases before 1.3 reject missing (NaN) inputs; later ones store at each
+split which child receives them (``missing_go_to_left``), and NaN inputs follow it as in
+``Tree.apply`` (only 1.3's forests still rejected NaN on input). Infinite inputs are rejected, as
+in scikit-learn. Trees whose nodes hold other fields are left to the installed scikit-learn.
 """
 from __future__ import annotations
 
 import pickle
+import re
 from pathlib import Path
 from typing import Any, List, Mapping, Union
 
@@ -107,8 +114,19 @@ class _RestrictedUnpickler(pickle.Unpickler):
             raise UnsupportedModelError(f"'{module}.{name}' is not part of a tree classifier pickle.") from None
 
 
+_NODE_FIELDS = ('left_child', 'right_child', 'feature', 'threshold', 'impurity', 'n_node_samples', 'weighted_n_node_samples')
+# Node layouts evaluated here: scikit-learn < 1.3, and >= 1.3 with missing-value routing.
+_NODE_LAYOUTS = (frozenset(_NODE_FIELDS), frozenset(_NODE_FIELDS + ('missing_go_to_left',)))
+
+
+def _stores_class_fractions(state: Mapping[str, Any]) -> bool:
+    # scikit-learn 1.4 changed classifier leaf values from weighted class counts to class fractions.
+    version = re.match(r'(\d+)\.(\d+)', str(state.get('_sklearn_version', '')))
+    return version is not None and (int(version.group(1)), int(version.group(2))) >= (1, 4)
+
+
 class _TreeArrays:
-    def __init__(self, tree: _Tree):
+    def __init__(self, tree: _Tree, normalize: bool):
         state = tree.state
         nodes = state['nodes']
         values = np.asarray(state['values'], dtype='float64')
@@ -116,11 +134,20 @@ class _TreeArrays:
         if values.ndim != 3 or values.shape[1] != 1:
             raise UnsupportedModelError('Only single-output tree classifiers are supported.')
 
+        fields = frozenset(nodes.dtype.names or ())
+        if fields not in _NODE_LAYOUTS:
+            raise UnsupportedModelError(f'Tree nodes with fields {sorted(fields)} are not supported.')
+
         self.left = np.asarray(nodes['left_child'], dtype='int64')
         self.right = np.asarray(nodes['right_child'], dtype='int64')
         self.feature = np.asarray(nodes['feature'], dtype='int64')
         self.threshold = np.asarray(nodes['threshold'], dtype='float64')
+        # The child that receives a missing (NaN) input; None before scikit-learn 1.3.
+        self.missing_go_to_left = (
+            np.asarray(nodes['missing_go_to_left'], dtype=bool) if 'missing_go_to_left' in fields else None
+        )
         self.value = values[:, 0, :]
+        self.normalize = normalize
 
     def leaves(self, x: np.ndarray) -> np.ndarray:
         rows = np.arange(x.shape[0])
@@ -133,15 +160,23 @@ class _TreeArrays:
                 return node
 
             feature = np.maximum(self.feature[node], 0)
-            go_left = x[rows, feature] <= self.threshold[node]
+            value = x[rows, feature]
+            go_left = value <= self.threshold[node]
+
+            if self.missing_go_to_left is not None:
+                go_left = np.where(np.isnan(value), self.missing_go_to_left[node], go_left)
+
             child = np.where(go_left, self.left[node], self.right[node])
             node = np.where(internal, child, node)
 
     def proba(self, x: np.ndarray, n_classes: int) -> np.ndarray:
         proba = self.value[self.leaves(x), :n_classes].copy()
-        normalizer = proba.sum(axis=1)[:, np.newaxis]
-        normalizer[normalizer == 0.0] = 1.0
-        proba /= normalizer
+
+        if self.normalize:
+            normalizer = proba.sum(axis=1)[:, np.newaxis]
+            normalizer[normalizer == 0.0] = 1.0
+            proba /= normalizer
+
         return proba
 
 
@@ -172,13 +207,16 @@ class TreeClassifierModel:
         if int(state.get('n_outputs_', 1)) != 1:
             raise UnsupportedModelError('Only single-output tree classifiers are supported.')
 
-        trees = [_TreeArrays(estimator.state['tree_']) for estimator in estimators]
+        trees = [
+            _TreeArrays(estimator.state['tree_'], normalize=not _stores_class_fractions(estimator.state))
+            for estimator in estimators
+        ]
         n_features = int(state.get('n_features_in_', state.get('n_features_', -1)))
         return cls(state['classes_'], trees, n_features, forest)
 
     def _validate(self, x) -> np.ndarray:
         # scikit-learn evaluates trees on float32 inputs against float64 thresholds.
-        x = np.asarray(x, dtype='float32').astype('float64')
+        x = np.asarray(x, dtype='float32')
 
         if x.ndim != 2:
             raise ValueError(f'Expected a 2D array of inputs, got shape {x.shape}.')
@@ -186,7 +224,15 @@ class TreeClassifierModel:
         if self.n_features_in_ >= 0 and x.shape[1] != self.n_features_in_:
             raise ValueError(f'X has {x.shape[1]} features, but the model expects {self.n_features_in_}.')
 
-        return x
+        # As in scikit-learn: infinite inputs are rejected, and so is NaN unless the nodes store
+        # where missing values go (scikit-learn >= 1.3).
+        if np.isinf(x).any():
+            raise ValueError("Input X contains infinity or a value too large for dtype('float32').")
+
+        if any(tree.missing_go_to_left is None for tree in self.trees) and np.isnan(x).any():
+            raise ValueError('Input X contains NaN.')
+
+        return x.astype('float64')
 
     def predict_proba(self, x) -> np.ndarray:
         x = self._validate(x)
@@ -204,7 +250,14 @@ class TreeClassifierModel:
         return proba
 
     def predict(self, x) -> np.ndarray:
-        return self.classes_.take(np.argmax(self.predict_proba(x), axis=1), axis=0)
+        if self.forest:
+            scores = self.predict_proba(x)
+        else:
+            # DecisionTreeClassifier.predict takes the argmax of the stored leaf values, not of predict_proba.
+            tree = self.trees[0]
+            scores = tree.value[tree.leaves(self._validate(x))]
+
+        return self.classes_.take(np.argmax(scores, axis=1), axis=0)
 
 
 def load_occupant_model(filepath: Union[str, Path]):

@@ -60,12 +60,13 @@ No dataset, schema or export-file migration is required.
 - **Custom occupant models:** `RandomForestClassifier` and
   `DecisionTreeClassifier` pickles are read the same way, with any pickle
   protocol (0 to 5) and when the model was fitted with a
-  `numpy.random.RandomState` as `random_state`. Models saved with scikit-learn
-  1.2.2 or earlier give scikit-learn 1.2.2's predictions. Other pickled models
-  are unpickled with the installed scikit-learn. If it cannot read one saved
-  with scikit-learn 1.2.2 or earlier, install `scikit-learn==1.2.2` with
-  `numpy<2` (Python 3.11 or older), or refit the model and save it with the
-  installed release.
+  `numpy.random.RandomState` as `random_state`. Predictions are those of the
+  scikit-learn release that saved the model. Releases before 1.3 reject missing
+  (NaN) inputs; from 1.3 a NaN input goes to the child each split stores for it
+  (`missing_go_to_left`). Other pickled models are unpickled with the installed
+  scikit-learn. If it cannot read one saved with scikit-learn 1.2.2 or earlier,
+  install `scikit-learn==1.2.2` with `numpy<2` (Python 3.11 or older), or refit
+  the model and save it with the installed release.
 - **Experiment evidence:** KPI-export manifests written on Windows record input
   files and the engine source as on Linux and macOS (file paths below the dataset
   root with `/`, engine source hashed with LF line endings), so Windows exports

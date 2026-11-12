@@ -6,10 +6,18 @@ scikit-learn release, and expected.json stores that release's ``predict`` and ``
 for fixed inputs, so the tests can compare CityLearn's reader with it under any scikit-learn and
 NumPy, or without scikit-learn.
 
-Run the script with scikit-learn 1.2.2 and NumPy < 2, the release CityLearn 3.2.0 pinned and the
-last one whose node layout has no ``missing_go_to_left``. It writes forests and trees pickled with
-protocols 1, 2, 4 and 5 and fitted with an integer seed or a ``numpy.random.RandomState``.
-scikit-learn 1.2.2 rejects missing values, so only finite inputs are recorded.
+Run the script once in each environment; a run replaces only its own set:
+
+- ``legacy``: scikit-learn 1.2.2 with NumPy < 2, the release CityLearn 3.2.0 pinned and the last
+  one whose node layout has no ``missing_go_to_left``. Forests and trees pickled with protocols
+  1, 2, 4 and 5 and fitted with an integer seed or a ``numpy.random.RandomState``. scikit-learn
+  1.2.2 rejects missing values, so only finite inputs are recorded.
+- ``missing_counts``: scikit-learn 1.3.x, a tree fitted on data with missing values. Its nodes
+  store ``missing_go_to_left`` and its leaves still hold class counts.
+- ``missing``: scikit-learn >= 1.4, a tree and a forest fitted on data with missing values. The
+  leaves hold class fractions.
+
+In the last two sets, NaN inputs go left at some splits and right at others.
 
     python tests/data/occupant_models/make_fixtures.py
 """
@@ -17,6 +25,7 @@ scikit-learn 1.2.2 rejects missing values, so only finite inputs are recorded.
 import json
 import pickle
 import platform
+import re
 from pathlib import Path
 
 import numpy as np
@@ -35,8 +44,21 @@ def _legacy_data():
     return x, y
 
 
-def _inputs(model, x):
-    """Training rows, then values on and one float32 step either side of each split of the first tree."""
+def _missing_data():
+    """Missing x0 is labelled like the left branch of the x0 split and missing x1 like the right
+    branch of the x1 split. x2 never misses, so NaN follows the larger child at an x2 split."""
+
+    rng = np.random.RandomState(0)
+    x = rng.uniform(0.0, 10.0, size=(300, 3))
+    y = np.where(x[:, 0] <= 5.0, np.where(x[:, 2] <= 7.0, 0, 1), np.where(x[:, 1] <= 5.0, 1, 2))
+    x[np.flatnonzero(x[:, 0] <= 5.0)[:25], 0] = np.nan
+    x[np.flatnonzero((x[:, 0] > 5.0) & (x[:, 1] > 5.0))[:20], 1] = np.nan
+    return x, y
+
+
+def _inputs(model, x, missing):
+    """Training rows, values on and one float32 step either side of each split of the first tree,
+    and, for models fitted with missing values, rows with NaN."""
 
     finite = x[np.isfinite(x).all(axis=1)]
     rows = list(x[:8])
@@ -48,6 +70,10 @@ def _inputs(model, x):
             row = finite[len(rows) % len(finite)].copy()
             row[feature] = value
             rows.append(row)
+
+    if missing:
+        nan = np.nan
+        rows += [[nan, 3.0, 3.0], [2.0, 3.0, nan], [8.0, nan, 3.0], [8.0, 3.0, nan], [nan, nan, nan], [nan, 8.0, 9.0]]
 
     return np.asarray(rows, dtype='float64')
 
@@ -64,7 +90,8 @@ def _nan_rejected(model, row):
 def _record(name, model, protocol, random_state, x, kind, expected):
     path = HERE/f'{name}.pkl'
     path.write_bytes(pickle.dumps(model, protocol=protocol))
-    inputs = _inputs(model, x)
+    missing = kind != 'legacy'
+    inputs = _inputs(model, x, missing)
     expected[name] = {
         'set': kind,
         'written_with': {'python': platform.python_version(), 'numpy': np.__version__, 'scikit-learn': sklearn.__version__},
@@ -76,31 +103,60 @@ def _record(name, model, protocol, random_state, x, kind, expected):
         'predict': model.predict(inputs).tolist(),
         'predict_proba': model.predict_proba(inputs).tolist(),
     }
+
+    if missing:
+        trees = model.estimators_ if hasattr(model, 'estimators_') else [model]
+        routing = {bool(t.tree_.missing_go_to_left[n]) for t in trees for n in np.flatnonzero(t.tree_.children_left != -1)}
+        assert routing == {False, True}, 'the fixture must route missing values both ways'
+        assert not expected[name]['nan_rejected']
+
     print(f'{path.name}: {path.stat().st_size} bytes')
 
 
 def main():
+    version = tuple(int(v) for v in re.match(r'(\d+)\.(\d+)', sklearn.__version__).groups())
     expected = json.loads(EXPECTED.read_text(encoding='utf-8')) if EXPECTED.exists() else {}
 
-    if sklearn.__version__ != '1.2.2' or not np.__version__.startswith('1.'):
-        raise SystemExit(f'Run with scikit-learn 1.2.2 and NumPy < 2, not {sklearn.__version__} and {np.__version__}.')
+    if version == (1, 2):
+        if sklearn.__version__ != '1.2.2' or not np.__version__.startswith('1.'):
+            raise SystemExit(f'The legacy set needs scikit-learn 1.2.2 and NumPy < 2, not {np.__version__}.')
 
-    kind = 'legacy'
-    x, y = _legacy_data()
-    models = [
-        ('legacy_forest_seed_protocol5', RandomForestClassifier(n_estimators=3, max_depth=3, random_state=0), 5, '0'),
-        ('legacy_forest_randomstate_protocol4', RandomForestClassifier(n_estimators=3, max_depth=3, random_state=np.random.RandomState(0)), 4, 'RandomState(0)'),
-        ('legacy_tree_randomstate_protocol5', DecisionTreeClassifier(max_depth=3, random_state=np.random.RandomState(0)), 5, 'RandomState(0)'),
-        ('legacy_forest_seed_protocol2', RandomForestClassifier(n_estimators=3, max_depth=3, random_state=0), 2, '0'),
-        ('legacy_tree_seed_protocol1', DecisionTreeClassifier(max_depth=3, random_state=0), 1, '0'),
-    ]
+        kind = 'legacy'
+        x, y = _legacy_data()
+        models = [
+            ('legacy_forest_seed_protocol5', RandomForestClassifier(n_estimators=3, max_depth=3, random_state=0), 5, '0'),
+            ('legacy_forest_randomstate_protocol4', RandomForestClassifier(n_estimators=3, max_depth=3, random_state=np.random.RandomState(0)), 4, 'RandomState(0)'),
+            ('legacy_tree_randomstate_protocol5', DecisionTreeClassifier(max_depth=3, random_state=np.random.RandomState(0)), 5, 'RandomState(0)'),
+            ('legacy_forest_seed_protocol2', RandomForestClassifier(n_estimators=3, max_depth=3, random_state=0), 2, '0'),
+            ('legacy_tree_seed_protocol1', DecisionTreeClassifier(max_depth=3, random_state=0), 1, '0'),
+        ]
+    elif version == (1, 3):
+        kind = 'missing_counts'
+        x, y = _missing_data()
+        models = [('missing_counts_tree_seed_protocol5', DecisionTreeClassifier(max_depth=3, random_state=0), 5, '0')]
+    elif version >= (1, 4):
+        kind = 'missing'
+        x, y = _missing_data()
+        tree = DecisionTreeClassifier(max_depth=3, random_state=0)
+        models = [
+            ('missing_tree_seed_protocol4', tree, 4, '0'),
+            ('missing_tree_seed_protocol5', tree, 5, '0'),
+            ('missing_forest_randomstate_protocol5', RandomForestClassifier(n_estimators=3, max_depth=3, random_state=np.random.RandomState(0)), 5, 'RandomState(0)'),
+        ]
+    else:
+        raise SystemExit(f'Run with scikit-learn 1.2.2, 1.3.x or >= 1.4, not {sklearn.__version__}.')
 
     for name in [name for name, entry in expected.items() if entry['set'] == kind]:
         (HERE/f'{name}.pkl').unlink(missing_ok=True)
         del expected[name]
 
+    fitted = set()
     for name, model, protocol, random_state in models:
-        _record(name, model.fit(x, y), protocol, random_state, x, kind, expected)
+        if id(model) not in fitted:
+            model.fit(x, y)
+            fitted.add(id(model))
+
+        _record(name, model, protocol, random_state, x, kind, expected)
 
     lines = [f' {json.dumps(name)}: {json.dumps(entry)}' for name, entry in sorted(expected.items())]
     EXPECTED.write_text('{\n' + ',\n'.join(lines) + '\n}\n', encoding='utf-8')

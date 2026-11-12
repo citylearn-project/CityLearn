@@ -12,8 +12,8 @@ from citylearn.internal.occupant_models import TreeClassifierModel, UnsupportedM
 
 DATASET = Path(__file__).resolve().parents[2]/'data'/'datasets'/'quebec_neighborhood_with_demand_response_set_points'
 MODEL = 'resstock-amy2018-2021-release-1-199613_setpoint_{}.pkl'
-# Tiny models pickled by scikit-learn 1.2.2, with that release's predictions; see
-# tests/data/occupant_models/make_fixtures.py.
+# Tiny models pickled by scikit-learn 1.2.2, 1.3 and a current release, with the predictions of the
+# release that wrote them, NaN inputs included from 1.3; see tests/data/occupant_models/make_fixtures.py.
 FIXTURES = Path(__file__).resolve().parents[1]/'data'/'occupant_models'
 EXPECTED = json.loads((FIXTURES/'expected.json').read_text(encoding='utf-8'))
 
@@ -60,6 +60,40 @@ def test_fixture_reproduces_the_scikit_learn_that_wrote_it(name):
     np.testing.assert_array_equal(model.predict_proba(x), expected['predict_proba'])
 
 
+@pytest.mark.parametrize('name', sorted(EXPECTED))
+def test_fixture_accepts_missing_values_only_where_its_scikit_learn_did(name):
+    model = load_occupant_model(FIXTURES/f'{name}.pkl')
+
+    if EXPECTED[name]['nan_rejected']:  # scikit-learn < 1.3
+        with pytest.raises(ValueError, match='NaN'):
+            model.predict([[np.nan, 1.0, 1.0]])
+    else:
+        assert model.predict([[np.nan, 1.0, 1.0]]).shape == (1,)
+
+
+@pytest.mark.parametrize('value', [np.inf, -np.inf, 1.0e39])
+@pytest.mark.parametrize('name', ['legacy_forest_seed_protocol5', 'missing_forest_randomstate_protocol5'])
+def test_rejects_infinite_inputs_like_scikit_learn(name, value):
+    model = load_occupant_model(FIXTURES/f'{name}.pkl')
+
+    with pytest.raises(ValueError, match='infinity'), np.errstate(over='ignore'):
+        model.predict([[value, 1.0, 1.0]])
+
+
+def test_unknown_node_layout_is_left_to_scikit_learn(tmp_path):
+    """A future node field could change how a tree routes its inputs; such trees are not evaluated."""
+    data = (FIXTURES/'legacy_tree_seed_protocol1.pkl').read_bytes()
+    path = tmp_path/'model.pkl'
+    path.write_bytes(data.replace(b'impurity', b'category'))  # same length, so the pickle stays valid
+
+    with pytest.raises(UnsupportedModelError, match='category'):
+        TreeClassifierModel.from_pickle(path)
+
+
+def _release(version: str) -> tuple:
+    return tuple(int(part) for part in version.split('.')[:2])
+
+
 @pytest.mark.parametrize('random_state', ['seed', 'RandomState'])
 @pytest.mark.parametrize('protocol', [0, 2, 4, 5])
 @pytest.mark.parametrize('estimator', ['forest', 'tree'])
@@ -71,17 +105,21 @@ def test_matches_installed_scikit_learn(tmp_path, estimator, protocol, random_st
     rng = np.random.default_rng(0)
     x = rng.normal(size=(400, 3))
     y = np.where(x[:, 0] + 0.5*x[:, 1] > 0.2, 'up', np.where(x[:, 2] > 0.8, 'hold', 'down'))
+    test = np.vstack([rng.normal(size=(300, 3)), x[:50]])
+
+    if _release(sklearn.__version__) >= (1, 4):  # trees and forests fit and predict with missing values
+        x[rng.random(x.shape) < 0.1] = np.nan
+        test[rng.random(test.shape) < 0.1] = np.nan
+
     seed = 0 if random_state == 'seed' else np.random.RandomState(0)
     reference = (RandomForestClassifier(n_estimators=15, max_depth=6, random_state=seed) if estimator == 'forest'
                  else DecisionTreeClassifier(max_depth=6, random_state=seed)).fit(x, y)
     path = tmp_path/'model.pkl'
     path.write_bytes(pickle.dumps(reference, protocol=protocol))
     model = TreeClassifierModel.from_pickle(path)
-    test = np.vstack([rng.normal(size=(300, 3)), x[:50]])
 
     np.testing.assert_array_equal(model.predict(test), reference.predict(test))
-    np.testing.assert_allclose(model.predict_proba(test), reference.predict_proba(test), rtol=0.0, atol=1.0e-12)
-    assert sklearn.__version__  # the comparison ran against the installed release
+    np.testing.assert_array_equal(model.predict_proba(test), reference.predict_proba(test))
 
 
 class _Payload:
