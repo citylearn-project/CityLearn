@@ -1,6 +1,7 @@
 """Dataset downloads: error responses, concurrent first downloads and the `directory` argument."""
 
 import os
+import shutil
 import threading
 import time
 from pathlib import Path
@@ -57,8 +58,10 @@ def _dataset_class(cache: Path, session: _Session, listing_calls: list = None):
 
 
 def _leftovers(cache: Path) -> list:
+    """Hidden staging or stale folders left in the cache (the lock files stay)."""
+
     datasets = cache/'datasets'
-    return [p.name for p in datasets.iterdir() if p.name.startswith('.')] if datasets.is_dir() else []
+    return [p.name for p in datasets.iterdir() if p.name.startswith('.') and p.suffix != '.lock'] if datasets.is_dir() else []
 
 
 def test_error_response_raises_and_is_not_cached(tmp_path):
@@ -128,6 +131,82 @@ def test_concurrent_first_downloads_both_get_a_complete_dataset(tmp_path):
     assert errors == []
     assert missing == {'A': [], 'B': []}
     assert sorted(os.listdir(tmp_path/'datasets'/'demo')) == sorted(FILES)
+    assert _leftovers(tmp_path) == []
+
+
+class _StaleFolderSession(_Session):
+    """Worker A pauses before downloading its last file until worker B has got past its check of the cache folder."""
+
+    def __init__(self):
+        super().__init__()
+        self.a_paused, self.b_checked = threading.Event(), threading.Event()
+
+    def get(self, url, **kwargs):
+        if threading.current_thread().name == 'A' and url.endswith(FILES[-1]):
+            self.a_paused.set()
+            self.b_checked.wait(5)
+        return super().get(url, **kwargs)
+
+
+def test_concurrent_downloads_replacing_an_incomplete_folder_keep_the_published_dataset(tmp_path, monkeypatch):
+    # An interrupted download by CityLearn <= 3.2.0, which wrote into the cache folder in listing order, left it
+    # without schema.json.
+    folder = tmp_path/'datasets'/'demo'
+    folder.mkdir(parents=True)
+
+    for n in FILES[:2]:
+        (folder/n).write_bytes(b'a,')
+
+    session = _StaleFolderSession()
+    dataset = _dataset_class(tmp_path, session)
+    a_returned, b_removed, a_checked = threading.Event(), threading.Event(), threading.Event()
+    rmtree = shutil.rmtree
+
+    def interleaving_rmtree(path, *args, **kwargs):
+        # B removes the folder it found incomplete only once A has published and returned its dataset, and moves its
+        # own copy into place only once A has read that dataset.
+        if threading.current_thread().name == 'B' and Path(path) == folder:
+            session.b_checked.set()
+            a_returned.wait(5)
+            rmtree(path, *args, **kwargs)
+            b_removed.set()
+            a_checked.wait(5)
+        else:
+            rmtree(path, *args, **kwargs)
+
+    monkeypatch.setattr(shutil, 'rmtree', interleaving_rmtree)
+    missing, errors = {}, []
+
+    def worker(name):
+        try:
+            schema = Path(dataset(offline=False).get_dataset('demo'))
+
+            if name == 'A':
+                a_returned.set()
+                b_removed.wait(5)
+
+            schema.read_bytes()
+            missing[name] = [n for n in FILES if not (schema.parent/n).is_file()]
+        except Exception as error:  # pragma: no cover - reported below
+            errors.append(f'{name}: {error!r}')
+        finally:
+            for event in ([a_returned, a_checked] if name == 'A' else [session.b_checked, b_removed]):
+                event.set()
+
+    a = threading.Thread(target=worker, args=('A',), name='A')
+    b = threading.Thread(target=worker, args=('B',), name='B')
+    a.start()
+    assert session.a_paused.wait(5)
+    b.start()
+    a.join(20)
+    b.join(20)
+
+    # Previously B, which had found the folder incomplete, deleted the complete dataset that A had just published and
+    # returned, so A's schema.json did not exist when A opened it.
+    assert errors == []
+    assert missing == {'A': [], 'B': []}
+    assert sorted(os.listdir(folder)) == sorted(FILES)
+    assert (folder/FILES[0]).read_bytes() == b'a,b\n1,2\n'
     assert _leftovers(tmp_path) == []
 
 

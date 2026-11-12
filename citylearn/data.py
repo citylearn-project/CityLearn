@@ -2,6 +2,7 @@ import ast
 import logging
 import os
 from pathlib import Path
+from filelock import FileLock
 from platformdirs import user_cache_dir
 import shutil
 import tempfile
@@ -287,32 +288,37 @@ class DataSet:
 
         Concurrent first downloads used to write into, and delete, the same cache folder. A dataset
         now appears under `target_directory` only when complete; a process that loses the race to
-        publish keeps the complete copy that won.
+        publish keeps the complete copy that won. Publishing, including the removal of an incomplete
+        folder left by an earlier version, holds a lock and checks again for a complete copy first,
+        so a published dataset is never removed.
         """
 
         parent = os.path.dirname(target_directory)
+        name = os.path.basename(target_directory)
         os.makedirs(parent, exist_ok=True)
-        staging = tempfile.mkdtemp(prefix=f'.{os.path.basename(target_directory)}-', dir=parent)
+        staging = tempfile.mkdtemp(prefix=f'.{name}-', dir=parent)
+        stale = None
 
         try:
             populate(staging)
-            schema_filepath = os.path.join(target_directory, 'schema.json')
 
-            if os.path.isdir(target_directory) and not os.path.isfile(schema_filepath):
-                # Incomplete folder left by an interrupted download of an earlier version.
-                shutil.rmtree(target_directory, ignore_errors=True)
+            # One lock per dataset, held by threads and processes alike and released by the operating
+            # system if its holder dies. Downloads still run in parallel; only publishing is serialised.
+            with FileLock(os.path.join(parent, f'.{name}.lock')):
+                if not os.path.isfile(os.path.join(target_directory, 'schema.json')):
+                    if os.path.isdir(target_directory):
+                        # Incomplete folder left by an interrupted download of an earlier version. Move it
+                        # aside in one step (it is either gone or untouched), delete it after the lock.
+                        stale = tempfile.mkdtemp(prefix=f'.{name}-stale-', dir=parent)
+                        os.rename(target_directory, os.path.join(stale, name))
 
-            try:
-                os.rename(staging, target_directory)
-                staging = None
-
-            except OSError:
-                if not os.path.isfile(schema_filepath):
-                    raise
+                    os.rename(staging, target_directory)
+                    staging = None
 
         finally:
-            if staging is not None:
-                shutil.rmtree(staging, ignore_errors=True)
+            for directory in (staging, stale):
+                if directory is not None:
+                    shutil.rmtree(directory, ignore_errors=True)
 
     @staticmethod
     def _copy_file(source: str, filepath: str) -> None:
