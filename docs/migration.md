@@ -55,8 +55,13 @@ No dataset, schema or export-file migration is required.
   pickles without scikit-learn and evaluated with NumPy, giving predictions
   bit-identical to scikit-learn 1.2.2; loading them no longer runs code from the
   file. Arithmetic whose type NumPy 2 changed (NEP 50 promotion of float32
-  scalars with Python numbers) is written to give NumPy 1's result, so simulations
-  are identical on both versions.
+  scalars with Python numbers) is written to give NumPy 1's result, so
+  observations, rewards and simulated time series are identical on both
+  versions. KPIs can differ in the last binary digits (relative differences of
+  order 1e-15): NumPy 2.3 and later add up more than 8,192 values in a different
+  order, which affects totals over episodes longer than 8,192 time steps and the
+  district Gini ratio of more than 90 members, and the equity audit's Gini ratio
+  uses a BLAS dot product, whose last digit depends on the BLAS build and CPU.
 - **Custom occupant models:** `RandomForestClassifier` and
   `DecisionTreeClassifier` pickles are read the same way, with any pickle
   protocol (0 to 5) and when the model was fitted with a
