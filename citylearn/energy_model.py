@@ -26,6 +26,11 @@ np.seterr(divide='ignore', invalid='ignore')
 
 LOGGER = logging.getLogger()
 
+# Zero-size devices stand in for absent equipment. Without a seed, each would draw one from Python's
+# global `random`, so its (unused) random parameters changed between constructions and building an
+# env advanced the caller's random stream.
+PLACEHOLDER_DEVICE_RANDOM_SEED = 0
+
 class Device(Environment):
     r"""Base device class.
 

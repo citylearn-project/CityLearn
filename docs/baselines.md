@@ -81,11 +81,12 @@ It cannot follow buildings, devices or chargers changed after loading, for
 example a new charger `max_charging_power` or building `simulate_power_outage`.
 Before it runs, it is compared with the evaluated environment as captured at its
 last `reset()`: the building order, each building's `simulate_power_outage` and
-active actions, each charger's power limits and efficiencies, and the capacity
-and initial energy of batteries and EVs. A difference raises a `ValueError` that
-names the setting; evaluate with `include_business_as_usual=False` in that case.
-Other device parameters, such as heat pump or PV sizes, are not compared, and a
-change made after `reset()` is not detected.
+active actions, the sizes and parameters of every device (heat pumps, heaters,
+storage tanks, PV, batteries, chargers, appliances and EV batteries), and the
+capacity and initial energy of batteries and EVs. A difference raises a
+`ValueError` that names the setting; evaluate with
+`include_business_as_usual=False` in that case. A change made after `reset()`
+is not detected: the comparison covers the configuration captured at reset.
 
 Results are cached for the current episode and timestep. The output adds
 `business_as_usual` values, `delta_to_business_as_usual` differences and

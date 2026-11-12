@@ -27,6 +27,69 @@ def inventory(env):
     return sorted(rows, key=lambda r: (r['kind'], r['id']))
 
 
+EQUIPMENT_SLOTS = ('cooling_device', 'heating_device', 'dhw_device', 'cooling_storage', 'heating_storage',
+                   'dhw_storage', 'electrical_storage', 'pv')
+CHARGER_ATTRIBUTES = ('efficiency', 'max_charging_power', 'min_charging_power', 'max_discharging_power',
+                      'min_discharging_power', 'charge_efficiency_curve', 'discharge_efficiency_curve')
+# Identity and window bookkeeping: they differ between envs that simulate the same devices.
+_NOT_EQUIPMENT = frozenset({'uid', 'random_seed', 'simulation_time_steps'})
+
+
+def _exact(value):
+    """Plain copy of `value` whose `==` is exact, NaN included."""
+    if isinstance(value, dict):
+        return {str(k): _exact(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_exact(v) for v in value]
+    if hasattr(value, 'tolist'):
+        return _exact(value.tolist())
+    if isinstance(value, float) and math.isnan(value):
+        return 'nan'
+    return value
+
+
+def equipment(env):
+    """Sizes and parameters of every simulated device, keyed by building and device.
+
+    :func:`inventory` records stored energy; this records what autosizing and random draws resolve
+    (heat pump and heater power, storage capacity, PV, battery curves, chargers, appliances, EV
+    batteries), so a reference can show that it simulates the same devices as the evaluated env.
+    """
+    def parameters(device):
+        return _exact({'type': type(device).__name__, **{
+            k: v for k, v in device.get_metadata().items() if k not in _NOT_EQUIPMENT}})
+
+    devices = {}
+    for building in env.buildings:
+        for slot in EQUIPMENT_SLOTS:
+            device = getattr(building, slot, None)
+            if device is not None:
+                devices[f'{building.name}/{slot}'] = parameters(device)
+        for i, device in enumerate(building.deferrable_appliances or []):
+            devices[f'{building.name}/deferrable_appliances[{i}]'] = parameters(device)
+        for i, device in enumerate(building.escalators or []):
+            devices[f'{building.name}/escalators[{i}]'] = parameters(device)
+        for charger in building.electric_vehicle_chargers or []:
+            devices[f'{building.name}/charger {charger.charger_id}'] = _exact(
+                {k: getattr(charger, k, None) for k in CHARGER_ATTRIBUTES})
+    for ev in getattr(env, '_all_electric_vehicles', None) or env.electric_vehicles:
+        devices[f'{ev.name}/battery'] = parameters(ev.battery)
+    return devices
+
+
+def equipment_differences(left, right):
+    """`device: parameter (left vs right)` for each parameter that differs, devices in order."""
+    differences = []
+    for device in sorted(set(left) | set(right)):
+        a, b = left.get(device), right.get(device)
+        if a is None or b is None:
+            differences.append(f"{device}: {'absent' if a is None else 'present'} vs {'absent' if b is None else 'present'}")
+            continue
+        differences.extend(f'{device}: {k} ({a.get(k)!r} vs {b.get(k)!r})'
+                           for k in sorted(set(a) | set(b)) if a.get(k) != b.get(k))
+    return differences
+
+
 def relative_to_root(value, root, path=os.path):
     """Return ``value`` relative to ``root`` with ``/`` separators, or None if it is not under ``root``.
 
@@ -260,37 +323,17 @@ def inventory_differences(left, right):
             for kind,name in sorted(set(maps[0])|set(maps[1]))]
 
 
-# Charger parameters that `Charger` setters can change after loading.
-CHARGER_ATTRIBUTES = ('efficiency', 'max_charging_power', 'min_charging_power', 'max_discharging_power',
-                      'min_discharging_power', 'charge_efficiency_curve', 'discharge_efficiency_curve')
-
-
-def _exact(value):
-    """Plain copy of `value` whose `==` is exact, NaN included."""
-    if isinstance(value, dict):
-        return {str(k): _exact(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_exact(v) for v in value]
-    if hasattr(value, 'tolist'):
-        return _exact(value.tolist())
-    if isinstance(value, float) and math.isnan(value):
-        return 'nan'
-    return value
-
-
 def reference_configuration(env):
     """Building order and the per-building settings that the native BAU reference must reproduce.
 
     The reference is rebuilt from the schema and the constructor arguments. This records what they
-    resolve to for each building, in the env's building order: the outage setting, the active actions
-    and the chargers' power limits and efficiencies, all of which setters can change after loading.
+    resolve to for each building, in the env's building order: the outage setting and the active
+    actions, which setters can change after loading. :func:`equipment` records the devices.
     """
     return [dict(
         name=building.name,
         simulate_power_outage=bool(building.simulate_power_outage),
         active_actions=sorted(building.active_actions),
-        chargers={str(charger.charger_id): _exact({k: getattr(charger, k, None) for k in CHARGER_ATTRIBUTES})
-                  for charger in building.electric_vehicle_chargers or []},
     ) for building in getattr(env, '_all_buildings', None) or env.buildings]
 
 
@@ -299,16 +342,5 @@ def configuration_differences(left, right):
     names = [[row['name'] for row in rows] for rows in (left, right)]
     if names[0] != names[1]:
         return [f'building order ({names[0]!r} vs {names[1]!r})']
-    differences = []
-    for a, b in zip(left, right):
-        differences.extend(f"{a['name']}: {key} ({a[key]!r} vs {b[key]!r})"
-                           for key in ('simulate_power_outage', 'active_actions') if a[key] != b[key])
-        for charger in sorted(set(a['chargers']) | set(b['chargers'])):
-            x, y = a['chargers'].get(charger), b['chargers'].get(charger)
-            if x is None or y is None:
-                differences.append(f"{a['name']}/charger {charger}: "
-                                   f"{'absent' if x is None else 'present'} vs {'absent' if y is None else 'present'}")
-                continue
-            differences.extend(f"{a['name']}/charger {charger}: {k} ({x.get(k)!r} vs {y.get(k)!r})"
-                               for k in CHARGER_ATTRIBUTES if x.get(k) != y.get(k))
-    return differences
+    return [f"{a['name']}: {key} ({a[key]!r} vs {b[key]!r})"
+            for a, b in zip(left, right) for key in ('simulate_power_outage', 'active_actions') if a[key] != b[key]]
