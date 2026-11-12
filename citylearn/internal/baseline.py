@@ -77,8 +77,8 @@ class CityLearnBusinessAsUsualBaselineService:
             raise ValueError(
                 f'Native BAU configuration differs from the evaluated env, as captured at its last reset, in '
                 f'{len(differences)} setting(s) (evaluated vs reference): {shown}. The reference is rebuilt from '
-                'the schema and the constructor arguments, so it cannot follow buildings, outage settings, actions '
-                'or chargers changed after loading; evaluate without the native reference '
+                'the schema and the constructor arguments, so it cannot follow buildings, outage settings or actions '
+                'changed after loading; evaluate without the native reference '
                 '(include_business_as_usual=False) in that case.'
             )
         # The inventory covers batteries and EVs only; heat pumps, heaters and storage tanks are sized too.
@@ -86,9 +86,9 @@ class CityLearnBusinessAsUsualBaselineService:
         if differences:
             shown = '; '.join(differences[:3]) + ('; ...' if len(differences) > 3 else '')
             raise ValueError(
-                f'Native BAU equipment differs from the evaluated env in {len(differences)} parameter(s) '
-                f'(evaluated vs reference): {shown}. The reference rebuilds devices from the schema, so it '
-                'cannot follow devices changed after loading; evaluate without the native reference '
+                f'Native BAU equipment differs from the evaluated env, as captured at its last reset, in '
+                f'{len(differences)} parameter(s) (evaluated vs reference): {shown}. The reference rebuilds devices '
+                'from the schema, so it cannot follow devices changed after loading; evaluate without the native reference '
                 '(include_business_as_usual=False) in that case.'
             )
         baseline_env._native_reference_metadata = dict(

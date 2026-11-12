@@ -297,17 +297,18 @@ def test_business_as_usual_reference_in_another_building_order_is_rejected(monke
 
 def test_configuration_differences_name_each_changed_setting():
     def row(name, **settings):
-        return dict(dict(name=name, simulate_power_outage=False, active_actions=['electrical_storage'], chargers={}), **settings)
+        return dict(dict(name=name, simulate_power_outage=False, active_actions=['electrical_storage']), **settings)
 
-    evaluated = [row('Building_1', chargers={'c1': {'max_charging_power': 0.0}}), row('Building_2', simulate_power_outage=True)]
-    reference = [row('Building_1', chargers={'c1': {'max_charging_power': 7.2}}), row('Building_2')]
+    evaluated = [row('Building_1', active_actions=[]), row('Building_2', simulate_power_outage=True)]
+    reference = [row('Building_1'), row('Building_2')]
 
     assert configuration_differences(evaluated, evaluated) == []
     assert configuration_differences(evaluated, reference[::-1]) == [
         "building order (['Building_1', 'Building_2'] vs ['Building_2', 'Building_1'])",
     ]
+    # Chargers are compared with the other devices, by `equipment`.
     assert configuration_differences(evaluated, reference) == [
-        'Building_1/charger c1: max_charging_power (0.0 vs 7.2)',
+        "Building_1: active_actions ([] vs ['electrical_storage'])",
         'Building_2: simulate_power_outage (True vs False)',
     ]
 

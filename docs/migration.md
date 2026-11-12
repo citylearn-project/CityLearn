@@ -85,8 +85,11 @@ Fixes that **change results** where they apply:
 Changes that **preserve trajectories and KPI values**: the zero-size placeholders
 for absent devices, and EV chargers, are seeded, so the placeholders' unused
 parameters are reproducible and building an env no longer advances Python's
-global `random` stream; the native BAU cache keeps only the latest reference, so
-repeated mid-episode `evaluate_v2()` calls no longer each keep a reference env.
+global `random` stream; the native BAU cache keeps only the latest reference and
+releases it before building the next, so repeated mid-episode `evaluate_v2()`
+calls hold at most one reference env; and the reference loads only the episode,
+not the whole data window, when the only device marked for autosizing is PV that
+`solar_generation` disables.
 
 ## Upgrade from 3.1.1 to 3.2.0
 
