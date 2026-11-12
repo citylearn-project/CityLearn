@@ -1,6 +1,7 @@
 """KPI references must simulate and price the same world as the evaluated control."""
 
 import json
+import weakref
 from pathlib import Path
 
 import numpy as np
@@ -141,6 +142,34 @@ def test_business_as_usual_cache_keeps_only_the_latest_reference():
     assert [(result.time_step, result.env.time_step) for result in results] == [(4, 4), (8, 8), (12, 12)]
     env.reset(seed=0)
     assert env._business_as_usual_baseline_cache == {}
+
+
+def test_business_as_usual_reference_is_released_before_the_next_one_is_built(monkeypatch):
+    env = CityLearnEnv(BAU_DATASET, central_agent=True, episode_time_steps=24, random_seed=0)
+    agent = BusinessAsUsualAgent(env)
+    observations, _ = env.reset(seed=0)
+    service = env._business_as_usual_baseline_service
+    build = service._new_sidecar_env
+    built, alive_at_build = [], []
+
+    def tracked_build():
+        alive_at_build.extend(reference() is not None for reference in built)
+        sidecar = build()
+        built.append(weakref.ref(sidecar))
+        return sidecar
+
+    monkeypatch.setattr(service, '_new_sidecar_env', tracked_build)
+
+    for _ in range(3):
+        for _ in range(4):
+            observations, *_ = env.step(agent.predict(observations, deterministic=True))
+
+        env.run_business_as_usual_baseline()
+
+    # The service's handle on the cache and the envs' reference cycles kept the previous reference
+    # alive while the next one was built, so two were held at the peak.
+    assert len(built) == 3
+    assert alive_at_build == [False, False, False]
 
 
 def test_business_as_usual_reference_rejects_other_equipment_even_with_the_same_batteries(monkeypatch):

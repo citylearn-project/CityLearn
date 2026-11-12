@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
@@ -47,8 +48,14 @@ class CityLearnBusinessAsUsualBaselineService:
 
         # Keep only the latest result. Within an episode the time step only moves forward and reset
         # clears the cache, so an earlier entry is never read again, yet each holds a whole sidecar
-        # env. Dropping it before building the next one also keeps at most one sidecar alive.
+        # env. Release it before building the next one, this frame's handle on the cache included,
+        # so at most one sidecar is alive. An env holds reference cycles, so dropping the last
+        # reference does not free it; collect now rather than when the collector next runs.
+        released = bool(cache)
+        del cache
         self.clear()
+        if released:
+            gc.collect()
         baseline_env = self._new_sidecar_env()
         baseline_env.random_seed = env.random_seed
         agent = BusinessAsUsualAgent(baseline_env)
