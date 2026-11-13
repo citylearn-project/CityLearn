@@ -1,6 +1,7 @@
 import ast
 import logging
 import os
+import posixpath
 from pathlib import Path
 from filelock import FileLock
 from platformdirs import user_cache_dir
@@ -65,6 +66,24 @@ class DataSet:
     DEFAULT_CACHE_DIRECTORY = os.path.join(user_cache_dir('citylearn'), REPOSITORY_TAG)
     BATTERY_CHOICES_FILENAME = 'battery_choices.yaml'
     PV_CHOICES_FILENAME = 'lbl-tracking_the_sun-res-pv.csv'
+    _DATASET_FILE_SUFFIXES = frozenset({
+        '.csv',
+        '.parquet',
+        '.pq',
+        '.parq',
+        '.json',
+        '.pkl',
+        '.pickle',
+        '.pt',
+        '.pth',
+        '.joblib',
+        '.npy',
+        '.npz',
+        '.epw',
+        '.txt',
+        '.yaml',
+        '.yml',
+    })
 
     def __init__(
         self, github_account: str = None, repository: str = None, tag: str = None, datasets_path: str = None,
@@ -141,15 +160,27 @@ class DataSet:
     
     @github_account.setter
     def github_account(self, value: str):
-        self.__github_account = self.GITHUB_ACCOUNT if value is None else value
+        if value is None:
+            env_value = os.getenv('CITYLEARN_DATASET_GITHUB_ACCOUNT')
+            self.__github_account = self.GITHUB_ACCOUNT if env_value is None else env_value
+        else:
+            self.__github_account = value
 
     @repository.setter
     def repository(self, value: str):
-        self.__repository = self.REPOSITORY_NAME if value is None else value
+        if value is None:
+            env_value = os.getenv('CITYLEARN_DATASET_REPOSITORY')
+            self.__repository = self.REPOSITORY_NAME if env_value is None else env_value
+        else:
+            self.__repository = value
 
     @tag.setter
     def tag(self, value: str):
-        self.__tag = self.REPOSITORY_TAG if value is None else value
+        if value is None:
+            env_value = os.getenv('CITYLEARN_DATASET_TAG')
+            self.__tag = self.REPOSITORY_TAG if env_value is None else env_value
+        else:
+            self.__tag = value
 
     @datasets_path.setter
     def datasets_path(self, value: str):
@@ -166,7 +197,135 @@ class DataSet:
 
     @offline.setter
     def offline(self, value: bool):
-        self.__offline = self.OFFLINE if value is None else bool(parse_bool(value, default=False, path='offline'))
+        if value is None:
+            env_value = os.getenv('CITYLEARN_OFFLINE')
+            self.__offline = self.OFFLINE if env_value is None else bool(parse_bool(env_value, default=False, path='CITYLEARN_OFFLINE'))
+        else:
+            self.__offline = bool(parse_bool(value, default=False, path='offline'))
+
+    @classmethod
+    def _missing_dataset_files(cls, directory: Union[Path, str]) -> List[str]:
+        directory_path = Path(directory).expanduser()
+
+        if not directory_path.is_dir():
+            return ['schema.json']
+
+        directory_resolved = directory_path.resolve()
+        schema_path = directory_resolved / 'schema.json'
+
+        if not schema_path.is_file():
+            return ['schema.json']
+
+        try:
+            schema = FileHandler.read_json(str(schema_path))
+        except Exception:
+            return ['schema.json']
+
+        if not isinstance(schema, Mapping):
+            return ['schema.json']
+
+        missing: List[str] = []
+        seen_missing = set()
+        visited_json = {schema_path.resolve()}
+
+        def _record_missing(label: str) -> None:
+            if label not in seen_missing:
+                seen_missing.add(label)
+                missing.append(label)
+
+        def _walk(node: Any, base_dir: Path) -> None:
+            if isinstance(node, Mapping):
+                for key, val in node.items():
+                    if key == 'root_directory':
+                        continue
+
+                    _walk(val, base_dir)
+
+            elif isinstance(node, (list, tuple)):
+                for item in node:
+                    _walk(item, base_dir)
+
+            elif isinstance(node, str):
+                token = node.strip()
+
+                if not token or '://' in token or token.startswith('citylearn.'):
+                    return
+
+                suffix = os.path.splitext(token)[1].lower()
+
+                if suffix not in cls._DATASET_FILE_SUFFIXES:
+                    return
+
+                candidate = Path(token).expanduser()
+                resolved_candidate = candidate if candidate.is_absolute() else (base_dir / candidate)
+
+                if not resolved_candidate.is_file():
+                    _record_missing(token)
+
+                elif suffix == '.json':
+                    canonical_json = resolved_candidate.resolve()
+
+                    if canonical_json not in visited_json:
+                        visited_json.add(canonical_json)
+
+                        try:
+                            nested = FileHandler.read_json(str(canonical_json))
+                        except Exception:
+                            _record_missing(token)
+                        else:
+                            if isinstance(nested, (Mapping, list, tuple)):
+                                _walk(nested, canonical_json.parent)
+
+        _walk(schema, directory_resolved)
+
+        return missing
+
+    @classmethod
+    def _is_complete_dataset_directory(cls, directory: Union[Path, str]) -> bool:
+        return len(cls._missing_dataset_files(directory)) == 0
+
+    def _incomplete_dataset_diagnostics(
+        self,
+        name: str,
+        cache_root: Optional[Union[Path, str]] = None,
+    ) -> List[str]:
+        normalized_name = str(name).strip()
+        dataset_name = Path(normalized_name.rstrip('/\\')).name
+        resolved_cache = (
+            Path(os.path.join(self.cache_directory, 'datasets', dataset_name)).expanduser()
+            if cache_root is None
+            else Path(cache_root).expanduser()
+        )
+        diagnostics: List[str] = []
+        checked_paths = set()
+
+        def _inspect(candidate: Path, kind: str) -> None:
+            if not candidate.is_dir():
+                return
+
+            canonical = str(candidate.resolve())
+
+            if canonical in checked_paths:
+                return
+
+            checked_paths.add(canonical)
+            missing = self._missing_dataset_files(candidate)
+
+            if len(missing) > 0:
+                diagnostics.append(
+                    f"incomplete {kind} dataset at '{canonical}' (missing: {', '.join(missing)})"
+                )
+
+        _inspect(resolved_cache, 'cached')
+        _inspect(Path(normalized_name).expanduser(), 'local')
+
+        for root in self.local_datasets_directories:
+            _inspect(Path(root) / dataset_name, 'local')
+
+        return diagnostics
+
+    def has_incomplete_dataset(self, name: str) -> bool:
+        return len(self._incomplete_dataset_diagnostics(name)) > 0
 
     @staticmethod
     def _existing_directories(directories: Iterable[str]) -> List[str]:
@@ -192,13 +351,13 @@ class DataSet:
         normalized_name = str(name).strip()
         name_path = Path(normalized_name).expanduser()
 
-        if name_path.is_dir() and (name_path / 'schema.json').is_file():
+        if name_path.is_dir() and self._is_complete_dataset_directory(name_path):
             return str(name_path.resolve())
 
         for root in self.local_datasets_directories:
             candidate = Path(root) / normalized_name
 
-            if candidate.is_dir() and (candidate / 'schema.json').is_file():
+            if candidate.is_dir() and self._is_complete_dataset_directory(candidate):
                 return str(candidate.resolve())
 
         return None
@@ -217,8 +376,26 @@ class DataSet:
 
         for root in self.local_datasets_directories:
             for dataset_path in Path(root).iterdir():
-                if dataset_path.is_dir() and (dataset_path / 'schema.json').is_file():
+                if dataset_path.is_dir() and self._is_complete_dataset_directory(dataset_path):
                     dataset_names.add(dataset_path.name)
+
+        return sorted(dataset_names)
+
+    def _get_cached_dataset_names(self) -> List[str]:
+        datasets_directory = Path(self.cache_directory) / 'datasets'
+
+        if not datasets_directory.is_dir():
+            return []
+
+        dataset_names = set()
+
+        for dataset_path in datasets_directory.iterdir():
+            if (
+                not dataset_path.name.startswith('.')
+                and dataset_path.is_dir()
+                and self._is_complete_dataset_directory(dataset_path)
+            ):
+                dataset_names.add(dataset_path.name)
 
         return sorted(dataset_names)
 
@@ -230,14 +407,13 @@ class DataSet:
         return schema
 
     def get_dataset(self, name: str, directory: Union[Path, str] = None) -> str:
-        dataset_name = Path(str(name).rstrip('/')).name
+        dataset_name = Path(str(name).rstrip('/\\')).name
         datasets_directory = os.path.join(self.cache_directory, 'datasets')
         root_directory = os.path.join(datasets_directory, dataset_name)
         schema_filepath = os.path.join(root_directory, 'schema.json')
         path = FileHandler.join_url(self.datasets_path, dataset_name)
 
-        # check that dataset does not already exist using the schema as a proxy
-        if not os.path.isfile(schema_filepath):
+        if not self._is_complete_dataset_directory(root_directory):
             local_root_directory = self._find_local_dataset_root(str(name))
 
             if local_root_directory is not None:
@@ -249,6 +425,17 @@ class DataSet:
                 if self.offline:
                     local_directories = self.local_datasets_directories
                     local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
+                    diagnostics = self._incomplete_dataset_diagnostics(str(name), cache_root=root_directory)
+
+                    if len(diagnostics) > 0:
+                        raise OfflineDataError(
+                            f"Dataset '{dataset_name}' could not be recovered locally while offline mode is enabled: "
+                            f"{'; '.join(diagnostics)}. "
+                            f"Checked local dataset roots: {local_directories_message}. "
+                            "Pass a complete local schema.json file path, place a complete dataset under one of the local roots, "
+                            "or disable offline mode."
+                        )
+
                     raise OfflineDataError(
                         f"Offline mode is enabled and dataset '{dataset_name}' was not found locally. "
                         f"Checked cache file '{schema_filepath}' and local dataset roots: {local_directories_message}. "
@@ -256,20 +443,39 @@ class DataSet:
                     )
 
                 LOGGER.info(
-                    f'The {dataset_name} dataset DNE in cache/local roots. Will download from '
+                    f'The {dataset_name} dataset is missing or incomplete in cache/local roots. Will download from '
                     f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {datasets_directory}. '
                     f'Next time DataSet.get_dataset(\'{dataset_name}\') is called, it will read '
                     'from cache unless DataSet.clear_cache is run first.'
                 )
                 contents = self.get_github_contents(path)
                 session = self.get_requests_session()
+                dataset_prefix = path.strip('/')
+
+                def _download_entries(entries: Iterable[Mapping[str, Any]], staging: str) -> None:
+                    for c in entries:
+                        entry_type = c.get('type')
+                        entry_path = str(c.get('path', '')).strip('/')
+
+                        if entry_type == 'dir':
+                            nested_contents = self.get_github_contents(entry_path)
+                            _download_entries(nested_contents, staging)
+
+                        elif entry_type == 'file':
+                            if dataset_prefix and entry_path.startswith(f'{dataset_prefix}/'):
+                                rel_posix = posixpath.relpath(entry_path, dataset_prefix)
+                                rel_parts = [part for part in rel_posix.split('/') if part not in ('', '.')]
+                            else:
+                                rel_parts = [str(c['name'])]
+
+                            if any(part == '..' for part in rel_parts):
+                                raise ValueError(f"Unsafe dataset entry path '{entry_path}'.")
+
+                            filepath = os.path.join(staging, *rel_parts)
+                            self._download_file(c['download_url'], filepath, session=session)
 
                 def download(staging: str):
-                    for c in contents:
-                        if c['type'] == 'file':
-                            relative_directory_content = c['path'].split(f'{dataset_name}/')[-1].split('/')[:-1]
-                            filepath = os.path.join(staging, *relative_directory_content, c['name'])
-                            self._download_file(c['download_url'], filepath, session=session)
+                    _download_entries(contents, staging)
 
                 self._publish_directory(root_directory, download)
 
@@ -301,11 +507,18 @@ class DataSet:
 
         try:
             populate(staging)
+            missing = DataSet._missing_dataset_files(staging)
+
+            if len(missing) > 0:
+                raise FileNotFoundError(
+                    f"Dataset '{name}' is incomplete and cannot be cached; "
+                    f"missing referenced file(s): {', '.join(missing)}"
+                )
 
             # One lock per dataset, held by threads and processes alike and released by the operating
             # system if its holder dies. Downloads still run in parallel; only publishing is serialised.
             with FileLock(os.path.join(parent, f'.{name}.lock')):
-                if not os.path.isfile(os.path.join(target_directory, 'schema.json')):
+                if not DataSet._is_complete_dataset_directory(target_directory):
                     if os.path.isdir(target_directory):
                         # Incomplete folder left by an interrupted download of an earlier version. Move it
                         # aside in one step (it is either gone or untouched), delete it after the lock.
@@ -319,6 +532,23 @@ class DataSet:
             for directory in (staging, stale):
                 if directory is not None:
                     shutil.rmtree(directory, ignore_errors=True)
+
+    @staticmethod
+    def _write_json_atomic(filepath: str, payload: Any) -> None:
+        directory = os.path.dirname(filepath)
+        os.makedirs(directory, exist_ok=True)
+        descriptor, temporary = tempfile.mkstemp(prefix='.json-', dir=directory)
+        os.close(descriptor)
+
+        try:
+            FileHandler.write_json(temporary, payload)
+            os.replace(temporary, filepath)
+
+        except BaseException:
+            if os.path.exists(temporary):
+                os.remove(temporary)
+
+            raise
 
     @staticmethod
     def _copy_file(source: str, filepath: str) -> None:
@@ -368,15 +598,32 @@ class DataSet:
     def get_dataset_names(self) -> List[str]:
         filepath = os.path.join(self.cache_directory, 'dataset_names.json')
         local_dataset_names = self._get_local_dataset_names()
+        cached_complete_names = self._get_cached_dataset_names()
+
+        cached_index_names: Optional[List[str]] = None
+
+        if os.path.isfile(filepath):
+            try:
+                loaded = FileHandler.read_json(filepath)
+                if isinstance(loaded, list):
+                    cached_index_names = [str(item) for item in loaded]
+            except Exception:
+                cached_index_names = None
 
         if len(local_dataset_names) > 0:
-            cached_dataset_names = FileHandler.read_json(filepath) if os.path.isfile(filepath) else []
-            contents = sorted(set(local_dataset_names).union(cached_dataset_names))
+            contents = sorted(
+                set(local_dataset_names)
+                .union(cached_index_names or [])
+                .union(cached_complete_names)
+            )
 
-        elif os.path.isfile(filepath):
-            contents = FileHandler.read_json(filepath)
+        elif cached_index_names is not None:
+            contents = sorted(set(cached_index_names).union(cached_complete_names))
 
         elif self.offline:
+            if len(cached_complete_names) > 0:
+                return cached_complete_names
+
             local_directories = self.local_datasets_directories
             local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
             raise OfflineDataError(
@@ -389,17 +636,63 @@ class DataSet:
                 f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {filepath}. '
                     'Next time DataSet.get_dataset_names is called, it will read '
                         'from cache unless DataSet.clear_cache is run first.')
-            contents = self.get_github_contents(self.datasets_path)
-            contents = [
-                r['name'] for r in contents 
-                    if r.get('type') == 'dir' 
-                        and r.get('path').replace(r['name'], '').strip('/') == self.datasets_path
-            ]
-            FileHandler.write_json(filepath, contents)
-            
-        contents = sorted(contents)
+            datasets_prefix = self.datasets_path.strip('/')
+            raw_contents = self.get_github_contents(self.datasets_path)
+            fetched_names = sorted(
+                r['name']
+                for r in raw_contents
+                if r.get('type') == 'dir'
+                and posixpath.dirname(str(r.get('path', '')).strip('/')) == datasets_prefix
+            )
+            with FileLock(os.path.join(self.cache_directory, '.dataset_names.json.lock')):
+                self._write_json_atomic(filepath, fetched_names)
 
-        return contents
+            contents = sorted(set(fetched_names).union(cached_complete_names))
+
+        return sorted(contents)
+
+    def _ensure_misc_cached_file(self, filename: str, label: str) -> str:
+        misc_directory = os.path.join(self.cache_directory, 'misc')
+        os.makedirs(misc_directory, exist_ok=True)
+        filepath = os.path.join(misc_directory, filename)
+
+        if os.path.isfile(filepath):
+            return filepath
+
+        with FileLock(os.path.join(misc_directory, f'.{filename}.lock')):
+            if not os.path.isfile(filepath):
+                local_filepath = self._find_local_misc_filepath(filename)
+
+                if local_filepath is not None:
+                    self._copy_file(local_filepath, filepath)
+
+            if not os.path.isfile(filepath):
+                if self.offline:
+                    local_directories = self.local_misc_directories
+                    local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
+                    raise OfflineDataError(
+                        f"Offline mode is enabled and '{filename}' was not found locally. "
+                        f"Checked cache file '{filepath}' and local misc roots: {local_directories_message}."
+                    )
+
+                LOGGER.info(
+                    f'The {label} data DNE in cache. Will download from '
+                    f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {misc_directory}. '
+                    f'Next time DataSet is called, it will read from cache unless DataSet.clear_cache is run first.'
+                )
+                path = FileHandler.join_url(self.misc_path)
+                contents = self.get_github_contents(path)
+                matching_urls = [f['download_url'] for f in contents if f.get('name') == filename and f.get('download_url')]
+
+                if len(matching_urls) == 0:
+                    raise FileNotFoundError(
+                        f"Unable to locate '{filename}' under '{path}' in "
+                        f"{self.github_account}/{self.repository}@{self.tag}."
+                    )
+
+                self._download_file(matching_urls[0], filepath)
+
+        return filepath
     
     def get_pv_sizing_data(self) -> pd.DataFrame:
         """Reads and returns LBNL''s Tracking The Sun dataset that has been prefilered for completeness.
@@ -409,39 +702,7 @@ class DataSet:
         data: pd.DataFrame
         """
 
-        misc_directory = os.path.join(self.cache_directory, 'misc')
-        os.makedirs(misc_directory, exist_ok=True)
-        filepath = os.path.join(misc_directory, self.PV_CHOICES_FILENAME)
-        path = FileHandler.join_url(self.misc_path)
-
-        # Prefer local data to avoid unnecessary network usage.
-        if not os.path.isfile(filepath):
-            local_filepath = self._find_local_misc_filepath(self.PV_CHOICES_FILENAME)
-
-            if local_filepath is not None:
-                self._copy_file(local_filepath, filepath)
-
-        # check that file DNE
-        if not os.path.isfile(filepath):
-            if self.offline:
-                local_directories = self.local_misc_directories
-                local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
-                raise OfflineDataError(
-                    f"Offline mode is enabled and '{self.PV_CHOICES_FILENAME}' was not found locally. "
-                    f"Checked cache file '{filepath}' and local misc roots: {local_directories_message}."
-                )
-
-            LOGGER.info(f'The PV sizing data DNE in cache. Will download from '
-                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {misc_directory}. '
-                    'Next time DataSet.get_pv_sizing_data is called, it will read '
-                        'from cache unless DataSet.clear_cache is run first.')
-            contents = self.get_github_contents(path)
-            url = [f['download_url'] for f in contents if f['name'] == self.PV_CHOICES_FILENAME][0]
-            self._download_file(url, filepath)
-
-        else:
-            pass
-
+        filepath = self._ensure_misc_cached_file(self.PV_CHOICES_FILENAME, 'PV sizing')
         data = pd.read_csv(filepath, low_memory=False)
         
         return data
@@ -454,39 +715,7 @@ class DataSet:
         data: Mapping[str, Union[float, str]]
         """
 
-        misc_directory = os.path.join(self.cache_directory, 'misc')
-        os.makedirs(misc_directory, exist_ok=True)
-        filepath = os.path.join(misc_directory, self.BATTERY_CHOICES_FILENAME)
-        path = FileHandler.join_url(self.misc_path)
-
-        # Prefer local data to avoid unnecessary network usage.
-        if not os.path.isfile(filepath):
-            local_filepath = self._find_local_misc_filepath(self.BATTERY_CHOICES_FILENAME)
-
-            if local_filepath is not None:
-                self._copy_file(local_filepath, filepath)
-
-        # check that file DNE
-        if not os.path.isfile(filepath):
-            if self.offline:
-                local_directories = self.local_misc_directories
-                local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
-                raise OfflineDataError(
-                    f"Offline mode is enabled and '{self.BATTERY_CHOICES_FILENAME}' was not found locally. "
-                    f"Checked cache file '{filepath}' and local misc roots: {local_directories_message}."
-                )
-
-            LOGGER.info(f'The battery sizing data DNE in cache. Will download from '
-                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {misc_directory}. '
-                    'Next time DataSet.get_battery_sizing_data is called, it will read '
-                        'from cache unless DataSet.clear_cache is run first.')
-            contents = self.get_github_contents(path)
-            url = [f['download_url'] for f in contents if f['name'] == self.BATTERY_CHOICES_FILENAME][0]
-            self._download_file(url, filepath)
-
-        else:
-            pass
-
+        filepath = self._ensure_misc_cached_file(self.BATTERY_CHOICES_FILENAME, 'battery sizing')
         data = FileHandler.read_yaml(filepath)
         data = pd.DataFrame([{'model': k, **v['attributes']} for k, v in data.items()])
         data = data.set_index('model')
@@ -507,7 +736,13 @@ class DataSet:
                 'Provide local data files or disable offline mode.'
             )
 
-        url = self.GITHUB_API_CONTENT_URL if path is None else FileHandler.join_url(self.GITHUB_API_CONTENT_URL, path) 
+        base_url = FileHandler.join_url(
+            'https://api.github.com/repos/',
+            self.github_account,
+            self.repository,
+            'contents',
+        )
+        url = base_url if path is None else FileHandler.join_url(base_url, path)
         params = dict(ref=self.tag)
         contents = self.get_requests_session().get(url, params=params)
 

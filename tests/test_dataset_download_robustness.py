@@ -224,3 +224,252 @@ def test_requests_retry_rate_limits():
 
     assert 429 in retry.status_forcelist
     assert retry.respect_retry_after_header
+
+
+def test_incomplete_cached_dataset_with_schema_recovers_from_local_source_offline(tmp_path, monkeypatch):
+    from citylearn.citylearn import CityLearnEnv
+
+    minute_demo = Path(__file__).resolve().parent / 'data' / 'minute_ev_demo'
+    cache_root = tmp_path / 'cache'
+    cached_demo = cache_root / 'datasets' / 'minute_ev_demo'
+    cached_demo.mkdir(parents=True)
+    shutil.copyfile(minute_demo / 'schema.json', cached_demo / 'schema.json')
+
+    local_root = tmp_path / 'local_datasets'
+    shutil.copytree(minute_demo, local_root / 'minute_ev_demo')
+
+    monkeypatch.setattr(DataSet, 'cache_directory', property(lambda self: str(cache_root)))
+    monkeypatch.setenv('CITYLEARN_LOCAL_DATASETS_PATH', str(local_root))
+    monkeypatch.setattr(
+        DataSet,
+        'get_requests_session',
+        staticmethod(lambda **kw: (_ for _ in ()).throw(AssertionError('Unexpected network call'))),
+    )
+
+    schema = DataSet(offline=True).get_schema('minute_ev_demo')
+    env = CityLearnEnv(schema, offline=True, central_agent=True, episode_time_steps=2, render_mode='none')
+
+    try:
+        observations, _ = env.reset()
+        assert len(observations) == 1
+        assert (cached_demo / 'Building_1.csv').is_file()
+        assert (cached_demo / 'charger_1_1.csv').is_file()
+        assert _leftovers(cache_root) == []
+    finally:
+        env.close()
+
+    # Also verify direct resolution by dataset name through CityLearnEnv when cache only has schema.json.
+    shutil.rmtree(cached_demo)
+    cached_demo.mkdir(parents=True)
+    shutil.copyfile(minute_demo / 'schema.json', cached_demo / 'schema.json')
+
+    env_by_name = CityLearnEnv('minute_ev_demo', offline=True, central_agent=True, episode_time_steps=2, render_mode='none')
+    try:
+        assert len(env_by_name.buildings) == 1
+        assert (cached_demo / 'Building_1.csv').is_file()
+        assert _leftovers(cache_root) == []
+    finally:
+        env_by_name.close()
+
+
+def test_incomplete_cached_dataset_with_schema_raises_clear_error_when_unrecoverable(tmp_path, monkeypatch):
+    from citylearn.citylearn import CityLearnEnv, UnknownSchemaError
+    from citylearn.data import OfflineDataError
+
+    minute_demo = Path(__file__).resolve().parent / 'data' / 'minute_ev_demo'
+    cache_root = tmp_path / 'cache'
+    cached_demo = cache_root / 'datasets' / 'minute_ev_demo'
+    cached_demo.mkdir(parents=True)
+    shutil.copyfile(minute_demo / 'schema.json', cached_demo / 'schema.json')
+
+    empty_local_root = tmp_path / 'empty_local'
+    empty_local_root.mkdir()
+    monkeypatch.setattr(DataSet, 'cache_directory', property(lambda self: str(cache_root)))
+    monkeypatch.setenv('CITYLEARN_LOCAL_DATASETS_PATH', str(empty_local_root))
+
+    with pytest.raises(OfflineDataError, match=r'minute_ev_demo.*Building_1\.csv'):
+        DataSet(offline=True).get_schema('minute_ev_demo')
+
+    with pytest.raises(UnknownSchemaError, match=r'minute_ev_demo.*offline mode is enabled.*Building_1\.csv'):
+        CityLearnEnv('minute_ev_demo', offline=True, central_agent=True, episode_time_steps=2, render_mode='none')
+
+    # Online download that omits a referenced file must fail before publishing an incomplete folder.
+    schema_bytes = (
+        b'{"buildings": {"Building_1": {"include": true, "energy_simulation": "Building_1.csv", "weather": "weather.csv"}}}'
+    )
+
+    class _IncompleteRemoteSession(_Session):
+        def get(self, url, **kwargs):
+            return _response(url, content=schema_bytes if url.endswith('schema.json') else b'a,b\n1,2\n')
+
+    class _IncompleteRemoteDataSet(_dataset_class(tmp_path / 'online_cache', _IncompleteRemoteSession())):
+        def get_github_contents(self, path=None):
+            return [
+                dict(type='file', name='schema.json', path='data/datasets/demo/schema.json', download_url='https://raw.example/demo/schema.json'),
+                dict(type='file', name='weather.csv', path='data/datasets/demo/weather.csv', download_url='https://raw.example/demo/weather.csv'),
+            ]
+
+    with pytest.raises(FileNotFoundError, match=r'Building_1\.csv'):
+        _IncompleteRemoteDataSet(offline=False).get_dataset('demo')
+
+    assert not (tmp_path / 'online_cache' / 'datasets' / 'demo').exists()
+    assert _leftovers(tmp_path / 'online_cache') == []
+
+
+def test_concurrent_downloads_replacing_incomplete_folder_with_schema_keep_published_dataset(tmp_path):
+    import json
+
+    schema_doc = {
+        'buildings': {
+            f'Building_{i}': {
+                'include': True,
+                'energy_simulation': f'Building_{i}.csv',
+                'weather': 'weather.csv',
+            }
+            for i in range(1, 7)
+        }
+    }
+    schema_bytes = json.dumps(schema_doc).encode('utf-8')
+    folder = tmp_path / 'datasets' / 'demo'
+    folder.mkdir(parents=True)
+    (folder / 'schema.json').write_bytes(schema_bytes)
+    (folder / 'Building_1.csv').write_bytes(b'partial')
+
+    class _SchemaAwareStaleSession(_StaleFolderSession):
+        def get(self, url, **kwargs):
+            if threading.current_thread().name == 'A' and url.endswith(FILES[-1]):
+                self.a_paused.set()
+                self.b_checked.wait(5)
+            return _response(url, content=schema_bytes if url.endswith('schema.json') else b'a,b\n1,2\n')
+
+    session = _SchemaAwareStaleSession()
+    dataset = _dataset_class(tmp_path, session)
+    a_returned, a_checked = threading.Event(), threading.Event()
+    missing, errors = {}, []
+
+    orig_is_complete = DataSet._is_complete_dataset_directory
+
+    class _InterleavedDataSet(dataset):
+        @classmethod
+        def _is_complete_dataset_directory(cls, directory):
+            result = orig_is_complete(directory)
+            if threading.current_thread().name == 'B' and not session.b_checked.is_set():
+                session.b_checked.set()
+                a_returned.wait(5)
+            return result
+
+    def worker(name):
+        try:
+            schema = Path(_InterleavedDataSet(offline=False).get_dataset('demo'))
+            if name == 'A':
+                a_returned.set()
+            schema.read_bytes()
+            missing[name] = [n for n in FILES if not (schema.parent / n).is_file()]
+        except Exception as error:  # pragma: no cover
+            errors.append(f'{name}: {error!r}')
+        finally:
+            for event in ([a_returned, a_checked] if name == 'A' else [session.b_checked]):
+                event.set()
+
+    a = threading.Thread(target=worker, args=('A',), name='A')
+    b = threading.Thread(target=worker, args=('B',), name='B')
+    a.start()
+    assert session.a_paused.wait(5)
+    b.start()
+    a.join(20)
+    b.join(20)
+
+    assert errors == []
+    assert missing == {'A': [], 'B': []}
+    assert sorted(os.listdir(folder)) == sorted(FILES)
+    assert (folder / 'Building_1.csv').read_bytes() == b'a,b\n1,2\n'
+    assert _leftovers(tmp_path) == []
+
+
+def test_dataset_and_env_respect_dynamic_env_vars_and_custom_repo(tmp_path, monkeypatch):
+    from citylearn.citylearn import CityLearnEnv, UnknownSchemaError
+
+    monkeypatch.setenv('CITYLEARN_OFFLINE', '1')
+    monkeypatch.setenv('CITYLEARN_DATASET_GITHUB_ACCOUNT', 'custom-org')
+    monkeypatch.setenv('CITYLEARN_DATASET_REPOSITORY', 'custom-repo')
+    monkeypatch.setenv('CITYLEARN_DATASET_TAG', 'v9.9.9')
+
+    ds = DataSet()
+    assert ds.offline is True
+    assert ds.github_account == 'custom-org'
+    assert ds.repository == 'custom-repo'
+    assert ds.tag == 'v9.9.9'
+
+    monkeypatch.setattr(DataSet, 'cache_directory', property(lambda self: str(tmp_path / 'cache')))
+    with pytest.raises(UnknownSchemaError, match='offline mode is enabled'):
+        CityLearnEnv('nonexistent_env_offline_check', central_agent=True, episode_time_steps=2, render_mode='none')
+
+    captured = {}
+
+    class _CaptureSession:
+        def get(self, url, params=None, **kwargs):
+            captured['url'] = url
+            captured['params'] = params
+            return _response(url, content=b'[]')
+
+    custom = DataSet(github_account='fork-owner', repository='ForkRepo', tag='v1.0.0', offline=False)
+    monkeypatch.setattr(custom, 'get_requests_session', lambda **kw: _CaptureSession())
+    assert custom.get_github_contents('data/datasets') == []
+    assert captured['url'] == 'https://api.github.com/repos/fork-owner/ForkRepo/contents/data/datasets'
+    assert captured['params'] == {'ref': 'v1.0.0'}
+
+
+def test_nested_subdirectory_download_and_dataset_names_prefix(tmp_path, monkeypatch):
+    schema_bytes = (
+        b'{"buildings": {"Building_1": {"include": true, "energy_simulation": "Building_1.csv", "weather": "shared/weather.csv"}}}'
+    )
+
+    class _NestedSession(_Session):
+        def get(self, url, **kwargs):
+            return _response(url, content=schema_bytes if url.endswith('schema.json') else b'a,b\n1,2\n')
+
+    class _NestedDataSet(DataSet):
+        @property
+        def cache_directory(self):
+            return str(tmp_path / 'cache')
+
+        @property
+        def local_datasets_directories(self):
+            return []
+
+        @property
+        def local_misc_directories(self):
+            return []
+
+        def get_github_contents(self, path=None):
+            if path == 'data/datasets':
+                return [
+                    dict(type='dir', name='data', path='data/datasets/data'),
+                    dict(type='dir', name='nested_demo', path='data/datasets/nested_demo'),
+                ]
+            if path == 'data/datasets/nested_demo':
+                return [
+                    dict(type='file', name='schema.json', path='data/datasets/nested_demo/schema.json', download_url='https://raw.example/nested_demo/schema.json'),
+                    dict(type='file', name='Building_1.csv', path='data/datasets/nested_demo/Building_1.csv', download_url='https://raw.example/nested_demo/Building_1.csv'),
+                    dict(type='dir', name='shared', path='data/datasets/nested_demo/shared'),
+                ]
+            if path == 'data/datasets/nested_demo/shared':
+                return [
+                    dict(type='file', name='weather.csv', path='data/datasets/nested_demo/shared/weather.csv', download_url='https://raw.example/nested_demo/shared/weather.csv'),
+                ]
+            if path == 'data/misc':
+                return []
+            raise AssertionError(f'Unexpected path: {path}')
+
+        def get_requests_session(self, **kwargs):
+            return _NestedSession()
+
+    ds = _NestedDataSet(offline=False)
+    assert ds.get_dataset_names() == ['data', 'nested_demo']
+
+    schema_file = Path(ds.get_dataset('nested_demo'))
+    assert (schema_file.parent / 'shared' / 'weather.csv').is_file()
+
+    with pytest.raises(FileNotFoundError, match=r'lbl-tracking_the_sun-res-pv\.csv'):
+        ds.get_pv_sizing_data()
+
