@@ -515,8 +515,7 @@ class CityLearnTopologyService:
         if capacity <= 0.0 or nominal_power <= 0.0:
             return
         initial_soc = float(getattr(storage, 'initial_soc', 0.0) or 0.0)
-        minimum_soc = getattr(storage, '_minimum_soc', lambda: 0.0)()
-        storage.force_set_soc(float(np.clip(initial_soc, minimum_soc, 1.0)))
+        storage.force_set_soc(initial_soc)
 
     def _bind_ev_runtime_context(self, ev: ElectricVehicle):
         env = self.env
