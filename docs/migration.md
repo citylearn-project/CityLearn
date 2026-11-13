@@ -100,14 +100,15 @@ No dataset, schema or export-file migration is required.
 - **Dataset downloads:** `DataSet.get_dataset(name, directory=...)` copies the
   dataset into `directory/<name>` and returns that schema path. Failed
   downloads raise instead of being cached, and concurrent first downloads no
-  longer interfere, also when they replace an incomplete folder left by an
-  earlier version. `filelock`, already installed with `torch`, is now a
+  longer interfere, including when they replace a cache folder missing
+  `schema.json`. `filelock`, already installed with `torch`, is now a
   declared requirement.
 - **SAC and MARLISA:** default schedules now work on episodes shorter than the
   default batch; inconsistent given values raise `ValueError` instead of
   `assert False`. Runs are repeatable from the environment seed. Agents saved
   with 3.2.0 resume training: the random streams they lack are derived from
-  their seed, and MARLISA refits its demand model on its whole buffer at the
+  their seed. MARLISA fills in missing scikit-learn parameters using the
+  installed defaults and refits its demand model on its whole buffer at the
   first update.
 
 Fixes that **change results** where they apply:

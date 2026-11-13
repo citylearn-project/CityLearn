@@ -521,6 +521,14 @@ class MARLISA(SAC):
     def __setstate__(self, state: Mapping[str, Any]):
         super().__setstate__(state)
 
+        # Older scikit-learn checkpoints lack constructor parameters added since they were saved.
+        # Restore the installed defaults while keeping the fitted coefficients and saved settings.
+        defaults = LinearRegression().get_params(deep=False)
+        for estimator in self.state_estimator:
+            if type(estimator) is LinearRegression:
+                for parameter, default in defaults.items():
+                    vars(estimator).setdefault(parameter, default)
+
         # Checkpoints from CityLearn <= 3.2.0 lack these. Their state estimator may have been fitted on as few as 2
         # samples: with no fit counted, it is refitted on the whole regression buffer at the next update, then as the
         # buffer grows. No transition is held back.
