@@ -467,6 +467,16 @@
 
         <span class="k">return</span> <span class="n">start</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ev_kpi_connection_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">,</span> <span class="n">sim</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">departure_index</span><span class="p">):</span>
+        <span class="n">boundary_soc</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s1">'_topology_connection_soc'</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="n">boundary_soc</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">ev_departure_audit</span><span class="o">.</span><span class="n">connected_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">,</span> <span class="n">sim</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">departure_index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">boundary_soc</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">boundary_soc</span><span class="p">[</span><span class="n">start</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_connected_interval_start</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">departure_index</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_arrival_soc_for_interval</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_ev_arrival_soc_for_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">states</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">interval_start</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
         <span class="n">estimated_soc_arrival</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_estimated_soc_arrival'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">current_soc_reference</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_current_soc'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -814,10 +824,12 @@
         <span class="p">):</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="n">interval_start</span> <span class="o">=</span> <span class="p">(</span><span class="n">audit_interval_start</span> <span class="k">if</span> <span class="n">audit</span> <span class="k">else</span>
-                          <span class="bp">self</span><span class="o">.</span><span class="n">_ev_connected_interval_start</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">departure_index</span><span class="p">))</span>
-        <span class="n">arrival_soc</span> <span class="o">=</span> <span class="p">(</span><span class="n">audit_arrival_soc</span> <span class="k">if</span> <span class="n">audit</span> <span class="k">else</span>
-                       <span class="bp">self</span><span class="o">.</span><span class="n">_ev_arrival_soc_for_interval</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">interval_start</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">audit</span><span class="p">:</span>
+            <span class="n">interval_start</span><span class="p">,</span> <span class="n">arrival_soc</span> <span class="o">=</span> <span class="n">audit_interval_start</span><span class="p">,</span> <span class="n">audit_arrival_soc</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">interval_start</span><span class="p">,</span> <span class="n">arrival_soc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_kpi_connection_boundary</span><span class="p">(</span>
+                <span class="n">charger</span><span class="p">,</span> <span class="n">sim</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">departure_index</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">arrival_soc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -1263,13 +1275,7 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">actual_soc</span><span class="p">):</span>
                     <span class="k">continue</span>
 
-                <span class="n">interval_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_connected_interval_start</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-                <span class="n">arrival_soc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_arrival_soc_for_interval</span><span class="p">(</span>
-                    <span class="n">sim</span><span class="p">,</span>
-                    <span class="n">ev</span><span class="p">,</span>
-                    <span class="n">states</span><span class="p">,</span>
-                    <span class="n">interval_start</span><span class="p">,</span>
-                <span class="p">)</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">arrival_soc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_kpi_connection_boundary</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">sim</span><span class="p">,</span> <span class="n">ev</span><span class="p">,</span> <span class="n">states</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
                 <span class="n">capacity_kwh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span>
                     <span class="nb">getattr</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="p">,</span> <span class="s1">'capacity'</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>

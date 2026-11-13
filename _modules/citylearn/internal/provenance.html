@@ -271,6 +271,7 @@
                                          <span class="nb">len</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">energy_provenance_events</span><span class="p">),</span> <span class="n">connection</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="n">stock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">stock</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">connection</span>
             <span class="n">events</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span><span class="p">(</span><span class="n">stock</span><span class="p">)</span>
             <span class="c1"># Transfers are processed jointly with the member bus in settle().</span>
             <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>

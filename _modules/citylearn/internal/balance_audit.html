@@ -403,6 +403,7 @@
                 <span class="p">)</span>
                 <span class="k">continue</span>
             <span class="n">stock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">stock</span><span class="p">[</span><span class="s2">"connection"</span><span class="p">]</span> <span class="o">=</span> <span class="n">asset</span><span class="p">[</span><span class="s2">"connection"</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span><span class="p">(</span><span class="n">stock</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"kind"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"transfer"</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">BalanceAuditError</span><span class="p">(</span>

@@ -205,6 +205,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_initial_building_structures</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_BuildingStructureSnapshot</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_active_member_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_active_ev_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_started_ev_ids</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suspended_evs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ElectricVehicle</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_member_lifecycle</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TopologyEvent</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_event_cursor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
@@ -305,6 +307,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_active_member_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_initial_active_member_ids</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_active_ev_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_started_ev_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">suspended_evs</span> <span class="o">=</span> <span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_member_lifecycle</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">member_id</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s1">'born_at'</span><span class="p">:</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">member_id</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_active_member_ids</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
@@ -326,7 +330,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_history_signature</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_history_time_step</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_active_views</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">apply_events_for_time_step</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
 
 
@@ -428,7 +431,7 @@
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_event_cursor</span> <span class="o">+=</span> <span class="mi">1</span>
 
-        <span class="k">if</span> <span class="n">changed</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">changed</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_history_time_step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_active_views</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_record_history</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
@@ -461,6 +464,16 @@
         <span class="n">snapshot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_history_lookup_reference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_active_charger_history</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="p">{})</span>
         <span class="n">member_chargers</span> <span class="o">=</span> <span class="n">snapshot</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">member_id</span><span class="p">,</span> <span class="p">{})</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">member_chargers</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CityLearnTopologyService.was_ev_connected">
+<a class="viewcode-back" href="../../../api/citylearn.internal.topology.html#citylearn.internal.topology.CityLearnTopologyService.was_ev_connected">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">was_ev_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">:</span> <span class="n">ElectricVehicle</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">snapshot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_history_lookup_reference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_active_charger_history</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">charger</span><span class="o">.</span><span class="n">past_connected_evs</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="ow">is</span> <span class="n">ev</span>
+            <span class="k">for</span> <span class="n">member_chargers</span> <span class="ow">in</span> <span class="n">snapshot</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">member_chargers</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CityLearnTopologyService.active_storage_at">
@@ -632,12 +645,29 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_building_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
 
         <span class="n">active_ev_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_active_ev_ids</span><span class="p">(</span><span class="n">active_buildings</span><span class="p">)</span>
+        <span class="n">previous_ev_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_active_ev_ids</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_active_ev_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">ev_id</span> <span class="k">for</span> <span class="n">ev_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_order</span> <span class="k">if</span> <span class="n">ev_id</span> <span class="ow">in</span> <span class="n">active_ev_ids</span><span class="p">]</span>
         <span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_ev_pool</span><span class="p">[</span><span class="n">ev_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">ev_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_ev_ids</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_bind_ev_runtime_context</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_set_ev_time_step</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="c1"># The catalogue EV is created once. Later charger changes only change its participation.</span>
+            <span class="k">if</span> <span class="n">ev</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started_ev_ids</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_started_ev_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">ev</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">t</span>
+                    <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">initialize_at_activation</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">ev</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&lt;</span> <span class="n">t</span><span class="p">:</span>
+                <span class="c1"># The ordinary terminal transition leaves devices at the last executed interval.</span>
+                <span class="c1"># A topology event at that boundary still needs a valid SOC for association.</span>
+                <span class="n">ev</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ev</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">previous_ev_ids</span><span class="p">:</span>
+                <span class="n">ev</span><span class="o">.</span><span class="n">_arrival_soc_time_step</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">time_step</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">suspended_evs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_pool</span><span class="p">[</span><span class="n">ev_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">ev_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_order</span>
+            <span class="k">if</span> <span class="n">ev_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started_ev_ids</span> <span class="ow">and</span> <span class="n">ev_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">active_ev_ids</span>
+        <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_building_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
@@ -663,12 +693,6 @@
 
         <span class="k">for</span> <span class="n">appliance</span> <span class="ow">in</span> <span class="n">building</span><span class="o">.</span><span class="n">deferrable_appliances</span> <span class="ow">or</span> <span class="p">[]:</span>
             <span class="n">appliance</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">time_step</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_set_ev_time_step</span><span class="p">(</span><span class="n">ev</span><span class="p">:</span> <span class="n">ElectricVehicle</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="n">ev</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">time_step</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="s1">'battery'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">time_step</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_storage_at_activation</span><span class="p">(</span><span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">):</span>

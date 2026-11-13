@@ -442,24 +442,10 @@
             <span class="n">timings</span><span class="p">[</span><span class="s1">'next_time_step_time'</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">timer_start</span>
             <span class="n">timings</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_last_next_time_step_debug_timing'</span><span class="p">,</span> <span class="p">{}))</span>
 
-        <span class="n">topology_changed</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dynamic'</span><span class="p">:</span>
-            <span class="n">topology_changed</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_topology_service</span><span class="o">.</span><span class="n">apply_events_for_time_step</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">topology_changed</span><span class="p">:</span>
-                <span class="c1"># Re-associate only when topology actually changed (e.g., added member/charger).</span>
-                <span class="c1"># Otherwise this would duplicate the association already done in `next_time_step()`.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">associate_chargers_to_electric_vehicles</span><span class="p">()</span>
-                <span class="n">env</span><span class="o">.</span><span class="n">_refresh_action_cache</span><span class="p">()</span>
-                <span class="n">env</span><span class="o">.</span><span class="n">_entity_service</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
-                <span class="n">env</span><span class="o">.</span><span class="n">reward_function</span><span class="o">.</span><span class="n">env_metadata</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
         <span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
         <span class="n">topology_events_applied</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
             <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_event_log'</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[])[</span><span class="n">topology_log_size_before</span><span class="p">:]</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">debug_timing</span><span class="p">:</span>
-            <span class="n">timings</span><span class="p">[</span><span class="s1">'topology_time'</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">timer_start</span>
-
         <span class="n">end_export_time</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="n">final_kpi_export_time</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
@@ -904,14 +890,6 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dynamic'</span><span class="p">:</span>
-            <span class="n">topology_changed</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_topology_service</span><span class="o">.</span><span class="n">apply_events_for_time_step</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">topology_changed</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">associate_chargers_to_electric_vehicles</span><span class="p">()</span>
-                <span class="n">env</span><span class="o">.</span><span class="n">_refresh_action_cache</span><span class="p">()</span>
-                <span class="n">env</span><span class="o">.</span><span class="n">_entity_service</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
-                <span class="n">env</span><span class="o">.</span><span class="n">reward_function</span><span class="o">.</span><span class="n">env_metadata</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
-
         <span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">truncated</span></div>
 
@@ -1049,6 +1027,8 @@
         <span class="n">current_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
         <span class="n">last_action_step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_steps</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">reached_terminal_transition</span> <span class="o">=</span> <span class="n">current_step</span> <span class="o">&gt;=</span> <span class="n">last_action_step</span>
+        <span class="n">topology</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_topology_service</span> <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">topology_mode</span> <span class="o">==</span> <span class="s1">'dynamic'</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">suspended_evs</span> <span class="o">=</span> <span class="n">topology</span><span class="o">.</span><span class="n">suspended_evs</span> <span class="k">if</span> <span class="n">topology</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">()</span>
 
         <span class="n">partial_render_time</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'render_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
@@ -1072,6 +1052,8 @@
             <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
             <span class="k">for</span> <span class="n">electric_vehicle</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">:</span>
                 <span class="n">electric_vehicle</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">electric_vehicle</span> <span class="ow">in</span> <span class="n">suspended_evs</span><span class="p">:</span>
+                <span class="n">electric_vehicle</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">debug_timing</span><span class="p">:</span>
                 <span class="n">timings</span><span class="p">[</span><span class="s1">'next_time_step_electric_vehicles_time'</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">timer_start</span>
         <span class="k">elif</span> <span class="n">debug_timing</span><span class="p">:</span>
@@ -1090,19 +1072,37 @@
             <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
                 <span class="n">building</span><span class="o">.</span><span class="n">_terminal_observation_time_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
 
+        <span class="c1"># Apply the topology for the new interval before reading charger schedules.</span>
+        <span class="c1"># An EV suspended over the elapsed interval still receives its mobility update on reentry.</span>
+        <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="n">previous_active_evs</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span>
+        <span class="n">topology_changed</span> <span class="o">=</span> <span class="n">topology</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">topology</span><span class="o">.</span><span class="n">apply_events_for_time_step</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">debug_timing</span><span class="p">:</span>
+            <span class="n">timings</span><span class="p">[</span><span class="s1">'topology_time'</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">timer_start</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">reached_terminal_transition</span><span class="p">:</span>
             <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">simulate_unconnected_ev_soc</span><span class="p">()</span>
+            <span class="n">continuing_evs</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">topology_changed</span><span class="p">:</span>
+                <span class="n">continuing_evs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">previous_active_evs</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulate_unconnected_ev_soc</span><span class="p">(</span><span class="n">continuing_evs</span><span class="o">=</span><span class="n">continuing_evs</span><span class="p">,</span> <span class="n">suspended_evs</span><span class="o">=</span><span class="n">suspended_evs</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">debug_timing</span><span class="p">:</span>
                 <span class="n">timings</span><span class="p">[</span><span class="s1">'next_time_step_unconnected_ev_soc_time'</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">timer_start</span>
+        <span class="k">elif</span> <span class="n">debug_timing</span><span class="p">:</span>
+            <span class="n">timings</span><span class="p">[</span><span class="s1">'next_time_step_unconnected_ev_soc_time'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
 
+        <span class="k">if</span> <span class="n">topology_changed</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">reached_terminal_transition</span><span class="p">:</span>
             <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">associate_chargers_to_electric_vehicles</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">debug_timing</span><span class="p">:</span>
                 <span class="n">timings</span><span class="p">[</span><span class="s1">'next_time_step_associate_chargers_time'</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">timer_start</span>
         <span class="k">elif</span> <span class="n">debug_timing</span><span class="p">:</span>
-            <span class="n">timings</span><span class="p">[</span><span class="s1">'next_time_step_unconnected_ev_soc_time'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
             <span class="n">timings</span><span class="p">[</span><span class="s1">'next_time_step_associate_chargers_time'</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">if</span> <span class="n">topology_changed</span><span class="p">:</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_refresh_action_cache</span><span class="p">()</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_entity_service</span><span class="o">.</span><span class="n">invalidate</span><span class="p">()</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">reward_function</span><span class="o">.</span><span class="n">env_metadata</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">debug_timing</span><span class="p">:</span>
             <span class="n">env</span><span class="o">.</span><span class="n">_last_next_time_step_debug_timing</span> <span class="o">=</span> <span class="n">timings</span>
@@ -1281,9 +1281,28 @@
                         <span class="n">previous_runtime_ev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ev</span> <span class="ow">or</span> <span class="n">session_changed</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">is_new_connection</span><span class="p">:</span>
-                        <span class="n">soc_value</span> <span class="o">=</span> <span class="n">_resolve_arrival_soc</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="n">prev_state</span><span class="p">,</span> <span class="n">prev_ev_id</span><span class="p">,</span> <span class="n">ev_id</span><span class="p">)</span>
+                        <span class="n">continuing_schedule</span> <span class="o">=</span> <span class="n">prev_state</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">prev_ev_id</span> <span class="o">==</span> <span class="n">ev_id</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">session_changed</span>
+                        <span class="n">topology_connection</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_topology_service</span><span class="o">.</span><span class="n">enabled</span> <span class="ow">and</span> <span class="p">(</span>
+                            <span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s1">'_topology_added_time_step'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span>
+                            <span class="ow">or</span> <span class="n">continuing_schedule</span>
+                        <span class="p">)</span>
+                        <span class="c1"># Changing ports mid-session must not reapply telemetry for a vehicle</span>
+                        <span class="c1"># that has already been served at the preceding interval.</span>
+                        <span class="n">handover</span> <span class="o">=</span> <span class="n">topology_connection</span> <span class="ow">and</span> <span class="n">continuing_schedule</span> <span class="ow">and</span> <span class="p">(</span>
+                            <span class="n">env</span><span class="o">.</span><span class="n">_topology_service</span><span class="o">.</span><span class="n">was_ev_connected</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="n">soc_value</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">handover</span> <span class="k">else</span> <span class="n">_resolve_arrival_soc</span><span class="p">(</span>
+                            <span class="n">sim</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="n">prev_state</span><span class="p">,</span> <span class="n">prev_ev_id</span><span class="p">,</span> <span class="n">ev_id</span><span class="p">,</span>
+                        <span class="p">)</span>
                         <span class="k">if</span> <span class="n">soc_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                             <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="n">soc_value</span><span class="p">)</span>
+                            <span class="n">ev</span><span class="o">.</span><span class="n">_arrival_soc_time_step</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span>
+                        <span class="k">if</span> <span class="n">topology_connection</span><span class="p">:</span>
+                            <span class="c1"># Capture the real boundary before any action changes the new stock.</span>
+                            <span class="n">boundary_soc</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s1">'_topology_connection_soc'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">boundary_soc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="n">boundary_soc</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">_topology_connection_soc</span> <span class="o">=</span> <span class="p">{}</span>
+                            <span class="n">boundary_soc</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span>
                             <span class="n">ev</span><span class="o">.</span><span class="n">_arrival_soc_time_step</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span>
                 <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                     <span class="n">charger</span><span class="o">.</span><span class="n">associate_incoming_car</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span></div>
@@ -1313,7 +1332,7 @@
 
 <div class="viewcode-block" id="CityLearnRuntimeService.simulate_unconnected_ev_soc">
 <a class="viewcode-back" href="../../../api/citylearn.internal.runtime.html#citylearn.internal.runtime.CityLearnRuntimeService.simulate_unconnected_ev_soc">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_unconnected_ev_soc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_unconnected_ev_soc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">continuing_evs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">suspended_evs</span><span class="o">=</span><span class="p">()):</span>
 <span class="w">        </span><span class="sd">"""Simulate SOC changes for EVs that are not under charger control at t+1."""</span>
 
         <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
@@ -1363,6 +1382,8 @@
                 <span class="n">charger_event_by_ev_id</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">next_id</span><span class="p">,</span> <span class="p">(</span><span class="s1">'connecting'</span><span class="p">,</span> <span class="n">soc</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">continuing_evs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ev</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">continuing_evs</span><span class="p">:</span>
+                <span class="k">continue</span>
             <span class="n">ev_id</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">name</span>
             <span class="n">event</span> <span class="o">=</span> <span class="n">charger_event_by_ev_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ev_id</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">event</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1380,7 +1401,20 @@
                 <span class="n">drift_std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_unconnected_drift_std</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
                 <span class="n">variability</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">random_state</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">drift_std</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">)</span>
                 <span class="c1"># Exogenous away-from-home movement: driving can reduce SOC, offsite charging can raise it.</span>
-                <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">last_soc</span> <span class="o">*</span> <span class="n">variability</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)))</span></div>
+                <span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">last_soc</span> <span class="o">*</span> <span class="n">variability</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="n">suspended_evs</span><span class="p">:</span>
+            <span class="c1"># Use a separate stream so suspension does not shift mobility draws for participating EVs.</span>
+            <span class="n">suspended_random</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_ev_suspended_drift_random_state'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">suspended_random</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">([</span><span class="n">env</span><span class="o">.</span><span class="n">_ev_drift_seed</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">generate_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">suspended_random</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_ev_suspended_drift_random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+            <span class="n">drift_std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ev_unconnected_drift_std</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">suspended_evs</span><span class="p">:</span>
+                <span class="n">battery</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">battery</span>
+                <span class="n">soc_after_standby</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                <span class="n">variability</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">suspended_random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">drift_std</span><span class="p">),</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">)</span>
+                <span class="n">battery</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">soc_after_standby</span> <span class="o">*</span> <span class="n">variability</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)))</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_record_deferrable_service_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
