@@ -323,7 +323,8 @@ def test_removed_pv_storage_and_deferrable_can_be_restored_from_same_member_temp
     schema = _load_schema()
     schema["buildings"]["Building_12"]["electrical_storage"]["attributes"][
         "initial_soc"
-    ] = 0.55
+    ] = 0.1
+    schema["buildings"]["Building_12"]["electrical_storage"]["attributes"]["depth_of_discharge"] = 0.8
     schema["topology_events"] = [
         {
             "id": "remove_pv",
@@ -431,6 +432,9 @@ def test_removed_pv_storage_and_deferrable_can_be_restored_from_same_member_temp
         assert restored_storage is not initial_storage
         assert float(restored_storage.soc[restored_storage.time_step]) == pytest.approx(
             initial_storage_soc
+        )
+        assert restored_storage.energy_provenance_events[-1]["after"] == pytest.approx(
+            initial_storage_capacity * initial_storage_soc
         )
         restored_storage.set_electricity_consumption(
             -0.5,

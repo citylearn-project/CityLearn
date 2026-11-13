@@ -948,6 +948,9 @@ class StorageDevice(Device):
         self._record_energy_event('transfer', energy_init, self.energy_init, terminal_energy)
 
     def force_set_soc(self, soc: float):
+        """Assign an external SOC in [0, 1], independently of the discharge reserve."""
+        if not np.isfinite(soc) or not 0.0 <= soc <= 1.0:
+            raise AttributeError("Soc must be between 0 and 1. Check your dataset")
         before = self.energy_init
         self.__soc[self.time_step] = soc
         self.__soc_initialized[self.time_step] = True
@@ -1406,25 +1409,6 @@ class Battery(StorageDevice, ElectricDevice):
             )/(curve_x[idx + 1] - curve_x[idx])
 
         return efficiency
-
-    def force_set_soc(self, soc: float):
-        """
-        Forcefully set the battery's state-of-charge (SOC) for the current time step,
-        bypassing restrictions such as efficiency losses, power limits, and degradation.
-
-        This is used for reconnections of the EV to the platform.
-
-        Parameters
-        ----------
-        soc : float
-            Desired state-of-charge as a fraction (between 0 and 1). Values outside this range are not accepted.
-        """
-        # Ensure soc is between 0 and 1
-        if soc < 0 or soc > 1:
-            raise AttributeError("Soc must be between 0 and 1. Check your dataset")
-        # Directly update the internal SOC array.
-        # Note: __soc is defined in the StorageDevice class, so we access it via name mangling.
-        super().force_set_soc(soc)
 
     def degrade(self) -> float:
         r"""Get amount of capacity degradation.
