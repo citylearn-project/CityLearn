@@ -304,6 +304,16 @@ class CityLearnEnv(Environment, Env):
                 raise ValueError('render_session_name must be a relative path. Use render_directory to choose an absolute location.')
             elif '..' in Path(self.render_session_name).parts:
                 raise ValueError('render_session_name cannot contain parent directory references (“..”).')
+        # The business-as-usual sidecar is rebuilt from `schema`, which these overrides do not
+        # modify, so it must re-apply them to simulate the same devices, PV and outages.
+        self._constructor_overrides = deepcopy({
+            'active_observations': active_observations,
+            'inactive_observations': inactive_observations,
+            'active_actions': active_actions,
+            'inactive_actions': inactive_actions,
+            'simulate_power_outage': simulate_power_outage,
+            'solar_generation': solar_generation,
+        })
         self._loading_service = CityLearnLoadingService(self)
         self._runtime_service = CityLearnRuntimeService(self)
         self._kpi_service = CityLearnKPIService(self)
@@ -1461,6 +1471,10 @@ class CityLearnEnv(Environment, Env):
 
         Callback failures are logged and disable reporting, preserving evaluation.
         No progress events or timings are added to the returned KPI table.
+
+        With `include_business_as_usual`, the native BAU reference is rebuilt from the schema and
+        the constructor arguments. A `ValueError` names the setting when it differs from this env as
+        captured at its last `reset()`; see the baselines guide for the settings that are compared.
         """
 
         return self._kpi_service.evaluate_v2(
@@ -1659,8 +1673,11 @@ class CityLearnEnv(Environment, Env):
         self._robustness_service.reset()
         self.associate_chargers_to_electric_vehicles()
         self._provenance_service.reset()
-        from citylearn.internal.comparison import inventory
+        from citylearn.internal.comparison import equipment, inventory, reference_configuration
         self._comparison_initial_inventory = inventory(self)
+        self._comparison_initial_configuration = reference_configuration(self)
+        # Taken here because the dynamic topology adds and removes devices during the episode.
+        self._comparison_initial_equipment = equipment(self)
 
         # reset reward function (does nothing by default)
         self.reward_function.reset()

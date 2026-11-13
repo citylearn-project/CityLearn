@@ -51,7 +51,7 @@ def _schema_with_deferrable_appliance(tmp_path: Path, *, earliest=1, latest=1, p
             {
                 "profile_id": "normal",
                 "duration_steps": len(profile),
-                "total_energy_kwh": sum(profile),
+                "total_energy_kwh": round(sum(profile), 12),  # 0.3, not 0.30000000000000004: pandas 2 and 3 parse it alike
                 "load_profile": json.dumps(profile),
             }
         ]

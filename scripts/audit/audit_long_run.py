@@ -14,7 +14,10 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import resource
+try:
+    import resource
+except ImportError:  # Windows; the meters below need Linux, see RESOURCE_METERS_AVAILABLE.
+    resource = None
 import sys
 import time
 import traceback
@@ -28,6 +31,8 @@ from citylearn.internal.experiment import experiment_manifest
 
 DEFINITION_VERSION = 'long-run-audit-v1'
 MIB = 1024**2
+# Current RSS comes from /proc and peak RSS from getrusage (KiB on Linux).
+RESOURCE_METERS_AVAILABLE = resource is not None and Path('/proc/self/statm').exists()
 
 
 def rss_mib():
@@ -174,6 +179,8 @@ class ExecutedIntervalObserver:
 
 
 def run(args):
+    if not RESOURCE_METERS_AVAILABLE:
+        raise RuntimeError('The long-run audit measures RSS with Linux /proc/self/statm and resource.getrusage')
     if args.transitions < 1 or args.start < 0 or args.block_steps < 1 or args.max_rss_mib <= 0 or args.max_seconds <= 0:
         raise ValueError('Positive durations, limits and nonnegative start required')
     if args.output.exists() and any(args.output.iterdir()):

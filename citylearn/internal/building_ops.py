@@ -5,7 +5,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import numpy as np
-from citylearn.internal.scalars import clip_scalar
+from citylearn.internal.scalars import clip_scalar, numpy1_scalar
 
 from citylearn.energy_model import HeatPump
 from citylearn.preprocessing import Normalize, PeriodicNormalization
@@ -369,11 +369,11 @@ class BuildingOpsService:
         if wants('electrical_storage_soc'):
             observations['electrical_storage_soc'] = building.electrical_storage.soc[endogenous_t]
         if wants('cooling_demand'):
-            observations['cooling_demand'] = building.energy_from_cooling_device[endogenous_t] + abs(min(building.cooling_storage.energy_balance[endogenous_t], 0.0))
+            observations['cooling_demand'] = building.energy_from_cooling_device[endogenous_t] + numpy1_scalar(abs(min(building.cooling_storage.energy_balance[endogenous_t], 0.0)))
         if wants('heating_demand'):
-            observations['heating_demand'] = building.energy_from_heating_device[endogenous_t] + abs(min(building.heating_storage.energy_balance[endogenous_t], 0.0))
+            observations['heating_demand'] = building.energy_from_heating_device[endogenous_t] + numpy1_scalar(abs(min(building.heating_storage.energy_balance[endogenous_t], 0.0)))
         if wants('dhw_demand'):
-            observations['dhw_demand'] = building.energy_from_dhw_device[endogenous_t] + abs(min(building.dhw_storage.energy_balance[endogenous_t], 0.0))
+            observations['dhw_demand'] = building.energy_from_dhw_device[endogenous_t] + numpy1_scalar(abs(min(building.dhw_storage.energy_balance[endogenous_t], 0.0)))
         if wants('net_electricity_consumption'):
             observations['net_electricity_consumption'] = building.net_electricity_consumption[endogenous_t]
         if wants('cooling_electricity_consumption'):

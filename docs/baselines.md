@@ -66,9 +66,33 @@ parameters from a separate agent created by the user.
 
 `env.evaluate_v2()` runs or reuses a separate BAU simulation up to the current
 evaluation timestep. That simulation is rebuilt from the source schema, selected
-members/EVs, episode window, timestep, topology mode and seed. It uses entity
-mode when dynamic topology or demand response requires it. Rendering is disabled
-for this internal comparison.
+members/EVs, episode window, timestep, topology mode and seed. It also re-applies
+the environment's constructor overrides `simulate_power_outage`,
+`solar_generation`, `active_actions`/`inactive_actions` and
+`active_observations`/`inactive_observations`, so the reference simulates the
+same equipment, generation and outages. It loads the buildings in the evaluated
+environment's order, so per-building override lists reach the same buildings
+when `buildings=[1, 0]` selects them in another order than the schema. It uses
+entity mode when dynamic topology or demand response requires it. Rendering is
+disabled for this internal comparison.
+
+The reference reproduces what the schema and these constructor arguments define.
+It cannot follow buildings, devices or chargers changed after loading, for
+example a new charger `max_charging_power` or building `simulate_power_outage`.
+Before it runs, it is compared with the evaluated environment as captured at its
+last `reset()`: the building order, each building's `simulate_power_outage` and
+active actions, the sizes and parameters of every device (heat pumps, heaters,
+storage tanks, PV, batteries, chargers, appliances and EV batteries), and the
+capacity and initial energy of batteries and EVs. A difference raises a
+`ValueError` that names the setting; evaluate with
+`include_business_as_usual=False` in that case. A change made after `reset()`
+is not detected: the comparison covers the configuration captured at reset.
+
+For stochastic power outages, CityLearn uses the model's explicit
+`random_seed` when provided. Otherwise the built-in models derive their
+seed from the environment seed, episode window and building name. The
+controller and its native BAU reference therefore face the same outages
+when they use the same model configuration.
 
 Results are cached for the current episode and timestep. The output adds
 `business_as_usual` values, `delta_to_business_as_usual` differences and
@@ -101,6 +125,11 @@ Choose the same evaluation condition when comparing controllers. During a
 simulated power outage the counterfactual, like the controlled run, exchanges
 no energy with the grid: its net, cost and emission values are zero at those
 time steps.
+
+With the community market enabled, both the control and the counterfactual
+costs are settled with the scenario's market rules, in the legacy, v2 and
+equity-audit KPIs alike. Savings from local trading are then not credited to
+the controller.
 
 For example, `district_cost_ratio_to_baseline_total_ratio` and
 `district_cost_ratio_to_business_as_usual_total_ratio` have different

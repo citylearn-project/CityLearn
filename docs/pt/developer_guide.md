@@ -20,6 +20,44 @@ Dependencias opcionais:
 | PV autosizing | `.venv/bin/pip install ".[pysam]"` |
 | Checks de build | `.venv/bin/pip install build twine` |
 
+## Evidência portátil de experiências
+
+O `.gitattributes` torna cada checkout idêntico ao repositório byte a byte: os
+ficheiros de texto usam LF e os ficheiros em `data/` e `tests/data/` nunca são
+convertidos, mesmo com o `core.autocrlf=true` por omissão do Git for Windows. Os
+manifestos de experiências calculam hashes destes ficheiros, que assim coincidem
+em todas as plataformas. Um checkout anterior ao `.gitattributes` pode ainda ter
+cópias CRLF; o `git status` mostra os ficheiros de dados convertidos como
+modificados. Fazer um clone novo e configurá-lo como em
+[Ambiente Local](#ambiente-local): o clone aplica as novas regras de checkout e
+deixa intacta a cópia de trabalho existente, incluindo as alterações não
+commitadas. Depois, limpar a cache de datasets, que pode conter cópias feitas a
+partir do checkout antigo:
+
+```console
+git clone https://github.com/citylearn-project/CityLearn.git
+python -c "from citylearn.data import DataSet; DataSet().clear_cache()"
+```
+
+Os manifestos registam cada ficheiro de entrada pelo seu caminho abaixo da raiz
+do dataset, com separadores `/`, pelo que um dataset movido ou copiado mantém a
+sua evidência. No Windows, onde `\` e `/` são ambos separadores e os nomes de
+ficheiros não distinguem maiúsculas de minúsculas, uma referência que só difere
+do caminho do ficheiro nos separadores ou nas maiúsculas regista a grafia do
+ficheiro no disco: com a raiz `C:\data\demo` e o ficheiro
+`C:\data\demo\sub\weather.csv`, as referências `sub\Weather.csv`,
+`SUB/weather.csv` e `C:\Data\Demo\sub\WEATHER.csv` registam todas
+`sub/weather.csv`. As outras grafias de um ficheiro de entrada mantêm o seu
+texto, com `/` em vez de `\` no Windows: componentes `.` ou `..`, separadores
+repetidos, ligações (links), nomes curtos 8.3 e ficheiros fora da raiz do
+dataset. As strings que não são ficheiros de entrada com hash (ver `FILE_TYPES`
+em `citylearn/internal/temporal.py`) mantêm o seu texto sem a raiz do dataset.
+No Linux e no macOS todas as referências mantêm o seu texto, sem a raiz do
+dataset; por omissão, os nomes de ficheiros no macOS não distinguem maiúsculas
+de minúsculas, mas a evidência distingue. Se duas execuções escreverem o mesmo
+ficheiro de formas que não são normalizadas, a comparação indica `incompatible`
+e não um par.
+
 ## Validacao Principal
 
 | Check | Comando |

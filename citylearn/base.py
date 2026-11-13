@@ -28,6 +28,7 @@ class EpisodeTracker:
         self.__episode = None
         self.__episode_start_time_step = None
         self.__episode_end_time_step = None
+        self.__episode_random_seed = None
         self.__simulation_start_time_step = simulation_start_time_step
         self.__simulation_end_time_step = simulation_end_time_step
         self.reset_episode_index()
@@ -37,6 +38,12 @@ class EpisodeTracker:
         """Current episode index"""
 
         return self.__episode
+
+    @property
+    def episode_random_seed(self) -> Union[int, None]:
+        """Environment seed captured when the current episode was selected."""
+
+        return getattr(self, '_EpisodeTracker__episode_random_seed', None)
     
     @property
     def episode_time_steps(self):
@@ -97,6 +104,7 @@ class EpisodeTracker:
             random_episode_split,
             random_seed,
         )
+        self.__episode_random_seed = random_seed
         
     def __next_episode_time_steps(self, episode_time_steps: Union[int, List[Tuple[int, int]]], rolling_episode_split: bool, random_episode_split: bool, random_seed: int):
         """Sets `episode_start_time_step` and `episode_end_time_step` for reading data files."""

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import copy
 from citylearn.internal.kpi_population import current_population, population_scope
+from functools import wraps
 from citylearn.internal.market_history import MarketSettlementHistory
 from citylearn.internal.evaluation_progress import EvaluationProgress, run, span
 from types import SimpleNamespace
@@ -20,6 +21,20 @@ from citylearn.data import ZERO_DIVISION_PLACEHOLDER, ChargerSimulation
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
+
+
+def settled_cost_scope(function):
+    """Share market-settled cost series across the KPI readers of one evaluation call."""
+    @wraps(function)
+    def wrapper(service, *args, **kwargs):
+        if getattr(service, '_settled_cost_cache', None) is not None:
+            return function(service, *args, **kwargs)
+        service._settled_cost_cache = {}
+        try:
+            return function(service, *args, **kwargs)
+        finally:
+            service._settled_cost_cache = None
+    return wrapper
 
 
 class CityLearnKPIService:
@@ -1492,6 +1507,7 @@ class CityLearnKPIService:
         return expected, served
 
     @population_scope
+    @settled_cost_scope
     def family_audit(self, comfort_band=None, control_condition=None, baseline_condition=None, *, progress=None):
         from citylearn.internal.kpi_family_audit import thermal_counts, thermal_metrics, pool_thermal, equity_metrics
         from citylearn.citylearn import EvaluationCondition
@@ -1511,8 +1527,16 @@ class CityLearnKPIService:
                 control = control_condition if control_condition is not None else (EvaluationCondition.WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV if dynamic else EvaluationCondition.WITH_STORAGE_AND_PV)
                 baseline = baseline_condition if baseline_condition is not None else (EvaluationCondition.WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV if dynamic else EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV)
                 conditions[building.name] = dict(control=getattr(control,'name',control.value), reference=getattr(baseline,'name',baseline.value))
-                costs.append((self._sum_finite(self._energy_values(building,getattr(building,'net_electricity_consumption_cost'+control.value))),
-                              self._sum_finite(self._energy_values(building,getattr(building,'net_electricity_consumption_cost'+baseline.value)))))
+                if getattr(self.env, 'community_market_enabled', False):
+                    control_costs, baseline_costs = self._market_cost_series(
+                        control_condition, baseline_condition,
+                        evaluation_condition_cls=EvaluationCondition, dynamics_building_cls=DynamicsBuilding,
+                    )
+                    costs.append((self._sum_finite(control_costs[building.name]),
+                                  self._sum_finite(baseline_costs[building.name])))
+                else:
+                    costs.append((self._sum_finite(self._energy_values(building,getattr(building,'net_electricity_consumption_cost'+control.value))),
+                                  self._sum_finite(self._energy_values(building,getattr(building,'net_electricity_consumption_cost'+baseline.value)))))
         return dict(buildings=rows,district=thermal_metrics(pool_thermal(counts)),equity=equity_metrics(costs),equity_conditions=conditions)
 
     def _building_days(self, building, t_start, t_final):
@@ -1567,13 +1591,71 @@ class CityLearnKPIService:
         *,
         condition_by_building: Mapping[str, object],
     ) -> Tuple[Mapping[str, float], float]:
+        series = self._settled_cost_series(condition_by_building=condition_by_building)
+        totals = {}
+        for name, values in series.items():
+            total = 0.0
+            # Sequential sum in step order, as the totals were accumulated before; inactive steps add 0.0.
+            for value in values.tolist():
+                total += value
+            totals[name] = total
+
+        district_total = float(sum(totals.values()))
+        return totals, district_total
+
+    def _market_cost_series(
+        self,
+        control_condition,
+        baseline_condition,
+        *,
+        evaluation_condition_cls,
+        dynamics_building_cls,
+    ) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+        """Control and reference cost series per member, both settled by the community market."""
+        control_condition_by_building = {}
+        baseline_condition_by_building = {}
+        for building in self._get_kpi_buildings():
+            c_cond, b_cond = self._default_building_conditions(
+                building,
+                control_condition,
+                baseline_condition,
+                evaluation_condition_cls=evaluation_condition_cls,
+                dynamics_building_cls=dynamics_building_cls,
+            )
+            control_condition_by_building[building.name] = c_cond
+            baseline_condition_by_building[building.name] = b_cond
+
+        return (
+            self._settled_cost_series(condition_by_building=control_condition_by_building),
+            self._settled_cost_series(condition_by_building=baseline_condition_by_building),
+        )
+
+    def _settled_cost_series(
+        self,
+        *,
+        condition_by_building: Mapping[str, object],
+    ) -> Dict[str, np.ndarray]:
+        """Per-member cost series with the community market settled over each member's condition flows.
+
+        The stored control cost is settled during simulation, but reference conditions are not;
+        comparing the two would credit the market's savings to the controller. Every cost
+        comparison therefore settles both sides here with the same rules.
+        """
+        cache = getattr(self, '_settled_cost_cache', None)
+        cache_key = tuple(sorted(
+            (name, getattr(condition, 'value', condition)) for name, condition in condition_by_building.items()
+        ))
+        if cache is not None and cache_key in cache:
+            return cache[cache_key]
+
         env = self.env
         buildings = self._get_kpi_buildings()
         building_names = [b.name for b in buildings]
         windows = {b.name: self._building_active_window(b) for b in buildings}
-        totals = {name: 0.0 for name in building_names}
+        step_count = max(int(getattr(env, 'time_step', 0)), 0)
+        series = {name: np.zeros(step_count, dtype='float64') for name in building_names}
         if len(building_names) == 0:
-            return totals, 0.0
+            return series
 
         final_t = int(max(getattr(env, 'time_step', 0), 0))
         ratio = self._to_scalar(getattr(env, 'community_market_sell_ratio', 0.8), 0.8)
@@ -1668,12 +1750,15 @@ class CityLearnKPIService:
                     - local_export[idx] * local_sell_price
                     - grid_export_remaining * grid_export_price
                 )
-                totals[building.name] += float(cost)
+                series[building.name][t] = float(cost)
 
-        district_total = float(sum(totals.values()))
-        return totals, district_total
+        if cache is not None:
+            cache[cache_key] = series
+
+        return series
 
     @population_scope
+    @settled_cost_scope
     def evaluate(
         self,
         control_condition=None,
@@ -2156,6 +2241,7 @@ class CityLearnKPIService:
             }
 
     @population_scope
+    @settled_cost_scope
     def evaluate_v2(
         self, control_condition=None, baseline_condition=None, comfort_band=None,
         include_business_as_usual=True, *, evaluation_condition_cls,
