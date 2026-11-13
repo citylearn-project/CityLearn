@@ -18,7 +18,11 @@ CSV and Parquet are interchangeable when the schema path is updated and columns,
 Resolve available names with `DataSet().get_dataset_names()` or use the CLI after
 installing its dependencies. Pass a dataset name to `CityLearnEnv` for automatic
 download and caching, or pass your own local `schema.json` path. Use
-`offline=True` with locally available files to disable network fallbacks.
+`offline=True` (or `CITYLEARN_OFFLINE=1`) with locally available files to disable
+network fallbacks. Cached dataset directories are validated against every data
+file referenced by `schema.json`; incomplete cached folders are automatically
+repaired from local roots or re-downloaded atomically without overwriting a
+complete dataset published concurrently.
 
 ## Unit Contract
 

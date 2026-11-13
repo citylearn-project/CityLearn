@@ -1180,13 +1180,20 @@ class CityLearnEnv(Environment, Env):
                 schema['root_directory'] = str(FileHandler.resolve_schema_root(schema, schema_path))
 
             elif isinstance(schema, str):
+                dataset_names: List[str] = []
+
                 try:
                     dataset_names = dataset.get_dataset_names()
                 except OfflineDataError as e:
-                    raise UnknownSchemaError(str(e)) from e
+                    if not dataset.has_incomplete_dataset(schema):
+                        raise UnknownSchemaError(str(e)) from e
 
-                if schema in dataset_names:
-                    schema = dataset.get_schema(schema)
+                if schema in dataset_names or dataset.has_incomplete_dataset(schema):
+                    try:
+                        schema = dataset.get_schema(schema)
+                    except OfflineDataError as e:
+                        raise UnknownSchemaError(str(e)) from e
+
                     schema['root_directory'] = '' if schema['root_directory'] is None else schema['root_directory']
                 else:
                     if self.offline:
@@ -1211,7 +1218,11 @@ class CityLearnEnv(Environment, Env):
 
     @offline.setter
     def offline(self, value: bool):
-        self.__offline = False if value is None else bool(parse_bool(value, default=False, path='offline'))
+        if value is None:
+            env_value = os.getenv('CITYLEARN_OFFLINE')
+            self.__offline = False if env_value is None else bool(parse_bool(env_value, default=False, path='CITYLEARN_OFFLINE'))
+        else:
+            self.__offline = bool(parse_bool(value, default=False, path='offline'))
 
     @render_enabled.setter
     def render_enabled(self, enabled: bool):
