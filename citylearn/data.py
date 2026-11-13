@@ -569,20 +569,23 @@ class TimeSeriesData:
 
         return variable
 
-    def __getattribute__(self, name: str):
-        if name.startswith('__'):
-            return object.__getattribute__(self, name)
+    def _refresh_sliced_views(self):
+        data = self.__dict__
+        start_time_step = data.get('_start_time_step')
+        end_time_step = data.get('_end_time_step')
+        cls = type(self)
 
-        data = object.__getattribute__(self, '__dict__')
-        variable_name = f'_{name}'
-
-        if variable_name in data:
-            start_time_step = data.get('_start_time_step')
-            end_time_step = data.get('_end_time_step')
-            variable = data[variable_name]
-            return self._slice_variable(variable, start_time_step, end_time_step)
-
-        return object.__getattribute__(self, name)
+        for raw_key, raw_val in list(data.items()):
+            if (
+                len(raw_key) > 1
+                and raw_key[0] == '_'
+                and raw_key[1] != '_'
+                and raw_key not in ('_start_time_step', '_end_time_step')
+                and not raw_key.startswith(f'_{cls.__name__}__')
+            ):
+                pub_name = raw_key[1:]
+                if not isinstance(getattr(cls, pub_name, None), property):
+                    data[pub_name] = self._slice_variable(raw_val, start_time_step, end_time_step)
 
     def __getattr__(self, name: str, start_time_step: int = None, end_time_step: int = None):
         """Returns values of the named variable within the specified time steps and
@@ -610,10 +613,32 @@ class TimeSeriesData:
     def __setattr__(self, name: str, value: Any):
         """Sets named variable.
         
-        Variables are named with a single underscore prefix.
+        Variables are named with a single underscore prefix and exposed as pre-sliced views.
         """
 
-        self.__dict__[f'_{name}'] = value
+        if name.startswith('_'):
+            object.__setattr__(self, name, value)
+            return
+
+        data = self.__dict__
+        data[f'_{name}'] = value
+        prop = getattr(type(self), name, None)
+
+        if isinstance(prop, property):
+            if prop.fset is not None:
+                prop.fset(self, value)
+            return
+
+        if name in ('start_time_step', 'end_time_step'):
+            data[name] = value
+            self._refresh_sliced_views()
+            return
+
+        data[name] = self._slice_variable(
+            value,
+            data.get('_start_time_step'),
+            data.get('_end_time_step'),
+        )
 
 class EnergySimulation(TimeSeriesData):
     """`Building` `energy_simulation` data class.
@@ -1311,19 +1336,25 @@ class DeferrableApplianceSimulation:
             raise ValueError(f'{source_label}.flexibility_schedule is missing columns: {sorted(missing_schedule)}.')
 
         profiles: Dict[str, Mapping[str, Any]] = {}
-        for row_index, row in cycle_profiles.iterrows():
-            profile_id = str(row['profile_id']).strip()
+        for row_index, raw_profile_id, raw_load_profile, raw_duration_steps, raw_total_energy in zip(
+            cycle_profiles.index,
+            cycle_profiles['profile_id'].tolist(),
+            cycle_profiles['load_profile'].tolist(),
+            cycle_profiles['duration_steps'].tolist(),
+            cycle_profiles['total_energy_kwh'].tolist(),
+        ):
+            profile_id = str(raw_profile_id).strip()
             if profile_id == '' or profile_id.lower() == 'nan':
                 raise ValueError(f'{source_label}.cycle_profiles[{row_index}].profile_id is required.')
             if profile_id in profiles:
                 raise ValueError(f"{source_label}.cycle_profiles contains duplicate profile_id '{profile_id}'.")
 
-            load_profile = cls.parse_load_profile(row['load_profile'])
+            load_profile = cls.parse_load_profile(raw_load_profile)
             if load_profile.size == 0:
                 raise ValueError(f"{source_label}.cycle_profiles profile '{profile_id}' has an empty load_profile.")
 
             try:
-                duration_steps = int(row['duration_steps'])
+                duration_steps = int(raw_duration_steps)
             except Exception as exc:
                 raise ValueError(f"{source_label}.cycle_profiles profile '{profile_id}' duration_steps must be an integer.") from exc
 
@@ -1336,7 +1367,7 @@ class DeferrableApplianceSimulation:
                 )
 
             try:
-                total_energy = float(row['total_energy_kwh'])
+                total_energy = float(raw_total_energy)
             except Exception as exc:
                 raise ValueError(f"{source_label}.cycle_profiles profile '{profile_id}' total_energy_kwh must be numeric.") from exc
 
@@ -1359,15 +1390,33 @@ class DeferrableApplianceSimulation:
 
         schedule = []
         seen_cycle_ids = set()
-        for row_index, row in flexibility_schedule.iterrows():
-            cycle_id = str(row['cycle_id']).strip()
+        for (
+            row_index,
+            raw_cycle_id,
+            raw_profile_id,
+            raw_earliest,
+            raw_latest,
+            raw_deadline,
+            raw_priority,
+            raw_must_run,
+        ) in zip(
+            flexibility_schedule.index,
+            flexibility_schedule['cycle_id'].tolist(),
+            flexibility_schedule['profile_id'].tolist(),
+            flexibility_schedule['earliest_start_time_step'].tolist(),
+            flexibility_schedule['latest_start_time_step'].tolist(),
+            flexibility_schedule['deadline_time_step'].tolist(),
+            flexibility_schedule['priority'].tolist(),
+            flexibility_schedule['must_run'].tolist(),
+        ):
+            cycle_id = str(raw_cycle_id).strip()
             if cycle_id == '' or cycle_id.lower() == 'nan':
                 raise ValueError(f'{source_label}.flexibility_schedule[{row_index}].cycle_id is required.')
             if cycle_id in seen_cycle_ids:
                 raise ValueError(f"{source_label}.flexibility_schedule contains duplicate cycle_id '{cycle_id}'.")
             seen_cycle_ids.add(cycle_id)
 
-            profile_id = str(row['profile_id']).strip()
+            profile_id = str(raw_profile_id).strip()
             if profile_id not in profiles:
                 raise ValueError(
                     f"{source_label}.flexibility_schedule cycle '{cycle_id}' references unknown profile_id '{profile_id}'."
@@ -1375,9 +1424,9 @@ class DeferrableApplianceSimulation:
             profile = profiles[profile_id]
 
             try:
-                earliest = int(row['earliest_start_time_step'])
-                latest = int(row['latest_start_time_step'])
-                deadline = int(row['deadline_time_step'])
+                earliest = int(raw_earliest)
+                latest = int(raw_latest)
+                deadline = int(raw_deadline)
             except Exception as exc:
                 raise ValueError(
                     f"{source_label}.flexibility_schedule cycle '{cycle_id}' time-step fields must be integers."
@@ -1397,7 +1446,7 @@ class DeferrableApplianceSimulation:
                 )
 
             try:
-                priority = float(row['priority'])
+                priority = float(raw_priority)
             except Exception as exc:
                 raise ValueError(f"{source_label}.flexibility_schedule cycle '{cycle_id}' priority must be numeric.") from exc
             if not np.isfinite(priority):
@@ -1410,7 +1459,7 @@ class DeferrableApplianceSimulation:
                 'latest_start_time_step': latest,
                 'deadline_time_step': deadline,
                 'priority': float(np.clip(priority, 0.0, 1.0)),
-                'must_run': parse_bool(row['must_run'], default=True, path=f'{source_label}.flexibility_schedule.{cycle_id}.must_run'),
+                'must_run': parse_bool(raw_must_run, default=True, path=f'{source_label}.flexibility_schedule.{cycle_id}.must_run'),
                 'duration_steps': int(profile['duration_steps']),
                 'total_energy_kwh': float(profile['total_energy_kwh']),
                 'load_profile': profile['load_profile'],

@@ -923,18 +923,25 @@ class RBCCommunityPolicy(RBCSmartPolicy):
         prospective_ev_kw: float,
         prospective_deferrable_kw: float,
     ) -> Tuple[float, float]:
-        total_net_kw = 0.0
+        env = self.env.unwrapped
+        buildings = env.buildings
+        cache_key = (int(env.time_step), getattr(env, 'topology_version', 0), len(buildings))
+        cached = getattr(self, '_community_base_net_cache', None)
+        if cached is not None and cached[0] == cache_key:
+            base_total_net_kw = cached[1]
+        else:
+            base_total_net_kw = 0.0
+            for building in buildings:
+                base_total_net_kw += self._base_load_kw(building) - self._pv_generation_kw(building)
+            self._community_base_net_cache = (cache_key, base_total_net_kw)
 
-        for building in self.env.unwrapped.buildings:
-            extra_ev_kw = prospective_ev_kw if building is target_building else 0.0
-            extra_deferrable_kw = prospective_deferrable_kw if building is target_building else 0.0
-            total_net_kw += (
-                self._base_load_kw(building)
-                + max(extra_ev_kw, 0.0)
-                + max(extra_deferrable_kw, 0.0)
-                - self._pv_generation_kw(building)
-            )
-
+        has_target = any(building is target_building for building in buildings)
+        extra_kw = (
+            max(prospective_ev_kw, 0.0) + max(prospective_deferrable_kw, 0.0)
+            if has_target
+            else 0.0
+        )
+        total_net_kw = base_total_net_kw + extra_kw
         return max(-total_net_kw, 0.0), max(total_net_kw, 0.0)
 
 

@@ -394,16 +394,26 @@ class CityLearnTopologyService:
         return instances
 
     @staticmethod
-    def _history_lookup(history: Mapping[int, Any], time_step: int, default: Any):
+    def _shallow_copy_history_value(value: Any):
+        if isinstance(value, list):
+            return list(value)
+        if isinstance(value, (int, float, str, bool, tuple)) or value is None:
+            return value
+        return deepcopy(value)
+
+    @classmethod
+    def _history_lookup(cls, history: Mapping[int, Any], time_step: int, default: Any):
         if time_step in history:
-            return deepcopy(history[time_step])
+            return cls._shallow_copy_history_value(history[time_step])
 
-        valid = (k for k in history.keys() if k <= time_step)
-        latest = max(valid, default=None)
+        latest = None
+        for k in history.keys():
+            if k <= time_step and (latest is None or k > latest):
+                latest = k
         if latest is None:
-            return deepcopy(default)
+            return cls._shallow_copy_history_value(default)
 
-        return deepcopy(history[latest])
+        return cls._shallow_copy_history_value(history[latest])
 
     @staticmethod
     def _history_lookup_reference(history: Mapping[int, Any], time_step: int, default: Any):

@@ -756,12 +756,13 @@ class Building(Environment):
         if not self.power_outage:
             return np.inf
 
-        capacity = abs(self.solar_generation[self.time_step]) - (
-            self.cooling_device.electricity_consumption[self.time_step]
-            + self.heating_device.electricity_consumption[self.time_step]
-            + self.dhw_device.electricity_consumption[self.time_step]
-            + self.non_shiftable_load_device.electricity_consumption[self.time_step]
-            + self.electrical_storage.electricity_consumption[self.time_step]
+        t = self.time_step
+        capacity = abs(self.__solar_generation[t]) - (
+            self.cooling_device.electricity_consumption_at(t)
+            + self.heating_device.electricity_consumption_at(t)
+            + self.dhw_device.electricity_consumption_at(t)
+            + self.non_shiftable_load_device.electricity_consumption_at(t)
+            + self.electrical_storage.electricity_consumption_at(t)
         )
 
         # Read live device values: building-level aggregates are only refreshed
@@ -771,7 +772,12 @@ class Building(Environment):
             self.deferrable_appliances,
             self.escalators,
         ):
-            capacity -= sum(device.electricity_consumption[self.time_step] for device in devices or [])
+            capacity -= sum(
+                device.electricity_consumption_at(t)
+                if hasattr(device, 'electricity_consumption_at')
+                else device.electricity_consumption[t]
+                for device in devices or []
+            )
 
         return max(0.0, capacity)
 
@@ -1611,7 +1617,7 @@ class Building(Environment):
         demand = float(self.cooling_demand[self.time_step])
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
         # Storage balances are control-step kWh; demand and device output are dataset-resolution kWh.
-        storage_output = to_dataset_resolution_energy(self.energy_from_cooling_storage[self.time_step], self.time_step_ratio)
+        storage_output = to_dataset_resolution_energy(max(-float(self.cooling_storage.energy_balance[self.time_step]), 0.0), self.time_step_ratio)
         max_electric_power = self.downward_electrical_flexibility
         max_device_output = self.cooling_device.get_max_output_power(temperature, heating=False, max_electric_power=max_electric_power)
         self.___demand_limit_check('cooling', demand, max_device_output)
@@ -1674,7 +1680,7 @@ class Building(Environment):
         demand = float(self.heating_demand[self.time_step])
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
         # Storage balances are control-step kWh; demand and device output are dataset-resolution kWh.
-        storage_output = to_dataset_resolution_energy(self.energy_from_heating_storage[self.time_step], self.time_step_ratio)
+        storage_output = to_dataset_resolution_energy(max(-float(self.heating_storage.energy_balance[self.time_step]), 0.0), self.time_step_ratio)
         max_electric_power = self.downward_electrical_flexibility
         max_device_output = self.heating_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
             if isinstance(self.heating_device, HeatPump) else self.heating_device.get_max_output_power(max_electric_power=max_electric_power)
@@ -1728,7 +1734,7 @@ class Building(Environment):
         demand = float(self.dhw_demand[self.time_step])
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
         # Storage balances are control-step kWh; demand and device output are dataset-resolution kWh.
-        storage_output = to_dataset_resolution_energy(self.energy_from_dhw_storage[self.time_step], self.time_step_ratio)
+        storage_output = to_dataset_resolution_energy(max(-float(self.dhw_storage.energy_balance[self.time_step]), 0.0), self.time_step_ratio)
         max_electric_power = self.downward_electrical_flexibility
         max_device_output = self.dhw_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
             if isinstance(self.dhw_device, HeatPump) else self.dhw_device.get_max_output_power(max_electric_power=max_electric_power)
@@ -1938,15 +1944,13 @@ class Building(Environment):
         """
 
         normalize = False if normalize is None else normalize
-        normalized_observation_space_limits = self.estimate_observation_space_limits(include_all=include_all, periodic_normalization=True)
-        unnormalized_observation_space_limits = self.estimate_observation_space_limits(include_all=include_all, periodic_normalization=False)
 
         if normalize:
-            low_limit, high_limit = normalized_observation_space_limits
+            low_limit, high_limit = self.estimate_observation_space_limits(include_all=include_all, periodic_normalization=True)
             low_limit = [0.0] * len(low_limit)
             high_limit = [1.0] * len(high_limit)
         else:
-            low_limit, high_limit = unnormalized_observation_space_limits
+            low_limit, high_limit = self.estimate_observation_space_limits(include_all=include_all, periodic_normalization=False)
             low_limit = list(low_limit.values())
             high_limit = list(high_limit.values())
 
@@ -3047,6 +3051,7 @@ class Building(Environment):
         else:
             pass
 
+        t = self.time_step
         building_chargers_total_electricity_consumption = 0
 
         if self.electric_vehicle_chargers is not None:
@@ -3054,50 +3059,52 @@ class Building(Environment):
             for c in self.electric_vehicle_chargers:
                 # include charger electricity consumption for current timestep
                 building_chargers_total_electricity_consumption = (
-                    building_chargers_total_electricity_consumption + float(c.electricity_consumption[self.time_step])
+                    building_chargers_total_electricity_consumption + float(c.electricity_consumption[t])
                 )
         else:
             pass
 
-        self.__chargers_electricity_consumption[self.time_step] = building_chargers_total_electricity_consumption
+        self.__chargers_electricity_consumption[t] = building_chargers_total_electricity_consumption
 
         building_deferrable_appliances_total_electricity_consumption = 0.0
         for appliance in self.deferrable_appliances or []:
-            building_deferrable_appliances_total_electricity_consumption += float(appliance.electricity_consumption[self.time_step])
+            building_deferrable_appliances_total_electricity_consumption += float(appliance.electricity_consumption_at(t))
 
-        self.__deferrable_appliances_electricity_consumption[self.time_step] = building_deferrable_appliances_total_electricity_consumption
+        self.__deferrable_appliances_electricity_consumption[t] = building_deferrable_appliances_total_electricity_consumption
 
         building_escalators_total_electricity_consumption = 0.0
         for escalator in self.escalators or []:
-            building_escalators_total_electricity_consumption += float(escalator.electricity_consumption[self.time_step])
+            building_escalators_total_electricity_consumption += float(escalator.electricity_consumption_at(t))
 
-        self.__escalators_electricity_consumption[self.time_step] = building_escalators_total_electricity_consumption
+        self.__escalators_electricity_consumption[t] = building_escalators_total_electricity_consumption
+
+        base_devices_consumption = (
+            self.cooling_device.electricity_consumption_at(t)
+            + self.heating_device.electricity_consumption_at(t)
+            + self.dhw_device.electricity_consumption_at(t)
+            + self.non_shiftable_load_device.electricity_consumption_at(t)
+            + self.electrical_storage.electricity_consumption_at(t)
+        )
 
         # A disconnected surplus is curtailed, not useful consumption. Keep
         # available PV unchanged and report the rejected energy explicitly.
-        served = (self.cooling_device.electricity_consumption[self.time_step]
-                  + self.heating_device.electricity_consumption[self.time_step]
-                  + self.dhw_device.electricity_consumption[self.time_step]
-                  + self.non_shiftable_load_device.electricity_consumption[self.time_step]
-                  + self.electrical_storage.electricity_consumption[self.time_step]
-                  + self.__chargers_electricity_consumption[self.time_step]
-                  + self.__deferrable_appliances_electricity_consumption[self.time_step]
-                  + self.__escalators_electricity_consumption[self.time_step])
-        self.__pv_curtailment[self.time_step] = max(-self.solar_generation[self.time_step] - served, 0.0) if self.power_outage else 0.0
+        served = (base_devices_consumption
+                  + self.__chargers_electricity_consumption[t]
+                  + self.__deferrable_appliances_electricity_consumption[t]
+                  + self.__escalators_electricity_consumption[t])
+        self.__pv_curtailment[t] = max(-self.__solar_generation[t] - served, 0.0) if self.power_outage else 0.0
 
         # net electricity consumption
         net_electricity_consumption = 0.0
 
         if not self.power_outage:
-            net_electricity_consumption = self.cooling_device.electricity_consumption[self.time_step] \
-                                          + self.heating_device.electricity_consumption[self.time_step] \
-                                            + self.dhw_device.electricity_consumption[self.time_step] \
-                                                + self.non_shiftable_load_device.electricity_consumption[self.time_step] \
-                                                    + self.electrical_storage.electricity_consumption[self.time_step] \
-                                                        + self.solar_generation[self.time_step] \
-                                                                + self.__chargers_electricity_consumption[self.time_step] \
-                                                                + self.__deferrable_appliances_electricity_consumption[self.time_step] \
-                                                                + self.__escalators_electricity_consumption[self.time_step]
+            net_electricity_consumption = (
+                base_devices_consumption
+                + self.__solar_generation[t]
+                + self.__chargers_electricity_consumption[t]
+                + self.__deferrable_appliances_electricity_consumption[t]
+                + self.__escalators_electricity_consumption[t]
+            )
         else:
             pass
 
@@ -3452,11 +3459,12 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
             raise ImportError('torch is required to use LSTMDynamicsBuilding.')
 
         # predict
-        model_input_tensor = torch.tensor(self.get_dynamics_input().T)
-        model_input_tensor = model_input_tensor[np.newaxis, :, :]
-        hidden_state = tuple([h.data for h in self.dynamics._hidden_state])
+        with torch.no_grad():
+            model_input_tensor = torch.tensor(self.get_dynamics_input().T)
+            model_input_tensor = model_input_tensor[np.newaxis, :, :]
+            hidden_state = tuple([h.data for h in self.dynamics._hidden_state])
 
-        indoor_dry_bulb_temperature_norm, self.dynamics._hidden_state = self.dynamics(model_input_tensor.float(), hidden_state)
+            indoor_dry_bulb_temperature_norm, self.dynamics._hidden_state = self.dynamics(model_input_tensor.float(), hidden_state)
 
         # update dry bulb temperature for current time step in model input
         ix = self.dynamics.input_observation_names.index('indoor_dry_bulb_temperature')

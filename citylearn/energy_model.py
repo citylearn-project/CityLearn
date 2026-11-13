@@ -142,6 +142,16 @@ class ElectricDevice(Device):
 
         return self.__electricity_consumption * ratio
 
+    def electricity_consumption_at(self, time_step: int = None):
+        r"""Scalar electricity consumption at `time_step` [kWh] without full-series allocation."""
+        step = self.time_step if time_step is None else int(time_step)
+        ratio = self._electricity_consumption_ratio()
+
+        if ratio == 1.0:
+            return self.__electricity_consumption[step]
+
+        return (self.__electricity_consumption[step:step + 1] * ratio)[0]
+
     @property
     def available_nominal_power(self) -> float:
         r"""Difference between `nominal_power` and `electricity_consumption` at current `time_step`."""
@@ -776,8 +786,15 @@ class StorageDevice(Device):
     def loss_coefficient(self) -> float:
         r"""Effective step loss, compounded from the configured hourly fraction."""
 
+        cache_key = (self.seconds_per_time_step, self.__loss_coefficient)
+        cached = getattr(self, '_StorageDevice__cached_loss_coefficient', None)
+        if cached is not None and cached[0] == cache_key:
+            return cached[1]
+
         step_hours = max(float(self.seconds_per_time_step) / 3600.0, 0.0)
-        return 1.0 - (1.0 - self.__loss_coefficient)**step_hours
+        effective = 1.0 - (1.0 - self.__loss_coefficient)**step_hours
+        self._StorageDevice__cached_loss_coefficient = (cache_key, effective)
+        return effective
     
     @property
     def initial_soc(self) -> float:
