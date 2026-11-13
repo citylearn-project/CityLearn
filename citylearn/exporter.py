@@ -385,14 +385,14 @@ class EpisodeExporter:
             )
 
     def _set_charger_render_state(self, charger, time_step: int, ev_lookup: Mapping[str, "ElectricVehicle"]):
-        """Set charger connected/incoming EV pointers to match schedule at a given time step."""
+        """Restore the actual connection and the scheduled incoming vehicle for a render row."""
 
         sim = charger.charger_simulation
         state = sim.electric_vehicle_charger_state[time_step] if time_step < len(sim.electric_vehicle_charger_state) else np.nan
         ev_id = sim.electric_vehicle_id[time_step] if time_step < len(sim.electric_vehicle_id) else None
         valid_ev_id = isinstance(ev_id, str) and ev_id.strip() not in {"", "nan"}
 
-        connected_ev = ev_lookup.get(ev_id) if valid_ev_id and state == 1 else None
+        connected_ev = charger.past_connected_evs[time_step] if time_step < len(charger.past_connected_evs) else None
         incoming_ev = ev_lookup.get(ev_id) if valid_ev_id and state == 2 else None
 
         charger.connected_electric_vehicle = connected_ev

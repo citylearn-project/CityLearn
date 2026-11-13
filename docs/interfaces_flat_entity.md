@@ -149,7 +149,7 @@ charger_units = specs["tables"]["charger"]["units"]
 | Exogenous observations | Read at timestep `t`. Examples: weather, pricing, schedules. |
 | Endogenous observations | Read at settled `t-1`. Examples: previous consumption and SOC after the last action. |
 | Terminal observation | Same rule at the final `t`: exogenous and calendar features from the last data row, endogenous ones from the last executed interval. Building series still hold only executed intervals. Charger, deferrable-appliance and escalator states are not advanced and stay at the last executed interval. |
-| Topology events | Events at `k` are applied after transition `k-1 -> k` and before observation `k`. |
+| Topology events | Events at `k` are applied after interval `k-1` and before EV association and observation at `k`. |
 
 ## Entity Bundles
 
@@ -226,3 +226,5 @@ opens at its configured initial SOC, and its opening stock enters the energy
 accounting when it connects. The EV can connect to one charger at a time.
 Departure metrics start a topology-induced connection at its observed opening
 SOC and count charging opportunities from that connection onwards.
+Charger exports show the connection that actually took place. An incoming
+vehicle appears as incoming until it connects.

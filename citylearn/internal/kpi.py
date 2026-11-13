@@ -337,11 +337,13 @@ class CityLearnKPIService:
         return start
 
     def _ev_kpi_connection_boundary(self, charger, sim, ev, states, departure_index):
-        start = self._ev_connected_interval_start(sim, states, departure_index)
         boundary_soc = getattr(charger, '_topology_connection_soc', {})
-        boundary = max((step for step in boundary_soc if start <= step <= departure_index), default=None)
-        if boundary is not None:
-            return boundary, boundary_soc[boundary]
+        if boundary_soc:
+            start = ev_departure_audit.connected_start(self, charger, sim, ev, states, departure_index)
+            if start in boundary_soc:
+                return start, boundary_soc[start]
+        else:
+            start = self._ev_connected_interval_start(sim, states, departure_index)
         return start, self._ev_arrival_soc_for_interval(sim, ev, states, start)
 
     def _ev_arrival_soc_for_interval(self, sim, ev, states: np.ndarray, interval_start: int) -> Optional[float]:

@@ -323,7 +323,7 @@ def test_removed_charger_can_be_reinstalled_from_its_initial_template():
         env.close()
 
 
-def _ev_lifecycle_env(tmp_path, seconds, *, first_activation=False, second_charger=False):
+def _ev_lifecycle_env(tmp_path, seconds, *, first_activation=False, second_charger=False, **env_options):
     shutil.copytree(STATIC_SCHEMA_PATH.parent, tmp_path, dirs_exist_ok=True)
     schema = json.loads((tmp_path / "schema.json").read_text())
     schema.update(root_directory=str(tmp_path), seconds_per_time_step=seconds)
@@ -359,7 +359,7 @@ def _ev_lifecycle_env(tmp_path, seconds, *, first_activation=False, second_charg
          "target_asset_id": "charger_1_1"} for event in events
     ]
     return CityLearnEnv(schema, interface="entity", topology_mode="dynamic", random_seed=19,
-                        physics_invariant_checks=True, export_kpis_on_episode_end=False)
+                        physics_invariant_checks=True, export_kpis_on_episode_end=False, **env_options)
 
 
 def _assert_lifecycle_ev_observation(env, ev, expected):
@@ -477,6 +477,90 @@ def test_another_charger_keeps_the_ev_active_during_removal(tmp_path, seconds):
         env.step(action)
         assert alternate.electricity_consumption[5] > 0.
         assert sum(charger.electricity_consumption[5] > 0. for charger in chargers) == 1
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("seconds", [3600, 900])
+def test_removed_charger_cannot_apply_its_arrival_soc(tmp_path, seconds):
+    env = _ev_lifecycle_env(tmp_path, seconds)
+    try:
+        env.reset(seed=19)
+        ev, = env.electric_vehicles
+        charger, = env.buildings[0].electric_vehicle_chargers
+        sim = charger.charger_simulation
+        sim.electric_vehicle_session_id[:8] = ["a", "a", "b", "b", "b", "b", "b", "b"]
+        sim.electric_vehicle_current_soc = np.full(8, -0.1, dtype="float32")
+        sim.electric_vehicle_current_soc[2] = .9
+        _step_until(env, 1)
+        expected = float(ev.battery.soc[1]) * .96**(seconds/3600)
+        _step_until(env, 2)
+        assert not env.buildings[0].electric_vehicle_chargers
+        assert charger.past_connected_evs[2] is None
+        assert charger.electricity_consumption[2] == 0.
+        assert ev.battery.soc[2] == pytest.approx(expected)
+        assert [event["kind"] for event in ev.battery.energy_provenance_events] == ["standby"]
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("seconds", [3600, 900])
+def test_kpi_and_audit_start_a_new_session_after_reentry(tmp_path, seconds):
+    env = _ev_lifecycle_env(tmp_path, seconds)
+    try:
+        env.reset(seed=19)
+        _step_until(env, 5)
+        charger, = env.buildings[0].electric_vehicle_chargers
+        ev = charger.connected_electric_vehicle
+        sim = charger.charger_simulation
+        sim.electric_vehicle_departure_time[5:8] = [1, 2, -1]
+        sim.electric_vehicle_charger_state[7] = 3
+        sim.electric_vehicle_current_soc = np.full(8, -0.1, dtype="float32")
+        sim.electric_vehicle_current_soc[6] = .6
+        sim.electric_vehicle_required_soc_departure[5:7] = .8
+        _step_until(env, 7)
+
+        service = env._kpi_service
+        states = sim.electric_vehicle_charger_state
+        start = ev_departure_audit.connected_start(service, charger, sim, ev, states, 6)
+        reason, audit_soc = ev_departure_audit.prerequisites(service, charger, sim, ev, states, start, .8)
+        kpi_step, kpi_soc = service._ev_kpi_connection_boundary(charger, sim, ev, states, 6)
+        assert reason is None
+        assert kpi_step == start == 6
+        assert kpi_soc == pytest.approx(audit_soc)
+        assert kpi_soc == pytest.approx(.6)
+        metrics = service._compute_ev_metrics(env.buildings[0])
+        assert metrics["ev_charge_total_kwh"] == 0.
+        assert metrics["ev_connected_soc_gain_total_kwh"] == pytest.approx(0.)
+        assert metrics["ev_energy_accounting_shortfall_kwh"] == pytest.approx(0.)
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("file_format", ["csv", "parquet"])
+def test_charger_export_matches_actual_connection_during_handover(tmp_path, file_format):
+    with pytest.warns(RuntimeWarning, match="already plugged"):
+        env = _ev_lifecycle_env(tmp_path, 900, second_charger=True, render=True,
+                                render_mode="end", render_directory=tmp_path / "exports",
+                                render_file_format=file_format, render_chunk_size=3)
+    try:
+        env.reset(seed=19)
+        ev, = env.electric_vehicles
+        with pytest.warns(RuntimeWarning, match="already plugged"):
+            _step_until(env, 7)
+
+        # The reinstalled charger is present again at 5, but the second
+        # charger retains the only actual connection.
+        root = Path(env.new_folder_path)
+        for charger_id, expected in (("charger_1_1", [True, True, False, False]),
+                                     ("charger_1_2", [False, False, True, True, True, True, True])):
+            files = sorted(root.glob(f"exported_data_building_1_{charger_id}_ep0*.{file_format}"))
+            read = pd.read_csv if file_format == "csv" else pd.read_parquet
+            exported = pd.concat([read(file) for file in files], ignore_index=True)
+            assert exported["Is EV Connected"].tolist() == expected
+            assert exported["EV Name"].dropna().replace("", np.nan).dropna().unique().tolist() == [ev.name]
+        assert [c.charger_id for c in env.buildings[0].electric_vehicle_chargers
+                if c.connected_electric_vehicle is ev] == ["charger_1_2"]
     finally:
         env.close()
 

@@ -507,7 +507,7 @@ class Charger(Environment):
                 "EV Estimated SOC Arrival-%": f"{self.charger_simulation.electric_vehicle_estimated_soc_arrival[self.time_step]}",
                 "EV Arrival Time": f"{self.charger_simulation.electric_vehicle_estimated_arrival_time[self.time_step]}",
                 "EV Departure Time": f"{self.charger_simulation.electric_vehicle_departure_time[self.time_step]}",
-                "Is EV Connected": True,
+                "Is EV Connected": False,
                 "EV Name": incoming_electric_vehicle.name
             }
         else:

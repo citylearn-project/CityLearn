@@ -308,24 +308,10 @@ class CityLearnRuntimeService:
             timings['next_time_step_time'] = time.perf_counter() - timer_start
             timings.update(getattr(env, '_last_next_time_step_debug_timing', {}))
 
-        topology_changed = False
-        timer_start = time.perf_counter() if debug_timing else 0.0
-        if getattr(env, 'topology_mode', 'static') == 'dynamic':
-            topology_changed = env._topology_service.apply_events_for_time_step(int(env.time_step))
-            if topology_changed:
-                # Re-associate only when topology actually changed (e.g., added member/charger).
-                # Otherwise this would duplicate the association already done in `next_time_step()`.
-                self.associate_chargers_to_electric_vehicles()
-                env._refresh_action_cache()
-                env._entity_service.invalidate()
-                env.reward_function.env_metadata = env.get_metadata()
         env._provenance_service.synchronize()
         topology_events_applied = list(
             (getattr(env, 'topology_event_log', []) or [])[topology_log_size_before:]
         )
-        if debug_timing:
-            timings['topology_time'] = time.perf_counter() - timer_start
-
         end_export_time = 0.0
         final_kpi_export_time = 0.0
         timer_start = time.perf_counter() if debug_timing else 0.0
@@ -768,14 +754,6 @@ class CityLearnRuntimeService:
 
         self.next_time_step()
 
-        if getattr(env, 'topology_mode', 'static') == 'dynamic':
-            topology_changed = env._topology_service.apply_events_for_time_step(int(env.time_step))
-            if topology_changed:
-                self.associate_chargers_to_electric_vehicles()
-                env._refresh_action_cache()
-                env._entity_service.invalidate()
-                env.reward_function.env_metadata = env.get_metadata()
-
         env._provenance_service.synchronize()
         return env.terminated, env.truncated
 
@@ -907,6 +885,8 @@ class CityLearnRuntimeService:
         current_step = int(env.time_step)
         last_action_step = max(env.time_steps - 2, 0)
         reached_terminal_transition = current_step >= last_action_step
+        topology = env._topology_service if env.topology_mode == 'dynamic' else None
+        suspended_evs = topology.suspended_evs if topology is not None else ()
 
         partial_render_time = 0.0
         if getattr(env, 'render_enabled', False):
@@ -930,9 +910,8 @@ class CityLearnRuntimeService:
             timer_start = time.perf_counter() if debug_timing else 0.0
             for electric_vehicle in env.electric_vehicles:
                 electric_vehicle.next_time_step()
-            if env._topology_service.enabled:
-                for electric_vehicle in env._topology_service.suspended_evs:
-                    electric_vehicle.next_time_step()
+            for electric_vehicle in suspended_evs:
+                electric_vehicle.next_time_step()
             if debug_timing:
                 timings['next_time_step_electric_vehicles_time'] = time.perf_counter() - timer_start
         elif debug_timing:
@@ -951,19 +930,37 @@ class CityLearnRuntimeService:
             for building in env.buildings:
                 building._terminal_observation_time_step = int(env.time_step)
 
+        # Apply the topology for the new interval before reading charger schedules.
+        # An EV suspended over the elapsed interval still receives its mobility update on reentry.
+        timer_start = time.perf_counter() if debug_timing else 0.0
+        previous_active_evs = env.electric_vehicles
+        topology_changed = topology is not None and topology.apply_events_for_time_step(int(env.time_step))
+        if debug_timing:
+            timings['topology_time'] = time.perf_counter() - timer_start
+
         if not reached_terminal_transition:
             timer_start = time.perf_counter() if debug_timing else 0.0
-            self.simulate_unconnected_ev_soc()
+            continuing_evs = None
+            if topology_changed:
+                continuing_evs = set(previous_active_evs).intersection(env.electric_vehicles)
+            self.simulate_unconnected_ev_soc(continuing_evs=continuing_evs, suspended_evs=suspended_evs)
             if debug_timing:
                 timings['next_time_step_unconnected_ev_soc_time'] = time.perf_counter() - timer_start
+        elif debug_timing:
+            timings['next_time_step_unconnected_ev_soc_time'] = 0.0
 
+        if topology_changed or not reached_terminal_transition:
             timer_start = time.perf_counter() if debug_timing else 0.0
             self.associate_chargers_to_electric_vehicles()
             if debug_timing:
                 timings['next_time_step_associate_chargers_time'] = time.perf_counter() - timer_start
         elif debug_timing:
-            timings['next_time_step_unconnected_ev_soc_time'] = 0.0
             timings['next_time_step_associate_chargers_time'] = 0.0
+
+        if topology_changed:
+            env._refresh_action_cache()
+            env._entity_service.invalidate()
+            env.reward_function.env_metadata = env.get_metadata()
 
         if debug_timing:
             env._last_next_time_step_debug_timing = timings
@@ -1187,7 +1184,7 @@ class CityLearnRuntimeService:
             stacklevel=2,
         )
 
-    def simulate_unconnected_ev_soc(self):
+    def simulate_unconnected_ev_soc(self, *, continuing_evs=None, suspended_evs=()):
         """Simulate SOC changes for EVs that are not under charger control at t+1."""
 
         env = self.env
@@ -1237,6 +1234,8 @@ class CityLearnRuntimeService:
                 charger_event_by_ev_id.setdefault(next_id, ('connecting', soc))
 
         for ev in env.electric_vehicles:
+            if continuing_evs is not None and ev not in continuing_evs:
+                continue
             ev_id = ev.name
             event = charger_event_by_ev_id.get(ev_id)
             if event is not None:
@@ -1256,14 +1255,14 @@ class CityLearnRuntimeService:
                 # Exogenous away-from-home movement: driving can reduce SOC, offsite charging can raise it.
                 ev.battery.force_set_soc(float(np.clip(last_soc * variability, 0.0, 1.0)))
 
-        if env._topology_service.enabled and env._topology_service.suspended_evs:
+        if suspended_evs:
             # Use a separate stream so suspension does not shift mobility draws for participating EVs.
             suspended_random = getattr(env, '_ev_suspended_drift_random_state', None)
             if suspended_random is None:
                 seed = np.random.SeedSequence([env._ev_drift_seed, 1]).generate_state(1)[0]
                 suspended_random = env._ev_suspended_drift_random_state = np.random.RandomState(seed)
             drift_std = self._ev_unconnected_drift_std(env.seconds_per_time_step)
-            for ev in env._topology_service.suspended_evs:
+            for ev in suspended_evs:
                 battery = ev.battery
                 soc_after_standby = float(battery.soc[t])
                 variability = np.clip(suspended_random.normal(1.0, drift_std), 0.6, 1.4)
