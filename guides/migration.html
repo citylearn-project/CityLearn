@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.2.0 documentation</title>
+  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=4f6ddb47"></script>
+      <script src="../_static/documentation_options.js?v=3eb8911e"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,7 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#changes-after-3-2-0-unreleased">Changes after 3.2.0 (unreleased)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-2-0-to-3-3-0">Upgrade from 3.2.0 to 3.3.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-1-1-to-3-2-0">Upgrade from 3.1.1 to 3.2.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-1-0-to-3-1-1">Upgrade from 3.1.0 to 3.1.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-0-2-to-3-1-0">Upgrade from 3.0.2 to 3.1.0</a></li>
@@ -180,8 +180,8 @@ repository-relative path is not created by <code class="docutils literal notrans
 <p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
 development-line history.</p>
 </section>
-<section id="changes-after-3-2-0-unreleased">
-<span id="changes-after-320-unreleased"></span><h2>Changes after 3.2.0 (unreleased)<a class="headerlink" href="#changes-after-3-2-0-unreleased" title="Link to this heading"></a></h2>
+<section id="upgrade-from-3-2-0-to-3-3-0">
+<span id="upgrade-from-320-to-330"></span><h2>Upgrade from 3.2.0 to 3.3.0<a class="headerlink" href="#upgrade-from-3-2-0-to-3-3-0" title="Link to this heading"></a></h2>
 <p>No dataset, schema or export-file migration is required.</p>
 <ul class="simple">
 <li><p><strong>NumPy 2 and Python 3.12+:</strong> <code class="docutils literal notranslate"><span class="pre">numpy&lt;2</span></code> and <code class="docutils literal notranslate"><span class="pre">scikit-learn&lt;=1.2.2</span></code> are no
@@ -246,6 +246,13 @@ first update.</p></li>
 </ul>
 <p>Fixes that <strong>change results</strong> where they apply:</p>
 <ul class="simple">
+<li><p>Storage activation and EV topology: the discharge reserve limits energy
+leaving a battery. A newly activated battery uses its configured initial SOC,
+including below the reserve. Removing or moving a charger preserves EV identity.
+While the EV is away, standby losses and seeded mobility continue to apply.
+A newly activated EV starts from its configured SOC, and an explicit arrival
+estimate is accounted for as external energy. Exports identify the charger
+that actually served the EV.</p></li>
 <li><p>Stochastic power outages: built-in models without an explicit seed now
 derive one from the environment seed, episode window and building name.
 The native BAU reference uses the same seed and outage signal.</p></li>

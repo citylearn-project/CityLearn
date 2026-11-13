@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Releases &mdash; CityLearn 3.2.0 documentation</title>
+  <title>Releases &mdash; CityLearn 3.3.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=4f6ddb47"></script>
+      <script src="../_static/documentation_options.js?v=3eb8911e"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -99,6 +99,12 @@
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Releases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#v3-3-0-2026-11-13">v3.3.0 - 2026-11-13</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#what-s-new">What’s new</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#validation">Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#credits">Credits</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-2-0-2026-11-06">v3.2.0 - 2026-11-06</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#validation-and-performance">Validation and performance</a></li>
 </ul>
@@ -148,6 +154,27 @@
 CityLearn release. Older notes are retained in the <a class="reference internal" href="releases_archive.html"><span class="std std-doc">release archive</span></a>.</p>
 <p>For package publication, version policy and the release checklist, see the
 <a class="reference internal" href="publishing.html"><span class="std std-doc">publishing guide</span></a>.</p>
+<section id="v3-3-0-2026-11-13">
+<span id="v330---2026-11-13"></span><h2>v3.3.0 - 2026-11-13<a class="headerlink" href="#v3-3-0-2026-11-13" title="Link to this heading"></a></h2>
+<section id="what-s-new">
+<span id="whats-new"></span><h3>What’s new<a class="headerlink" href="#what-s-new" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Battery and EV physics.</strong> Activation respects the configured SOC below the discharge reserve. EVs retain their identity and evolve through charger removal, re-entry and handover. Accounting includes standby losses, mobility and explicit arrival energy. CSV and Parquet exports report the charger that actually served the EV.</p></li>
+<li><p><strong>BAU and KPIs.</strong> Native BAU uses matching equipment, PV, actions and outages, including the same stochastic outages. Cost and net-exchange ratios, market comparisons and portfolio aggregation are corrected. Repeated evaluation retains only the latest BAU reference.</p></li>
+<li><p><strong>Compatibility and robustness.</strong> Support NumPy 1 and 2 and legacy occupant models. Resume SAC and MARLISA training from 3.2.0 checkpoints. Keep EV session IDs, publish complete dataset caches atomically and make experiment evidence portable across checkouts.</p></li>
+</ul>
+<p>Public dataset files and export layouts are preserved. If your scenario uses the corrected paths, rerun both the controller and its reference for comparisons. See the <a class="reference internal" href="migration.html#upgrade-from-3-2-0-to-3-3-0"><span class="std std-ref">migration guide</span></a>.</p>
+</section>
+<section id="validation">
+<h3>Validation<a class="headerlink" href="#validation" title="Link to this heading"></a></h3>
+<p>The integrated runtime passed the <a class="reference external" href="https://github.com/citylearn-project/CityLearn/actions/runs/43354734920">CI matrix</a> on Python 3.9, 3.10 and 3.12, covering NumPy 1 and 2, runtime audits and installed-wheel exports. The battery and EV regression tests cover one-hour and 15-minute steps.</p>
+</section>
+<section id="credits">
+<h3>Credits<a class="headerlink" href="#credits" title="Link to this heading"></a></h3>
+<p>Thanks to <strong>Mark Colley</strong> (<a class="reference external" href="https://github.com/M-Colley">&#64;M-Colley</a>) for the cross-platform, BAU, NumPy, KPI, EV arrival, agent and dataset-cache fixes in <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/170">#170</a>–<a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/175">#175</a>. <strong>Tiago Fonseca</strong> (<a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>) and the <strong>CityLearn maintainers</strong> reviewed, validated and integrated those changes, added matched stochastic outages, completed the EV session-ID and MARLISA fixes, and developed the battery reserve and EV lifecycle corrections in <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/179">#179</a> and <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/180">#180</a>.</p>
+<p><a class="reference external" href="https://github.com/citylearn-project/CityLearn/compare/v3.2.0...v3.3.0">Full changelog</a></p>
+</section>
+</section>
 <section id="v3-2-0-2026-11-06">
 <span id="v320---2026-11-06"></span><h2>v3.2.0 - 2026-11-06<a class="headerlink" href="#v3-2-0-2026-11-06" title="Link to this heading"></a></h2>
 <p>Release maintainer: <strong>Tiago Fonseca</strong> (<a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>).

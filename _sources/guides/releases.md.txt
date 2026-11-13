@@ -6,6 +6,26 @@ CityLearn release. Older notes are retained in the [release archive](releases_ar
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## v3.3.0 - 2026-11-13
+
+### What's new
+
+- **Battery and EV physics.** Activation respects the configured SOC below the discharge reserve. EVs retain their identity and evolve through charger removal, re-entry and handover. Accounting includes standby losses, mobility and explicit arrival energy. CSV and Parquet exports report the charger that actually served the EV.
+- **BAU and KPIs.** Native BAU uses matching equipment, PV, actions and outages, including the same stochastic outages. Cost and net-exchange ratios, market comparisons and portfolio aggregation are corrected. Repeated evaluation retains only the latest BAU reference.
+- **Compatibility and robustness.** Support NumPy 1 and 2 and legacy occupant models. Resume SAC and MARLISA training from 3.2.0 checkpoints. Keep EV session IDs, publish complete dataset caches atomically and make experiment evidence portable across checkouts.
+
+Public dataset files and export layouts are preserved. If your scenario uses the corrected paths, rerun both the controller and its reference for comparisons. See the [migration guide](migration.md#upgrade-from-320-to-330).
+
+### Validation
+
+The integrated runtime passed the [CI matrix](https://github.com/citylearn-project/CityLearn/actions/runs/43354734920) on Python 3.9, 3.10 and 3.12, covering NumPy 1 and 2, runtime audits and installed-wheel exports. The battery and EV regression tests cover one-hour and 15-minute steps.
+
+### Credits
+
+Thanks to **Mark Colley** ([@M-Colley](https://github.com/M-Colley)) for the cross-platform, BAU, NumPy, KPI, EV arrival, agent and dataset-cache fixes in [#170](https://github.com/citylearn-project/CityLearn/pull/170)–[#175](https://github.com/citylearn-project/CityLearn/pull/175). **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)) and the **CityLearn maintainers** reviewed, validated and integrated those changes, added matched stochastic outages, completed the EV session-ID and MARLISA fixes, and developed the battery reserve and EV lifecycle corrections in [#179](https://github.com/citylearn-project/CityLearn/pull/179) and [#180](https://github.com/citylearn-project/CityLearn/pull/180).
+
+[Full changelog](https://github.com/citylearn-project/CityLearn/compare/v3.2.0...v3.3.0)
+
 ## v3.2.0 - 2026-11-06
 
 Release maintainer: **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)).
