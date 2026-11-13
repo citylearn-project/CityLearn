@@ -336,6 +336,16 @@ class CityLearnKPIService:
 
         return start
 
+    def _ev_kpi_connection_boundary(self, charger, sim, ev, states, departure_index):
+        boundary_soc = getattr(charger, '_topology_connection_soc', {})
+        if boundary_soc:
+            start = ev_departure_audit.connected_start(self, charger, sim, ev, states, departure_index)
+            if start in boundary_soc:
+                return start, boundary_soc[start]
+        else:
+            start = self._ev_connected_interval_start(sim, states, departure_index)
+        return start, self._ev_arrival_soc_for_interval(sim, ev, states, start)
+
     def _ev_arrival_soc_for_interval(self, sim, ev, states: np.ndarray, interval_start: int) -> Optional[float]:
         estimated_soc_arrival = getattr(sim, 'electric_vehicle_estimated_soc_arrival', None)
         current_soc_reference = getattr(sim, 'electric_vehicle_current_soc', None)
@@ -683,10 +693,12 @@ class CityLearnKPIService:
         ):
             return None
 
-        interval_start = (audit_interval_start if audit else
-                          self._ev_connected_interval_start(sim, states, departure_index))
-        arrival_soc = (audit_arrival_soc if audit else
-                       self._ev_arrival_soc_for_interval(sim, ev, states, interval_start))
+        if audit:
+            interval_start, arrival_soc = audit_interval_start, audit_arrival_soc
+        else:
+            interval_start, arrival_soc = self._ev_kpi_connection_boundary(
+                charger, sim, ev, states, departure_index,
+            )
 
         if arrival_soc is None:
             return None
@@ -1132,13 +1144,7 @@ class CityLearnKPIService:
                 if not np.isfinite(actual_soc):
                     continue
 
-                interval_start = self._ev_connected_interval_start(sim, states, t)
-                arrival_soc = self._ev_arrival_soc_for_interval(
-                    sim,
-                    ev,
-                    states,
-                    interval_start,
-                )
+                _, arrival_soc = self._ev_kpi_connection_boundary(charger, sim, ev, states, t)
                 capacity_kwh = self._to_scalar(
                     getattr(ev.battery, 'capacity', np.nan),
                     np.nan,

@@ -117,6 +117,7 @@ class CityLearnProvenanceService:
                                          len(battery.energy_provenance_events), connection)
                 continue
             stock = self.stocks[key]
+            stock.connection = connection
             events = self._pending(stock)
             # Transfers are processed jointly with the member bus in settle().
             for event in events:

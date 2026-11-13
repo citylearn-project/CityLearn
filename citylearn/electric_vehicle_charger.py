@@ -440,6 +440,7 @@ class Charger(Environment):
         self.__gross_energy_discharge = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.__past_charging_action_values_kwh = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.__past_connected_evs = [None] * self.episode_tracker.episode_time_steps
+        self._topology_connection_soc = {}
         self.action_feedback_requested_action_normalized = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.action_feedback_limited_action_normalized = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
         self.action_feedback_requested_power_kw = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32')
@@ -506,7 +507,7 @@ class Charger(Environment):
                 "EV Estimated SOC Arrival-%": f"{self.charger_simulation.electric_vehicle_estimated_soc_arrival[self.time_step]}",
                 "EV Arrival Time": f"{self.charger_simulation.electric_vehicle_estimated_arrival_time[self.time_step]}",
                 "EV Departure Time": f"{self.charger_simulation.electric_vehicle_departure_time[self.time_step]}",
-                "Is EV Connected": True,
+                "Is EV Connected": False,
                 "EV Name": incoming_electric_vehicle.name
             }
         else:

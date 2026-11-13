@@ -108,7 +108,8 @@ def prerequisites(service, charger, sim, ev, states, start, target):
                                      getattr(service.env, 'seconds_per_time_step', None))), np.nan)
     if not np.isfinite(seconds) or seconds <= 0:
         return 'invalid_time_step', None
-    initial = arrival_soc(service, sim, battery, states, start)
+    boundaries = getattr(charger, '_topology_connection_soc', {})
+    initial = boundaries[start] if start in boundaries else arrival_soc(service, sim, battery, states, start)
     if initial is None:
         return 'missing_arrival_soc', None
     if not isinstance(battery, Battery):

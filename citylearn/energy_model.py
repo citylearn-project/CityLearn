@@ -956,6 +956,12 @@ class StorageDevice(Device):
         self.__soc_initialized[self.time_step] = True
         self._record_energy_event('external', before, self.energy_init)
 
+    def initialize_at_activation(self):
+        """Record the opening stock of a device entering the simulation mid-episode."""
+        self.__soc[self.time_step] = self.initial_soc
+        self.__soc_initialized[self.time_step] = True
+        self._record_energy_event('external', 0.0, self.energy_init)
+
     def set_energy_balance(self, energy: float, energy_init:float) -> float:
         r"""Calculate energy balance.
 

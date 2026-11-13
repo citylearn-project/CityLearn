@@ -74,6 +74,8 @@ class CityLearnTopologyService:
         self._initial_building_structures: Dict[str, _BuildingStructureSnapshot] = {}
         self._active_member_ids: List[str] = []
         self._active_ev_ids: List[str] = []
+        self._started_ev_ids: Set[str] = set()
+        self.suspended_evs: Sequence[ElectricVehicle] = ()
         self._member_lifecycle: Dict[str, Dict[str, Any]] = {}
         self._events: List[TopologyEvent] = []
         self._event_cursor: int = 0
@@ -169,6 +171,8 @@ class CityLearnTopologyService:
 
         self._active_member_ids = list(self._initial_active_member_ids)
         self._active_ev_ids = []
+        self._started_ev_ids = set()
+        self.suspended_evs = ()
         self._member_lifecycle = {
             member_id: {
                 'born_at': 0 if member_id in set(self._active_member_ids) else None,
@@ -190,7 +194,6 @@ class CityLearnTopologyService:
         self._last_history_signature = None
         self._last_history_time_step = None
 
-        self._set_active_views()
         self.apply_events_for_time_step(0)
 
     def _snapshot_building_structure(self, building: Building) -> _BuildingStructureSnapshot:
@@ -289,7 +292,7 @@ class CityLearnTopologyService:
             )
             self._event_cursor += 1
 
-        if changed:
+        if changed or self._last_history_time_step is None:
             self._set_active_views()
 
         self._record_history(time_step)
@@ -310,6 +313,13 @@ class CityLearnTopologyService:
         snapshot = self._history_lookup_reference(self._active_charger_history, time_step, {})
         member_chargers = snapshot.get(member_id, {})
         return dict(member_chargers)
+
+    def was_ev_connected(self, ev: ElectricVehicle, time_step: int) -> bool:
+        snapshot = self._history_lookup_reference(self._active_charger_history, time_step, {})
+        return any(
+            charger.past_connected_evs[time_step] is ev
+            for member_chargers in snapshot.values() for charger in member_chargers.values()
+        )
 
     def active_storage_at(self, time_step: int, member_id: str) -> Optional[Battery]:
         snapshot = self._history_lookup_reference(self._active_storage_history, time_step, {})
@@ -465,12 +475,29 @@ class CityLearnTopologyService:
             self._set_building_time_step(building, t)
 
         active_ev_ids = self._collect_active_ev_ids(active_buildings)
+        previous_ev_ids = set(self._active_ev_ids)
         self._active_ev_ids = [ev_id for ev_id in self._ev_order if ev_id in active_ev_ids]
         env.electric_vehicles = [self._ev_pool[ev_id] for ev_id in self._active_ev_ids]
 
         for ev in env.electric_vehicles:
             self._bind_ev_runtime_context(ev)
-            self._set_ev_time_step(ev, t)
+            # The catalogue EV is created once. Later charger changes only change its participation.
+            if ev.name not in self._started_ev_ids:
+                self._started_ev_ids.add(ev.name)
+                if t > 0:
+                    ev.time_step = ev.battery.time_step = t
+                    ev.battery.initialize_at_activation()
+            elif ev.time_step < t:
+                # The ordinary terminal transition leaves devices at the last executed interval.
+                # A topology event at that boundary still needs a valid SOC for association.
+                ev.next_time_step()
+            if ev.name not in previous_ev_ids:
+                ev._arrival_soc_time_step = ev.time_step
+
+        self.suspended_evs = tuple(
+            self._ev_pool[ev_id] for ev_id in self._ev_order
+            if ev_id in self._started_ev_ids and ev_id not in active_ev_ids
+        )
 
     @staticmethod
     def _set_building_time_step(building: Building, time_step: int):
@@ -496,12 +523,6 @@ class CityLearnTopologyService:
 
         for appliance in building.deferrable_appliances or []:
             appliance.time_step = time_step
-
-    @staticmethod
-    def _set_ev_time_step(ev: ElectricVehicle, time_step: int):
-        ev.time_step = time_step
-        if getattr(ev, 'battery', None) is not None:
-            ev.battery.time_step = time_step
 
     @staticmethod
     def _initialize_storage_at_activation(building: Building):

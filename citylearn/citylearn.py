@@ -1695,6 +1695,7 @@ class CityLearnEnv(Environment, Env):
         self._reset_seed_explicit = seed is not None
         self._ev_drift_seed = int(self.random_seed) if seed is not None else int(self.random_seed) + episode_index
         self._ev_drift_random_state = np.random.RandomState(self._ev_drift_seed)
+        self._ev_suspended_drift_random_state = None
         self._render_buffer.clear()
         self._refresh_action_cache()
         self.update_variables()

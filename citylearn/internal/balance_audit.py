@@ -243,6 +243,7 @@ class IndependentBalanceAudit:
                 )
                 continue
             stock = self.stocks[key]
+            stock["connection"] = asset["connection"]
             for event in self._pending(stock):
                 if event["kind"] == "transfer":
                     raise BalanceAuditError(

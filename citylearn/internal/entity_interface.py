@@ -1450,7 +1450,8 @@ class CityLearnEntityInterfaceService:
             ev = charger.connected_electric_vehicle
             battery = getattr(ev, "battery", None)
             capacity = self._safe_scalar(getattr(battery, "capacity", 0.0), 0.0)
-            soc = self._safe_index(getattr(battery, "soc", []), endogenous_t, 0.0)
+            soc_index = ev.observation_soc_index(endogenous_t) if self.env.topology_mode == "dynamic" else endogenous_t
+            soc = self._safe_index(getattr(battery, "soc", []), soc_index, 0.0)
             if capacity <= 0.0 or soc < 0.0:
                 continue
 
