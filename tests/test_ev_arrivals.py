@@ -1,4 +1,5 @@
 import json
+import shutil
 import numpy as np
 import pandas as pd
 import pytest
@@ -9,6 +10,7 @@ pytest.importorskip("gymnasium")
 
 from citylearn.citylearn import CityLearnEnv
 from citylearn.data import ChargerSimulation
+from citylearn.internal import ev_departure_audit
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -87,6 +89,165 @@ def test_ev_soc_matches_dataset_on_arrival(from_state: int):
     expected_soc = estimated_soc
 
     assert pytest.approx(expected_soc, abs=1e-6) == float(ev.battery.soc[env.time_step])
+
+
+def test_arrival_soc_estimate_found_on_earlier_incoming_row():
+    # charger_12_1: Electric_Vehicle_4 is incoming at rows 705 (one step to arrival, estimate 17 %) and
+    # 706 (no estimate), then connects at 707.
+    env = CityLearnEnv(
+        SCHEMA_PATH, central_agent=True, simulation_start_time_step=695, simulation_end_time_step=730, random_seed=1,
+    )
+    env.reset()
+    charger = next(
+        c for b in env.buildings for c in (b.electric_vehicle_chargers or []) if c.charger_id == 'charger_12_1'
+    )
+    sim = charger.charger_simulation
+    ev = next(e for e in env.electric_vehicles if e.name == 'Electric_Vehicle_4')
+    arrival = 707 - 695
+    assert sim.electric_vehicle_charger_state[arrival - 2:arrival + 1].tolist() == [2, 2, 1]
+    assert sim.electric_vehicle_estimated_soc_arrival[arrival - 1] < 0.0, 'last incoming row has no estimate'
+    estimate = float(sim.electric_vehicle_estimated_soc_arrival[arrival - 2])
+    assert estimate == pytest.approx(0.17, abs=0.05)
+
+    while env.time_step < arrival:
+        env.step(_zero_actions(env))
+
+    assert charger.connected_electric_vehicle is ev
+    assert float(ev.battery.soc[arrival]) == pytest.approx(estimate, abs=1e-6)
+    states = np.asarray(sim.electric_vehicle_charger_state, dtype='float64')
+    assert env._kpi_service._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(estimate, abs=1e-6)
+    env.close()
+
+
+def test_arrival_soc_index_reads_only_the_incoming_rows_of_the_arriving_ev():
+    index = ChargerSimulation.arrival_soc_index
+    states = np.array([1, 2, 2, 2, 1, 3, 2, 3, 1, 2, 2, 1], dtype='float32')
+    ids = np.array(['A', 'A', 'A', 'A', 'A', None, 'A', None, 'A', 'A', 'B', 'B'], dtype=object)
+    soc = np.array([-0.1, 0.3, 0.4, -0.1, -0.1, -0.1, 0.5, -0.1, -0.1, 0.6, -0.1, -0.1], dtype='float32')
+
+    assert index(states, ids, soc, 4) == 2  # latest estimate of the incoming block
+    soc[3] = 0.45
+    assert index(states, ids, soc, 4) == 3  # the usual case: the last incoming row
+    assert index(states, ids, soc, 8) is None  # an announcement behind away rows is stale
+    assert index(states, ids, soc, 11) is None  # never another EV's estimate
+    soc[0] = 0.2
+    assert index(states, ids, soc, 0) == 0  # no preceding row: the arrival row itself
+
+
+def test_arrival_soc_index_stops_at_an_explicit_session_boundary():
+    index = ChargerSimulation.arrival_soc_index
+    states = np.array([1, 2, 2, 2, 1], dtype='float32')
+    ids = np.array(['A'] * 5, dtype=object)
+    soc = np.array([-0.1, 0.3, -0.1, -0.1, -0.1], dtype='float32')
+
+    # One session, or no session IDs: the estimate on row 1 belongs to this arrival.
+    for sessions in (None, np.array(['', '', np.nan, 'nan', ''], dtype=object), np.array(['S0'] + ['S1'] * 4, dtype=object)):
+        assert index(states, ids, soc, 4, sessions) == 1
+    # Row 1 announced an earlier session of the same EV, also across rows without a session ID.
+    assert index(states, ids, soc, 4, np.array(['S0', 'S1', 'S2', 'S2', 'S2'], dtype=object)) is None
+    assert index(states, ids, soc, 4, np.array(['S0', 'S1', '', '', 'S2'], dtype=object)) is None
+    soc[1], soc[3] = -0.1, 0.3
+    assert index(states, ids, soc, 4, np.array(['S0', 'S1', 'S1', 'S1', 'S2'], dtype=object)) is None
+    soc[4] = 0.7
+    assert index(states, ids, soc, 4, np.array(['S0', 'S1', 'S1', 'S1', 'S2'], dtype=object)) == 4  # its own estimate
+
+
+def test_arrival_soc_index_falls_back_to_the_connection_row():
+    index = ChargerSimulation.arrival_soc_index
+    states = np.array([2, 2, 1, 3, 1, 2, 1], dtype='float32')
+    ids = np.array(['A', 'A', 'A', None, 'A', 'B', 'A'], dtype=object)
+    soc = np.array([-0.1, -0.1, 0.7, -0.1, 0.6, 0.2, 0.5], dtype='float32')
+
+    assert index(states, ids, soc, 2) == 2  # incoming rows without an estimate
+    assert index(states, ids, soc, 4) == 4  # an away row without an estimate
+    assert index(states, ids, soc, 6) == 6  # never the estimate of another EV
+    soc[1] = 0.4
+    assert index(states, ids, soc, 2) == 1  # an estimate on the incoming rows comes first
+    soc[4] = -0.1
+    assert index(states, ids, soc, 4) is None  # no estimate at all: the EV keeps its simulated SOC
+
+
+@pytest.mark.parametrize(
+    "rows, expected_soc",
+    [
+        # (session ID, estimated arrival SOC) of the incoming rows 1-3 and the connection row 4.
+        pytest.param([("", -0.1), ("", -0.1), ("", 0.35), ("", -0.1)], 0.35, id="incoming-row"),
+        pytest.param([("", -0.1), ("", -0.1), ("", -0.1), ("", 0.7)], 0.7, id="connection-row-only"),
+        pytest.param([("S1", 0.3), ("S2", -0.1), ("S2", -0.1), ("S2", -0.1)], None, id="earlier-session-in-incoming-rows"),
+        pytest.param([("S1", -0.1), ("S1", -0.1), ("S1", 0.3), ("S2", -0.1)], None, id="earlier-session-before-connection"),
+        pytest.param([("S1", 0.3), ("S2", -0.1), ("S2", -0.1), ("S2", 0.7)], 0.7, id="earlier-session-and-connection-row"),
+    ],
+)
+def test_battery_arrival_soc_matches_kpi_and_departure_audit_references(rows, expected_soc):
+    env = CityLearnEnv(str(MINUTE_SCHEMA_PATH), central_agent=True, random_seed=0)
+    env.reset()
+    charger = env.buildings[0].electric_vehicle_chargers[0]
+    ev = charger.connected_electric_vehicle
+    sim = charger.charger_simulation
+    # The EV leaves after row 0, is incoming at rows 1-3 and connects again at row 4 until row 7.
+    arrival = 4
+    sim.electric_vehicle_charger_state[:8] = [1, 2, 2, 2, 1, 1, 1, 1]
+    sim.electric_vehicle_id[:8] = ev.name
+    sim.electric_vehicle_departure_time[:8] = [1, -1, -1, -1, 4, 3, 2, 1]
+    sim.electric_vehicle_session_id[:8] = [""] + [session for session, _ in rows] + [rows[-1][0]] * 3
+    sim.electric_vehicle_estimated_soc_arrival[:8] = [-0.1] + [soc for _, soc in rows] + [-0.1] * 3
+
+    while env.time_step < arrival:
+        env.step(_zero_actions(env))
+
+    assert charger.connected_electric_vehicle is ev
+    service = env._kpi_service
+    states = np.asarray(sim.electric_vehicle_charger_state, dtype='float64')
+    assert service._ev_connected_interval_start(sim, states, 7) == arrival
+    battery_soc = float(ev.battery.soc[arrival])
+    audit_soc = ev_departure_audit.arrival_soc(service, sim, ev.battery, states, arrival)
+
+    if expected_soc is None:
+        # No estimate for this session: the EV keeps its simulated SOC, never the 30 % of session S1.
+        assert battery_soc == pytest.approx(float(ev.battery.soc[arrival - 1]), abs=1e-6)
+        assert battery_soc != pytest.approx(0.3, abs=1e-3)
+        assert audit_soc is None
+    else:
+        assert battery_soc == pytest.approx(expected_soc, abs=1e-6)
+        assert audit_soc == pytest.approx(battery_soc, abs=1e-6)
+
+    assert service._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(battery_soc, abs=1e-6)
+    env.close()
+
+
+@pytest.mark.parametrize("session_ids", [("1", "2"), ("01", "1")])
+def test_numeric_csv_session_ids_keep_arrival_soc_within_the_session(tmp_path, session_ids):
+    shutil.copytree(MINUTE_SCHEMA_PATH.parent, tmp_path, dirs_exist_ok=True)
+    charger_path = tmp_path / "charger_1_1.csv"
+    charger_data = pd.read_csv(charger_path)
+    previous, current = session_ids
+    charger_data["electric_vehicle_charger_state"] = [1, 2, 2, 2, 1, 1, 1, 1]
+    charger_data["electric_vehicle_departure_time"] = [1, -1, -1, -1, 4, 3, 2, 1]
+    charger_data["electric_vehicle_session_id"] = ["0", previous, "", current, current, current, current, current]
+    charger_data["electric_vehicle_estimated_soc_arrival"] = [-0.1, 30, -0.1, -0.1, -0.1, -0.1, -0.1, -0.1]
+    charger_data.to_csv(charger_path, index=False)
+
+    env = CityLearnEnv(
+        str(tmp_path / "schema.json"), central_agent=True, random_seed=0, physics_invariant_checks=True,
+    )
+    try:
+        env.reset()
+        arrival = 4
+        for _ in range(arrival):
+            env.step(_zero_actions(env))
+
+        charger = env.buildings[0].electric_vehicle_chargers[0]
+        ev = charger.connected_electric_vehicle
+        sim = charger.charger_simulation
+        assert sim.electric_vehicle_session_id[[1, 3]].tolist() == [previous, current]
+        states = np.asarray(sim.electric_vehicle_charger_state, dtype="float64")
+        battery_soc = float(ev.battery.soc[arrival])
+        assert battery_soc == pytest.approx(float(ev.battery.soc[arrival - 1]))
+        assert battery_soc != pytest.approx(0.3)
+        assert env._kpi_service._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(battery_soc)
+        assert ev_departure_audit.arrival_soc(env._kpi_service, sim, ev.battery, states, arrival) is None
+    finally:
+        env.close()
 
 
 def test_connected_ev_without_arrival_soc_uses_initial_soc_on_reset():

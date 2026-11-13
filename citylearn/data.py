@@ -2,8 +2,10 @@ import ast
 import logging
 import os
 from pathlib import Path
+from filelock import FileLock
 from platformdirs import user_cache_dir
 import shutil
+import tempfile
 from typing import Any, Dict, Iterable, Mapping, List, Optional, Union
 import numpy as np
 import pandas as pd
@@ -239,10 +241,9 @@ class DataSet:
             local_root_directory = self._find_local_dataset_root(str(name))
 
             if local_root_directory is not None:
-                if os.path.isdir(root_directory):
-                    shutil.rmtree(root_directory)
-
-                shutil.copytree(local_root_directory, root_directory)
+                self._publish_directory(
+                    root_directory, lambda staging: shutil.copytree(local_root_directory, staging, dirs_exist_ok=True)
+                )
 
             else:
                 if self.offline:
@@ -261,27 +262,108 @@ class DataSet:
                     'from cache unless DataSet.clear_cache is run first.'
                 )
                 contents = self.get_github_contents(path)
+                session = self.get_requests_session()
 
-                if os.path.isdir(root_directory):
-                    shutil.rmtree(root_directory)
+                def download(staging: str):
+                    for c in contents:
+                        if c['type'] == 'file':
+                            relative_directory_content = c['path'].split(f'{dataset_name}/')[-1].split('/')[:-1]
+                            filepath = os.path.join(staging, *relative_directory_content, c['name'])
+                            self._download_file(c['download_url'], filepath, session=session)
 
-                for c in contents:
-                    if c['type'] == 'file':
-                        relative_directory_content = c['path'].split(f'{dataset_name}/')[-1].split('/')[:-1]
-                        content_directory = os.path.join(root_directory, *relative_directory_content)
-                        filepath = os.path.join(content_directory, c['name'])
-                        os.makedirs(content_directory, exist_ok=True)
-                        response = self.get_requests_session().get(c['download_url'])
-
-                        with open(filepath, 'wb') as f:
-                            f.write(response.content)
+                self._publish_directory(root_directory, download)
 
         if directory is not None:
-            os.makedirs(directory, exist_ok=True)
-            shutil.copytree(root_directory, directory, dirs_exist_ok=True)
-            schema_filepath = os.path.join(directory, dataset_name, 'schema.json')
-    
+            # Copy into `directory/<dataset name>`, the location of the returned schema.
+            target_directory = os.path.join(directory, dataset_name)
+            os.makedirs(target_directory, exist_ok=True)
+            shutil.copytree(root_directory, target_directory, dirs_exist_ok=True)
+            schema_filepath = os.path.join(target_directory, 'schema.json')
+
         return schema_filepath
+
+    @staticmethod
+    def _publish_directory(target_directory: str, populate) -> None:
+        """Fill a dataset folder in a private staging folder, then move it into place.
+
+        Concurrent first downloads used to write into, and delete, the same cache folder. A dataset
+        now appears under `target_directory` only when complete; a process that loses the race to
+        publish keeps the complete copy that won. Publishing, including the removal of an incomplete
+        folder left by an earlier version, holds a lock and checks again for a complete copy first,
+        so a published dataset is never removed.
+        """
+
+        parent = os.path.dirname(target_directory)
+        name = os.path.basename(target_directory)
+        os.makedirs(parent, exist_ok=True)
+        staging = tempfile.mkdtemp(prefix=f'.{name}-', dir=parent)
+        stale = None
+
+        try:
+            populate(staging)
+
+            # One lock per dataset, held by threads and processes alike and released by the operating
+            # system if its holder dies. Downloads still run in parallel; only publishing is serialised.
+            with FileLock(os.path.join(parent, f'.{name}.lock')):
+                if not os.path.isfile(os.path.join(target_directory, 'schema.json')):
+                    if os.path.isdir(target_directory):
+                        # Incomplete folder left by an interrupted download of an earlier version. Move it
+                        # aside in one step (it is either gone or untouched), delete it after the lock.
+                        stale = tempfile.mkdtemp(prefix=f'.{name}-stale-', dir=parent)
+                        os.rename(target_directory, os.path.join(stale, name))
+
+                    os.rename(staging, target_directory)
+                    staging = None
+
+        finally:
+            for directory in (staging, stale):
+                if directory is not None:
+                    shutil.rmtree(directory, ignore_errors=True)
+
+    @staticmethod
+    def _copy_file(source: str, filepath: str) -> None:
+        """Copy under a temporary name, then move into place, so readers never see a partial file."""
+
+        directory = os.path.dirname(filepath)
+        os.makedirs(directory, exist_ok=True)
+        descriptor, temporary = tempfile.mkstemp(prefix='.copy-', dir=directory)
+        os.close(descriptor)
+
+        try:
+            shutil.copyfile(source, temporary)
+            os.replace(temporary, filepath)
+
+        except BaseException:
+            if os.path.exists(temporary):
+                os.remove(temporary)
+
+            raise
+
+    def _download_file(self, url: str, filepath: str, session: requests.Session = None) -> None:
+        """Download `url` to `filepath`, raising on an error response instead of caching it as data.
+
+        The content is written under a temporary name and then moved into place, so an interrupted
+        download never leaves a partial file under the cached name.
+        """
+
+        session = self.get_requests_session() if session is None else session
+        response = session.get(url)
+        response.raise_for_status()
+        directory = os.path.dirname(filepath)
+        os.makedirs(directory, exist_ok=True)
+        descriptor, temporary = tempfile.mkstemp(prefix='.download-', dir=directory)
+
+        try:
+            with os.fdopen(descriptor, 'wb') as f:
+                f.write(response.content)
+
+            os.replace(temporary, filepath)
+
+        except BaseException:
+            if os.path.exists(temporary):
+                os.remove(temporary)
+
+            raise
 
     def get_dataset_names(self) -> List[str]:
         filepath = os.path.join(self.cache_directory, 'dataset_names.json')
@@ -337,7 +419,7 @@ class DataSet:
             local_filepath = self._find_local_misc_filepath(self.PV_CHOICES_FILENAME)
 
             if local_filepath is not None:
-                shutil.copy(local_filepath, filepath)
+                self._copy_file(local_filepath, filepath)
 
         # check that file DNE
         if not os.path.isfile(filepath):
@@ -355,10 +437,7 @@ class DataSet:
                         'from cache unless DataSet.clear_cache is run first.')
             contents = self.get_github_contents(path)
             url = [f['download_url'] for f in contents if f['name'] == self.PV_CHOICES_FILENAME][0]
-            response = self.get_requests_session().get(url)
-
-            with open(filepath, 'wb') as f:
-                f.write(response.content)
+            self._download_file(url, filepath)
 
         else:
             pass
@@ -385,7 +464,7 @@ class DataSet:
             local_filepath = self._find_local_misc_filepath(self.BATTERY_CHOICES_FILENAME)
 
             if local_filepath is not None:
-                shutil.copy(local_filepath, filepath)
+                self._copy_file(local_filepath, filepath)
 
         # check that file DNE
         if not os.path.isfile(filepath):
@@ -403,10 +482,7 @@ class DataSet:
                         'from cache unless DataSet.clear_cache is run first.')
             contents = self.get_github_contents(path)
             url = [f['download_url'] for f in contents if f['name'] == self.BATTERY_CHOICES_FILENAME][0]
-            response = self.get_requests_session().get(url)
-
-            with open(filepath, 'wb') as f:
-                f.write(response.content)
+            self._download_file(url, filepath)
 
         else:
             pass
@@ -450,7 +526,8 @@ class DataSet:
         kwargs = {
             'total': 5,
             'backoff_factor': 1,
-            'status_forcelist': [400, 502, 503, 504],
+            # 429: GitHub rate limiting; Retry honours its Retry-After header.
+            'status_forcelist': [400, 429, 500, 502, 503, 504],
             **kwargs
         }
         retries = Retry(**kwargs)
@@ -999,6 +1076,84 @@ class ChargerSimulation(TimeSeriesData):
             noise_std=self.noise_std,
             random_state=noise_random_state,
         )
+
+    @staticmethod
+    def arrival_soc_index(
+        charger_state: Iterable[float],
+        electric_vehicle_id: Iterable[str],
+        estimated_soc_arrival: Iterable[float],
+        time_step: int,
+        electric_vehicle_session_id: Iterable[str] = None,
+    ) -> Union[int, None]:
+        """Row whose estimated SOC initializes an EV that connects at `time_step`.
+
+        The runtime arrival, the KPI arrival reference and the departure audit all use this row, so
+        they agree on the SOC the EV starts the session with.
+
+        The estimate is given on the incoming (state 2) rows before the connection, usually on the
+        last one (`time_step` - 1). Some sessions give it only on an earlier incoming row, e.g. the
+        row one step before arrival followed by a row without an estimate. When the previous row is
+        incoming or away (state 2 or 3), the latest valid estimate is taken from `time_step` - 1 back
+        through the contiguous incoming rows of the same EV and session. The search stops at a row of
+        another EV and at an explicit session boundary, i.e. a row whose session ID differs from the
+        one of the rows after it; a missing or empty session ID is not a boundary. When these rows hold
+        no estimate, and always at the first step or after a connected or empty row, the `time_step`
+        row itself is used. Returns `None` when no such row holds a value in [0, 1]; the EV then keeps
+        its simulated SOC.
+        """
+
+        def valid(index: int) -> bool:
+            if estimated_soc_arrival is None or not 0 <= index < len(estimated_soc_arrival):
+                return False
+
+            value = estimated_soc_arrival[index]
+            return isinstance(value, (float, np.floating)) and 0.0 <= value <= 1.0
+
+        def label(values: Iterable[str], index: int) -> Union[str, None]:
+            value = values[index] if values is not None and 0 <= index < len(values) else None
+            value = value.strip() if isinstance(value, str) else ''
+            return None if value.lower() in ('', 'nan') else value
+
+        time_step = int(time_step)
+        fallback = time_step if valid(time_step) else None
+        previous_state = (
+            charger_state[time_step - 1]
+            if charger_state is not None and 0 < time_step <= len(charger_state) else np.nan
+        )
+
+        if previous_state not in (2, 3):
+            return fallback
+
+        index = time_step - 1
+        electric_vehicle = label(electric_vehicle_id, time_step)
+
+        if electric_vehicle is not None and label(electric_vehicle_id, index) not in (None, electric_vehicle):
+            return fallback
+
+        session = label(electric_vehicle_session_id, time_step)
+
+        while True:
+            row_session = label(electric_vehicle_session_id, index)
+
+            if row_session is not None:
+                if session not in (None, row_session):
+                    return fallback
+
+                session = row_session
+
+            if valid(index):
+                return index
+
+            if not (
+                index > 0
+                and charger_state[index] == 2
+                and charger_state[index - 1] == 2
+                and electric_vehicle_id is not None
+                and electric_vehicle_id[index - 1] == electric_vehicle_id[index]
+            ):
+                return fallback
+
+            index -= 1
 
     @staticmethod
     def normalize_soc_series(

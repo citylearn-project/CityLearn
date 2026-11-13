@@ -48,6 +48,8 @@ Versao inglesa: [../robustness_reference.md](../robustness_reference.md).
 
 Corrupcao de observations e forecasts afeta apenas o que o agente ve. Rewards, KPIs fisicos e settlement de demand response continuam a usar o estado real do simulador. Eventos de action e asset-control alteram a acao efetivamente aplicada, portanto podem alterar a fisica e KPIs normais.
 
+Um sistema PV nao tem acao. Um evento `asset` com target `pv` e `target_feature` `control` ou `both` coloca o PV fora de servico: nao gera energia durante o evento, pelo que consumo liquido, custo, emissoes, provenance de energia e KPIs de PV usam geracao zero nesses timesteps. A referencia business-as-usual ve a mesma falha. Com `telemetry` apenas, o PV continua a gerar e so as suas observacoes ficam ocultas.
+
 ## Diagnostico Entity
 
 Ativar o bundle de diagnostico quando se usa entity observations:

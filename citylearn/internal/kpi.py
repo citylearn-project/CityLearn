@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Sequence, Tuple
 import numpy as np
 import pandas as pd
 
-from citylearn.data import ZERO_DIVISION_PLACEHOLDER
+from citylearn.data import ZERO_DIVISION_PLACEHOLDER, ChargerSimulation
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
@@ -181,6 +181,22 @@ class CityLearnKPIService:
         return c / b
 
     @staticmethod
+    def _signed_ratio(control_value: float, baseline_value: float):
+        """Lower-is-better ratio for totals that can be negative, e.g. net exchange.
+
+        Equals `control / baseline` for a positive baseline. For a negative
+        baseline (a net exporter) it is `1 + (control - baseline) / |baseline|`,
+        so a higher control total never reads as an improvement.
+        """
+        ratio = CityLearnKPIService._safe_div(control_value, baseline_value)
+        b = CityLearnKPIService._to_scalar(baseline_value, 0.0)
+
+        if ratio is None or b >= -float(ZERO_DIVISION_PLACEHOLDER):
+            return ratio
+
+        return 2.0 - ratio
+
+    @staticmethod
     def _window_steps(window_seconds: float, seconds_per_time_step: float) -> int:
         step_seconds = max(float(seconds_per_time_step), 1.0)
         return max(1, int(round(float(window_seconds) / step_seconds)))
@@ -323,29 +339,21 @@ class CityLearnKPIService:
     def _ev_arrival_soc_for_interval(self, sim, ev, states: np.ndarray, interval_start: int) -> Optional[float]:
         estimated_soc_arrival = getattr(sim, 'electric_vehicle_estimated_soc_arrival', None)
         current_soc_reference = getattr(sim, 'electric_vehicle_current_soc', None)
-        ev_ids = getattr(sim, 'electric_vehicle_id', None)
-        current_ev_id = self._normal_ev_id(self._safe_sequence_value(ev_ids, interval_start))
         # This is the same boundary reference used by the runtime for a normal
         # arrival, a partial-window reset, or a topology activation that exposes
         # an already occupied charger.  It is a boundary value only, not an
         # exogenous trajectory that may overwrite subsequent control.
         candidates = [self._safe_sequence_value(current_soc_reference, interval_start)]
-
-        if interval_start > 0:
-            previous_state = self._to_scalar(states[interval_start - 1], np.nan)
-            previous_ev_id = self._normal_ev_id(self._safe_sequence_value(ev_ids, interval_start - 1))
-
-            if (
-                previous_state in (2, 3)
-                and (
-                    current_ev_id is None
-                    or previous_ev_id is None
-                    or previous_ev_id == current_ev_id
-                )
-            ):
-                candidates.append(self._safe_sequence_value(estimated_soc_arrival, interval_start - 1))
-
-        candidates.append(self._safe_sequence_value(estimated_soc_arrival, interval_start))
+        # Same estimate row as the runtime arrival. Without one the runtime
+        # keeps the simulated SOC, which the battery candidates below give.
+        index = ChargerSimulation.arrival_soc_index(
+            states,
+            getattr(sim, 'electric_vehicle_id', None),
+            estimated_soc_arrival,
+            interval_start,
+            getattr(sim, 'electric_vehicle_session_id', None),
+        )
+        candidates.append(self._safe_sequence_value(estimated_soc_arrival, index))
 
         battery = getattr(ev, 'battery', None)
         battery_soc = getattr(battery, 'soc', None)
@@ -1824,6 +1832,55 @@ class CityLearnKPIService:
 
         return '_'.join(tokens)
 
+    @classmethod
+    def total_ratio_components(cls, level: str) -> Dict[str, Tuple[str, str, bool]]:
+        """V2 ratio KPIs defined as a control total over a reference total.
+
+        Maps each ratio name to `(control_total_name, reference_total_name, signed)`.
+        Only ratios whose two totals add up across members are listed, so a pooled
+        ratio can be rebuilt from summed totals. `signed` totals can be negative and
+        use `_signed_ratio`; the others use `_safe_div`.
+        """
+        v2 = cls._v2_name
+        components: Dict[str, Tuple[str, str, bool]] = {}
+
+        for reference, subfamily in (('baseline', 'ratio_to_baseline'), ('business_as_usual', 'ratio_to_business_as_usual')):
+            for family, unit, signed in (('cost', 'eur', True), ('emissions', 'kgco2', False)):
+                components[v2(level, family, subfamily, 'total', None, 'ratio')] = (
+                    v2(level, family, 'total', 'control', None, unit),
+                    v2(level, family, 'total', reference, None, unit),
+                    signed,
+                )
+
+            for metric in ('import', 'export', 'net_exchange'):
+                components[v2(level, 'energy_grid', subfamily, f'{metric}_total', None, 'ratio')] = (
+                    v2(level, 'energy_grid', 'total', metric, 'control', 'kwh'),
+                    v2(level, 'energy_grid', 'total', metric, reference, 'kwh'),
+                    metric == 'net_exchange',
+                )
+
+        # Business-as-usual references of additive equipment and service totals.
+        for family, subfamily, metric, unit, ratio_metric in (
+            ('solar_self_consumption', 'total', 'generation', 'kwh', 'generation_total'),
+            ('solar_self_consumption', 'total', 'export', 'kwh', 'export_total'),
+            ('ev', 'total', 'charge', 'kwh', 'charge_total'),
+            ('ev', 'total', 'v2g_export', 'kwh', 'v2g_export_total'),
+            ('battery', 'total', 'charge', 'kwh', 'charge'),
+            ('battery', 'total', 'discharge', 'kwh', 'discharge'),
+            ('battery', 'total', 'throughput', 'kwh', 'throughput'),
+            ('deferrable_appliance', 'service', 'completed_cycles', 'count', 'completed_cycles'),
+            ('deferrable_appliance', 'service', 'missed_cycles', 'count', 'missed_cycles'),
+            ('deferrable_appliance', 'service', 'served_energy_total', 'kwh', 'served_energy_total'),
+            ('deferrable_appliance', 'service', 'unserved_energy_total', 'kwh', 'unserved_energy_total'),
+        ):
+            components[v2(level, family, 'ratio_to_business_as_usual', ratio_metric, None, 'ratio')] = (
+                v2(level, family, subfamily, metric, None, unit),
+                v2(level, family, subfamily, metric, 'business_as_usual', unit),
+                False,
+            )
+
+        return components
+
     def evaluate_legacy(
         self,
         control_condition=None,
@@ -1914,6 +1971,7 @@ class CityLearnKPIService:
             control_variant: Optional[str] = None,
             bau_variant: Optional[str] = None,
             delta_variant: Optional[str] = None,
+            signed: bool = False,
         ):
             control_total_key = v2(level, family, total_subfamily, control_total_metric, control_variant, unit)
             bau_total = bau(level, name, control_total_key)
@@ -1929,7 +1987,7 @@ class CityLearnKPIService:
                 level,
                 name,
                 v2(level, family, 'ratio_to_business_as_usual', ratio_metric, None, 'ratio'),
-                self._safe_div(control_total, bau_total),
+                (self._signed_ratio if signed else self._safe_div)(control_total, bau_total),
             )
 
             control_daily_key = v2(level, family, daily_subfamily, control_daily_metric, control_variant, unit)
@@ -1990,6 +2048,7 @@ class CityLearnKPIService:
                     delta_daily_metric='delta_to_business_as_usual',
                     ratio_metric='total',
                     unit='eur',
+                    signed=True,
                 )
                 add_total_daily_ratio(
                     level,
@@ -2029,6 +2088,7 @@ class CityLearnKPIService:
                         control_variant='control',
                         bau_variant='business_as_usual',
                         delta_variant='delta_to_business_as_usual',
+                        signed=metric == 'net_exchange',
                     )
 
                 for metric, unit in [
@@ -2633,7 +2693,7 @@ class CityLearnKPIService:
             put('building', building_name, v2('building', 'cost', 'daily_average', 'control', None, 'eur'), self._daily_average(control_total, building_days))
             put('building', building_name, v2('building', 'cost', 'daily_average', 'baseline', None, 'eur'), self._daily_average(baseline_total, building_days))
             put('building', building_name, v2('building', 'cost', 'daily_average', 'delta', None, 'eur'), self._daily_average(delta_total, building_days))
-            put('building', building_name, v2('building', 'cost', 'ratio_to_baseline', 'total', None, 'ratio'), self._safe_div(control_total, baseline_total))
+            put('building', building_name, v2('building', 'cost', 'ratio_to_baseline', 'total', None, 'ratio'), self._signed_ratio(control_total, baseline_total))
 
         district_delta_total = district_control_total - district_baseline_total
         put('district', 'District', v2('district', 'cost', 'total', 'control', None, 'eur'), district_control_total)
@@ -2642,7 +2702,7 @@ class CityLearnKPIService:
         put('district', 'District', v2('district', 'cost', 'daily_average', 'control', None, 'eur'), self._daily_average(district_control_total, simulated_days))
         put('district', 'District', v2('district', 'cost', 'daily_average', 'baseline', None, 'eur'), self._daily_average(district_baseline_total, simulated_days))
         put('district', 'District', v2('district', 'cost', 'daily_average', 'delta', None, 'eur'), self._daily_average(district_delta_total, simulated_days))
-        put('district', 'District', v2('district', 'cost', 'ratio_to_baseline', 'total', None, 'ratio'), self._safe_div(district_control_total, district_baseline_total))
+        put('district', 'District', v2('district', 'cost', 'ratio_to_baseline', 'total', None, 'ratio'), self._signed_ratio(district_control_total, district_baseline_total))
 
         # Equity metrics are recomputed from cost totals for consistency.
         equity_valid_benefits: Dict[str, float] = {}

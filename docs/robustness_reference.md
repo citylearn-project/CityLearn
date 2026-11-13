@@ -48,6 +48,8 @@ Portuguese version: [pt/robustness_reference.md](pt/robustness_reference.md).
 
 Observation and forecast corruption is agent-facing only. Rewards, physical KPIs and demand-response settlement still use the real simulator state. Action and asset-control events change the action effectively applied, so they can change physics and normal KPIs.
 
+A PV array has no action. An `asset` event on a `pv` target with `target_feature` `control` or `both` takes the array out of service: it generates nothing during the event, so net consumption, cost, emissions, energy provenance and PV KPIs all use zero generation for those steps. The business-as-usual reference sees the same outage. With `telemetry` only the PV keeps generating and only its observations are hidden.
+
 ## Entity Diagnostics
 
 Enable the diagnostic bundle when using entity observations:

@@ -56,6 +56,63 @@ def test_include_all_observations_remain_on_current_transition_time():
         env.close()
 
 
+def _run_to_terminal(env: CityLearnEnv):
+    observations, _ = env.reset()
+
+    while not env.terminated:
+        if env.interface == 'entity':
+            actions = {'tables': {k: np.zeros(s.shape, dtype='float32') for k, s in env.action_space['tables'].spaces.items()}}
+        else:
+            actions = _zero_actions(env)
+
+        observations, *_ = env.step(actions)
+
+    return observations
+
+
+def test_flat_terminal_observation_reads_terminal_row_and_last_interval():
+    env = CityLearnEnv(str(SCHEMA), central_agent=False, episode_time_steps=4, random_seed=0)
+
+    try:
+        observations = dict(zip(env.observation_names[0], _run_to_terminal(env)[0]))
+        building = env.buildings[0]
+        t = env.time_step
+
+        assert building.time_step == t - 1, 'building series keep only executed intervals'
+        # Exogenous and calendar features at the terminal row t ...
+        assert observations['hour'] == building.energy_simulation.hour[t] != building.energy_simulation.hour[t - 1]
+        assert observations['outdoor_dry_bulb_temperature'] == building.weather.outdoor_dry_bulb_temperature[t]
+        assert observations['non_shiftable_load'] == building.energy_simulation.non_shiftable_load[t]
+        # ... endogenous features settled by the last action, at t - 1.
+        assert observations['net_electricity_consumption'] == building.net_electricity_consumption[t - 1]
+        assert observations['electrical_storage_soc'] == building.electrical_storage.soc[t - 1]
+    finally:
+        env.close()
+
+
+def test_entity_terminal_observation_does_not_mix_rows():
+    # The dataset opts in to all entity bundles, including core electrical and derived calendar features.
+    env = CityLearnEnv(str(SCHEMA), central_agent=True, episode_time_steps=4, random_seed=0, interface='entity')
+
+    try:
+        observations = _run_to_terminal(env)
+        tables, specs = observations['tables'], env.entity_specs['tables']
+        district = dict(zip(specs['district']['features'], tables['district'][0]))
+        member = dict(zip(specs['building']['features'], tables['building'][0]))
+        building = env.buildings[0]
+        t = env.time_step
+        hour = float(building.energy_simulation.hour[t])
+
+        assert observations['meta']['time_step'] == t and observations['meta']['endogenous_time_step'] == t - 1
+        assert district['hour'] == hour
+        assert district['hour_sin'] == pytest.approx(np.sin(2.0 * np.pi * ((hour - 1.0) % 24.0) / 24.0), abs=1e-6)
+        assert district['outdoor_dry_bulb_temperature'] == building.weather.outdoor_dry_bulb_temperature[t]
+        assert member['net_electricity_consumption'] == pytest.approx(member['net_energy_kwh_step'], abs=1e-6)
+        assert member['net_energy_kwh_step'] == pytest.approx(float(building.net_electricity_consumption[t - 1]), abs=1e-6)
+    finally:
+        env.close()
+
+
 def test_step_after_terminal_raises_runtime_error():
     env = CityLearnEnv(str(SCHEMA), central_agent=True, episode_time_steps=2, random_seed=0)
 

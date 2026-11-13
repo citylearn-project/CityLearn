@@ -16,11 +16,14 @@ from test_deferrable_appliance_integration import (
 )
 from test_independent_balances import commands, scenario
 from test_robustness import (
+    PACKAGED_2022_ROBUSTNESS_SCHEMA_PATH,
     _clean_schema,
     _copy_schema,
     _event,
+    _kpi_value,
     _storage_action,
     _write_events,
+    _zero_actions,
 )
 
 
@@ -104,6 +107,92 @@ def test_asset_control_unavailability_wins_after_action_channels(
         assert histories[0] == histories[1]
     finally:
         env.close()
+
+
+PV_OUTAGE_STEPS = range(36, 40)  # global steps of the outage, inside the 32-43 episode
+
+
+def _pv_outage_rollout(tmp_path, *, interface, feature=None):
+    """Zero-action rollout of two 2022 buildings, with Building_1's PV unavailable at PV_OUTAGE_STEPS."""
+
+    schema = json.loads(PACKAGED_2022_ROBUSTNESS_SCHEMA_PATH.read_text())
+    schema["root_directory"] = str(PACKAGED_2022_ROBUSTNESS_SCHEMA_PATH.parent)
+    schema["interface"] = interface
+    for name, building in schema["buildings"].items():
+        building["include"] = name in {"Building_1", "Building_2"}
+    if feature is None:
+        schema["robustness"]["enabled"] = False
+    else:
+        events_file = tmp_path / f"pv_outage_{interface}_{feature}.csv"
+        pd.DataFrame([_event(
+            event_id="pv_out", module="asset", target_type="pv", target_id="Building_1",
+            target_feature=feature, start=PV_OUTAGE_STEPS[0], end=PV_OUTAGE_STEPS[-1], mode="unavailable",
+        )]).to_csv(events_file, index=False)
+        schema["robustness"]["events_file"] = str(events_file)
+    env = CityLearnEnv(
+        schema, central_agent=True, simulation_start_time_step=32, simulation_end_time_step=43, random_seed=0,
+    )
+    env.reset(seed=0)
+    while not env.terminated:
+        env.step(_zero_actions(env))
+    return env
+
+
+@pytest.mark.parametrize("interface,feature", [("flat", "control"), ("flat", "both"), ("entity", "both")])
+def test_pv_control_unavailability_stops_generation_and_counts_in_balance(tmp_path, interface, feature):
+    reference = _pv_outage_rollout(tmp_path, interface=interface)
+    faulted = _pv_outage_rollout(tmp_path, interface=interface, feature=feature)
+    try:
+        start = faulted.episode_tracker.episode_start_time_step
+        outage = np.isin(np.arange(faulted.time_step) + start, PV_OUTAGE_STEPS)
+        steps = faulted.time_step
+        ref, out = reference.buildings[0], faulted.buildings[0]
+        ref_pv = np.asarray(ref.solar_generation[:steps], dtype=float)
+        out_pv = np.asarray(out.solar_generation[:steps], dtype=float)
+        assert outage.sum() == 4 and np.all(ref_pv[outage] < 0.0), "scenario must lose daytime generation"
+
+        np.testing.assert_array_equal(out_pv[outage], 0.0)
+        np.testing.assert_array_equal(out_pv[~outage], ref_pv[~outage])
+        # The lost generation is bought from the grid; nothing else changes.
+        np.testing.assert_allclose(
+            np.asarray(out.net_electricity_consumption[:steps], dtype=float),
+            np.asarray(ref.net_electricity_consumption[:steps], dtype=float) - np.where(outage, ref_pv, 0.0),
+            rtol=0.0, atol=1.0e-5,
+        )
+        np.testing.assert_array_equal(
+            np.asarray(faulted.buildings[1].net_electricity_consumption),
+            np.asarray(reference.buildings[1].net_electricity_consumption),
+        )
+
+        kpis = faulted.evaluate_v2()
+        assert _kpi_value(kpis, "district_robustness_asset_unavailable_time_step_count") == pytest.approx(4.0)
+        # The business-as-usual reference runs in the same physical world, with the same outage.
+        sidecar = faulted._business_as_usual_baseline_service.run().env.buildings[0]
+        np.testing.assert_array_equal(np.asarray(sidecar.solar_generation[:steps], dtype=float)[outage], 0.0)
+
+        faulted.reset(seed=0)  # The next episode starts from the dataset production again.
+        np.testing.assert_array_equal(
+            faulted.buildings[0]._Building__solar_generation, reference.buildings[0]._Building__solar_generation,
+        )
+    finally:
+        reference.close()
+        faulted.close()
+
+
+def test_pv_telemetry_unavailability_keeps_generation(tmp_path):
+    reference = _pv_outage_rollout(tmp_path, interface="entity")
+    faulted = _pv_outage_rollout(tmp_path, interface="entity", feature="telemetry")
+    try:
+        np.testing.assert_array_equal(
+            np.asarray(faulted.buildings[0].net_electricity_consumption),
+            np.asarray(reference.buildings[0].net_electricity_consumption),
+        )
+        np.testing.assert_array_equal(
+            np.asarray(faulted.buildings[0].solar_generation), np.asarray(reference.buildings[0].solar_generation),
+        )
+    finally:
+        reference.close()
+        faulted.close()
 
 
 @pytest.mark.parametrize("asset_first", [True, False])

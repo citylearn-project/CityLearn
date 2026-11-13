@@ -118,6 +118,8 @@ Todas as comunidades filhas tem de usar:
 
 O wrapper valida isto no constructor e depois de cada reset.
 
+As janelas de calendario nao fazem parte do contrato. Cada filho escolhe o seu episode split a partir da sua propria janela de simulacao, do `random_episode_split` e do `random_seed`, por isso as comunidades podem simular datas diferentes no mesmo step. Para partilhar janelas, de aos filhos as mesmas definicoes de janela e o mesmo `random_seed`, ou passe uma seed a `reset(seed=...)`, que chega a todos os filhos.
+
 ## Demand Response
 
 Demand response continua local a cada comunidade. Se o schema filho tiver `demand_response.enabled=true`, esse filho le o seu proprio `requests_file`, expoe o seu proprio pedido nas observations entity e calcula settlement/KPIs locais. A v1 do `MultiCommunityEnv` nao coordena pedidos DSO/TSO entre comunidades.
@@ -137,8 +139,13 @@ So KPIs district sao agregados:
 | Sufixo KPI | Regra no portfolio |
 |---|---|
 | `_kwh`, `_eur`, `_kgco2`, `_count` | Soma entre comunidades. |
-| `_ratio`, `_percent` | Media ponderada por `weight`. |
+| `_ratio` de um total control sobre um total de referencia | Ratio dos totais somados, por exemplo `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
+| Outros `_ratio`, `_percent` | Media ponderada por `weight`. |
 | `_kw`, `_c`, `_hours` e outros point metrics | Nao agregados na v1. |
+
+Os ratios reconstruidos a partir dos totais somados sao os ratios `ratio_to_baseline` e `ratio_to_business_as_usual` de custo, emissoes, import, export e net exchange da rede, e os ratios `ratio_to_business_as_usual` de geracao e export solar, carga EV e export V2G, carga, descarga e throughput da bateria, e contagens de ciclos e energia dos deferrable appliances. Usam apenas comunidades que reportam os dois totais, ignoram `weight` como os totais somados, e mantem a regra lower-is-better da [referencia de KPIs](kpis_reference.md#equacoes-base) para totais negativos de net exchange e custo. Um `ratio_to_baseline` district de import, net exchange ou emissoes e a media dos ratios dos buildings, por isso o ratio de um portfolio com uma comunidade pode diferir dele.
+
+Os ratios sem totais aditivos continuam medias ponderadas: ratios de forma da rede (picos, ramping e penalidades de load factor), proporcoes de conforto e resiliencia, taxas de departure EV, service levels, shares, equity, ratios de auditoria e cobertura, capacity fade da bateria, e os ratios `ratio_to_business_as_usual` de capacity fade e ciclos equivalentes da bateria, self-consumption, service level e start delay.
 
 Os nomes de portfolio substituem o prefixo `district_` por `portfolio_`, por exemplo `district_demand_response_revenue_total_eur` vira `portfolio_demand_response_revenue_total_eur`.
 

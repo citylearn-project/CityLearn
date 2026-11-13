@@ -3,6 +3,7 @@ from collections import Counter
 
 import numpy as np
 
+from citylearn.data import ChargerSimulation
 from citylearn.energy_model import Battery
 
 
@@ -50,13 +51,11 @@ def arrival_soc(service, sim, battery, states, start):
     value = service._safe_sequence_value
     candidates = [value(getattr(sim, 'electric_vehicle_current_soc', None), start)]
     estimated = getattr(sim, 'electric_vehicle_estimated_soc_arrival', None)
-    ids = getattr(sim, 'electric_vehicle_id', None)
-    if start > 0 and states[start - 1] in (2, 3):
-        previous = service._normal_ev_id(value(ids, start - 1))
-        current = service._normal_ev_id(value(ids, start))
-        if previous is None or current is None or previous == current:
-            candidates.append(value(estimated, start - 1))
-    candidates.append(value(estimated, start))
+    # Same estimate row as the runtime arrival and the KPI reference.
+    index = ChargerSimulation.arrival_soc_index(
+        states, getattr(sim, 'electric_vehicle_id', None), estimated, start,
+        getattr(sim, 'electric_vehicle_session_id', None))
+    candidates.append(value(estimated, index))
     if start == 0:
         candidates.append(getattr(battery, 'initial_soc', None))
     for candidate in candidates:

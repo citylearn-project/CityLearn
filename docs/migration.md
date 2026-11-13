@@ -97,6 +97,20 @@ No dataset, schema or export-file migration is required.
   change made after `reset()` is not detected. Evaluate with
   `include_business_as_usual=False` in that case.
 
+- **Dataset downloads:** `DataSet.get_dataset(name, directory=...)` copies the
+  dataset into `directory/<name>` and returns that schema path. Failed
+  downloads raise instead of being cached, and concurrent first downloads no
+  longer interfere, including when they replace a cache folder missing
+  `schema.json`. `filelock`, already installed with `torch`, is now a
+  declared requirement.
+- **SAC and MARLISA:** default schedules now work on episodes shorter than the
+  default batch; inconsistent given values raise `ValueError` instead of
+  `assert False`. Runs are repeatable from the environment seed. Agents saved
+  with 3.2.0 resume training: the random streams they lack are derived from
+  their seed. MARLISA fills in missing scikit-learn parameters using the
+  installed defaults and refits its demand model on its whole buffer at the
+  first update.
+
 Fixes that **change results** where they apply:
 
 - Stochastic power outages: built-in models without an explicit seed now
@@ -118,6 +132,30 @@ Fixes that **change results** where they apply:
 - Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
   ca neighbourhood datasets), and an EV connects to at most one charger per step,
   which affects charger clones in the dynamic-topology demos.
+
+- EV datasets: each EV draws its own unspecified battery parameters
+  (efficiency, curves, capacity fade) instead of all sharing one set. An
+  arriving EV starts from the latest arrival state of charge on the incoming
+  rows of its own session, also when only an earlier incoming row holds it, or
+  else from the one on its connection row. It never takes an estimate across a
+  change of `electric_vehicle_session_id`, and the KPI and departure-audit
+  arrival references use the same value.
+- SAC/MARLISA: features or rewards constant during warm-up are centred but no
+  longer scaled by ~1e5; exploration, replay sampling and policy noise use
+  seeded generators; MARLISA stores each transition with its own coordination
+  variables and refits its demand model as data accumulates.
+- KPIs: net-exchange and cost ratios with a negative (net-exporting or
+  market-credited) reference use `1 + (control - reference) / |reference|`, so
+  lower stays better; the counterfactual baseline exchanges no energy with the
+  grid during power outages; multi-community ratios to a reference are ratios
+  of summed totals.
+- Subhourly control with hourly data: the partial-load baseline top-up is
+  converted to the control step.
+- Robustness: a PV `asset` `unavailable` event with the `control` or `both`
+  part stops generation, not only its telemetry.
+- Terminal observation: calendar, weather and prices come from the terminal
+  row, and endogenous values from the last executed step, as for every other
+  observation. Episode length and termination are unchanged.
 
 Changes that **preserve trajectories and KPI values**: the zero-size placeholders
 for absent devices, and EV chargers, are seeded, so the placeholders' unused

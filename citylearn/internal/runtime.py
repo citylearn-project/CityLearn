@@ -941,6 +941,13 @@ class CityLearnRuntimeService:
         if debug_timing:
             timings['next_time_step_environment_time'] = time.perf_counter() - timer_start
 
+        if reached_terminal_transition:
+            # Buildings stay on the last executed interval so their series hold only
+            # committed intervals. The terminal observation is still for the new
+            # environment time step: exogenous data at it, endogenous at the last interval.
+            for building in env.buildings:
+                building._terminal_observation_time_step = int(env.time_step)
+
         if not reached_terminal_transition:
             timer_start = time.perf_counter() if debug_timing else 0.0
             self.simulate_unconnected_ev_soc()
@@ -979,24 +986,20 @@ class CityLearnRuntimeService:
                 if isinstance(current_value, (float, np.floating)) and not np.isnan(current_value) and 0.0 <= current_value <= 1.0:
                     return float(current_value)
 
-            candidate_index = None
-
             if prev_state in (2, 3) and step > 0:
                 if isinstance(prev_id, str) and prev_id.strip() not in {'', 'nan'} and prev_id != ev_identifier:
                     raise ValueError(
                         f"Charger dataset EV mismatch: expected '{ev_identifier}' but found '{prev_id}' at time step {step - 1}."
                     )
-                candidate_index = step - 1
 
-            elif 0 <= step < len(simulation.electric_vehicle_estimated_soc_arrival):
-                candidate_index = step
-
-            soc_value = None
-
-            if candidate_index is not None and 0 <= candidate_index < len(simulation.electric_vehicle_estimated_soc_arrival):
-                candidate = simulation.electric_vehicle_estimated_soc_arrival[candidate_index]
-                if isinstance(candidate, (float, np.floating)) and not np.isnan(candidate) and 0.0 <= candidate <= 1.0:
-                    soc_value = float(candidate)
+            # The estimate sits on the incoming rows of this session, not always on the last one, or
+            # else on the connection row; the KPI and departure-audit references use the same row.
+            estimated_soc_arrival = simulation.electric_vehicle_estimated_soc_arrival
+            index = ChargerSimulation.arrival_soc_index(
+                simulation.electric_vehicle_charger_state, simulation.electric_vehicle_id, estimated_soc_arrival, step,
+                getattr(simulation, 'electric_vehicle_session_id', None),
+            )
+            soc_value = None if index is None else float(estimated_soc_arrival[index])
 
             return soc_value
 
@@ -1203,13 +1206,12 @@ class CityLearnRuntimeService:
                 if not is_connecting:
                     continue
 
-                is_incoming = isinstance(curr_id, str) and curr_id == next_id and curr_state == 2
-                soc_index = t if is_incoming else t + 1
-                soc = (
-                    sim.electric_vehicle_estimated_soc_arrival[soc_index]
-                    if soc_index < len(sim.electric_vehicle_estimated_soc_arrival)
-                    else np.nan
+                # The same estimate the connection at t + 1 starts from.
+                soc_index = ChargerSimulation.arrival_soc_index(
+                    sim.electric_vehicle_charger_state, sim.electric_vehicle_id,
+                    sim.electric_vehicle_estimated_soc_arrival, t + 1, getattr(sim, 'electric_vehicle_session_id', None),
                 )
+                soc = np.nan if soc_index is None else sim.electric_vehicle_estimated_soc_arrival[soc_index]
                 charger_event_by_ev_id.setdefault(next_id, ('connecting', soc))
 
         for ev in env.electric_vehicles:

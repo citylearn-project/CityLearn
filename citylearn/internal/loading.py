@@ -644,6 +644,13 @@ class CityLearnLoadingService:
         else:
             loss_coefficient = float(loss_coefficient)
 
+        # Each EV draws its unspecified battery parameters (efficiency, curves, capacity fade) from
+        # its own seed, as `initial_soc` above does; a shared seed gave every EV identical values.
+        battery_random_seed = attrs.get('random_seed')
+        if battery_random_seed is None:
+            seed_source = f"{schema['random_seed']}:{electric_vehicle_name}:battery"
+            battery_random_seed = int(hashlib.md5(seed_source.encode('utf-8')).hexdigest()[:8], 16)
+
         battery_kwargs = {
             'capacity': capacity,
             'nominal_power': nominal_power,
@@ -651,7 +658,7 @@ class CityLearnLoadingService:
             'loss_coefficient': loss_coefficient,
             'seconds_per_time_step': schema['seconds_per_time_step'],
             'time_step_ratio': time_step_ratio,
-            'random_seed': schema['random_seed'],
+            'random_seed': battery_random_seed,
             'episode_tracker': episode_tracker,
             'depth_of_discharge': depth_of_discharge,
         }
@@ -800,13 +807,20 @@ class CityLearnLoadingService:
 
         return 'csv'
 
-    def _read_simulation_dataframe(self, schema: Mapping[str, Any], filepath: Union[str, os.PathLike]) -> pd.DataFrame:
+    def _read_simulation_dataframe(
+        self,
+        schema: Mapping[str, Any],
+        filepath: Union[str, os.PathLike],
+        *,
+        csv_dtypes: Optional[Mapping[str, Any]] = None,
+    ) -> pd.DataFrame:
         """Read only the configured simulation window from a CSV or Parquet time series file."""
 
         dataframe = self._read_timeseries_dataframe(
             filepath,
             start_time_step=int(schema['simulation_start_time_step']),
             end_time_step=int(schema['simulation_end_time_step']),
+            csv_dtypes=csv_dtypes,
         )
         if not parse_bool(
             schema.get('terminal_observation_padding', False),
@@ -887,6 +901,7 @@ class CityLearnLoadingService:
         *,
         start_time_step: Optional[int] = None,
         end_time_step: Optional[int] = None,
+        csv_dtypes: Optional[Mapping[str, Any]] = None,
     ) -> pd.DataFrame:
         if start_time_step is not None and end_time_step is not None and end_time_step < start_time_step:
             raise ValueError(
@@ -904,9 +919,9 @@ class CityLearnLoadingService:
         nrows = None if end_time_step is None else int(end_time_step) - int(start_time_step or 0) + 1
 
         if start_time_step is None or int(start_time_step) <= 0:
-            return pd.read_csv(filepath, nrows=nrows)
+            return pd.read_csv(filepath, nrows=nrows, dtype=csv_dtypes)
 
-        return pd.read_csv(filepath, skiprows=range(1, int(start_time_step) + 1), nrows=nrows)
+        return pd.read_csv(filepath, skiprows=range(1, int(start_time_step) + 1), nrows=nrows, dtype=csv_dtypes)
 
     @staticmethod
     def _read_parquet_timeseries_dataframe(

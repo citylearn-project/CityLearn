@@ -141,6 +141,7 @@ Cada tabela contem:
 |---|---|
 | Exogenous observations | Lidas no timestep `t`. Exemplos: weather, pricing, schedules. |
 | Endogenous observations | Lidas em `t-1` settled. Exemplos: consumo aplicado no ultimo step, SOC depois da acao anterior. |
+| Observacao terminal | Mesma regra no `t` final: features exogenas e de calendario da ultima linha de dados, endogenas do ultimo intervalo executado. As series dos buildings continuam a ter apenas intervalos executados. Os estados de chargers, deferrable appliances e escalators nao avancam e ficam no ultimo intervalo executado. |
 | Topology events | Eventos em `k` sao aplicados depois da transicao `k-1 -> k` e antes da observacao `k`. |
 
 Isto evita expor buffers ainda nao inicializados e torna a interface consistente para agentes online.

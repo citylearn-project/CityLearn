@@ -70,6 +70,17 @@ self_consumption = (solar_generation_total - export_total) / solar_generation_to
 
 Safe division devolve `None`/placeholder quando o denominador nao e fisicamente valido.
 
+Os ratios continuam lower-is-better quando o total de referencia e negativo. O net exchange (legacy `zero_net_energy`) e os totais de custo podem ser negativos, para um exportador liquido ou depois de receitas do community market. Os seus ratios ao baseline e ao BAU usam
+
+```text
+ratio_x = control_x / reference_x                        se reference_x > 0
+ratio_x = 1 + (control_x - reference_x) / |reference_x|  se reference_x < 0
+```
+
+Assim 1 continua a significar sem alteracao e um total control maior da um ratio maior. Para uma referencia positiva e o ratio simples. Import, export e emissoes nunca sao negativos e usam o ratio simples.
+
+O counterfactual `baseline` segue o outage da rede do run controlado: nos time steps de power outage as series net `*_without_storage*`, e as suas series de custo e emissoes, sao zero. Nenhum dos runs troca energia com a rede enquanto ela esta em baixo.
+
 ## Familias Principais
 
 | Familia | Nivel | O que mede |

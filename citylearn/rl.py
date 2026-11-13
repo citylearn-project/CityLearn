@@ -20,13 +20,16 @@ class PolicyNetwork(nn.Module):
                  init_w = 3e-3, 
                  log_std_min = -20, 
                  log_std_max = 2, 
-                 epsilon = 1e-6):
+                 epsilon = 1e-6,
+                 generator = None):
         
         super(PolicyNetwork, self).__init__()
 
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
         self.epsilon = epsilon
+        # Source of the exploration noise in `sample`; None draws from torch's global generator.
+        self.generator = generator
         
         self.linear1 = nn.Linear(num_inputs, hidden_dim[0])
         self.linear2 = nn.Linear(hidden_dim[0], hidden_dim[1])
@@ -57,7 +60,14 @@ class PolicyNetwork(nn.Module):
         mean, log_std = self.forward(state)
         std = log_std.exp()
         normal = Normal(mean, std)
-        x_t = normal.rsample()  # for reparameterization trick (mean + std * N(0,1))
+        generator = getattr(self, 'generator', None)
+
+        if generator is None:
+            x_t = normal.rsample()  # for reparameterization trick (mean + std * N(0,1))
+        else:
+            # Same reparameterization as Normal.rsample, with the noise drawn from this policy's own generator.
+            x_t = mean + torch.empty_like(mean).normal_(generator=generator)*std
+
         y_t = torch.tanh(x_t)
         action = y_t * self.action_scale + self.action_bias
         log_prob = normal.log_prob(x_t)
@@ -73,10 +83,12 @@ class PolicyNetwork(nn.Module):
         return super(PolicyNetwork, self).to(device)
     
 class ReplayBuffer:
-    def __init__(self, capacity):
+    def __init__(self, capacity, seed=None):
         self.capacity = capacity
         self.buffer = []
         self.position = 0
+        # Mini-batches come from this buffer's own generator when seeded, else from the global `random` module.
+        self.random = None if seed is None else random.Random(seed)
     
     def push(self, state, action, reward, next_state, done):
         if len(self.buffer) < self.capacity:
@@ -86,13 +98,17 @@ class ReplayBuffer:
         self.position = (self.position + 1) % self.capacity
     
     def sample(self, batch_size):
-        batch = random.sample(self.buffer, batch_size)
+        batch = (random if self.random is None else self.random).sample(self.buffer, batch_size)
         state, action, reward, next_state, done = map(np.stack, zip(*batch))
         return state, action, reward, next_state, done
     
     def __len__(self):
         return len(self.buffer)
         
+    def __setstate__(self, state):
+        # Buffers saved before `random` existed (CityLearn <= 3.2.0) sample from the global `random` module, as then.
+        self.__dict__.update({'random': None, **state})
+
 class RegressionBuffer:
     def __init__(self, capacity):
         self.capacity = capacity

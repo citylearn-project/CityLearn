@@ -386,7 +386,27 @@ class Building(Environment):
         `net_electricity_consumption_without_storage` - `solar_generation`
         """
 
-        return self.net_electricity_consumption_without_storage - self.solar_generation
+        return self._without_grid_during_outage(self.net_electricity_consumption_without_storage - self.solar_generation)
+
+    def _without_grid_during_outage(self, values: np.ndarray) -> np.ndarray:
+        """Set a counterfactual net electricity consumption series to zero at power outage time steps.
+
+        The controlled building exchanges no energy with the grid while it is down (see
+        `update_variables`), so counterfactual series follow the same rule to stay comparable.
+        """
+
+        if not self.simulate_power_outage:
+            return values
+
+        outage = np.asarray(self.power_outage_signal) != 0
+
+        if not outage.any():
+            return values
+
+        values = np.array(values, copy=True)
+        values[outage] = 0.0
+
+        return values
 
     @property
     def net_electricity_consumption_emission_without_storage(self) -> np.ndarray:
@@ -418,14 +438,16 @@ class Building(Environment):
         So, the first one is subtracted from the net_electricity_consumption, obtaining the energy consumption as if the cars were not used at all.
         However, if there are chargers and EVs, they need to charge per usual, so that consumption is added
         This is what allows to check if the control mechanism affects the grid balancing scheme for EVs for example.
+
+        Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.
         """
-        return self.net_electricity_consumption - np.sum([
+        return self._without_grid_during_outage(self.net_electricity_consumption - np.sum([
             self.cooling_storage_electricity_consumption,
             self.heating_storage_electricity_consumption,
             self.dhw_storage_electricity_consumption,
             self.electrical_storage_electricity_consumption,
             self.chargers_electricity_consumption,
-        ], axis=0)
+        ], axis=0))
 
     @property
     def net_electricity_consumption_emission(self) -> np.ndarray:
@@ -1808,11 +1830,15 @@ class Building(Environment):
         ratio = 1.0 if self.time_step_ratio in (None, 0) else float(self.time_step_ratio)
         return self.seconds_per_time_step/3600.0/ratio
 
-    def _dataset_energy_to_control_step(self, energy: float) -> float:
-        """Convert dataset-resolution kWh to the active control-step kWh."""
+    def _dataset_energy_to_control_step(self, energy: Union[float, Iterable[float]]) -> Union[float, np.ndarray]:
+        """Convert dataset-resolution kWh (a value or a time series) to the active control-step kWh."""
 
         ratio = 1.0 if self.time_step_ratio in (None, 0) else float(self.time_step_ratio)
-        return float(energy) * ratio
+
+        if np.ndim(energy) == 0:
+            return float(energy) * ratio
+
+        return np.asarray(energy) * ratio
 
     def _pv_generation_to_control_step(self, solar_generation: Union[float, Iterable[float]]) -> np.ndarray:
         """Convert PV inputs to control-step kWh."""
@@ -1850,6 +1876,19 @@ class Building(Environment):
 
         if upper < len(self.__solar_generation):
             self.__solar_generation[max(start, upper):] = 0.0
+
+    def _set_pv_out_of_service(self, time_step: int) -> None:
+        """Zero PV production at ``time_step`` because the array is out of service.
+
+        Used by robustness asset-unavailability events. It must run before that
+        step's physics so net consumption, energy provenance and KPIs all see
+        the same zero production. Other steps are left unchanged and ``reset``
+        restores the dataset production.
+        """
+
+        time_step = int(time_step)
+        if 0 <= time_step < len(self.__solar_generation):
+            self.__solar_generation[time_step] = 0.0
 
     def _clip_outage_electric_loads_to_local_supply(self):
         """Clip initial electric loads to locally available islanded supply."""
@@ -2820,6 +2859,8 @@ class Building(Environment):
         # object reset
         super().reset()
         self._archived_storage_electricity = None
+        # Row of the agent-facing terminal observation; set by the runtime after the last transition.
+        self._terminal_observation_time_step = None
         self.cooling_storage.reset()
         self.heating_storage.reset()
         self.dhw_storage.reset()
@@ -3235,7 +3276,7 @@ class DynamicsBuilding(Building):
         `net_electricity_consumption_without_storage_and_partial_load` - `solar_generation`
         """
 
-        return self.net_electricity_consumption_without_storage_and_partial_load - self.solar_generation
+        return self._without_grid_during_outage(self.net_electricity_consumption_without_storage_and_partial_load - self.solar_generation)
 
     @property
     def net_electricity_consumption_emission_without_storage_and_partial_load(self) -> np.ndarray:
@@ -3280,11 +3321,17 @@ class DynamicsBuilding(Building):
         else:
             heating_electricity_consumption_difference = self.heating_device.get_input_power(heating_demand_difference)
 
-        # net electricity consumption without storage and partial load
-        return self.net_electricity_consumption_without_storage + np.sum([
+        # The demand series are dataset-resolution kWh, so the device input energy for their difference is too;
+        # convert it to control-step kWh like the device electricity in the rest of the baseline.
+        partial_load_electricity_consumption = self._dataset_energy_to_control_step(np.sum([
             cooling_electricity_consumption_difference,
             heating_electricity_consumption_difference,
-        ], axis=0)
+        ], axis=0))
+
+        # net electricity consumption without storage and partial load
+        return self._without_grid_during_outage(
+            self.net_electricity_consumption_without_storage + partial_load_electricity_consumption
+        )
 
     @property
     def heating_demand_without_partial_load(self) -> np.ndarray:
