@@ -65,7 +65,11 @@ class HourRBC(RBC):
                 self.__verify_action_map(n, m, index=i)
         
         elif isinstance(action_map, dict):
-            if isinstance(list(action_map.values())[0], dict):
+            if len(action_map) == 0:
+                action_names = list({a_ for a in self.action_names for a_ in a})
+                self.__verify_action_map(action_names, action_map)
+                action_map = [{} for _ in self.action_names]
+            elif isinstance(list(action_map.values())[0], dict):
                 action_names = [a_ for a in self.action_names for a_ in a]
                 action_names = list(set(action_names))
                 self.__verify_action_map(action_names, action_map)
@@ -436,7 +440,7 @@ class BasicElectricVehicleRBC_ReferenceController(BasicRBC): #change the name
             for n in action_names:
                 action_map[n] = {}
 
-                if n == "electrical_storage":
+                if n in ("electrical_storage", "cooling_storage", "heating_storage"):
                     for hour in Building.get_periodic_observation_metadata()['hour']:
                         if 9 <= hour <= 21:
                             value = -0.08

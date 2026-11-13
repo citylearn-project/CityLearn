@@ -38,6 +38,8 @@ class CostFunction:
 
         down_ramp = False if down_ramp is None else down_ramp
         net_export = True if net_export is None else net_export
+        if len(net_electricity_consumption) == 0:
+            return []
 
         data = pd.DataFrame({'net_electricity_consumption':net_electricity_consumption})
         data['ramping'] = data['net_electricity_consumption'] - data['net_electricity_consumption'].shift(1)
@@ -77,6 +79,10 @@ class CostFunction:
         """
 
         window = 730 if window is None else window
+        if window <= 0:
+            raise ValueError('window must be >= 1.')
+        if len(net_electricity_consumption) == 0:
+            return []
         data = pd.DataFrame({'net_electricity_consumption':net_electricity_consumption})
         data['group'] = (data.index/window).astype(int)
         data = data.groupby(['group'])[['net_electricity_consumption']].agg(['mean','max'])
@@ -103,6 +109,10 @@ class CostFunction:
         """
 
         window = 24 if window is None else window
+        if window <= 0:
+            raise ValueError('window must be >= 1.')
+        if len(net_electricity_consumption) == 0:
+            return []
         data = pd.DataFrame({'net_electricity_consumption':net_electricity_consumption})
         data['group'] = (data.index/window).astype(int)
         data = data.groupby(['group'])[['net_electricity_consumption']].max()
@@ -127,6 +137,8 @@ class CostFunction:
             Electricity consumption cost.
         """
 
+        if len(net_electricity_consumption) == 0:
+            return []
         data = pd.DataFrame({'net_electricity_consumption':np.array(net_electricity_consumption).clip(min=0)})
         data['electricity_consumption'] = data['net_electricity_consumption'].rolling(window=data.shape[0],min_periods=1).sum()
         
@@ -150,6 +162,8 @@ class CostFunction:
             Zero net energy cost.
         """
 
+        if len(net_electricity_consumption) == 0:
+            return []
         data = pd.DataFrame({'net_electricity_consumption':np.array(net_electricity_consumption)})
         data['zero_net_energy'] = data['net_electricity_consumption'].rolling(window=data.shape[0],min_periods=1).sum()
         
@@ -170,6 +184,8 @@ class CostFunction:
             Carbon emissions cost.
         """
 
+        if len(carbon_emissions) == 0:
+            return []
         data = pd.DataFrame({'carbon_emissions':np.array(carbon_emissions).clip(min=0)})
         data['carbon_emissions'] = data['carbon_emissions'].rolling(window=data.shape[0],min_periods=1).sum()
         
@@ -190,6 +206,8 @@ class CostFunction:
             Cost of electricity.
         """
 
+        if len(cost) == 0:
+            return []
         data = pd.DataFrame({'cost':np.array(cost).clip(min=0)})
         data['cost'] = data['cost'].rolling(window=data.shape[0],min_periods=1).sum()
         
@@ -214,6 +232,8 @@ class CostFunction:
         Net electricity consumption values are clipped at a minimum of 0 before calculating the quadratic cost.
         """
 
+        if len(net_electricity_consumption) == 0:
+            return []
         data = pd.DataFrame({'net_electricity_consumption':np.array(net_electricity_consumption).clip(min=0)})
         data['quadratic'] = data['net_electricity_consumption']**2
         data['quadratic'] = data['quadratic'].rolling(window=data.shape[0],min_periods=1).sum()

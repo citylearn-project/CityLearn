@@ -218,13 +218,20 @@ def load_kpis(path):
     import pandas as pd
     frame = pd.read_parquet(path) if Path(path).suffix == '.parquet' else pd.read_csv(path)
     if 'KPI' in frame:
-        frame = frame.melt(id_vars='KPI', var_name='name', value_name='value').rename(columns={'KPI': 'cost_function'})
+        id_vars = ['community_id', 'KPI'] if 'community_id' in frame else ['KPI']
+        frame = frame.melt(id_vars=id_vars, var_name='name', value_name='value').rename(columns={'KPI': 'cost_function'})
     elif not {'cost_function', 'name', 'value'} <= set(frame):
         raise ValueError('Expected a V2 KPI export or long-form cost_function/name/value columns')
-    if frame.duplicated(['name', 'cost_function']).any():
+    has_community = 'community_id' in frame
+    key_cols = ['community_id', 'name', 'cost_function'] if has_community else ['name', 'cost_function']
+    if frame.duplicated(key_cols).any():
         raise ValueError('Duplicate KPI/name rows cannot be compared safely')
-    return {(r['name'], r['cost_function']): (None if pd.isna(r['value']) or not math.isfinite(float(r['value'])) else float(r['value']))
-            for r in frame.to_dict('records')}
+    return {
+        ((f"{r['community_id']}:{r['name']}" if has_community else r['name']), r['cost_function']): (
+            None if pd.isna(r['value']) or not math.isfinite(float(r['value'])) else float(r['value'])
+        )
+        for r in frame.to_dict('records')
+    }
 
 
 def compare_manifests(left, right, mode='controller'):

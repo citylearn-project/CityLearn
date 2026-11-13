@@ -637,7 +637,10 @@ class CityLearnTopologyService:
 
         building = self._member_pool[target_member_id]
         rejoining = self._member_lifecycle.get(target_member_id, {}).get('born_at') is not None
-        prefix, storage_prefix = self._capture_member_energy_prefix(building, time_step) if rejoining else ([], None)
+        prefix, storage_prefix, phase_prefix = (
+            self._capture_member_energy_prefix(building, time_step)
+            if rejoining else ([], None, {})
+        )
         if rejoining:
             # Histories keep physical instances; resetting them would erase
             # pre-exit throughput and charger service as well as building totals.
@@ -649,6 +652,11 @@ class CityLearnTopologyService:
         for obj, key, values in prefix:
             current = getattr(obj, key)
             current[:len(values)] = values
+        current_phases = getattr(building, '_charging_phase_power_history_kw', None) or {}
+        for phase_name, values in phase_prefix.items():
+            if phase_name in current_phases:
+                target = current_phases[phase_name]
+                target[:min(len(values), len(target))] = values[:min(len(values), len(target))]
         building._archived_storage_electricity = storage_prefix
         self._set_building_time_step(building, time_step)
         self._initialize_storage_at_activation(building)
@@ -684,15 +692,29 @@ class CityLearnTopologyService:
                 continue
             seen.add(id(obj))
             for key, values in vars(obj).items():
-                is_flow = any(token in key for token in ('electricity_consumption', 'solar_generation',
-                    'energy_balance', 'energy_from_', 'energy_to_', 'power_outage_signal', 'pv_curtailment'))
+                is_flow = (
+                    any(token in key for token in (
+                        'electricity_consumption', 'solar_generation',
+                        'energy_balance', 'energy_from_', 'energy_to_',
+                        'power_outage_signal', 'pv_curtailment',
+                    ))
+                    or key in {
+                        '_charging_constraint_violation_history',
+                        '_charging_total_power_history_kw',
+                    }
+                )
                 if is_flow and isinstance(values, np.ndarray) and values.ndim == 1:
                     prefixes.append((obj, key, values[:time_step].copy()))
+        phase_prefixes = {
+            phase_name: arr[:time_step].copy()
+            for phase_name, arr in (getattr(building, '_charging_phase_power_history_kw', None) or {}).items()
+            if isinstance(arr, np.ndarray) and arr.ndim == 1
+        }
         storage_prefix = np.zeros(time_step, dtype=float)
         values = building.electrical_storage_electricity_consumption
         size = min(time_step, len(values))
         storage_prefix[:size] = values[:size]
-        return prefixes, storage_prefix
+        return prefixes, storage_prefix, phase_prefixes
 
     def _global_time_step(self, local_time_step: int) -> int:
         tracker = getattr(self.env, 'episode_tracker', None)

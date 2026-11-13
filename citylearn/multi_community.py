@@ -288,7 +288,7 @@ class MultiCommunityEnv(Env):
 
         path = self._export_path(filepath)
         path.parent.mkdir(parents=True, exist_ok=True)
-        kpis.fillna("").to_csv(path, index=False, encoding="utf-8")
+        kpis.to_csv(path, index=False, encoding="utf-8", na_rep="")
 
     def render(self) -> Mapping[str, Any]:
         """Render every child environment into its own community subfolder."""

@@ -632,9 +632,17 @@ class CityLearnEntityInterfaceService:
 
         building_ids = set(self._building_ids)
         charger_global_ids = {ref.global_id for ref in self._charger_refs}
-        charger_raw_to_global = {ref.charger_id: ref.global_id for ref in self._charger_refs}
+        charger_raw_counts: Dict[str, int] = {}
+        charger_raw_to_global: Dict[str, str] = {}
+        for ref in self._charger_refs:
+            charger_raw_counts[ref.charger_id] = charger_raw_counts.get(ref.charger_id, 0) + 1
+            charger_raw_to_global[ref.charger_id] = ref.global_id
         deferrable_global_ids = {ref.global_id for ref in self._deferrable_appliance_refs}
-        deferrable_raw_to_global = {ref.appliance_id: ref.global_id for ref in self._deferrable_appliance_refs}
+        deferrable_raw_counts: Dict[str, int] = {}
+        deferrable_raw_to_global: Dict[str, str] = {}
+        for ref in self._deferrable_appliance_refs:
+            deferrable_raw_counts[ref.appliance_id] = deferrable_raw_counts.get(ref.appliance_id, 0) + 1
+            deferrable_raw_to_global[ref.appliance_id] = ref.global_id
         building_overrides: Dict[str, Mapping[str, Any]] = {}
         charger_overrides: Dict[str, Mapping[str, Any]] = {}
         deferrable_appliance_overrides: Dict[str, Mapping[str, Any]] = {}
@@ -652,10 +660,20 @@ class CityLearnEntityInterfaceService:
                 elif raw_key in charger_global_ids:
                     entity_kind, entity_id = "charger", raw_key
                 elif raw_key in charger_raw_to_global:
+                    if charger_raw_counts.get(raw_key, 0) > 1:
+                        raise ValueError(
+                            f"Ambiguous unqualified charger id '{raw_key}' in action map; "
+                            "specify '<building_id>:<charger_id>'."
+                        )
                     entity_kind, entity_id = "charger", charger_raw_to_global[raw_key]
                 elif raw_key in deferrable_global_ids:
                     entity_kind, entity_id = "deferrable_appliance", raw_key
                 elif raw_key in deferrable_raw_to_global:
+                    if deferrable_raw_counts.get(raw_key, 0) > 1:
+                        raise ValueError(
+                            f"Ambiguous unqualified deferrable_appliance id '{raw_key}' in action map; "
+                            "specify '<building_id>:<appliance_id>'."
+                        )
                     entity_kind, entity_id = "deferrable_appliance", deferrable_raw_to_global[raw_key]
                 else:
                     raise AssertionError(f"Unknown entity id '{raw_key}' in action map.")
@@ -667,7 +685,12 @@ class CityLearnEntityInterfaceService:
                 continue
 
             if entity_kind == "charger":
-                if entity_id in charger_raw_to_global:
+                if entity_id in charger_raw_to_global and entity_id not in charger_global_ids:
+                    if charger_raw_counts.get(entity_id, 0) > 1:
+                        raise ValueError(
+                            f"Ambiguous unqualified charger id '{entity_id}' in action map; "
+                            "specify '<building_id>:<charger_id>'."
+                        )
                     entity_id = charger_raw_to_global[entity_id]
                 if entity_id not in charger_global_ids:
                     raise AssertionError(f"Unknown charger id '{entity_id}' in action map.")
@@ -675,7 +698,12 @@ class CityLearnEntityInterfaceService:
                 continue
 
             if entity_kind == "deferrable_appliance":
-                if entity_id in deferrable_raw_to_global:
+                if entity_id in deferrable_raw_to_global and entity_id not in deferrable_global_ids:
+                    if deferrable_raw_counts.get(entity_id, 0) > 1:
+                        raise ValueError(
+                            f"Ambiguous unqualified deferrable_appliance id '{entity_id}' in action map; "
+                            "specify '<building_id>:<appliance_id>'."
+                        )
                     entity_id = deferrable_raw_to_global[entity_id]
                 if entity_id not in deferrable_global_ids:
                     raise AssertionError(f"Unknown deferrable_appliance id '{entity_id}' in action map.")
@@ -1246,9 +1274,10 @@ class CityLearnEntityInterfaceService:
 
         battery = getattr(charger.connected_electric_vehicle, "battery", None)
         depth_of_discharge = self._safe_scalar(getattr(battery, "depth_of_discharge", 1.0), 1.0)
-        soc_min = float(np.clip(1.0 - depth_of_discharge, 0.0, 1.0))
+        soc_max = float(np.clip(self._safe_scalar(getattr(battery, "max_soc", 1.0), 1.0), 0.0, 1.0))
+        soc_min = float(np.clip(1.0 - depth_of_discharge, 0.0, soc_max))
         energy_available = max((current_soc - soc_min) * battery_capacity, 0.0)
-        energy_to_full = max((1.0 - current_soc) * battery_capacity, 0.0)
+        energy_to_full = max((soc_max - current_soc) * battery_capacity, 0.0)
         outage = bool(getattr(building, "power_outage", False))
 
         charge_efficiency = max(self._safe_scalar(charge_efficiency_at_max, 1.0), 1.0e-6)
@@ -1334,6 +1363,7 @@ class CityLearnEntityInterfaceService:
         capacity: float,
         nominal_power: float,
         soc_min: float,
+        soc_max: float = 1.0,
         energy_to_full: float,
         energy_available: float,
         max_charge_power: float,
@@ -1370,7 +1400,7 @@ class CityLearnEntityInterfaceService:
         outage = bool(getattr(building, "power_outage", False))
         available_charge_power = 0.0 if outage else max(min(charge_candidates), 0.0)
         available_discharge_power = 0.0 if outage else max(min(discharge_candidates), 0.0)
-        usable_denominator = max(1.0 - soc_min, 1.0e-6)
+        usable_denominator = max(soc_max - soc_min, 1.0e-6)
 
         return {
             "can_charge": 1.0 if available_charge_power > 1.0e-9 else 0.0,
@@ -1407,9 +1437,11 @@ class CityLearnEntityInterfaceService:
             nominal_power = self._safe_scalar(getattr(storage, "nominal_power", 0.0), 0.0)
             soc = self._safe_index(getattr(storage, "soc", []), endogenous_t, 0.0)
             depth_of_discharge = self._safe_scalar(getattr(storage, "depth_of_discharge", 1.0), 1.0)
-            soc_min = max(1.0 - depth_of_discharge, 0.0)
+            soc_max = float(np.clip(self._safe_scalar(getattr(storage, "max_soc", 1.0), 1.0), 0.0, 1.0))
+            soc_min = float(np.clip(1.0 - depth_of_discharge, 0.0, soc_max))
             current_energy = soc * max(capacity, 0.0)
-            storage_energy_to_full = max(capacity - current_energy, 0.0)
+            max_energy = max(capacity, 0.0) if soc_max == 1.0 else soc_max * max(capacity, 0.0)
+            storage_energy_to_full = max(max_energy - current_energy, 0.0)
             storage_energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
             max_charge_power = (
                 self._safe_scalar(storage.get_max_input_power(), nominal_power)
@@ -1428,6 +1460,7 @@ class CityLearnEntityInterfaceService:
                 capacity=capacity,
                 nominal_power=nominal_power,
                 soc_min=soc_min,
+                soc_max=soc_max,
                 energy_to_full=storage_energy_to_full,
                 energy_available=storage_energy_available,
                 max_charge_power=max_charge_power,
@@ -1450,14 +1483,15 @@ class CityLearnEntityInterfaceService:
             ev = charger.connected_electric_vehicle
             battery = getattr(ev, "battery", None)
             capacity = self._safe_scalar(getattr(battery, "capacity", 0.0), 0.0)
-            soc_index = ev.observation_soc_index(endogenous_t) if self.env.topology_mode == "dynamic" else endogenous_t
+            soc_index = ev.observation_soc_index(endogenous_t)
             soc = self._safe_index(getattr(battery, "soc", []), soc_index, 0.0)
             if capacity <= 0.0 or soc < 0.0:
                 continue
 
             depth_of_discharge = self._safe_scalar(getattr(battery, "depth_of_discharge", 1.0), 1.0)
-            soc_min = max(1.0 - depth_of_discharge, 0.0)
-            ev_energy_to_full = max((1.0 - soc) * capacity, 0.0)
+            ev_soc_max = float(np.clip(self._safe_scalar(getattr(battery, "max_soc", 1.0), 1.0), 0.0, 1.0))
+            soc_min = float(np.clip(1.0 - depth_of_discharge, 0.0, ev_soc_max))
+            ev_energy_to_full = max((ev_soc_max - soc) * capacity, 0.0)
             ev_energy_available = max((soc - soc_min) * capacity, 0.0)
             max_charge_power = self._safe_scalar(getattr(charger, "max_charging_power", 0.0), 0.0)
             max_discharge_power = self._safe_scalar(getattr(charger, "max_discharging_power", 0.0), 0.0)

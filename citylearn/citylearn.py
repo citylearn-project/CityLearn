@@ -352,6 +352,8 @@ class CityLearnEnv(Environment, Env):
         self.root_directory = root_directory
         self._all_buildings = list(buildings)
         self._all_electric_vehicles = list(electric_vehicles)
+        if self.interface == 'entity' and any(getattr(b, 'escalators', None) for b in self._all_buildings):
+            raise ValueError('Escalator actions are currently supported only by the flat interface.')
         if self.topology_mode == 'dynamic':
             self._topology_service.initialize(self._all_buildings, self._all_electric_vehicles)
             self.buildings = list(self._all_buildings)
@@ -706,7 +708,7 @@ class CityLearnEnv(Environment, Env):
             return self._robustness_service.apply_observations(self._entity_service.observation_payload())
 
         if self._observations_cache is not None and self._observations_cache_time_step == self.time_step:
-            return self._observations_cache
+            return [list(row) for row in self._observations_cache]
 
         building_observations = [
             b.observations(
@@ -734,10 +736,11 @@ class CityLearnEnv(Environment, Env):
         else:
             observations = [list(o.values()) for o in building_observations]
 
-        self._observations_cache = observations
+        observations = self._robustness_service.apply_observations(observations)
+        self._observations_cache = [list(row) for row in observations]
         self._observations_cache_time_step = self.time_step
 
-        return self._robustness_service.apply_observations(observations)
+        return [list(row) for row in self._observations_cache]
 
     @property
     def observation_names(self) -> List[List[str]]:
@@ -814,121 +817,129 @@ class CityLearnEnv(Environment, Env):
         self._active_actions_cache = [list(b.active_actions) for b in self.buildings]
         self._expected_central_action_count = sum(len(actions) for actions in self._active_actions_cache)
 
+    def _sum_building_counterfactual_series(self, getter) -> np.ndarray:
+        if getattr(self, 'topology_mode', 'static') == 'dynamic':
+            from citylearn.internal.kpi_population import ActivePopulation
+
+            population = ActivePopulation(self)
+            buildings = getattr(self, '_all_buildings', None) or self.buildings
+            rows = []
+            for b in buildings:
+                series = np.array(getter(b), copy=True)
+                active = population.mask(b.name, len(series), energy=True)
+                series[~active] = 0.0
+                rows.append(series)
+
+            if len(rows) == 0:
+                return np.zeros(max(int(getattr(self, 'time_step', 0)), 0), dtype='float32')
+
+            return pd.DataFrame(rows).sum(axis=0, min_count=1).to_numpy()
+
+        return pd.DataFrame([getter(b) for b in self.buildings]).sum(axis=0, min_count=1).to_numpy()
+
     @property
     def net_electricity_consumption_emission_without_storage_and_partial_load_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage_and_partial_load_and_pv` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage_and_partial_load_and_pv
+        return self._sum_building_counterfactual_series(
+            lambda b: (
+                b.net_electricity_consumption_emission_without_storage_and_partial_load_and_pv
                 if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_emission_without_storage_and_pv
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+            )
+        )
 
     @property
     def net_electricity_consumption_cost_without_storage_and_partial_load_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage_and_partial_load_and_pv` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage_and_partial_load_and_pv
+        return self._sum_building_counterfactual_series(
+            lambda b: (
+                b.net_electricity_consumption_cost_without_storage_and_partial_load_and_pv
                 if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_cost_without_storage_and_pv
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+            )
+        )
 
     @property
     def net_electricity_consumption_without_storage_and_partial_load_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage_and_partial_load_and_pv` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage_and_partial_load_and_pv
+        return self._sum_building_counterfactual_series(
+            lambda b: (
+                b.net_electricity_consumption_without_storage_and_partial_load_and_pv
                 if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_without_storage_and_pv
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+            )
+        )
 
 
     @property
     def net_electricity_consumption_emission_without_storage_and_partial_load(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage_and_partial_load` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage_and_partial_load
+        return self._sum_building_counterfactual_series(
+            lambda b: (
+                b.net_electricity_consumption_emission_without_storage_and_partial_load
                 if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_emission_without_storage
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+            )
+        )
 
     @property
     def net_electricity_consumption_cost_without_storage_and_partial_load(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage_and_partial_load` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage_and_partial_load
+        return self._sum_building_counterfactual_series(
+            lambda b: (
+                b.net_electricity_consumption_cost_without_storage_and_partial_load
                 if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_cost_without_storage
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+            )
+        )
 
     @property
     def net_electricity_consumption_without_storage_and_partial_load(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage_and_partial_load` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage_and_partial_load
+        return self._sum_building_counterfactual_series(
+            lambda b: (
+                b.net_electricity_consumption_without_storage_and_partial_load
                 if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_without_storage
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+            )
+        )
 
     @property
     def net_electricity_consumption_emission_without_storage_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage_and_pv` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage_and_pv
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_counterfactual_series(lambda b: b.net_electricity_consumption_emission_without_storage_and_pv)
 
     @property
     def net_electricity_consumption_cost_without_storage_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage_and_pv` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage_and_pv
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_counterfactual_series(lambda b: b.net_electricity_consumption_cost_without_storage_and_pv)
 
     @property
     def net_electricity_consumption_without_storage_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage_and_pv` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage_and_pv
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_counterfactual_series(lambda b: b.net_electricity_consumption_without_storage_and_pv)
 
 
     @property
     def net_electricity_consumption_emission_without_storage(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_counterfactual_series(lambda b: b.net_electricity_consumption_emission_without_storage)
 
     @property
     def net_electricity_consumption_cost_without_storage(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_counterfactual_series(lambda b: b.net_electricity_consumption_cost_without_storage)
 
     @property
     def net_electricity_consumption_without_storage(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_counterfactual_series(lambda b: b.net_electricity_consumption_without_storage)
 
     @property
     def net_electricity_consumption_emission(self) -> List[float]:
@@ -1263,11 +1274,13 @@ class CityLearnEnv(Environment, Env):
     @central_agent.setter
     def central_agent(self, central_agent: bool):
         self.__central_agent = central_agent
+        self._observations_cache = None
 
     @shared_observations.setter
     def shared_observations(self, shared_observations: List[str]):
         self.__shared_observations = self.get_default_shared_observations() if shared_observations is None else shared_observations
         self._shared_observations_set = set(self.__shared_observations)
+        self._observations_cache = None
 
     @interface.setter
     def interface(self, interface: str):
@@ -1277,6 +1290,7 @@ class CityLearnEnv(Environment, Env):
         if mode != 'entity' and getattr(self, '_CityLearnEnv__topology_mode', 'static') == 'dynamic':
             raise ValueError("topology_mode='dynamic' requires interface='entity'.")
         self.__interface = mode
+        self._observations_cache = None
 
     @topology_mode.setter
     def topology_mode(self, topology_mode: str):
@@ -1792,12 +1806,14 @@ class CityLearnEnv(Environment, Env):
         else:
             agent_type = self.schema['agent']['type']
 
-        if kwargs is not None and len(kwargs) > 0:
+        if agent is None:
+            schema_agent = self.schema.get('agent') or {}
+            schema_attrs = schema_agent.get('attributes')
+            agent_attributes = dict(schema_attrs) if isinstance(schema_attrs, Mapping) else {}
+            if kwargs:
+                agent_attributes.update(kwargs)
+        elif kwargs:
             agent_attributes = dict(kwargs)
-
-        elif agent is None:
-            agent_attributes = dict(self.schema['agent'].get('attributes', {}))
-
         else:
             agent_attributes = {}
 

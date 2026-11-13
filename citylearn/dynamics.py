@@ -127,14 +127,19 @@ class LSTMDynamics(Dynamics, (torch.nn if torch is not None else _TorchNNPlaceho
 
         super().reset()
 
-        try:
-            self.load_state_dict(torch.load(self.filepath)['model_state_dict'])
-        
-        except RuntimeError:
-            self.load_state_dict(torch.load(self.filepath, map_location=torch.device('cpu'))['model_state_dict'])
-        
-        except:
-            self.load_state_dict(torch.load(self.filepath))
+        cached_path = getattr(self, '_cached_state_dict_filepath', None)
+        state_dict = getattr(self, '_cached_state_dict', None)
+        if state_dict is None or cached_path != self.filepath:
+            checkpoint = torch.load(self.filepath, map_location=torch.device('cpu'))
+            state_dict = (
+                checkpoint['model_state_dict']
+                if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint
+                else checkpoint
+            )
+            self._cached_state_dict = state_dict
+            self._cached_state_dict_filepath = self.filepath
+
+        self.load_state_dict(state_dict)
 
         # Simulation is inference: without eval() the dropout layer stays active and every prediction
         # drops random units (unseeded), making the temperature dynamics noisy and non-reproducible.

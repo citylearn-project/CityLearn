@@ -164,6 +164,15 @@ Fixes that **change results** where they apply:
 - Terminal observation: calendar, weather and prices come from the terminal
   row, and endogenous values from the last executed step, as for every other
   observation. Episode length and termination are unchanged.
+- Dynamic-topology, entity, wrapper, agent and CLI edge cases: export-ratio KPIs
+  mask inactive membership intervals; dynamic member rejoins preserve
+  charging-constraint and phase-power histories; BAU time-series exports write
+  only executed steps; entity flexible-capacity metrics honour `max_soc < 1`;
+  `TabularQLearningWrapper` encodes discrete multi-feature states without
+  materializing Cartesian lookup tables; `MARLISARBC` uses its RBC policy during
+  exploration; `ComfortReward` and `MultiBuildingRewardFunction` resolve
+  mode/scoping edge cases; and `citylearn simulate ... train --evaluate`
+  evaluates the trained agent instance.
 
 Changes that **preserve trajectories and KPI values**: the zero-size placeholders
 for absent devices, and EV chargers, are seeded, so the placeholders' unused

@@ -151,6 +151,10 @@ class CityLearnBusinessAsUsualBaselineService:
         requires_entity_interface = (
             getattr(env, 'topology_mode', None) == 'dynamic'
             or bool(getattr(getattr(env, '_demand_response_service', None), 'enabled', False))
+            or (
+                getattr(env, 'interface', 'flat') == 'entity'
+                and bool(getattr(getattr(env, '_robustness_service', None), 'enabled', False))
+            )
         )
 
         baseline_env = env.__class__(

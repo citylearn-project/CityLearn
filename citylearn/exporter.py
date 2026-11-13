@@ -172,7 +172,7 @@ class EpisodeExporter:
         if self._render_file_format() == 'parquet':
             kpis.to_parquet(file_path, index=False)
         else:
-            kpis.fillna('').to_csv(file_path, index=False, encoding='utf-8')
+            kpis.to_csv(file_path, index=False, encoding='utf-8', na_rep='')
         if include_business_as_usual and export_business_as_usual_timeseries:
             self.export_business_as_usual_timeseries(export_env)
         from citylearn.internal.experiment import experiment_manifest
@@ -193,7 +193,7 @@ class EpisodeExporter:
         result = source_env.run_business_as_usual_baseline()
         baseline_env = result.env
         episode_num = source_env.episode_tracker.episode
-        final_index = int(result.time_step)
+        executed_steps = max(int(result.time_step), 0)
         filename = self._export_filename(f"exported_data_business_as_usual_ep{episode_num}.csv")
         file_path = Path(env.new_folder_path) / filename
         if file_path.exists():
@@ -221,7 +221,7 @@ class EpisodeExporter:
         if self._render_file_format() == 'parquet':
             rows = []
             chunk_size = self._render_chunk_size()
-            for t in range(final_index + 1):
+            for t in range(executed_steps):
                 building_rows = []
                 for building in self._buildings_for_time_step(t, baseline_env):
                     row = self._business_as_usual_building_row(building, t, baseline_env)
@@ -239,11 +239,11 @@ class EpisodeExporter:
             self.write_render_rows(filename, rows)
             return
 
-        with file_path.open('w', newline='') as csvfile:
+        with file_path.open('w', newline='', encoding='utf-8') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
-            for t in range(final_index + 1):
+            for t in range(executed_steps):
                 building_rows = []
                 for building in self._buildings_for_time_step(t, baseline_env):
                     row = self._business_as_usual_building_row(building, t, baseline_env)

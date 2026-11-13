@@ -31,12 +31,12 @@ class MARLISA(SAC):
         self.__pending_transitions = None
         self.__start_regression_time_step = None
         self.information_sharing = information_sharing
+        self.pca_compression = pca_compression
 
         super().__init__(*args, **kwargs)
 
         self.regression_buffer_capacity = regression_buffer_capacity
         self.start_regression_time_step = start_regression_time_step
-        self.pca_compression = pca_compression
         self.iterations = iterations
         self.regression_frequency = regression_frequency
 
@@ -418,8 +418,8 @@ class MARLISA(SAC):
     def set_pca(self):
         addition = self.__COORDINATION_VARIABLE_COUNT if self.information_sharing else 0
         
-        for i, s in enumerate(self.observation_space):
-            n_components = int((self.pca_compression)*(addition + len(self.get_encoded_observations(i, s.low))))
+        for i, obs_dim in enumerate(self.observation_dimension):
+            n_components = max(1, int((self.pca_compression)*(addition + obs_dim)))
             self.pca[i] = PCA(n_components=n_components, random_state=self._get_seed(3, i))
 
     def set_energy_coefficients(self):
@@ -482,7 +482,13 @@ class MARLISA(SAC):
 
     def set_networks(self):
         internal_observation_count = self.__COORDINATION_VARIABLE_COUNT if self.information_sharing else 0
-        return super().set_networks(internal_observation_count=internal_observation_count)
+        if self.pca_compression == 1.0:
+            return super().set_networks(internal_observation_count=internal_observation_count)
+        observation_dimensions = [
+            max(1, int(self.pca_compression * (obs_dim + internal_observation_count)))
+            for obs_dim in self.observation_dimension
+        ]
+        return super().set_networks(observation_dimensions=observation_dimensions)
 
     def set_training_schedule(self, *args, **kwargs):
         # SAC.__init__ calls this before start_regression_time_step exists; MARLISA.__init__ calls it again afterwards.
@@ -565,7 +571,4 @@ class MARLISARBC(MARLISA, SACRBC):
         super().__init__(env=env, rbc=rbc, **kwargs)
 
     def get_exploration_prediction_without_information_sharing(self, observations: List[List[float]]) -> Tuple[List[List[float]], List[List[float]]]:
-        _, coordination_variables = super().get_exploration_prediction_without_information_sharing(observations)
-        actions = super(SACRBC, self).get_exploration_prediction(observations)
-
-        return actions, coordination_variables
+        return super().get_exploration_prediction_without_information_sharing(observations)

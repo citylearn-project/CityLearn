@@ -381,11 +381,15 @@ class SAC(RLC):
     def get_encoded_observations(self, index: int, observations: List[float]) -> npt.NDArray[np.float64]:
         return np.array([j for j in np.hstack(self.encoders[index]*np.array(observations, dtype=float)) if j != None], dtype = float)
 
-    def set_networks(self, internal_observation_count: int = None):
+    def set_networks(self, internal_observation_count: int = None, observation_dimensions: List[int] = None):
         internal_observation_count = 0 if internal_observation_count is None else internal_observation_count
 
         for i in range(len(self.action_dimension)):
-            observation_dimension = self.observation_dimension[i] + internal_observation_count
+            observation_dimension = (
+                self.observation_dimension[i] + internal_observation_count
+                if observation_dimensions is None
+                else int(observation_dimensions[i])
+            )
             # init networks
             self.soft_q_net1[i] = SoftQNetwork(observation_dimension, self.action_dimension[i], self.hidden_dimension).to(self.device)
             self.soft_q_net2[i] = SoftQNetwork(observation_dimension, self.action_dimension[i], self.hidden_dimension).to(self.device)
@@ -464,3 +468,8 @@ class SACRBC(SAC):
         """Return actions using :class:`RBC`."""
 
         return self.rbc.predict(observations)
+
+    def reset(self):
+        super().reset()
+        if getattr(self, '_SACRBC__rbc', None) is not None:
+            self.__rbc.reset()
