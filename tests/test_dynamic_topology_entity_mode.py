@@ -3,16 +3,20 @@ from __future__ import annotations
 import csv
 import datetime
 import json
+import shutil
 from pathlib import Path
 from typing import Any, Mapping
 
 import numpy as np
+import pandas as pd
 import pytest
 
 pytest.importorskip("gymnasium")
 
 from citylearn.building import DynamicsBuilding
 from citylearn.citylearn import CityLearnEnv, EvaluationCondition
+from citylearn.internal import ev_departure_audit
+from citylearn.internal.balance_audit import IndependentBalanceAudit
 
 
 SCHEMA_PATH = Path(__file__).resolve().parents[1] / "data/datasets/citylearn_three_phase_dynamic_topology_demo/schema.json"
@@ -315,6 +319,164 @@ def test_removed_charger_can_be_reinstalled_from_its_initial_template():
             t_final=env.time_step,
         )
         assert ev_metrics["departures_total"] == 2.0
+    finally:
+        env.close()
+
+
+def _ev_lifecycle_env(tmp_path, seconds, *, first_activation=False, second_charger=False):
+    shutil.copytree(STATIC_SCHEMA_PATH.parent, tmp_path, dirs_exist_ok=True)
+    schema = json.loads((tmp_path / "schema.json").read_text())
+    schema.update(root_directory=str(tmp_path), seconds_per_time_step=seconds)
+    ev_id = "Electric_Vehicle_1"
+    schema["electric_vehicles_def"][ev_id]["battery"]["attributes"].update(
+        initial_soc=.25, loss_coefficient=.04, depth_of_discharge=.8,
+        capacity_loss_coefficient=0., power_efficiency_curve=[[0., .81], [1., .81]],
+    )
+    building = schema["buildings"]["Building_1"]
+    charger = building["chargers"]["charger_1_1"]
+    charger["attributes"].update(charge_efficiency_curve=[[0., .95], [1., .95]])
+    schedule_path = tmp_path / charger["charger_simulation"]
+    schedule = pd.read_csv(schedule_path)
+    schedule["electric_vehicle_charger_state"] = 1
+    schedule["electric_vehicle_id"] = ev_id
+    schedule["electric_vehicle_departure_time"] = np.arange(len(schedule), 0, -1)
+    schedule["electric_vehicle_estimated_soc_arrival"] = -0.1
+    schedule.to_csv(schedule_path, index=False)
+    if second_charger:
+        schedule["electric_vehicle_current_soc"] = .1
+        schedule.to_csv(tmp_path / "charger_1_2.csv", index=False)
+        building["chargers"]["charger_1_2"] = {**charger, "charger_simulation": "charger_1_2.csv"}
+    events = [
+        {"operation": "remove_asset", "time_step": 2},
+        {"operation": "add_asset", "time_step": 5},
+    ]
+    if first_activation:
+        schema["buildings"]["Template"] = {**building, "include": False}
+        building["chargers"] = {}
+        events = [{"operation": "add_asset", "time_step": 5, "source_member_id": "Template"}]
+    schema["topology_events"] = [
+        {**event, "target_member_id": "Building_1", "target_asset_type": "charger",
+         "target_asset_id": "charger_1_1"} for event in events
+    ]
+    return CityLearnEnv(schema, interface="entity", topology_mode="dynamic", random_seed=19,
+                        physics_invariant_checks=True, export_kpis_on_episode_end=False)
+
+
+def _assert_lifecycle_ev_observation(env, ev, expected):
+    spec = env.entity_specs["tables"]["ev"]
+    row = spec["ids"].index(ev.name)
+    col = spec["features"].index("soc")
+    assert env.observations["tables"]["ev"][row, col] == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("seconds", [3600, 900])
+def test_reinstalled_charger_recovers_the_same_evolved_ev(tmp_path, seconds):
+    env = _ev_lifecycle_env(tmp_path, seconds)
+    try:
+        env.reset(seed=19)
+        ev, = env.electric_vehicles
+        battery = ev.battery
+        with IndependentBalanceAudit(env) as audit:
+            _step_until(env, 2)
+            assert ev not in env.electric_vehicles
+            assert "Building_1/charger_1_1" not in env.entity_specs["actions"]["charger"]["ids"]
+            expected = float(battery.soc[2])
+            mobility_rng = np.random.RandomState(np.random.SeedSequence([19, 1]).generate_state(1)[0])
+            retention = .96**(seconds/3600)
+            for step in range(3, 6):
+                _step_until(env, step)
+                expected *= retention * np.clip(mobility_rng.normal(1., .2*np.sqrt(seconds/3600)), .6, 1.4)
+                assert ev.time_step == battery.time_step == step
+                assert float(battery.soc[step]) == pytest.approx(expected, abs=1e-7)
+                assert battery.energy_balance[step] == 0.
+                standby, mobility = battery.energy_provenance_events
+                assert [standby["kind"], mobility["kind"]] == ["standby", "external"]
+                assert standby["before"] - standby["after"] == pytest.approx(
+                    standby["before"]*(1.-retention), abs=1e-5,
+                )
+                assert standby["after"] == pytest.approx(mobility["before"])
+                assert mobility["after"] == pytest.approx(expected * battery.capacity)
+            assert env.electric_vehicles == [ev]
+            charger, = env.buildings[0].electric_vehicle_chargers
+            assert charger.connected_electric_vehicle is ev
+            assert "Building_1/charger_1_1" in env.entity_specs["actions"]["charger"]["ids"]
+            _assert_lifecycle_ev_observation(env, ev, expected)
+            opening = battery.energy_init
+            kpi = env._kpi_service
+            sim = charger.charger_simulation
+            states = sim.electric_vehicle_charger_state
+            boundary_step, boundary_soc = kpi._ev_kpi_connection_boundary(charger, sim, ev, states, 6)
+            assert boundary_step == 5
+            assert boundary_soc == pytest.approx(opening / battery.capacity)
+            start = ev_departure_audit.connected_start(kpi, charger, sim, ev, states, 5)
+            reason, audit_soc = ev_departure_audit.prerequisites(kpi, charger, sim, ev, states, start, .8)
+            assert start == 5 and reason is None
+            assert audit_soc == pytest.approx(boundary_soc)
+            reward_observation = env.buildings[0]._get_observations_data(include_all=True)
+            assert reward_observation["electric_vehicles_chargers_dict"][charger.charger_id][
+                "previous_battery_soc"
+            ] == pytest.approx(boundary_soc)
+            action = _zero_entity_actions(env)
+            action["tables"]["charger"][:] = 1.
+            env.step(action)
+            ac = float(charger.electricity_consumption[5])
+            assert 0. < ac <= charger.max_charging_power * seconds/3600 + 1e-5
+            assert battery.soc[5]*battery.capacity - opening == pytest.approx(ac*.95*.9, abs=1e-5)
+            _step_until(env, 7)
+            assert audit.finish()["status"] == "pass"
+        env.reset(seed=19)
+        _step_until(env, 5)
+        assert float(ev.battery.soc[5]) == pytest.approx(expected)
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("seconds", [3600, 900])
+def test_first_ev_activation_accounts_for_opening_stock(tmp_path, seconds):
+    env = _ev_lifecycle_env(tmp_path, seconds, first_activation=True)
+    try:
+        env.reset(seed=19)
+        assert not env.electric_vehicles
+        _step_until(env, 5)
+        ev, = env.electric_vehicles
+        battery = ev.battery
+        assert ev.time_step == battery.time_step == 5
+        assert battery.soc[5] == pytest.approx(.25)
+        _assert_lifecycle_ev_observation(env, ev, .25)
+        opening, = battery.energy_provenance_events
+        assert opening["kind"] == "external"
+        assert opening["before"] == 0.
+        assert opening["after"] == pytest.approx(.25*battery.capacity)
+        assert opening["terminal"] == battery.energy_balance[5] == 0.
+        stock = env._provenance_service.stocks[id(battery)]
+        assert stock.bag[("unknown", "Building_1")][0] == pytest.approx(.25*battery.capacity)
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("seconds", [3600, 900])
+def test_another_charger_keeps_the_ev_active_during_removal(tmp_path, seconds):
+    with pytest.warns(RuntimeWarning, match="already plugged"):
+        env = _ev_lifecycle_env(tmp_path, seconds, second_charger=True)
+    try:
+        env.reset(seed=19)
+        ev, = env.electric_vehicles
+        _step_until(env, 2)
+        alternate, = env.buildings[0].electric_vehicle_chargers
+        assert alternate.connected_electric_vehicle is ev
+        assert env._provenance_service.stocks[id(ev.battery)].connection is alternate
+        with pytest.warns(RuntimeWarning, match="already plugged"):
+            _step_until(env, 5)
+        assert env.electric_vehicles == [ev]
+        assert not env._topology_service.suspended_evs
+        assert ev.battery.soc[5] == pytest.approx(.25*.96**(5*seconds/3600))
+        chargers = env.buildings[0].electric_vehicle_chargers
+        assert [charger for charger in chargers if charger.connected_electric_vehicle is ev] == [alternate]
+        action = _zero_entity_actions(env)
+        action["tables"]["charger"][:] = 1.
+        env.step(action)
+        assert alternate.electricity_consumption[5] > 0.
+        assert sum(charger.electricity_consumption[5] > 0. for charger in chargers) == 1
     finally:
         env.close()
 

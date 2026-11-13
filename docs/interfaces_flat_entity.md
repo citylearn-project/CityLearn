@@ -210,3 +210,14 @@ has the same topology event timeline as recreating the environment for each epis
 | Running statistics | Maintain stats per feature, not per fixed row. |
 | Removed assets | Ignore IDs that disappear from `active_ids`. |
 | Added assets | Initialize model memory/hidden state for new IDs. |
+
+EV IDs identify vehicles independently of their chargers. Removing the last
+charger that references an EV suspends its participation in the community.
+The same EV continues to experience standby loss and the seeded away-mobility
+model while suspended, with no charging from the community. Reinstalling a
+charger brings back that EV and its evolved SOC. A valid arrival SOC from the
+dataset is an external adjustment. A catalogue EV first activated mid-episode
+opens at its configured initial SOC, and its opening stock enters the energy
+accounting when it connects. The EV can connect to one charger at a time.
+Departure metrics start a topology-induced connection at its observed opening
+SOC and count charging opportunities from that connection onwards.

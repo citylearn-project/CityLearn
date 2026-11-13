@@ -930,6 +930,9 @@ class CityLearnRuntimeService:
             timer_start = time.perf_counter() if debug_timing else 0.0
             for electric_vehicle in env.electric_vehicles:
                 electric_vehicle.next_time_step()
+            if env._topology_service.enabled:
+                for electric_vehicle in env._topology_service.suspended_evs:
+                    electric_vehicle.next_time_step()
             if debug_timing:
                 timings['next_time_step_electric_vehicles_time'] = time.perf_counter() - timer_start
         elif debug_timing:
@@ -1136,9 +1139,28 @@ class CityLearnRuntimeService:
                         previous_runtime_ev is not ev or session_changed
                     )
                     if is_new_connection:
-                        soc_value = _resolve_arrival_soc(sim, env.time_step, prev_state, prev_ev_id, ev_id)
+                        continuing_schedule = prev_state == 1 and prev_ev_id == ev_id and not session_changed
+                        topology_connection = env._topology_service.enabled and (
+                            getattr(charger, '_topology_added_time_step', None) == env.time_step
+                            or continuing_schedule
+                        )
+                        # Changing ports mid-session must not reapply telemetry for a vehicle
+                        # that has already been served at the preceding interval.
+                        handover = topology_connection and continuing_schedule and (
+                            env._topology_service.was_ev_connected(ev, env.time_step - 1)
+                        )
+                        soc_value = None if handover else _resolve_arrival_soc(
+                            sim, env.time_step, prev_state, prev_ev_id, ev_id,
+                        )
                         if soc_value is not None:
                             ev.battery.force_set_soc(soc_value)
+                            ev._arrival_soc_time_step = env.time_step
+                        if topology_connection:
+                            # Capture the real boundary before any action changes the new stock.
+                            boundary_soc = getattr(charger, '_topology_connection_soc', None)
+                            if boundary_soc is None:
+                                boundary_soc = charger._topology_connection_soc = {}
+                            boundary_soc[env.time_step] = float(ev.battery.soc[env.time_step])
                             ev._arrival_soc_time_step = env.time_step
                 elif state == 2:
                     charger.associate_incoming_car(ev)
@@ -1233,6 +1255,19 @@ class CityLearnRuntimeService:
                 variability = np.clip(random_state.normal(1.0, drift_std), 0.6, 1.4)
                 # Exogenous away-from-home movement: driving can reduce SOC, offsite charging can raise it.
                 ev.battery.force_set_soc(float(np.clip(last_soc * variability, 0.0, 1.0)))
+
+        if env._topology_service.enabled and env._topology_service.suspended_evs:
+            # Use a separate stream so suspension does not shift mobility draws for participating EVs.
+            suspended_random = getattr(env, '_ev_suspended_drift_random_state', None)
+            if suspended_random is None:
+                seed = np.random.SeedSequence([env._ev_drift_seed, 1]).generate_state(1)[0]
+                suspended_random = env._ev_suspended_drift_random_state = np.random.RandomState(seed)
+            drift_std = self._ev_unconnected_drift_std(env.seconds_per_time_step)
+            for ev in env._topology_service.suspended_evs:
+                battery = ev.battery
+                soc_after_standby = float(battery.soc[t])
+                variability = np.clip(suspended_random.normal(1.0, drift_std), 0.6, 1.4)
+                battery.force_set_soc(float(np.clip(soc_after_standby * variability, 0.0, 1.0)))
 
     def _record_deferrable_service_interval(self):
         for building in self.env.buildings:

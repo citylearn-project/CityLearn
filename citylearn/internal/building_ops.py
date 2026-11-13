@@ -289,7 +289,11 @@ class BuildingOpsService:
                         last_charged_kwh = float(charger.past_charging_action_values_kwh[endogenous_t])
 
                     battery_soc = connected_car.battery.soc[connected_car.observation_soc_index(endogenous_t)]
-                    previous_battery_soc = connected_car.battery.initial_soc if endogenous_t == 0 else connected_car.battery.soc[endogenous_t - 1]
+                    boundary_soc = getattr(charger, '_topology_connection_soc', {})
+                    if endogenous_t in boundary_soc:
+                        previous_battery_soc = boundary_soc[endogenous_t]
+                    else:
+                        previous_battery_soc = connected_car.battery.initial_soc if endogenous_t == 0 else connected_car.battery.soc[endogenous_t - 1]
 
                     required_soc = charger.charger_simulation.electric_vehicle_required_soc_departure[t]
                     departure_steps = charger.charger_simulation.electric_vehicle_departure_time[t]
