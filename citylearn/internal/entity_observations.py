@@ -351,12 +351,13 @@ def fill_ev_rows(entity: "CityLearnEntityInterfaceService", context: Observation
         entity._set_obs_value(row, entity._ev_feature_cols, "battery_capacity_kwh", capacity)
         entity._set_obs_value(row, entity._ev_feature_cols, "depth_of_discharge_ratio", depth_of_discharge)
         if core_bundle_enabled:
-            soc_min = max(1.0 - depth_of_discharge, 0.0)
+            soc_max = float(np.clip(entity._safe_scalar(getattr(ev.battery, "max_soc", 1.0), 1.0), 0.0, 1.0))
+            soc_min = float(np.clip(1.0 - depth_of_discharge, 0.0, soc_max))
             energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
-            energy_to_full = max((1.0 - soc) * max(capacity, 0.0), 0.0)
+            energy_to_full = max((soc_max - soc) * max(capacity, 0.0), 0.0)
             entity._set_obs_value(row, entity._ev_feature_cols, "soc_ratio", soc)
             entity._set_obs_value(row, entity._ev_feature_cols, "soc_min_ratio", soc_min)
-            entity._set_obs_value(row, entity._ev_feature_cols, "soc_max_ratio", 1.0)
+            entity._set_obs_value(row, entity._ev_feature_cols, "soc_max_ratio", soc_max)
             entity._set_obs_value(row, entity._ev_feature_cols, "energy_available_kwh", energy_available)
             entity._set_obs_value(row, entity._ev_feature_cols, "energy_to_full_kwh", energy_to_full)
 
@@ -406,9 +407,11 @@ def fill_storage_rows(entity: "CityLearnEntityInterfaceService", context: Observ
         entity._set_obs_value(row, entity._storage_feature_cols, "round_trip_efficiency_ratio", round_trip_efficiency)
         if core_bundle_enabled:
             depth_of_discharge = entity._safe_scalar(getattr(storage, "depth_of_discharge", 1.0), 1.0)
-            soc_min = max(1.0 - depth_of_discharge, 0.0)
+            soc_max = float(np.clip(entity._safe_scalar(getattr(storage, "max_soc", 1.0), 1.0), 0.0, 1.0))
+            soc_min = float(np.clip(1.0 - depth_of_discharge, 0.0, soc_max))
             current_energy = soc * max(capacity, 0.0)
-            energy_to_full = max(capacity - current_energy, 0.0)
+            max_energy = max(capacity, 0.0) if soc_max == 1.0 else soc_max * max(capacity, 0.0)
+            energy_to_full = max(max_energy - current_energy, 0.0)
             energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
             max_charge_power = (
                 entity._safe_scalar(storage.get_max_input_power(), nominal_power)
@@ -427,6 +430,7 @@ def fill_storage_rows(entity: "CityLearnEntityInterfaceService", context: Observ
                 capacity=capacity,
                 nominal_power=nominal_power,
                 soc_min=soc_min,
+                soc_max=soc_max,
                 energy_to_full=energy_to_full,
                 energy_available=energy_available,
                 max_charge_power=max_charge_power,

@@ -96,31 +96,49 @@ class RewardFunction:
         return reward
     
 class MultiBuildingRewardFunction(RewardFunction):
-    def __init__(self, env, reward_functions: dict[str, RewardFunction]):
+    def __init__(self, env, reward_functions: Mapping[str, RewardFunction]):
         self.env = env
         self.reward_functions = reward_functions
         super().__init__(env)
 
-    def calculate(self, observations: list[dict]) -> list[float]:
+    def _iter_active_reward_functions(self, observations: List[Mapping[str, Any]]):
+        buildings = self.env_metadata.get('buildings') if isinstance(self.env_metadata, Mapping) else None
+        if (
+            isinstance(buildings, list)
+            and len(buildings) == len(observations)
+            and all(isinstance(b, Mapping) and b.get('name') in self.reward_functions for b in buildings)
+        ):
+            for obs, b in zip(observations, buildings):
+                name = str(b['name'])
+                yield obs, name, self.reward_functions[name]
+            return
+
+        for obs, (building_name, rf) in zip(observations, self.reward_functions.items()):
+            yield obs, building_name, rf
+
+    def calculate(self, observations: List[Mapping[str, Any]]) -> List[float]:
         # Each building's function sees only that building, so it yields one value; collect them flat
         # and aggregate for a central agent like every other reward function.
         rewards = []
-        for obs, (building_name, rf) in zip(observations, self.reward_functions.items()):
+        for obs, building_name, rf in self._iter_active_reward_functions(observations):
             if rf is None:
                 raise ValueError(f"No reward function for building '{building_name}'")
 
             rewards.extend(float(value) for value in np.asarray(rf.calculate([obs]), dtype=float).reshape(-1))
 
-        return [sum(rewards)] if self.central_agent else rewards
+        return [sum(rewards, numpy1_scalar(0))] if self.central_agent else rewards
 
     def reset(self):
         for rf in self.reward_functions.values():
-            rf.reset()
+            if rf is not None:
+                rf.reset()
 
     def get_required_observation_names(self) -> Optional[Iterable[str]]:
         required: Set[str] = set()
 
         for rf in self.reward_functions.values():
+            if rf is None:
+                continue
             names = rf.get_required_observation_names()
             if names is None:
                 return None
@@ -135,8 +153,25 @@ class MultiBuildingRewardFunction(RewardFunction):
     @env_metadata.setter
     def env_metadata(self, env_metadata: Mapping[str, Any]):
         self._env_metadata = env_metadata
-        for rf in self.reward_functions.values():
-            rf.env_metadata = env_metadata
+        buildings_by_name = {}
+        if isinstance(env_metadata, Mapping) and isinstance(env_metadata.get('buildings'), list):
+            for idx, b in enumerate(env_metadata['buildings']):
+                if isinstance(b, Mapping) and 'name' in b:
+                    buildings_by_name[str(b['name'])] = b
+                buildings_by_name.setdefault(idx, b)
+
+        for idx, (building_name, rf) in enumerate(self.reward_functions.items()):
+            if rf is None:
+                continue
+            if isinstance(env_metadata, Mapping):
+                scoped = dict(env_metadata)
+                scoped['central_agent'] = False
+                matched = buildings_by_name.get(str(building_name), buildings_by_name.get(idx))
+                if matched is not None:
+                    scoped['buildings'] = [matched]
+                rf.env_metadata = scoped
+            else:
+                rf.env_metadata = env_metadata
     
 
 class MARL(RewardFunction):
@@ -325,13 +360,13 @@ class ComfortReward(RewardFunction):
                     reward = -(delta**numpy1_scalar(exponent))
                 
                 elif lower_bound_comfortable_indoor_dry_bulb_temperature <= indoor_dry_bulb_temperature < set_point:
-                    reward = 0.0 if heating else -delta
+                    reward = 0.0 if hvac_mode == 2 else -delta
 
                 elif set_point <= indoor_dry_bulb_temperature <= upper_bound_comfortable_indoor_dry_bulb_temperature:
-                    reward = -delta if heating else 0.0
+                    reward = -delta if hvac_mode == 2 else 0.0
 
                 else:
-                    exponent = self.higher_exponent if heating else self.lower_exponent
+                    exponent = self.higher_exponent if hvac_mode == 2 else self.lower_exponent
                     reward = -(delta**numpy1_scalar(exponent))
 
             else:
@@ -455,7 +490,7 @@ class Electric_Vehicles_Reward_Function(MARL):
         super().__init__(env_metadata)
 
         # Default tunable weights for EV-related reward components
-        self.weights = weights or {
+        default_weights = {
             "no_car_charging": -5.0,
             "battery_limits": -2.0,
             "soc_impossible": -10.0,
@@ -464,6 +499,7 @@ class Electric_Vehicles_Reward_Function(MARL):
             "self_ev_consumption": 5.0,
             "extra_self_production": 5.0,
         }
+        self.weights = dict(default_weights) if weights is None else {**default_weights, **dict(weights)}
         self._last_base_reward_total = 0.0
         self._last_penalty_total = 0.0
         self._last_base_rewards_per_building: List[float] = []
@@ -534,6 +570,8 @@ class Electric_Vehicles_Reward_Function(MARL):
             soc_now = data.get("battery_soc")
             capacity = data.get("battery_capacity")
             min_capacity = data.get("min_capacity")
+            if min_capacity is None:
+                min_capacity = 0.0
             last_charged_kwh = data.get("last_charged_kwh", 0)
             if last_charged_kwh is None:
                 last_charged_kwh = 0.0

@@ -2614,8 +2614,8 @@ class CityLearnKPIService:
                 dynamics_building_cls=dynamics_building_cls,
             )
             t_start, t_end = building_windows.get(building.name, (0, -1))
-            net_c = self._slice_window(getattr(building, f'net_electricity_consumption{control_cond.value}'), t_start, t_end)
-            net_b = self._slice_window(getattr(building, f'net_electricity_consumption{baseline_cond.value}'), t_start, t_end)
+            net_c = self._energy_values(building, getattr(building, f'net_electricity_consumption{control_cond.value}'))
+            net_b = self._energy_values(building, getattr(building, f'net_electricity_consumption{baseline_cond.value}'))
             export_c = self._sum_finite(np.clip(-net_c, 0.0, None))
             export_b = self._sum_finite(np.clip(-net_b, 0.0, None))
             put(
@@ -2633,8 +2633,8 @@ class CityLearnKPIService:
             evaluation_condition_cls.WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV
             if baseline_condition is None else baseline_condition
         )
-        env_net_c = np.array(getattr(env, f'net_electricity_consumption{env_control_condition.value}'), dtype='float64')
-        env_net_b = np.array(getattr(env, f'net_electricity_consumption{env_baseline_condition.value}'), dtype='float64')
+        env_net_c = self._energy_values(env, getattr(env, f'net_electricity_consumption{env_control_condition.value}'))
+        env_net_b = self._energy_values(env, getattr(env, f'net_electricity_consumption{env_baseline_condition.value}'))
         env_export_c = self._sum_finite(np.clip(-env_net_c, 0.0, None))
         env_export_b = self._sum_finite(np.clip(-env_net_b, 0.0, None))
         put(

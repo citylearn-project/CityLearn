@@ -685,7 +685,7 @@ class EnergySimulation(TimeSeriesData):
         noise_start_index=0,
         dataset_seconds_per_time_step=None,
     ):
-        super().__init__(start_time_step=start_time_step, end_time_step=end_time_step)
+        super().__init__(start_time_step=None, end_time_step=None)
         self.noise_std = noise_std
         from citylearn.utilities import IndexedNoise
         noise_random_state = None if noise_seed is None else IndexedNoise(noise_seed, noise_start_index)
@@ -703,9 +703,15 @@ class EnergySimulation(TimeSeriesData):
         # set space demands and check there is not cooling and heating demand at same time step
         self.cooling_demand = np.array(cooling_demand, dtype = 'float32')
         self.heating_demand = np.array(heating_demand, dtype = 'float32')
-        assert (self.cooling_demand*self.heating_demand).sum() == 0, 'Cooling and heating in the same time step is not allowed.'
+        assert not np.any((self.cooling_demand > 0) & (self.heating_demand > 0)), (
+            'Cooling and heating in the same time step is not allowed.'
+        )
 
-        self.solar_generation = np.array(solar_generation, dtype = 'float32') + NoiseUtils.generate_gaussian_noise(indoor_dry_bulb_temperature, self.noise_std, random_state=noise_random_state)
+        solar_arr = np.array(solar_generation, dtype='float32')
+        solar_noisy = solar_arr + NoiseUtils.generate_gaussian_noise(
+            solar_arr, self.noise_std, random_state=noise_random_state
+        )
+        self.solar_generation = np.maximum(solar_noisy, np.float32(0.0)) if self.noise_std else solar_noisy
 
         # optional
         self.minutes = np.array(minutes, dtype='int32') if minutes is not None else None
@@ -797,6 +803,8 @@ class EnergySimulation(TimeSeriesData):
                 'Valid values are 0, 1, 2, 3 to indicate off, cooling mode, heating mode, and automatic mode.'
             
         self.hvac_mode = np.array(hvac_mode, dtype='int32')
+        self.start_time_step = start_time_step
+        self.end_time_step = end_time_step
 
     @property
     def time_step_ratios(self):
@@ -870,7 +878,7 @@ class Weather(TimeSeriesData):
         noise_seed=None,
         noise_start_index=0,
     ):
-        super().__init__(start_time_step=start_time_step, end_time_step=end_time_step)
+        super().__init__(start_time_step=None, end_time_step=None)
         self.noise_std = noise_std
         from citylearn.utilities import IndexedNoise
         noise_random_state = None if noise_seed is None else IndexedNoise(noise_seed, noise_start_index)
@@ -903,6 +911,8 @@ class Weather(TimeSeriesData):
         self.direct_solar_irradiance_predicted_1 = np.array(direct_solar_irradiance_predicted_1, dtype='float32') + NoiseUtils.generate_gaussian_noise(direct_solar_irradiance_predicted_1, self.noise_std, random_state=noise_random_state)
         self.direct_solar_irradiance_predicted_2 = np.array(direct_solar_irradiance_predicted_2, dtype='float32') + NoiseUtils.generate_gaussian_noise(direct_solar_irradiance_predicted_2, self.noise_std, random_state=noise_random_state)
         self.direct_solar_irradiance_predicted_3 = np.array(direct_solar_irradiance_predicted_3, dtype='float32') + NoiseUtils.generate_gaussian_noise(direct_solar_irradiance_predicted_3, self.noise_std, random_state=noise_random_state)
+        self.start_time_step = start_time_step
+        self.end_time_step = end_time_step
 
 
 
@@ -931,7 +941,7 @@ class Pricing(TimeSeriesData):
         noise_seed=None,
         noise_start_index=0,
     ):
-        super().__init__(start_time_step=start_time_step, end_time_step=end_time_step)
+        super().__init__(start_time_step=None, end_time_step=None)
         self.noise_std = noise_std
         from citylearn.utilities import IndexedNoise
         noise_random_state = None if noise_seed is None else IndexedNoise(noise_seed, noise_start_index)
@@ -939,6 +949,8 @@ class Pricing(TimeSeriesData):
         self.electricity_pricing_predicted_1 = np.array(electricity_pricing_predicted_1, dtype='float32') + NoiseUtils.generate_gaussian_noise(electricity_pricing_predicted_1, self.noise_std, random_state=noise_random_state)
         self.electricity_pricing_predicted_2 = np.array(electricity_pricing_predicted_2, dtype='float32') + NoiseUtils.generate_gaussian_noise(electricity_pricing_predicted_2, self.noise_std, random_state=noise_random_state)
         self.electricity_pricing_predicted_3 = np.array(electricity_pricing_predicted_3, dtype='float32') + NoiseUtils.generate_gaussian_noise(electricity_pricing_predicted_3, self.noise_std, random_state=noise_random_state)
+        self.start_time_step = start_time_step
+        self.end_time_step = end_time_step
 
     def as_dict(self, time_step) -> dict:
         """Return a dictionary representation of the current pricing data.
@@ -1039,10 +1051,30 @@ class ChargerSimulation(TimeSeriesData):
         default_time_value = -1
         default_soc_value = -0.1
 
-        self.electric_vehicle_charger_state = np.array([
-            int(str(s)) if str(s).isdigit() else np.nan
-            for s in electric_vehicle_charger_state
-        ], dtype='float32')
+        def _parse_charger_state(value) -> float:
+            if value is None or pd.isna(value):
+                return np.nan
+            if isinstance(value, str):
+                token = value.strip()
+                if not token:
+                    return np.nan
+                try:
+                    numeric = float(token)
+                except ValueError:
+                    return np.nan
+            else:
+                try:
+                    numeric = float(value)
+                except (TypeError, ValueError):
+                    return np.nan
+            if not np.isfinite(numeric) or numeric < 0.0 or int(numeric) != numeric:
+                return np.nan
+            return float(int(numeric))
+
+        self.electric_vehicle_charger_state = np.array(
+            [_parse_charger_state(s) for s in electric_vehicle_charger_state],
+            dtype='float32',
+        )
 
         self.electric_vehicle_id = np.array(electric_vehicle_id, dtype=object)
         self.electric_vehicle_session_id = np.array(
@@ -1221,8 +1253,11 @@ class EscalatorSimulation(TimeSeriesData):
             raise ValueError(f'{source_label} contains non-finite values in required columns.')
 
         time_steps = frame['time_step'].to_numpy(dtype='int64')
-        if not np.array_equal(time_steps, np.arange(len(frame), dtype='int64')):
-            raise ValueError(f'{source_label}.time_step must be contiguous and start at 0.')
+        if len(time_steps) > 0 and (
+            time_steps[0] < 0
+            or not np.array_equal(time_steps, np.arange(time_steps[0], time_steps[0] + len(frame), dtype='int64'))
+        ):
+            raise ValueError(f'{source_label}.time_step must be contiguous and non-negative.')
 
         non_negative = (
             'passengers_from_trains_15min', 'background_pedestrians_15min',

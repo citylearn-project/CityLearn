@@ -28,13 +28,12 @@ class ClippedObservationWrapper(ObservationWrapper):
         self.env: CityLearnEnv
 
     def observation(self, observations: List[List[float]]) -> List[List[float]]:
-        """Returns normalized observations."""
+        """Returns clipped observations without mutating the input container."""
 
-        for i, (o, s) in enumerate(zip(observations, self.observation_space)):
-            for j, (o_, l, u) in enumerate(zip(o, s.low, s.high)):
-                observations[i][j] = min(max(o_, l), u)
-
-        return observations
+        return [
+            [float(min(max(o_, l), u)) for o_, l, u in zip(o, s.low, s.high)]
+            for o, s in zip(observations, self.observation_space)
+        ]
 
 class NormalizedObservationWrapper(ObservationWrapper):
     """Wrapper for observations min-max and periodic normalization.
@@ -295,11 +294,20 @@ class DiscreteObservationWrapper(ObservationWrapper):
         super().__init__(env)
         self.env: CityLearnEnv
         assert bin_sizes is None or len(bin_sizes) == len(self.env.unwrapped.buildings), 'length of bin_size must equal number of buildings.'
-        self.bin_sizes = [{} for _ in self.env.unwrapped.buildings] if bin_sizes is None else bin_sizes
+        raw_bin_sizes = [{} for _ in self.env.unwrapped.buildings] if bin_sizes is None else bin_sizes
         self.default_bin_size = 10 if default_bin_size is None else default_bin_size
+        if isinstance(self.env, NormalizedObservationWrapper):
+            building_obs_keys = [
+                list(b.observations(normalize=True, periodic_normalization=True).keys())
+                for b in self.env.unwrapped.buildings
+            ]
+            self._shared_obs_names = list(self.env.shared_observations)
+        else:
+            building_obs_keys = [list(b.active_observations) for b in self.env.unwrapped.buildings]
+            self._shared_obs_names = list(self.env.unwrapped.shared_observations)
         self.bin_sizes = [
-            {o: s.get(o, self.default_bin_size) for o in b.active_observations} 
-            for b, s in zip(self.env.unwrapped.buildings, self.bin_sizes)
+            {o: s.get(o, self.default_bin_size) for o in keys}
+            for keys, s in zip(building_obs_keys, raw_bin_sizes)
         ]
         
     @property
@@ -312,17 +320,11 @@ class DiscreteObservationWrapper(ObservationWrapper):
 
             for i, b in enumerate(self.bin_sizes):
                 for k, v in b.items():
-                    if i == 0 or k not in self.env.unwrapped.shared_observations or k not in shared_observations:
+                    if i == 0 or k not in self._shared_obs_names or k not in shared_observations:
                         bin_sizes.append(v)
 
-                    else:
-                        pass
-
-                    if k in self.env.unwrapped.shared_observations and k not in shared_observations:
+                    if k in self._shared_obs_names and k not in shared_observations:
                         shared_observations.append(k)
-
-                    else:
-                        pass
             
             observation_space = [spaces.MultiDiscrete(bin_sizes)]
 
@@ -331,16 +333,17 @@ class DiscreteObservationWrapper(ObservationWrapper):
         
         return observation_space
     
-    def observation(self, observations: List[List[float]]) -> np.ndarray:
+    def observation(self, observations: List[List[float]]) -> List[List[int]]:
         """Returns discretized observations."""
 
         transformed_observations = []
 
-        for i, (cs, ds) in enumerate(zip(self.env.unwrapped.observation_space, self.observation_space)):
+        for i, (cs, ds) in enumerate(zip(self.env.observation_space, self.observation_space)):
             transformed_observations_ = []
 
             for j, (ll, hl, b) in enumerate(zip(cs.low, cs.high, ds)):
-                o = np.digitize(observations[i][j], np.linspace(ll, hl, b.n), right=True)
+                raw_bin = int(np.digitize(observations[i][j], np.linspace(ll, hl, b.n), right=True))
+                o = max(0, min(raw_bin, int(b.n) - 1))
                 transformed_observations_.append(o)
 
             transformed_observations.append(transformed_observations_)
@@ -394,7 +397,7 @@ class DiscreteActionWrapper(ActionWrapper):
 
         transformed_actions = []
 
-        for i, (cs, ds) in enumerate(zip(self.env.unwrapped.action_space, self.action_space)):
+        for i, (cs, ds) in enumerate(zip(self.env.action_space, self.action_space)):
             transformed_actions_ = []
             
             for j, (ll, hl, b) in enumerate(zip(cs.low, cs.high, ds)):
@@ -449,31 +452,43 @@ class TabularQLearningObservationWrapper(ObservationWrapper):
         env = DiscreteObservationWrapper(env, bin_sizes=bin_sizes, default_bin_size=default_bin_size)
         super().__init__(env)
         self.env: CityLearnEnv
-        self.combinations = self.set_combinations()
+        self._combinations_cache = None
+
+    @property
+    def _obs_dims(self) -> List[Tuple[int, ...]]:
+        return [tuple(int(d.n) for d in s) for s in self.env.observation_space]
+
+    @property
+    def combinations(self) -> List[List[Tuple[int, ...]]]:
+        if self._combinations_cache is None:
+            self._combinations_cache = self.set_combinations()
+        return self._combinations_cache
 
     @property
     def observation_space(self) -> List[spaces.Discrete]:
         """Returns observation space for discretized observations."""
 
-        observation_space = []
-
-        for c in self.combinations:
-            observation_space.append(spaces.Discrete(len(c) - 1))
-        
-        return observation_space
+        return [spaces.Discrete(max(1, int(np.prod(dims, dtype=np.int64)))) for dims in self._obs_dims]
     
     def observation(self, observations: List[List[int]]) -> List[List[int]]:
         """Returns discretized observations."""
 
-        return [[c.index(tuple(o))] for o, c in zip(observations, self.combinations)]
+        encoded = []
+        for o, dims in zip(observations, self._obs_dims):
+            if len(dims) == 0:
+                encoded.append([0])
+            else:
+                clipped = [max(0, min(int(v), d - 1)) for v, d in zip(o, dims)]
+                encoded.append([int(np.ravel_multi_index(clipped, dims))])
+        return encoded
     
-    def set_combinations(self) -> List[List[int]]:
+    def set_combinations(self) -> List[List[Tuple[int, ...]]]:
         """Returns all combinations of discrete observations."""
 
         combs_list = []
 
-        for s in self.env.observation_space:
-            options = [list(range(d.n + 1)) for d in s]
+        for dims in self._obs_dims:
+            options = [list(range(d)) for d in dims]
             combs = list(itertools.product(*options))
             combs_list.append(combs)
 
@@ -498,31 +513,42 @@ class TabularQLearningActionWrapper(ActionWrapper):
         env = DiscreteActionWrapper(env, bin_sizes=bin_sizes, default_bin_size=default_bin_size)
         super().__init__(env)
         self.env: CityLearnEnv
-        self.combinations = self.set_combinations()
+        self._combinations_cache = None
+
+    @property
+    def _action_dims(self) -> List[Tuple[int, ...]]:
+        return [tuple(int(d.n) for d in s) for s in self.env.action_space]
+
+    @property
+    def combinations(self) -> List[List[Tuple[int, ...]]]:
+        if self._combinations_cache is None:
+            self._combinations_cache = self.set_combinations()
+        return self._combinations_cache
 
     @property
     def action_space(self) -> List[spaces.Discrete]:
         """Returns action space for discretized actions."""
 
-        action_space = []
-
-        for c in self.combinations:
-            action_space.append(spaces.Discrete(len(c)))
-        
-        return action_space
+        return [spaces.Discrete(max(1, int(np.prod(dims, dtype=np.int64)))) for dims in self._action_dims]
     
     def action(self, actions: List[float]) -> List[List[int]]:
         """Returns discretized actions."""
 
-        return [list(c[a[0]]) for a, c in zip(actions, self.combinations)]
+        decoded = []
+        for a, dims in zip(actions, self._action_dims):
+            if len(dims) == 0:
+                decoded.append([])
+            else:
+                decoded.append([int(x) for x in np.unravel_index(int(a[0]), dims)])
+        return decoded
     
-    def set_combinations(self) -> List[List[int]]:
+    def set_combinations(self) -> List[List[Tuple[int, ...]]]:
         """Returns all combinations of discrete actions."""
 
         combs_list = []
 
-        for s in self.env.action_space:
-            options = [list(range(d.n)) for d in s]
+        for dims in self._action_dims:
+            options = [list(range(d)) for d in dims]
             combs = list(itertools.product(*options))
             combs_list.append(combs)
 
@@ -688,7 +714,7 @@ class RLlibSingleAgentWrapper(StableBaselines3Wrapper):
     """
 
     def __init__(self, env_config: Mapping[str, Any]):
-        env_kwargs = env_config['env_kwargs']
+        env_kwargs = dict(env_config['env_kwargs'])
         env_kwargs['central_agent'] = True
         assert 'schema' in env_kwargs, 'missing schema key in env_kwargs.'
         env = CityLearnEnv(**env_kwargs)
@@ -767,7 +793,7 @@ class RLlibMultiAgentActionWrapper(ActionWrapper):
     def action(self, actions: Mapping[str, np.ndarray]) -> List[List[float]]:
         """Parses actions into data structure for :py:meth:`citylearn.citylearn.CityLearnEnv.step`."""
 
-        return [list(v) for v in actions.values()]
+        return [list(actions[f'agent_{i}']) for i in range(len(self.env.action_space))]
 
 class RLlibMultiAgentRewardWrapper(RewardWrapper):
     """Action wrapper for :code:`RLlib` multi-agent algorithms.
@@ -834,7 +860,7 @@ class RLlibMultiAgentEnv(MultiAgentEnv):
             pass
 
         super().__init__()
-        env_kwargs = env_config['env_kwargs']
+        env_kwargs = dict(env_config['env_kwargs'])
         env_kwargs['central_agent'] = False
         assert 'schema' in env_kwargs, 'missing schema key in env_kwargs.'
         env = CityLearnEnv(**env_kwargs)
@@ -849,7 +875,8 @@ class RLlibMultiAgentEnv(MultiAgentEnv):
         env = RLlibMultiAgentObservationWrapper(env)
         env = RLlibMultiAgentRewardWrapper(env)
         self.env: CityLearnEnv = env
-        self._agent_ids = [f'agent_{i}' for i in range(len(self.buildings))]
+        self._agent_id_order = [f'agent_{i}' for i in range(len(self.buildings))]
+        self._agent_ids = set(self._agent_id_order)
         self.observation_space: spaces.Dict = self.env.observation_space
         self.action_space: spaces.Dict = self.env.action_space
 

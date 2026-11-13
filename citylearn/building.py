@@ -115,7 +115,6 @@ class Building(Environment):
         electrical_service = kwargs.pop('electrical_service', None)
         electrical_storage_phase_connection = kwargs.pop('electrical_storage_phase_connection', None)
         self.equity_group = kwargs.pop('equity_group', None)
-        self.name = name
         self.dhw_storage = dhw_storage
         self.cooling_storage = cooling_storage
         self.heating_storage = heating_storage
@@ -125,13 +124,13 @@ class Building(Environment):
         self.heating_device = heating_device
         self.__non_shiftable_load_device = ElectricDevice(nominal_power=0.0, **kwargs)
         self.pv = pv
-        self.time_step_ratio=time_step_ratio
         super().__init__(
             seconds_per_time_step=kwargs.get('seconds_per_time_step'),
             random_seed=kwargs.get('random_seed'),
             episode_tracker=episode_tracker,
-            time_step_ratio=self.time_step_ratio,
+            time_step_ratio=time_step_ratio,
         )
+        self.name = name
         self.algorithm_action_based_time_step_hours_ratio = self.seconds_per_time_step / 3600
         self.stochastic_power_outage_model = stochastic_power_outage_model
         self.deferrable_appliances = deferrable_appliances if deferrable_appliances is not None else washing_machines
@@ -1378,6 +1377,7 @@ class Building(Environment):
         self.dhw_device.random_seed = self.random_seed
         self.cooling_storage.random_seed = self.random_seed
         self.heating_storage.random_seed = self.random_seed
+        self.dhw_storage.random_seed = self.random_seed
         self.electrical_storage.random_seed = self.random_seed
         self.pv.random_seed = self.random_seed
 
@@ -2137,33 +2137,50 @@ class Building(Environment):
                 high_limit[key] = max_violation_energy
                 continue
 
-            if key == 'net_electricity_consumption':
-                # assumes devices and storages have been sized; EV chargers draw (or, with V2G, export)
-                # on top of the building loads, so their power widens both limits.
-                low_limits = data['non_shiftable_load'] - (
+            def _compute_net_consumption_bounds():
+                low_vals = data['non_shiftable_load'] - (
                     + electrical_storage_energy_limit
                     + charger_discharging_energy_limit
                     + data['solar_generation']
                 )
-                high_limits = data['non_shiftable_load'] \
-                    + cooling_device_energy_limit \
-                                + heating_device_energy_limit \
-                                    + dhw_device_energy_limit \
-                                        + electrical_storage_energy_limit \
-                                            + charger_charging_energy_limit \
-                                            + deferrable_appliances_energy_limit \
-                                            + escalators_energy_limit \
-                                            - data['solar_generation']
-                low_limit[key] = min(low_limits.min(), 0.0)
-                high_limit[key] = high_limits.max()
+                high_vals = (
+                    data['non_shiftable_load']
+                    + cooling_device_energy_limit
+                    + heating_device_energy_limit
+                    + dhw_device_energy_limit
+                    + electrical_storage_energy_limit
+                    + charger_charging_energy_limit
+                    + deferrable_appliances_energy_limit
+                    + escalators_energy_limit
+                    - data['solar_generation']
+                )
+                return min(low_vals.min(), 0.0), high_vals.max()
+
+            if key == 'net_electricity_consumption':
+                # assumes devices and storages have been sized; EV chargers draw (or, with V2G, export)
+                # on top of the building loads, so their power widens both limits.
+                low_limit[key], high_limit[key] = _compute_net_consumption_bounds()
 
             elif key == 'net_electricity_consumption_without_storage':
-                low_limit[key] = min(as_float(low_limit['net_electricity_consumption']) + electrical_storage_energy_limit, 0.0)
-                high_limit[key] = as_float(high_limit['net_electricity_consumption']) - electrical_storage_energy_limit
+                if 'net_electricity_consumption' in low_limit:
+                    net_low, net_high = low_limit['net_electricity_consumption'], high_limit['net_electricity_consumption']
+                else:
+                    net_low, net_high = _compute_net_consumption_bounds()
+                low_limit[key] = min(as_float(net_low) + electrical_storage_energy_limit, 0.0)
+                high_limit[key] = as_float(net_high) - electrical_storage_energy_limit
 
             elif key == 'net_electricity_consumption_without_storage_and_partial_load':
-                low_limit[key] = low_limit['net_electricity_consumption_without_storage']
-                high_limit[key] = high_limit['net_electricity_consumption_without_storage']
+                if 'net_electricity_consumption_without_storage' in low_limit:
+                    low_limit[key] = low_limit['net_electricity_consumption_without_storage']
+                    high_limit[key] = high_limit['net_electricity_consumption_without_storage']
+                else:
+                    net_low, net_high = (
+                        (low_limit['net_electricity_consumption'], high_limit['net_electricity_consumption'])
+                        if 'net_electricity_consumption' in low_limit
+                        else _compute_net_consumption_bounds()
+                    )
+                    low_limit[key] = min(as_float(net_low) + electrical_storage_energy_limit, 0.0)
+                    high_limit[key] = as_float(net_high) - electrical_storage_energy_limit
 
             elif key == 'net_electricity_consumption_without_storage_and_partial_load_and_pv':
                 low_limit[key] = 0.0
@@ -3166,7 +3183,6 @@ class Building(Environment):
                     'dhw_demand': self.energy_simulation.dhw_demand[t],
                     'solar_generation': self.energy_simulation.solar_generation[t],
                     'indoor_temperature': self.energy_simulation.indoor_dry_bulb_temperature[t],
-                    'solar_generation': self.energy_simulation.solar_generation[t]
                 },
                 'weather': {
                     'outdoor_temperature': self.weather.outdoor_dry_bulb_temperature[t],
@@ -3178,44 +3194,46 @@ class Building(Environment):
                 },
                 'storage': {
                     'dhw_storage': {
-                        'soc': self.dhw_storage.soc[t] if self.dhw_storage else None,
+                        'soc': self.dhw_storage.soc[t] if self.dhw_storage and t < len(self.dhw_storage.soc) else None,
                         'capacity': self.dhw_storage.capacity if self.dhw_storage else None
                     },
                     'cooling_storage': {
-                        'soc': self.cooling_storage.soc[t] if self.cooling_storage else None,
+                        'soc': self.cooling_storage.soc[t] if self.cooling_storage and t < len(self.cooling_storage.soc) else None,
                         'capacity': self.cooling_storage.capacity if self.cooling_storage else None
                     },
                     'heating_storage': {
-                        'soc': self.heating_storage.soc[t] if self.heating_storage else None,
+                        'soc': self.heating_storage.soc[t] if self.heating_storage and t < len(self.heating_storage.soc) else None,
                         'capacity': self.heating_storage.capacity if self.heating_storage else None
                     },
                     'electrical_storage': {
-                        'soc': self.electrical_storage.soc[t] if self.electrical_storage else None,
+                        'soc': self.electrical_storage.soc[t] if self.electrical_storage and t < len(self.electrical_storage.soc) else None,
                         'capacity': self.electrical_storage.capacity if self.electrical_storage else None
                     }
                 },
                 'devices': {
                     'dhw_device': {
-                        'electricity_consumption': self.dhw_device.electricity_consumption[t] if self.dhw_device else None,
+                        'electricity_consumption': self.dhw_device.electricity_consumption[t] if self.dhw_device and t < len(self.dhw_device.electricity_consumption) else None,
                         'nominal_power': self.dhw_device.nominal_power if self.dhw_device else None
                     },
                     'cooling_device': {
-                        'electricity_consumption': self.cooling_device.electricity_consumption[t] if self.cooling_device else None,
+                        'electricity_consumption': self.cooling_device.electricity_consumption[t] if self.cooling_device and t < len(self.cooling_device.electricity_consumption) else None,
                         'nominal_power': self.cooling_device.nominal_power if self.cooling_device else None
                     },
                     'heating_device': {
-                        'electricity_consumption': self.heating_device.electricity_consumption[t] if self.heating_device else None,
+                        'electricity_consumption': self.heating_device.electricity_consumption[t] if self.heating_device and t < len(self.heating_device.electricity_consumption) else None,
                         'nominal_power': self.heating_device.nominal_power if self.heating_device else None
                     }
                 },
                 'pv': {
-                    'power_generation': self.pv.electricity_consumption[t] if self.pv else None,
+                    'power_generation': self.pv.electricity_consumption[t] if self.pv and t < len(self.pv.electricity_consumption) else None,
                     'nominal_power': self.pv.nominal_power if self.pv else None
                 },
-                'observations': self.observations(t) if hasattr(self, 'observations') else None
+                'observations': self.observations() if t == self.time_step and hasattr(self, 'observations') else None
             }
 
             result['simulation_data'].append(time_step_data)
+
+        return result
 
 class DynamicsBuilding(Building):
     r"""Base class for temperature dynamic building.

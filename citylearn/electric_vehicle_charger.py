@@ -9,7 +9,6 @@ from citylearn.internal.units import (
     normalized_power_action_to_energy_kwh,
     to_dataset_resolution_energy,
 )
-np.seterr(divide='ignore', invalid='ignore')
 
 class Charger(Environment):
     def __init__(
@@ -62,11 +61,8 @@ class Charger(Environment):
             key: value for (key, value) in kwargs.items()
             if (key in arg_spec.args or (arg_spec.varkw is not None))
         }
-        self.time_step_ratio = time_step_ratio
-        seconds_per_time_step = kwargs.get('seconds_per_time_step', 3600)
-        self.algorithm_action_based_time_step_hours_ratio = seconds_per_time_step / 3600
-        super().__init__(episode_tracker=episode_tracker,time_step_ratio=time_step_ratio
-                        ,**kwargs)
+        super().__init__(episode_tracker=episode_tracker, time_step_ratio=time_step_ratio, **kwargs)
+        self.algorithm_action_based_time_step_hours_ratio = self.seconds_per_time_step / 3600
 
     @property
     def charger_simulation(self) -> ChargerSimulation:
@@ -512,7 +508,7 @@ class Charger(Environment):
             }
         else:
             ev_data = {
-                "EV SOC": "-1.00",
+                "EV SOC-%": "-1.00",
                 "EV Charger State": "-1.00",
                 "EV Required SOC Departure-%": "-1.00",
                 "EV Estimated SOC Arrival-%": "-1.00",
@@ -537,13 +533,15 @@ class Charger(Environment):
         result : dict
             A JSON-like dictionary with the charger name and per-time-step data.
         """
-        num_steps = self.episode_tracker.episode_time_steps - 1
-        
+        num_steps = max(min(self.episode_tracker.episode_time_steps - 1, len(self.electricity_consumption)), 0)
+        sim = self.charger_simulation
+        past_connected = getattr(self, 'past_connected_evs', None) or []
+
         result = {
             'name': self.charger_id,
             'charger_data': []
         }
-        
+
         for t in range(num_steps):
             time_step_data = {
                 'time_step': t,
@@ -553,27 +551,27 @@ class Charger(Environment):
                 'connected_ev': None,
                 'incoming_ev': None
             }
-            
-            # Include connected EV data if available
-            if self.connected_electric_vehicle:
-                ev = self.connected_electric_vehicle
+
+            ev = past_connected[t] if t < len(past_connected) and past_connected[t] is not None else (
+                self.connected_electric_vehicle if t == self.time_step else None
+            )
+            if ev is not None:
                 time_step_data['connected_ev'] = {
                     'name': ev.name,
-                    'soc': ev.battery.soc[t],
+                    'soc': ev.battery.soc[t] if t < len(ev.battery.soc) else None,
                     'capacity': ev.battery.capacity,
-                    'charger_state': ev.electric_vehicle_simulation.electric_vehicle_charger_state[t],
-                    'required_soc_departure': ev.electric_vehicle_simulation.electric_vehicle_required_soc_departure[t],
-                    'estimated_soc_arrival': ev.electric_vehicle_simulation.electric_vehicle_estimated_soc_arrival[t],
-                    'arrival_time': ev.electric_vehicle_simulation.electric_vehicle_estimated_arrival_time[t],
-                    'departure_time': ev.electric_vehicle_simulation.electric_vehicle_departure_time[t]
+                    'charger_state': sim.electric_vehicle_charger_state[t] if sim is not None else None,
+                    'required_soc_departure': sim.electric_vehicle_required_soc_departure[t] if sim is not None else None,
+                    'estimated_soc_arrival': sim.electric_vehicle_estimated_soc_arrival[t] if sim is not None else None,
+                    'arrival_time': sim.electric_vehicle_estimated_arrival_time[t] if sim is not None else None,
+                    'departure_time': sim.electric_vehicle_departure_time[t] if sim is not None else None,
                 }
-            
-            # Include incoming EV data if available
-            if self.incoming_electric_vehicle:
+
+            if self.incoming_electric_vehicle and t == self.time_step:
                 time_step_data['incoming_ev'] = {
                     'name': self.incoming_electric_vehicle.name
                 }
-            
+
             result['charger_data'].append(time_step_data)
-        
+
         return result

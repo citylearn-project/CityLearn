@@ -339,17 +339,22 @@ class BaselineAgent(Agent):
         Agent.env.fset(self, self.__deactivate_actions(env))
 
     def __deactivate_actions(self, env: CityLearnEnv) -> CityLearnEnv:
-        for b in env.unwrapped.buildings:
+        unwrapped = env.unwrapped
+        buildings = getattr(unwrapped, '_all_buildings', None) or unwrapped.buildings
+
+        for b in buildings:
             for a in b.action_metadata:
                 b.action_metadata[a] = False
 
             b.action_space = b.estimate_action_space()
             b.observation_space = b.estimate_observation_space()
 
+        unwrapped._observation_names_cache = None
+
         return env
 
     def predict(self, observations: List[List[float]], deterministic: bool = None) -> List[List[float]]:
-        actions = [[] for _ in self.action_names]
+        actions = [[] for _ in self.env.unwrapped.action_names]
         self.actions = actions
         self.next_time_step()
         

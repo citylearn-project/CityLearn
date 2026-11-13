@@ -29,16 +29,24 @@ class ElectricVehicle(Environment):
             Other keyword arguments used to initialize super class.
         """
 
-        self.name = name
+        if battery is None:
+            battery = Battery(
+                capacity=0.0,
+                nominal_power=0.0,
+                seconds_per_time_step=kwargs.get('seconds_per_time_step'),
+                random_seed=kwargs.get('random_seed'),
+                episode_tracker=episode_tracker,
+            )
+        self.battery = battery
 
         super().__init__(
             seconds_per_time_step=kwargs.get('seconds_per_time_step'),
             random_seed=kwargs.get('random_seed'),
             episode_tracker=episode_tracker,
-            time_step_ratio=battery.time_step_ratio
+            time_step_ratio=battery.time_step_ratio,
         )
 
-        self.battery = battery
+        self.name = name
         self.__observation_epsilon = 0.0  # to avoid out of bound observations
 
 
@@ -56,7 +64,7 @@ class ElectricVehicle(Environment):
 
     @name.setter
     def name(self, name: str):
-        self.__name = name
+        self.__name = self.uid if name is None else name
     
     @battery.setter
     def battery(self, battery: Battery):

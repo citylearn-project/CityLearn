@@ -628,13 +628,19 @@ class CityLearnLoadingService:
 
         attrs = electric_vehicle_schema['battery']['attributes']
         capacity = attrs['capacity']
-        nominal_power = attrs['nominal_power']
+        nominal_power = (
+            attrs['nominal_power']
+            if 'nominal_power' in attrs
+            else max(float(attrs['max_charge_kw']), float(attrs['max_discharge_kw']))
+        )
+        depth_of_discharge = attrs.get('depth_of_discharge', 1.0)
         initial_soc = attrs.get('initial_soc')
         if initial_soc is None:
             seed_source = f"{schema['random_seed']}:{electric_vehicle_name}:initial_soc"
             deterministic_seed = int(hashlib.md5(seed_source.encode('utf-8')).hexdigest()[:8], 16)
-            initial_soc = float(np.random.RandomState(deterministic_seed).uniform(0.0, 1.0))
-        depth_of_discharge = attrs.get('depth_of_discharge', 1.0)
+            soc_low = float(attrs.get('min_soc', 0.0))
+            soc_high = float(attrs.get('max_soc', 1.0))
+            initial_soc = float(np.random.RandomState(deterministic_seed).uniform(soc_low, soc_high))
         loss_coefficient = attrs.get('loss_coefficient', 0.0)
 
         if loss_coefficient is None:

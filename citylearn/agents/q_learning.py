@@ -44,8 +44,18 @@ class TabularQLearning(Agent):
         self.learning_rate = 0.05 if learning_rate is None else learning_rate
         self.discount_factor = 0.90 if discount_factor is None else discount_factor
         self.q_init_value = np.nan if q_init_value is None else q_init_value
+        self._seed_action_spaces()
         self.q, self.q_exploration, self.q_exploitation = self.__initialize_q()
         self.__explored = False
+
+    def _seed_action_spaces(self):
+        if self.random_seed is None:
+            return
+
+        for i, space in enumerate(self.action_space):
+            if getattr(space, '_np_random', None) is None:
+                seed = int(np.random.SeedSequence(int(self.random_seed), spawn_key=(0, i)).generate_state(1)[0])
+                space.seed(seed)
 
     def predict(self, observations: List[List[float]], deterministic: bool = None) -> List[List[float]]:
         """Provide actions for current time step.
@@ -138,8 +148,11 @@ class TabularQLearning(Agent):
 
             next_q = self.q[i][n]
             # Bellman target uses the best next-state value, not its action index;
-            # unvisited (all-NaN) states contribute zero.
-            next_max_q = 0.0 if np.all(np.isnan(next_q)) else float(np.nanmax(next_q))
+            # terminal transitions and unvisited (all-NaN) states contribute zero.
+            if terminated or np.all(np.isnan(next_q)):
+                next_max_q = 0.0
+            else:
+                next_max_q = float(np.nanmax(next_q))
             
             # update q
             new_q = current_q + self.learning_rate*(r + self.discount_factor*next_max_q - current_q)

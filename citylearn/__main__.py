@@ -19,6 +19,7 @@ from citylearn.citylearn import CityLearnEnv
 from citylearn.data import DataSet, get_settings
 from citylearn.__init__ import __version__
 from citylearn.utilities import FileHandler
+from gymnasium import ActionWrapper
 import pandas as pd
 import simplejson as json
 
@@ -26,15 +27,16 @@ try:
     from stable_baselines3.common.base_class import BaseAlgorithm as StableBaselines3Agent
 
 except (ImportError, ModuleNotFoundError):
-    # stable-baselines3 is optional; the name is still used in annotations evaluated at import time.
-    StableBaselines3Agent = Any
+    # stable-baselines3 is optional; guard runtime isinstance/load calls when absent.
+    StableBaselines3Agent = None
 
 def run_work_order(work_order_filepath, max_workers=None, start_index=None, end_index=None, virtual_environment_path=None, windows_system=None):
     work_order_filepath = Path(work_order_filepath)
+    windows_system = (os.name == 'nt') if windows_system is None else bool(windows_system)
     
     if virtual_environment_path is not None:    
         if windows_system:
-            virtual_environment_command = f'"{os.path.join(virtual_environment_path, "Scripts", "Activate.ps1")}"'
+            virtual_environment_command = f'call "{os.path.join(virtual_environment_path, "Scripts", "activate.bat")}"'
         
         else:
             virtual_environment_command = f'source "{os.path.join(virtual_environment_path, "bin", "activate")}"'
@@ -42,16 +44,18 @@ def run_work_order(work_order_filepath, max_workers=None, start_index=None, end_
     else:
         virtual_environment_command = 'echo "No virtual environment"'
 
-    with open(work_order_filepath,mode='r') as f:
-        args = f.read()
+    with open(work_order_filepath, mode='r', encoding='utf-8-sig') as f:
+        args = [line.strip() for line in f.read().splitlines() if line.strip()]
     
-    args = args.strip('\n').split('\n')
+    if len(args) == 0:
+        return
+
     start_index = 0 if start_index is None else start_index
     end_index = len(args) - 1 if end_index is None else end_index
     assert start_index <= end_index, 'start_index must be <= end_index'
     assert start_index < len(args), 'start_index must be < number of jobs'
     args = args[start_index:end_index + 1]
-    args = [a for a in args if not a.startswith('#')]
+    args = [a for a in args if not a.lstrip().startswith('#')]
     args = [f'{virtual_environment_command} && {a}' for a in args]
     max_workers = cpu_count() if max_workers is None else max_workers
     
@@ -227,10 +231,12 @@ class Simulator:
 
         for b in self.env.unwrapped.buildings:
             data = {}
+            n_steps = len(b.net_electricity_consumption)
 
             for variable in self.time_series_variables:
                 key = b
                 values = variable.split('.')
+                value = None
 
                 for i in range(len(values)):
                     if hasattr(key, values[i]):
@@ -238,16 +244,42 @@ class Simulator:
                         key = value
                     
                     else:
-                        pass
+                        value = None
+                        break
                 
+                if isinstance(value, (list, tuple, pd.Series)) or hasattr(value, '__len__') and not isinstance(value, (str, bytes, Mapping)):
+                    if len(value) > n_steps:
+                        value = value[:n_steps]
                 data[variable.replace('.', '_')] = value
             
-            data = pd.DataFrame(data)
+            data = pd.DataFrame(data, index=range(n_steps))
             data.insert(0, 'time_step', data.index)
             data.insert(1, 'building_name', b.name)
             data_list.append(data)
 
         return pd.concat(data_list, ignore_index=True)
+
+    def __unwrap_actions(self, actions: Any) -> Any:
+        unwrapped_actions = actions
+        cur = self.env
+        base = self.env.unwrapped
+        while cur is not base and hasattr(cur, 'env'):
+            if isinstance(cur, ActionWrapper):
+                unwrapped_actions = cur.action(unwrapped_actions)
+            cur = cur.env
+        return unwrapped_actions
+
+    @staticmethod
+    def _normalize_episode_time_steps(evaluation_episode_time_steps):
+        if evaluation_episode_time_steps is None:
+            return None
+        if (
+            isinstance(evaluation_episode_time_steps, (list, tuple))
+            and len(evaluation_episode_time_steps) == 2
+            and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in evaluation_episode_time_steps)
+        ):
+            return [[int(evaluation_episode_time_steps[0]), int(evaluation_episode_time_steps[1])]]
+        return [[int(pair[0]), int(pair[1])] for pair in evaluation_episode_time_steps]
 
     def __get_training_summary(self):
         return {
@@ -266,30 +298,39 @@ class Simulator:
         }
 
     def __evaluate(self):
-        observations, _ = self.env.reset()
+        reset_out = self.env.reset()
+        observations = reset_out[0] if isinstance(reset_out, tuple) else reset_out
+        terminated = bool(self.env.unwrapped.terminated)
+        truncated = bool(self.env.unwrapped.truncated)
         actions_list = []
-        self.__evaluation_start_timestamp = datetime.datetime.now(datetime.UTC)
+        self.__evaluation_start_timestamp = datetime.datetime.now(datetime.timezone.utc)
         
-        while not self.env.terminated:
+        while not (terminated or truncated):
             if isinstance(self.agent, CityLearnAgent):
                 actions = self.agent.predict(observations, deterministic=True)
-                actions_list.append(self.env.unwrapped._parse_actions(actions))
+                actions_list.append(self.env.unwrapped._parse_actions(self.__unwrap_actions(actions)))
             
-            elif isinstance(self.agent, StableBaselines3Agent):
+            elif StableBaselines3Agent is not None and isinstance(self.agent, StableBaselines3Agent):
                 actions, _ = self.agent.predict(observations, deterministic=True)
-                actions_list.append(self.env.unwrapped._parse_actions([actions]))
+                unwrapped_actions = self.__unwrap_actions(actions)
+                if not isinstance(unwrapped_actions, list) or (len(unwrapped_actions) > 0 and not isinstance(unwrapped_actions[0], (list, tuple, pd.Series)) and getattr(unwrapped_actions, 'ndim', 1) == 1):
+                    unwrapped_actions = [unwrapped_actions]
+                actions_list.append(self.env.unwrapped._parse_actions(unwrapped_actions))
 
             else:
-                raise Exception(f'Unknown agent type: {type(self.agent)}')
+                raise TypeError(f'Unknown agent type: {type(self.agent)}')
 
-            observations, _, _, _, _ = self.env.step(actions)
+            step_out = self.env.step(actions)
+            observations = step_out[0]
+            terminated = bool(step_out[2])
+            truncated = bool(step_out[3]) if len(step_out) >= 5 else bool(self.env.unwrapped.truncated)
 
-        self.__evaluation_end_timestamp = datetime.datetime.now(datetime.UTC)
+        self.__evaluation_end_timestamp = datetime.datetime.now(datetime.timezone.utc)
         self.__actions_list = actions_list
 
     def __train(self, episodes: int):
         kwargs = {}
-        self.__train_start_timestamp = datetime.datetime.now(datetime.UTC)
+        self.__train_start_timestamp = datetime.datetime.now(datetime.timezone.utc)
         env = self.env.unwrapped
         previous_final_export_episode_index = (
             env.plan_final_episode_exports(episodes)
@@ -308,7 +349,7 @@ class Simulator:
             if hasattr(env, 'plan_final_episode_exports'):
                 env._final_export_episode_index = previous_final_export_episode_index
 
-        self.__train_end_timestamp = datetime.datetime.now(datetime.UTC)
+        self.__train_end_timestamp = datetime.datetime.now(datetime.timezone.utc)
 
     def __save_agent(self):
         if isinstance(self.agent, CityLearnAgent):
@@ -319,7 +360,7 @@ class Simulator:
             filepath = os.path.join(self.output_directory, f'{self.simulation_id}-agent')
             self.agent.save(filepath)
 
-    def __set_agent(self) -> Union[CityLearnAgent, StableBaselines3Agent]:
+    def __set_agent(self) -> Any:
         if self.agent_filepath is None:
             agent = self.env.unwrapped.load_agent(
                 agent=self.agent_name, 
@@ -333,6 +374,11 @@ class Simulator:
                 agent.env = self.env
 
             else:
+                if StableBaselines3Agent is None:
+                    raise ImportError(
+                        'Loading a Stable-Baselines3 agent requires `stable-baselines3`. '
+                        'Install it via `pip install stable-baselines3`.'
+                    )
                 agent = StableBaselines3Agent.load(self.agent_filepath, self.env)
 
         return agent
@@ -359,14 +405,11 @@ class Simulator:
     
     @classmethod
     def evaluate(cls, evaluation_episode_time_steps: Tuple[int, int] = None, **kwargs):
-        kwargs['env_kwargs'] = {} if kwargs.get('env_kwargs') is None else kwargs['env_kwargs']
+        kwargs = dict(kwargs)
+        kwargs['env_kwargs'] = {} if kwargs.get('env_kwargs') is None else dict(kwargs['env_kwargs'])
 
         if evaluation_episode_time_steps is not None:
-            kwargs['env_kwargs']['episode_time_steps'] = [evaluation_episode_time_steps]
-        
-        else:
-            pass
-            
+            kwargs['env_kwargs']['episode_time_steps'] = cls._normalize_episode_time_steps(evaluation_episode_time_steps)
 
         simulator = cls(**kwargs)
         simulator.__evaluate()
@@ -375,6 +418,8 @@ class Simulator:
 
     @classmethod
     def train(cls, episodes: int = None, evaluate: bool = None, evaluation_episode_time_steps: Tuple[int, int] = None, save_agent: bool = None, **kwargs):
+        kwargs = dict(kwargs)
+        kwargs['env_kwargs'] = {} if kwargs.get('env_kwargs') is None else dict(kwargs['env_kwargs'])
         simulator = cls(**kwargs)
         episodes = 1 if episodes is None else episodes
         simulator.__train(episodes)
@@ -384,23 +429,19 @@ class Simulator:
         if save_agent:
             simulator.__save_agent()
 
-        else:
-            pass
-
         if evaluate:
-            evaluation_episode_time_steps = [[
-                simulator.env.unwrapped.episode_tracker.simulation_start_time_step, 
-                simulator.env.unwrapped.episode_tracker.simulation_end_time_step
-            ]] if evaluation_episode_time_steps is None else [evaluation_episode_time_steps]
-            kwargs['env_kwargs'] = {} if kwargs.get('env_kwargs') is None else kwargs['env_kwargs']
-            kwargs['overwrite'] = False
-            kwargs['output_directory'] = simulator.output_directory
-            kwargs['env_kwargs']['episode_time_steps'] = evaluation_episode_time_steps
-            kwargs['simulation_id'] = f'{simulator.simulation_id}'
-            simulator.evaluate(**kwargs)
-
-        else:
-            pass
+            normalized_steps = (
+                [[
+                    simulator.env.unwrapped.episode_tracker.simulation_start_time_step,
+                    simulator.env.unwrapped.episode_tracker.simulation_end_time_step,
+                ]]
+                if evaluation_episode_time_steps is None
+                else cls._normalize_episode_time_steps(evaluation_episode_time_steps)
+            )
+            simulator.env.unwrapped.episode_time_steps = normalized_steps
+            simulator.__evaluate()
+            eval_filepath = os.path.join(simulator.output_directory, f'{simulator.simulation_id}-evaluation.json')
+            FileHandler.write_json(eval_filepath, simulator.__get_evaluation_summary())
 
     @staticmethod
     def get_default_time_series_variables():

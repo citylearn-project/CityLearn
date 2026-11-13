@@ -22,7 +22,6 @@ from citylearn.data import (
 )
 from citylearn.internal.units import power_kw_to_energy_kwh, seconds_to_hours, to_dataset_resolution_energy
 from citylearn.internal.deferrable_cycles import CycleIndex
-np.seterr(divide='ignore', invalid='ignore')
 
 LOGGER = logging.getLogger()
 
@@ -2272,6 +2271,7 @@ class WashingMachine(ElectricDevice):
         self.washing_machine_simulation = washing_machine_simulation
         self.name = name
         self.__initiated = False
+        self.__past_action_values = None
         super().__init__(**kwargs)
 
     @property
@@ -2328,6 +2328,14 @@ class WashingMachine(ElectricDevice):
 
     def start_cycle(self, action_value: float):
         """Trigger a washing cycle if conditions are met and apply the associated load profile to power consumption."""
+        if self.__past_action_values is None:
+            self.__past_action_values = np.zeros(
+                self.episode_tracker.episode_time_steps, dtype='float32'
+            )
+        if self._ElectricDevice__electricity_consumption is None:
+            self._ElectricDevice__electricity_consumption = np.zeros(
+                self.episode_tracker.episode_time_steps, dtype='float32'
+            )
         self.__past_action_values[self.time_step] = action_value
 
         start_time_step = self.washing_machine_simulation.wm_start_time_step[self.time_step]
@@ -2344,12 +2352,13 @@ class WashingMachine(ElectricDevice):
                 return
 
             self.__initiated = True
+            ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
 
             # Apply load profile across future timesteps
             for offset, load in enumerate(load_profile):
                 step = self.time_step + offset
                 if step < self.episode_tracker.episode_time_steps:
-                    self._ElectricDevice__electricity_consumption[step] += float(load)
+                    self._ElectricDevice__electricity_consumption[step] += float(load) / ratio
 
     def observations(self) -> Mapping[str, float]:
         """Return the current observation dictionary including simulation inputs and machine state."""
