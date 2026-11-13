@@ -592,6 +592,12 @@ class EpisodeExporter:
             self._write_parquet_rows(filename, rows)
             return
 
+        header_cache = getattr(self, '_csv_header_cache', None)
+        if header_cache is None:
+            header_cache = {}
+            self._csv_header_cache = header_cache
+        path_key = str(file_path)
+
         if not file_path.exists():
             fieldnames = buffered_fieldnames
             with file_path.open('w', newline='') as csvfile:
@@ -599,11 +605,17 @@ class EpisodeExporter:
                 writer.writeheader()
                 for row in rows:
                     writer.writerow({field: row.get(field, '') for field in fieldnames})
+            header_cache[path_key] = (list(fieldnames), file_path.stat().st_size)
             return
 
-        with file_path.open('r', newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            existing_fieldnames = reader.fieldnames or []
+        current_size = file_path.stat().st_size
+        cached_header = header_cache.get(path_key)
+        if cached_header is not None and current_size >= cached_header[1] and current_size > 0:
+            existing_fieldnames = cached_header[0]
+        else:
+            with file_path.open('r', newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                existing_fieldnames = list(reader.fieldnames or [])
 
         missing_fieldnames = [field for field in buffered_fieldnames if field not in existing_fieldnames]
         if missing_fieldnames:
@@ -618,12 +630,14 @@ class EpisodeExporter:
                     writer.writerow({field: row.get(field, '') for field in extended_fieldnames})
                 for row in rows:
                     writer.writerow({field: row.get(field, '') for field in extended_fieldnames})
+            header_cache[path_key] = (list(extended_fieldnames), file_path.stat().st_size)
             return
 
         with file_path.open('a', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=existing_fieldnames)
             for row in rows:
                 writer.writerow({field: row.get(field, '') for field in existing_fieldnames})
+        header_cache[path_key] = (list(existing_fieldnames), file_path.stat().st_size)
 
     def _write_parquet_rows(self, filename: str, rows: List[Mapping[str, Any]]):
         env = self.env

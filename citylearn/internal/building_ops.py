@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
+from math import isfinite
 from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import numpy as np
@@ -270,15 +271,13 @@ class BuildingOpsService:
 
         building = self.building
         requested: Optional[Set[str]] = None if observation_names is None else set(observation_names)
-
-        def wants(name: str) -> bool:
-            return requested is None or name in requested
+        include_every = requested is None
 
         electric_vehicle_chargers_dict = {}
         deferrable_appliances_dict = {}
         t, endogenous_t = self._observation_time_steps(include_all)
 
-        if wants('electric_vehicles_chargers_dict'):
+        if include_every or 'electric_vehicles_chargers_dict' in requested:
             for charger in building.electric_vehicle_chargers or []:
                 charger_id = charger.charger_id
                 connected_car = charger.connected_electric_vehicle
@@ -336,95 +335,124 @@ class BuildingOpsService:
                         'max_discharging_power': charger.max_discharging_power,
                     }
 
-        if wants('deferrable_appliances_dict') or wants('washing_machines_dict'):
+        if include_every or 'deferrable_appliances_dict' in requested or 'washing_machines_dict' in requested:
             for appliance in building.deferrable_appliances or []:
                 deferrable_appliances_dict[appliance.name] = dict(appliance.observations())
 
         observations = {}
-        for key, series in building._energy_simulation_observation_sources:
-            if wants(key) and t < len(series):
-                observations[key] = series[t]
-
-        for key, series in building._weather_observation_sources:
-            if wants(key) and t < len(series):
-                observations[key] = series[t]
-
-        for key, series in building._pricing_observation_sources:
-            if wants(key) and t < len(series):
-                observations[key] = series[t]
-
-        for key, series in building._carbon_observation_sources:
-            if wants(key) and t < len(series):
-                observations[key] = series[t]
-
-        for key, series in getattr(building, '_additional_observation_sources', ()):
-            if wants(key) and t < len(series):
-                observations[key] = series[t]
+        if include_every:
+            for source_group in (
+                building._energy_simulation_observation_sources,
+                building._weather_observation_sources,
+                building._pricing_observation_sources,
+                building._carbon_observation_sources,
+                getattr(building, '_additional_observation_sources', ()),
+            ):
+                for key, series in source_group:
+                    if t < len(series):
+                        observations[key] = series[t]
+        else:
+            for source_group in (
+                building._energy_simulation_observation_sources,
+                building._weather_observation_sources,
+                building._pricing_observation_sources,
+                building._carbon_observation_sources,
+                getattr(building, '_additional_observation_sources', ()),
+            ):
+                for key, series in source_group:
+                    if key in requested and t < len(series):
+                        observations[key] = series[t]
 
         # Full series: the terminal observation reads one row past the last executed interval.
-        if wants('solar_generation'):
+        if include_every or 'solar_generation' in requested:
             observations['solar_generation'] = abs(building._Building__solar_generation[t])
-        if wants('cooling_storage_soc'):
+        if include_every or 'cooling_storage_soc' in requested:
             observations['cooling_storage_soc'] = building.cooling_storage.soc[endogenous_t]
-        if wants('heating_storage_soc'):
+        if include_every or 'heating_storage_soc' in requested:
             observations['heating_storage_soc'] = building.heating_storage.soc[endogenous_t]
-        if wants('dhw_storage_soc'):
+        if include_every or 'dhw_storage_soc' in requested:
             observations['dhw_storage_soc'] = building.dhw_storage.soc[endogenous_t]
-        if wants('electrical_storage_soc'):
+        if include_every or 'electrical_storage_soc' in requested:
             observations['electrical_storage_soc'] = building.electrical_storage.soc[endogenous_t]
-        if wants('cooling_demand'):
-            observations['cooling_demand'] = building.energy_from_cooling_device[endogenous_t] + numpy1_scalar(abs(min(building.cooling_storage.energy_balance[endogenous_t], 0.0)))
-        if wants('heating_demand'):
-            observations['heating_demand'] = building.energy_from_heating_device[endogenous_t] + numpy1_scalar(abs(min(building.heating_storage.energy_balance[endogenous_t], 0.0)))
-        if wants('dhw_demand'):
-            observations['dhw_demand'] = building.energy_from_dhw_device[endogenous_t] + numpy1_scalar(abs(min(building.dhw_storage.energy_balance[endogenous_t], 0.0)))
-        if wants('net_electricity_consumption'):
-            observations['net_electricity_consumption'] = building.net_electricity_consumption[endogenous_t]
-        if wants('cooling_electricity_consumption'):
-            observations['cooling_electricity_consumption'] = building.cooling_electricity_consumption[endogenous_t]
-        if wants('heating_electricity_consumption'):
-            observations['heating_electricity_consumption'] = building.heating_electricity_consumption[endogenous_t]
-        if wants('dhw_electricity_consumption'):
-            observations['dhw_electricity_consumption'] = building.dhw_electricity_consumption[endogenous_t]
-        if wants('cooling_storage_electricity_consumption'):
-            observations['cooling_storage_electricity_consumption'] = building.cooling_storage_electricity_consumption[endogenous_t]
-        if wants('heating_storage_electricity_consumption'):
-            observations['heating_storage_electricity_consumption'] = building.heating_storage_electricity_consumption[endogenous_t]
-        if wants('dhw_storage_electricity_consumption'):
-            observations['dhw_storage_electricity_consumption'] = building.dhw_storage_electricity_consumption[endogenous_t]
-        if wants('electrical_storage_electricity_consumption'):
-            observations['electrical_storage_electricity_consumption'] = building.electrical_storage_electricity_consumption[endogenous_t]
-        if wants('deferrable_appliance_electricity_consumption'):
-            observations['deferrable_appliance_electricity_consumption'] = building.deferrable_appliances_electricity_consumption[endogenous_t]
-        if wants('washing_machine_electricity_consumption'):
-            observations['washing_machine_electricity_consumption'] = building.deferrable_appliances_electricity_consumption[endogenous_t]
-        if wants('cooling_device_efficiency'):
+        if include_every or 'cooling_demand' in requested:
+            observations['cooling_demand'] = building._Building__energy_from_cooling_device[endogenous_t] + numpy1_scalar(abs(min(building.cooling_storage.energy_balance[endogenous_t], 0.0)))
+        if include_every or 'heating_demand' in requested:
+            observations['heating_demand'] = building._Building__energy_from_heating_device[endogenous_t] + numpy1_scalar(abs(min(building.heating_storage.energy_balance[endogenous_t], 0.0)))
+        if include_every or 'dhw_demand' in requested:
+            observations['dhw_demand'] = building._Building__energy_from_dhw_device[endogenous_t] + numpy1_scalar(abs(min(building.dhw_storage.energy_balance[endogenous_t], 0.0)))
+        if include_every or 'net_electricity_consumption' in requested:
+            observations['net_electricity_consumption'] = building._Building__net_electricity_consumption[endogenous_t]
+        if include_every or 'cooling_electricity_consumption' in requested:
+            observations['cooling_electricity_consumption'] = building.cooling_device.electricity_consumption_at(endogenous_t)
+        if include_every or 'heating_electricity_consumption' in requested:
+            observations['heating_electricity_consumption'] = building.heating_device.electricity_consumption_at(endogenous_t)
+        if include_every or 'dhw_electricity_consumption' in requested:
+            observations['dhw_electricity_consumption'] = building.dhw_device.electricity_consumption_at(endogenous_t)
+        if include_every or 'cooling_storage_electricity_consumption' in requested:
+            observations['cooling_storage_electricity_consumption'] = building.cooling_device.get_input_power(
+                building.cooling_storage.energy_balance[endogenous_t:endogenous_t + 1],
+                building.weather.outdoor_dry_bulb_temperature[endogenous_t:endogenous_t + 1],
+                False,
+            )[0]
+        if include_every or 'heating_storage_electricity_consumption' in requested:
+            eb_slice = building.heating_storage.energy_balance[endogenous_t:endogenous_t + 1]
+            observations['heating_storage_electricity_consumption'] = (
+                building.heating_device.get_input_power(
+                    eb_slice,
+                    building.weather.outdoor_dry_bulb_temperature[endogenous_t:endogenous_t + 1],
+                    True,
+                )[0]
+                if isinstance(building.heating_device, HeatPump)
+                else building.heating_device.get_input_power(eb_slice)[0]
+            )
+        if include_every or 'dhw_storage_electricity_consumption' in requested:
+            eb_slice = building.dhw_storage.energy_balance[endogenous_t:endogenous_t + 1]
+            observations['dhw_storage_electricity_consumption'] = (
+                building.dhw_device.get_input_power(
+                    eb_slice,
+                    building.weather.outdoor_dry_bulb_temperature[endogenous_t:endogenous_t + 1],
+                    True,
+                )[0]
+                if isinstance(building.dhw_device, HeatPump)
+                else building.dhw_device.get_input_power(eb_slice)[0]
+            )
+        if include_every or 'electrical_storage_electricity_consumption' in requested:
+            archived = getattr(building, '_archived_storage_electricity', None)
+            if archived is not None and endogenous_t < len(archived):
+                observations['electrical_storage_electricity_consumption'] = archived[endogenous_t]
+            else:
+                observations['electrical_storage_electricity_consumption'] = building.electrical_storage.electricity_consumption_at(endogenous_t)
+        if include_every or 'deferrable_appliance_electricity_consumption' in requested:
+            observations['deferrable_appliance_electricity_consumption'] = building._Building__deferrable_appliances_electricity_consumption[endogenous_t]
+        if include_every or 'washing_machine_electricity_consumption' in requested:
+            observations['washing_machine_electricity_consumption'] = building._Building__deferrable_appliances_electricity_consumption[endogenous_t]
+        if include_every or 'cooling_device_efficiency' in requested:
             observations['cooling_device_efficiency'] = building.cooling_device.get_cop(building.weather.outdoor_dry_bulb_temperature[t], heating=False)
-        if wants('heating_device_efficiency'):
+        if include_every or 'heating_device_efficiency' in requested:
             observations['heating_device_efficiency'] = building.heating_device.get_cop(building.weather.outdoor_dry_bulb_temperature[t], heating=True) \
                 if isinstance(building.heating_device, HeatPump) else building.heating_device.efficiency
-        if wants('dhw_device_efficiency'):
+        if include_every or 'dhw_device_efficiency' in requested:
             observations['dhw_device_efficiency'] = building.dhw_device.get_cop(building.weather.outdoor_dry_bulb_temperature[t], heating=True) \
                 if isinstance(building.dhw_device, HeatPump) else building.dhw_device.efficiency
-        if wants('indoor_dry_bulb_temperature_cooling_set_point'):
+        if include_every or 'indoor_dry_bulb_temperature_cooling_set_point' in requested:
             observations['indoor_dry_bulb_temperature_cooling_set_point'] = building.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[t]
-        if wants('indoor_dry_bulb_temperature_heating_set_point'):
+        if include_every or 'indoor_dry_bulb_temperature_heating_set_point' in requested:
             observations['indoor_dry_bulb_temperature_heating_set_point'] = building.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[t]
-        if wants('indoor_dry_bulb_temperature_cooling_delta'):
+        if include_every or 'indoor_dry_bulb_temperature_cooling_delta' in requested:
             observations['indoor_dry_bulb_temperature_cooling_delta'] = building.energy_simulation.indoor_dry_bulb_temperature[t] - building.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[t]
-        if wants('indoor_dry_bulb_temperature_heating_delta'):
+        if include_every or 'indoor_dry_bulb_temperature_heating_delta' in requested:
             observations['indoor_dry_bulb_temperature_heating_delta'] = building.energy_simulation.indoor_dry_bulb_temperature[t] - building.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[t]
-        if wants('comfort_band'):
+        if include_every or 'comfort_band' in requested:
             observations['comfort_band'] = building.energy_simulation.comfort_band[t]
-        if wants('occupant_count'):
+        if include_every or 'occupant_count' in requested:
             observations['occupant_count'] = building.energy_simulation.occupant_count[t]
-        if wants('power_outage'):
+        if include_every or 'power_outage' in requested:
             observations['power_outage'] = building._Building__power_outage_signal[t]
-        if wants('electric_vehicles_chargers_dict'):
+        if include_every or 'electric_vehicles_chargers_dict' in requested:
             observations['electric_vehicles_chargers_dict'] = electric_vehicle_chargers_dict
-        if wants('deferrable_appliances_dict'):
+        if include_every or 'deferrable_appliances_dict' in requested:
             observations['deferrable_appliances_dict'] = deferrable_appliances_dict
-        if wants('washing_machines_dict'):
+        if include_every or 'washing_machines_dict' in requested:
             observations['washing_machines_dict'] = deferrable_appliances_dict
 
         if (
@@ -434,29 +462,30 @@ class BuildingOpsService:
         ):
             state = building._charging_constraints_state
             headroom = state.get('building_headroom_kw')
-            if headroom is not None and wants('charging_building_headroom_kw'):
+            if headroom is not None and (include_every or 'charging_building_headroom_kw' in requested):
                 observations['charging_building_headroom_kw'] = headroom
             export_headroom = state.get('building_export_headroom_kw')
-            if export_headroom is not None and wants('charging_building_export_headroom_kw'):
+            if export_headroom is not None and (include_every or 'charging_building_export_headroom_kw' in requested):
                 observations['charging_building_export_headroom_kw'] = export_headroom
             for phase_name, value in (state.get('phase_headroom_kw') or {}).items():
                 key = f'charging_phase_{phase_name}_headroom_kw'
-                if value is not None and wants(key):
+                if value is not None and (include_every or key in requested):
                     observations[key] = value
             for phase_name, value in (state.get('phase_export_headroom_kw') or {}).items():
                 key = f'charging_phase_{phase_name}_export_headroom_kw'
-                if value is not None and wants(key):
+                if value is not None and (include_every or key in requested):
                     observations[key] = value
 
         if getattr(building, '_charging_constraints_enabled', False):
-            if getattr(building, '_expose_charging_violation', False) and wants('charging_constraint_violation_kwh'):
+            if getattr(building, '_expose_charging_violation', False) and (include_every or 'charging_constraint_violation_kwh' in requested):
                 observations['charging_constraint_violation_kwh'] = building._charging_constraint_last_penalty_kwh
             if getattr(building, '_phase_encoding_observations', None):
-                observations.update({
-                    key: value
-                    for key, value in building._phase_encoding_observations.items()
-                    if wants(key)
-                })
+                if include_every:
+                    observations.update(building._phase_encoding_observations)
+                else:
+                    for key, value in building._phase_encoding_observations.items():
+                        if key in requested:
+                            observations[key] = value
 
         return observations
 
@@ -683,12 +712,17 @@ class BuildingOpsService:
         return cache
 
     def _safe_scalar(self, value, default: float = 0.0) -> float:
+        if type(value) is float:
+            return value if isfinite(value) else float(default)
+        if type(value) is int:
+            return float(value)
+
         try:
             scalar = float(value)
         except (TypeError, ValueError):
             return float(default)
 
-        if not np.isfinite(scalar):
+        if not isfinite(scalar):
             return float(default)
 
         return scalar
@@ -749,18 +783,35 @@ class BuildingOpsService:
         if 0 <= t < len(values):
             values[t] = self._safe_scalar(value, 0.0)
 
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def _clip_reason_attr_names(prefix: str) -> Tuple[str, ...]:
+        return tuple(
+            f'{prefix}clip_reason_{reason}'
+            for reason in (
+                'availability',
+                'power_limit',
+                'soc_limit',
+                'building_headroom',
+                'phase_headroom',
+                'export_headroom',
+                'outage',
+                'deferrable_window',
+            )
+        )
+
     def _clear_feedback_reasons(self, owner, prefix: str = 'action_feedback_'):
-        for reason in (
-            'availability',
-            'power_limit',
-            'soc_limit',
-            'building_headroom',
-            'phase_headroom',
-            'export_headroom',
-            'outage',
-            'deferrable_window',
-        ):
-            self._set_feedback_value(owner, f'{prefix}clip_reason_{reason}', 0.0)
+        t = int(self.building.time_step)
+        expected = int(getattr(self.building.episode_tracker, 'episode_time_steps', 0) or 0)
+        bool_dtype = np.dtype(np.bool_)
+
+        for attr_name in self._clip_reason_attr_names(prefix):
+            values = getattr(owner, attr_name, None)
+            if values is None or len(values) != expected or getattr(values, 'dtype', None) != bool_dtype:
+                values = np.zeros(expected, dtype=bool_dtype)
+                setattr(owner, attr_name, values)
+            if 0 <= t < expected:
+                values[t] = False
 
     def _set_feedback_reason(self, owner, reason: str, prefix: str = 'action_feedback_'):
         self._set_feedback_value(owner, f'{prefix}clip_reason_{reason}', 1.0)

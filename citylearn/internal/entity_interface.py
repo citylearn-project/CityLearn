@@ -882,9 +882,40 @@ class CityLearnEntityInterfaceService:
         }
 
     def _derived_forecast_config(self) -> Mapping[str, Any]:
-        schema = getattr(self.env, "schema", {}) or {}
-        raw = schema.get("derived_forecasts", {}) if isinstance(schema, Mapping) else {}
+        schema = getattr(self.env, "schema", None)
+        raw = schema.get("derived_forecasts") if isinstance(schema, Mapping) else None
+        if not raw:
+            cached_default = getattr(self, "_default_derived_forecast_config", None)
+            if cached_default is not None:
+                return cached_default
+            default_config = {
+                "method": "actual_future",
+                "period_seconds": float(24 * 60 * 60),
+                "cold_start": "current_step",
+                "price_source": "known_future_market_input",
+                "price_horizon_steps": (1, 2, 3),
+            }
+            self._default_derived_forecast_config = default_config
+            return default_config
+
         raw = raw if isinstance(raw, Mapping) else {}
+        raw_horizons_key = (
+            tuple(raw["price_horizon_steps"])
+            if isinstance(raw.get("price_horizon_steps"), (list, tuple))
+            else None
+        )
+        cache_key = (
+            raw.get("load_pv_method"),
+            raw.get("method"),
+            raw.get("persistence_period_seconds"),
+            raw.get("cold_start"),
+            raw.get("price_source"),
+            raw_horizons_key,
+        )
+        cached = getattr(self, "_cached_derived_forecast_config", None)
+        if cached is not None and raw_horizons_key is not None and cached[0] == cache_key:
+            return cached[1]
+
         method = str(raw.get("load_pv_method", raw.get("method", "actual_future"))).strip().lower()
         if method not in {"actual_future", "daily_persistence"}:
             raise ValueError(
@@ -932,13 +963,16 @@ class CityLearnEntityInterfaceService:
                 "derived_forecasts.price_horizon_steps must contain three strictly increasing positive integers."
             )
 
-        return {
+        parsed_config = {
             "method": method,
             "period_seconds": period_seconds,
             "cold_start": cold_start,
             "price_source": price_source,
             "price_horizon_steps": price_horizon_steps,
         }
+        if raw_horizons_key is not None:
+            self._cached_derived_forecast_config = (cache_key, parsed_config)
+        return parsed_config
 
     @staticmethod
     def _series_mean(values: Sequence[float], indices: Sequence[int], fallback: float) -> float:
@@ -1009,16 +1043,45 @@ class CityLearnEntityInterfaceService:
         control_t: int,
         step_hours: float,
     ) -> Mapping[str, float]:
+        b_step = building.time_step
         net_energy = self._safe_index(building.net_electricity_consumption, endogenous_t, 0.0)
         import_energy = max(net_energy, 0.0)
         export_energy = max(-net_energy, 0.0)
         pv_energy = abs(self._safe_index(building.solar_generation, endogenous_t, 0.0))
-        bess_energy = self._safe_index(building.electrical_storage_electricity_consumption, endogenous_t, 0.0)
+        archived_bess = getattr(building, "_archived_storage_electricity", None)
+        if archived_bess is not None and 0 <= endogenous_t <= b_step and endogenous_t < len(archived_bess):
+            bess_energy = self._safe_scalar(archived_bess[endogenous_t], 0.0)
+        elif 0 <= endogenous_t <= b_step and hasattr(building.electrical_storage, "electricity_consumption_at"):
+            bess_energy = self._safe_scalar(building.electrical_storage.electricity_consumption_at(endogenous_t), 0.0)
+        else:
+            bess_energy = self._safe_index(building.electrical_storage_electricity_consumption, endogenous_t, 0.0)
         ev_energy = self._safe_index(building.chargers_electricity_consumption, endogenous_t, 0.0)
-        cooling = self._safe_index(building.cooling_electricity_consumption, endogenous_t, 0.0)
-        heating = self._safe_index(building.heating_electricity_consumption, endogenous_t, 0.0)
-        dhw = self._safe_index(building.dhw_electricity_consumption, endogenous_t, 0.0)
-        non_shiftable = self._safe_index(building.non_shiftable_load_electricity_consumption, endogenous_t, 0.0)
+        if 0 <= endogenous_t <= b_step:
+            cooling = (
+                self._safe_scalar(building.cooling_device.electricity_consumption_at(endogenous_t), 0.0)
+                if hasattr(building.cooling_device, "electricity_consumption_at")
+                else self._safe_index(building.cooling_electricity_consumption, endogenous_t, 0.0)
+            )
+            heating = (
+                self._safe_scalar(building.heating_device.electricity_consumption_at(endogenous_t), 0.0)
+                if hasattr(building.heating_device, "electricity_consumption_at")
+                else self._safe_index(building.heating_electricity_consumption, endogenous_t, 0.0)
+            )
+            dhw = (
+                self._safe_scalar(building.dhw_device.electricity_consumption_at(endogenous_t), 0.0)
+                if hasattr(building.dhw_device, "electricity_consumption_at")
+                else self._safe_index(building.dhw_electricity_consumption, endogenous_t, 0.0)
+            )
+            non_shiftable = (
+                self._safe_scalar(building.non_shiftable_load_device.electricity_consumption_at(endogenous_t), 0.0)
+                if hasattr(building.non_shiftable_load_device, "electricity_consumption_at")
+                else self._safe_index(building.non_shiftable_load_electricity_consumption, endogenous_t, 0.0)
+            )
+        else:
+            cooling = self._safe_index(building.cooling_electricity_consumption, endogenous_t, 0.0)
+            heating = self._safe_index(building.heating_electricity_consumption, endogenous_t, 0.0)
+            dhw = self._safe_index(building.dhw_electricity_consumption, endogenous_t, 0.0)
+            non_shiftable = self._safe_index(building.non_shiftable_load_electricity_consumption, endogenous_t, 0.0)
         deferrable = self._safe_index(building.deferrable_appliances_electricity_consumption, endogenous_t, 0.0)
         load_energy = max(cooling + heating + dhw + non_shiftable + deferrable + ev_energy, 0.0)
         pv_surplus_energy = max(pv_energy - load_energy, 0.0)
@@ -1865,16 +1928,34 @@ class CityLearnEntityInterfaceService:
             dhw = self._safe_scalar(building.dhw_device.get_input_power(dhw_demand), 0.0)
         deferrable = 0.0
         if include_deferrable:
-            deferrable = sum(
-                self._safe_index(getattr(appliance, "electricity_consumption", []), step, 0.0)
-                for appliance in building.deferrable_appliances or []
-            )
+            for appliance in building.deferrable_appliances or []:
+                ec_at = getattr(appliance, "electricity_consumption_at", None)
+                raw_ec = getattr(appliance, "_ElectricDevice__electricity_consumption", None)
+                if ec_at is not None and raw_ec is not None and 0 <= step < len(raw_ec):
+                    deferrable += self._safe_scalar(ec_at(step), 0.0)
+                else:
+                    deferrable += self._safe_index(series(appliance, "electricity_consumption"), step, 0.0)
         load_energy = max(non_shiftable + cooling + heating + dhw + deferrable, 0.0)
         try:
-            solar_generation = building._pv_generation_to_control_step([
-                self._safe_index(series(energy_simulation, "solar_generation"), step, 0.0)
-            ])
-            pv_energy = abs(self._safe_index(solar_generation, 0, 0.0))
+            from citylearn.energy_model import PV
+
+            solar_val = self._safe_index(series(energy_simulation, "solar_generation"), step, 0.0)
+            pv_obj = getattr(building, "pv", None)
+            if (
+                type(pv_obj) is PV
+                and getattr(pv_obj, "generation_mode", "per_kw") != "absolute"
+                and "_pv_generation_to_control_step" not in getattr(building, "__dict__", ())
+            ):
+                raw_gen = (
+                    pv_obj.nominal_power
+                    * solar_val
+                    / 1000.0
+                    * (pv_obj.seconds_per_time_step / 3600.0)
+                )
+                pv_energy = abs(self._safe_scalar(np.float32(raw_gen), 0.0))
+            else:
+                solar_generation = building._pv_generation_to_control_step([solar_val])
+                pv_energy = abs(self._safe_index(solar_generation, 0, 0.0))
         except Exception:
             pv_energy = abs(self._safe_index(getattr(building, "solar_generation", []), step, 0.0))
 
@@ -2906,29 +2987,31 @@ class CityLearnEntityInterfaceService:
 
     @staticmethod
     def _safe_scalar(value: Any, default: float = 0.0) -> float:
+        if value is None:
+            return float(default)
         try:
             scalar = float(value)
         except (TypeError, ValueError):
             return float(default)
-        if not isfinite(scalar):
-            return float(default)
-        return scalar
+        return scalar if isfinite(scalar) else float(default)
 
-    @classmethod
-    def _safe_index(cls, values: Any, index: int, default: float = 0.0) -> float:
+    @staticmethod
+    def _safe_index(values: Any, index: int, default: float = 0.0) -> float:
         try:
-            return cls._safe_scalar(values[index], default)
+            scalar = float(values[index])
         except Exception:
             return float(default)
+        return scalar if isfinite(scalar) else float(default)
 
     @staticmethod
     def _fill_obs_row_from_mapping(row: np.ndarray, feature_names: Sequence[str], values: Mapping[str, Any]) -> None:
         if len(feature_names) == 0:
             return
 
+        get_val = values.get
         for index, name in enumerate(feature_names):
             try:
-                row[index] = values.get(name, 0.0)
+                row[index] = get_val(name, 0.0)
             except (TypeError, ValueError):
                 row[index] = 0.0
 
@@ -2959,8 +3042,14 @@ class CityLearnEntityInterfaceService:
         feature_cols: Mapping[str, int],
         values: Mapping[str, Any],
     ) -> None:
+        get_col = feature_cols.get
         for name, value in values.items():
-            cls._set_obs_value(row, feature_cols, name, value)
+            col = get_col(name)
+            if col is not None:
+                try:
+                    row[col] = value
+                except (TypeError, ValueError):
+                    row[col] = 0.0
 
     @staticmethod
     def _to_2d_array(value: Any, *, rows: int, cols: int) -> Optional[np.ndarray]:

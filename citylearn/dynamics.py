@@ -122,19 +122,41 @@ class LSTMDynamics(Dynamics, (torch.nn if torch is not None else _TorchNNPlaceho
         
         return hidden
 
+    _STATE_DICT_CACHE = {}
+
+    @classmethod
+    def _load_cached_state_dict(cls, filepath: Union[Path, str]):
+        cache_key = None
+        if isinstance(filepath, (str, Path)):
+            p = Path(filepath)
+            if p.is_file():
+                stat = p.stat()
+                cache_key = (str(p.resolve()), stat.st_size, stat.st_mtime_ns)
+                cached = cls._STATE_DICT_CACHE.get(cache_key)
+                if cached is not None:
+                    return cached
+
+        try:
+            loaded = torch.load(filepath)
+            state_dict = loaded['model_state_dict']
+        except RuntimeError:
+            loaded = torch.load(filepath, map_location=torch.device('cpu'))
+            state_dict = loaded['model_state_dict']
+        except Exception:
+            state_dict = torch.load(filepath, map_location=torch.device('cpu'))
+
+        if cache_key is not None:
+            if len(cls._STATE_DICT_CACHE) >= 128:
+                cls._STATE_DICT_CACHE.clear()
+            cls._STATE_DICT_CACHE[cache_key] = state_dict
+
+        return state_dict
+
     def reset(self):
         """Loads dynamic model state dict, and initializes hidden states and model input."""
 
         super().reset()
-
-        try:
-            self.load_state_dict(torch.load(self.filepath)['model_state_dict'])
-        
-        except RuntimeError:
-            self.load_state_dict(torch.load(self.filepath, map_location=torch.device('cpu'))['model_state_dict'])
-        
-        except:
-            self.load_state_dict(torch.load(self.filepath))
+        self.load_state_dict(self._load_cached_state_dict(self.filepath))
 
         # Simulation is inference: without eval() the dropout layer stays active and every prediction
         # drops random units (unseeded), making the temperature dynamics noisy and non-reproducible.
