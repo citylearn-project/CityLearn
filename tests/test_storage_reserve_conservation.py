@@ -10,7 +10,7 @@ import pytest
 
 from citylearn.base import EpisodeTracker
 from citylearn.citylearn import CityLearnEnv
-from citylearn.energy_model import Battery
+from citylearn.energy_model import Battery, StorageTank
 from citylearn.internal.physics_invariants import CityLearnPhysicsInvariantService
 
 
@@ -63,6 +63,53 @@ def test_standby_losses_can_cross_operational_reserve(initial_soc):
     battery.charge(-10.)
     assert battery.soc[1] == pytest.approx(expected_soc)
     assert battery.energy_balance[1] == pytest.approx(0.)
+
+
+@pytest.mark.parametrize('seconds', [3600, 900])
+@pytest.mark.parametrize('soc', [.1, .2, .5, 1.])
+@pytest.mark.parametrize('command', [-1., 0., 1.])
+def test_reserve_transfer_and_standby_balance(seconds, soc, command):
+    battery = _battery(initial_soc=soc, loss=.01, seconds=seconds)
+    before = float(battery.soc[0])*60.
+    battery.charge(command)
+    after = float(battery.soc[0])*60.
+    terminal = float(battery.electricity_consumption[0])
+    expected_terminal = (min(command, max(60. - before, 0.)/.8) if command >= 0.
+                         else -min(-command, max(before - 12., 0.)*.8))
+    assert terminal == pytest.approx(expected_terminal, abs=1e-5)
+    stored_delta = terminal*.8 if terminal >= 0. else terminal/.8
+    assert after - before == pytest.approx(stored_delta, abs=1e-5)
+    battery.next_time_step()
+    assert float(battery.soc[1])*60. == pytest.approx(after*.99**(seconds/3600), abs=1e-5)
+
+
+@pytest.mark.parametrize('kind', ['battery', 'thermal'])
+@pytest.mark.parametrize('soc', [-.1, 1.1, np.nan, np.inf])
+def test_forced_soc_rejects_invalid_values_without_changing_stock(kind, soc):
+    battery = _battery()
+    storage = battery if kind == 'battery' else StorageTank(
+        capacity=60., initial_soc=.5, episode_tracker=battery.episode_tracker,
+    )
+    storage.reset()
+    with pytest.raises(AttributeError, match='Soc must be between 0 and 1'):
+        storage.force_set_soc(soc)
+    assert storage.energy_init == pytest.approx(30.)
+    assert not storage.energy_provenance_events
+
+
+@pytest.mark.parametrize('seconds', [3600, 900])
+def test_thermal_storage_uses_its_actual_stock(seconds):
+    battery = _battery(seconds=seconds)
+    tank = StorageTank(capacity=10., initial_soc=0., efficiency=.64, loss_coefficient=.01,
+                       episode_tracker=battery.episode_tracker, seconds_per_time_step=seconds)
+    tank.reset()
+    tank.charge(-1.)
+    assert tank.energy_init == pytest.approx(0.)
+    tank.charge(1.)
+    assert tank.energy_init == pytest.approx(.8)
+    assert tank.energy_balance[0] == pytest.approx(1.)
+    tank.next_time_step()
+    assert tank.energy_init == pytest.approx(.8*.99**(seconds/3600))
 
 
 def test_conservation_sums_multiple_transfers_at_their_own_efficiencies():
