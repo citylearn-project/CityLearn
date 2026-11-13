@@ -46,7 +46,7 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
-## Changes after 3.2.0 (unreleased)
+## Upgrade from 3.2.0 to 3.3.0
 
 No dataset, schema or export-file migration is required.
 
@@ -112,6 +112,14 @@ No dataset, schema or export-file migration is required.
   first update.
 
 Fixes that **change results** where they apply:
+
+- Storage activation and EV topology: the discharge reserve limits energy
+  leaving a battery. A newly activated battery uses its configured initial SOC,
+  including below the reserve. Removing or moving a charger preserves EV identity.
+  While the EV is away, standby losses and seeded mobility continue to apply.
+  A newly activated EV starts from its configured SOC, and an explicit arrival
+  estimate is accounted for as external energy. Exports identify the charger
+  that actually served the EV.
 
 - Stochastic power outages: built-in models without an explicit seed now
   derive one from the environment seed, episode window and building name.

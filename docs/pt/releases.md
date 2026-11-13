@@ -3,6 +3,23 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## v3.3.0 - 2026-11-13
+
+**Mark Colley** ([@M-Colley](https://github.com/M-Colley)) contribuiu com
+correções de compatibilidade, BAU, KPIs, chegadas dos EVs, agentes e cache.
+**Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)) e a equipa
+do CityLearn fizeram a revisão e integração e acrescentaram as correções de
+conservação das baterias e do ciclo de vida dos EVs.
+
+- A reserva limita a descarga. Na ativação, a bateria parte do SOC configurado.
+- O mesmo EV mantém a identidade e a evolução do SOC quando sai e volta a
+  ligar-se. Os exports CSV e Parquet identificam o carregador efetivo.
+- A referência BAU usa o mesmo equipamento, PV e cortes de rede que o
+  controlador. Foram corrigidos rácios, custos e agregação de KPIs.
+- O CI validou Python 3.9, 3.10 e 3.12, NumPy 1 e 2, as auditorias do motor
+  e os exports do pacote instalado. Os ficheiros dos datasets foram preservados.
+  Consultar o [guia de migração](../migration.md#upgrade-from-320-to-330).
+
 ## v3.2.0 - 2026-11-06
 
 Responsável pela versão: **Tiago Fonseca**. Contribuição de **Mark Colley** no
