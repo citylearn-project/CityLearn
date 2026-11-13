@@ -146,6 +146,7 @@ charger_units = specs["tables"]["charger"]["units"]
 |---|---|
 | Exogenous observations | Read at timestep `t`. Examples: weather, pricing, schedules. |
 | Endogenous observations | Read at settled `t-1`. Examples: previous consumption and SOC after the last action. |
+| Terminal observation | Same rule at the final `t`: exogenous and calendar features from the last data row, endogenous ones from the last executed interval. Building series still hold only executed intervals. Charger, deferrable-appliance and escalator states are not advanced and stay at the last executed interval. |
 | Topology events | Events at `k` are applied after transition `k-1 -> k` and before observation `k`. |
 
 ## Entity Bundles

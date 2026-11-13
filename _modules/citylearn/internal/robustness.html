@@ -548,6 +548,13 @@
                 <span class="n">mode</span> <span class="o">=</span> <span class="s2">"dropout"</span> <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"dropout"</span> <span class="k">else</span> <span class="n">event</span><span class="o">.</span><span class="n">mode</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_record_application</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">"action"</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
 
+        <span class="c1"># A PV array has no agent action; an unavailable control port takes it</span>
+        <span class="c1"># out of service, so it produces nothing during this step.</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">availability_events</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">building</span><span class="p">,</span> <span class="n">descriptor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pv_outage_targets</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+                <span class="n">building</span><span class="o">.</span><span class="n">_set_pv_out_of_service</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_record_application</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">"asset"</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"unavailable"</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">actions</span></div>
 
 
@@ -1216,9 +1223,38 @@
 
         <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">module</span> <span class="o">==</span> <span class="s2">"asset"</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">target_feature</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONTROL_FEATURES</span><span class="p">:</span>
             <span class="n">descriptors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validation_action_descriptors</span><span class="p">()</span>
-            <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_asset_control_event_matches</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">)</span> <span class="k">for</span> <span class="n">descriptor</span> <span class="ow">in</span> <span class="n">descriptors</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_asset_control_event_matches</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">)</span> <span class="k">for</span> <span class="n">descriptor</span> <span class="ow">in</span> <span class="n">descriptors</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pv_outage_targets</span><span class="p">(</span><span class="n">event</span><span class="p">))</span>
+            <span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pv_outage_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">RobustnessEvent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">"""PV arrays taken out of service by an asset-control unavailability event.</span>
+
+<span class="sd">        Only events that target ``pv`` explicitly match. Descriptors use the PV</span>
+<span class="sd">        entity identity, so the telemetry and control effects of one event count</span>
+<span class="sd">        as one asset-unavailable application per step.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">target_type</span> <span class="o">!=</span> <span class="s2">"pv"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.entity_interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEntityInterfaceService</span>
+
+        <span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s2">"buildings"</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">CityLearnEntityInterfaceService</span><span class="o">.</span><span class="n">_has_pv_asset</span><span class="p">(</span><span class="n">building</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">global_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">/pv"</span>
+            <span class="n">descriptor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observation_descriptor</span><span class="p">(</span>
+                <span class="s2">"pv"</span><span class="p">,</span> <span class="n">global_id</span><span class="p">,</span> <span class="s2">"generation"</span><span class="p">,</span> <span class="n">building_name</span><span class="o">=</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">raw_id</span><span class="o">=</span><span class="n">global_id</span><span class="p">,</span> <span class="n">global_id</span><span class="o">=</span><span class="n">global_id</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_asset_control_event_matches</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">):</span>
+                <span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">building</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">targets</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_validation_action_descriptors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
         <span class="n">zero_actions</span> <span class="o">=</span> <span class="p">[]</span>

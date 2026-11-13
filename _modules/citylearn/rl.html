@@ -148,13 +148,16 @@
                  <span class="n">init_w</span> <span class="o">=</span> <span class="mf">3e-3</span><span class="p">,</span> 
                  <span class="n">log_std_min</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span> 
                  <span class="n">log_std_max</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> 
-                 <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">):</span>
+                 <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
+                 <span class="n">generator</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         
         <span class="nb">super</span><span class="p">(</span><span class="n">PolicyNetwork</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">log_std_min</span> <span class="o">=</span> <span class="n">log_std_min</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_std_max</span> <span class="o">=</span> <span class="n">log_std_max</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        <span class="c1"># Source of the exploration noise in `sample`; None draws from torch's global generator.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generator</span> <span class="o">=</span> <span class="n">generator</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">num_inputs</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">hidden_dim</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -190,7 +193,14 @@
         <span class="n">mean</span><span class="p">,</span> <span class="n">log_std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="n">std</span> <span class="o">=</span> <span class="n">log_std</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span>
         <span class="n">normal</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
-        <span class="n">x_t</span> <span class="o">=</span> <span class="n">normal</span><span class="o">.</span><span class="n">rsample</span><span class="p">()</span>  <span class="c1"># for reparameterization trick (mean + std * N(0,1))</span>
+        <span class="n">generator</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'generator'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">generator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x_t</span> <span class="o">=</span> <span class="n">normal</span><span class="o">.</span><span class="n">rsample</span><span class="p">()</span>  <span class="c1"># for reparameterization trick (mean + std * N(0,1))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Same reparameterization as Normal.rsample, with the noise drawn from this policy's own generator.</span>
+            <span class="n">x_t</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span><span class="o">*</span><span class="n">std</span>
+
         <span class="n">y_t</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x_t</span><span class="p">)</span>
         <span class="n">action</span> <span class="o">=</span> <span class="n">y_t</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_scale</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_bias</span>
         <span class="n">log_prob</span> <span class="o">=</span> <span class="n">normal</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">x_t</span><span class="p">)</span>
@@ -213,10 +223,12 @@
 <div class="viewcode-block" id="ReplayBuffer">
 <a class="viewcode-back" href="../../api/citylearn.rl.html#citylearn.rl.ReplayBuffer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ReplayBuffer</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">capacity</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">capacity</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="n">capacity</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Mini-batches come from this buffer's own generator when seeded, else from the global `random` module.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
     
 <div class="viewcode-block" id="ReplayBuffer.push">
 <a class="viewcode-back" href="../../api/citylearn.rl.html#citylearn.rl.ReplayBuffer.push">[docs]</a>
@@ -231,15 +243,19 @@
 <div class="viewcode-block" id="ReplayBuffer.sample">
 <a class="viewcode-back" href="../../api/citylearn.rl.html#citylearn.rl.ReplayBuffer.sample">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
-        <span class="n">batch</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="p">(</span><span class="n">random</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
         <span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">next_state</span><span class="p">,</span> <span class="n">done</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">next_state</span><span class="p">,</span> <span class="n">done</span></div>
 
     
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span></div>
-
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span>
         
+    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="c1"># Buffers saved before `random` existed (CityLearn &lt;= 3.2.0) sample from the global `random` module, as then.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">'random'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">state</span><span class="p">})</span></div>
+
+
 <div class="viewcode-block" id="RegressionBuffer">
 <a class="viewcode-back" href="../../api/citylearn.rl.html#citylearn.rl.RegressionBuffer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">RegressionBuffer</span><span class="p">:</span>

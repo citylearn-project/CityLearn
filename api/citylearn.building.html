@@ -806,6 +806,7 @@ chargers_electricity_consumption -&gt; Sum of the electricity consumption of all
 <p>So, the first one is subtracted from the net_electricity_consumption, obtaining the energy consumption as if the cars were not used at all.
 However, if there are chargers and EVs, they need to charge per usual, so that consumption is added
 This is what allows to check if the control mechanism affects the grid balancing scheme for EVs for example.</p>
+<p>Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.</p>
 </dd></dl>
 
 <dl class="py property">

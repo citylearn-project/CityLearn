@@ -171,6 +171,7 @@
 </tbody>
 </table>
 <p><code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> in the schema must represent the physical cadence of the dataset. If the dataset resolution and schema resolution differ, the simulator applies the compatibility conversion and prints an explicit <code class="docutils literal notranslate"><span class="pre">[CityLearn][unit-conversion]</span></code> warning. This is supported, but the preferred production path is to generate the dataset at the same resolution declared by the schema.</p>
+<p>With that conversion, simulated electricity series are control-step kWh. This includes the <code class="docutils literal notranslate"><span class="pre">net_electricity_consumption_without_storage_and_partial_load*</span></code> baselines: the device electricity for the extra heating and cooling of the ideal (uncontrolled) demand is converted once from dataset-step to control-step kWh, like the controlled device electricity.</p>
 </section>
 <section id="main-time-series">
 <h2>Main Time Series<a class="headerlink" href="#main-time-series" title="Link to this heading"></a></h2>

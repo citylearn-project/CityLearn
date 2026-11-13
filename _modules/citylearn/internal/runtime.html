@@ -1083,6 +1083,13 @@
         <span class="k">if</span> <span class="n">debug_timing</span><span class="p">:</span>
             <span class="n">timings</span><span class="p">[</span><span class="s1">'next_time_step_environment_time'</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">timer_start</span>
 
+        <span class="k">if</span> <span class="n">reached_terminal_transition</span><span class="p">:</span>
+            <span class="c1"># Buildings stay on the last executed interval so their series hold only</span>
+            <span class="c1"># committed intervals. The terminal observation is still for the new</span>
+            <span class="c1"># environment time step: exogenous data at it, endogenous at the last interval.</span>
+            <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
+                <span class="n">building</span><span class="o">.</span><span class="n">_terminal_observation_time_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">reached_terminal_transition</span><span class="p">:</span>
             <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">simulate_unconnected_ev_soc</span><span class="p">()</span>
@@ -1124,24 +1131,20 @@
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_value</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">current_value</span><span class="p">)</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">current_value</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
                     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">current_value</span><span class="p">)</span>
 
-            <span class="n">candidate_index</span> <span class="o">=</span> <span class="kc">None</span>
-
             <span class="k">if</span> <span class="n">prev_state</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="ow">and</span> <span class="n">step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prev_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">prev_id</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">''</span><span class="p">,</span> <span class="s1">'nan'</span><span class="p">}</span> <span class="ow">and</span> <span class="n">prev_id</span> <span class="o">!=</span> <span class="n">ev_identifier</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">"Charger dataset EV mismatch: expected '</span><span class="si">{</span><span class="n">ev_identifier</span><span class="si">}</span><span class="s2">' but found '</span><span class="si">{</span><span class="n">prev_id</span><span class="si">}</span><span class="s2">' at time step </span><span class="si">{</span><span class="n">step</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">."</span>
                     <span class="p">)</span>
-                <span class="n">candidate_index</span> <span class="o">=</span> <span class="n">step</span> <span class="o">-</span> <span class="mi">1</span>
 
-            <span class="k">elif</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">simulation</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span><span class="p">):</span>
-                <span class="n">candidate_index</span> <span class="o">=</span> <span class="n">step</span>
-
-            <span class="n">soc_value</span> <span class="o">=</span> <span class="kc">None</span>
-
-            <span class="k">if</span> <span class="n">candidate_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">candidate_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">simulation</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span><span class="p">):</span>
-                <span class="n">candidate</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span><span class="p">[</span><span class="n">candidate_index</span><span class="p">]</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">candidate</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
-                    <span class="n">soc_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">candidate</span><span class="p">)</span>
+            <span class="c1"># The estimate sits on the incoming rows of this session, not always on the last one, or</span>
+            <span class="c1"># else on the connection row; the KPI and departure-audit references use the same row.</span>
+            <span class="n">estimated_soc_arrival</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">ChargerSimulation</span><span class="o">.</span><span class="n">arrival_soc_index</span><span class="p">(</span>
+                <span class="n">simulation</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">,</span> <span class="n">simulation</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">,</span> <span class="n">estimated_soc_arrival</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">simulation</span><span class="p">,</span> <span class="s1">'electric_vehicle_session_id'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">soc_value</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">estimated_soc_arrival</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
 
             <span class="k">return</span> <span class="n">soc_value</span>
 
@@ -1351,13 +1354,12 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">is_connecting</span><span class="p">:</span>
                     <span class="k">continue</span>
 
-                <span class="n">is_incoming</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">curr_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">curr_id</span> <span class="o">==</span> <span class="n">next_id</span> <span class="ow">and</span> <span class="n">curr_state</span> <span class="o">==</span> <span class="mi">2</span>
-                <span class="n">soc_index</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">is_incoming</span> <span class="k">else</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span>
-                <span class="n">soc</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span><span class="p">[</span><span class="n">soc_index</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="n">soc_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span><span class="p">)</span>
-                    <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                <span class="c1"># The same estimate the connection at t + 1 starts from.</span>
+                <span class="n">soc_index</span> <span class="o">=</span> <span class="n">ChargerSimulation</span><span class="o">.</span><span class="n">arrival_soc_index</span><span class="p">(</span>
+                    <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">,</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">,</span>
+                    <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_session_id'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
                 <span class="p">)</span>
+                <span class="n">soc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">soc_index</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span><span class="p">[</span><span class="n">soc_index</span><span class="p">]</span>
                 <span class="n">charger_event_by_ev_id</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">next_id</span><span class="p">,</span> <span class="p">(</span><span class="s1">'connecting'</span><span class="p">,</span> <span class="n">soc</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">:</span>

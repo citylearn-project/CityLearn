@@ -281,8 +281,7 @@
         <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">ev_chargers</span><span class="p">:</span>
             <span class="n">charger_id</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span>
             <span class="n">sim</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span>
-            <span class="n">t</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">time_step</span>
-            <span class="n">endogenous_t</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">include_all</span> <span class="k">else</span> <span class="nb">max</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">t</span><span class="p">,</span> <span class="n">endogenous_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observation_time_steps</span><span class="p">(</span><span class="n">include_all</span><span class="p">)</span>
 
             <span class="n">connected_state_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'electric_vehicle_charger_</span><span class="si">{</span><span class="n">charger_id</span><span class="si">}</span><span class="s1">_connected_state'</span>
             <span class="n">incoming_state_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'electric_vehicle_charger_</span><span class="si">{</span><span class="n">charger_id</span><span class="si">}</span><span class="s1">_incoming_state'</span>
@@ -428,8 +427,7 @@
 
         <span class="n">electric_vehicle_chargers_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">deferrable_appliances_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">t</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">time_step</span>
-        <span class="n">endogenous_t</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">include_all</span> <span class="k">else</span> <span class="nb">max</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">t</span><span class="p">,</span> <span class="n">endogenous_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observation_time_steps</span><span class="p">(</span><span class="n">include_all</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">wants</span><span class="p">(</span><span class="s1">'electric_vehicles_chargers_dict'</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">building</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span> <span class="ow">or</span> <span class="p">[]:</span>
@@ -510,8 +508,9 @@
             <span class="k">if</span> <span class="n">wants</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
                 <span class="n">observations</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">series</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
 
+        <span class="c1"># Full series: the terminal observation reads one row past the last executed interval.</span>
         <span class="k">if</span> <span class="n">wants</span><span class="p">(</span><span class="s1">'solar_generation'</span><span class="p">):</span>
-            <span class="n">observations</span><span class="p">[</span><span class="s1">'solar_generation'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+            <span class="n">observations</span><span class="p">[</span><span class="s1">'solar_generation'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">_Building__solar_generation</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">wants</span><span class="p">(</span><span class="s1">'cooling_storage_soc'</span><span class="p">):</span>
             <span class="n">observations</span><span class="p">[</span><span class="s1">'cooling_storage_soc'</span><span class="p">]</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">cooling_storage</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">endogenous_t</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">wants</span><span class="p">(</span><span class="s1">'heating_storage_soc'</span><span class="p">):</span>
@@ -567,7 +566,7 @@
         <span class="k">if</span> <span class="n">wants</span><span class="p">(</span><span class="s1">'occupant_count'</span><span class="p">):</span>
             <span class="n">observations</span><span class="p">[</span><span class="s1">'occupant_count'</span><span class="p">]</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">occupant_count</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">wants</span><span class="p">(</span><span class="s1">'power_outage'</span><span class="p">):</span>
-            <span class="n">observations</span><span class="p">[</span><span class="s1">'power_outage'</span><span class="p">]</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">power_outage_signal</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+            <span class="n">observations</span><span class="p">[</span><span class="s1">'power_outage'</span><span class="p">]</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_Building__power_outage_signal</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">wants</span><span class="p">(</span><span class="s1">'electric_vehicles_chargers_dict'</span><span class="p">):</span>
             <span class="n">observations</span><span class="p">[</span><span class="s1">'electric_vehicles_chargers_dict'</span><span class="p">]</span> <span class="o">=</span> <span class="n">electric_vehicle_chargers_dict</span>
         <span class="k">if</span> <span class="n">wants</span><span class="p">(</span><span class="s1">'deferrable_appliances_dict'</span><span class="p">):</span>
@@ -844,6 +843,25 @@
             <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">scalar</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_observation_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">include_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Rows read by an observation: exogenous `t` and endogenous (settled `t - 1`).</span>
+
+<span class="sd">        `include_all` (reward/KPI) observations read the current transition at both. After the</span>
+<span class="sd">        terminal transition the building stays on the last executed interval, but the agent-facing</span>
+<span class="sd">        terminal observation is for the environment's new time step, like every other observation.</span>
+<span class="sd">        """</span>
+
+        <span class="n">building</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">building</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">include_all</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">t</span><span class="p">,</span> <span class="n">t</span>
+
+        <span class="n">terminal_time_step</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'_terminal_observation_time_step'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span> <span class="k">if</span> <span class="n">terminal_time_step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">terminal_time_step</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">t</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_safe_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>

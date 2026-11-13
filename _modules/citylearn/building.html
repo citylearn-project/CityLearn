@@ -514,7 +514,27 @@
 <span class="sd">        `net_electricity_consumption_without_storage` - `solar_generation`</span>
 <span class="sd">        """</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_without_storage</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">solar_generation</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_without_grid_during_outage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_without_storage</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_without_grid_during_outage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set a counterfactual net electricity consumption series to zero at power outage time steps.</span>
+
+<span class="sd">        The controlled building exchanges no energy with the grid while it is down (see</span>
+<span class="sd">        `update_variables`), so counterfactual series follow the same rule to stay comparable.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_power_outage</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">values</span>
+
+        <span class="n">outage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power_outage_signal</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">outage</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">values</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">values</span><span class="p">[</span><span class="n">outage</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">return</span> <span class="n">values</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">net_electricity_consumption_emission_without_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -546,14 +566,16 @@
 <span class="sd">        So, the first one is subtracted from the net_electricity_consumption, obtaining the energy consumption as if the cars were not used at all.</span>
 <span class="sd">        However, if there are chargers and EVs, they need to charge per usual, so that consumption is added</span>
 <span class="sd">        This is what allows to check if the control mechanism affects the grid balancing scheme for EVs for example.</span>
+
+<span class="sd">        Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_without_grid_during_outage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage_electricity_consumption</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage_electricity_consumption</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage_electricity_consumption</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage_electricity_consumption</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">chargers_electricity_consumption</span><span class="p">,</span>
-        <span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">net_electricity_consumption_emission</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -2002,11 +2024,15 @@
         <span class="n">ratio</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="o">/</span><span class="mf">3600.0</span><span class="o">/</span><span class="n">ratio</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_dataset_energy_to_control_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Convert dataset-resolution kWh to the active control-step kWh."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_dataset_energy_to_control_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Convert dataset-resolution kWh (a value or a time series) to the active control-step kWh."""</span>
 
         <span class="n">ratio</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span> <span class="o">*</span> <span class="n">ratio</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span> <span class="o">*</span> <span class="n">ratio</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span> <span class="o">*</span> <span class="n">ratio</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_pv_generation_to_control_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solar_generation</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Convert PV inputs to control-step kWh."""</span>
@@ -2044,6 +2070,19 @@
 
         <span class="k">if</span> <span class="n">upper</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__solar_generation</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__solar_generation</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">upper</span><span class="p">):]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_pv_out_of_service</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Zero PV production at ``time_step`` because the array is out of service.</span>
+
+<span class="sd">        Used by robustness asset-unavailability events. It must run before that</span>
+<span class="sd">        step's physics so net consumption, energy provenance and KPIs all see</span>
+<span class="sd">        the same zero production. Other steps are left unchanged and ``reset``</span>
+<span class="sd">        restores the dataset production.</span>
+<span class="sd">        """</span>
+
+        <span class="n">time_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">time_step</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__solar_generation</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__solar_generation</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_clip_outage_electric_loads_to_local_supply</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Clip initial electric loads to locally available islanded supply."""</span>
@@ -3052,6 +3091,8 @@
         <span class="c1"># object reset</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_archived_storage_electricity</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Row of the agent-facing terminal observation; set by the runtime after the last transition.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_terminal_observation_time_step</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
@@ -3492,7 +3533,7 @@
 <span class="sd">        `net_electricity_consumption_without_storage_and_partial_load` - `solar_generation`</span>
 <span class="sd">        """</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_without_storage_and_partial_load</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">solar_generation</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_without_grid_during_outage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_without_storage_and_partial_load</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">net_electricity_consumption_emission_without_storage_and_partial_load</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -3537,11 +3578,17 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">heating_electricity_consumption_difference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_device</span><span class="o">.</span><span class="n">get_input_power</span><span class="p">(</span><span class="n">heating_demand_difference</span><span class="p">)</span>
 
-        <span class="c1"># net electricity consumption without storage and partial load</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_without_storage</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span>
+        <span class="c1"># The demand series are dataset-resolution kWh, so the device input energy for their difference is too;</span>
+        <span class="c1"># convert it to control-step kWh like the device electricity in the rest of the baseline.</span>
+        <span class="n">partial_load_electricity_consumption</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_energy_to_control_step</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span>
             <span class="n">cooling_electricity_consumption_difference</span><span class="p">,</span>
             <span class="n">heating_electricity_consumption_difference</span><span class="p">,</span>
-        <span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+        <span class="c1"># net electricity consumption without storage and partial load</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_without_grid_during_outage</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption_without_storage</span> <span class="o">+</span> <span class="n">partial_load_electricity_consumption</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">heating_demand_without_partial_load</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>

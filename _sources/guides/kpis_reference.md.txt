@@ -87,6 +87,24 @@ self_consumption = (solar_generation_total - export_total) / solar_generation_to
 For a denominator within the numerical zero tolerance, safe division returns
 `1.0` if the numerator is also effectively zero, and `None` otherwise.
 
+Ratios stay lower-is-better when the reference total is negative. Net exchange
+(legacy `zero_net_energy`) and cost totals can be negative, for a net exporter
+or after community-market revenue. Their ratios to the baseline and to BAU use
+
+```text
+ratio_x = control_x / reference_x                        if reference_x > 0
+ratio_x = 1 + (control_x - reference_x) / |reference_x|  if reference_x < 0
+```
+
+so 1 still means no change and a higher control total gives a higher ratio.
+For a positive reference this is the plain ratio. Import, export and emission
+totals are never negative and use the plain ratio.
+
+The conventional `baseline` counterfactual follows the grid outage of the
+controlled run: at power-outage time steps the `*_without_storage*` net series,
+and their cost and emission series, are zero. Neither run exchanges energy with
+the grid while it is down.
+
 ## KPI Families
 
 | Family | Level | Measures |

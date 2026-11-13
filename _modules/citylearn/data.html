@@ -128,8 +128,10 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">filelock</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileLock</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">platformdirs</span><span class="w"> </span><span class="kn">import</span> <span class="n">user_cache_dir</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -378,10 +380,9 @@
             <span class="n">local_root_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_local_dataset_root</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
 
             <span class="k">if</span> <span class="n">local_root_directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">root_directory</span><span class="p">):</span>
-                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">root_directory</span><span class="p">)</span>
-
-                <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">local_root_directory</span><span class="p">,</span> <span class="n">root_directory</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_publish_directory</span><span class="p">(</span>
+                    <span class="n">root_directory</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">staging</span><span class="p">:</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">local_root_directory</span><span class="p">,</span> <span class="n">staging</span><span class="p">,</span> <span class="n">dirs_exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="p">)</span>
 
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offline</span><span class="p">:</span>
@@ -400,28 +401,109 @@
                     <span class="s1">'from cache unless DataSet.clear_cache is run first.'</span>
                 <span class="p">)</span>
                 <span class="n">contents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_github_contents</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_requests_session</span><span class="p">()</span>
 
-                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">root_directory</span><span class="p">):</span>
-                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">root_directory</span><span class="p">)</span>
+                <span class="k">def</span><span class="w"> </span><span class="nf">download</span><span class="p">(</span><span class="n">staging</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contents</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'file'</span><span class="p">:</span>
+                            <span class="n">relative_directory_content</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s1">/'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                            <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">staging</span><span class="p">,</span> <span class="o">*</span><span class="n">relative_directory_content</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="s1">'name'</span><span class="p">])</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_download_file</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s1">'download_url'</span><span class="p">],</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">)</span>
 
-                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contents</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'file'</span><span class="p">:</span>
-                        <span class="n">relative_directory_content</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s1">/'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-                        <span class="n">content_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_directory</span><span class="p">,</span> <span class="o">*</span><span class="n">relative_directory_content</span><span class="p">)</span>
-                        <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">content_directory</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="s1">'name'</span><span class="p">])</span>
-                        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">content_directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_requests_session</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s1">'download_url'</span><span class="p">])</span>
-
-                        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_publish_directory</span><span class="p">(</span><span class="n">root_directory</span><span class="p">,</span> <span class="n">download</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">root_directory</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">dirs_exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">schema_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">,</span> <span class="s1">'schema.json'</span><span class="p">)</span>
-    
+            <span class="c1"># Copy into `directory/&lt;dataset name&gt;`, the location of the returned schema.</span>
+            <span class="n">target_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">root_directory</span><span class="p">,</span> <span class="n">target_directory</span><span class="p">,</span> <span class="n">dirs_exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">schema_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="s1">'schema.json'</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">schema_filepath</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_publish_directory</span><span class="p">(</span><span class="n">target_directory</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">populate</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Fill a dataset folder in a private staging folder, then move it into place.</span>
+
+<span class="sd">        Concurrent first downloads used to write into, and delete, the same cache folder. A dataset</span>
+<span class="sd">        now appears under `target_directory` only when complete; a process that loses the race to</span>
+<span class="sd">        publish keeps the complete copy that won. Publishing, including the removal of an incomplete</span>
+<span class="sd">        folder left by an earlier version, holds a lock and checks again for a complete copy first,</span>
+<span class="sd">        so a published dataset is never removed.</span>
+<span class="sd">        """</span>
+
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">target_directory</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">target_directory</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">staging</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s1">'.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">-'</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+        <span class="n">stale</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">populate</span><span class="p">(</span><span class="n">staging</span><span class="p">)</span>
+
+            <span class="c1"># One lock per dataset, held by threads and processes alike and released by the operating</span>
+            <span class="c1"># system if its holder dies. Downloads still run in parallel; only publishing is serialised.</span>
+            <span class="k">with</span> <span class="n">FileLock</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">.lock'</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="s1">'schema.json'</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">target_directory</span><span class="p">):</span>
+                        <span class="c1"># Incomplete folder left by an interrupted download of an earlier version. Move it</span>
+                        <span class="c1"># aside in one step (it is either gone or untouched), delete it after the lock.</span>
+                        <span class="n">stale</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s1">'.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">-stale-'</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">parent</span><span class="p">)</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stale</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+
+                    <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">staging</span><span class="p">,</span> <span class="n">target_directory</span><span class="p">)</span>
+                    <span class="n">staging</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="p">(</span><span class="n">staging</span><span class="p">,</span> <span class="n">stale</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_copy_file</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Copy under a temporary name, then move into place, so readers never see a partial file."""</span>
+
+        <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">descriptor</span><span class="p">,</span> <span class="n">temporary</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s1">'.copy-'</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">directory</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">temporary</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">temporary</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">temporary</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">temporary</span><span class="p">)</span>
+
+            <span class="k">raise</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_download_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Download `url` to `filepath`, raising on an error response instead of caching it as data.</span>
+
+<span class="sd">        The content is written under a temporary name and then moved into place, so an interrupted</span>
+<span class="sd">        download never leaves a partial file under the cached name.</span>
+<span class="sd">        """</span>
+
+        <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_requests_session</span><span class="p">()</span> <span class="k">if</span> <span class="n">session</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">session</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">descriptor</span><span class="p">,</span> <span class="n">temporary</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s1">'.download-'</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">directory</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+
+            <span class="n">os</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">temporary</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">temporary</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">temporary</span><span class="p">)</span>
+
+            <span class="k">raise</span>
 
 <div class="viewcode-block" id="DataSet.get_dataset_names">
 <a class="viewcode-back" href="../../api/citylearn.data.html#citylearn.data.DataSet.get_dataset_names">[docs]</a>
@@ -482,7 +564,7 @@
             <span class="n">local_filepath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_local_misc_filepath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PV_CHOICES_FILENAME</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">local_filepath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">local_filepath</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_copy_file</span><span class="p">(</span><span class="n">local_filepath</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
 
         <span class="c1"># check that file DNE</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
@@ -500,10 +582,7 @@
                         <span class="s1">'from cache unless DataSet.clear_cache is run first.'</span><span class="p">)</span>
             <span class="n">contents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_github_contents</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
             <span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">[</span><span class="s1">'download_url'</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">contents</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">PV_CHOICES_FILENAME</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_requests_session</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_download_file</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">pass</span>
@@ -533,7 +612,7 @@
             <span class="n">local_filepath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_local_misc_filepath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BATTERY_CHOICES_FILENAME</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">local_filepath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">local_filepath</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_copy_file</span><span class="p">(</span><span class="n">local_filepath</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
 
         <span class="c1"># check that file DNE</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
@@ -551,10 +630,7 @@
                         <span class="s1">'from cache unless DataSet.clear_cache is run first.'</span><span class="p">)</span>
             <span class="n">contents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_github_contents</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
             <span class="n">url</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">[</span><span class="s1">'download_url'</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">contents</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">BATTERY_CHOICES_FILENAME</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_requests_session</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_download_file</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">pass</span>
@@ -607,7 +683,8 @@
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">'total'</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
             <span class="s1">'backoff_factor'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-            <span class="s1">'status_forcelist'</span><span class="p">:</span> <span class="p">[</span><span class="mi">400</span><span class="p">,</span> <span class="mi">502</span><span class="p">,</span> <span class="mi">503</span><span class="p">,</span> <span class="mi">504</span><span class="p">],</span>
+            <span class="c1"># 429: GitHub rate limiting; Retry honours its Retry-After header.</span>
+            <span class="s1">'status_forcelist'</span><span class="p">:</span> <span class="p">[</span><span class="mi">400</span><span class="p">,</span> <span class="mi">429</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">502</span><span class="p">,</span> <span class="mi">503</span><span class="p">,</span> <span class="mi">504</span><span class="p">],</span>
             <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">}</span>
         <span class="n">retries</span> <span class="o">=</span> <span class="n">Retry</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1181,6 +1258,87 @@
             <span class="n">noise_std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_std</span><span class="p">,</span>
             <span class="n">random_state</span><span class="o">=</span><span class="n">noise_random_state</span><span class="p">,</span>
         <span class="p">)</span>
+
+<div class="viewcode-block" id="ChargerSimulation.arrival_soc_index">
+<a class="viewcode-back" href="../../api/citylearn.data.html#citylearn.data.ChargerSimulation.arrival_soc_index">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">arrival_soc_index</span><span class="p">(</span>
+        <span class="n">charger_state</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">electric_vehicle_id</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">estimated_soc_arrival</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">electric_vehicle_session_id</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Row whose estimated SOC initializes an EV that connects at `time_step`.</span>
+
+<span class="sd">        The runtime arrival, the KPI arrival reference and the departure audit all use this row, so</span>
+<span class="sd">        they agree on the SOC the EV starts the session with.</span>
+
+<span class="sd">        The estimate is given on the incoming (state 2) rows before the connection, usually on the</span>
+<span class="sd">        last one (`time_step` - 1). Some sessions give it only on an earlier incoming row, e.g. the</span>
+<span class="sd">        row one step before arrival followed by a row without an estimate. When the previous row is</span>
+<span class="sd">        incoming or away (state 2 or 3), the latest valid estimate is taken from `time_step` - 1 back</span>
+<span class="sd">        through the contiguous incoming rows of the same EV and session. The search stops at a row of</span>
+<span class="sd">        another EV and at an explicit session boundary, i.e. a row whose session ID differs from the</span>
+<span class="sd">        one of the rows after it; a missing or empty session ID is not a boundary. When these rows hold</span>
+<span class="sd">        no estimate, and always at the first step or after a connected or empty row, the `time_step`</span>
+<span class="sd">        row itself is used. Returns `None` when no such row holds a value in [0, 1]; the EV then keeps</span>
+<span class="sd">        its simulated SOC.</span>
+<span class="sd">        """</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">valid</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">estimated_soc_arrival</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">estimated_soc_arrival</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="n">value</span> <span class="o">=</span> <span class="n">estimated_soc_arrival</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">))</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mf">1.0</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">label</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s1">''</span>
+            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">''</span><span class="p">,</span> <span class="s1">'nan'</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
+
+        <span class="n">time_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="n">fallback</span> <span class="o">=</span> <span class="n">time_step</span> <span class="k">if</span> <span class="n">valid</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">previous_state</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">charger_state</span><span class="p">[</span><span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">charger_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">time_step</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">charger_state</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">previous_state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">fallback</span>
+
+        <span class="n">index</span> <span class="o">=</span> <span class="n">time_step</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">electric_vehicle</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">electric_vehicle_id</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">electric_vehicle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">label</span><span class="p">(</span><span class="n">electric_vehicle_id</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">electric_vehicle</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">fallback</span>
+
+        <span class="n">session</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">electric_vehicle_session_id</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">row_session</span> <span class="o">=</span> <span class="n">label</span><span class="p">(</span><span class="n">electric_vehicle_session_id</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">row_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">session</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">row_session</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">fallback</span>
+
+                <span class="n">session</span> <span class="o">=</span> <span class="n">row_session</span>
+
+            <span class="k">if</span> <span class="n">valid</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">index</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="n">index</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                <span class="ow">and</span> <span class="n">charger_state</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span>
+                <span class="ow">and</span> <span class="n">charger_state</span><span class="p">[</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span>
+                <span class="ow">and</span> <span class="n">electric_vehicle_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">electric_vehicle_id</span><span class="p">[</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">electric_vehicle_id</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="k">return</span> <span class="n">fallback</span>
+
+            <span class="n">index</span> <span class="o">-=</span> <span class="mi">1</span></div>
+
 
 <div class="viewcode-block" id="ChargerSimulation.normalize_soc_series">
 <a class="viewcode-back" href="../../api/citylearn.data.html#citylearn.data.ChargerSimulation.normalize_soc_series">[docs]</a>

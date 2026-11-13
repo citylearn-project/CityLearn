@@ -218,6 +218,7 @@
 </tbody>
 </table>
 <p>Observation and forecast corruption is agent-facing only. Rewards, physical KPIs and demand-response settlement still use the real simulator state. Action and asset-control events change the action effectively applied, so they can change physics and normal KPIs.</p>
+<p>A PV array has no action. An <code class="docutils literal notranslate"><span class="pre">asset</span></code> event on a <code class="docutils literal notranslate"><span class="pre">pv</span></code> target with <code class="docutils literal notranslate"><span class="pre">target_feature</span></code> <code class="docutils literal notranslate"><span class="pre">control</span></code> or <code class="docutils literal notranslate"><span class="pre">both</span></code> takes the array out of service: it generates nothing during the event, so net consumption, cost, emissions, energy provenance and PV KPIs all use zero generation for those steps. The business-as-usual reference sees the same outage. With <code class="docutils literal notranslate"><span class="pre">telemetry</span></code> only the PV keeps generating and only its observations are hidden.</p>
 </section>
 <section id="entity-diagnostics">
 <h2>Entity Diagnostics<a class="headerlink" href="#entity-diagnostics" title="Link to this heading"></a></h2>

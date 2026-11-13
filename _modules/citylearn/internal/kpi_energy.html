@@ -249,7 +249,7 @@
         <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">ec_c</span><span class="p">,</span> <span class="n">ec_b</span><span class="p">),</span>
     <span class="p">},</span> <span class="p">{</span>
         <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'zero_net_energy'</span><span class="p">,</span>
-        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">zne_c</span><span class="p">,</span> <span class="n">zne_b</span><span class="p">),</span>
+        <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_signed_ratio</span><span class="p">(</span><span class="n">zne_c</span><span class="p">,</span> <span class="n">zne_b</span><span class="p">),</span>
     <span class="p">},</span> <span class="p">{</span>
         <span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'carbon_emissions_total'</span><span class="p">,</span>
         <span class="s1">'value'</span><span class="p">:</span> <span class="n">kpi</span><span class="o">.</span><span class="n">_safe_div</span><span class="p">(</span><span class="n">ce_c</span><span class="p">,</span> <span class="n">ce_b</span><span class="p">),</span>

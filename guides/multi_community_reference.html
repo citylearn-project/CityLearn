@@ -274,6 +274,11 @@
 </tbody>
 </table>
 <p>The wrapper validates these conditions at construction and again after reset.</p>
+<p>Calendar windows are not part of the contract. Each child selects its episode
+split from its own simulation window, <code class="docutils literal notranslate"><span class="pre">random_episode_split</span></code> setting and
+<code class="docutils literal notranslate"><span class="pre">random_seed</span></code>, so communities can simulate different dates at the same step.
+To share windows, give the children the same window settings and the same
+<code class="docutils literal notranslate"><span class="pre">random_seed</span></code>, or pass a seed to <code class="docutils literal notranslate"><span class="pre">reset(seed=...)</span></code>, which reaches every child.</p>
 </section>
 <section id="demand-response">
 <h2>Demand Response<a class="headerlink" href="#demand-response" title="Link to this heading"></a></h2>
@@ -298,14 +303,33 @@ community_id = "__portfolio__"
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">_eur</span></code>, <code class="docutils literal notranslate"><span class="pre">_kgco2</span></code>, <code class="docutils literal notranslate"><span class="pre">_count</span></code></p></td>
 <td><p>Sum across communities.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">_percent</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_ratio</span></code> of a control total to a reference total</p></td>
+<td><p>Ratio of the summed totals, e.g. <code class="docutils literal notranslate"><span class="pre">portfolio_cost_total_control_eur</span> <span class="pre">/</span> <span class="pre">portfolio_cost_total_baseline_eur</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Other <code class="docutils literal notranslate"><span class="pre">_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">_percent</span></code></p></td>
 <td><p>Weighted mean using community <code class="docutils literal notranslate"><span class="pre">weight</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">_c</span></code>, <code class="docutils literal notranslate"><span class="pre">_hours</span></code> and other point metrics</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">_c</span></code>, <code class="docutils literal notranslate"><span class="pre">_hours</span></code> and other point metrics</p></td>
 <td><p>Not aggregated in v1.</p></td>
 </tr>
 </tbody>
 </table>
+<p>Ratios rebuilt from summed totals are the <code class="docutils literal notranslate"><span class="pre">ratio_to_baseline</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios of cost, emissions, grid import, export and
+net exchange, and the <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios of solar generation
+and export, EV charge and V2G export, battery charge, discharge and throughput,
+and deferrable-appliance cycle and energy counts. They use only communities that
+report both totals, ignore <code class="docutils literal notranslate"><span class="pre">weight</span></code> like the summed totals, and keep the
+lower-is-better rule of the <a class="reference internal" href="kpis_reference.html#core-equations"><span class="std std-ref">KPI reference</span></a>
+for negative net-exchange and cost totals. A district <code class="docutils literal notranslate"><span class="pre">ratio_to_baseline</span></code> of
+import, net exchange or emissions is the mean of its building ratios, so a
+one-community portfolio ratio can differ from it.</p>
+<p>Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
+ramping and load-factor penalties), comfort and resilience proportions, EV
+departure rates, service levels, shares, equity, audit and coverage ratios,
+battery capacity fade, and the <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios of battery
+capacity fade and equivalent full cycles, self-consumption, service level and
+start delay.</p>
 <p>Portfolio KPI names replace a leading <code class="docutils literal notranslate"><span class="pre">district_</span></code> prefix with <code class="docutils literal notranslate"><span class="pre">portfolio_</span></code>, for example <code class="docutils literal notranslate"><span class="pre">district_demand_response_revenue_total_eur</span></code> becomes <code class="docutils literal notranslate"><span class="pre">portfolio_demand_response_revenue_total_eur</span></code>.</p>
 </section>
 <section id="export">

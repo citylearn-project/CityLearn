@@ -118,6 +118,12 @@ All child environments must use:
 
 The wrapper validates these conditions at construction and again after reset.
 
+Calendar windows are not part of the contract. Each child selects its episode
+split from its own simulation window, `random_episode_split` setting and
+`random_seed`, so communities can simulate different dates at the same step.
+To share windows, give the children the same window settings and the same
+`random_seed`, or pass a seed to `reset(seed=...)`, which reaches every child.
+
 ## Demand Response
 
 Demand response remains local to each community. If a child schema has `demand_response.enabled=true`, that child loads its own `requests_file`, exposes its own request metadata in entity observations, and computes local settlement/KPIs. `MultiCommunityEnv` does not coordinate DSO/TSO requests across communities in v1.
@@ -137,8 +143,27 @@ Only district-level child KPIs are aggregated:
 | KPI suffix | Portfolio rule |
 |---|---|
 | `_kwh`, `_eur`, `_kgco2`, `_count` | Sum across communities. |
-| `_ratio`, `_percent` | Weighted mean using community `weight`. |
+| `_ratio` of a control total to a reference total | Ratio of the summed totals, e.g. `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
+| Other `_ratio`, `_percent` | Weighted mean using community `weight`. |
 | `_kw`, `_c`, `_hours` and other point metrics | Not aggregated in v1. |
+
+Ratios rebuilt from summed totals are the `ratio_to_baseline` and
+`ratio_to_business_as_usual` ratios of cost, emissions, grid import, export and
+net exchange, and the `ratio_to_business_as_usual` ratios of solar generation
+and export, EV charge and V2G export, battery charge, discharge and throughput,
+and deferrable-appliance cycle and energy counts. They use only communities that
+report both totals, ignore `weight` like the summed totals, and keep the
+lower-is-better rule of the [KPI reference](kpis_reference.md#core-equations)
+for negative net-exchange and cost totals. A district `ratio_to_baseline` of
+import, net exchange or emissions is the mean of its building ratios, so a
+one-community portfolio ratio can differ from it.
+
+Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
+ramping and load-factor penalties), comfort and resilience proportions, EV
+departure rates, service levels, shares, equity, audit and coverage ratios,
+battery capacity fade, and the `ratio_to_business_as_usual` ratios of battery
+capacity fade and equivalent full cycles, self-consumption, service level and
+start delay.
 
 Portfolio KPI names replace a leading `district_` prefix with `portfolio_`, for example `district_demand_response_revenue_total_eur` becomes `portfolio_demand_response_revenue_total_eur`.
 

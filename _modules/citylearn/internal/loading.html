@@ -786,6 +786,13 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">loss_coefficient</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">loss_coefficient</span><span class="p">)</span>
 
+        <span class="c1"># Each EV draws its unspecified battery parameters (efficiency, curves, capacity fade) from</span>
+        <span class="c1"># its own seed, as `initial_soc` above does; a shared seed gave every EV identical values.</span>
+        <span class="n">battery_random_seed</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'random_seed'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">battery_random_seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">seed_source</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">schema</span><span class="p">[</span><span class="s1">'random_seed'</span><span class="p">]</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">electric_vehicle_name</span><span class="si">}</span><span class="s2">:battery"</span>
+            <span class="n">battery_random_seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">seed_source</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf-8'</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">8</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+
         <span class="n">battery_kwargs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">'capacity'</span><span class="p">:</span> <span class="n">capacity</span><span class="p">,</span>
             <span class="s1">'nominal_power'</span><span class="p">:</span> <span class="n">nominal_power</span><span class="p">,</span>
@@ -793,7 +800,7 @@
             <span class="s1">'loss_coefficient'</span><span class="p">:</span> <span class="n">loss_coefficient</span><span class="p">,</span>
             <span class="s1">'seconds_per_time_step'</span><span class="p">:</span> <span class="n">schema</span><span class="p">[</span><span class="s1">'seconds_per_time_step'</span><span class="p">],</span>
             <span class="s1">'time_step_ratio'</span><span class="p">:</span> <span class="n">time_step_ratio</span><span class="p">,</span>
-            <span class="s1">'random_seed'</span><span class="p">:</span> <span class="n">schema</span><span class="p">[</span><span class="s1">'random_seed'</span><span class="p">],</span>
+            <span class="s1">'random_seed'</span><span class="p">:</span> <span class="n">battery_random_seed</span><span class="p">,</span>
             <span class="s1">'episode_tracker'</span><span class="p">:</span> <span class="n">episode_tracker</span><span class="p">,</span>
             <span class="s1">'depth_of_discharge'</span><span class="p">:</span> <span class="n">depth_of_discharge</span><span class="p">,</span>
         <span class="p">}</span>
@@ -952,13 +959,20 @@
 
         <span class="k">return</span> <span class="s1">'csv'</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_read_simulation_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_simulation_dataframe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">csv_dtypes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Read only the configured simulation window from a CSV or Parquet time series file."""</span>
 
         <span class="n">dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_timeseries_dataframe</span><span class="p">(</span>
             <span class="n">filepath</span><span class="p">,</span>
             <span class="n">start_time_step</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">schema</span><span class="p">[</span><span class="s1">'simulation_start_time_step'</span><span class="p">]),</span>
             <span class="n">end_time_step</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">schema</span><span class="p">[</span><span class="s1">'simulation_end_time_step'</span><span class="p">]),</span>
+            <span class="n">csv_dtypes</span><span class="o">=</span><span class="n">csv_dtypes</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parse_bool</span><span class="p">(</span>
             <span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'terminal_observation_padding'</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
@@ -1039,6 +1053,7 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">start_time_step</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">end_time_step</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">csv_dtypes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">start_time_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">end_time_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">end_time_step</span> <span class="o">&lt;</span> <span class="n">start_time_step</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1056,9 +1071,9 @@
         <span class="n">nrows</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">end_time_step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">end_time_step</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">start_time_step</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="n">start_time_step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">start_time_step</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="n">nrows</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="n">nrows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">csv_dtypes</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">start_time_step</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">nrows</span><span class="o">=</span><span class="n">nrows</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">start_time_step</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">nrows</span><span class="o">=</span><span class="n">nrows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">csv_dtypes</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_read_parquet_timeseries_dataframe</span><span class="p">(</span>

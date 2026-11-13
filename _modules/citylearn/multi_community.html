@@ -139,6 +139,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">Env</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">EvaluationCondition</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnKPIService</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"MultiCommunityEnv"</span><span class="p">]</span>
@@ -713,12 +714,15 @@
 
         <span class="n">district</span><span class="p">[</span><span class="s2">"numeric_value"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">district</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"value"</span><span class="p">),</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"coerce"</span><span class="p">)</span>
         <span class="n">rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">total_ratios</span> <span class="o">=</span> <span class="n">CityLearnKPIService</span><span class="o">.</span><span class="n">total_ratio_components</span><span class="p">(</span><span class="s2">"district"</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">cost_function</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">district</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">"cost_function"</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">metric</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cost_function</span><span class="p">)</span>
             <span class="n">aggregate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
 
-            <span class="k">if</span> <span class="n">metric</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_SUM_SUFFIXES</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">total_ratios</span><span class="p">:</span>
+                <span class="n">aggregate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pooled_ratio</span><span class="p">(</span><span class="n">district</span><span class="p">,</span> <span class="o">*</span><span class="n">total_ratios</span><span class="p">[</span><span class="n">metric</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">metric</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_SUM_SUFFIXES</span><span class="p">):</span>
                 <span class="n">values</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s2">"numeric_value"</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
                 <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
                     <span class="n">aggregate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
@@ -740,6 +744,25 @@
             <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">local</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pooled_ratio</span><span class="p">(</span><span class="n">district</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">control_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">reference_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">signed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Ratio of control and reference totals summed over communities that report both."""</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">totals</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">district</span><span class="p">[</span><span class="n">district</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span> <span class="o">==</span> <span class="n">name</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">rows</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"community_id"</span><span class="p">)[</span><span class="s2">"numeric_value"</span><span class="p">]</span>
+
+        <span class="n">paired</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">totals</span><span class="p">(</span><span class="n">control_name</span><span class="p">),</span> <span class="n">totals</span><span class="p">(</span><span class="n">reference_name</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="p">[</span><span class="s2">"control"</span><span class="p">,</span> <span class="s2">"reference"</span><span class="p">],</span> <span class="n">join</span><span class="o">=</span><span class="s2">"inner"</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">paired</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="n">ratio</span> <span class="o">=</span> <span class="n">CityLearnKPIService</span><span class="o">.</span><span class="n">_signed_ratio</span> <span class="k">if</span> <span class="n">signed</span> <span class="k">else</span> <span class="n">CityLearnKPIService</span><span class="o">.</span><span class="n">_safe_div</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">ratio</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">paired</span><span class="p">[</span><span class="s2">"control"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="n">paired</span><span class="p">[</span><span class="s2">"reference"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_weighted_mean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
         <span class="n">weighted_sum</span> <span class="o">=</span> <span class="mf">0.0</span>

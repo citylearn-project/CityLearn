@@ -283,6 +283,31 @@ and <cite>Normalize</cite> for observations with known minimum and maximum bound
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.agents.marlisa.MARLISA.set_training_schedule">
+<span class="sig-name descname"><span class="pre">set_training_schedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/marlisa.html#MARLISA.set_training_schedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.marlisa.MARLISA.set_training_schedule" title="Link to this definition"></a></dt>
+<dd><p>Adapt the default training schedule to the episode, then validate it.</p>
+<p>The policy acts from time step <cite>end_exploration_time_step</cite> + 1 and needs the standardization statistics,
+which <a class="reference internal" href="#citylearn.agents.marlisa.MARLISA.update" title="citylearn.agents.marlisa.MARLISA.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code></a> computes at the first time step &gt;= <cite>standardize_start_time_step</cite> at which the replay
+buffer holds <cite>batch_size</cite> transitions (and, for MARLISA, at least as many as its PCA has components).
+Only if the schedule cannot meet this are defaults adapted, in order: the default
+<cite>standardize_start_time_step</cite> waits for the minimum number of transitions, the default <cite>batch_size</cite> shrinks
+to the transitions collected by <cite>standardize_start_time_step</cite>, and the default <cite>end_exploration_time_step</cite>
+moves to the time step before standardization. Schedules that already meet it are left unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>optional</em>) – User-given batch size, None if it is the default.</p></li>
+<li><p><strong>standardize_start_time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – User-given earliest standardization time step, None if it is the default.</p></li>
+<li><p><strong>end_exploration_time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – User-given end of exploration, None if it is the default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the schedule cannot be met without changing given values.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.agents.marlisa.MARLISA.start_regression_time_step">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_regression_time_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.agents.marlisa.MARLISA.start_regression_time_step" title="Link to this definition"></a></dt>

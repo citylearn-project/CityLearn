@@ -327,7 +327,10 @@ parts of the contract. A normally disconnected EV is not a failed charger.</p>
 <tr class="row-odd"><td><p>Endogenous observations</p></td>
 <td><p>Read at settled <code class="docutils literal notranslate"><span class="pre">t-1</span></code>. Examples: previous consumption and SOC after the last action.</p></td>
 </tr>
-<tr class="row-even"><td><p>Topology events</p></td>
+<tr class="row-even"><td><p>Terminal observation</p></td>
+<td><p>Same rule at the final <code class="docutils literal notranslate"><span class="pre">t</span></code>: exogenous and calendar features from the last data row, endogenous ones from the last executed interval. Building series still hold only executed intervals. Charger, deferrable-appliance and escalator states are not advanced and stay at the last executed interval.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Topology events</p></td>
 <td><p>Events at <code class="docutils literal notranslate"><span class="pre">k</span></code> are applied after transition <code class="docutils literal notranslate"><span class="pre">k-1</span> <span class="pre">-&gt;</span> <span class="pre">k</span></code> and before observation <code class="docutils literal notranslate"><span class="pre">k</span></code>.</p></td>
 </tr>
 </tbody>

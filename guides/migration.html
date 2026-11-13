@@ -230,6 +230,19 @@ PV, batteries, chargers, appliances and EV batteries), not only battery
 capacities. Before, the reference silently simulated the schema’s values. A
 change made after <code class="docutils literal notranslate"><span class="pre">reset()</span></code> is not detected. Evaluate with
 <code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> in that case.</p></li>
+<li><p><strong>Dataset downloads:</strong> <code class="docutils literal notranslate"><span class="pre">DataSet.get_dataset(name,</span> <span class="pre">directory=...)</span></code> copies the
+dataset into <code class="docutils literal notranslate"><span class="pre">directory/&lt;name&gt;</span></code> and returns that schema path. Failed
+downloads raise instead of being cached, and concurrent first downloads no
+longer interfere, including when they replace a cache folder missing
+<code class="docutils literal notranslate"><span class="pre">schema.json</span></code>. <code class="docutils literal notranslate"><span class="pre">filelock</span></code>, already installed with <code class="docutils literal notranslate"><span class="pre">torch</span></code>, is now a
+declared requirement.</p></li>
+<li><p><strong>SAC and MARLISA:</strong> default schedules now work on episodes shorter than the
+default batch; inconsistent given values raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> instead of
+<code class="docutils literal notranslate"><span class="pre">assert</span> <span class="pre">False</span></code>. Runs are repeatable from the environment seed. Agents saved
+with 3.2.0 resume training: the random streams they lack are derived from
+their seed. MARLISA fills in missing scikit-learn parameters using the
+installed defaults and refits its demand model on its whole buffer at the
+first update.</p></li>
 </ul>
 <p>Fixes that <strong>change results</strong> where they apply:</p>
 <ul class="simple">
@@ -252,6 +265,29 @@ match.</p></li>
 <li><p>Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
 ca neighbourhood datasets), and an EV connects to at most one charger per step,
 which affects charger clones in the dynamic-topology demos.</p></li>
+<li><p>EV datasets: each EV draws its own unspecified battery parameters
+(efficiency, curves, capacity fade) instead of all sharing one set. An
+arriving EV starts from the latest arrival state of charge on the incoming
+rows of its own session, also when only an earlier incoming row holds it, or
+else from the one on its connection row. It never takes an estimate across a
+change of <code class="docutils literal notranslate"><span class="pre">electric_vehicle_session_id</span></code>, and the KPI and departure-audit
+arrival references use the same value.</p></li>
+<li><p>SAC/MARLISA: features or rewards constant during warm-up are centred but no
+longer scaled by ~1e5; exploration, replay sampling and policy noise use
+seeded generators; MARLISA stores each transition with its own coordination
+variables and refits its demand model as data accumulates.</p></li>
+<li><p>KPIs: net-exchange and cost ratios with a negative (net-exporting or
+market-credited) reference use <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">+</span> <span class="pre">(control</span> <span class="pre">-</span> <span class="pre">reference)</span> <span class="pre">/</span> <span class="pre">|reference|</span></code>, so
+lower stays better; the counterfactual baseline exchanges no energy with the
+grid during power outages; multi-community ratios to a reference are ratios
+of summed totals.</p></li>
+<li><p>Subhourly control with hourly data: the partial-load baseline top-up is
+converted to the control step.</p></li>
+<li><p>Robustness: a PV <code class="docutils literal notranslate"><span class="pre">asset</span></code> <code class="docutils literal notranslate"><span class="pre">unavailable</span></code> event with the <code class="docutils literal notranslate"><span class="pre">control</span></code> or <code class="docutils literal notranslate"><span class="pre">both</span></code>
+part stops generation, not only its telemetry.</p></li>
+<li><p>Terminal observation: calendar, weather and prices come from the terminal
+row, and endogenous values from the last executed step, as for every other
+observation. Episode length and termination are unchanged.</p></li>
 </ul>
 <p>Changes that <strong>preserve trajectories and KPI values</strong>: the zero-size placeholders
 for absent devices, and EV chargers, are seeded, so the placeholders’ unused
