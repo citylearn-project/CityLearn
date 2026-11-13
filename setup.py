@@ -34,6 +34,7 @@ setuptools.setup(
     include_package_data=True,
     install_requires=requirements,
     extras_require={
+        'llm': ['transformers>=4.40.0'],
         'parquet': ['pyarrow'],
         'pysam': ['nrel-pysam'],
         # Only citylearn.end_use_load_profiles (building new datasets from EULP/EnergyPlus) needs these.

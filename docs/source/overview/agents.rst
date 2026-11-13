@@ -16,6 +16,7 @@ Controller choices
 * :py:mod:`citylearn.agents.q_learning`: tabular Q-learning.
 * :py:mod:`citylearn.agents.sac`: Soft Actor-Critic.
 * :py:mod:`citylearn.agents.marlisa`: coordinated multi-agent learning.
+* :py:mod:`citylearn.agents.llm`: generative LLM building controllers (persona, daily schedule, and rationale-backed action selection).
 * A custom agent or an external learning library using a compatible wrapper.
 
 The classic RL agents/wrappers use flat spaces. Entity-mode controllers consume

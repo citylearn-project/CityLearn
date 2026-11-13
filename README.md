@@ -67,6 +67,7 @@ The [first-simulation guide](https://www.citylearn.net/quickstart.html) explains
 - [Features and configuration](https://www.citylearn.net/guides/features.html): choose assets, services, interfaces and scenario conditions.
 - [Running simulations](https://www.citylearn.net/guides/running_simulations.html): Python, CLI, datasets, exports and advanced examples.
 - [Baselines](https://www.citylearn.net/guides/baselines.html), [KPIs](https://www.citylearn.net/kpis.html) and [scorecard](https://www.citylearn.net/guides/scorecard.html): understand the reference controllers, metrics and comparisons.
+- [Generative LLM agents](docs/llm_agents.md) and [examples/llm_agent_simulation.py](examples/llm_agent_simulation.py): run persona-grounded, schedule-driven LLM controllers (`citylearn[llm]`, Ollama/vLLM, or OpenAI-compatible APIs).
 - [CityLearn UI](https://citylearnui.netlify.app/): inspect exported time series and compare results.
 - [Contributing](https://www.citylearn.net/contributing.html): report issues, contribute code and find the developer guide.
 
