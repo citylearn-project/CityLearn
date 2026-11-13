@@ -298,19 +298,6 @@ limitations, losses to the environment quantified by <cite>efficiency</cite>, <c
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="citylearn.energy_model.Battery.force_set_soc">
-<span class="sig-name descname"><span class="pre">force_set_soc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/energy_model.html#Battery.force_set_soc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.Battery.force_set_soc" title="Link to this definition"></a></dt>
-<dd><p>Forcefully set the battery’s state-of-charge (SOC) for the current time step,
-bypassing restrictions such as efficiency losses, power limits, and degradation.</p>
-<p>This is used for reconnections of the EV to the platform.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>soc</strong> (<em>float</em>) – Desired state-of-charge as a fraction (between 0 and 1). Values outside this range are not accepted.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.get_current_efficiency">
 <span class="sig-name descname"><span class="pre">get_current_efficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#Battery.get_current_efficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.Battery.get_current_efficiency" title="Link to this definition"></a></dt>
 <dd><p>Get technical efficiency while considering <cite>power_efficiency_curve</cite> limitations.</p>
@@ -1107,7 +1094,8 @@ largest control-step demand, rather than a power in [kW].</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.force_set_soc">
 <span class="sig-name descname"><span class="pre">force_set_soc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">soc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/energy_model.html#StorageDevice.force_set_soc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.StorageDevice.force_set_soc" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Assign an external SOC in [0, 1], independently of the discharge reserve.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.get_metadata">

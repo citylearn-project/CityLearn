@@ -411,6 +411,10 @@ asset composition loaded from the schema, then applies any events scheduled at t
 Added or removed chargers, deferrable appliances, PV systems, electrical storage and runtime-cloned
 members therefore do not leak into the next episode. Reusing one environment across training episodes
 has the same topology event timeline as recreating the environment for each episode.</p>
+<p>When a stationary battery is added or recommissioned, its configured initial
+SOC defines the opening stock. An initial SOC below the discharge reserve stays
+at that value. The battery can charge immediately and can discharge once its
+SOC exceeds the reserve.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Element</p></th>

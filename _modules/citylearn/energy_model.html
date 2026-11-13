@@ -1150,6 +1150,9 @@
 <div class="viewcode-block" id="StorageDevice.force_set_soc">
 <a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.StorageDevice.force_set_soc">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">force_set_soc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">soc</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Assign an external SOC in [0, 1], independently of the discharge reserve."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">soc</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">soc</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">"Soc must be between 0 and 1. Check your dataset"</span><span class="p">)</span>
         <span class="n">before</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy_init</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__soc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">soc</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__soc_initialized</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1647,28 +1650,6 @@
             <span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">curve_x</span><span class="p">[</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">curve_x</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
 
         <span class="k">return</span> <span class="n">efficiency</span></div>
-
-
-<div class="viewcode-block" id="Battery.force_set_soc">
-<a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.Battery.force_set_soc">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">force_set_soc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">soc</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Forcefully set the battery's state-of-charge (SOC) for the current time step,</span>
-<span class="sd">        bypassing restrictions such as efficiency losses, power limits, and degradation.</span>
-
-<span class="sd">        This is used for reconnections of the EV to the platform.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        soc : float</span>
-<span class="sd">            Desired state-of-charge as a fraction (between 0 and 1). Values outside this range are not accepted.</span>
-<span class="sd">        """</span>
-        <span class="c1"># Ensure soc is between 0 and 1</span>
-        <span class="k">if</span> <span class="n">soc</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">soc</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">"Soc must be between 0 and 1. Check your dataset"</span><span class="p">)</span>
-        <span class="c1"># Directly update the internal SOC array.</span>
-        <span class="c1"># Note: __soc is defined in the StorageDevice class, so we access it via name mangling.</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="n">soc</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Battery.degrade">

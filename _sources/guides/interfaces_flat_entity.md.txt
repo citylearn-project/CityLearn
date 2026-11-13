@@ -201,6 +201,11 @@ Added or removed chargers, deferrable appliances, PV systems, electrical storage
 members therefore do not leak into the next episode. Reusing one environment across training episodes
 has the same topology event timeline as recreating the environment for each episode.
 
+When a stationary battery is added or recommissioned, its configured initial
+SOC defines the opening stock. An initial SOC below the discharge reserve stays
+at that value. The battery can charge immediately and can discharge once its
+SOC exceeds the reserve.
+
 | Element | Agent guidance |
 |---|---|
 | `topology_version` | Re-read `entity_specs` when it changes. |
