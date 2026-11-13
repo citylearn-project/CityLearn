@@ -39,6 +39,7 @@ Submodules
    citylearn.internal.loading_inputs
    citylearn.internal.market_history
    citylearn.internal.observation_contract
+   citylearn.internal.occupant_models
    citylearn.internal.physics_invariants
    citylearn.internal.provenance
    citylearn.internal.robustness

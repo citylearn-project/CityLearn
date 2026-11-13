@@ -126,7 +126,44 @@
   <h1>Source code for citylearn.internal.scalars</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""Scalar helpers for per-step hot paths."""</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
+<div class="viewcode-block" id="as_float">
+<a class="viewcode-back" href="../../../api/citylearn.internal.scalars.html#citylearn.internal.scalars.as_float">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">as_float</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return a Python float for a NumPy floating scalar or 0-d array; anything else unchanged.</span>
+
+<span class="sd">    NumPy 1 evaluated ``float32_scalar &lt;op&gt; python_float`` in float64; NumPy 2 (NEP 50) keeps it in</span>
+<span class="sd">    float32. Reading float32 storage through this helper keeps such arithmetic in float64 under both,</span>
+<span class="sd">    so results do not depend on the installed NumPy version.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">'f'</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="numpy1_scalar">
+<a class="viewcode-back" href="../../../api/citylearn.internal.scalars.html#citylearn.internal.scalars.numpy1_scalar">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">numpy1_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return a Python int or float as ``np.float64``; anything else unchanged.</span>
+
+<span class="sd">    NumPy 1 promoted ``float32_scalar &lt;op&gt; python_number`` to float64, but kept arithmetic between</span>
+<span class="sd">    two float32 scalars in float32. NumPy 2 (NEP 50) treats the Python number as weak and stays in</span>
+<span class="sd">    float32. Wrapping only the Python operand reproduces NumPy 1 under both versions without</span>
+<span class="sd">    changing arithmetic between two NumPy scalars.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span></div>
+
 
 
 <div class="viewcode-block" id="clip_scalar">

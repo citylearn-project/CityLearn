@@ -134,7 +134,15 @@
   <section id="installation">
 <span id="installation-page"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
 <p>CityLearn v3 is distributed as <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> on PyPI and requires Python 3.9 or
-newer. Use a virtual environment to keep its dependencies separate.</p>
+newer. It supports NumPy 1.x and 2.x: observations, rewards and simulated time
+series are bit-identical on both. KPIs can differ in the last binary digits
+(relative differences of order 1e-15), for two reasons. NumPy 2.3 and later add
+up more than 8,192 values in a different order, which affects totals over
+episodes longer than 8,192 time steps, such as a full year of hourly steps, and
+the district Gini ratio of more than 90 members. The equity audit’s Gini ratio
+uses a BLAS dot product, whose last digit depends on the BLAS build and the
+CPU, and NumPy 1 and 2 wheels ship different OpenBLAS releases.</p>
+<p>Use a virtual environment to keep its dependencies separate.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m venv .venv</span>
 </pre></div>
 </div>

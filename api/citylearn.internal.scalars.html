@@ -146,11 +146,30 @@
 <span id="citylearn-internal-scalars-module"></span><h1>citylearn.internal.scalars module<a class="headerlink" href="#module-citylearn.internal.scalars" title="Link to this heading"></a></h1>
 <p>Scalar helpers for per-step hot paths.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.scalars.as_float">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.scalars.</span></span><span class="sig-name descname"><span class="pre">as_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/scalars.html#as_float"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.scalars.as_float" title="Link to this definition"></a></dt>
+<dd><p>Return a Python float for a NumPy floating scalar or 0-d array; anything else unchanged.</p>
+<p>NumPy 1 evaluated <code class="docutils literal notranslate"><span class="pre">float32_scalar</span> <span class="pre">&lt;op&gt;</span> <span class="pre">python_float</span></code> in float64; NumPy 2 (NEP 50) keeps it in
+float32. Reading float32 storage through this helper keeps such arithmetic in float64 under both,
+so results do not depend on the installed NumPy version.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="citylearn.internal.scalars.clip_scalar">
 <span class="sig-prename descclassname"><span class="pre">citylearn.internal.scalars.</span></span><span class="sig-name descname"><span class="pre">clip_scalar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/scalars.html#clip_scalar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.scalars.clip_scalar" title="Link to this definition"></a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">float(np.clip(value,</span> <span class="pre">low,</span> <span class="pre">high))</span></code> for a single value without NumPy call overhead.</p>
 <p>Follows NumPy’s <code class="docutils literal notranslate"><span class="pre">min(max(x,</span> <span class="pre">low),</span> <span class="pre">high)</span></code> order, so NaN propagates and <code class="docutils literal notranslate"><span class="pre">-0.0</span></code> clipped at
 <code class="docutils literal notranslate"><span class="pre">low=0.0</span></code> becomes <code class="docutils literal notranslate"><span class="pre">0.0</span></code> exactly as <code class="docutils literal notranslate"><span class="pre">np.clip</span></code> does.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.scalars.numpy1_scalar">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.scalars.</span></span><span class="sig-name descname"><span class="pre">numpy1_scalar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/scalars.html#numpy1_scalar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.scalars.numpy1_scalar" title="Link to this definition"></a></dt>
+<dd><p>Return a Python int or float as <code class="docutils literal notranslate"><span class="pre">np.float64</span></code>; anything else unchanged.</p>
+<p>NumPy 1 promoted <code class="docutils literal notranslate"><span class="pre">float32_scalar</span> <span class="pre">&lt;op&gt;</span> <span class="pre">python_number</span></code> to float64, but kept arithmetic between
+two float32 scalars in float32. NumPy 2 (NEP 50) treats the Python number as weak and stays in
+float32. Wrapping only the Python operand reproduces NumPy 1 under both versions without
+changing arithmetic between two NumPy scalars.</p>
 </dd></dl>
 
 </section>

@@ -1,0 +1,460 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.internal.occupant_models &mdash; CityLearn 3.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=4f6ddb47"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.internal.occupant_models</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.internal.occupant_models</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Occupant set-point models stored as scikit-learn tree pickles, evaluated with NumPy.</span>
+
+<span class="sd">The bundled Quebec datasets ship ``RandomForestClassifier`` pickles written by scikit-learn</span>
+<span class="sd">1.0.2. scikit-learn 1.3 changed the tree node layout and cannot unpickle them, which used to</span>
+<span class="sd">pin scikit-learn to &lt;=1.2.2 and, through it, NumPy to &lt;2 and Python to &lt;3.12.</span>
+
+<span class="sd">These files are read by a restricted unpickler, whichever pickle protocol (0 to 5) wrote them.</span>
+<span class="sd">It rebuilds only NumPy arrays and records the state of the three scikit-learn classes involved,</span>
+<span class="sd">so no scikit-learn installation is needed and no other callable named in the file can run. A</span>
+<span class="sd">``numpy.random.RandomState`` passed as ``random_state`` is recorded as an inert placeholder,</span>
+<span class="sd">since prediction never draws from it.</span>
+
+<span class="sd">Predictions reproduce ``predict`` and ``predict_proba`` of single-output</span>
+<span class="sd">``RandomForestClassifier`` and ``DecisionTreeClassifier`` as the scikit-learn release that wrote</span>
+<span class="sd">the file computes them: inputs are cast to float32, trees are traversed with the stored</span>
+<span class="sd">thresholds, and leaf values are averaged in estimator order. Releases before 1.4 store weighted</span>
+<span class="sd">class counts in the leaves and normalise them per tree; later releases store class fractions and</span>
+<span class="sd">use them as stored. Releases before 1.3 reject missing (NaN) inputs; later ones store at each</span>
+<span class="sd">split which child receives them (``missing_go_to_left``), and NaN inputs follow it as in</span>
+<span class="sd">``Tree.apply`` (only 1.3's forests still rejected NaN on input). Infinite inputs are rejected, as</span>
+<span class="sd">in scikit-learn. Trees whose nodes hold other fields are left to the installed scikit-learn.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">try</span><span class="p">:</span>  <span class="c1"># NumPy &gt;= 2</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">numpy._core</span><span class="w"> </span><span class="kn">import</span> <span class="n">multiarray</span> <span class="k">as</span> <span class="n">_multiarray</span><span class="p">,</span> <span class="n">numeric</span> <span class="k">as</span> <span class="n">_numeric</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - NumPy 1.x</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">multiarray</span> <span class="k">as</span> <span class="n">_multiarray</span><span class="p">,</span> <span class="n">numeric</span> <span class="k">as</span> <span class="n">_numeric</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_PickledObject</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""State of a scikit-learn object, recorded without importing scikit-learn."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_RandomForestClassifier</span><span class="p">(</span><span class="n">_PickledObject</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_DecisionTreeClassifier</span><span class="p">(</span><span class="n">_PickledObject</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Tree</span><span class="p">(</span><span class="n">_PickledObject</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_RandomState</span><span class="p">(</span><span class="n">_PickledObject</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Stands in for a pickled ``numpy.random.RandomState`` and its bit generator; never draws."""</span>
+
+
+<div class="viewcode-block" id="UnsupportedModelError">
+<a class="viewcode-back" href="../../../api/citylearn.internal.occupant_models.html#citylearn.internal.occupant_models.UnsupportedModelError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UnsupportedModelError</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">UnpicklingError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The file holds something other than a scikit-learn decision tree or random forest."""</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_latin1_bytes</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+    <span class="c1"># Protocols 0 to 2 store bytes as _codecs.encode(text, 'latin1').</span>
+    <span class="k">if</span> <span class="n">encoding</span> <span class="o">!=</span> <span class="s1">'latin1'</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">UnsupportedModelError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'_codecs.encode' to </span><span class="si">{</span><span class="n">encoding</span><span class="si">!r}</span><span class="s2"> is not part of a tree classifier pickle."</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">text</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'latin1'</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_reconstructor</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+    <span class="c1"># Protocols 0 and 1 rebuild Python objects with copyreg._reconstructor(cls, object, None).</span>
+    <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">object</span> <span class="ow">or</span> <span class="n">state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">_PickledObject</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">UnsupportedModelError</span><span class="p">(</span><span class="s2">"'copyreg._reconstructor' only rebuilds scikit-learn tree objects here."</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+
+<span class="n">_ALLOWED_GLOBALS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="s1">'numpy'</span><span class="p">,</span> <span class="s1">'ndarray'</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'numpy'</span><span class="p">,</span> <span class="s1">'dtype'</span><span class="p">):</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'numpy.core.multiarray'</span><span class="p">,</span> <span class="s1">'_reconstruct'</span><span class="p">):</span> <span class="n">_multiarray</span><span class="o">.</span><span class="n">_reconstruct</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'numpy._core.multiarray'</span><span class="p">,</span> <span class="s1">'_reconstruct'</span><span class="p">):</span> <span class="n">_multiarray</span><span class="o">.</span><span class="n">_reconstruct</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'numpy.core.multiarray'</span><span class="p">,</span> <span class="s1">'scalar'</span><span class="p">):</span> <span class="n">_multiarray</span><span class="o">.</span><span class="n">scalar</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'numpy._core.multiarray'</span><span class="p">,</span> <span class="s1">'scalar'</span><span class="p">):</span> <span class="n">_multiarray</span><span class="o">.</span><span class="n">scalar</span><span class="p">,</span>
+    <span class="c1"># Pickle protocol 5 stores contiguous arrays as raw buffers.</span>
+    <span class="p">(</span><span class="s1">'numpy.core.numeric'</span><span class="p">,</span> <span class="s1">'_frombuffer'</span><span class="p">):</span> <span class="n">_numeric</span><span class="o">.</span><span class="n">_frombuffer</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'numpy._core.numeric'</span><span class="p">,</span> <span class="s1">'_frombuffer'</span><span class="p">):</span> <span class="n">_numeric</span><span class="o">.</span><span class="n">_frombuffer</span><span class="p">,</span>
+    <span class="c1"># Protocols 0 to 2; find_class receives the Python 2 module names they are written with.</span>
+    <span class="p">(</span><span class="s1">'_codecs'</span><span class="p">,</span> <span class="s1">'encode'</span><span class="p">):</span> <span class="n">_latin1_bytes</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'copy_reg'</span><span class="p">,</span> <span class="s1">'_reconstructor'</span><span class="p">):</span> <span class="n">_reconstructor</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'copyreg'</span><span class="p">,</span> <span class="s1">'_reconstructor'</span><span class="p">):</span> <span class="n">_reconstructor</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'__builtin__'</span><span class="p">,</span> <span class="s1">'object'</span><span class="p">):</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'builtins'</span><span class="p">,</span> <span class="s1">'object'</span><span class="p">):</span> <span class="nb">object</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'numpy.random._pickle'</span><span class="p">,</span> <span class="s1">'__randomstate_ctor'</span><span class="p">):</span> <span class="n">_RandomState</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'numpy.random._pickle'</span><span class="p">,</span> <span class="s1">'__bit_generator_ctor'</span><span class="p">):</span> <span class="n">_RandomState</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'numpy.random._mt19937'</span><span class="p">,</span> <span class="s1">'MT19937'</span><span class="p">):</span> <span class="n">_RandomState</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'sklearn.ensemble._forest'</span><span class="p">,</span> <span class="s1">'RandomForestClassifier'</span><span class="p">):</span> <span class="n">_RandomForestClassifier</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'sklearn.tree._classes'</span><span class="p">,</span> <span class="s1">'DecisionTreeClassifier'</span><span class="p">):</span> <span class="n">_DecisionTreeClassifier</span><span class="p">,</span>
+    <span class="p">(</span><span class="s1">'sklearn.tree._tree'</span><span class="p">,</span> <span class="s1">'Tree'</span><span class="p">):</span> <span class="n">_Tree</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_RestrictedUnpickler</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">Unpickler</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">find_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_ALLOWED_GLOBALS</span><span class="p">[(</span><span class="n">module</span><span class="p">,</span> <span class="n">name</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnsupportedModelError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">module</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' is not part of a tree classifier pickle."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+
+<span class="n">_NODE_FIELDS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'left_child'</span><span class="p">,</span> <span class="s1">'right_child'</span><span class="p">,</span> <span class="s1">'feature'</span><span class="p">,</span> <span class="s1">'threshold'</span><span class="p">,</span> <span class="s1">'impurity'</span><span class="p">,</span> <span class="s1">'n_node_samples'</span><span class="p">,</span> <span class="s1">'weighted_n_node_samples'</span><span class="p">)</span>
+<span class="c1"># Node layouts evaluated here: scikit-learn &lt; 1.3, and &gt;= 1.3 with missing-value routing.</span>
+<span class="n">_NODE_LAYOUTS</span> <span class="o">=</span> <span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">_NODE_FIELDS</span><span class="p">),</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">_NODE_FIELDS</span> <span class="o">+</span> <span class="p">(</span><span class="s1">'missing_go_to_left'</span><span class="p">,)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sklearn_release</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">'(\d+)\.(\d+)'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'_sklearn_version'</span><span class="p">,</span> <span class="s1">''</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">version</span><span class="o">.</span><span class="n">groups</span><span class="p">()))</span> <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">()</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_TreeArrays</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">:</span> <span class="n">_Tree</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">state</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s1">'nodes'</span><span class="p">]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s1">'values'</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnsupportedModelError</span><span class="p">(</span><span class="s1">'Only single-output tree classifiers are supported.'</span><span class="p">)</span>
+
+        <span class="n">fields</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span> <span class="ow">or</span> <span class="p">())</span>
+        <span class="k">if</span> <span class="n">fields</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_NODE_LAYOUTS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnsupportedModelError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Tree nodes with fields </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span><span class="si">}</span><span class="s1"> are not supported.'</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="s1">'left_child'</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'int64'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="s1">'right_child'</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'int64'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="s1">'feature'</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'int64'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="s1">'threshold'</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+        <span class="c1"># The child that receives a missing (NaN) input; None before scikit-learn 1.3.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">missing_go_to_left</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="s1">'missing_go_to_left'</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span> <span class="k">if</span> <span class="s1">'missing_go_to_left'</span> <span class="ow">in</span> <span class="n">fields</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span> <span class="o">=</span> <span class="n">normalize</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">leaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'int64'</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">internal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">internal</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">node</span>
+
+            <span class="n">feature</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature</span><span class="p">[</span><span class="n">node</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">feature</span><span class="p">]</span>
+            <span class="n">go_left</span> <span class="o">=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_go_to_left</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">go_left</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_go_to_left</span><span class="p">[</span><span class="n">node</span><span class="p">],</span> <span class="n">go_left</span><span class="p">)</span>
+
+            <span class="n">child</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">go_left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">[</span><span class="n">node</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">[</span><span class="n">node</span><span class="p">])</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">internal</span><span class="p">,</span> <span class="n">child</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">proba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">leaves</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">:</span><span class="n">n_classes</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">:</span>
+            <span class="n">normalizer</span> <span class="o">=</span> <span class="n">proba</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+            <span class="n">normalizer</span><span class="p">[</span><span class="n">normalizer</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">proba</span> <span class="o">/=</span> <span class="n">normalizer</span>
+
+        <span class="k">return</span> <span class="n">proba</span>
+
+
+<div class="viewcode-block" id="TreeClassifierModel">
+<a class="viewcode-back" href="../../../api/citylearn.internal.occupant_models.html#citylearn.internal.occupant_models.TreeClassifierModel">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TreeClassifierModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""NumPy evaluation of a pickled scikit-learn ``RandomForestClassifier`` or ``DecisionTreeClassifier``."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">classes</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">trees</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">_TreeArrays</span><span class="p">],</span> <span class="n">n_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">forest</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+                 <span class="n">accepts_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trees</span> <span class="o">=</span> <span class="n">trees</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_features_in_</span> <span class="o">=</span> <span class="n">n_features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forest</span> <span class="o">=</span> <span class="n">forest</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_accepts_missing</span> <span class="o">=</span> <span class="n">accepts_missing</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">missing_go_to_left</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">trees</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TreeClassifierModel.from_pickle">
+<a class="viewcode-back" href="../../../api/citylearn.internal.occupant_models.html#citylearn.internal.occupant_models.TreeClassifierModel.from_pickle">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_pickle</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">'TreeClassifierModel'</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">_RestrictedUnpickler</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_RandomForestClassifier</span><span class="p">):</span>
+            <span class="n">estimators</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s1">'estimators_'</span><span class="p">]</span>
+            <span class="n">forest</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_DecisionTreeClassifier</span><span class="p">):</span>
+            <span class="n">estimators</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span><span class="p">]</span>
+            <span class="n">forest</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnsupportedModelError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s1"> does not hold a tree classifier.'</span><span class="p">)</span>
+
+        <span class="n">state</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">state</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'n_outputs_'</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnsupportedModelError</span><span class="p">(</span><span class="s1">'Only single-output tree classifiers are supported.'</span><span class="p">)</span>
+
+        <span class="c1"># scikit-learn 1.4 switched from weighted class counts to class fractions.</span>
+        <span class="n">trees</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">_TreeArrays</span><span class="p">(</span><span class="n">estimator</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s1">'tree_'</span><span class="p">],</span> <span class="n">normalize</span><span class="o">=</span><span class="n">_sklearn_release</span><span class="p">(</span><span class="n">estimator</span><span class="o">.</span><span class="n">state</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">estimator</span> <span class="ow">in</span> <span class="n">estimators</span>
+        <span class="p">]</span>
+        <span class="n">n_features</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'n_features_in_'</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'n_features_'</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="c1"># Stored routes do not imply that the writing estimator accepts NaN.</span>
+        <span class="n">release</span> <span class="o">=</span> <span class="n">_sklearn_release</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">legacy_random_split</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">forest</span> <span class="ow">and</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'splitter'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'random'</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">release</span><span class="p">)</span> <span class="ow">and</span> <span class="n">release</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="n">legacy_monotonic</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">release</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span> <span class="ow">and</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'monotonic_cst'</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">requires_finite</span> <span class="o">=</span> <span class="p">(</span><span class="n">forest</span> <span class="ow">and</span> <span class="n">release</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> <span class="ow">or</span> <span class="n">legacy_random_split</span> <span class="ow">or</span> <span class="n">legacy_monotonic</span>
+        <span class="n">accepts_missing</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">requires_finite</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s1">'classes_'</span><span class="p">],</span> <span class="n">trees</span><span class="p">,</span> <span class="n">n_features</span><span class="p">,</span> <span class="n">forest</span><span class="p">,</span> <span class="n">accepts_missing</span><span class="o">=</span><span class="n">accepts_missing</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="c1"># scikit-learn evaluates trees on float32 inputs against float64 thresholds.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Expected a 2D array of inputs, got shape </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">.'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_features_in_</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_features_in_</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'X has </span><span class="si">{</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1"> features, but the model expects </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_features_in_</span><span class="si">}</span><span class="s1">.'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Input X contains infinity or a value too large for dtype('float32')."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accepts_missing</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Input X contains NaN.'</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float64'</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TreeClassifierModel.predict_proba">
+<a class="viewcode-back" href="../../../api/citylearn.internal.occupant_models.html#citylearn.internal.occupant_models.TreeClassifierModel.predict_proba">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">n_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">forest</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">trees</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">proba</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">)</span>
+
+        <span class="n">proba</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n_classes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">tree</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">trees</span><span class="p">:</span>
+            <span class="n">proba</span> <span class="o">+=</span> <span class="n">tree</span><span class="o">.</span><span class="n">proba</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">)</span>
+
+        <span class="n">proba</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trees</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">proba</span></div>
+
+
+<div class="viewcode-block" id="TreeClassifierModel.predict">
+<a class="viewcode-back" href="../../../api/citylearn.internal.occupant_models.html#citylearn.internal.occupant_models.TreeClassifierModel.predict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">forest</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># DecisionTreeClassifier.predict takes the argmax of the stored leaf values, not of predict_proba.</span>
+            <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trees</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="n">tree</span><span class="o">.</span><span class="n">leaves</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">x</span><span class="p">))]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="load_occupant_model">
+<a class="viewcode-back" href="../../../api/citylearn.internal.occupant_models.html#citylearn.internal.occupant_models.load_occupant_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_occupant_model</span><span class="p">(</span><span class="n">filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">"""Load an occupant model; tree classifiers never need scikit-learn or run code from the file.</span>
+
+<span class="sd">    Other pickled models still load through :py:mod:`pickle` and need a compatible library.</span>
+<span class="sd">    """</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">TreeClassifierModel</span><span class="o">.</span><span class="n">from_pickle</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">UnsupportedModelError</span> <span class="k">as</span> <span class="n">reason</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">UnsupportedModelError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s1"> is not a tree classifier CityLearn reads without scikit-learn (</span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s1">), and '</span>
+                    <span class="sa">f</span><span class="s1">'unpickling it failed: </span><span class="si">{</span><span class="n">error</span><span class="si">!r}</span><span class="s1">. Install the library release that saved the model, or refit '</span>
+                    <span class="s1">'and save it with the installed one.'</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
