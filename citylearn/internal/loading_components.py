@@ -110,7 +110,10 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
             noise_std = charger_config.get('noise_std', 0.0)
 
             charger_simulation_filepath = os.path.join(schema['root_directory'], charger_config['charger_simulation'])
-            charger_simulation_file = loader._read_simulation_dataframe(schema, charger_simulation_filepath)
+            # CSV has no column types. Preserve textual IDs such as "01" and "1" before inference.
+            charger_simulation_file = loader._read_simulation_dataframe(
+                schema, charger_simulation_filepath, csv_dtypes={'electric_vehicle_session_id': object},
+            )
             charger_window = loader._dynamic_charger_windows.get((building_name, charger_name))
             charger_simulation_file = loader._align_dynamic_timeseries_dataframe(
                 charger_simulation_file,

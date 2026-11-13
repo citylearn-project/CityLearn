@@ -1,4 +1,5 @@
 import json
+import shutil
 import numpy as np
 import pandas as pd
 import pytest
@@ -212,6 +213,41 @@ def test_battery_arrival_soc_matches_kpi_and_departure_audit_references(rows, ex
 
     assert service._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(battery_soc, abs=1e-6)
     env.close()
+
+
+@pytest.mark.parametrize("session_ids", [("1", "2"), ("01", "1")])
+def test_numeric_csv_session_ids_keep_arrival_soc_within_the_session(tmp_path, session_ids):
+    shutil.copytree(MINUTE_SCHEMA_PATH.parent, tmp_path, dirs_exist_ok=True)
+    charger_path = tmp_path / "charger_1_1.csv"
+    charger_data = pd.read_csv(charger_path)
+    previous, current = session_ids
+    charger_data["electric_vehicle_charger_state"] = [1, 2, 2, 2, 1, 1, 1, 1]
+    charger_data["electric_vehicle_departure_time"] = [1, -1, -1, -1, 4, 3, 2, 1]
+    charger_data["electric_vehicle_session_id"] = ["0", previous, "", current, current, current, current, current]
+    charger_data["electric_vehicle_estimated_soc_arrival"] = [-0.1, 30, -0.1, -0.1, -0.1, -0.1, -0.1, -0.1]
+    charger_data.to_csv(charger_path, index=False)
+
+    env = CityLearnEnv(
+        str(tmp_path / "schema.json"), central_agent=True, random_seed=0, physics_invariant_checks=True,
+    )
+    try:
+        env.reset()
+        arrival = 4
+        for _ in range(arrival):
+            env.step(_zero_actions(env))
+
+        charger = env.buildings[0].electric_vehicle_chargers[0]
+        ev = charger.connected_electric_vehicle
+        sim = charger.charger_simulation
+        assert sim.electric_vehicle_session_id[[1, 3]].tolist() == [previous, current]
+        states = np.asarray(sim.electric_vehicle_charger_state, dtype="float64")
+        battery_soc = float(ev.battery.soc[arrival])
+        assert battery_soc == pytest.approx(float(ev.battery.soc[arrival - 1]))
+        assert battery_soc != pytest.approx(0.3)
+        assert env._kpi_service._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(battery_soc)
+        assert ev_departure_audit.arrival_soc(env._kpi_service, sim, ev.battery, states, arrival) is None
+    finally:
+        env.close()
 
 
 def test_connected_ev_without_arrival_soc_uses_initial_soc_on_reset():
