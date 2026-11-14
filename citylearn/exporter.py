@@ -239,7 +239,7 @@ class EpisodeExporter:
             self.write_render_rows(filename, rows)
             return
 
-        with file_path.open('w', newline='') as csvfile:
+        with file_path.open('w', encoding='utf-8', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
@@ -594,24 +594,24 @@ class EpisodeExporter:
 
         if not file_path.exists():
             fieldnames = buffered_fieldnames
-            with file_path.open('w', newline='') as csvfile:
+            with file_path.open('w', encoding='utf-8', newline='') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
                 for row in rows:
                     writer.writerow({field: row.get(field, '') for field in fieldnames})
             return
 
-        with file_path.open('r', newline='') as csvfile:
+        with file_path.open('r', encoding='utf-8', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             existing_fieldnames = reader.fieldnames or []
 
         missing_fieldnames = [field for field in buffered_fieldnames if field not in existing_fieldnames]
         if missing_fieldnames:
-            with file_path.open('r', newline='') as csvfile:
+            with file_path.open('r', encoding='utf-8', newline='') as csvfile:
                 reader = csv.DictReader(csvfile)
                 existing_rows = list(reader)
             extended_fieldnames = [*existing_fieldnames, *missing_fieldnames]
-            with file_path.open('w', newline='') as csvfile:
+            with file_path.open('w', encoding='utf-8', newline='') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=extended_fieldnames)
                 writer.writeheader()
                 for row in existing_rows:
@@ -620,7 +620,7 @@ class EpisodeExporter:
                     writer.writerow({field: row.get(field, '') for field in extended_fieldnames})
             return
 
-        with file_path.open('a', newline='') as csvfile:
+        with file_path.open('a', encoding='utf-8', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=existing_fieldnames)
             for row in rows:
                 writer.writerow({field: row.get(field, '') for field in existing_fieldnames})
@@ -647,9 +647,9 @@ class EpisodeExporter:
         # path with NumPy scalars used while an asset is active.  PyArrow cannot
         # infer a stable type for such object columns (for example charger state
         # is ``"-1.00"`` while idle and ``np.float32(1)`` while occupied).
-        # Promote wholly numeric-like object columns to numbers before writing;
-        # keep genuinely textual columns textual and normalize NumPy scalars.
-        for column in dataframe.select_dtypes(include=['object']).columns:
+        # Promote wholly numeric-like object/string columns to numbers before writing;
+        # keep genuinely textual columns textual and normalize NumPy/mixed scalars.
+        for column in dataframe.select_dtypes(include=['object', 'string']).columns:
             series = dataframe[column]
             non_null = series.dropna()
             if non_null.empty:
@@ -660,11 +660,16 @@ class EpisodeExporter:
                 dataframe[column] = pd.to_numeric(series, errors='coerce')
                 continue
 
+            has_string = any(isinstance(v, str) for v in non_null)
             dataframe[column] = series.map(
-                lambda value: (
-                    value.item()
-                    if isinstance(value, np.generic)
-                    else value
+                lambda value, _to_str=has_string: (
+                    value
+                    if pd.isna(value)
+                    else (
+                        str(value.item() if isinstance(value, np.generic) else value)
+                        if _to_str
+                        else (value.item() if isinstance(value, np.generic) else value)
+                    )
                 )
             )
         dataframe.to_parquet(part_path, index=False)

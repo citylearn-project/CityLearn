@@ -25,16 +25,20 @@ AUDIT_COVERAGE = {
 }
 
 
+def _utc_now_iso() -> str:
+    return dt.datetime.now(dt.timezone.utc).replace(tzinfo=None, microsecond=0).isoformat() + "Z"
+
+
 def _run(cmd: List[str], cwd: Path) -> Dict[str, Any]:
-    started = dt.datetime.utcnow()
+    started = _utc_now_iso()
     result = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True)
-    ended = dt.datetime.utcnow()
+    ended = _utc_now_iso()
 
     return {
         "cmd": cmd,
         "returncode": int(result.returncode),
-        "started_utc": started.replace(microsecond=0).isoformat() + "Z",
-        "ended_utc": ended.replace(microsecond=0).isoformat() + "Z",
+        "started_utc": started,
+        "ended_utc": ended,
         "stdout": result.stdout[-20000:],
         "stderr": result.stderr[-20000:],
     }
@@ -149,7 +153,7 @@ def main(argv=None) -> int:
         runs.append(run)
 
     summary = {
-        "generated_utc": dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        "generated_utc": _utc_now_iso(),
         "python": sys.version,
         "strict": bool(args.strict),
         "mode": "verify" if args.strict else "report_only",

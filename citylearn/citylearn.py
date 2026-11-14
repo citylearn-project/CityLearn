@@ -655,7 +655,13 @@ class CityLearnEnv(Environment, Env):
                     else:
                         pass
 
-            observation_space = [spaces.Box(low=np.array(low_limit), high=np.array(high_limit), dtype=np.float32)]
+            observation_space = [
+                spaces.Box(
+                    low=np.asarray(low_limit, dtype=np.float32),
+                    high=np.asarray(high_limit, dtype=np.float32),
+                    dtype=np.float32,
+                )
+            ]
 
         else:
             observation_space = [b.observation_space for b in self.buildings]
@@ -686,7 +692,13 @@ class CityLearnEnv(Environment, Env):
         if self.central_agent:
             low_limit = [v for b in self.buildings for v in b.action_space.low]
             high_limit = [v for b in self.buildings for v in b.action_space.high]
-            action_space = [spaces.Box(low=np.array(low_limit), high=np.array(high_limit), dtype=np.float32)]
+            action_space = [
+                spaces.Box(
+                    low=np.asarray(low_limit, dtype=np.float32),
+                    high=np.asarray(high_limit, dtype=np.float32),
+                    dtype=np.float32,
+                )
+            ]
         else:
             action_space = [b.action_space for b in self.buildings]
 
@@ -818,117 +830,117 @@ class CityLearnEnv(Environment, Env):
     def net_electricity_consumption_emission_without_storage_and_partial_load_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage_and_partial_load_and_pv` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage_and_partial_load_and_pv
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_emission_without_storage_and_pv
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_emission_without_storage_and_partial_load_and_pv',
+            non_dynamics_attribute='net_electricity_consumption_emission_without_storage_and_pv',
+            preserve_dtype=True,
+        )
 
     @property
     def net_electricity_consumption_cost_without_storage_and_partial_load_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage_and_partial_load_and_pv` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage_and_partial_load_and_pv
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_cost_without_storage_and_pv
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_cost_without_storage_and_partial_load_and_pv',
+            non_dynamics_attribute='net_electricity_consumption_cost_without_storage_and_pv',
+            preserve_dtype=True,
+        )
 
     @property
     def net_electricity_consumption_without_storage_and_partial_load_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage_and_partial_load_and_pv` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage_and_partial_load_and_pv
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_without_storage_and_pv
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_without_storage_and_partial_load_and_pv',
+            non_dynamics_attribute='net_electricity_consumption_without_storage_and_pv',
+            preserve_dtype=True,
+        )
 
 
     @property
     def net_electricity_consumption_emission_without_storage_and_partial_load(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage_and_partial_load` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage_and_partial_load
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_emission_without_storage
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_emission_without_storage_and_partial_load',
+            non_dynamics_attribute='net_electricity_consumption_emission_without_storage',
+            preserve_dtype=True,
+        )
 
     @property
     def net_electricity_consumption_cost_without_storage_and_partial_load(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage_and_partial_load` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage_and_partial_load
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_cost_without_storage
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_cost_without_storage_and_partial_load',
+            non_dynamics_attribute='net_electricity_consumption_cost_without_storage',
+            preserve_dtype=True,
+        )
 
     @property
     def net_electricity_consumption_without_storage_and_partial_load(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage_and_partial_load` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage_and_partial_load
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_without_storage
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_without_storage_and_partial_load',
+            non_dynamics_attribute='net_electricity_consumption_without_storage',
+            preserve_dtype=True,
+        )
 
     @property
     def net_electricity_consumption_emission_without_storage_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage_and_pv` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage_and_pv
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_emission_without_storage_and_pv',
+            preserve_dtype=True,
+        )
 
     @property
     def net_electricity_consumption_cost_without_storage_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage_and_pv` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage_and_pv
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_cost_without_storage_and_pv',
+            preserve_dtype=True,
+        )
 
     @property
     def net_electricity_consumption_without_storage_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage_and_pv` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage_and_pv
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_without_storage_and_pv',
+            preserve_dtype=True,
+        )
 
 
     @property
     def net_electricity_consumption_emission_without_storage(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_emission_without_storage',
+            preserve_dtype=True,
+        )
 
     @property
     def net_electricity_consumption_cost_without_storage(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_cost_without_storage',
+            preserve_dtype=True,
+        )
 
     @property
     def net_electricity_consumption_without_storage(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_building_series(
+            'net_electricity_consumption_without_storage',
+            preserve_dtype=True,
+        )
 
     @property
     def net_electricity_consumption_emission(self) -> List[float]:
@@ -948,12 +960,54 @@ class CityLearnEnv(Environment, Env):
 
         return self.__net_electricity_consumption
 
-    def _sum_building_series(self, attribute: str) -> np.ndarray:
+    def _sum_building_series(
+        self,
+        attribute: str,
+        non_dynamics_attribute: str = None,
+        *,
+        preserve_dtype: bool = False,
+    ) -> np.ndarray:
         if len(self.buildings) == 0:
             return np.array([], dtype='float64')
 
-        series = [np.asarray(getattr(b, attribute)).reshape(-1) for b in self.buildings]
+        if non_dynamics_attribute is None:
+            series = [np.asarray(getattr(b, attribute)).reshape(-1) for b in self.buildings]
+        else:
+            series = [
+                np.asarray(
+                    getattr(b, attribute if isinstance(b, DynamicsBuilding) else non_dynamics_attribute)
+                ).reshape(-1)
+                for b in self.buildings
+            ]
+
+        out_dtype = np.dtype('float64')
+        if preserve_dtype:
+            non_empty = [values for values in series if len(values) > 0]
+            if non_empty:
+                inferred = np.result_type(*(values.dtype for values in non_empty))
+                out_dtype = np.promote_types(inferred, np.float32) if np.issubdtype(inferred, np.number) else np.dtype('float64')
+
         length = max((len(values) for values in series), default=0)
+        if length == 0:
+            return np.array([], dtype=out_dtype)
+
+        if preserve_dtype:
+            padded = []
+            for values in series:
+                casted = np.asarray(values, dtype=out_dtype).reshape(-1)
+                if len(casted) < length:
+                    buf = np.full(length, np.nan, dtype=out_dtype)
+                    buf[:len(casted)] = casted
+                    casted = buf
+                padded.append(casted)
+            matrix = np.column_stack(padded)
+            nan_mask = np.isnan(matrix)
+            if not nan_mask.any():
+                return matrix.sum(axis=1)
+            total = np.nansum(matrix, axis=1)
+            total[nan_mask.all(axis=1)] = np.nan
+            return total
+
         total = np.zeros(length, dtype='float64')
         valid = np.zeros(length, dtype=bool)
 

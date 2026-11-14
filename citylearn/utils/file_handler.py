@@ -1,8 +1,30 @@
+import json
+import math
 import pickle
 from pathlib import Path
 from typing import Any
-import simplejson as json
+import numpy as np
 import yaml
+
+
+def _sanitize_json_value(value: Any, *, ignore_nan: bool) -> Any:
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+    if isinstance(value, (int, np.integer)):
+        return int(value)
+    if isinstance(value, (float, np.floating)):
+        scalar = float(value)
+        if not math.isfinite(scalar):
+            return None if ignore_nan else scalar
+        return scalar
+    if isinstance(value, np.ndarray):
+        return _sanitize_json_value(value.tolist(), ignore_nan=ignore_nan)
+    if isinstance(value, dict):
+        return {k: _sanitize_json_value(v, ignore_nan=ignore_nan) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_sanitize_json_value(v, ignore_nan=ignore_nan) for v in value]
+    return value
+
 
 class FileHandler:
     @staticmethod
@@ -41,7 +63,7 @@ class FileHandler:
         Other Parameters
         ----------------
         **kwargs : dict
-            Other infrequently used keyword arguments to be parsed to `simplejson.load`.
+            Other infrequently used keyword arguments to be parsed to `json.load`.
 
         Returns
         -------
@@ -68,13 +90,17 @@ class FileHandler:
         Other Parameters
         ----------------
         **kwargs : dict
-            Other infrequently used keyword arguments to be parsed to `simplejson.dump`.
+            Other infrequently used keyword arguments to be parsed to `json.dump`.
         """
 
         kwargs = {'ignore_nan': True, 'sort_keys': False, 'default': str, 'indent': 2, **kwargs}
+        ignore_nan = bool(kwargs.pop('ignore_nan', True))
+        if ignore_nan:
+            kwargs.setdefault('allow_nan', False)
+        payload = _sanitize_json_value(dictionary, ignore_nan=ignore_nan)
 
-        with open(filepath,'w') as f:
-            json.dump(dictionary, f, **kwargs)
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(payload, f, **kwargs)
 
     @staticmethod
     def read_yaml(filepath: str) -> dict:
@@ -91,7 +117,7 @@ class FileHandler:
             YAML document converted to dictionary.
         """
 
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f)
 
         return data
@@ -115,7 +141,7 @@ class FileHandler:
 
         kwargs = {'sort_keys': False, 'indent': 2, **kwargs}
 
-        with open(filepath, 'w') as f:
+        with open(filepath, 'w', encoding='utf-8') as f:
             yaml.safe_dump(dictionary, f, **kwargs)
 
     @staticmethod

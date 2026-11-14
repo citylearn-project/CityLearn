@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "citylearn"
+dynamic = ["version", "dependencies", "optional-dependencies"]
+description = "CityLearn: an energy-community reinforcement-learning environment focused on EV/BESS/PV, electrical-service constraints, dynamic topology and community-market experimentation."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+authors = [
+    { name = "Soft-CPS Research Group, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy", email = "jose@isep.ipp.pt" },
+]
+maintainers = [
+    { name = "Tiago Fonseca", email = "calof@isep.ipp.pt" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Source = "https://github.com/citylearn-project/CityLearn"
+Documentation = "https://www.citylearn.net/"
+
+[project.scripts]
+citylearn = "citylearn.__main__:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["citylearn*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint]
+select = ["E9", "F821", "NPY201"]

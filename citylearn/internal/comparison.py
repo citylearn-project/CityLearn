@@ -297,7 +297,7 @@ def compare_exports(left_path, right_path, mode='controller'):
     manifests = []
     for p in paths:
         manifest_path = p.with_suffix('.manifest.json')
-        manifests.append(json.loads(manifest_path.read_text()) if manifest_path.exists() else {})
+        manifests.append(json.loads(manifest_path.read_text(encoding='utf-8')) if manifest_path.exists() else {})
     report = compare_manifests(*manifests, mode=mode)
     values = [load_kpis(p) for p in paths]
     rows = []
