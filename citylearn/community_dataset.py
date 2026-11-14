@@ -58,8 +58,7 @@ class InventoryBattery(Battery):
                    headroom/self.charging_efficiency*3600/self.seconds_per_time_step)
 
     def get_max_output_power(self, energy_init=None):
-        # Call Battery input directly: its output method delegates back to input.
-        return min(self.max_discharge_kw, Battery.get_max_input_power(self, energy_init))
+        return min(self.max_discharge_kw, super().get_max_output_power(energy_init))
 
     def get_current_efficiency(self, power):
         return (self.charging_efficiency if self._charging else self.discharging_efficiency)**2

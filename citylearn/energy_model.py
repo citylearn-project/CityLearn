@@ -20,7 +20,12 @@ from citylearn.data import (
     EscalatorSimulation,
     WashingMachineSimulation,
 )
-from citylearn.internal.units import power_kw_to_energy_kwh, seconds_to_hours, to_dataset_resolution_energy
+from citylearn.internal.units import (
+    energy_kwh_to_power_kw,
+    power_kw_to_energy_kwh,
+    seconds_to_hours,
+    to_dataset_resolution_energy,
+)
 from citylearn.internal.deferrable_cycles import CycleIndex
 np.seterr(divide='ignore', invalid='ignore')
 
@@ -144,13 +149,14 @@ class ElectricDevice(Device):
 
     @property
     def available_nominal_power(self) -> float:
-        r"""Difference between `nominal_power` and `electricity_consumption` at current `time_step`."""
+        r"""Difference between `nominal_power` and `electricity_consumption` power at current `time_step` [kW]."""
 
         if self.nominal_power is None:
             return None
 
-        consumption = float(self.__electricity_consumption[self.time_step]) * self._electricity_consumption_ratio()
-        return as_float(self.nominal_power) - consumption
+        consumption_kwh = float(self.__electricity_consumption[self.time_step]) * self._electricity_consumption_ratio()
+        used_power_kw = energy_kwh_to_power_kw(consumption_kwh, self.seconds_per_time_step)
+        return max(0.0, as_float(self.nominal_power) - used_power_kw)
 
 
     def get_metadata(self) -> Mapping[str, Any]:
@@ -1355,6 +1361,28 @@ class Battery(StorageDevice, ElectricDevice):
         if self.time_step < len(self.capacity_before_step):
             self.capacity_before_step[self.time_step] = self.degraded_capacity
 
+    def _evaluate_capacity_power_curve(self, curve_position: float) -> float:
+        curve_x = self.capacity_power_curve[0]
+        curve_y = self.capacity_power_curve[1]
+        curve_position = as_float(curve_position)
+        if not np.isfinite(curve_position):
+            return np.nan
+
+        pos = clip_scalar(curve_position, 0.0, 1.0)
+        idx = min(len(curve_x) - 2, max(0, int(np.searchsorted(curve_x, pos, side='left')) - 1))
+        x0 = float(curve_x[idx])
+        x1 = float(curve_x[idx + 1])
+        y0 = float(curve_y[idx])
+        y1 = float(curve_y[idx + 1])
+        return float(as_float(self.nominal_power) * (y0 + (y1 - y0) * (pos - x0) / (x1 - x0)))
+
+    def _degraded_soc_fraction(self, energy_init: float = None) -> float:
+        energy_init = as_float(self.energy_init if energy_init is None else energy_init)
+        soc = energy_init / max(as_float(self.degraded_capacity), ZERO_DIVISION_PLACEHOLDER)
+        if not np.isfinite(soc):
+            return np.nan
+        return clip_scalar(soc, 0.0, 1.0)
+
     def get_max_output_power(self, energy_init: float = None) -> float:
         r"""Get maximum output power while considering `capacity_power_curve` limitations if defined otherwise, returns `nominal_power`.
 
@@ -1364,7 +1392,11 @@ class Battery(StorageDevice, ElectricDevice):
             Maximum amount of power that the storage unit can output [kW].
         """
 
-        return self.get_max_input_power(energy_init=energy_init)
+        soc = self._degraded_soc_fraction(energy_init=energy_init)
+        if not np.isfinite(soc):
+            return np.nan
+
+        return self._evaluate_capacity_power_curve(1.0 - soc)
 
     def get_max_input_power(self, energy_init: float = None) -> float:
         r"""Get maximum input power while considering `capacity_power_curve` limitations.
@@ -1375,23 +1407,8 @@ class Battery(StorageDevice, ElectricDevice):
             Maximum amount of power that the storage unit can use to charge [kW].
         """
 
-        #The initial SOC is the previous SOC minus the energy losses
-        energy_init = self.energy_init if energy_init is None else energy_init
-        soc = energy_init/max(self.capacity, ZERO_DIVISION_PLACEHOLDER)
-        curve_x = self.capacity_power_curve[0]
-        curve_y = self.capacity_power_curve[1]
-        if not np.isfinite(soc):
-            return np.nan
-
-        # Calculating the maximum power rate at which the battery can be charged or discharged
-        idx = min(len(curve_x) - 2, max(0, int(np.searchsorted(curve_x, soc, side='left')) - 1))
-        max_output_power = self.nominal_power*(
-            curve_y[idx]
-            + (curve_y[idx+1] - curve_y[idx])*(soc - curve_x[idx])
-            /(curve_x[idx+1] - curve_x[idx])
-        )
-        
-        return max_output_power
+        soc = self._degraded_soc_fraction(energy_init=energy_init)
+        return self._evaluate_capacity_power_curve(soc)
 
     def get_current_efficiency(self, power: float) -> float:
         r"""Get technical efficiency while considering `power_efficiency_curve` limitations.
@@ -1809,7 +1826,7 @@ class DeferrableAppliance(ElectricDevice):
             'pending': 1.0 if pending else 0.0,
             'running': 1.0 if running else 0.0,
             'can_start': 1.0 if self._can_start_cycle(cycle, current_global) else 0.0,
-            'deadline_missed': 1.0 if missed else 0.0,
+            'deadline_missed': 1.0 if (missed or self._get_cycle_index().first('missed') is not None) else 0.0,
             'earliest_start_time_step': float(earliest),
             'latest_start_time_step': float(latest),
             'deadline_time_step': float(deadline),

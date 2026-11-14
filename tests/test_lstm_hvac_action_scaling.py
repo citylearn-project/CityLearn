@@ -51,6 +51,9 @@ def _schema(dataset, tmp_path, native_quarter_hour):
         index = np.arange(len(frame))
         frame['hour'] = (index//4)%24
         frame.insert(frame.columns.get_loc('hour') + 1, 'minutes', (index%4)*15)
+        for col in ('cooling_demand', 'heating_demand', 'dhw_demand', 'non_shiftable_load'):
+            if col in frame.columns:
+                frame[col] = frame[col] * 0.25
         frame.to_csv(energy_simulation, index=False)
         schema['root_directory'] = str(target)
 

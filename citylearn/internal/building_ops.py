@@ -9,7 +9,11 @@ from citylearn.internal.scalars import clip_scalar, numpy1_scalar
 
 from citylearn.energy_model import HeatPump
 from citylearn.preprocessing import Normalize, PeriodicNormalization
-from citylearn.internal.units import energy_kwh_to_power_kw, power_kw_to_energy_kwh
+from citylearn.internal.units import (
+    energy_kwh_to_power_kw,
+    power_kw_to_energy_kwh,
+    to_dataset_resolution_energy,
+)
 from citylearn.internal.electrical_limits import allocate_electrical_service, electrical_service_violation_kw
 
 if TYPE_CHECKING:
@@ -127,12 +131,16 @@ class BuildingOpsService:
                     observations[key] = value
 
         if normalize:
-            periodic_low_limit, periodic_high_limit = building.periodic_normalized_observation_space_limits
+            low_limit, high_limit = (
+                building.periodic_normalized_observation_space_limits
+                if periodic_normalization
+                else building.non_periodic_normalized_observation_space_limits
+            )
             normalizer = Normalize(0.0, 1.0)
 
             for key, value in observations.items():
-                normalizer.x_min = periodic_low_limit[key]
-                normalizer.x_max = periodic_high_limit[key]
+                normalizer.x_min = low_limit[key]
+                normalizer.x_max = high_limit[key]
                 observations[key] = value * normalizer
 
         return observations
@@ -373,11 +381,17 @@ class BuildingOpsService:
         if wants('electrical_storage_soc'):
             observations['electrical_storage_soc'] = building.electrical_storage.soc[endogenous_t]
         if wants('cooling_demand'):
-            observations['cooling_demand'] = building.energy_from_cooling_device[endogenous_t] + numpy1_scalar(abs(min(building.cooling_storage.energy_balance[endogenous_t], 0.0)))
+            observations['cooling_demand'] = building.energy_from_cooling_device[endogenous_t] + numpy1_scalar(
+                to_dataset_resolution_energy(abs(min(building.cooling_storage.energy_balance[endogenous_t], 0.0)), building.time_step_ratio)
+            )
         if wants('heating_demand'):
-            observations['heating_demand'] = building.energy_from_heating_device[endogenous_t] + numpy1_scalar(abs(min(building.heating_storage.energy_balance[endogenous_t], 0.0)))
+            observations['heating_demand'] = building.energy_from_heating_device[endogenous_t] + numpy1_scalar(
+                to_dataset_resolution_energy(abs(min(building.heating_storage.energy_balance[endogenous_t], 0.0)), building.time_step_ratio)
+            )
         if wants('dhw_demand'):
-            observations['dhw_demand'] = building.energy_from_dhw_device[endogenous_t] + numpy1_scalar(abs(min(building.dhw_storage.energy_balance[endogenous_t], 0.0)))
+            observations['dhw_demand'] = building.energy_from_dhw_device[endogenous_t] + numpy1_scalar(
+                to_dataset_resolution_energy(abs(min(building.dhw_storage.energy_balance[endogenous_t], 0.0)), building.time_step_ratio)
+            )
         if wants('net_electricity_consumption'):
             observations['net_electricity_consumption'] = building.net_electricity_consumption[endogenous_t]
         if wants('cooling_electricity_consumption'):
@@ -498,10 +512,10 @@ class BuildingOpsService:
             cooling_device_action = np.nan if 'cooling_device' not in active_action_set else cooling_device_action
             heating_device_action = np.nan if 'heating_device' not in active_action_set else heating_device_action
 
-        cooling_storage_action = 0.0 if 'cooling_storage' not in active_action_set else cooling_storage_action
-        heating_storage_action = 0.0 if 'heating_storage' not in active_action_set else heating_storage_action
-        dhw_storage_action = 0.0 if 'dhw_storage' not in active_action_set else dhw_storage_action
-        electrical_storage_action = 0.0 if 'electrical_storage' not in active_action_set else electrical_storage_action
+        cooling_storage_action = 0.0 if 'cooling_storage' not in active_action_set or cooling_storage_action is None else cooling_storage_action
+        heating_storage_action = 0.0 if 'heating_storage' not in active_action_set or heating_storage_action is None else heating_storage_action
+        dhw_storage_action = 0.0 if 'dhw_storage' not in active_action_set or dhw_storage_action is None else dhw_storage_action
+        electrical_storage_action = 0.0 if 'electrical_storage' not in active_action_set or electrical_storage_action is None else electrical_storage_action
 
         if deferrable_appliance_actions is None:
             deferrable_appliance_actions = washing_machine_actions
@@ -521,6 +535,7 @@ class BuildingOpsService:
                 electric_vehicle_storage_actions,
                 electrical_storage_action,
                 deferrable_appliance_actions,
+                requested_escalator_actions,
             )
         else:
             building._charging_constraint_penalty_kwh = 0.0
@@ -601,20 +616,36 @@ class BuildingOpsService:
                     escalator_priority_list.append(action_key)
             priority_list = priority_list + escalator_priority_list
 
-        if electrical_storage_action < 0.0:
-            key = 'electrical_storage'
-            priority_list.remove(key)
-            priority_list = [key] + priority_list
-
+        discharging_thermal_keys = []
         for key in ['cooling', 'heating', 'dhw']:
             storage = f'{key}_storage'
             device = f'{key}_device'
 
-            if actions[storage][1][0] < 0.0:
+            if self._safe_scalar(actions[storage][1][0], 0.0) < 0.0:
                 storage_ix = priority_list.index(storage)
                 device_ix = priority_list.index(device)
                 priority_list[storage_ix] = device
                 priority_list[device_ix] = storage
+                discharging_thermal_keys.append(storage)
+
+        # Ensure thermal demand updates and thermal tank discharges run before electrical backup
+        # (BESS and V2G discharge), and electrical backup runs before electric loads so islanded
+        # loads see local backup supply through `downward_electrical_flexibility`.
+        discharging_electric_keys = []
+        if self._safe_scalar(electrical_storage_action, 0.0) < 0.0 and 'electrical_storage' in priority_list:
+            discharging_electric_keys.append('electrical_storage')
+        if electric_vehicle_storage_actions is not None:
+            for charger_id, action in electric_vehicle_storage_actions.items():
+                action_key = f'electric_vehicle_storage_{charger_id}'
+                if self._safe_scalar(action, 0.0) < 0.0 and action_key in priority_list:
+                    discharging_electric_keys.append(action_key)
+
+        if discharging_electric_keys:
+            lead_keys = ['cooling_demand', 'heating_demand', *discharging_thermal_keys]
+            lead_set = set(lead_keys) | set(discharging_electric_keys)
+            ordered_lead = [k for k in lead_keys if k in priority_list]
+            remaining_keys = [k for k in priority_list if k not in lead_set]
+            priority_list = ordered_lead + discharging_electric_keys + remaining_keys
 
         limit_control_actions = bool(building.power_outage)
         for key in priority_list:
@@ -765,7 +796,13 @@ class BuildingOpsService:
     def _set_feedback_reason(self, owner, reason: str, prefix: str = 'action_feedback_'):
         self._set_feedback_value(owner, f'{prefix}clip_reason_{reason}', 1.0)
 
-    def _constraint_clip_reasons(self, requested_power_kw: float, limited_power_kw: float) -> List[str]:
+    def _constraint_clip_reasons(
+        self,
+        requested_power_kw: float,
+        limited_power_kw: float,
+        phase_connection: Optional[str] = None,
+        charger_id: Optional[str] = None,
+    ) -> List[str]:
         if abs(requested_power_kw - limited_power_kw) <= 1.0e-6:
             return []
 
@@ -774,23 +811,52 @@ class BuildingOpsService:
         reasons: List[str] = []
         building_headroom = self._safe_scalar(state.get('building_headroom_kw'), np.nan)
         export_headroom = self._safe_scalar(state.get('building_export_headroom_kw'), np.nan)
-        phase_headrooms = [
-            self._safe_scalar(value, np.nan)
-            for value in (state.get('phase_headroom_kw') or {}).values()
-        ]
-        phase_export_headrooms = [
-            self._safe_scalar(value, np.nan)
-            for value in (state.get('phase_export_headroom_kw') or {}).values()
-        ]
+        phase_map = state.get('phase_headroom_kw') or {}
+        phase_export_map = state.get('phase_export_headroom_kw') or {}
 
-        if requested_power_kw > limited_power_kw and np.isfinite(building_headroom) and building_headroom <= 1.0e-6:
-            reasons.append('building_headroom')
-        if requested_power_kw < limited_power_kw and np.isfinite(export_headroom) and export_headroom <= 1.0e-6:
-            reasons.append('export_headroom')
-        if any(np.isfinite(value) and value <= 1.0e-6 for value in phase_headrooms):
-            reasons.append('phase_headroom')
-        if any(np.isfinite(value) and value <= 1.0e-6 for value in phase_export_headrooms):
-            reasons.append('export_headroom')
+        if getattr(building, '_electrical_service_enabled', False):
+            connected_phases = [
+                phase for phase, weight in self._split_power_by_connection(1.0, phase_connection).items()
+                if abs(weight) > 1.0e-9
+            ]
+            phase_headrooms = [
+                self._safe_scalar(phase_map.get(phase), np.nan)
+                for phase in connected_phases
+                if phase in phase_map
+            ]
+            phase_export_headrooms = [
+                self._safe_scalar(phase_export_map.get(phase), np.nan)
+                for phase in connected_phases
+                if phase in phase_export_map
+            ]
+        else:
+            if charger_id is not None and getattr(building, '_phase_limits', None):
+                relevant_names = {
+                    phase.get('name')
+                    for phase in building._phase_limits
+                    if charger_id in (phase.get('chargers') or [])
+                }
+                phase_headrooms = [
+                    self._safe_scalar(value, np.nan)
+                    for name, value in phase_map.items()
+                    if name in relevant_names
+                ]
+            else:
+                phase_headrooms = [self._safe_scalar(value, np.nan) for value in phase_map.values()]
+            phase_export_headrooms = [self._safe_scalar(value, np.nan) for value in phase_export_map.values()]
+
+        if requested_power_kw > limited_power_kw:
+            if np.isfinite(building_headroom) and building_headroom <= 1.0e-6:
+                reasons.append('building_headroom')
+            if any(np.isfinite(value) and value <= 1.0e-6 for value in phase_headrooms):
+                reasons.append('phase_headroom')
+        elif requested_power_kw < limited_power_kw:
+            if (
+                (np.isfinite(export_headroom) and export_headroom <= 1.0e-6)
+                or any(np.isfinite(value) and value <= 1.0e-6 for value in phase_export_headrooms)
+            ):
+                reasons.append('export_headroom')
+
         if not reasons:
             reasons.append('power_limit')
         return reasons
@@ -811,7 +877,13 @@ class BuildingOpsService:
             self._set_feedback_reason(charger, 'power_limit')
         if abs(requested_power) > 1.0e-9 and charger.connected_electric_vehicle is None:
             self._set_feedback_reason(charger, 'availability')
-        for reason in self._constraint_clip_reasons(requested_power, limited_power):
+        phase_connection = getattr(self.building, '_charger_phase_map', {}).get(charger.charger_id)
+        for reason in self._constraint_clip_reasons(
+            requested_power,
+            limited_power,
+            phase_connection=phase_connection,
+            charger_id=charger.charger_id,
+        ):
             self._set_feedback_reason(charger, reason)
 
     def _record_charger_post_apply_feedback(self, charger):
@@ -838,7 +910,11 @@ class BuildingOpsService:
         self._set_feedback_value(building, f'{prefix}requested_power_kw', requested_power)
         self._set_feedback_value(building, f'{prefix}limited_power_kw', limited_power)
         self._clear_feedback_reasons(building, prefix=prefix)
-        for reason in self._constraint_clip_reasons(requested_power, limited_power):
+        for reason in self._constraint_clip_reasons(
+            requested_power,
+            limited_power,
+            phase_connection=getattr(building, 'electrical_storage_phase_connection', None),
+        ):
             self._set_feedback_reason(building, reason, prefix=prefix)
 
     def _record_storage_post_apply_feedback(self):
@@ -917,8 +993,22 @@ class BuildingOpsService:
 
         if action_key.startswith('electric_vehicle_storage_'):
             charger = getattr(func, '__self__', None)
-            if charger is None or action <= 0.0:
+            if charger is None or abs(action) <= 1.0e-12:
                 return (0.0,)
+
+            if action < 0.0:
+                if getattr(charger, 'connected_electric_vehicle', None) is None:
+                    return (0.0,)
+                unserved_kw = max(
+                    self._estimate_outage_unserved_load_kw(
+                        int(building.time_step),
+                        include_electrical_storage=True,
+                    ),
+                    0.0,
+                )
+                requested_power_kw = min(self._charger_requested_power_kw(charger, action), 0.0)
+                target_power_kw = max(requested_power_kw, -unserved_kw)
+                return (self._charger_action_from_power_kw(charger, target_power_kw),)
 
             available_energy_kwh = max(self._safe_scalar(building.downward_electrical_flexibility, 0.0), 0.0)
             available_power_kw = self._control_step_energy_to_power_kw(available_energy_kwh)
@@ -1021,14 +1111,146 @@ class BuildingOpsService:
             values = getattr(self.building, public_name, [])
         return self._safe_index(values, step, default)
 
+    def _preview_escalator_power_kw(
+        self,
+        step: int,
+        escalator_actions: Optional[Mapping[str, float]] = None,
+    ) -> float:
+        building = self.building
+        if self._power_outage_at_step(step):
+            return 0.0
+
+        action_map = escalator_actions or {}
+        total_kw = 0.0
+        for escalator in building.escalators or []:
+            applied = getattr(escalator, 'action_applied', None)
+            if applied is not None and 0 <= step < len(applied) and bool(applied[step]):
+                total_kw += self._control_step_energy_to_power_kw(
+                    self._safe_index(escalator.electricity_consumption, step, 0.0)
+                )
+                continue
+
+            if step == int(building.time_step):
+                raw_action = action_map.get(
+                    f'escalator_{escalator.name}',
+                    action_map.get(escalator.name, None),
+                )
+                if raw_action is not None:
+                    requested = escalator.action_to_state(raw_action)
+                    available = escalator._available()
+                    desired = requested if available else escalator.STATE_STANDBY
+                    effective_state = escalator.state
+                    if desired != effective_state:
+                        elapsed = int(escalator.time_step) - int(getattr(escalator, '_Escalator__state_start_time_step', -escalator.minimum_state_steps))
+                        if elapsed >= escalator.minimum_state_steps or (not available and desired == escalator.STATE_STANDBY):
+                            effective_state = desired
+                    total_kw += self._safe_scalar(escalator._power_for_state(effective_state), 0.0)
+                    continue
+
+            total_kw += self._control_step_energy_to_power_kw(
+                self._safe_index(escalator.electricity_consumption, step, 0.0)
+            )
+        return total_kw
+
+    def _estimate_outage_unserved_load_kw(
+        self,
+        step: int,
+        include_electrical_storage: bool = True,
+    ) -> float:
+        building = self.building
+        temperature = self._safe_index(building.weather.outdoor_dry_bulb_temperature, step, 0.0)
+
+        cooling_discharged = max(-self._safe_index(building.cooling_storage.energy_balance, step, 0.0), 0.0)
+        cooling_charged = max(self._safe_index(building.cooling_storage.energy_balance, step, 0.0), 0.0)
+        cooling_building_kwh = max(
+            self._dataset_energy_to_control_step(self._safe_index(building.energy_simulation.cooling_demand, step, 0.0))
+            - cooling_discharged,
+            0.0,
+        )
+        cooling_max_kwh = power_kw_to_energy_kwh(
+            self._safe_scalar(building.cooling_device.get_max_output_power(temperature, heating=False), 0.0),
+            building.seconds_per_time_step,
+        )
+        cooling_thermal_kwh = min(cooling_building_kwh + cooling_charged, cooling_max_kwh)
+        cooling_energy = self._safe_scalar(
+            building.cooling_device.get_input_power(cooling_thermal_kwh, temperature, heating=False),
+            0.0,
+        )
+        cooling_kw = self._control_step_energy_to_power_kw(max(cooling_energy, 0.0))
+
+        heating_discharged = max(-self._safe_index(building.heating_storage.energy_balance, step, 0.0), 0.0)
+        heating_charged = max(self._safe_index(building.heating_storage.energy_balance, step, 0.0), 0.0)
+        heating_building_kwh = max(
+            self._dataset_energy_to_control_step(self._safe_index(building.energy_simulation.heating_demand, step, 0.0))
+            - heating_discharged,
+            0.0,
+        )
+        heating_max_power = (
+            building.heating_device.get_max_output_power(temperature, heating=True)
+            if isinstance(building.heating_device, HeatPump)
+            else building.heating_device.get_max_output_power()
+        )
+        heating_max_kwh = power_kw_to_energy_kwh(self._safe_scalar(heating_max_power, 0.0), building.seconds_per_time_step)
+        heating_thermal_kwh = min(heating_building_kwh + heating_charged, heating_max_kwh)
+        heating_energy = self._safe_scalar(
+            building.heating_device.get_input_power(heating_thermal_kwh, temperature, heating=True)
+            if isinstance(building.heating_device, HeatPump)
+            else building.heating_device.get_input_power(heating_thermal_kwh),
+            0.0,
+        )
+        heating_kw = self._control_step_energy_to_power_kw(max(heating_energy, 0.0))
+
+        dhw_discharged = max(-self._safe_index(building.dhw_storage.energy_balance, step, 0.0), 0.0)
+        dhw_charged = max(self._safe_index(building.dhw_storage.energy_balance, step, 0.0), 0.0)
+        dhw_building_kwh = max(
+            self._dataset_energy_to_control_step(self._safe_index(building.energy_simulation.dhw_demand, step, 0.0))
+            - dhw_discharged,
+            0.0,
+        )
+        dhw_max_power = (
+            building.dhw_device.get_max_output_power(temperature, heating=True)
+            if isinstance(building.dhw_device, HeatPump)
+            else building.dhw_device.get_max_output_power()
+        )
+        dhw_max_kwh = power_kw_to_energy_kwh(self._safe_scalar(dhw_max_power, 0.0), building.seconds_per_time_step)
+        dhw_thermal_kwh = min(dhw_building_kwh + dhw_charged, dhw_max_kwh)
+        dhw_energy = self._safe_scalar(
+            building.dhw_device.get_input_power(dhw_thermal_kwh, temperature, heating=True)
+            if isinstance(building.dhw_device, HeatPump)
+            else building.dhw_device.get_input_power(dhw_thermal_kwh),
+            0.0,
+        )
+        dhw_kw = self._control_step_energy_to_power_kw(max(dhw_energy, 0.0))
+
+        non_shiftable_energy = self._dataset_energy_to_control_step(
+            max(self._safe_index(building.energy_simulation.non_shiftable_load, step, 0.0), 0.0)
+        )
+        non_shiftable_kw = self._control_step_energy_to_power_kw(non_shiftable_energy)
+        solar_kw = self._control_step_energy_to_power_kw(self._solar_generation_energy_at_step(step))
+        deferrable_kw = sum(
+            self._control_step_energy_to_power_kw(self._safe_index(appliance.electricity_consumption, step, 0.0))
+            for appliance in building.deferrable_appliances or []
+        )
+        bess_kw = (
+            self._control_step_energy_to_power_kw(self._safe_index(building.electrical_storage.electricity_consumption, step, 0.0))
+            if include_electrical_storage
+            else 0.0
+        )
+        chargers_kw = sum(
+            self._control_step_energy_to_power_kw(self._safe_index(charger.electricity_consumption, step, 0.0))
+            for charger in building.electric_vehicle_chargers or []
+        )
+        return float(cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw + bess_kw + chargers_kw)
+
     def _estimate_base_power_at_step(self, step: int) -> Tuple[float, Dict[str, float]]:
         building = self.building
         phase_names = self._current_phase_names()
         temperature = self._safe_index(building.weather.outdoor_dry_bulb_temperature, step, 0.0)
 
+        # `energy_from_*_device` is already net of thermal storage discharge; only positive tank charging adds load.
         cooling_demand = self._dataset_energy_to_control_step(
             self._building_series_value('energy_from_cooling_device', 'energy_from_cooling_device', step, 0.0)
-        ) + self._safe_index(building.cooling_storage.energy_balance, step, 0.0)
+        ) + max(self._safe_index(building.cooling_storage.energy_balance, step, 0.0), 0.0)
         cooling_energy = self._safe_scalar(
             building.cooling_device.get_input_power(cooling_demand, temperature, heating=False),
             0.0,
@@ -1037,7 +1259,7 @@ class BuildingOpsService:
 
         heating_demand = self._dataset_energy_to_control_step(
             self._building_series_value('energy_from_heating_device', 'energy_from_heating_device', step, 0.0)
-        ) + self._safe_index(building.heating_storage.energy_balance, step, 0.0)
+        ) + max(self._safe_index(building.heating_storage.energy_balance, step, 0.0), 0.0)
         if isinstance(building.heating_device, HeatPump):
             heating_energy = self._safe_scalar(
                 building.heating_device.get_input_power(heating_demand, temperature, heating=True),
@@ -1049,7 +1271,7 @@ class BuildingOpsService:
 
         dhw_demand = self._dataset_energy_to_control_step(
             self._building_series_value('energy_from_dhw_device', 'energy_from_dhw_device', step, 0.0)
-        ) + self._safe_index(building.dhw_storage.energy_balance, step, 0.0)
+        ) + max(self._safe_index(building.dhw_storage.energy_balance, step, 0.0), 0.0)
         if isinstance(building.dhw_device, HeatPump):
             dhw_energy = self._safe_scalar(building.dhw_device.get_input_power(dhw_demand, temperature, heating=True), 0.0)
         else:
@@ -1065,8 +1287,9 @@ class BuildingOpsService:
             self._control_step_energy_to_power_kw(self._safe_index(appliance.electricity_consumption, step, 0.0))
             for appliance in building.deferrable_appliances or []
         )
+        escalator_kw = self._preview_escalator_power_kw(step)
 
-        base_total_kw = cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw
+        base_total_kw = cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw + escalator_kw
         return float(base_total_kw), {phase: value for phase, value in self._split_unassigned_power(base_total_kw).items() if phase in phase_names}
 
     def _electrical_service_allows(self, total_kw: float, phase_kw: Mapping[str, float]) -> bool:
@@ -1174,6 +1397,7 @@ class BuildingOpsService:
     def _estimate_non_controllable_base_power(
         self,
         deferrable_appliance_actions: Optional[Mapping[str, float]] = None,
+        escalator_actions: Optional[Mapping[str, float]] = None,
     ) -> Tuple[float, Dict[str, float]]:
         building = self.building
         t = building.time_step
@@ -1186,7 +1410,7 @@ class BuildingOpsService:
 
         cooling_demand = self._dataset_energy_to_control_step(
             self._safe_index(building.energy_from_cooling_device, t, 0.0)
-        ) + self._safe_index(building.cooling_storage.energy_balance, t, 0.0)
+        ) + max(self._safe_index(building.cooling_storage.energy_balance, t, 0.0), 0.0)
         cooling_energy = self._safe_scalar(
             building.cooling_device.get_input_power(cooling_demand, temperature, heating=False),
             0.0,
@@ -1195,7 +1419,7 @@ class BuildingOpsService:
 
         heating_demand = self._dataset_energy_to_control_step(
             self._safe_index(building.energy_from_heating_device, t, 0.0)
-        ) + self._safe_index(building.heating_storage.energy_balance, t, 0.0)
+        ) + max(self._safe_index(building.heating_storage.energy_balance, t, 0.0), 0.0)
         if isinstance(building.heating_device, HeatPump):
             heating_energy = self._safe_scalar(
                 building.heating_device.get_input_power(heating_demand, temperature, heating=True),
@@ -1207,7 +1431,7 @@ class BuildingOpsService:
 
         dhw_demand = self._dataset_energy_to_control_step(
             self._safe_index(building.energy_from_dhw_device, t, 0.0)
-        ) + self._safe_index(building.dhw_storage.energy_balance, t, 0.0)
+        ) + max(self._safe_index(building.dhw_storage.energy_balance, t, 0.0), 0.0)
         if isinstance(building.dhw_device, HeatPump):
             dhw_energy = self._safe_scalar(building.dhw_device.get_input_power(dhw_demand, temperature, heating=True), 0.0)
         else:
@@ -1224,8 +1448,9 @@ class BuildingOpsService:
             for appliance in building.deferrable_appliances or []
         )
         deferrable_kw += self._prospective_deferrable_start_power_kw(deferrable_appliance_actions)
+        escalator_kw = self._preview_escalator_power_kw(t, escalator_actions=escalator_actions)
 
-        base_total_kw = cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw
+        base_total_kw = cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw + escalator_kw
         base_phase_kw = self._split_unassigned_power(base_total_kw)
 
         return float(base_total_kw), base_phase_kw
@@ -1422,10 +1647,18 @@ class BuildingOpsService:
         actions: Optional[Mapping[str, float]],
         electrical_storage_action: Optional[float],
         deferrable_appliance_actions: Optional[Mapping[str, float]] = None,
+        escalator_actions: Optional[Mapping[str, float]] = None,
     ) -> Tuple[Optional[Mapping[str, float]], Optional[float]]:
         building = self.building
         phase_names = self._current_phase_names()
-        base_total_kw, base_phase_kw = self._estimate_non_controllable_base_power(deferrable_appliance_actions)
+        base_total_kw, base_phase_kw = (
+            self._estimate_non_controllable_base_power(deferrable_appliance_actions)
+            if escalator_actions is None
+            else self._estimate_non_controllable_base_power(
+                deferrable_appliance_actions,
+                escalator_actions=escalator_actions,
+            )
+        )
         base_phase_kw = {phase: base_phase_kw.get(phase, 0.0) for phase in phase_names}
 
         controls = {}
@@ -1521,6 +1754,7 @@ class BuildingOpsService:
         actions: Optional[Mapping[str, float]],
         electrical_storage_action: Optional[float] = None,
         deferrable_appliance_actions: Optional[Mapping[str, float]] = None,
+        escalator_actions: Optional[Mapping[str, float]] = None,
     ) -> Tuple[Optional[Mapping[str, float]], Optional[float]]:
         """Apply configured electrical constraints and return adjusted EV/storage actions."""
 
@@ -1537,6 +1771,7 @@ class BuildingOpsService:
                 actions,
                 electrical_storage_action,
                 deferrable_appliance_actions,
+                escalator_actions=escalator_actions,
             )
 
         adjusted_actions = self._apply_legacy_charging_constraints(actions)
