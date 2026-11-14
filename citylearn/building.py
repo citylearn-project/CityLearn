@@ -19,6 +19,7 @@ from citylearn.energy_model import (
 )
 from citylearn.internal.building_ops import BuildingOpsService
 from citylearn.internal.units import (
+    energy_kwh_to_power_kw,
     normalized_capacity_action_to_energy_kwh,
     normalized_power_action_to_energy_kwh,
     power_kw_to_energy_kwh,
@@ -1605,6 +1606,12 @@ class Building(Environment):
 
         raise NotImplementedError
 
+    def _max_outage_electric_power_kw(self) -> Optional[float]:
+        flex_kwh = self.downward_electrical_flexibility
+        if not np.isfinite(flex_kwh):
+            return None
+        return energy_kwh_to_power_kw(max(float(flex_kwh), 0.0), self.seconds_per_time_step)
+
     def update_energy_from_cooling_device(self):
         r"""Update cooling device electricity consumption and energy tranfer for current time step's cooling demand."""
 
@@ -1612,8 +1619,12 @@ class Building(Environment):
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
         # Storage balances are control-step kWh; demand and device output are dataset-resolution kWh.
         storage_output = to_dataset_resolution_energy(self.energy_from_cooling_storage[self.time_step], self.time_step_ratio)
-        max_electric_power = self.downward_electrical_flexibility
-        max_device_output = self.cooling_device.get_max_output_power(temperature, heating=False, max_electric_power=max_electric_power)
+        max_electric_power = self._max_outage_electric_power_kw()
+        max_output_power = self.cooling_device.get_max_output_power(temperature, heating=False, max_electric_power=max_electric_power)
+        max_device_output = to_dataset_resolution_energy(
+            power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step),
+            self.time_step_ratio,
+        )
         self.___demand_limit_check('cooling', demand, max_device_output)
         device_output = min(demand - storage_output, max_device_output)
         self.__energy_from_cooling_device[self.time_step] = device_output
@@ -1646,8 +1657,9 @@ class Building(Environment):
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
 
         if energy > 0.0:
-            max_electric_power = self.downward_electrical_flexibility
-            max_output = self.cooling_device.get_max_output_power(temperature, heating=False, max_electric_power=max_electric_power)
+            max_electric_power = self._max_outage_electric_power_kw()
+            max_output_power = self.cooling_device.get_max_output_power(temperature, heating=False, max_electric_power=max_electric_power)
+            max_output = power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step)
             energy = min(max_output, energy)
 
         else:
@@ -1675,9 +1687,13 @@ class Building(Environment):
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
         # Storage balances are control-step kWh; demand and device output are dataset-resolution kWh.
         storage_output = to_dataset_resolution_energy(self.energy_from_heating_storage[self.time_step], self.time_step_ratio)
-        max_electric_power = self.downward_electrical_flexibility
-        max_device_output = self.heating_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
+        max_electric_power = self._max_outage_electric_power_kw()
+        max_output_power = self.heating_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
             if isinstance(self.heating_device, HeatPump) else self.heating_device.get_max_output_power(max_electric_power=max_electric_power)
+        max_device_output = to_dataset_resolution_energy(
+            power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step),
+            self.time_step_ratio,
+        )
         self.___demand_limit_check('heating', demand, max_device_output)
         device_output = min(demand - storage_output, max_device_output)
         self.__energy_from_heating_device[self.time_step] = device_output
@@ -1704,9 +1720,10 @@ class Building(Environment):
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
 
         if energy > 0.0:
-            max_electric_power = self.downward_electrical_flexibility
-            max_output = self.heating_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
+            max_electric_power = self._max_outage_electric_power_kw()
+            max_output_power = self.heating_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
                 if isinstance(self.heating_device, HeatPump) else self.heating_device.get_max_output_power(max_electric_power=max_electric_power)
+            max_output = power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step)
             energy = min(max_output, energy)
 
         else:
@@ -1729,9 +1746,13 @@ class Building(Environment):
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
         # Storage balances are control-step kWh; demand and device output are dataset-resolution kWh.
         storage_output = to_dataset_resolution_energy(self.energy_from_dhw_storage[self.time_step], self.time_step_ratio)
-        max_electric_power = self.downward_electrical_flexibility
-        max_device_output = self.dhw_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
+        max_electric_power = self._max_outage_electric_power_kw()
+        max_output_power = self.dhw_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
             if isinstance(self.dhw_device, HeatPump) else self.dhw_device.get_max_output_power(max_electric_power=max_electric_power)
+        max_device_output = to_dataset_resolution_energy(
+            power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step),
+            self.time_step_ratio,
+        )
         self.___demand_limit_check('dhw', demand, max_device_output)
         device_output = min(demand - storage_output, max_device_output)
         self.__energy_from_dhw_device[self.time_step] = device_output
@@ -1758,9 +1779,10 @@ class Building(Environment):
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
 
         if energy > 0.0:
-            max_electric_power = self.downward_electrical_flexibility
-            max_output = self.dhw_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
+            max_electric_power = self._max_outage_electric_power_kw()
+            max_output_power = self.dhw_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
                 if isinstance(self.dhw_device, HeatPump) else self.dhw_device.get_max_output_power(max_electric_power=max_electric_power)
+            max_output = power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step)
             energy = min(max_output, energy)
 
         else:
@@ -1779,7 +1801,9 @@ class Building(Environment):
     def update_non_shiftable_load(self):
         r"""Update non shiftable loads electricity consumption for current time step non shiftable load."""
 
-        demand = min(self.non_shiftable_load[self.time_step], self.downward_electrical_flexibility)
+        flex_kwh = self.downward_electrical_flexibility
+        max_demand = to_dataset_resolution_energy(flex_kwh, self.time_step_ratio) if np.isfinite(flex_kwh) else flex_kwh
+        demand = min(as_float(self.non_shiftable_load[self.time_step]), max_demand)
         self.__energy_to_non_shiftable_load[self.time_step] = demand
         self.non_shiftable_load_device.update_electricity_consumption(demand)
 
@@ -1804,10 +1828,13 @@ class Building(Environment):
         energy = min(energy, self.downward_electrical_flexibility)
         if self.power_outage and energy < 0.0:
             try:
-                base_total_kw, _ = self._ops_service._estimate_base_power_at_step(self.time_step)
+                unserved_kw = self._ops_service._estimate_outage_unserved_load_kw(
+                    self.time_step,
+                    include_electrical_storage=False,
+                )
             except Exception:
-                base_total_kw = 0.0
-            local_load_kwh = power_kw_to_energy_kwh(max(float(base_total_kw), 0.0), self.seconds_per_time_step)
+                unserved_kw = 0.0
+            local_load_kwh = power_kw_to_energy_kwh(max(float(unserved_kw), 0.0), self.seconds_per_time_step)
             energy = max(energy, -local_load_kwh)
 
 
@@ -1897,7 +1924,19 @@ class Building(Environment):
             return
 
         t = self.time_step
-        available = abs(float(self.solar_generation[t])) + max(-float(self.electrical_storage.electricity_consumption[t]), 0.0)
+        charger_net_kwh = sum(float(c.electricity_consumption[t]) for c in self.electric_vehicle_chargers or [])
+        other_loads_kwh = sum(
+            float(d.electricity_consumption[t])
+            for devices in (self.deferrable_appliances, self.escalators)
+            for d in (devices or [])
+        )
+        available = max(
+            abs(float(self.solar_generation[t]))
+            - float(self.electrical_storage.electricity_consumption[t])
+            - charger_net_kwh
+            - other_loads_kwh,
+            0.0,
+        )
         for device in (
             self.non_shiftable_load_device,
             self.dhw_device,
@@ -3727,6 +3766,7 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
         previous_heating_set_point = self.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[self.time_step - 1]
         hvac_mode = self.energy_simulation.hvac_mode[self.time_step]
 
+        active_mode = hvac_mode
         if hvac_mode == 1:
             current_set_point = current_cooling_set_point
             previous_set_point = previous_cooling_set_point
@@ -3736,10 +3776,16 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
             previous_set_point = previous_heating_set_point
 
         elif hvac_mode == 3:
-            raise NotImplementedError(
-                'Setpoint update not implemented for auto hvac mode.' 
-                ' Set hvac_mode in citylearn.Building.energy_simulation to 0 (off), 1 (cooling mode) or 2 (heating mode).'
-            )
+            current_temperature = self.energy_simulation.indoor_dry_bulb_temperature[self.time_step]
+            midpoint = 0.5 * (as_float(current_cooling_set_point) + as_float(current_heating_set_point))
+            if as_float(current_temperature) >= midpoint:
+                active_mode = 1
+                current_set_point = current_cooling_set_point
+                previous_set_point = previous_cooling_set_point
+            else:
+                active_mode = 2
+                current_set_point = current_heating_set_point
+                previous_set_point = previous_heating_set_point
         
         else:
             # HVAC off: there is no active set point to adjust.
@@ -3759,11 +3805,22 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
         self.occupant.parameters.occupant_interaction_indoor_dry_bulb_temperature_set_point_delta[self.time_step] = setpoint_delta
 
         if abs(setpoint_delta) > 0.0 and not self.ignore_occupant:
-            if hvac_mode == 1:
-                self.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[self.time_step:] = as_float(current_set_point) + setpoint_delta
+            hold_slice = (
+                slice(self.time_step, self.time_step + int(self.set_point_hold_time_steps) + 1)
+                if np.isfinite(self.set_point_hold_time_steps)
+                else slice(self.time_step, None)
+            )
+            if active_mode == 1:
+                updated = as_float(current_set_point) + setpoint_delta
+                if hvac_mode == 3:
+                    updated = np.maximum(updated, self.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[hold_slice])
+                self.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[hold_slice] = updated
 
-            elif hvac_mode == 2:
-                self.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[self.time_step:] = as_float(current_set_point) + setpoint_delta
+            elif active_mode == 2:
+                updated = as_float(current_set_point) + setpoint_delta
+                if hvac_mode == 3:
+                    updated = np.minimum(updated, self.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[hold_slice])
+                self.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[hold_slice] = updated
             
             else:
                 pass

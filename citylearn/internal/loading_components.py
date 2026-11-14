@@ -78,6 +78,13 @@ def add_model_options(building_kwargs, building_name, building_schema, schema, e
             _ = attributes.pop(f'setpoint_{key}_model_filename')
 
         building_kwargs['occupant'] = occupant_constructor(**attributes)
+        if building_schema.get('set_point_hold_time_steps') is not None:
+            building_kwargs['set_point_hold_time_steps'] = building_schema['set_point_hold_time_steps']
+        if building_schema.get('ignore_occupant') is not None:
+            building_kwargs['ignore_occupant'] = parse_bool(
+                building_schema['ignore_occupant'],
+                path=f'buildings.{building_name}.ignore_occupant',
+            )
     else:
         building_kwargs['occupant'] = None
 

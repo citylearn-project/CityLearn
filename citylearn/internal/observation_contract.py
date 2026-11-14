@@ -86,6 +86,7 @@ def apply(service, payload):
     # Build a safe metadata allowlist, rather than chasing future diagnostic keys.
     meta = payload.get('meta', {})
     payload['meta'] = {k: meta[k] for k in ('time_step', 'endogenous_time_step', 'seconds_per_time_step',
-                                         'spec_version', 'temporal_semantics', 'topology_version') if k in meta}
+                                         'spec_version', 'temporal_semantics', 'topology_version',
+                                         'demand_response') if k in meta}
     payload['meta']['agent_observation_contract'] = {'definition_version': DEFINITION_VERSION, 'mode': 'hidden_faults'}
     return payload

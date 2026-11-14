@@ -76,9 +76,17 @@ class LogisticRegressionOccupant(Occupant):
         self.__probabilities['decrease_setpoint'][self.time_step] = decrease_setpoint_probability
         self.__probabilities['random'][self.time_step] = random_probability
         
-        if (increase_setpoint_probability < random_probability and decrease_setpoint_probability < random_probability) \
-                or (increase_setpoint_probability >= random_probability and decrease_setpoint_probability >= random_probability):
+        if increase_setpoint_probability < random_probability and decrease_setpoint_probability < random_probability:
             pass
+
+        elif increase_setpoint_probability >= random_probability and decrease_setpoint_probability >= random_probability:
+            total_prob = increase_setpoint_probability + decrease_setpoint_probability
+            if total_prob <= 0.0 or nprs.uniform() < (increase_setpoint_probability / total_prob):
+                response = self.__setpoint_increase_model.predict(delta_input)
+                delta = self.delta_output_map[response[0]]
+            else:
+                response = self.__setpoint_decrease_model.predict(delta_input)
+                delta = -self.delta_output_map[response[0]]
 
         elif increase_setpoint_probability >= random_probability:
             response = self.__setpoint_increase_model.predict(delta_input)
