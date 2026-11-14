@@ -1,8 +1,7 @@
 import pickle
 from typing import Any, Iterable, Union
 import numpy as np
-import simplejson as json
-import yaml
+from citylearn.utils.file_handler import FileHandler as _SharedFileHandler
 
 
 def parse_bool(value: Any, default: Any = None, path: str = 'value'):
@@ -56,13 +55,12 @@ def parse_bool(value: Any, default: Any = None, path: str = 'value'):
 class FileHandler:
     @staticmethod
     def resolve_schema_root(schema: dict, schema_filepath: str):
-        from citylearn.utils.file_handler import FileHandler as SharedFileHandler
-        return SharedFileHandler.resolve_schema_root(schema, schema_filepath)
+        return _SharedFileHandler.resolve_schema_root(schema, schema_filepath)
 
     @staticmethod
     def read_json(filepath: str, **kwargs) -> dict:
         """Return JSON document as dictionary.
-        
+
         Parameters
         ----------
         filepath : str
@@ -71,23 +69,20 @@ class FileHandler:
         Other Parameters
         ----------------
         **kwargs : dict
-            Other infrequently used keyword arguments to be parsed to `simplejson.load`.
-        
+            Other infrequently used keyword arguments to be parsed to `json.load`.
+
         Returns
         -------
         dict
             JSON document converted to dictionary.
         """
 
-        with open(filepath) as f:
-            json_file = json.load(f, **kwargs)
-
-        return json_file
+        return _SharedFileHandler.read_json(filepath, **kwargs)
 
     @staticmethod
     def write_json(filepath: str, dictionary: dict, **kwargs):
         """Write dictionary to JSON file.
-        
+
         Parameters
         ----------
         filepath : str
@@ -98,38 +93,32 @@ class FileHandler:
         Other Parameters
         ----------------
         **kwargs : dict
-            Other infrequently used keyword arguments to be parsed to `simplejson.dump`.
+            Other infrequently used keyword arguments to be parsed to `json.dump`.
         """
 
-        kwargs = {'ignore_nan': True, 'sort_keys': False, 'default': str, 'indent': 2, **kwargs}
-        
-        with open(filepath,'w') as f:
-            json.dump(dictionary, f, **kwargs)
+        return _SharedFileHandler.write_json(filepath, dictionary, **kwargs)
 
     @staticmethod
     def read_yaml(filepath: str) -> dict:
         """Return YAML document as dictionary.
-        
+
         Parameters
         ----------
         filepath : str
         pathname of YAML document.
-        
+
         Returns
         -------
         dict
             YAML document converted to dictionary.
         """
 
-        with open(filepath, 'r') as f:
-            data = yaml.safe_load(f)
-
-        return data
+        return _SharedFileHandler.read_yaml(filepath)
 
     @staticmethod
     def write_yaml(filepath: str, dictionary: dict, **kwargs):
-        """Write dictionary to YAML file. 
-        
+        """Write dictionary to YAML file.
+
         Parameters
         ----------
         filepath : str
@@ -143,10 +132,7 @@ class FileHandler:
             Other infrequently used keyword arguments to be parsed to `yaml.safe_dump`.
         """
 
-        kwargs = {'sort_keys': False, 'indent': 2, **kwargs}
-        
-        with open(filepath, 'w') as f:
-            yaml.safe_dump(dictionary, f, **kwargs)
+        return _SharedFileHandler.write_yaml(filepath, dictionary, **kwargs)
 
     @staticmethod
     def read_pickle(filepath: str, **kwargs) -> Any:

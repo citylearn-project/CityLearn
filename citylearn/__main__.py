@@ -20,7 +20,7 @@ from citylearn.data import DataSet, get_settings
 from citylearn.__init__ import __version__
 from citylearn.utilities import FileHandler
 import pandas as pd
-import simplejson as json
+import json
 
 try:
     from stable_baselines3.common.base_class import BaseAlgorithm as StableBaselines3Agent

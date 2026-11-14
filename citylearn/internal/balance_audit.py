@@ -157,7 +157,7 @@ class IndependentBalanceAudit:
         for name, filename in (
             (env.schema.get("community_market") or {}).get("tariff_files", {}).items()
         ):
-            with (root / filename).open() as stream:
+            with (root / filename).open(encoding="utf-8") as stream:
                 self._tariffs[name] = list(csv.DictReader(stream))
         self.boundary()
         self.initial_inventory = {
