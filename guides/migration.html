@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.3.1 documentation</title>
+  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.4.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../_static/documentation_options.js?v=b0e360d0"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,6 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-3-to-3-4-0">Upgrade from 3.3 to 3.4.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-3-0-to-3-3-1">Upgrade from 3.3.0 to 3.3.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-2-0-to-3-3-0">Upgrade from 3.2.0 to 3.3.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-1-1-to-3-2-0">Upgrade from 3.1.1 to 3.2.0</a></li>
@@ -180,6 +181,50 @@ local schema and files for data that are not in the public catalogue; a
 repository-relative path is not created by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>.</p>
 <p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
 development-line history.</p>
+</section>
+<section id="upgrade-from-3-3-to-3-4-0">
+<span id="upgrade-from-33-to-340"></span><h2>Upgrade from 3.3 to 3.4.0<a class="headerlink" href="#upgrade-from-3-3-to-3-4-0" title="Link to this heading"></a></h2>
+<p>No dataset, schema or export-file migration is required.</p>
+<ul class="simple">
+<li><p><strong>BAU.</strong> <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> still charges EVs at once to 100% by default
+(<code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v2</span></code>), but it now decides from the entity observations,
+with the battery and appliance rules of the Algorithms BAU. The native BAU
+reference added by <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> changes with it, so every
+<code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code>, <code class="docutils literal notranslate"><span class="pre">delta_to_business_as_usual</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> KPI can differ from 3.3. Rerun both the controller
+and its reference; do not mix 3.3 and 3.4 BAU values. To charge only to the
+user’s requested departure SOC, set <code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target='requested'</span></code>
+on the environment (or in the schema) and use
+<code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent(env,</span> <span class="pre">ev_charge_target='requested')</span></code>.</p></li>
+<li><p><strong>Unlimited headroom.</strong> In the entity tables, a building without an electrical
+service limit (or without a limit on a phase or direction) now publishes its
+headroom features (<code class="docutils literal notranslate"><span class="pre">charging_*headroom_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">building_*_headroom_kw</span></code>,
+<code class="docutils literal notranslate"><span class="pre">*_phase_headroom_kw</span></code>) as 1,000,000 kW, the upper bound of their observation
+space, instead of 0 kW. 0 kW read as “no capacity left”. Models trained on 3.3
+entity observations of such buildings saw 0 there; retrain or re-evaluate them.</p></li>
+<li><p><strong>BAU parameters.</strong> The 3.3 constructor arguments <code class="docutils literal notranslate"><span class="pre">ev_target_soc</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ev_follow_required_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">ev_service_margin_rate</span></code>, <code class="docutils literal notranslate"><span class="pre">ev_service_floor_rate</span></code> and
+<code class="docutils literal notranslate"><span class="pre">storage_deadband_kw</span></code> no longer exist; unknown keyword arguments raise
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. <code class="docutils literal notranslate"><span class="pre">storage_min_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">storage_max_soc</span></code> and <code class="docutils literal notranslate"><span class="pre">deferrable_start_action</span></code>
+keep their names and defaults. See the <a class="reference internal" href="baselines.html#default-parameters"><span class="std std-ref">baselines guide</span></a>.</p></li>
+<li><p><strong>Removed names.</strong> <code class="docutils literal notranslate"><span class="pre">NormalPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">NormalNoBatteryPolicy</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ServiceOnlyBaselineAgent</span></code> are removed; use <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>.
+<code class="docutils literal notranslate"><span class="pre">GridAwareBaselineAgent</span></code> and <code class="docutils literal notranslate"><span class="pre">CommunityAwareBaselineAgent</span></code> are removed; use
+<code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code>. Code importing these names must be
+updated before upgrading to 3.4.0.</p></li>
+<li><p><strong>Rule-based baselines.</strong> <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and
+<code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> are replaced by the Basic, Smart and Community baselines
+validated in the Soft-CPS Algorithms repository. Their decisions, parameters and
+results differ from 3.3. Pass parameters as keyword arguments, for example
+<code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy(env,</span> <span class="pre">community_import_threshold_kw=10.0)</span></code>.</p></li>
+<li><p><strong>Observations.</strong> All baselines now decide from the named entity observations
+rather than from simulator objects. Code that changes a building series or a
+device after loading is seen by the baselines only through the observations
+the simulator publishes for that step.</p></li>
+<li><p><strong>Experiment identity.</strong> <code class="docutils literal notranslate"><span class="pre">comparison_identity()</span></code> and the BAU reference
+metadata report <code class="docutils literal notranslate"><span class="pre">observation_access='entity_observations'</span></code> and include the
+definition version and resolved parameters.</p></li>
+</ul>
 </section>
 <section id="upgrade-from-3-3-0-to-3-3-1">
 <span id="upgrade-from-330-to-331"></span><h2>Upgrade from 3.3.0 to 3.3.1<a class="headerlink" href="#upgrade-from-3-3-0-to-3-3-1" title="Link to this heading"></a></h2>

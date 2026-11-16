@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Baselines &mdash; CityLearn 3.3.1 documentation</title>
+  <title>Baselines &mdash; CityLearn 3.4.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../_static/documentation_options.js?v=b0e360d0"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -73,7 +73,12 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Baselines</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#business-as-usual-the-operational-reference">Business as usual: the operational reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#choosing-the-bau-charging-target">Choosing the BAU charging target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#known-limits">Known limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#default-parameters">Default parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rule-based-baselines">Rule-based baselines</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#automatic-bau-evaluation">Automatic BAU evaluation</a></li>
 </ul>
 </li>
@@ -146,8 +151,8 @@ reference for demand-response settlement. They answer different questions.</p>
 <section id="business-as-usual-the-operational-reference">
 <h2>Business as usual: the operational reference<a class="headerlink" href="#business-as-usual-the-operational-reference" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> represents day-to-day equipment operation without
-learning or price optimization. It runs the configured community, including
-its demand, generation, devices, schedules and electrical constraints.
+learning, forecasts or price optimization. It runs the configured community,
+including its demand, generation, devices, schedules and electrical constraints.
 It is not a scenario with all equipment switched off.</p>
 <table class="docutils align-default">
 <thead>
@@ -157,16 +162,16 @@ It is not a scenario with all equipment switched off.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>EVs</p></td>
-<td><p>Requests maximum charging power immediately while connected, until 100% SOC. It ignores departure targets, deadlines, prices and solar forecasts, and never requests V2G. Electrical limits share available power proportionally; equal requests receive equal shares.</p></td>
+<td><p>Requests maximum charging power as soon as an EV is connected, until 100% SOC by default, or until the user’s requested departure SOC (see below). Ignores deadlines, prices and solar forecasts and never requests V2G. Electrical limits share the available power proportionally between simultaneous requests.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Stationary batteries</p></td>
-<td><p>Charges from PV surplus and discharges to serve local demand, including prospective EV and appliance demand. SOC thresholds and a power deadband control when this rule acts.</p></td>
+<td><p>Charges from local PV surplus and discharges to serve local import (self-consumption). EV charging is considered first, so the battery does not discharge into an EV that is already full.</p></td>
 </tr>
 <tr class="row-even"><td><p>Flexible appliances</p></td>
 <td><p>Requests the next pending cycle at its first feasible start opportunity.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Electrical connection</p></td>
-<td><p>Scales EV and battery requests against configured total and per-phase import/export limits. Equipment and simulator constraints still determine the applied energy.</p></td>
+<td><p>The simulator applies the configured total and per-phase import/export limits; equipment and simulator constraints determine the applied energy.</p></td>
 </tr>
 <tr class="row-even"><td><p>Local sharing</p></td>
 <td><p>The scenario’s settlement rules value the resulting trajectory. BAU does not optimize the allocation or local-market price.</p></td>
@@ -179,11 +184,55 @@ It is not a scenario with all equipment switched off.</p>
 </tr>
 </tbody>
 </table>
-<p>The controller uses current equipment state and schedule information from the
-environment. It does not train a model, forecast prices, perform tariff
-arbitrage, optimize a planning horizon or coordinate communities.</p>
+<section id="choosing-the-bau-charging-target">
+<h3>Choosing the BAU charging target<a class="headerlink" href="#choosing-the-bau-charging-target" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> has two EV charging targets:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">ev_charge_target</span></code></p></th>
+<th class="head"><p>Definition</p></th>
+<th class="head"><p>EV behaviour</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'full'</span></code> (default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v2</span></code></p></td>
+<td><p>Charges to 100%, as the BAU of CityLearn 3.1–3.3.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">'requested'</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">immediate-user-target-v1</span></code></p></td>
+<td><p>Charges up to the user’s requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger’s minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Everything else is the same. Select the BAU used as the KPI reference by
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> with the environment setting
+<code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target</span></code>, as a constructor argument or a schema key:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">business_as_usual_ev_charge_target</span><span class="o">=</span><span class="s1">'requested'</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">ev_charge_target</span><span class="o">=</span><span class="s1">'requested'</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The exported metadata records the selected definition. Compare results only
+against references with the same definition.</p>
+<p>All baselines in <code class="docutils literal notranslate"><span class="pre">citylearn.agents.baseline</span></code> read the same named, unnormalized
+entity observations (current state, schedules and the simulator’s published
+forecasts). They work with the flat and the entity interface and return flat
+action vectors in <code class="docutils literal notranslate"><span class="pre">env.action_names</span></code> order.</p>
+</section>
+<section id="known-limits">
+<h3>Known limits<a class="headerlink" href="#known-limits" title="Link to this heading"></a></h3>
+<p>The baselines decide from observations, so the battery reacts to the last
+settled step rather than reading the current step’s load and PV from the
+simulator, as the 3.1–3.3 BAU did. Without the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle
+the rules also do not see the power an EV can still accept, and reserve the
+charger’s nominal power: near the end of a full charge the battery can then
+discharge more than the EV takes. Enabling that bundle in the schema gives the
+rules the accepted power.</p>
+</section>
 <section id="default-parameters">
 <h3>Default parameters<a class="headerlink" href="#default-parameters" title="Link to this heading"></a></h3>
+<p>Keyword arguments override the policy hyperparameters. Unknown names raise a
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. The main BAU parameters are:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Parameter</p></th>
@@ -192,33 +241,33 @@ arbitrage, optimize a planning horizon or coordinate communities.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_target_soc</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_normal_charge_rate</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
-<td><p>EV charging target/cap, as a SOC ratio.</p></td>
+<td><p>EV charge command while below the target, as a fraction of maximum charger power.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_follow_required_soc</span></code></p></td>
-<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
-<td><p>With the default, charge towards full SOC rather than a lower requested departure target.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_service_margin_rate</span></code></p></td>
-<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.02</span></code></p></td>
-<td><p>Compatibility spelling for the fixed legacy default; target scheduling uses an RBC.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_service_floor_rate</span></code></p></td>
-<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></td>
-<td><p>Compatibility spelling for the fixed legacy default; equipment minimum power still applies.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">storage_min_soc</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">storage_min_soc</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.20</span></code></p></td>
-<td><p>Stop requesting discharge below this SOC threshold.</p></td>
+<td><p>Stop requesting battery discharge below this SOC.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">storage_max_soc</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">storage_max_soc</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.90</span></code></p></td>
-<td><p>Stop requesting charge above this SOC threshold.</p></td>
+<td><p>Stop requesting battery charge above this SOC.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">storage_deadband_kw</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">storage_charge_rate</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
+<td><p>Maximum battery charge command for PV surplus.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">storage_discharge_rate</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
+<td><p>Maximum battery discharge command for local import.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pv_surplus_threshold_kw</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
-<td><p>Ignore small net-load differences around zero.</p></td>
+<td><p>PV surplus that triggers battery charging.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">normal_storage_discharge_import_threshold_kw</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
+<td><p>Local import that triggers battery discharge.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_start_action</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
@@ -226,26 +275,71 @@ arbitrage, optimize a planning horizon or coordinate communities.</p>
 </tr>
 </tbody>
 </table>
-<p>The storage thresholds decide whether to request charge/discharge; they are
-not additional hard SOC constraints on the final timestep. Physical battery
-limits are applied by the simulator.</p>
+<p>The storage thresholds decide whether to request charge or discharge; they are
+not hard SOC constraints. Physical battery limits are applied by the simulator.</p>
 <p>See the <a class="reference external" href="../quickstart.html">first simulation</a> for a
-complete run using these defaults. A different operational policy can be
-created explicitly:</p>
+complete run using these defaults. A customized BAU is created explicitly:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">BusinessAsUsualAgent</span>
 
-<span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span>
-    <span class="n">env</span><span class="p">,</span>
-    <span class="n">ev_follow_required_soc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">storage_min_soc</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span>
-    <span class="n">storage_max_soc</span><span class="o">=</span><span class="mf">0.90</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">storage_min_soc</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span> <span class="n">storage_max_soc</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Label customized runs with their parameter values. The automatic comparison
 described below instantiates the native default BAU; it does not inherit
 parameters from a separate agent created by the user.</p>
 </section>
+</section>
+<section id="rule-based-baselines">
+<h2>Rule-based baselines<a class="headerlink" href="#rule-based-baselines" title="Link to this heading"></a></h2>
+<p>Three rule-based controllers give progressively better-informed references
+between BAU and a learned controller. Run them on the same members, files,
+windows, seeds and market conditions as the candidate.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Agent</p></th>
+<th class="head"><p>Policy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code></p></td>
+<td><p>Uses the current price and service urgency for EVs and flexible appliances. EVs receive the minimum charge that meets their departure target, raised when the price is cheap. Appliances start when urgent or cheap. The battery performs self-consumption.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code></p></td>
+<td><p>Uses price forecasts and the forecast local PV surplus to schedule EV charging and appliance starts. The battery combines self-consumption, price arbitrage and a service reserve. It uses only building-local and public observations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code></p></td>
+<td><p>Adds energy shareable between community members. When the community market is enabled, the batteries can support expensive periods once community import reaches <code class="docutils literal notranslate"><span class="pre">community_import_threshold_kw</span></code> (15 kW by default). This value triggers an action; the observed peak can exceed it. Without a community market it shares no energy and follows Smart’s economic rules, but, unlike Smart, it is not restricted to building-local observations.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Smart and Community use the entity observation bundles when the schema enables
+them: <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> for measured import and export,
+<code class="docutils literal notranslate"><span class="pre">entity_forecasts_existing</span></code> and <code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code> for price and PV
+forecasts, and <code class="docutils literal notranslate"><span class="pre">entity_community_operational</span></code> for community import and surplus.
+The simulator leaves them off unless the schema turns them on; some bundled
+datasets do (for example <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code> and the
+dynamic-topology demo), others do not (for example
+<code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo</span></code>). Without the community bundle, Community cannot
+observe community import or surplus; without the forecast bundles, Smart and
+Community fall back to the current price and PV.
+Enable them in the schema, for example
+<code class="docutils literal notranslate"><span class="pre">&quot;observation_bundles&quot;:</span> <span class="pre">{&quot;entity_community_operational&quot;:</span> <span class="pre">true}</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code> compares the current price with fixed thresholds,
+<code class="docutils literal notranslate"><span class="pre">basic_cheap_price_eur_kwh=0.0765</span></code> and <code class="docutils literal notranslate"><span class="pre">basic_expensive_price_eur_kwh=0.1078</span></code>.
+They are the terciles of the 2023 Portuguese day-ahead price used to calibrate
+the policy. For another tariff, set both thresholds in the dataset’s price unit,
+or use <code class="docutils literal notranslate"><span class="pre">basic_price_policy='forecast_relative'</span></code> to compare the current price
+with the price forecast:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">RBCBasicPolicy</span><span class="p">,</span> <span class="n">RBCCommunityPolicy</span>
+
+<span class="n">basic</span> <span class="o">=</span> <span class="n">RBCBasicPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">basic_cheap_price_eur_kwh</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span> <span class="n">basic_expensive_price_eur_kwh</span><span class="o">=</span><span class="mf">0.35</span><span class="p">)</span>
+<span class="n">community</span> <span class="o">=</span> <span class="n">RBCCommunityPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">community_import_threshold_kw</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These policies are ported from the Soft-CPS Algorithms baselines (commit
+<code class="docutils literal notranslate"><span class="pre">725a72a</span></code>). With the same defaults and observations they request the same
+actions at every step. <code class="docutils literal notranslate"><span class="pre">agent.comparison_identity()</span></code> records the class, the
+definition version and the resolved parameters for experiment manifests.</p>
 <section id="automatic-bau-evaluation">
 <h3>Automatic BAU evaluation<a class="headerlink" href="#automatic-bau-evaluation" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">env.evaluate_v2()</span></code> runs or reuses a separate BAU simulation up to the current
@@ -331,11 +425,11 @@ BAU. The <code class="docutils literal notranslate"><span class="pre">business_a
 their simulator-defined meaning.</p>
 <p>Read <a class="reference internal" href="scorecard.html"><span class="std std-doc">the scorecard</span></a> for matched-controller comparisons and
 <a class="reference external" href="../ui.html">the UI guide</a> for the visual workflow.</p>
-<p>From 3.1, BAU uses <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v1</span></code>. Explicit departure-target scheduling
-settings belong to <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code> or its variants; configure those instead of BAU.
-The public BAU parameter names and positional signature remain available, with
-the fixed EV defaults shown above. Historical BAU results may differ after corrected
-charging and shared electrical limits; compare experiments with matching versions.</p>
+<p>From 3.4.0, the BAU is <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v2</span></code> by default: it still charges
+EVs to 100%, now decided from the entity observations like the other baselines.
+<code class="docutils literal notranslate"><span class="pre">immediate-user-target-v1</span></code> charges only to the requested departure SOC. BAU
+references computed with earlier versions are not comparable with 3.4.0
+results; rerun both the controller and its reference.</p>
 </section>
 </section>
 

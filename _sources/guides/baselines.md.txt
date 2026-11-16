@@ -8,59 +8,131 @@ reference for demand-response settlement. They answer different questions.
 ## Business as usual: the operational reference
 
 `BusinessAsUsualAgent` represents day-to-day equipment operation without
-learning or price optimization. It runs the configured community, including
-its demand, generation, devices, schedules and electrical constraints.
+learning, forecasts or price optimization. It runs the configured community,
+including its demand, generation, devices, schedules and electrical constraints.
 It is not a scenario with all equipment switched off.
 
 | Equipment or service | BAU behaviour |
 |---|---|
-| EVs | Requests maximum charging power immediately while connected, until 100% SOC. It ignores departure targets, deadlines, prices and solar forecasts, and never requests V2G. Electrical limits share available power proportionally; equal requests receive equal shares. |
-| Stationary batteries | Charges from PV surplus and discharges to serve local demand, including prospective EV and appliance demand. SOC thresholds and a power deadband control when this rule acts. |
+| EVs | Requests maximum charging power as soon as an EV is connected, until 100% SOC by default, or until the user's requested departure SOC (see below). Ignores deadlines, prices and solar forecasts and never requests V2G. Electrical limits share the available power proportionally between simultaneous requests. |
+| Stationary batteries | Charges from local PV surplus and discharges to serve local import (self-consumption). EV charging is considered first, so the battery does not discharge into an EV that is already full. |
 | Flexible appliances | Requests the next pending cycle at its first feasible start opportunity. |
-| Electrical connection | Scales EV and battery requests against configured total and per-phase import/export limits. Equipment and simulator constraints still determine the applied energy. |
+| Electrical connection | The simulator applies the configured total and per-phase import/export limits; equipment and simulator constraints determine the applied energy. |
 | Local sharing | The scenario's settlement rules value the resulting trajectory. BAU does not optimize the allocation or local-market price. |
 | Demand response | Runs under the scenario, but has no policy that optimizes an activation target, payment or penalty. |
 | Other active actions | Requests zero, clipped to the action bounds. This is not a dedicated HVAC, thermal-storage or escalator policy; the effect of zero follows each device's action contract. |
 
-The controller uses current equipment state and schedule information from the
-environment. It does not train a model, forecast prices, perform tariff
-arbitrage, optimize a planning horizon or coordinate communities.
+### Choosing the BAU charging target
+
+`BusinessAsUsualAgent` has two EV charging targets:
+
+| `ev_charge_target` | Definition | EV behaviour |
+|---|---|---|
+| `'full'` (default) | `immediate-full-charge-v2` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. |
+| `'requested'` | `immediate-user-target-v1` | Charges up to the user's requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger's minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC. |
+
+Everything else is the same. Select the BAU used as the KPI reference by
+`evaluate_v2()` with the environment setting
+`business_as_usual_ev_charge_target`, as a constructor argument or a schema key:
+
+```python
+env = CityLearnEnv(schema, business_as_usual_ev_charge_target='requested')
+agent = BusinessAsUsualAgent(env, ev_charge_target='requested')
+```
+
+The exported metadata records the selected definition. Compare results only
+against references with the same definition.
+
+All baselines in `citylearn.agents.baseline` read the same named, unnormalized
+entity observations (current state, schedules and the simulator's published
+forecasts). They work with the flat and the entity interface and return flat
+action vectors in `env.action_names` order.
+
+### Known limits
+
+The baselines decide from observations, so the battery reacts to the last
+settled step rather than reading the current step's load and PV from the
+simulator, as the 3.1–3.3 BAU did. Without the `entity_core_electrical` bundle
+the rules also do not see the power an EV can still accept, and reserve the
+charger's nominal power: near the end of a full charge the battery can then
+discharge more than the EV takes. Enabling that bundle in the schema gives the
+rules the accepted power.
 
 ### Default parameters
 
+Keyword arguments override the policy hyperparameters. Unknown names raise a
+`ValueError`. The main BAU parameters are:
+
 | Parameter | Default | Meaning |
 |---|---:|---|
-| `ev_target_soc` | `1.0` | EV charging target/cap, as a SOC ratio. |
-| `ev_follow_required_soc` | `False` | With the default, charge towards full SOC rather than a lower requested departure target. |
-| `ev_service_margin_rate` | `0.02` | Compatibility spelling for the fixed legacy default; target scheduling uses an RBC. |
-| `ev_service_floor_rate` | `0.0` | Compatibility spelling for the fixed legacy default; equipment minimum power still applies. |
-| `storage_min_soc` | `0.20` | Stop requesting discharge below this SOC threshold. |
-| `storage_max_soc` | `0.90` | Stop requesting charge above this SOC threshold. |
-| `storage_deadband_kw` | `0.05` | Ignore small net-load differences around zero. |
+| `ev_normal_charge_rate` | `1.0` | EV charge command while below the target, as a fraction of maximum charger power. |
+| `storage_min_soc` | `0.20` | Stop requesting battery discharge below this SOC. |
+| `storage_max_soc` | `0.90` | Stop requesting battery charge above this SOC. |
+| `storage_charge_rate` | `1.0` | Maximum battery charge command for PV surplus. |
+| `storage_discharge_rate` | `1.0` | Maximum battery discharge command for local import. |
+| `pv_surplus_threshold_kw` | `0.05` | PV surplus that triggers battery charging. |
+| `normal_storage_discharge_import_threshold_kw` | `0.05` | Local import that triggers battery discharge. |
 | `deferrable_start_action` | `1.0` | Start command for a ready flexible appliance. |
 
-The storage thresholds decide whether to request charge/discharge; they are
-not additional hard SOC constraints on the final timestep. Physical battery
-limits are applied by the simulator.
+The storage thresholds decide whether to request charge or discharge; they are
+not hard SOC constraints. Physical battery limits are applied by the simulator.
 
 See the [first simulation](https://www.citylearn.net/quickstart.html) for a
-complete run using these defaults. A different operational policy can be
-created explicitly:
+complete run using these defaults. A customized BAU is created explicitly:
 
 ```python
 from citylearn.agents.baseline import BusinessAsUsualAgent
 
-agent = BusinessAsUsualAgent(
-    env,
-    ev_follow_required_soc=True,
-    storage_min_soc=0.20,
-    storage_max_soc=0.90,
-)
+agent = BusinessAsUsualAgent(env, storage_min_soc=0.10, storage_max_soc=0.95)
 ```
 
 Label customized runs with their parameter values. The automatic comparison
 described below instantiates the native default BAU; it does not inherit
 parameters from a separate agent created by the user.
+
+## Rule-based baselines
+
+Three rule-based controllers give progressively better-informed references
+between BAU and a learned controller. Run them on the same members, files,
+windows, seeds and market conditions as the candidate.
+
+| Agent | Policy |
+|---|---|
+| `RBCBasicPolicy` | Uses the current price and service urgency for EVs and flexible appliances. EVs receive the minimum charge that meets their departure target, raised when the price is cheap. Appliances start when urgent or cheap. The battery performs self-consumption. |
+| `RBCSmartPolicy` | Uses price forecasts and the forecast local PV surplus to schedule EV charging and appliance starts. The battery combines self-consumption, price arbitrage and a service reserve. It uses only building-local and public observations. |
+| `RBCCommunityPolicy` | Adds energy shareable between community members. When the community market is enabled, the batteries can support expensive periods once community import reaches `community_import_threshold_kw` (15 kW by default). This value triggers an action; the observed peak can exceed it. Without a community market it shares no energy and follows Smart's economic rules, but, unlike Smart, it is not restricted to building-local observations. |
+
+Smart and Community use the entity observation bundles when the schema enables
+them: `entity_core_electrical` for measured import and export,
+`entity_forecasts_existing` and `entity_forecasts_derived` for price and PV
+forecasts, and `entity_community_operational` for community import and surplus.
+The simulator leaves them off unless the schema turns them on; some bundled
+datasets do (for example `citylearn_challenge_2022_phase_all_plus_evs` and the
+dynamic-topology demo), others do not (for example
+`citylearn_three_phase_electrical_service_demo`). Without the community bundle, Community cannot
+observe community import or surplus; without the forecast bundles, Smart and
+Community fall back to the current price and PV.
+Enable them in the schema, for example
+`"observation_bundles": {"entity_community_operational": true}`.
+
+`RBCBasicPolicy` compares the current price with fixed thresholds,
+`basic_cheap_price_eur_kwh=0.0765` and `basic_expensive_price_eur_kwh=0.1078`.
+They are the terciles of the 2023 Portuguese day-ahead price used to calibrate
+the policy. For another tariff, set both thresholds in the dataset's price unit,
+or use `basic_price_policy='forecast_relative'` to compare the current price
+with the price forecast:
+
+```python
+from citylearn.agents.baseline import RBCBasicPolicy, RBCCommunityPolicy
+
+basic = RBCBasicPolicy(env, basic_cheap_price_eur_kwh=0.20, basic_expensive_price_eur_kwh=0.35)
+community = RBCCommunityPolicy(env, community_import_threshold_kw=10.0)
+```
+
+These policies are ported from the Soft-CPS Algorithms baselines (commit
+`725a72a`). With the same defaults and observations they request the same
+actions at every step. `agent.comparison_identity()` records the class, the
+definition version and the resolved parameters for experiment manifests.
 
 ### Automatic BAU evaluation
 
@@ -157,8 +229,8 @@ their simulator-defined meaning.
 Read [the scorecard](scorecard.md) for matched-controller comparisons and
 [the UI guide](https://www.citylearn.net/ui.html) for the visual workflow.
 
-From 3.1, BAU uses `immediate-full-charge-v1`. Explicit departure-target scheduling
-settings belong to `RBCBasicPolicy` or its variants; configure those instead of BAU.
-The public BAU parameter names and positional signature remain available, with
-the fixed EV defaults shown above. Historical BAU results may differ after corrected
-charging and shared electrical limits; compare experiments with matching versions.
+From 3.4.0, the BAU is `immediate-full-charge-v2` by default: it still charges
+EVs to 100%, now decided from the entity observations like the other baselines.
+`immediate-user-target-v1` charges only to the requested departure SOC. BAU
+references computed with earlier versions are not comparable with 3.4.0
+results; rerun both the controller and its reference.

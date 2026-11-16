@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.internal.entity_observations &mdash; CityLearn 3.3.1 documentation</title>
+  <title>citylearn.internal.entity_observations &mdash; CityLearn 3.4.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../../../_static/documentation_options.js?v=b0e360d0"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -238,6 +238,9 @@
 
         <span class="k">if</span> <span class="n">core_bundle_enabled</span> <span class="ow">and</span> <span class="n">electrical_metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_feature_cols</span><span class="p">,</span> <span class="n">electrical_metrics</span><span class="p">)</span>
+
+        <span class="c1"># A quantity without a limit is unlimited, not 0 kW of headroom.</span>
+        <span class="n">entity</span><span class="o">.</span><span class="n">_fill_obs_row_sparse</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_building_feature_cols</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">_unlimited_headroom_values</span><span class="p">(</span><span class="n">building</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">community_bundle_enabled</span> <span class="ow">and</span> <span class="n">electrical_metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">building_electrical_metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">electrical_metrics</span><span class="p">)</span>

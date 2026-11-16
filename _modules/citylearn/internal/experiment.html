@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.internal.experiment &mdash; CityLearn 3.3.1 documentation</title>
+  <title>citylearn.internal.experiment &mdash; CityLearn 3.4.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../../../_static/documentation_options.js?v=b0e360d0"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -189,7 +189,8 @@
                           <span class="k">if</span> <span class="n">provenance</span><span class="o">.</span><span class="n">enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">source_destinations</span> <span class="o">=</span> <span class="n">provenance</span><span class="o">.</span><span class="n">source_destinations</span><span class="p">()</span> <span class="k">if</span> <span class="n">provenance</span><span class="o">.</span><span class="n">enabled</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">simulator_version</span><span class="o">=</span><span class="n">__version__</span><span class="p">,</span> <span class="n">git_commit</span><span class="o">=</span><span class="n">revision</span><span class="p">,</span> <span class="n">tracked_worktree_dirty</span><span class="o">=</span><span class="n">dirty</span><span class="p">,</span>
-                <span class="n">business_as_usual_definition</span><span class="o">=</span><span class="n">BusinessAsUsualAgent</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span><span class="p">,</span>
+                <span class="n">business_as_usual_definition</span><span class="o">=</span><span class="n">BusinessAsUsualAgent</span><span class="o">.</span><span class="n">definition</span><span class="p">(</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'business_as_usual_ev_charge_target'</span><span class="p">,</span> <span class="s1">'full'</span><span class="p">))[</span><span class="mi">1</span><span class="p">],</span>
                 <span class="n">business_as_usual_reference</span><span class="o">=</span><span class="n">native_reference</span><span class="p">(</span><span class="n">env</span><span class="p">),</span>
                 <span class="n">controller_identity</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_controller_identity'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
                 <span class="n">comparison_context</span><span class="o">=</span><span class="n">context</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">files</span><span class="p">),</span> <span class="n">final_inventory</span><span class="o">=</span><span class="n">inventory</span><span class="p">(</span><span class="n">env</span><span class="p">),</span>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.citylearn &mdash; CityLearn 3.3.1 documentation</title>
+  <title>citylearn.citylearn &mdash; CityLearn 3.4.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../../_static/documentation_options.js?v=b0e360d0"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -281,6 +281,9 @@
 <span class="sd">        Symmetric SOC target accuracy tolerance used by EV departure within-tolerance KPIs. Defaults to ``0.05``.</span>
 <span class="sd">    ev_departure_service_tolerance: float, optional</span>
 <span class="sd">        Lower SOC service tolerance used by EV departure minimum-acceptable KPIs. Defaults to ``0.05``.</span>
+<span class="sd">    business_as_usual_ev_charge_target: str, optional</span>
+<span class="sd">        EV charging of the native BAU reference built by ``evaluate_v2()``: ``'full'`` charges to 100%,</span>
+<span class="sd">        ``'requested'`` to the user's requested departure SOC. Defaults to the schema value, else ``'full'``.</span>
 <span class="sd">    energy_provenance: bool, optional</span>
 <span class="sd">        Whether to keep the per-step electricity provenance ledger (``*_energy_provenance_*`` KPIs and</span>
 <span class="sd">        provenance audits). Defaults to ``True``. Disabling it does not change any simulated quantity and</span>
@@ -324,6 +327,7 @@
         <span class="n">metrics_log_interval</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'metrics_log_interval'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">ev_departure_within_tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ev_departure_within_tolerance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">ev_departure_service_tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ev_departure_service_tolerance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">business_as_usual_ev_charge_target</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'business_as_usual_ev_charge_target'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">kw_render_mode</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render_mode'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">requested_render_mode</span> <span class="o">=</span> <span class="n">render_mode</span> <span class="k">if</span> <span class="n">kw_render_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">kw_render_mode</span>
         <span class="n">requested_render_mode</span> <span class="o">=</span> <span class="s1">'none'</span> <span class="k">if</span> <span class="n">requested_render_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">requested_render_mode</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
@@ -412,6 +416,11 @@
             <span class="k">if</span> <span class="n">ev_departure_service_tolerance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ev_departure_service_tolerance</span><span class="p">,</span>
             <span class="n">default</span><span class="o">=</span><span class="n">CityLearnKPIService</span><span class="o">.</span><span class="n">EV_DEPARTURE_SERVICE_TOLERANCE_DEFAULT</span><span class="p">,</span>
             <span class="n">path</span><span class="o">=</span><span class="s1">'ev_departure_service_tolerance'</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_business_as_usual_ev_charge_target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">business_as_usual_ev_charge_target</span> <span class="o">=</span> <span class="n">validate_business_as_usual_ev_charge_target</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'business_as_usual_ev_charge_target'</span><span class="p">,</span> <span class="s1">'full'</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">business_as_usual_ev_charge_target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">business_as_usual_ev_charge_target</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache_time_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
@@ -1483,6 +1492,7 @@
             <span class="s1">'temporal_reproducibility'</span><span class="p">:</span> <span class="n">axis_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
             <span class="s1">'ev_departure_within_tolerance'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_departure_within_tolerance</span><span class="p">,</span>
             <span class="s1">'ev_departure_service_tolerance'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_departure_service_tolerance</span><span class="p">,</span>
+            <span class="s1">'business_as_usual_ev_charge_target'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">business_as_usual_ev_charge_target</span><span class="p">,</span>
             <span class="s1">'reward_function'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_function</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
             <span class="s1">'central_agent'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span>
             <span class="s1">'shared_observations'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_observations</span><span class="p">,</span>

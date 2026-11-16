@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.internal.baseline &mdash; CityLearn 3.3.1 documentation</title>
+  <title>citylearn.internal.baseline &mdash; CityLearn 3.4.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -17,7 +17,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../../../_static/documentation_options.js?v=b0e360d0"></script>
       <script src="../../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -146,7 +146,25 @@
     <span class="n">env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span>
     <span class="n">kpis_v2</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
     <span class="n">episode</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span></div>
+    <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">ev_charge_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'full'</span></div>
+
+
+
+<span class="c1"># EV charging targets of the native BAU, kept here so the environment can</span>
+<span class="c1"># validate its setting without importing the agents.</span>
+<span class="n">BUSINESS_AS_USUAL_EV_CHARGE_TARGETS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'full'</span><span class="p">,</span> <span class="s1">'requested'</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="validate_business_as_usual_ev_charge_target">
+<a class="viewcode-back" href="../../../api/citylearn.internal.baseline.html#citylearn.internal.baseline.validate_business_as_usual_ev_charge_target">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_business_as_usual_ev_charge_target</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BUSINESS_AS_USUAL_EV_CHARGE_TARGETS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"ev_charge_target must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">BUSINESS_AS_USUAL_EV_CHARGE_TARGETS</span><span class="p">)</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span></div>
 
 
 
@@ -176,7 +194,8 @@
             <span class="p">{},</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">force</span> <span class="ow">and</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
+        <span class="n">ev_charge_target</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'business_as_usual_ev_charge_target'</span><span class="p">,</span> <span class="s1">'full'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">force</span> <span class="ow">and</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">cache</span> <span class="ow">and</span> <span class="n">cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span><span class="o">.</span><span class="n">ev_charge_target</span> <span class="o">==</span> <span class="n">ev_charge_target</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span>
 
         <span class="c1"># Keep only the latest result. Within an episode the time step only moves forward and reset</span>
@@ -191,7 +210,7 @@
             <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
         <span class="n">baseline_env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_sidecar_env</span><span class="p">()</span>
         <span class="n">baseline_env</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">random_seed</span>
-        <span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">)</span>
+        <span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">,</span> <span class="n">ev_charge_target</span><span class="o">=</span><span class="n">ev_charge_target</span><span class="p">)</span>
         <span class="n">baseline_env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="c1"># Pair the away-EV stochastic stream with the source episode, including</span>
         <span class="c1"># repeated resets; a freshly constructed sidecar has a different episode index.</span>
@@ -224,12 +243,11 @@
                 <span class="s1">'from the schema, so it cannot follow devices changed after loading; evaluate without the native reference '</span>
                 <span class="s1">'(include_business_as_usual=False) in that case.'</span>
             <span class="p">)</span>
+        <span class="n">identity</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">comparison_identity</span><span class="p">()</span>
         <span class="n">baseline_env</span><span class="o">.</span><span class="n">_native_reference_metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
             <span class="n">implementation</span><span class="o">=</span><span class="s1">'citylearn.agents.baseline.BusinessAsUsualAgent'</span><span class="p">,</span> <span class="n">simulator_version</span><span class="o">=</span><span class="n">__version__</span><span class="p">,</span>
-            <span class="n">definition_version</span><span class="o">=</span><span class="n">agent</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span><span class="p">,</span> <span class="n">observation_access</span><span class="o">=</span><span class="s1">'privileged_simulator_state'</span><span class="p">,</span>
-            <span class="n">resolved_parameters</span><span class="o">=</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span>
-                <span class="s1">'ev_target_soc'</span><span class="p">,</span> <span class="s1">'ev_follow_required_soc'</span><span class="p">,</span> <span class="s1">'ev_service_margin_rate'</span><span class="p">,</span> <span class="s1">'ev_service_floor_rate'</span><span class="p">,</span>
-                <span class="s1">'storage_min_soc'</span><span class="p">,</span> <span class="s1">'storage_max_soc'</span><span class="p">,</span> <span class="s1">'storage_deadband_kw'</span><span class="p">,</span> <span class="s1">'deferrable_start_action'</span><span class="p">)},</span>
+            <span class="n">definition_version</span><span class="o">=</span><span class="n">agent</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span><span class="p">,</span> <span class="n">observation_access</span><span class="o">=</span><span class="n">identity</span><span class="p">[</span><span class="s1">'observation_access'</span><span class="p">],</span>
+            <span class="n">resolved_parameters</span><span class="o">=</span><span class="n">identity</span><span class="p">[</span><span class="s1">'parameters'</span><span class="p">],</span>
         <span class="p">)</span>
 
         <span class="k">while</span> <span class="nb">int</span><span class="p">(</span><span class="n">baseline_env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">target_time_step</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">baseline_env</span><span class="o">.</span><span class="n">terminated</span> <span class="ow">or</span> <span class="n">baseline_env</span><span class="o">.</span><span class="n">truncated</span><span class="p">):</span>
@@ -242,6 +260,7 @@
             <span class="n">kpis_v2</span><span class="o">=</span><span class="n">kpis_v2</span><span class="p">,</span>
             <span class="n">episode</span><span class="o">=</span><span class="n">episode</span><span class="p">,</span>
             <span class="n">time_step</span><span class="o">=</span><span class="n">target_time_step</span><span class="p">,</span>
+            <span class="n">ev_charge_target</span><span class="o">=</span><span class="n">ev_charge_target</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">env</span><span class="o">.</span><span class="n">_business_as_usual_baseline_cache</span> <span class="o">=</span> <span class="p">{</span><span class="n">cache_key</span><span class="p">:</span> <span class="n">result</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">result</span></div>

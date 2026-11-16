@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agents &mdash; CityLearn 3.3.1 documentation</title>
+  <title>Agents &mdash; CityLearn 3.4.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../_static/documentation_options.js?v=b0e360d0"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -153,7 +153,11 @@ the controller, not just the number of vectors.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent" title="citylearn.agents.baseline.BusinessAsUsualAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.agents.baseline.BusinessAsUsualAgent</span></code></a>: the operational
 reference described in <a class="reference internal" href="../guides/baselines.html"><span class="doc">Baselines</span></a>.</p></li>
-<li><p><a class="reference internal" href="../api/citylearn.agents.rbc.html#module-citylearn.agents.rbc" title="citylearn.agents.rbc"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.agents.rbc</span></code></a>: rule-based controllers.</p></li>
+<li><p><a class="reference internal" href="../api/citylearn.agents.baseline.html#citylearn.agents.baseline.RBCBasicPolicy" title="citylearn.agents.baseline.RBCBasicPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.agents.baseline.RBCBasicPolicy</span></code></a>,
+<a class="reference internal" href="../api/citylearn.agents.baseline.html#citylearn.agents.baseline.RBCSmartPolicy" title="citylearn.agents.baseline.RBCSmartPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code></a> and
+<a class="reference internal" href="../api/citylearn.agents.baseline.html#citylearn.agents.baseline.RBCCommunityPolicy" title="citylearn.agents.baseline.RBCCommunityPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code></a>: reference
+rule-based baselines with price, forecast and community information.</p></li>
+<li><p><a class="reference internal" href="../api/citylearn.agents.rbc.html#module-citylearn.agents.rbc" title="citylearn.agents.rbc"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.agents.rbc</span></code></a>: classic hour-based rule-based controllers.</p></li>
 <li><p><a class="reference internal" href="../api/citylearn.agents.q_learning.html#module-citylearn.agents.q_learning" title="citylearn.agents.q_learning"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.agents.q_learning</span></code></a>: tabular Q-learning.</p></li>
 <li><p><a class="reference internal" href="../api/citylearn.agents.sac.html#module-citylearn.agents.sac" title="citylearn.agents.sac"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.agents.sac</span></code></a>: Soft Actor-Critic.</p></li>
 <li><p><a class="reference internal" href="../api/citylearn.agents.marlisa.html#module-citylearn.agents.marlisa" title="citylearn.agents.marlisa"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.agents.marlisa</span></code></a>: coordinated multi-agent learning.</p></li>
@@ -161,7 +165,8 @@ reference described in <a class="reference internal" href="../guides/baselines.h
 </ul>
 <p>The classic RL agents/wrappers use flat spaces. Entity-mode controllers consume
 tables, masks and edges and must handle the active population and action
-contract. The native BAU accepts both interfaces through its flat action path.</p>
+contract. The native BAU and the reference baselines accept both interfaces
+through their flat action path.</p>
 </section>
 <section id="create-your-own">
 <h2>Create your own<a class="headerlink" href="#create-your-own" title="Link to this heading"></a></h2>

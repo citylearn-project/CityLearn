@@ -12,7 +12,11 @@ Controller choices
 
 * :py:class:`citylearn.agents.baseline.BusinessAsUsualAgent`: the operational
   reference described in :doc:`../guides/baselines`.
-* :py:mod:`citylearn.agents.rbc`: rule-based controllers.
+* :py:class:`citylearn.agents.baseline.RBCBasicPolicy`,
+  :py:class:`~citylearn.agents.baseline.RBCSmartPolicy` and
+  :py:class:`~citylearn.agents.baseline.RBCCommunityPolicy`: reference
+  rule-based baselines with price, forecast and community information.
+* :py:mod:`citylearn.agents.rbc`: classic hour-based rule-based controllers.
 * :py:mod:`citylearn.agents.q_learning`: tabular Q-learning.
 * :py:mod:`citylearn.agents.sac`: Soft Actor-Critic.
 * :py:mod:`citylearn.agents.marlisa`: coordinated multi-agent learning.
@@ -20,7 +24,8 @@ Controller choices
 
 The classic RL agents/wrappers use flat spaces. Entity-mode controllers consume
 tables, masks and edges and must handle the active population and action
-contract. The native BAU accepts both interfaces through its flat action path.
+contract. The native BAU and the reference baselines accept both interfaces
+through their flat action path.
 
 Create your own
 ***************

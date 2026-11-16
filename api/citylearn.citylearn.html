@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citylearn.citylearn module &mdash; CityLearn 3.3.1 documentation</title>
+  <title>citylearn.citylearn module &mdash; CityLearn 3.4.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=9ac01507"></script>
+      <script src="../_static/documentation_options.js?v=b0e360d0"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -212,6 +212,8 @@ If not provided, defaults to the effective rendering setting (enabled when rende
 <li><p><strong>export_only_final_episode</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether automatic exports should run only on the final planned episode. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><strong>ev_departure_within_tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Symmetric SOC target accuracy tolerance used by EV departure within-tolerance KPIs. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
 <li><p><strong>ev_departure_service_tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower SOC service tolerance used by EV departure minimum-acceptable KPIs. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
+<li><p><strong>business_as_usual_ev_charge_target</strong> (<em>str</em><em>, </em><em>optional</em>) – EV charging of the native BAU reference built by <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>: <code class="docutils literal notranslate"><span class="pre">'full'</span></code> charges to 100%,
+<code class="docutils literal notranslate"><span class="pre">'requested'</span></code> to the user’s requested departure SOC. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">'full'</span></code>.</p></li>
 <li><p><strong>energy_provenance</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to keep the per-step electricity provenance ledger (<code class="docutils literal notranslate"><span class="pre">*_energy_provenance_*</span></code> KPIs and
 provenance audits). Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>. Disabling it does not change any simulated quantity and
 makes <code class="docutils literal notranslate"><span class="pre">step()</span></code> substantially faster, e.g. for training runs that do not report provenance KPIs.</p></li>
