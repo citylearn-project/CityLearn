@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from citylearn.agents.baseline import NormalPolicy
+from citylearn.agents.baseline import BusinessAsUsualAgent
 from citylearn.citylearn import CityLearnEnv
 from test_independent_balances import scenario
 from test_robustness import _event
@@ -28,7 +28,7 @@ def completed_env(tmp_path, *, dynamic=False, robust=False):
     env = CityLearnEnv(schema, random_seed=19, offline=True, render_mode='none',
                        physics_invariant_checks=True, export_kpis_on_episode_end=False)
     obs, _ = env.reset(seed=19)
-    policy = NormalPolicy(env)
+    policy = BusinessAsUsualAgent(env)
     while not env.terminated:
         obs, *_ = env.step(policy.predict(obs, deterministic=True))
     return env

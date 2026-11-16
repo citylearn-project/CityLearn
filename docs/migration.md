@@ -46,6 +46,49 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Upgrade from 3.3 to 3.4.0
+
+No dataset, schema or export-file migration is required.
+
+- **BAU.** `BusinessAsUsualAgent` still charges EVs at once to 100% by default
+  (`immediate-full-charge-v2`), but it now decides from the entity observations,
+  with the battery and appliance rules of the Algorithms BAU. The native BAU
+  reference added by `evaluate_v2()` changes with it, so every
+  `business_as_usual`, `delta_to_business_as_usual` and
+  `ratio_to_business_as_usual` KPI can differ from 3.3. Rerun both the controller
+  and its reference; do not mix 3.3 and 3.4 BAU values. To charge only to the
+  user's requested departure SOC, set `business_as_usual_ev_charge_target='requested'`
+  on the environment (or in the schema) and use
+  `BusinessAsUsualAgent(env, ev_charge_target='requested')`.
+- **Unlimited headroom.** In the entity tables, a building without an electrical
+  service limit (or without a limit on a phase or direction) now publishes its
+  headroom features (`charging_*headroom_kw`, `building_*_headroom_kw`,
+  `*_phase_headroom_kw`) as 1,000,000 kW, the upper bound of their observation
+  space, instead of 0 kW. 0 kW read as "no capacity left". Models trained on 3.3
+  entity observations of such buildings saw 0 there; retrain or re-evaluate them.
+- **BAU parameters.** The 3.3 constructor arguments `ev_target_soc`,
+  `ev_follow_required_soc`, `ev_service_margin_rate`, `ev_service_floor_rate` and
+  `storage_deadband_kw` no longer exist; unknown keyword arguments raise
+  `ValueError`. `storage_min_soc`, `storage_max_soc` and `deferrable_start_action`
+  keep their names and defaults. See the [baselines guide](baselines.md#default-parameters).
+- **Removed names.** `NormalPolicy`, `NormalNoBatteryPolicy` and
+  `ServiceOnlyBaselineAgent` are removed; use `BusinessAsUsualAgent`.
+  `GridAwareBaselineAgent` and `CommunityAwareBaselineAgent` are removed; use
+  `RBCSmartPolicy` and `RBCCommunityPolicy`. Code importing these names must be
+  updated before upgrading to 3.4.0.
+- **Rule-based baselines.** `RBCBasicPolicy`, `RBCSmartPolicy` and
+  `RBCCommunityPolicy` are replaced by the Basic, Smart and Community baselines
+  validated in the Soft-CPS Algorithms repository. Their decisions, parameters and
+  results differ from 3.3. Pass parameters as keyword arguments, for example
+  `RBCCommunityPolicy(env, community_import_threshold_kw=10.0)`.
+- **Observations.** All baselines now decide from the named entity observations
+  rather than from simulator objects. Code that changes a building series or a
+  device after loading is seen by the baselines only through the observations
+  the simulator publishes for that step.
+- **Experiment identity.** `comparison_identity()` and the BAU reference
+  metadata report `observation_access='entity_observations'` and include the
+  definition version and resolved parameters.
+
 ## Upgrade from 3.3.0 to 3.3.1
 
 No dataset, schema or export-file migration is required. The native BAU

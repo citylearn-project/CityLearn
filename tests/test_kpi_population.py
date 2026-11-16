@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from pandas.testing import assert_frame_equal
 
-from citylearn.agents.baseline import NormalPolicy
+from citylearn.agents.baseline import BusinessAsUsualAgent
 from citylearn.internal.kpi import CityLearnKPIService
 from citylearn.internal.kpi_population import current_population, population_scope
 from citylearn.internal.topology import CityLearnTopologyService
@@ -154,7 +154,7 @@ def test_partial_horizons_remove_rejoin_reset_and_native_bau(tmp_path, monkeypat
     ])
     try:
         obs, _ = env.reset(seed=19)
-        policy = NormalPolicy(env)
+        policy = BusinessAsUsualAgent(env)
         for step in range(8):
             if step in [0, 2, 4, 7]:
                 cached = env.evaluate_v2(include_business_as_usual=False)

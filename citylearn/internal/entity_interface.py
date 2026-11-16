@@ -885,6 +885,17 @@ class CityLearnEntityInterfaceService:
         schema = getattr(self.env, "schema", {}) or {}
         raw = schema.get("derived_forecasts", {}) if isinstance(schema, Mapping) else {}
         raw = raw if isinstance(raw, Mapping) else {}
+        # Called for every building and step: reuse the validated result while
+        # the schema settings are unchanged.
+        key = repr(sorted(raw.items(), key=lambda item: str(item[0])))
+        cached = getattr(self, "_derived_forecast_config_cache", None)
+        if cached is not None and cached[0] == key:
+            return cached[1]
+        config = self._validated_derived_forecast_config(raw)
+        self._derived_forecast_config_cache = (key, config)
+        return config
+
+    def _validated_derived_forecast_config(self, raw: Mapping[str, Any]) -> Mapping[str, Any]:
         method = str(raw.get("load_pv_method", raw.get("method", "actual_future"))).strip().lower()
         if method not in {"actual_future", "daily_persistence"}:
             raise ValueError(
@@ -1149,6 +1160,40 @@ class CityLearnEntityInterfaceService:
                 continue
             forecasts[str(key)] = self._safe_scalar(value, 0.0)
         return forecasts
+
+    # Headroom of a quantity without a limit (no electrical service limit, or no
+    # limit on that phase/direction). The tables must stay finite, so "no limit"
+    # is the upper bound of the headroom observation space, never 0 kW.
+    UNLIMITED_HEADROOM_KW = 1.0e6
+
+    def _unlimited_headroom_values(self, building) -> Mapping[str, float]:
+        """Headroom features of ``building`` whose quantity has no limit."""
+        state = getattr(building, "_charging_constraints_state", {}) or {}
+        if not getattr(building, "_charging_constraints_enabled", False):
+            state = {}
+        unlimited = self.UNLIMITED_HEADROOM_KW
+        values: Dict[str, float] = {}
+        for key, names in (
+            ("building_headroom_kw", ("charging_building_headroom_kw", "building_import_headroom_kw")),
+            ("building_export_headroom_kw", ("charging_building_export_headroom_kw", "building_export_headroom_kw")),
+        ):
+            if not np.isfinite(self._safe_scalar(state.get(key), np.nan)):
+                values.update(dict.fromkeys(names, unlimited))
+        for key, direction, aggregate in (
+            ("phase_headroom_kw", "", "import_phase_headroom_kw"),
+            ("phase_export_headroom_kw", "_export", "export_phase_headroom_kw"),
+        ):
+            phases = state.get(key) or {}
+            finite = {
+                name for name, value in phases.items()
+                if value is not None and np.isfinite(self._safe_scalar(value, np.nan))
+            }
+            for phase in self._phase_names:
+                if phase not in finite:
+                    values[f"charging_phase_{phase}{direction}_headroom_kw"] = unlimited
+            if not finite:
+                values[aggregate] = unlimited
+        return values
 
     def _headroom_power_limit_for_connection(self, building, phase_connection: Optional[str], *, export: bool = False) -> float:
         state = getattr(building, "_charging_constraints_state", {}) or {}

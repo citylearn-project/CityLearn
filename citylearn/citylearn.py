@@ -150,6 +150,9 @@ class CityLearnEnv(Environment, Env):
         Symmetric SOC target accuracy tolerance used by EV departure within-tolerance KPIs. Defaults to ``0.05``.
     ev_departure_service_tolerance: float, optional
         Lower SOC service tolerance used by EV departure minimum-acceptable KPIs. Defaults to ``0.05``.
+    business_as_usual_ev_charge_target: str, optional
+        EV charging of the native BAU reference built by ``evaluate_v2()``: ``'full'`` charges to 100%,
+        ``'requested'`` to the user's requested departure SOC. Defaults to the schema value, else ``'full'``.
     energy_provenance: bool, optional
         Whether to keep the per-step electricity provenance ledger (``*_energy_provenance_*`` KPIs and
         provenance audits). Defaults to ``True``. Disabling it does not change any simulated quantity and
@@ -193,6 +196,7 @@ class CityLearnEnv(Environment, Env):
         metrics_log_interval = kwargs.pop('metrics_log_interval', None)
         ev_departure_within_tolerance = kwargs.pop('ev_departure_within_tolerance', None)
         ev_departure_service_tolerance = kwargs.pop('ev_departure_service_tolerance', None)
+        business_as_usual_ev_charge_target = kwargs.pop('business_as_usual_ev_charge_target', None)
         kw_render_mode = kwargs.pop('render_mode', None)
         requested_render_mode = render_mode if kw_render_mode is None else kw_render_mode
         requested_render_mode = 'none' if requested_render_mode is None else str(requested_render_mode).lower()
@@ -281,6 +285,11 @@ class CityLearnEnv(Environment, Env):
             if ev_departure_service_tolerance is None else ev_departure_service_tolerance,
             default=CityLearnKPIService.EV_DEPARTURE_SERVICE_TOLERANCE_DEFAULT,
             path='ev_departure_service_tolerance',
+        )
+        from citylearn.internal.baseline import validate_business_as_usual_ev_charge_target
+        self.business_as_usual_ev_charge_target = validate_business_as_usual_ev_charge_target(
+            self.schema.get('business_as_usual_ev_charge_target', 'full')
+            if business_as_usual_ev_charge_target is None else business_as_usual_ev_charge_target
         )
         self._observations_cache: List[List[float]] = None
         self._observations_cache_time_step: int = -1
@@ -1341,6 +1350,7 @@ class CityLearnEnv(Environment, Env):
             'temporal_reproducibility': axis_metadata(self),
             'ev_departure_within_tolerance': self.ev_departure_within_tolerance,
             'ev_departure_service_tolerance': self.ev_departure_service_tolerance,
+            'business_as_usual_ev_charge_target': self.business_as_usual_ev_charge_target,
             'reward_function': self.reward_function.__class__.__name__,
             'central_agent': self.central_agent,
             'shared_observations': self.shared_observations,

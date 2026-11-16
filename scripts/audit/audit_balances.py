@@ -63,9 +63,9 @@ def main():
         obs, _ = env.reset(seed=args.seed)
         report["members_initial"] = len(env.buildings)
         if args.policy == "normal":
-            from citylearn.agents.baseline import NormalPolicy
+            from citylearn.agents.baseline import BusinessAsUsualAgent
 
-            agent = NormalPolicy(env)
+            agent = BusinessAsUsualAgent(env)
         rng = np.random.default_rng(args.seed)
         with IndependentBalanceAudit(env) as auditor:
             while not (env.terminated or env.truncated):

@@ -2,7 +2,6 @@
 
 import ast
 import importlib.util
-import inspect
 import json
 from pathlib import Path
 import re
@@ -128,10 +127,12 @@ def test_documented_bau_defaults():
 
     content = (ROOT / "docs/baselines.md").read_text(encoding="utf-8")
     rows = re.findall(r"\| `([a-z_]+)` \| `([^`]+)` \|", content)
-    defaults = inspect.signature(BusinessAsUsualAgent).parameters
+    engine = BusinessAsUsualAgent.ENGINE_CLASS(
+        {"algorithm": {"hyperparameters": dict(BusinessAsUsualAgent.DEFAULT_HYPERPARAMETERS)}}
+    )
     assert len(rows) == 8
     for name, value in rows:
-        assert ast.literal_eval(value) == defaults[name].default
+        assert ast.literal_eval(value) == getattr(engine, name)
 
 
 def test_kpi_only_ui_export(tmp_path):

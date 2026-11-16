@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 import numpy as np
 from citylearn.citylearn import CityLearnEnv
-from citylearn.agents.baseline import NormalPolicy
+from citylearn.agents.baseline import BusinessAsUsualAgent
 from citylearn.internal.experiment import experiment_manifest
 
 DEFINITION_VERSION = 'long-run-audit-v1'
@@ -209,7 +209,7 @@ def run(args):
                       rolling_episode_split=False,random_episode_split=False)
         env=CityLearnEnv(schema,random_seed=args.seed,offline=True,render_mode='none',
                          physics_invariant_checks=True,export_kpis_on_episode_end=False)
-        obs,_=env.reset(seed=args.seed);policy=NormalPolicy(env)
+        obs,_=env.reset(seed=args.seed);policy=BusinessAsUsualAgent(env)
         identity=policy.comparison_identity();env.set_experiment_identity(**identity)
         report.update(controller=identity,load_and_reset_seconds=time.monotonic()-start_clock,
                       rss_after_reset_mib=rss_mib(),members_initial=len(env.buildings))

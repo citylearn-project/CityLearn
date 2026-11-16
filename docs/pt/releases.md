@@ -3,6 +3,33 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## v3.4.0 - 2026-11-16
+
+- **Dois BAU selecionáveis.** O `BusinessAsUsualAgent` carrega o EV assim que
+  chega, à potência máxima, até 100% por defeito. Com
+  `ev_charge_target='requested'` carrega só até ao SOC pedido pelo utilizador; a
+  última ordem fica limitada à energia em falta e, abaixo da potência mínima do
+  carregador, o EV fica ligeiramente abaixo do alvo em vez de o ultrapassar. O
+  `business_as_usual_ev_charge_target` (construtor ou schema) escolhe o BAU que o
+  `evaluate_v2()` usa como referência. Os controladores Basic,
+  Smart e Community anteriores foram removidos, assim como
+  os nomes `NormalPolicy`, `NormalNoBatteryPolicy`, `ServiceOnlyBaselineAgent`,
+  `GridAwareBaselineAgent` e `CommunityAwareBaselineAgent`.
+- **Controladores Basic, Smart e Community.** `RBCBasicPolicy`, `RBCSmartPolicy`
+  e `RBCCommunityPolicy` passam a ser os controladores validados no repositório
+  Algorithms da Soft-CPS. O Basic usa o preço atual e a urgência do serviço. O
+  Smart agenda EVs e aparelhos com previsões de preço e de excedente solar local
+  e combina autoconsumo, arbitragem e reserva na bateria. O Community acrescenta
+  a energia partilhável entre membros e, com mercado comunitário, usa as baterias
+  em períodos caros quando a importação comunitária atinge 15 kW.
+- **Margem sem limite deixa de ser 0 kW.** Nas tabelas de entidades, um edifício
+  sem limite de ligação publica a margem como 1 000 000 kW (o limite do espaço
+  de observação) em vez de 0 kW, que se lia como "sem capacidade" e impedia a
+  carga dos EVs nos controladores por regras.
+- Todos usam as observações da interface de entidades e funcionam com as
+  interfaces flat e entity, incluindo topologia dinâmica. Os KPIs relativos ao
+  BAU mudam; consultar o [guia de migração](../migration.md#upgrade-from-33-to-340).
+
 ## v3.3.1 - 2026-11-16
 
 - O `evaluate_v2()` com a referência BAU nativa deixou de falhar com

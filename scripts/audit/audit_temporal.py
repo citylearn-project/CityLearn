@@ -183,10 +183,10 @@ def replay(path, start, transitions, seed):
         for fresh, queries in [(False, False), (False, True), (True, True)]:
             if fresh:
                 env = make()
-            from citylearn.agents.baseline import NormalPolicy
+            from citylearn.agents.baseline import BusinessAsUsualAgent
 
             obs, _ = env.reset(seed=seed)
-            agent = NormalPolicy(env)
+            agent = BusinessAsUsualAgent(env)
             trace = []
             while not env.terminated:
                 actions = agent.predict(obs, deterministic=True)
@@ -215,7 +215,7 @@ def replay(path, start, transitions, seed):
             trace_sha256=traces[0],
             physics_invariant_checks=True,
             temporal_evidence=metadata,
-            policy="citylearn.agents.baseline.NormalPolicy",
+            policy="citylearn.agents.baseline.BusinessAsUsualAgent",
             queries_are_passive=True,
         )
     finally:

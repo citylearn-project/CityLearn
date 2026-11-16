@@ -8,6 +8,29 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## v3.4.0 - 2026-11-16
+
+### What's new
+
+- **Two selectable BAUs.** `BusinessAsUsualAgent` charges a connected EV at once and at full power, to 100% by default (`immediate-full-charge-v2`). With `ev_charge_target='requested'` (`immediate-user-target-v1`) it charges only up to the user's requested departure SOC; the last command is limited to the remaining energy gap, and below the charger minimum the EV stops slightly short of the target instead of overshooting it. `business_as_usual_ev_charge_target` (constructor or schema) selects which one `evaluate_v2()` uses as the KPI reference. The previous Basic, Smart and Community controllers and the names `NormalPolicy`, `NormalNoBatteryPolicy`, `ServiceOnlyBaselineAgent`, `GridAwareBaselineAgent` and `CommunityAwareBaselineAgent` are removed.
+- **Basic, Smart and Community baselines.** `RBCBasicPolicy`, `RBCSmartPolicy` and `RBCCommunityPolicy` are replaced by the baselines validated in the Soft-CPS Algorithms repository. Basic uses the current price and service urgency. Smart schedules EVs and appliances from price and local PV-surplus forecasts and combines battery self-consumption, arbitrage and reserve. Community adds shareable member energy and, with the community market enabled, battery support during expensive periods once community import reaches 15 kW.
+- **Unlimited headroom is no longer 0 kW.** In the entity tables, a building without an electrical service limit publishes its headroom as 1,000,000 kW (the observation bound) instead of 0 kW, which read as "no capacity left" and stopped rule-based EV charging.
+- **One observation contract.** All baselines decide from the named entity observations and run under the flat and the entity interface, including dynamic topology. Keyword arguments set any policy parameter; unknown names raise an error. Experiment manifests record the definition version and resolved parameters.
+
+BAU-relative KPIs change with the new reference. Rerun the controller and its reference together; see the [migration guide](migration.md#upgrade-from-33-to-340) and the [baselines guide](baselines.md).
+
+### Validation
+
+On the same observations, the CityLearn baselines request exactly the same actions as the Algorithms policies (commit `725a72a`) at every step, for both BAUs, Basic, Smart and Community, on three bundled datasets (EVs, three-phase limits with a community market, dynamic topology).
+
+On 30 days of `citylearn_challenge_2022_phase_all_plus_evs`, the default BAU delivers the same EV energy as the 3.3.1 BAU (7,512 kWh) and costs 4.8% more (2,723 € vs 2,598 €): its battery reacts to the last observed step instead of reading the current step from the simulator. The user-target BAU costs 2,290 € and delivers 4,797 kWh. Basic, Smart and Community meet the minimum acceptable SOC at every feasible departure.
+
+### Credits
+
+**Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)) developed and validated the baselines in the Soft-CPS Algorithms repository and ported them to CityLearn in [#189](https://github.com/citylearn-project/CityLearn/pull/189).
+
+[Full changelog](https://github.com/citylearn-project/CityLearn/compare/v3.3.1...v3.4.0)
+
 ## v3.3.1 - 2026-11-16
 
 ### Fixed

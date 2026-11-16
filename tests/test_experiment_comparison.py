@@ -40,8 +40,8 @@ def test_relocated_exports_pair_with_distinct_controller_identity(tmp_path):
     assert report['status']=='paired',report
     assert report['permitted_claim']=='controller_difference'
     assert report['baseline_reference']['evaluated']
-    assert report['baseline_reference']['definition_version']=='immediate-full-charge-v1'
-    assert report['baseline_reference']['resolved_parameters']['ev_target_soc']==1
+    assert report['baseline_reference']['definition_version']=='immediate-full-charge-v2'
+    assert report['baseline_reference']['resolved_parameters']['ev_normal_target_soc']==1
     assert report['final_inventory']['left'] is not None
     assert all(r['delta_right_minus_left'] in (None,0.) for r in report['kpis'])
     manifest=json.loads(a.with_suffix('.manifest.json').read_text())
@@ -138,7 +138,8 @@ def test_native_controller_export_records_actual_identity(tmp_path):
         identity=manifest['controller_identity']
         assert identity['implementation']=='citylearn.agents.baseline.BusinessAsUsualAgent'
         assert identity['parameters']['storage_min_soc']==.25
-        assert identity['observation_access']=='privileged_simulator_state'
+        assert identity['observation_access']=='entity_observations'
+        assert identity['parameters']['definition_version']=='immediate-full-charge-v2'
     finally:env.close()
 
 
