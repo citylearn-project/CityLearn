@@ -56,13 +56,15 @@ No dataset, schema or export-file migration is required.
   added by `evaluate_v2()` changes with it, so every `business_as_usual`,
   `delta_to_business_as_usual` and `ratio_to_business_as_usual` KPI can differ
   from 3.3. Rerun both the controller and its reference; do not mix 3.3 and 3.4
-  BAU values. The previous behaviour is available as
-  `FullChargeBusinessAsUsualAgent` (alias `NormalPolicy`).
+  BAU values. `NormalPolicy` remains another name of the BAU.
 - **BAU parameters.** The 3.3 constructor arguments `ev_target_soc`,
   `ev_follow_required_soc`, `ev_service_margin_rate`, `ev_service_floor_rate` and
   `storage_deadband_kw` no longer exist; unknown keyword arguments raise
   `ValueError`. `storage_min_soc`, `storage_max_soc` and `deferrable_start_action`
   keep their names and defaults. See the [baselines guide](baselines.md#default-parameters).
+- **Removed classes.** `NormalNoBatteryPolicy`, `ServiceOnlyBaselineAgent`,
+  `GridAwareBaselineAgent` and `CommunityAwareBaselineAgent` are removed. Use
+  `BusinessAsUsualAgent`, `RBCSmartPolicy` and `RBCCommunityPolicy`.
 - **Rule-based baselines.** `RBCBasicPolicy`, `RBCSmartPolicy` and
   `RBCCommunityPolicy` are replaced by the Basic, Smart and Community baselines
   validated in the Soft-CPS Algorithms repository. Their decisions, parameters and

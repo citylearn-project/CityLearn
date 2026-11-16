@@ -2053,28 +2053,6 @@ class NormalTargetPolicy(NormalPolicy):
         return clipped if minimum_rate <= clipped <= energy_cap_rate else 0.0
 
 
-class NormalNoBatteryPolicy(NormalPolicy):
-    """Day-to-day behaviour without home battery control."""
-
-    def __init__(self, config: Dict[str, Any]) -> None:
-        super().__init__(config)
-        self.control_storage = False
-
-    def _policy_type(self) -> str:
-        return "normal_no_battery_policy"
-
-    def _compute_storage_action(
-        self,
-        agent_idx: int,
-        obs: np.ndarray,
-        obs_map: Dict[str, int],
-        action_name: str,
-        bounds: Sequence[float],
-    ) -> float:
-        del agent_idx, obs, obs_map, action_name
-        return float(np.clip(0.0, bounds[0], bounds[1]))
-
-
 class RBCBasicPolicy(_OperationalBaselinePolicy):
     """Current-price/service scheduling with reactive battery self-consumption."""
 

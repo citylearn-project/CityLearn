@@ -13,8 +13,6 @@ Agent                                       Behaviour
                                             power, up to the user's requested departure SOC; starts
                                             appliances at the first admissible step; the home battery
                                             stores PV surplus and serves local import.
-:class:`FullChargeBusinessAsUsualAgent`     Same as BAU but charges every EV to 100%.
-:class:`NormalNoBatteryPolicy`              Full-charge BAU without home battery control.
 :class:`RBCBasicPolicy`                     Current price and service urgency for EVs and
                                             appliances; battery self-consumption.
 :class:`RBCSmartPolicy`                     Price and local PV-surplus forecasts schedule EVs and
@@ -203,24 +201,6 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
     DEFINITION_VERSION = 'immediate-user-target-v1'
 
 
-class FullChargeBusinessAsUsualAgent(_RuleBaselineAgent):
-    """BAU variant that charges every connected EV immediately to 100%.
-
-    Compared with :class:`BusinessAsUsualAgent`, the difference includes the
-    extra energy delivered to the EVs above their requested departure SOC.
-    """
-
-    ENGINE_CLASS = engines.NormalPolicy
-    DEFINITION_VERSION = 'immediate-full-charge-v2'
-
-
-class NormalNoBatteryPolicy(_RuleBaselineAgent):
-    """Full-charge BAU that leaves the home battery idle."""
-
-    ENGINE_CLASS = engines.NormalNoBatteryPolicy
-    DEFINITION_VERSION = 'immediate-full-charge-no-battery-v2'
-
-
 class RBCBasicPolicy(_RuleBaselineAgent):
     """Current-price and service-urgency scheduling with battery self-consumption.
 
@@ -273,24 +253,17 @@ class ZeroActionBaselineAgent(Agent):
         return actions
 
 
-NormalPolicy = FullChargeBusinessAsUsualAgent
+# Other names of the BAU: CityLearn's historical NormalPolicy and the Algorithms NormalTargetPolicy.
+NormalPolicy = BusinessAsUsualAgent
 NormalTargetPolicy = BusinessAsUsualAgent
-ServiceOnlyBaselineAgent = NormalNoBatteryPolicy
-GridAwareBaselineAgent = RBCSmartPolicy
-CommunityAwareBaselineAgent = RBCCommunityPolicy
 
 
 __all__ = [
     'BusinessAsUsualAgent',
-    'FullChargeBusinessAsUsualAgent',
     'NormalPolicy',
     'NormalTargetPolicy',
-    'NormalNoBatteryPolicy',
-    'ServiceOnlyBaselineAgent',
     'RBCBasicPolicy',
     'RBCSmartPolicy',
     'RBCCommunityPolicy',
-    'GridAwareBaselineAgent',
-    'CommunityAwareBaselineAgent',
     'ZeroActionBaselineAgent',
 ]

@@ -10,8 +10,8 @@ import pytest
 pytest.importorskip("gymnasium")
 
 from citylearn.agents.baseline import (
-    BusinessAsUsualAgent, FullChargeBusinessAsUsualAgent, NormalPolicy, NormalNoBatteryPolicy,
-    NormalTargetPolicy, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy,
+    BusinessAsUsualAgent, NormalPolicy, NormalTargetPolicy,
+    RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy,
 )
 from citylearn.citylearn import CityLearnEnv
 
@@ -116,17 +116,6 @@ def test_business_as_usual_charges_at_once_up_to_user_target_and_never_discharge
         env.close()
 
 
-@pytest.mark.parametrize("agent_class", [FullChargeBusinessAsUsualAgent, NormalPolicy, NormalNoBatteryPolicy])
-@pytest.mark.parametrize("soc", [0.2, 0.8, 0.95])
-def test_full_charge_bau_requests_maximum_until_full_even_above_departure_target(agent_class, soc):
-    env = _ev_env()
-    try:
-        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = soc
-        assert _ev_action(agent_class, env) == pytest.approx(1.0)
-    finally:
-        env.close()
-
-
 def test_business_as_usual_stops_below_target_instead_of_overshooting_charger_minimum(tmp_path: Path):
     dataset_dir = tmp_path / "minute_ev_demo"
     shutil.copytree(SOURCE_DATASET, dataset_dir)
@@ -160,9 +149,9 @@ def test_business_as_usual_episode_never_charges_above_user_target():
         env.close()
 
 
-def test_target_and_full_charge_aliases():
+def test_bau_aliases_and_definition():
     assert NormalTargetPolicy is BusinessAsUsualAgent
-    assert NormalPolicy is FullChargeBusinessAsUsualAgent
+    assert NormalPolicy is BusinessAsUsualAgent
     assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-user-target-v1"
 
 
@@ -199,7 +188,7 @@ def test_rule_based_baselines_serve_a_tight_departure(agent_class):
 
 @pytest.mark.parametrize(
     "agent_class",
-    [BusinessAsUsualAgent, FullChargeBusinessAsUsualAgent, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy],
+    [BusinessAsUsualAgent, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy],
 )
 def test_baselines_take_the_same_actions_under_flat_and_entity_interfaces(agent_class):
     trajectories = []

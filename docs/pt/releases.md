@@ -9,8 +9,8 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   chega, à potência máxima, mas só até ao SOC pedido pelo utilizador. A última
   ordem fica limitada à energia em falta; abaixo da potência mínima do carregador,
   o EV fica ligeiramente abaixo do alvo em vez de o ultrapassar. A referência BAU
-  do `evaluate_v2()` passa a usar esta definição. A carga imediata até 100%
-  continua disponível em `FullChargeBusinessAsUsualAgent` (`NormalPolicy`).
+  do `evaluate_v2()` passa a usar esta definição. O BAU com carga até 100% e os
+  controladores Basic, Smart e Community anteriores foram removidos.
 - **Controladores Basic, Smart e Community.** `RBCBasicPolicy`, `RBCSmartPolicy`
   e `RBCCommunityPolicy` passam a ser os controladores validados no repositório
   Algorithms da Soft-CPS. O Basic usa o preço atual e a urgência do serviço. O

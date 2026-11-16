@@ -27,14 +27,7 @@ entity observations (current state, schedules and the simulator's published
 forecasts). They work with the flat and the entity interface and return flat
 action vectors in `env.action_names` order.
 
-### BAU variants
-
-| Agent | Difference from `BusinessAsUsualAgent` |
-|---|---|
-| `FullChargeBusinessAsUsualAgent` (alias `NormalPolicy`) | Charges every connected EV immediately to 100%. Its difference from BAU includes the extra energy delivered above the requested departure SOC. |
-| `NormalNoBatteryPolicy` (alias `ServiceOnlyBaselineAgent`) | Full-charge BAU that leaves the home battery idle. |
-
-`NormalTargetPolicy` is an alias of `BusinessAsUsualAgent`.
+`NormalPolicy` and `NormalTargetPolicy` are other names of `BusinessAsUsualAgent`.
 
 ### Default parameters
 
@@ -79,9 +72,6 @@ windows, seeds and market conditions as the candidate.
 | `RBCBasicPolicy` | Uses the current price and service urgency for EVs and flexible appliances. EVs receive the minimum charge that meets their departure target, raised when the price is cheap. Appliances start when urgent or cheap. The battery performs self-consumption. |
 | `RBCSmartPolicy` | Uses price forecasts and the forecast local PV surplus to schedule EV charging and appliance starts. The battery combines self-consumption, price arbitrage and a service reserve. It uses only building-local and public observations. |
 | `RBCCommunityPolicy` | Adds energy shareable between community members. When the community market is enabled, the batteries can support expensive periods once community import reaches `community_import_threshold_kw` (15 kW by default). This value triggers an action; the observed peak can exceed it. Without a community market it uses the same local dispatch as `RBCSmartPolicy`. |
-
-`GridAwareBaselineAgent` and `CommunityAwareBaselineAgent` remain aliases of
-`RBCSmartPolicy` and `RBCCommunityPolicy`.
 
 `RBCBasicPolicy` compares the current price with fixed thresholds,
 `basic_cheap_price_eur_kwh=0.0765` and `basic_expensive_price_eur_kwh=0.1078`.
@@ -198,7 +188,6 @@ Read [the scorecard](scorecard.md) for matched-controller comparisons and
 [the UI guide](https://www.citylearn.net/ui.html) for the visual workflow.
 
 From 3.4.0, BAU uses `immediate-user-target-v1`: it charges EVs only up to
-the requested departure SOC. The 3.1–3.3 behaviour, immediate charging to 100%,
-is available as `FullChargeBusinessAsUsualAgent` (`immediate-full-charge-v2`).
-BAU references computed with earlier versions are not comparable with 3.4.0
-results; rerun both the controller and its reference.
+the requested departure SOC, where 3.1–3.3 charged them to 100%. BAU references
+computed with earlier versions are not comparable with 3.4.0 results; rerun both
+the controller and its reference.
