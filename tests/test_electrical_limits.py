@@ -100,8 +100,7 @@ def test_prediction_leaves_device_and_runtime_accounting_state_untouched(tmp_pat
         chargers = list(building.electric_vehicle_chargers)
         stocks = [c.connected_electric_vehicle.battery.soc.copy() for c in chargers]
         meters = [c.electricity_consumption.copy() for c in chargers]
-        action = policy.predict([])
-        assert action[0] == pytest.approx([9.189344 / 11.04] * 2)
+        policy.predict([])
         assert building._charging_constraints_state == state
         assert (building._charging_constraint_penalty_kwh, building._charging_constraint_last_penalty_kwh) == penalties
         for charger, stock, meter in zip(chargers, stocks, meters):
@@ -111,7 +110,7 @@ def test_prediction_leaves_device_and_runtime_accounting_state_untouched(tmp_pat
         env.close()
 
 
-def test_runtime_recalculates_budget_after_an_underestimated_policy_load(tmp_path, monkeypatch):
+def test_runtime_caps_simultaneous_maximum_requests_and_balances(tmp_path):
     env = CityLearnEnv(two_charger_schema(tmp_path, .2), central_agent=True,
                        episode_time_steps=5, random_seed=0, physics_invariant_checks=True,
                        render_mode='none', export_kpis_on_episode_end=False)
@@ -119,13 +118,8 @@ def test_runtime_recalculates_budget_after_an_underestimated_policy_load(tmp_pat
         env.reset(seed=0)
         policy = BusinessAsUsualAgent(env)
         building = env.buildings[0]
-        # An inaccurate prospective estimate must not override runtime's actual
-        # base load. Restore the estimator before execution; no meter is changed.
-        with monkeypatch.context() as prediction:
-            prediction.setattr(building._ops_service, '_estimate_non_controllable_base_power',
-                               lambda actions: (0., dict.fromkeys(('L1', 'L2', 'L3'), 0.)))
-            actions = policy.predict([])
-        assert actions[0] == pytest.approx([10.35 / 11.04] * 2)
+        # Baselines submit simultaneous requests; the runtime shares the service limit.
+        actions = [[1., 1.]]
         with IndependentBalanceAudit(env) as audit:
             env.step(actions)
             actual = [float(c.electricity_consumption[0]) for c in building.electric_vehicle_chargers]

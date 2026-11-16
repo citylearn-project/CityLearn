@@ -94,6 +94,13 @@ class _RuleBaselineAgent(Agent):
 
     def _attach(self, payload: Optional[Mapping[str, Any]]):
         env = self.env.unwrapped
+        if getattr(env, 'topology_mode', 'static') == 'dynamic':
+            # Members and assets can change between steps and episodes.
+            self.action_space = env.flat_action_space
+            self.action_names = env.action_names
+            self.observation_space = env.flat_observation_space
+            self.observation_names = env.observation_names
+            self.building_metadata = env.get_metadata()['buildings']
         self._flattener = EntityObservationFlattener(env.entity_specs)
         names, _ = self._flattener.flatten(self._payload(payload))
         buildings = env.buildings
@@ -147,11 +154,6 @@ class _RuleBaselineAgent(Agent):
             self.reset()
         payload = self._payload(observations)
         if int(getattr(env, 'topology_version', 0)) != self._attached_topology_version:
-            self.action_space = env.flat_action_space
-            self.action_names = env.action_names
-            self.observation_space = env.flat_observation_space
-            self.observation_names = env.observation_names
-            self.building_metadata = env.get_metadata()['buildings']
             self._attach(payload)
 
         _, values = self._flattener.flatten(payload)
