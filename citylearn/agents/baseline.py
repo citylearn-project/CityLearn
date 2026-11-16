@@ -253,15 +253,10 @@ class ZeroActionBaselineAgent(Agent):
         return actions
 
 
-# Other names of the BAU: CityLearn's historical NormalPolicy and the Algorithms NormalTargetPolicy.
-NormalPolicy = BusinessAsUsualAgent
-NormalTargetPolicy = BusinessAsUsualAgent
 
 
 __all__ = [
     'BusinessAsUsualAgent',
-    'NormalPolicy',
-    'NormalTargetPolicy',
     'RBCBasicPolicy',
     'RBCSmartPolicy',
     'RBCCommunityPolicy',

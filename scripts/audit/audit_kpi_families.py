@@ -91,9 +91,9 @@ def main():
         )
         obs, _ = env.reset(seed=args.seed)
         if args.policy == "normal":
-            from citylearn.agents.baseline import NormalPolicy
+            from citylearn.agents.baseline import BusinessAsUsualAgent
 
-            agent = NormalPolicy(env)
+            agent = BusinessAsUsualAgent(env)
         history, versions = {}, {}
         independent_rows = []
         while not (env.terminated or env.truncated):

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from citylearn.agents.baseline import NormalPolicy
+from citylearn.agents.baseline import BusinessAsUsualAgent
 from citylearn.citylearn import CityLearnEnv
 
 SOURCE = Path(__file__).parent / 'data/minute_ev_demo'
@@ -121,7 +121,7 @@ def test_normal_policy_tracks_dynamic_member_identity_and_reset(central, start):
                        simulation_start_time_step=start, simulation_end_time_step=6,
                        episode_time_steps=7-start, random_seed=0)
     try:
-        agent = NormalPolicy(env)
+        agent = BusinessAsUsualAgent(env)
         for episode in range(2):
             obs, _ = env.reset(seed=0)
             expected = {}
@@ -148,7 +148,7 @@ def test_normal_policy_learn_preserves_entity_observations_and_dynamic_rewards(m
     env = CityLearnEnv(dynamic_schema(), central_agent=False, episode_time_steps=7,
                        random_seed=0, render_mode='none', export_kpis_on_episode_end=False)
     try:
-        agent = NormalPolicy(env)
+        agent = BusinessAsUsualAgent(env)
         original = agent.predict
 
         def predict(observations, deterministic=None):

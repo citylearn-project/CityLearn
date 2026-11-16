@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from citylearn.agents.baseline import NormalPolicy
 from citylearn.citylearn import CityLearnEnv
 from citylearn.internal.building_ops import BuildingOpsService
 
@@ -41,19 +40,12 @@ def allocation_case(powers, connections, base_kw, total_limits, phase_limits):
 
 
 def allocate(layer, building, ev_actions, storage_action=None):
-    if layer == 'runtime':
-        return building._ops_service._apply_electrical_service_constraints(ev_actions, storage_action)
-    names = ['electric_vehicle_storage_' + name for name in ev_actions]
-    values = list(ev_actions.values())
-    if storage_action is not None:
-        names.append('electrical_storage')
-        values.append(storage_action)
-    result = NormalPolicy._apply_electrical_service_limits(
-        None, building, tuple(names), tuple([(-1., 1.)] * len(names)), values)
-    return dict(zip(ev_actions, result)), result[-1] if storage_action is not None else None
+    # The baselines submit simultaneous requests; the runtime allocates the service.
+    assert layer == 'runtime'
+    return building._ops_service._apply_electrical_service_constraints(ev_actions, storage_action)
 
 
-@pytest.mark.parametrize('layer', ['policy', 'runtime'])
+@pytest.mark.parametrize('layer', ['runtime'])
 @pytest.mark.parametrize('direction', [1., -1.], ids=['import', 'export'])
 @pytest.mark.parametrize('powers,expected_kw', [
     ({'a': 11.04, 'b': 11.04}, {'a': 9.189344, 'b': 9.189344}),
@@ -78,7 +70,7 @@ def test_total_and_balanced_phase_limits_share_power_once(layer, direction, powe
     assert actions['a'] == pytest.approx(actions['b'])
 
 
-@pytest.mark.parametrize('layer', ['policy', 'runtime'])
+@pytest.mark.parametrize('layer', ['runtime'])
 @pytest.mark.parametrize('direction', [1., -1.], ids=['import', 'export'])
 def test_shared_three_phase_charger_uses_reduced_totals_at_later_phases(layer, direction):
     building = allocation_case(
@@ -94,7 +86,7 @@ def test_shared_three_phase_charger_uses_reduced_totals_at_later_phases(layer, d
     assert abs(direction + 12 * actions['a'] / 3) == pytest.approx(3.8)
 
 
-@pytest.mark.parametrize('layer', ['policy', 'runtime'])
+@pytest.mark.parametrize('layer', ['runtime'])
 @pytest.mark.parametrize('direction', [1., -1.], ids=['EV-import', 'EV-export'])
 def test_opposing_ev_and_storage_keep_feasible_power_after_total_and_phase_checks(layer, direction):
     building = allocation_case(
@@ -147,26 +139,23 @@ def two_charger_schema(tmp_path, price):
     return schema
 
 
-@pytest.mark.parametrize('driver', ['normal', 'raw-maximum'])
 @pytest.mark.parametrize('price', [.01, 1.])
-def test_two_ev_chargers_receive_available_power_and_keep_charging_above_targets(tmp_path, driver, price):
+def test_two_ev_chargers_receive_available_power_and_keep_charging_above_targets(tmp_path, price):
     env = CityLearnEnv(two_charger_schema(tmp_path, price), central_agent=True,
                        episode_time_steps=5, random_seed=0, physics_invariant_checks=True,
                        render_mode='none', export_kpis_on_episode_end=False)
     try:
         env.reset(seed=0)
-        policy = NormalPolicy(env)
         building = env.buildings[0]
         chargers = list(building.electric_vehicle_chargers)
         vehicles = [c.connected_electric_vehicle for c in chargers]
         assert all(ev.battery.soc[0] > .6 for ev in vehicles)
         for t in range(4):
-            actions = policy.predict([]) if driver == 'normal' else [[1., 1.]]
+            actions = [[1., 1.]]  # Raw maximum requests above the departure targets.
             env.step(actions)
             energies = [float(c.electricity_consumption[t]) for c in chargers]
             assert energies == pytest.approx([9.189344 / 4] * 2, abs=1e-6)
             assert building.net_electricity_consumption[t] * 4 == pytest.approx(20.7, abs=1e-5)
         assert all(ev.battery.soc[3] > .8 for ev in vehicles)
-        assert policy.DEFINITION_VERSION == 'immediate-full-charge-v1'
     finally:
         env.close()

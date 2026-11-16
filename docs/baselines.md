@@ -27,8 +27,6 @@ entity observations (current state, schedules and the simulator's published
 forecasts). They work with the flat and the entity interface and return flat
 action vectors in `env.action_names` order.
 
-`NormalPolicy` and `NormalTargetPolicy` are other names of `BusinessAsUsualAgent`.
-
 ### Default parameters
 
 Keyword arguments override the policy hyperparameters. Unknown names raise a

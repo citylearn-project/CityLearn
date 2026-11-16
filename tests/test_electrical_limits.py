@@ -5,7 +5,7 @@ from copy import deepcopy
 import numpy as np
 import pytest
 
-from citylearn.agents.baseline import NormalPolicy
+from citylearn.agents.baseline import BusinessAsUsualAgent
 from citylearn.citylearn import CityLearnEnv
 from citylearn.internal.balance_audit import IndependentBalanceAudit
 from citylearn.internal.electrical_limits import (
@@ -93,7 +93,7 @@ def test_prediction_leaves_device_and_runtime_accounting_state_untouched(tmp_pat
                        render_mode='none', export_kpis_on_episode_end=False)
     try:
         env.reset(seed=0)
-        policy = NormalPolicy(env)
+        policy = BusinessAsUsualAgent(env)
         building = env.buildings[0]
         state = deepcopy(building._charging_constraints_state)
         penalties = (building._charging_constraint_penalty_kwh, building._charging_constraint_last_penalty_kwh)
@@ -117,7 +117,7 @@ def test_runtime_recalculates_budget_after_an_underestimated_policy_load(tmp_pat
                        render_mode='none', export_kpis_on_episode_end=False)
     try:
         env.reset(seed=0)
-        policy = NormalPolicy(env)
+        policy = BusinessAsUsualAgent(env)
         building = env.buildings[0]
         # An inaccurate prospective estimate must not override runtime's actual
         # base load. Restore the estimator before execution; no meter is changed.

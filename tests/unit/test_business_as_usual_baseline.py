@@ -10,8 +10,7 @@ import pytest
 pytest.importorskip("gymnasium")
 
 from citylearn.agents.baseline import (
-    BusinessAsUsualAgent, NormalPolicy, NormalTargetPolicy,
-    RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy,
+    BusinessAsUsualAgent, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy,
 )
 from citylearn.citylearn import CityLearnEnv
 
@@ -149,9 +148,12 @@ def test_business_as_usual_episode_never_charges_above_user_target():
         env.close()
 
 
-def test_bau_aliases_and_definition():
-    assert NormalTargetPolicy is BusinessAsUsualAgent
-    assert NormalPolicy is BusinessAsUsualAgent
+def test_bau_definition_and_removed_names():
+    import citylearn.agents.baseline as baseline
+
+    for name in ("NormalPolicy", "NormalTargetPolicy", "NormalNoBatteryPolicy", "ServiceOnlyBaselineAgent",
+                 "GridAwareBaselineAgent", "CommunityAwareBaselineAgent"):
+        assert not hasattr(baseline, name)
     assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-user-target-v1"
 
 

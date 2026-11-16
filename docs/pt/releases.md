@@ -10,7 +10,9 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   ordem fica limitada à energia em falta; abaixo da potência mínima do carregador,
   o EV fica ligeiramente abaixo do alvo em vez de o ultrapassar. A referência BAU
   do `evaluate_v2()` passa a usar esta definição. O BAU com carga até 100% e os
-  controladores Basic, Smart e Community anteriores foram removidos.
+  controladores Basic, Smart e Community anteriores foram removidos, assim como
+  os nomes `NormalPolicy`, `NormalNoBatteryPolicy`, `ServiceOnlyBaselineAgent`,
+  `GridAwareBaselineAgent` e `CommunityAwareBaselineAgent`.
 - **Controladores Basic, Smart e Community.** `RBCBasicPolicy`, `RBCSmartPolicy`
   e `RBCCommunityPolicy` passam a ser os controladores validados no repositório
   Algorithms da Soft-CPS. O Basic usa o preço atual e a urgência do serviço. O

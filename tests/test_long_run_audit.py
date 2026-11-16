@@ -102,7 +102,7 @@ def test_real_cli_exports_evidence_and_enforces_measured_resource_limit(tmp_path
     report=json.loads((output/'summary.json').read_text())
     assert report['status']=='pass' and report['completed_intervals']==3
     assert len(report['blocks'])==3 and report['checks']>0
-    assert report['physics_invariant_checks'] and report['controller']['implementation'].endswith('NormalPolicy')
+    assert report['physics_invariant_checks'] and report['controller']['implementation'].endswith('BusinessAsUsualAgent')
     assert all((output/f).is_file() for f in ['manifest.json','service.json','intervals.csv','kpis.csv'])
     limited=tmp_path/'limited'
     result=subprocess.run(command+['--max-rss-mib','0.001','--output',str(limited)],capture_output=True,text=True)
