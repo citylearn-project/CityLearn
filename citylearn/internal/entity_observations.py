@@ -102,6 +102,9 @@ def fill_building_rows(entity: "CityLearnEntityInterfaceService", context: Obser
         if core_bundle_enabled and electrical_metrics is not None:
             entity._fill_obs_row_sparse(row, entity._building_feature_cols, electrical_metrics)
 
+        # A quantity without a limit is unlimited, not 0 kW of headroom.
+        entity._fill_obs_row_sparse(row, entity._building_feature_cols, entity._unlimited_headroom_values(building))
+
         if community_bundle_enabled and electrical_metrics is not None:
             building_electrical_metrics.append(electrical_metrics)
 

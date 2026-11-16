@@ -5,13 +5,13 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## v3.4.0 - Por publicar
 
-- **Novo BAU de referência.** O `BusinessAsUsualAgent` carrega o EV assim que
-  chega, à potência máxima, mas só até ao SOC pedido pelo utilizador. A última
-  ordem fica limitada à energia em falta; abaixo da potência mínima do carregador,
-  o EV fica ligeiramente abaixo do alvo em vez de o ultrapassar. A referência BAU
-  do `evaluate_v2()` passa a usar esta definição por defeito. O BAU com carga até
-  100% continua selecionável com `business_as_usual_ev_charge_target='full'` (ou
-  `BusinessAsUsualAgent(env, ev_charge_target='full')`). Os controladores Basic,
+- **Dois BAU selecionáveis.** O `BusinessAsUsualAgent` carrega o EV assim que
+  chega, à potência máxima, até 100% por defeito. Com
+  `ev_charge_target='requested'` carrega só até ao SOC pedido pelo utilizador; a
+  última ordem fica limitada à energia em falta e, abaixo da potência mínima do
+  carregador, o EV fica ligeiramente abaixo do alvo em vez de o ultrapassar. O
+  `business_as_usual_ev_charge_target` (construtor ou schema) escolhe o BAU que o
+  `evaluate_v2()` usa como referência. Os controladores Basic,
   Smart e Community anteriores foram removidos, assim como
   os nomes `NormalPolicy`, `NormalNoBatteryPolicy`, `ServiceOnlyBaselineAgent`,
   `GridAwareBaselineAgent` e `CommunityAwareBaselineAgent`.
@@ -22,6 +22,10 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   e combina autoconsumo, arbitragem e reserva na bateria. O Community acrescenta
   a energia partilhável entre membros e, com mercado comunitário, usa as baterias
   em períodos caros quando a importação comunitária atinge 15 kW.
+- **Margem sem limite deixa de ser 0 kW.** Nas tabelas de entidades, um edifício
+  sem limite de ligação publica a margem como 1 000 000 kW (o limite do espaço
+  de observação) em vez de 0 kW, que se lia como "sem capacidade" e impedia a
+  carga dos EVs nos controladores por regras.
 - Todos usam as observações da interface de entidades e funcionam com as
   interfaces flat e entity, incluindo topologia dinâmica. Os KPIs relativos ao
   BAU mudam; consultar o [guia de migração](../migration.md#upgrade-from-33-to-340).

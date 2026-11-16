@@ -95,22 +95,22 @@ def _ev_env(**kwargs) -> CityLearnEnv:
     return env
 
 
-def test_business_as_usual_charges_at_once_up_to_user_target_and_never_discharges():
+def test_requested_target_bau_charges_at_once_up_to_user_target_and_never_discharges():
     # Fixture: 20 kWh EV, requested departure SOC 0.8, 7.2 kW charger, 15-minute steps.
     env = _ev_env()
     try:
         battery = env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery
         battery.soc[0] = 0.4
-        assert _ev_action(BusinessAsUsualAgent, env) == pytest.approx(1.0)
+        assert _ev_action(BusinessAsUsualAgent, env, ev_charge_target="requested") == pytest.approx(1.0)
 
         # The last command is limited to the remaining energy gap.
         battery.soc[0] = 0.79
         expected = (0.8 - 0.79 - 1.0e-6) * 20.0 / (0.25 * 7.2)
-        assert _ev_action(BusinessAsUsualAgent, env) == pytest.approx(expected, rel=1.0e-4)
+        assert _ev_action(BusinessAsUsualAgent, env, ev_charge_target="requested") == pytest.approx(expected, rel=1.0e-4)
 
         for soc in (0.8, 0.95, 1.0):
             battery.soc[0] = soc
-            assert _ev_action(BusinessAsUsualAgent, env) == pytest.approx(0.0)
+            assert _ev_action(BusinessAsUsualAgent, env, ev_charge_target="requested") == pytest.approx(0.0)
     finally:
         env.close()
 
@@ -128,9 +128,9 @@ def test_business_as_usual_stops_below_target_instead_of_overshooting_charger_mi
     try:
         env.reset(seed=0)
         env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 0.79
-        assert _ev_action(BusinessAsUsualAgent, env) == pytest.approx(0.0)
+        assert _ev_action(BusinessAsUsualAgent, env, ev_charge_target="requested") == pytest.approx(0.0)
         env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 0.4
-        assert _ev_action(BusinessAsUsualAgent, env) == pytest.approx(1.0)
+        assert _ev_action(BusinessAsUsualAgent, env, ev_charge_target="requested") == pytest.approx(1.0)
     finally:
         env.close()
 
@@ -140,7 +140,7 @@ def test_business_as_usual_episode_never_charges_above_user_target():
     try:
         ev = env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle
         ev.battery.soc[0] = 0.7
-        agent = BusinessAsUsualAgent(env)
+        agent = BusinessAsUsualAgent(env, ev_charge_target="requested")
         while not env.terminated:
             env.step(agent.predict([]))
         assert max(float(v) for v in ev.battery.soc[: env.time_step + 1]) <= 0.8 + 1.0e-4
@@ -154,10 +154,12 @@ def test_bau_definition_and_removed_names():
     for name in ("NormalPolicy", "NormalTargetPolicy", "NormalNoBatteryPolicy", "ServiceOnlyBaselineAgent",
                  "GridAwareBaselineAgent", "CommunityAwareBaselineAgent"):
         assert not hasattr(baseline, name)
-    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-user-target-v1"
+    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-full-charge-v2"
 
 
-@pytest.mark.parametrize("kwargs", [{"ev_normal_target_soc": 0.5}, {"not_a_parameter": 1.0}])
+@pytest.mark.parametrize("kwargs", [
+    {"ev_charge_target": "requested", "ev_normal_target_soc": 0.5}, {"not_a_parameter": 1.0},
+])
 def test_business_as_usual_rejects_invalid_configuration(kwargs):
     env = _ev_env()
     try:
@@ -425,16 +427,24 @@ def test_baselines_request_zero_for_actions_they_do_not_control(tmp_path: Path, 
         env.close()
 
 
-def test_headroom_of_buildings_without_service_limits_is_unknown_not_zero():
-    from citylearn.agents._entity_observations import EntityObservationFlattener
+def test_buildings_without_service_limits_publish_unlimited_headroom(tmp_path: Path):
+    from citylearn.internal.entity_interface import CityLearnEntityInterfaceService
 
-    specs = {"tables": {"building": {"ids": ["A", "B"], "features": ["charging_building_headroom_kw", "non_shiftable_load"]}}}
-    payload = {"tables": {"building": [[0.0, 1.0], [5.0, 2.0]]}, "edges": {}}
-    names, values = EntityObservationFlattener(specs).flatten(payload, unlimited_buildings=[True, False])
-    # A published 0 kW for an unlimited building must not read as "no capacity".
-    assert np.isnan(values[0][names[0].index("charging_building_headroom_kw")])
-    assert values[0][names[0].index("non_shiftable_load")] == 1.0
-    assert values[1][names[1].index("charging_building_headroom_kw")] == 5.0
+    env = CityLearnEnv(str(_market_schema_with_bundles(tmp_path)), central_agent=False, episode_time_steps=4,
+                       random_seed=0, interface="entity")
+    try:
+        payload, _ = env.reset(seed=0)
+        features = env.entity_specs["tables"]["building"]["features"]
+        table = np.asarray(payload["tables"]["building"])
+        names = [b.name for b in env.buildings]
+        unlimited, limited = names.index("Building_10"), names.index("Building_15")
+        for feature in ("charging_building_headroom_kw", "charging_phase_L1_headroom_kw", "building_import_headroom_kw"):
+            column = features.index(feature)
+            # No limit is published as the space bound, never as 0 kW of headroom.
+            assert table[unlimited, column] == CityLearnEntityInterfaceService.UNLIMITED_HEADROOM_KW
+            assert 0.0 < table[limited, column] < CityLearnEntityInterfaceService.UNLIMITED_HEADROOM_KW
+    finally:
+        env.close()
 
 
 @pytest.mark.parametrize("soc", [0.2, 0.8, 0.95])
@@ -454,12 +464,12 @@ def test_bau_charge_target_is_validated_and_recorded():
     try:
         with pytest.raises(ValueError, match="ev_charge_target"):
             BusinessAsUsualAgent(env, ev_charge_target="half")
-        agent = BusinessAsUsualAgent(env, ev_charge_target="full")
-        assert agent.DEFINITION_VERSION == "immediate-full-charge-v2"
-        assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-user-target-v1"
+        assert BusinessAsUsualAgent(env).ev_charge_target == "full"
+        agent = BusinessAsUsualAgent(env, ev_charge_target="requested")
+        assert agent.DEFINITION_VERSION == "immediate-user-target-v1"
         parameters = agent.comparison_identity()["parameters"]
-        assert parameters["ev_charge_target"] == "full"
-        assert parameters["definition_version"] == "immediate-full-charge-v2"
+        assert parameters["ev_charge_target"] == "requested"
+        assert parameters["definition_version"] == "immediate-user-target-v1"
     finally:
         env.close()
 

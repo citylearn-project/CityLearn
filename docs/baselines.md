@@ -14,7 +14,7 @@ It is not a scenario with all equipment switched off.
 
 | Equipment or service | BAU behaviour |
 |---|---|
-| EVs | Requests maximum charging power as soon as an EV is connected, until it reaches the user's requested departure SOC. The last command is limited to the remaining energy gap. If that command would fall below the charger's minimum power, the EV stops slightly below the target rather than overshooting it. Ignores deadlines, prices and solar forecasts and never requests V2G. Electrical limits share the available power proportionally between simultaneous requests. |
+| EVs | Requests maximum charging power as soon as an EV is connected, until 100% SOC by default, or until the user's requested departure SOC (see below). Ignores deadlines, prices and solar forecasts and never requests V2G. Electrical limits share the available power proportionally between simultaneous requests. |
 | Stationary batteries | Charges from local PV surplus and discharges to serve local import (self-consumption). EV charging is considered first, so the battery does not discharge into an EV that is already full. |
 | Flexible appliances | Requests the next pending cycle at its first feasible start opportunity. |
 | Electrical connection | The simulator applies the configured total and per-phase import/export limits; equipment and simulator constraints determine the applied energy. |
@@ -28,16 +28,16 @@ It is not a scenario with all equipment switched off.
 
 | `ev_charge_target` | Definition | EV behaviour |
 |---|---|---|
-| `'requested'` (default) | `immediate-user-target-v1` | Charges up to the user's requested departure SOC. |
-| `'full'` | `immediate-full-charge-v2` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. Its difference from the default includes the extra energy delivered above the requested SOC. |
+| `'full'` (default) | `immediate-full-charge-v2` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. |
+| `'requested'` | `immediate-user-target-v1` | Charges up to the user's requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger's minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC. |
 
 Everything else is the same. Select the BAU used as the KPI reference by
 `evaluate_v2()` with the environment setting
 `business_as_usual_ev_charge_target`, as a constructor argument or a schema key:
 
 ```python
-env = CityLearnEnv(schema, business_as_usual_ev_charge_target='full')
-agent = BusinessAsUsualAgent(env, ev_charge_target='full')
+env = CityLearnEnv(schema, business_as_usual_ev_charge_target='requested')
+agent = BusinessAsUsualAgent(env, ev_charge_target='requested')
 ```
 
 The exported metadata records the selected definition. Compare results only
@@ -219,8 +219,8 @@ their simulator-defined meaning.
 Read [the scorecard](scorecard.md) for matched-controller comparisons and
 [the UI guide](https://www.citylearn.net/ui.html) for the visual workflow.
 
-From 3.4.0, the default BAU uses `immediate-user-target-v1`: it charges EVs
-only up to the requested departure SOC, where 3.1–3.3 charged them to 100%. The
-full-charge BAU remains selectable (`immediate-full-charge-v2`). BAU references
-computed with earlier versions are not comparable with 3.4.0 results; rerun both
-the controller and its reference.
+From 3.4.0, the BAU is `immediate-full-charge-v2` by default: it still charges
+EVs to 100%, now decided from the entity observations like the other baselines.
+`immediate-user-target-v1` charges only to the requested departure SOC. BAU
+references computed with earlier versions are not comparable with 3.4.0
+results; rerun both the controller and its reference.

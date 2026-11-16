@@ -1161,6 +1161,40 @@ class CityLearnEntityInterfaceService:
             forecasts[str(key)] = self._safe_scalar(value, 0.0)
         return forecasts
 
+    # Headroom of a quantity without a limit (no electrical service limit, or no
+    # limit on that phase/direction). The tables must stay finite, so "no limit"
+    # is the upper bound of the headroom observation space, never 0 kW.
+    UNLIMITED_HEADROOM_KW = 1.0e6
+
+    def _unlimited_headroom_values(self, building) -> Mapping[str, float]:
+        """Headroom features of ``building`` whose quantity has no limit."""
+        state = getattr(building, "_charging_constraints_state", {}) or {}
+        if not getattr(building, "_charging_constraints_enabled", False):
+            state = {}
+        unlimited = self.UNLIMITED_HEADROOM_KW
+        values: Dict[str, float] = {}
+        for key, names in (
+            ("building_headroom_kw", ("charging_building_headroom_kw", "building_import_headroom_kw")),
+            ("building_export_headroom_kw", ("charging_building_export_headroom_kw", "building_export_headroom_kw")),
+        ):
+            if not np.isfinite(self._safe_scalar(state.get(key), np.nan)):
+                values.update(dict.fromkeys(names, unlimited))
+        for key, direction, aggregate in (
+            ("phase_headroom_kw", "", "import_phase_headroom_kw"),
+            ("phase_export_headroom_kw", "_export", "export_phase_headroom_kw"),
+        ):
+            phases = state.get(key) or {}
+            finite = {
+                name for name, value in phases.items()
+                if value is not None and np.isfinite(self._safe_scalar(value, np.nan))
+            }
+            for phase in self._phase_names:
+                if phase not in finite:
+                    values[f"charging_phase_{phase}{direction}_headroom_kw"] = unlimited
+            if not finite:
+                values[aggregate] = unlimited
+        return values
+
     def _headroom_power_limit_for_connection(self, building, phase_connection: Optional[str], *, export: bool = False) -> float:
         state = getattr(building, "_charging_constraints_state", {}) or {}
         total_key = "building_export_headroom_kw" if export else "building_headroom_kw"

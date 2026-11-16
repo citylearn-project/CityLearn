@@ -205,7 +205,7 @@ def native_reference(env):
     from citylearn.agents.baseline import BusinessAsUsualAgent
     result = dict(implementation='citylearn.agents.baseline.BusinessAsUsualAgent',
                   simulator_version=__version__,
-                  definition_version=BusinessAsUsualAgent.definition(getattr(env, 'business_as_usual_ev_charge_target', 'requested'))[1],
+                  definition_version=BusinessAsUsualAgent.definition(getattr(env, 'business_as_usual_ev_charge_target', 'full'))[1],
                   observation_access='entity_observations', evaluated=False, resolved_parameters=None)
     key = (env.episode_tracker.episode, int(env.time_step))
     cached = getattr(env, '_business_as_usual_baseline_cache', {}).get(key)

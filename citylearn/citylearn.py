@@ -151,8 +151,8 @@ class CityLearnEnv(Environment, Env):
     ev_departure_service_tolerance: float, optional
         Lower SOC service tolerance used by EV departure minimum-acceptable KPIs. Defaults to ``0.05``.
     business_as_usual_ev_charge_target: str, optional
-        EV charging of the native BAU reference built by ``evaluate_v2()``: ``'requested'`` charges to the
-        user's requested departure SOC, ``'full'`` to 100%. Defaults to the schema value, else ``'requested'``.
+        EV charging of the native BAU reference built by ``evaluate_v2()``: ``'full'`` charges to 100%,
+        ``'requested'`` to the user's requested departure SOC. Defaults to the schema value, else ``'full'``.
     energy_provenance: bool, optional
         Whether to keep the per-step electricity provenance ledger (``*_energy_provenance_*`` KPIs and
         provenance audits). Defaults to ``True``. Disabling it does not change any simulated quantity and
@@ -288,7 +288,7 @@ class CityLearnEnv(Environment, Env):
         )
         from citylearn.agents.baseline import BusinessAsUsualAgent
         self.business_as_usual_ev_charge_target = str(
-            self.schema.get('business_as_usual_ev_charge_target', 'requested')
+            self.schema.get('business_as_usual_ev_charge_target', 'full')
             if business_as_usual_ev_charge_target is None else business_as_usual_ev_charge_target
         )
         BusinessAsUsualAgent.definition(self.business_as_usual_ev_charge_target)

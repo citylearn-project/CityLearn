@@ -50,15 +50,22 @@ development-line history.
 
 No dataset, schema or export-file migration is required.
 
-- **BAU charges EVs to the requested departure SOC.** `BusinessAsUsualAgent`
-  (`immediate-user-target-v1`) still charges at once and at full power, but stops
-  at the user's requested departure SOC instead of 100%. The native BAU reference
-  added by `evaluate_v2()` changes with it, so every `business_as_usual`,
-  `delta_to_business_as_usual` and `ratio_to_business_as_usual` KPI can differ
-  from 3.3. Rerun both the controller and its reference; do not mix 3.3 and 3.4
-  BAU values. To keep charging to 100%, set
-  `business_as_usual_ev_charge_target='full'` on the environment (or in the
-  schema) and use `BusinessAsUsualAgent(env, ev_charge_target='full')`.
+- **BAU.** `BusinessAsUsualAgent` still charges EVs at once to 100% by default
+  (`immediate-full-charge-v2`), but it now decides from the entity observations,
+  with the battery and appliance rules of the Algorithms BAU. The native BAU
+  reference added by `evaluate_v2()` changes with it, so every
+  `business_as_usual`, `delta_to_business_as_usual` and
+  `ratio_to_business_as_usual` KPI can differ from 3.3. Rerun both the controller
+  and its reference; do not mix 3.3 and 3.4 BAU values. To charge only to the
+  user's requested departure SOC, set `business_as_usual_ev_charge_target='requested'`
+  on the environment (or in the schema) and use
+  `BusinessAsUsualAgent(env, ev_charge_target='requested')`.
+- **Unlimited headroom.** In the entity tables, a building without an electrical
+  service limit (or without a limit on a phase or direction) now publishes its
+  headroom features (`charging_*headroom_kw`, `building_*_headroom_kw`,
+  `*_phase_headroom_kw`) as 1,000,000 kW, the upper bound of their observation
+  space, instead of 0 kW. 0 kW read as "no capacity left". Models trained on 3.3
+  entity observations of such buildings saw 0 there; retrain or re-evaluate them.
 - **BAU parameters.** The 3.3 constructor arguments `ev_target_soc`,
   `ev_follow_required_soc`, `ev_service_margin_rate`, `ev_service_floor_rate` and
   `storage_deadband_kw` no longer exist; unknown keyword arguments raise

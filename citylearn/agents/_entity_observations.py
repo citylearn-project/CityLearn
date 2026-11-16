@@ -88,9 +88,7 @@ class EntityObservationFlattener:
         self.ids = {name: list((tables.get(name) or {}).get('ids', [])) for name in _ASSET_TABLES}
         self._charger_col = {name: i for i, name in enumerate(self.features['charger'])}
 
-    def flatten(
-        self, payload: Mapping[str, Any], unlimited_buildings: Sequence[bool] = (),
-    ) -> Tuple[List[List[str]], List[np.ndarray]]:
+    def flatten(self, payload: Mapping[str, Any]) -> Tuple[List[List[str]], List[np.ndarray]]:
         """Return names and values per building.
 
         The layout (names and source positions) is computed once per asset
@@ -116,7 +114,7 @@ class EntityObservationFlattener:
         incoming = _charger_ev_rows(edges.get('charger_to_ev_incoming', []), edges.get('charger_to_ev_incoming_mask', []))
         ev_offset, (ev_rows_n, ev_cols) = self._offsets['ev'], shapes[-1]
         values = []
-        for b, (index, ev_slots, headroom) in enumerate(self._plans):
+        for index, ev_slots in self._plans:
             if ev_slots:
                 index = index.copy()
                 for start, charger_row, is_connected in ev_slots:
@@ -129,8 +127,6 @@ class EntityObservationFlattener:
                         index[start:start + width] = np.where(cols < ev_cols, ev_offset + ev_row * ev_cols + cols, self._zero)
             vector = source[index]
             vector[~np.isfinite(vector)] = 0.0
-            if b < len(unlimited_buildings) and unlimited_buildings[b] and headroom.size:
-                vector[headroom] = np.nan
             values.append(vector)
         return [list(names) for names in self._names], values
 
@@ -195,20 +191,12 @@ class EntityObservationFlattener:
                 index.append(index[names.index('minutes')]); names.append('minute')
             if 'solar_generation' not in names and 'pv_power_kw' in names:
                 index.append(index[names.index('pv_power_kw')]); names.append('solar_generation')
-            headroom = np.asarray([i for i, n in enumerate(names) if 'headroom' in n and '::' not in n], dtype=int)
             self._names.append(names)
-            self._plans.append((np.asarray(index, dtype=np.int64), ev_slots, headroom))
+            self._plans.append((np.asarray(index, dtype=np.int64), ev_slots))
         self._constants = np.asarray(constants, dtype=np.float64)
 
-    def flatten_reference(
-        self, payload: Mapping[str, Any], unlimited_buildings: Sequence[bool] = (),
-    ) -> Tuple[List[List[str]], List[np.ndarray]]:
-        """Return names and values per building (readable reference implementation).
-
-        ``unlimited_buildings[b]`` marks a building without electrical service
-        limits. The entity tables publish its headroom as 0 kW, which would read
-        as "no capacity"; its headroom features are returned as NaN (unknown).
-        """
+    def flatten_reference(self, payload: Mapping[str, Any]) -> Tuple[List[List[str]], List[np.ndarray]]:
+        """Return names and values per building (readable reference implementation)."""
         tables = {name: _as_2d(values) for name, values in (payload.get('tables', {}) or {}).items()}
         edges = payload.get('edges', {}) or {}
         empty = np.zeros((0, 0))
@@ -279,12 +267,7 @@ class EntityObservationFlattener:
                 add('solar_generation', values[names.index('pv_power_kw')])
 
             all_names.append(names)
-            vector = np.asarray(values, dtype=np.float64)
-            if b < len(unlimited_buildings) and unlimited_buildings[b]:
-                for i, name in enumerate(names):
-                    if 'headroom' in name and '::' not in name:
-                        vector[i] = np.nan
-            all_values.append(vector)
+            all_values.append(np.asarray(values, dtype=np.float64))
 
         return all_names, all_values
 
