@@ -156,7 +156,11 @@ class _RuleBaselineAgent(Agent):
         if int(getattr(env, 'topology_version', 0)) != self._attached_topology_version:
             self._attach(payload)
 
-        _, values = self._flattener.flatten(payload)
+        unlimited = [
+            not (getattr(b, '_electrical_service_enabled', False) or getattr(b, '_charging_constraints_enabled', False))
+            for b in env.buildings
+        ]
+        _, values = self._flattener.flatten(payload, unlimited)
         per_building = []
         for (size, controlled, zeros), vector in zip(self._layouts, self._engine.predict(values)):
             full = [float(v) for v in zeros]

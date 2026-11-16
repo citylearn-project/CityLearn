@@ -423,3 +423,15 @@ def test_baselines_request_zero_for_actions_they_do_not_control(tmp_path: Path, 
         assert action[next(i for i, n in enumerate(names) if n.startswith("electric_vehicle_storage_"))] > 0.0
     finally:
         env.close()
+
+
+def test_headroom_of_buildings_without_service_limits_is_unknown_not_zero():
+    from citylearn.agents._entity_observations import EntityObservationFlattener
+
+    specs = {"tables": {"building": {"ids": ["A", "B"], "features": ["charging_building_headroom_kw", "non_shiftable_load"]}}}
+    payload = {"tables": {"building": [[0.0, 1.0], [5.0, 2.0]]}, "edges": {}}
+    names, values = EntityObservationFlattener(specs).flatten(payload, unlimited_buildings=[True, False])
+    # A published 0 kW for an unlimited building must not read as "no capacity".
+    assert np.isnan(values[0][names[0].index("charging_building_headroom_kw")])
+    assert values[0][names[0].index("non_shiftable_load")] == 1.0
+    assert values[1][names[1].index("charging_building_headroom_kw")] == 5.0

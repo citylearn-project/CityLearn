@@ -88,7 +88,15 @@ class EntityObservationFlattener:
         self.ids = {name: list((tables.get(name) or {}).get('ids', [])) for name in _ASSET_TABLES}
         self._charger_col = {name: i for i, name in enumerate(self.features['charger'])}
 
-    def flatten(self, payload: Mapping[str, Any]) -> Tuple[List[List[str]], List[np.ndarray]]:
+    def flatten(
+        self, payload: Mapping[str, Any], unlimited_buildings: Sequence[bool] = (),
+    ) -> Tuple[List[List[str]], List[np.ndarray]]:
+        """Return names and values per building.
+
+        ``unlimited_buildings[b]`` marks a building without electrical service
+        limits. The entity tables publish its headroom as 0 kW, which would read
+        as "no capacity"; its headroom features are returned as NaN (unknown).
+        """
         tables = {name: _as_2d(values) for name, values in (payload.get('tables', {}) or {}).items()}
         edges = payload.get('edges', {}) or {}
         empty = np.zeros((0, 0))
@@ -159,7 +167,12 @@ class EntityObservationFlattener:
                 add('solar_generation', values[names.index('pv_power_kw')])
 
             all_names.append(names)
-            all_values.append(np.asarray(values, dtype=np.float64))
+            vector = np.asarray(values, dtype=np.float64)
+            if b < len(unlimited_buildings) and unlimited_buildings[b]:
+                for i, name in enumerate(names):
+                    if 'headroom' in name and '::' not in name:
+                        vector[i] = np.nan
+            all_values.append(vector)
 
         return all_names, all_values
 

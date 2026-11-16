@@ -71,6 +71,16 @@ windows, seeds and market conditions as the candidate.
 | `RBCSmartPolicy` | Uses price forecasts and the forecast local PV surplus to schedule EV charging and appliance starts. The battery combines self-consumption, price arbitrage and a service reserve. It uses only building-local and public observations. |
 | `RBCCommunityPolicy` | Adds energy shareable between community members. When the community market is enabled, the batteries can support expensive periods once community import reaches `community_import_threshold_kw` (15 kW by default). This value triggers an action; the observed peak can exceed it. Without a community market it uses the same local dispatch as `RBCSmartPolicy`. |
 
+Smart and Community use the entity observation bundles when the schema enables
+them: `entity_core_electrical` for measured import and export,
+`entity_forecasts_existing` and `entity_forecasts_derived` for price and PV
+forecasts, and `entity_community_operational` for community import and surplus.
+All bundles are off by default. Without the community bundle, Community cannot
+observe community import and takes the same decisions as Smart; without the
+forecast bundles, Smart and Community fall back to the current price and PV.
+Enable them in the schema, for example
+`"observation_bundles": {"entity_community_operational": true}`.
+
 `RBCBasicPolicy` compares the current price with fixed thresholds,
 `basic_cheap_price_eur_kwh=0.0765` and `basic_expensive_price_eur_kwh=0.1078`.
 They are the terciles of the 2023 Portuguese day-ahead price used to calibrate
