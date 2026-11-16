@@ -46,6 +46,14 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Upgrade from 3.3.0 to 3.3.1
+
+No dataset, schema or export-file migration is required. The native BAU
+reference built by `evaluate_v2()` now uses the entity interface whenever the
+evaluated env does, so entity schemas with static topology and robustness events
+on `ev`, `storage` or `pv` observations no longer fail. BAU actions and KPIs are
+unchanged, because the BAU agent reads simulator state rather than observations.
+
 ## Upgrade from 3.2.0 to 3.3.0
 
 No dataset, schema or export-file migration is required.
