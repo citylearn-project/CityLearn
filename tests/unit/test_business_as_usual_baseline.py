@@ -539,3 +539,35 @@ def test_smart_and_community_use_forecast_and_community_bundles(tmp_path: Path):
     smart = [np.concatenate(step) for step in actions[RBCSmartPolicy]]
     community = [np.concatenate(step) for step in actions[RBCCommunityPolicy]]
     assert any(not np.allclose(a, b) for a, b in zip(smart, community))
+
+
+@pytest.mark.parametrize("dataset", ["citylearn_three_phase_dynamic_topology_demo", "citylearn_challenge_2022_phase_all_plus_evs"])
+def test_fast_observation_layout_matches_reference(dataset):
+    env = CityLearnEnv(dataset, central_agent=False, episode_time_steps=24, random_seed=0)
+    try:
+        observations, _ = env.reset(seed=0)
+        agent = BusinessAsUsualAgent(env)
+        while not env.terminated:
+            payload = env._entity_service.observation_payload()
+            fast_names, fast_values = agent._flattener.flatten(payload)
+            names, values = agent._flattener.flatten_reference(payload)
+            assert fast_names == names
+            for fast, reference in zip(fast_values, values):
+                np.testing.assert_array_equal(fast, reference)
+            observations, *_ = env.step(agent.predict(observations))
+    finally:
+        env.close()
+
+
+def test_bau_reference_cache_follows_the_selected_target():
+    env = CityLearnEnv(str(SOURCE_DATASET / "schema.json"), central_agent=True, episode_time_steps=4, random_seed=0)
+    try:
+        _run_zero_episode(env)
+        full = env.run_business_as_usual_baseline()
+        assert full.ev_charge_target == "full"
+        env.business_as_usual_ev_charge_target = "requested"
+        requested = env.run_business_as_usual_baseline()
+        assert requested is not full
+        assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v1"
+    finally:
+        env.close()

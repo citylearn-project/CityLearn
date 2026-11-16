@@ -209,7 +209,7 @@ def native_reference(env):
                   observation_access='entity_observations', evaluated=False, resolved_parameters=None)
     key = (env.episode_tracker.episode, int(env.time_step))
     cached = getattr(env, '_business_as_usual_baseline_cache', {}).get(key)
-    if cached is not None:
+    if cached is not None and cached.ev_charge_target == getattr(env, 'business_as_usual_ev_charge_target', 'full'):
         result.update(getattr(cached.env, '_native_reference_metadata', {}))
         result['evaluated'] = True
     return result

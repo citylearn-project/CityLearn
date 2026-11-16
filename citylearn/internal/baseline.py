@@ -19,6 +19,21 @@ class BusinessAsUsualBaselineResult:
     kpis_v2: pd.DataFrame
     episode: int
     time_step: int
+    ev_charge_target: str = 'full'
+
+
+# EV charging targets of the native BAU, kept here so the environment can
+# validate its setting without importing the agents.
+BUSINESS_AS_USUAL_EV_CHARGE_TARGETS = ('full', 'requested')
+
+
+def validate_business_as_usual_ev_charge_target(value) -> str:
+    value = str(value)
+    if value not in BUSINESS_AS_USUAL_EV_CHARGE_TARGETS:
+        raise ValueError(
+            f"ev_charge_target must be one of {sorted(BUSINESS_AS_USUAL_EV_CHARGE_TARGETS)}, got {value!r}."
+        )
+    return value
 
 
 class CityLearnBusinessAsUsualBaselineService:
@@ -43,7 +58,8 @@ class CityLearnBusinessAsUsualBaselineService:
             {},
         )
 
-        if not force and cache_key in cache:
+        ev_charge_target = getattr(env, 'business_as_usual_ev_charge_target', 'full')
+        if not force and cache_key in cache and cache[cache_key].ev_charge_target == ev_charge_target:
             return cache[cache_key]
 
         # Keep only the latest result. Within an episode the time step only moves forward and reset
@@ -58,9 +74,7 @@ class CityLearnBusinessAsUsualBaselineService:
             gc.collect()
         baseline_env = self._new_sidecar_env()
         baseline_env.random_seed = env.random_seed
-        agent = BusinessAsUsualAgent(
-            baseline_env, ev_charge_target=getattr(env, 'business_as_usual_ev_charge_target', 'full'),
-        )
+        agent = BusinessAsUsualAgent(baseline_env, ev_charge_target=ev_charge_target)
         baseline_env.reset()
         # Pair the away-EV stochastic stream with the source episode, including
         # repeated resets; a freshly constructed sidecar has a different episode index.
@@ -110,6 +124,7 @@ class CityLearnBusinessAsUsualBaselineService:
             kpis_v2=kpis_v2,
             episode=episode,
             time_step=target_time_step,
+            ev_charge_target=ev_charge_target,
         )
         env._business_as_usual_baseline_cache = {cache_key: result}
         return result

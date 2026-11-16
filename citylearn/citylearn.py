@@ -286,12 +286,11 @@ class CityLearnEnv(Environment, Env):
             default=CityLearnKPIService.EV_DEPARTURE_SERVICE_TOLERANCE_DEFAULT,
             path='ev_departure_service_tolerance',
         )
-        from citylearn.agents.baseline import BusinessAsUsualAgent
-        self.business_as_usual_ev_charge_target = str(
+        from citylearn.internal.baseline import validate_business_as_usual_ev_charge_target
+        self.business_as_usual_ev_charge_target = validate_business_as_usual_ev_charge_target(
             self.schema.get('business_as_usual_ev_charge_target', 'full')
             if business_as_usual_ev_charge_target is None else business_as_usual_ev_charge_target
         )
-        BusinessAsUsualAgent.definition(self.business_as_usual_ev_charge_target)
         self._observations_cache: List[List[float]] = None
         self._observations_cache_time_step: int = -1
         self._render_origin_overridden = start_date is not None

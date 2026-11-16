@@ -48,6 +48,16 @@ entity observations (current state, schedules and the simulator's published
 forecasts). They work with the flat and the entity interface and return flat
 action vectors in `env.action_names` order.
 
+### Known limits
+
+The baselines decide from observations, so the battery reacts to the last
+settled step rather than reading the current step's load and PV from the
+simulator, as the 3.1–3.3 BAU did. Without the `entity_core_electrical` bundle
+the rules also do not see the power an EV can still accept, and reserve the
+charger's nominal power: near the end of a full charge the battery can then
+discharge more than the EV takes. Enabling that bundle in the schema gives the
+rules the accepted power.
+
 ### Default parameters
 
 Keyword arguments override the policy hyperparameters. Unknown names raise a

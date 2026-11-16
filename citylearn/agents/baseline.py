@@ -116,7 +116,7 @@ class _RuleBaselineAgent(Agent):
             high = np.asarray(building.action_space.high, dtype='float64')
             controlled = [i for i, name in enumerate(active) if self._is_controlled_action(name)]
             idx = np.asarray(controlled, dtype=int)
-            self._layouts.append((len(active), controlled, np.clip(0.0, low, high)))
+            self._layouts.append((controlled, np.clip(0.0, low, high)))
             engine_names.append([active[i] for i in controlled])
             engine_spaces.append(spaces.Box(low=low[idx], high=high[idx], dtype='float64'))
         self._engine.attach_environment(
@@ -159,7 +159,7 @@ class _RuleBaselineAgent(Agent):
 
         _, values = self._flattener.flatten(payload)
         per_building = []
-        for (size, controlled, zeros), vector in zip(self._layouts, self._engine.predict(values)):
+        for (controlled, zeros), vector in zip(self._layouts, self._engine.predict(values)):
             full = [float(v) for v in zeros]
             for position, value in zip(controlled, vector):
                 full[position] = float(value)
