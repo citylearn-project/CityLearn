@@ -8,7 +8,7 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
-## v3.4.0 - Unreleased
+## v3.4.0 - 2026-11-16
 
 ### What's new
 
@@ -25,6 +25,11 @@ On the same observations, the CityLearn baselines request exactly the same actio
 
 On 30 days of `citylearn_challenge_2022_phase_all_plus_evs`, the default BAU delivers the same EV energy as the 3.3.1 BAU (7,512 kWh) and costs 4.8% more (2,723 € vs 2,598 €): its battery reacts to the last observed step instead of reading the current step from the simulator. The user-target BAU costs 2,290 € and delivers 4,797 kWh. Basic, Smart and Community meet the minimum acceptable SOC at every feasible departure.
 
+### Credits
+
+**Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)) developed and validated the baselines in the Soft-CPS Algorithms repository and ported them to CityLearn in [#189](https://github.com/citylearn-project/CityLearn/pull/189).
+
+[Full changelog](https://github.com/citylearn-project/CityLearn/compare/v3.3.1...v3.4.0)
 
 ## v3.3.1 - 2026-11-16
 

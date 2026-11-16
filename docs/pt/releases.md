@@ -3,7 +3,7 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
-## v3.4.0 - Por publicar
+## v3.4.0 - 2026-11-16
 
 - **Dois BAU selecionáveis.** O `BusinessAsUsualAgent` carrega o EV assim que
   chega, à potência máxima, até 100% por defeito. Com
