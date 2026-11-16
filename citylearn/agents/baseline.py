@@ -22,7 +22,7 @@ Agent                                       Behaviour
 :class:`RBCCommunityPolicy`                 Smart plus energy shareable between members. When the
                                             community market is enabled, batteries support expensive
                                             periods once community import reaches a trigger
-                                            (15 kW by default). Without a market it acts as Smart.
+                                            (15 kW by default). Without a market it shares no energy.
 ==========================================  ==========================================================
 
 The policies are ported from the Soft-CPS Algorithms baselines and keep their
@@ -242,7 +242,8 @@ class RBCCommunityPolicy(_RuleBaselineAgent):
     treated as discounted energy, and batteries help during expensive periods
     once community import reaches ``community_import_threshold_kw`` (15 kW by
     default; a trigger, not a hard cap). Without a community market it uses the
-    same local dispatch as :class:`RBCSmartPolicy`.
+    same economic rules as :class:`RBCSmartPolicy`, without sharing energy, but it
+    is not restricted to building-local observations.
     """
 
     ENGINE_CLASS = engines.RBCCommunityPolicy

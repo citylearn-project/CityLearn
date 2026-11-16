@@ -69,15 +69,15 @@ windows, seeds and market conditions as the candidate.
 |---|---|
 | `RBCBasicPolicy` | Uses the current price and service urgency for EVs and flexible appliances. EVs receive the minimum charge that meets their departure target, raised when the price is cheap. Appliances start when urgent or cheap. The battery performs self-consumption. |
 | `RBCSmartPolicy` | Uses price forecasts and the forecast local PV surplus to schedule EV charging and appliance starts. The battery combines self-consumption, price arbitrage and a service reserve. It uses only building-local and public observations. |
-| `RBCCommunityPolicy` | Adds energy shareable between community members. When the community market is enabled, the batteries can support expensive periods once community import reaches `community_import_threshold_kw` (15 kW by default). This value triggers an action; the observed peak can exceed it. Without a community market it uses the same local dispatch as `RBCSmartPolicy`. |
+| `RBCCommunityPolicy` | Adds energy shareable between community members. When the community market is enabled, the batteries can support expensive periods once community import reaches `community_import_threshold_kw` (15 kW by default). This value triggers an action; the observed peak can exceed it. Without a community market it shares no energy and follows Smart's economic rules, but, unlike Smart, it is not restricted to building-local observations. |
 
 Smart and Community use the entity observation bundles when the schema enables
 them: `entity_core_electrical` for measured import and export,
 `entity_forecasts_existing` and `entity_forecasts_derived` for price and PV
 forecasts, and `entity_community_operational` for community import and surplus.
 All bundles are off by default. Without the community bundle, Community cannot
-observe community import and takes the same decisions as Smart; without the
-forecast bundles, Smart and Community fall back to the current price and PV.
+observe community import or surplus; without the forecast bundles, Smart and
+Community fall back to the current price and PV.
 Enable them in the schema, for example
 `"observation_bundles": {"entity_community_operational": true}`.
 
