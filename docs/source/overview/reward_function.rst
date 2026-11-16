@@ -44,3 +44,21 @@ The existing emissions-based example is:
 A reward can declare ``required_observation_names`` to receive a smaller
 observation payload. The :doc:`../usage/custom_controller` tutorial demonstrates
 this together with a complete simulation.
+
+Penalize unserved energy during power outages
+*********************************************
+
+When ``simulate_power_outage`` is on, a building cannot import from the grid during an outage, so its net
+electricity consumption is zero and rewards built on grid imports give no signal about load left unserved.
+:py:class:`citylearn.reward_function.OutageUnservedEnergyReward` wraps any reward and subtracts a penalty for
+that shortfall, using the same definition as the ``power_outage_normalized_unserved_energy_total`` KPI:
+
+.. code-block:: python
+
+   from citylearn.citylearn import CityLearnEnv
+   from citylearn.reward_function import OutageUnservedEnergyReward
+
+   env = CityLearnEnv('citylearn_challenge_2023_phase_2_online_evaluation_1')
+   env.reward_function = OutageUnservedEnergyReward(env, coefficient=1.0)
+
+``coefficient`` is the penalty per unserved kWh in the units of the wrapped reward.
