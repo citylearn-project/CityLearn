@@ -20,7 +20,9 @@ BAU-relative KPIs change with the new reference. Rerun the controller and its re
 
 ### Validation
 
-On the same observations, the CityLearn baselines request exactly the same actions as the Algorithms policies at every step.
+On the same observations, the CityLearn baselines request exactly the same actions as the Algorithms policies (commit `725a72a`) at every step, checked on three bundled datasets (EVs, three-phase limits with a community market, dynamic topology). One deliberate difference: a building without electrical service limits publishes 0 kW headroom, which the Algorithms rules read as no capacity; CityLearn treats it as unknown, so EVs there still charge.
+
+On 30 days of `citylearn_challenge_2022_phase_all_plus_evs`, the new BAU costs 11.9% less than the 3.3.1 BAU (2,290 € vs 2,598 €) because it delivers 36% less EV energy (4,797 vs 7,512 kWh), with 214 of 218 feasible departures within tolerance. Basic, Smart and Community meet the minimum acceptable SOC at every feasible departure and lower peak import by 5–21% against the new BAU.
 
 ## v3.3.1 - 2026-11-16
 
