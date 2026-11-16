@@ -91,12 +91,11 @@ class CityLearnBusinessAsUsualBaselineService:
                 'from the schema, so it cannot follow devices changed after loading; evaluate without the native reference '
                 '(include_business_as_usual=False) in that case.'
             )
+        identity = agent.comparison_identity()
         baseline_env._native_reference_metadata = dict(
             implementation='citylearn.agents.baseline.BusinessAsUsualAgent', simulator_version=__version__,
-            definition_version=agent.DEFINITION_VERSION, observation_access='privileged_simulator_state',
-            resolved_parameters={key: getattr(agent, key) for key in (
-                'ev_target_soc', 'ev_follow_required_soc', 'ev_service_margin_rate', 'ev_service_floor_rate',
-                'storage_min_soc', 'storage_max_soc', 'storage_deadband_kw', 'deferrable_start_action')},
+            definition_version=agent.DEFINITION_VERSION, observation_access=identity['observation_access'],
+            resolved_parameters=identity['parameters'],
         )
 
         while int(baseline_env.time_step) < target_time_step and not (baseline_env.terminated or baseline_env.truncated):

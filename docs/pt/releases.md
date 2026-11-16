@@ -3,6 +3,25 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## v3.4.0 - Por publicar
+
+- **Novo BAU de referência.** O `BusinessAsUsualAgent` carrega o EV assim que
+  chega, à potência máxima, mas só até ao SOC pedido pelo utilizador. A última
+  ordem fica limitada à energia em falta; abaixo da potência mínima do carregador,
+  o EV fica ligeiramente abaixo do alvo em vez de o ultrapassar. A referência BAU
+  do `evaluate_v2()` passa a usar esta definição. A carga imediata até 100%
+  continua disponível em `FullChargeBusinessAsUsualAgent` (`NormalPolicy`).
+- **Controladores Basic, Smart e Community.** `RBCBasicPolicy`, `RBCSmartPolicy`
+  e `RBCCommunityPolicy` passam a ser os controladores validados no repositório
+  Algorithms da Soft-CPS. O Basic usa o preço atual e a urgência do serviço. O
+  Smart agenda EVs e aparelhos com previsões de preço e de excedente solar local
+  e combina autoconsumo, arbitragem e reserva na bateria. O Community acrescenta
+  a energia partilhável entre membros e, com mercado comunitário, usa as baterias
+  em períodos caros quando a importação comunitária atinge 15 kW.
+- Todos usam as observações da interface de entidades e funcionam com as
+  interfaces flat e entity, incluindo topologia dinâmica. Os KPIs relativos ao
+  BAU mudam; consultar o [guia de migração](../migration.md#upgrade-from-33-to-340).
+
 ## v3.3.1 - 2026-11-16
 
 - O `evaluate_v2()` com a referência BAU nativa deixou de falhar com

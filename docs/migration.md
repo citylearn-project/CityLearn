@@ -46,6 +46,36 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Upgrade from 3.3 to 3.4.0
+
+No dataset, schema or export-file migration is required.
+
+- **BAU charges EVs to the requested departure SOC.** `BusinessAsUsualAgent`
+  (`immediate-user-target-v1`) still charges at once and at full power, but stops
+  at the user's requested departure SOC instead of 100%. The native BAU reference
+  added by `evaluate_v2()` changes with it, so every `business_as_usual`,
+  `delta_to_business_as_usual` and `ratio_to_business_as_usual` KPI can differ
+  from 3.3. Rerun both the controller and its reference; do not mix 3.3 and 3.4
+  BAU values. The previous behaviour is available as
+  `FullChargeBusinessAsUsualAgent` (alias `NormalPolicy`).
+- **BAU parameters.** The 3.3 constructor arguments `ev_target_soc`,
+  `ev_follow_required_soc`, `ev_service_margin_rate`, `ev_service_floor_rate` and
+  `storage_deadband_kw` no longer exist; unknown keyword arguments raise
+  `ValueError`. `storage_min_soc`, `storage_max_soc` and `deferrable_start_action`
+  keep their names and defaults. See the [baselines guide](baselines.md#default-parameters).
+- **Rule-based baselines.** `RBCBasicPolicy`, `RBCSmartPolicy` and
+  `RBCCommunityPolicy` are replaced by the Basic, Smart and Community baselines
+  validated in the Soft-CPS Algorithms repository. Their decisions, parameters and
+  results differ from 3.3. Pass parameters as keyword arguments, for example
+  `RBCCommunityPolicy(env, community_import_threshold_kw=10.0)`.
+- **Observations.** All baselines now decide from the named entity observations
+  rather than from simulator objects. Code that changes a building series or a
+  device after loading is seen by the baselines only through the observations
+  the simulator publishes for that step.
+- **Experiment identity.** `comparison_identity()` and the BAU reference
+  metadata report `observation_access='entity_observations'` and include the
+  definition version and resolved parameters.
+
 ## Upgrade from 3.3.0 to 3.3.1
 
 No dataset, schema or export-file migration is required. The native BAU

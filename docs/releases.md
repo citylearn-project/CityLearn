@@ -8,6 +8,20 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## v3.4.0 - Unreleased
+
+### What's new
+
+- **New BAU reference.** `BusinessAsUsualAgent` charges a connected EV at once and at full power, but only up to the user's requested departure SOC (`immediate-user-target-v1`). The last command is limited to the remaining energy gap; below the charger minimum the EV stops slightly short of the target instead of overshooting it. The native BAU reference in `evaluate_v2()` uses this definition. Immediate charging to 100% remains available as `FullChargeBusinessAsUsualAgent` (alias `NormalPolicy`).
+- **Basic, Smart and Community baselines.** `RBCBasicPolicy`, `RBCSmartPolicy` and `RBCCommunityPolicy` are replaced by the baselines validated in the Soft-CPS Algorithms repository. Basic uses the current price and service urgency. Smart schedules EVs and appliances from price and local PV-surplus forecasts and combines battery self-consumption, arbitrage and reserve. Community adds shareable member energy and, with the community market enabled, battery support during expensive periods once community import reaches 15 kW.
+- **One observation contract.** All baselines decide from the named entity observations and run under the flat and the entity interface, including dynamic topology. Keyword arguments set any policy parameter; unknown names raise an error. Experiment manifests record the definition version and resolved parameters.
+
+BAU-relative KPIs change with the new reference. Rerun the controller and its reference together; see the [migration guide](migration.md#upgrade-from-33-to-340) and the [baselines guide](baselines.md).
+
+### Validation
+
+On the same observations, the CityLearn baselines request exactly the same actions as the Algorithms policies at every step.
+
 ## v3.3.1 - 2026-11-16
 
 ### Fixed

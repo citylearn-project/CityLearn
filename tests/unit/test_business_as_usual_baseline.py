@@ -10,8 +10,8 @@ import pytest
 pytest.importorskip("gymnasium")
 
 from citylearn.agents.baseline import (
-    BusinessAsUsualAgent, NormalPolicy, NormalNoBatteryPolicy,
-    RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy,
+    BusinessAsUsualAgent, FullChargeBusinessAsUsualAgent, NormalPolicy, NormalNoBatteryPolicy,
+    NormalTargetPolicy, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy,
 )
 from citylearn.citylearn import CityLearnEnv
 
@@ -83,117 +83,152 @@ def _business_action(env: CityLearnEnv):
     return agent.predict(env.observations)[0]
 
 
-def test_business_as_usual_ev_charges_to_full_and_never_discharges():
-    env = CityLearnEnv(str(SOURCE_DATASET / "schema.json"), central_agent=True, episode_time_steps=4, random_seed=0)
+def _ev_action(agent_class, env: CityLearnEnv, **kwargs) -> float:
+    agent = agent_class(env, **kwargs)
+    action = agent.predict([])[0]
+    index = next(i for i, name in enumerate(env.action_names[0]) if name.startswith("electric_vehicle_storage_"))
+    return action[index]
 
+
+def _ev_env(**kwargs) -> CityLearnEnv:
+    env = CityLearnEnv(str(SOURCE_DATASET / "schema.json"), central_agent=True, episode_time_steps=4, random_seed=0, **kwargs)
+    env.reset(seed=0)
+    return env
+
+
+def test_business_as_usual_charges_at_once_up_to_user_target_and_never_discharges():
+    # Fixture: 20 kWh EV, requested departure SOC 0.8, 7.2 kW charger, 15-minute steps.
+    env = _ev_env()
     try:
-        env.reset(seed=0)
-        action_names = env.action_names[0]
-        ev_index = next(i for i, name in enumerate(action_names) if name.startswith("electric_vehicle_storage_"))
-        action = _business_action(env)
-        assert action[ev_index] > 0.0
+        battery = env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery
+        battery.soc[0] = 0.4
+        assert _ev_action(BusinessAsUsualAgent, env) == pytest.approx(1.0)
 
-        charger = env.buildings[0].electric_vehicle_chargers[0]
-        charger.connected_electric_vehicle.battery.soc[env.time_step] = 1.0
-        action = _business_action(env)
-        assert action[ev_index] == pytest.approx(0.0)
-        assert action[ev_index] >= 0.0
+        # The last command is limited to the remaining energy gap.
+        battery.soc[0] = 0.79
+        expected = (0.8 - 0.79 - 1.0e-6) * 20.0 / (0.25 * 7.2)
+        assert _ev_action(BusinessAsUsualAgent, env) == pytest.approx(expected, rel=1.0e-4)
+
+        for soc in (0.8, 0.95, 1.0):
+            battery.soc[0] = soc
+            assert _ev_action(BusinessAsUsualAgent, env) == pytest.approx(0.0)
     finally:
         env.close()
 
 
-@pytest.mark.parametrize('agent_class', [BusinessAsUsualAgent, NormalPolicy, NormalNoBatteryPolicy])
-@pytest.mark.parametrize('soc', [0.2, 0.8, 0.999])
-def test_bau_requests_maximum_until_full_even_above_departure_target(agent_class, soc):
-    env = CityLearnEnv(str(SOURCE_DATASET / 'schema.json'), episode_time_steps=4, random_seed=0)
+@pytest.mark.parametrize("agent_class", [FullChargeBusinessAsUsualAgent, NormalPolicy, NormalNoBatteryPolicy])
+@pytest.mark.parametrize("soc", [0.2, 0.8, 0.95])
+def test_full_charge_bau_requests_maximum_until_full_even_above_departure_target(agent_class, soc):
+    env = _ev_env()
     try:
-        env.reset(seed=0)
-        charger = env.buildings[0].electric_vehicle_chargers[0]
-        charger.connected_electric_vehicle.battery.soc[0] = soc
-        charger.min_charging_power = 1.38
-        agent = agent_class(env)
-        # A long deadline and a lower service target must never slow down BAU.
-        agent._ev_service_context_for_charger = lambda *args: {
-            'soc': soc, 'required_soc': 0.6, 'departure_hours': 100.0, 'capacity_kwh': 20.0,
-        }
-        assert agent._ev_action_for_charger(charger, -1.0, 1.0, building=env.buildings[0]) == 1.0
-        assert agent._ev_action_for_charger(charger, -1.0, 0.4, building=env.buildings[0]) == 0.4
-        charger.connected_electric_vehicle = None
-        assert agent._ev_action_for_charger(charger, -1.0, 1.0) == 0.0
+        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = soc
+        assert _ev_action(agent_class, env) == pytest.approx(1.0)
     finally:
         env.close()
 
 
-def test_bau_finishes_the_last_charge_interval_despite_charger_deadband():
-    env = CityLearnEnv(str(SOURCE_DATASET / 'schema.json'), episode_time_steps=4, random_seed=0)
+def test_business_as_usual_stops_below_target_instead_of_overshooting_charger_minimum(tmp_path: Path):
+    dataset_dir = tmp_path / "minute_ev_demo"
+    shutil.copytree(SOURCE_DATASET, dataset_dir)
+    schema_path = dataset_dir / "schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema["root_directory"] = str(dataset_dir)
+    # The remaining 0.2 kWh needs ~0.8 kW for 15 minutes, below this minimum.
+    schema["buildings"]["Building_1"]["chargers"]["charger_1_1"]["attributes"]["min_charging_power"] = 1.38
+    schema_path.write_text(json.dumps(schema), encoding="utf-8")
+    env = CityLearnEnv(str(schema_path), central_agent=True, episode_time_steps=4, random_seed=0)
     try:
         env.reset(seed=0)
-        charger = env.buildings[0].electric_vehicle_chargers[0]
-        ev = charger.connected_electric_vehicle
-        ev.battery.soc[0] = 0.999
-        charger.min_charging_power = 1.38
+        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 0.79
+        assert _ev_action(BusinessAsUsualAgent, env) == pytest.approx(0.0)
+        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 0.4
+        assert _ev_action(BusinessAsUsualAgent, env) == pytest.approx(1.0)
+    finally:
+        env.close()
+
+
+def test_business_as_usual_episode_never_charges_above_user_target():
+    env = _ev_env()
+    try:
+        ev = env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle
+        ev.battery.soc[0] = 0.7
         agent = BusinessAsUsualAgent(env)
-        action = agent._ev_action_for_charger(charger, -1.0, 1.0)
-        charger.update_connected_electric_vehicle_soc(action)
-        assert ev.battery.soc[0] == pytest.approx(1.0, abs=1e-6)
-        assert agent._ev_action_for_charger(charger, -1.0, 1.0) == 0.0
+        while not env.terminated:
+            env.step(agent.predict([]))
+        assert max(float(v) for v in ev.battery.soc[: env.time_step + 1]) <= 0.8 + 1.0e-4
     finally:
         env.close()
 
 
-@pytest.mark.parametrize('seconds', [15, 900, 3600])
-def test_bau_battery_covers_accepted_ev_energy_instead_of_exporting_nominal_request(seconds):
-    env = CityLearnEnv(str(SOURCE_DATASET / 'schema.json'), central_agent=True,
-                      seconds_per_time_step=seconds, episode_time_steps=4, random_seed=0)
-    try:
-        env.reset(seed=0)
-        building = env.buildings[0]
-        charger = building.electric_vehicle_chargers[0]
-        ev = charger.connected_electric_vehicle
-        ev.battery.soc[0] = 0.999
-        building.energy_simulation.non_shiftable_load[0] = 0.0
-        building._Building__solar_generation[0] = 0.0
-        agent = BusinessAsUsualAgent(env)
-        before = ev.battery.soc.copy()
-        efficiency = ev.battery.efficiency
-        actions = agent.predict([])
-        np.testing.assert_array_equal(ev.battery.soc, before)
-        assert ev.battery.efficiency == efficiency
-        assert actions[0][-1] == 1.0
-        env.step(actions)
-        assert 0.999 < ev.battery.soc[0] <= 1.0
-        if seconds >= 900:
-            assert ev.battery.soc[0] == pytest.approx(1.0, abs=1e-6)
-        assert building.net_electricity_consumption[0] >= -1.0e-5
-    finally:
-        env.close()
+def test_target_and_full_charge_aliases():
+    assert NormalTargetPolicy is BusinessAsUsualAgent
+    assert NormalPolicy is FullChargeBusinessAsUsualAgent
+    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-user-target-v1"
 
 
-@pytest.mark.parametrize('kwargs', [
-    {'ev_target_soc': 0.8}, {'ev_follow_required_soc': True}, {'ev_service_floor_rate': 0.5},
-])
-def test_bau_rejects_configuration_that_changes_its_full_charge_definition(kwargs):
-    env = CityLearnEnv(str(SOURCE_DATASET / 'schema.json'), episode_time_steps=4, random_seed=0)
+@pytest.mark.parametrize("kwargs", [{"ev_normal_target_soc": 0.5}, {"not_a_parameter": 1.0}])
+def test_business_as_usual_rejects_invalid_configuration(kwargs):
+    env = _ev_env()
     try:
-        with pytest.raises(ValueError, match='RBC'):
+        with pytest.raises(ValueError):
             BusinessAsUsualAgent(env, **kwargs)
     finally:
         env.close()
 
 
-@pytest.mark.parametrize('agent_class', [RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy])
-def test_native_rbcs_still_stop_at_departure_target(agent_class):
-    env = CityLearnEnv(str(SOURCE_DATASET / 'schema.json'), episode_time_steps=4, random_seed=0)
+@pytest.mark.parametrize("agent_class", [RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy])
+def test_rule_based_baselines_stop_at_departure_target(agent_class):
+    env = _ev_env()
     try:
-        env.reset(seed=0)
-        building = env.buildings[0]
-        charger = building.electric_vehicle_chargers[0]
-        charger.connected_electric_vehicle.battery.soc[0] = 0.8
-        agent = agent_class(env)
-        agent._ev_service_context_for_charger = lambda *args: {
-            'soc': 0.8, 'required_soc': 0.6, 'departure_hours': 100.0, 'capacity_kwh': 20.0,
-        }
-        assert agent._ev_action_for_charger(charger, 0.0, 1.0, building=building) == 0.0
+        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 0.85
+        assert _ev_action(agent_class, env) == pytest.approx(0.0)
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("agent_class", [RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy])
+def test_rule_based_baselines_serve_a_tight_departure(agent_class):
+    env = _ev_env()
+    try:
+        # 8 kWh in four 15-minute steps at 7.2 kW needs more than full power: serve now.
+        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 0.4
+        assert _ev_action(agent_class, env) > 0.5
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize(
+    "agent_class",
+    [BusinessAsUsualAgent, FullChargeBusinessAsUsualAgent, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy],
+)
+def test_baselines_take_the_same_actions_under_flat_and_entity_interfaces(agent_class):
+    trajectories = []
+    for interface in ("flat", "entity"):
+        env = CityLearnEnv(
+            str(SOURCE_DATASET / "schema.json"), central_agent=False, episode_time_steps=4,
+            random_seed=0, interface=interface,
+        )
+        try:
+            observations, _ = env.reset(seed=0)
+            agent = agent_class(env)
+            actions = []
+            while not env.terminated:
+                action = agent.predict(observations)
+                actions.append(action)
+                observations, *_ = env.step(action)
+            trajectories.append(actions)
+        finally:
+            env.close()
+    np.testing.assert_allclose(np.asarray(trajectories[0]), np.asarray(trajectories[1]))
+
+
+def test_baseline_comparison_identity_records_definition_and_parameters():
+    env = _ev_env()
+    try:
+        identity = RBCCommunityPolicy(env, community_import_threshold_kw=10.0).comparison_identity()
+        assert identity["implementation"] == "citylearn.agents.baseline.RBCCommunityPolicy"
+        assert identity["parameters"]["definition_version"] == RBCCommunityPolicy.DEFINITION_VERSION
+        assert identity["parameters"]["community_import_threshold_kw"] == 10.0
     finally:
         env.close()
 
@@ -216,41 +251,35 @@ def test_business_as_usual_deferrable_starts_at_first_available_step(tmp_path: P
         env.close()
 
 
-def test_business_as_usual_bess_self_consumption_respects_soc_and_deadband():
-    env = CityLearnEnv(str(SOURCE_DATASET / "schema.json"), central_agent=True, episode_time_steps=4, random_seed=0)
+def _bau_storage_action(*, solar_kwh: float, load_kwh: float, net_kwh: float, soc: float) -> float:
+    """Storage command of the BAU engine for one observed 15-minute building state."""
+    from gymnasium import spaces
+    from citylearn.agents import _baseline_engine as engines
 
-    try:
-        env.reset(seed=0)
-        building = env.buildings[0]
-        building.electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 1.0
-        action_names = env.action_names[0]
-        storage_index = action_names.index("electrical_storage")
+    engine = engines.NormalTargetPolicy({"algorithm": {"hyperparameters": {}}})
+    names = [
+        "solar_generation", "non_shiftable_load", "net_electricity_consumption",
+        "storage::B/electrical_storage::soc", "storage::B/electrical_storage::capacity_kwh",
+        "storage::B/electrical_storage::nominal_power_kw",
+    ]
+    engine.attach_environment(
+        observation_names=[names], action_names=[["electrical_storage"]],
+        action_space=[spaces.Box(-1.0, 1.0, (1,))], observation_space=[None],
+        metadata={"seconds_per_time_step": 900, "building_names": ["B"]},
+    )
+    observation = np.asarray([solar_kwh, load_kwh, net_kwh, soc, 5.0, 5.0], dtype="float64")
+    return engine.predict([observation])[0][0]
 
-        building.energy_simulation.non_shiftable_load[0] = 0.0
-        building._Building__solar_generation[0] = -0.5
-        action = _business_action(env)
-        assert action[storage_index] > 0.0
 
-        building.electrical_storage.soc[0] = 0.95
-        action = _business_action(env)
-        assert action[storage_index] == pytest.approx(0.0)
-
-        building.electrical_storage.soc[0] = 0.5
-        building._Building__solar_generation[0] = 0.0
-        building.energy_simulation.non_shiftable_load[0] = 0.5
-        action = _business_action(env)
-        assert action[storage_index] < 0.0
-
-        building.electrical_storage.soc[0] = 0.1
-        action = _business_action(env)
-        assert action[storage_index] == pytest.approx(0.0)
-
-        building.electrical_storage.soc[0] = 0.5
-        building.energy_simulation.non_shiftable_load[0] = 0.001
-        action = _business_action(env)
-        assert action[storage_index] == pytest.approx(0.0)
-    finally:
-        env.close()
+def test_business_as_usual_bess_self_consumption_respects_soc_and_threshold():
+    # 0.5 kWh PV surplus in 15 minutes is 2 kW: charge at 2 kW of the 5 kW battery.
+    assert _bau_storage_action(solar_kwh=0.5, load_kwh=0.0, net_kwh=-0.5, soc=0.5) == pytest.approx(0.4)
+    assert _bau_storage_action(solar_kwh=0.5, load_kwh=0.0, net_kwh=-0.5, soc=0.95) == pytest.approx(0.0)
+    # 0.5 kWh local import in 15 minutes is 2 kW: discharge at 2 kW.
+    assert _bau_storage_action(solar_kwh=0.0, load_kwh=0.5, net_kwh=0.5, soc=0.5) == pytest.approx(-0.4)
+    assert _bau_storage_action(solar_kwh=0.0, load_kwh=0.5, net_kwh=0.5, soc=0.1) == pytest.approx(0.0)
+    # 0.004 kW is below the 0.05 kW discharge threshold.
+    assert _bau_storage_action(solar_kwh=0.0, load_kwh=0.001, net_kwh=0.001, soc=0.5) == pytest.approx(0.0)
 
 
 @pytest.mark.parametrize("seconds_per_time_step", [15, 300, 3600])
@@ -380,3 +409,26 @@ def test_cli_default_agent_is_business_as_usual(monkeypatch):
     agent_action = next(action for action in simulate._actions if action.dest == "agent_name")
 
     assert agent_action.default == "citylearn.agents.baseline.BusinessAsUsualAgent"
+
+
+@pytest.mark.parametrize("agent_class", [BusinessAsUsualAgent, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy])
+def test_baselines_request_zero_for_actions_they_do_not_control(tmp_path: Path, agent_class):
+    dataset_dir = tmp_path / "minute_ev_demo"
+    shutil.copytree(SOURCE_DATASET, dataset_dir)
+    schema_path = dataset_dir / "schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema["root_directory"] = str(dataset_dir)
+    schema_path.write_text(json.dumps(schema), encoding="utf-8")
+    env = CityLearnEnv(str(schema_path), central_agent=True, episode_time_steps=4, random_seed=0)
+    try:
+        env.reset(seed=0)
+        agent = agent_class(env)
+        # Pretend the storage action is not controlled: it must be zero, the EV still served.
+        agent._is_controlled_action = lambda name: name.startswith("electric_vehicle_storage")
+        agent._build_engine()
+        action = agent.predict([])[0]
+        names = env.action_names[0]
+        assert action[names.index("electrical_storage")] == 0.0
+        assert action[next(i for i, n in enumerate(names) if n.startswith("electric_vehicle_storage_"))] > 0.0
+    finally:
+        env.close()

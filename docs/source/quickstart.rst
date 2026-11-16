@@ -16,10 +16,9 @@ What happens in this example?
    and caches it locally. Internet access is needed for that download;
    no repository clone or private dataset is required.
 2. ``reset(seed=0)`` starts the episode and returns observations plus information.
-3. The built-in ``BusinessAsUsualAgent`` selects actions. It charges connected EVs,
-   starts ready flexible appliances and uses stationary storage for PV
-   self-consumption. Its default EV target is full charge, not symmetric tracking
-   of a lower requested departure SOC.
+3. The built-in ``BusinessAsUsualAgent`` selects actions. It charges connected EVs
+   at once up to the user's requested departure SOC, starts ready flexible
+   appliances and uses stationary storage for PV self-consumption.
 4. ``step`` returns observations, rewards, termination, truncation and information,
    in that order. The loop stops when either termination flag is true.
 5. ``evaluate_v2()`` returns a table with ``cost_function``, ``value``, ``name`` and

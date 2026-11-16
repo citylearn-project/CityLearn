@@ -205,7 +205,7 @@ def native_reference(env):
     from citylearn.agents.baseline import BusinessAsUsualAgent
     result = dict(implementation='citylearn.agents.baseline.BusinessAsUsualAgent',
                   simulator_version=__version__, definition_version=BusinessAsUsualAgent.DEFINITION_VERSION,
-                  observation_access='privileged_simulator_state', evaluated=False, resolved_parameters=None)
+                  observation_access='entity_observations', evaluated=False, resolved_parameters=None)
     key = (env.episode_tracker.episode, int(env.time_step))
     cached = getattr(env, '_business_as_usual_baseline_cache', {}).get(key)
     if cached is not None:
