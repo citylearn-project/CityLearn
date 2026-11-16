@@ -3,6 +3,18 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## v3.3.1 - 2026-11-16
+
+- O `evaluate_v2()` com a referência BAU nativa deixou de falhar com
+  `ValueError: robustness event ... target does not match any declared
+  observation target` em schemas entity com topologia estática cujos eventos de
+  robustez de observação visam as tabelas `ev`, `storage` ou `pv`. O ambiente de
+  referência BAU usa agora a interface entity sempre que o ambiente avaliado a usa.
+- O agente BAU lê diretamente o estado do simulador, pelo que as ações e os KPIs
+  não dependem da interface. Em 13 schemas de Portugal os KPIs foram idênticos
+  bit a bit. Não é necessária migração de datasets, schemas ou exports.
+  Consultar o [guia de migração](../migration.md#upgrade-from-330-to-331).
+
 ## v3.3.0 - 2026-11-13
 
 **Mark Colley** ([@M-Colley](https://github.com/M-Colley)) contribuiu com

@@ -671,6 +671,44 @@ def test_asset_unavailable_telemetry_and_control_without_dynamic_topology(tmp_pa
         env.close()
 
 
+def test_business_as_usual_reference_accepts_entity_only_targets_with_static_topology(tmp_path: Path):
+    # An EV SOC event only resolves against the entity `ev` table. With static topology and no
+    # demand response the BAU reference used to be built flat and rejected the evaluated schema.
+    schema = _copy_schema(tmp_path, name="bau_entity_ev_soc", interface="entity")
+    schema["topology_mode"] = "static"
+    _write_events(
+        schema,
+        [
+            _event(
+                event_id="ev_soc_noise",
+                target_type="ev",
+                target_id="*",
+                target_feature="soc",
+                end=3,
+                mode="noise",
+                std=0.005,
+            )
+        ],
+    )
+    env = CityLearnEnv(_clean_schema(schema), central_agent=True, episode_time_steps=4, random_seed=0)
+
+    try:
+        assert env.interface == "entity"
+        assert env.topology_mode == "static"
+        env.reset(seed=0)
+        while not env.terminated:
+            env.step(_zero_actions(env))
+        sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+        try:
+            assert sidecar.interface == "entity"
+        finally:
+            sidecar.close()
+        kpis = env.evaluate_v2()
+        assert not kpis.empty
+    finally:
+        env.close()
+
+
 def test_observation_only_robustness_keeps_reward_on_real_state(tmp_path: Path):
     schema = _copy_schema(tmp_path, name="reward_real_state")
     _write_events(schema, [_event(replacement_value=-9999.0)])

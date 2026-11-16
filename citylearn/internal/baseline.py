@@ -148,8 +148,13 @@ class CityLearnBusinessAsUsualBaselineService:
             simulation_start = int(getattr(tracker, 'simulation_start_time_step', start))
             simulation_end = int(getattr(tracker, 'simulation_end_time_step', end))
 
+        # Follow the evaluated env's interface: robustness events can target entity tables
+        # (EV, storage, PV) that the flat layout does not expose, so a flat reference would
+        # reject a schema the evaluated env accepted. The BAU agent reads simulator state
+        # directly, so the interface does not change its actions.
         requires_entity_interface = (
-            getattr(env, 'topology_mode', None) == 'dynamic'
+            getattr(env, 'interface', 'flat') == 'entity'
+            or getattr(env, 'topology_mode', None) == 'dynamic'
             or bool(getattr(getattr(env, '_demand_response_service', None), 'enabled', False))
         )
 
