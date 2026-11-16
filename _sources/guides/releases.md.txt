@@ -6,6 +6,24 @@ CityLearn release. Older notes are retained in the [release archive](releases_ar
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## v3.3.1 - 2026-11-16
+
+### Fixed
+
+- **Native BAU reference with entity-only robustness targets.** `evaluate_v2()` no longer raises `ValueError: robustness event ... target does not match any declared observation target` on entity schemas with static topology whose robustness observation events target `ev`, `storage` or `pv` tables. The BAU reference env now uses the entity interface whenever the evaluated env does, as it already did for dynamic topology and demand response.
+
+The BAU agent reads simulator state directly, so its actions and KPIs do not depend on the interface; on 13 Portugal schemas the reference KPIs were bit-identical before and after the change. No dataset, schema or export migration is required. See the [migration guide](migration.md#upgrade-from-330-to-331).
+
+### Validation
+
+A regression test covers an EV SOC robustness event on a static entity schema evaluated with the native BAU reference. The full test suite and the release CI matrix passed.
+
+### Credits
+
+**Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)) ported the fix from SoftCPS Simulator 2.1.1.
+
+[Full changelog](https://github.com/citylearn-project/CityLearn/compare/v3.3.0...v3.3.1)
+
 ## v3.3.0 - 2026-11-13
 
 ### What's new
