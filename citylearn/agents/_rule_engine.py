@@ -124,6 +124,7 @@ class RulePolicyBase:
         self._obs_index = [
             {name: idx for idx, name in enumerate(names)} for names in observation_names
         ]
+        self._storage_suffix_cache = {}
         self._action_labels = [list(names) for names in action_names]
 
         self._action_bounds = []
@@ -370,12 +371,21 @@ class RulePolicyBase:
                     return value
 
             storage_suffix = f"::{suffix}"
-            for raw_name in obs_map:
-                raw = str(raw_name)
-                if raw.startswith("storage::") and raw.endswith(storage_suffix):
-                    value = self._get_value(obs, obs_map, raw, default=float("nan"))
-                    if not math.isnan(value):
-                        return value
+            # CityLearn: cache the matching names per observation layout.
+            cache = self.__dict__.setdefault("_storage_suffix_cache", {})
+            key = (id(obs_map), len(obs_map), storage_suffix)
+            matches = cache.get(key)
+            if matches is None:
+                matches = [
+                    str(raw_name)
+                    for raw_name in obs_map
+                    if str(raw_name).startswith("storage::") and str(raw_name).endswith(storage_suffix)
+                ]
+                cache[key] = matches
+            for raw in matches:
+                value = self._get_value(obs, obs_map, raw, default=float("nan"))
+                if not math.isnan(value):
+                    return value
 
             return default
 

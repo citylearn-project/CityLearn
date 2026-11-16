@@ -22,6 +22,27 @@ It is not a scenario with all equipment switched off.
 | Demand response | Runs under the scenario, but has no policy that optimizes an activation target, payment or penalty. |
 | Other active actions | Requests zero, clipped to the action bounds. This is not a dedicated HVAC, thermal-storage or escalator policy; the effect of zero follows each device's action contract. |
 
+### Choosing the BAU charging target
+
+`BusinessAsUsualAgent` has two EV charging targets:
+
+| `ev_charge_target` | Definition | EV behaviour |
+|---|---|---|
+| `'requested'` (default) | `immediate-user-target-v1` | Charges up to the user's requested departure SOC. |
+| `'full'` | `immediate-full-charge-v2` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. Its difference from the default includes the extra energy delivered above the requested SOC. |
+
+Everything else is the same. Select the BAU used as the KPI reference by
+`evaluate_v2()` with the environment setting
+`business_as_usual_ev_charge_target`, as a constructor argument or a schema key:
+
+```python
+env = CityLearnEnv(schema, business_as_usual_ev_charge_target='full')
+agent = BusinessAsUsualAgent(env, ev_charge_target='full')
+```
+
+The exported metadata records the selected definition. Compare results only
+against references with the same definition.
+
 All baselines in `citylearn.agents.baseline` read the same named, unnormalized
 entity observations (current state, schedules and the simulator's published
 forecasts). They work with the flat and the entity interface and return flat
@@ -75,7 +96,10 @@ Smart and Community use the entity observation bundles when the schema enables
 them: `entity_core_electrical` for measured import and export,
 `entity_forecasts_existing` and `entity_forecasts_derived` for price and PV
 forecasts, and `entity_community_operational` for community import and surplus.
-All bundles are off by default. Without the community bundle, Community cannot
+The simulator leaves them off unless the schema turns them on; some bundled
+datasets do (for example `citylearn_challenge_2022_phase_all_plus_evs` and the
+dynamic-topology demo), others do not (for example
+`citylearn_three_phase_electrical_service_demo`). Without the community bundle, Community cannot
 observe community import or surplus; without the forecast bundles, Smart and
 Community fall back to the current price and PV.
 Enable them in the schema, for example
@@ -195,7 +219,8 @@ their simulator-defined meaning.
 Read [the scorecard](scorecard.md) for matched-controller comparisons and
 [the UI guide](https://www.citylearn.net/ui.html) for the visual workflow.
 
-From 3.4.0, BAU uses `immediate-user-target-v1`: it charges EVs only up to
-the requested departure SOC, where 3.1–3.3 charged them to 100%. BAU references
+From 3.4.0, the default BAU uses `immediate-user-target-v1`: it charges EVs
+only up to the requested departure SOC, where 3.1–3.3 charged them to 100%. The
+full-charge BAU remains selectable (`immediate-full-charge-v2`). BAU references
 computed with earlier versions are not comparable with 3.4.0 results; rerun both
 the controller and its reference.

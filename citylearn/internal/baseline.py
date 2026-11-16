@@ -58,7 +58,9 @@ class CityLearnBusinessAsUsualBaselineService:
             gc.collect()
         baseline_env = self._new_sidecar_env()
         baseline_env.random_seed = env.random_seed
-        agent = BusinessAsUsualAgent(baseline_env)
+        agent = BusinessAsUsualAgent(
+            baseline_env, ev_charge_target=getattr(env, 'business_as_usual_ev_charge_target', 'requested'),
+        )
         baseline_env.reset()
         # Pair the away-EV stochastic stream with the source episode, including
         # repeated resets; a freshly constructed sidecar has a different episode index.

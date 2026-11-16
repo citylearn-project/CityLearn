@@ -885,6 +885,17 @@ class CityLearnEntityInterfaceService:
         schema = getattr(self.env, "schema", {}) or {}
         raw = schema.get("derived_forecasts", {}) if isinstance(schema, Mapping) else {}
         raw = raw if isinstance(raw, Mapping) else {}
+        # Called for every building and step: reuse the validated result while
+        # the schema settings are unchanged.
+        key = repr(sorted(raw.items(), key=lambda item: str(item[0])))
+        cached = getattr(self, "_derived_forecast_config_cache", None)
+        if cached is not None and cached[0] == key:
+            return cached[1]
+        config = self._validated_derived_forecast_config(raw)
+        self._derived_forecast_config_cache = (key, config)
+        return config
+
+    def _validated_derived_forecast_config(self, raw: Mapping[str, Any]) -> Mapping[str, Any]:
         method = str(raw.get("load_pv_method", raw.get("method", "actual_future"))).strip().lower()
         if method not in {"actual_future", "daily_persistence"}:
             raise ValueError(

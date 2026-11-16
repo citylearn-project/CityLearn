@@ -56,7 +56,9 @@ No dataset, schema or export-file migration is required.
   added by `evaluate_v2()` changes with it, so every `business_as_usual`,
   `delta_to_business_as_usual` and `ratio_to_business_as_usual` KPI can differ
   from 3.3. Rerun both the controller and its reference; do not mix 3.3 and 3.4
-  BAU values.
+  BAU values. To keep charging to 100%, set
+  `business_as_usual_ev_charge_target='full'` on the environment (or in the
+  schema) and use `BusinessAsUsualAgent(env, ev_charge_target='full')`.
 - **BAU parameters.** The 3.3 constructor arguments `ev_target_soc`,
   `ev_follow_required_soc`, `ev_service_margin_rate`, `ev_service_floor_rate` and
   `storage_deadband_kw` no longer exist; unknown keyword arguments raise

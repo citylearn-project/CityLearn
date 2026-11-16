@@ -9,8 +9,10 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   chega, à potência máxima, mas só até ao SOC pedido pelo utilizador. A última
   ordem fica limitada à energia em falta; abaixo da potência mínima do carregador,
   o EV fica ligeiramente abaixo do alvo em vez de o ultrapassar. A referência BAU
-  do `evaluate_v2()` passa a usar esta definição. O BAU com carga até 100% e os
-  controladores Basic, Smart e Community anteriores foram removidos, assim como
+  do `evaluate_v2()` passa a usar esta definição por defeito. O BAU com carga até
+  100% continua selecionável com `business_as_usual_ev_charge_target='full'` (ou
+  `BusinessAsUsualAgent(env, ev_charge_target='full')`). Os controladores Basic,
+  Smart e Community anteriores foram removidos, assim como
   os nomes `NormalPolicy`, `NormalNoBatteryPolicy`, `ServiceOnlyBaselineAgent`,
   `GridAwareBaselineAgent` e `CommunityAwareBaselineAgent`.
 - **Controladores Basic, Smart e Community.** `RBCBasicPolicy`, `RBCSmartPolicy`

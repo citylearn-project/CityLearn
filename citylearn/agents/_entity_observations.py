@@ -93,6 +93,118 @@ class EntityObservationFlattener:
     ) -> Tuple[List[List[str]], List[np.ndarray]]:
         """Return names and values per building.
 
+        The layout (names and source positions) is computed once per asset
+        layout; each step then gathers the values with NumPy. The result is
+        identical to :meth:`flatten_reference`.
+        """
+        tables = {name: _as_2d(values) for name, values in (payload.get('tables', {}) or {}).items()}
+        edges = payload.get('edges', {}) or {}
+        asset_rows = tuple(
+            tuple(tuple(_edge_targets(edges.get(f'building_to_{name}', []), b)) for b in range(len(self.building_ids)))
+            for name in _ASSET_TABLES
+        )
+        order = ('district', 'building', 'storage', 'pv', 'deferrable_appliance', 'charger', 'ev')
+        shapes = tuple(tables.get(name, np.zeros((0, 0))).shape for name in order)
+        key = (asset_rows, shapes)
+        if getattr(self, '_layout_key', None) != key:
+            self._build_layout(asset_rows, shapes, order)
+            self._layout_key = key
+
+        flat = [tables.get(name, np.zeros((0, 0))).ravel() for name in order]
+        source = np.concatenate(flat + [np.array([0.0, 1.0])] + [self._constants]).astype(np.float64, copy=False)
+        connected = _charger_ev_rows(edges.get('charger_to_ev_connected', []), edges.get('charger_to_ev_connected_mask', []))
+        incoming = _charger_ev_rows(edges.get('charger_to_ev_incoming', []), edges.get('charger_to_ev_incoming_mask', []))
+        ev_offset, (ev_rows_n, ev_cols) = self._offsets['ev'], shapes[-1]
+        values = []
+        for b, (index, ev_slots, headroom) in enumerate(self._plans):
+            if ev_slots:
+                index = index.copy()
+                for start, charger_row, is_connected in ev_slots:
+                    ev_row = (connected if is_connected else incoming).get(charger_row)
+                    width = len(self.features['ev'])
+                    if ev_row is None or ev_row >= ev_rows_n:
+                        index[start:start + width] = self._zero
+                    else:
+                        cols = np.arange(width)
+                        index[start:start + width] = np.where(cols < ev_cols, ev_offset + ev_row * ev_cols + cols, self._zero)
+            vector = source[index]
+            vector[~np.isfinite(vector)] = 0.0
+            if b < len(unlimited_buildings) and unlimited_buildings[b] and headroom.size:
+                vector[headroom] = np.nan
+            values.append(vector)
+        return [list(names) for names in self._names], values
+
+    def _build_layout(self, asset_rows, shapes, order):
+        offsets, position = {}, 0
+        for name, shape in zip(order, shapes):
+            offsets[name] = position
+            position += int(np.prod(shape)) if len(shape) == 2 else 0
+        self._offsets = offsets
+        self._zero, one = position, position + 1
+        constants: List[float] = []
+        base = position + 2
+        shape_of = dict(zip(order, shapes))
+
+        def cell(table, row, col):
+            rows, cols = shape_of[table]
+            return offsets[table] + row * cols + col if row < rows and col < cols else self._zero
+
+        def constant(value):
+            constants.append(float(value))
+            return base + len(constants) - 1
+
+        rows_by = dict(zip(_ASSET_TABLES, asset_rows))
+        self._names, self._plans = [], []
+        for b in range(len(self.building_ids)):
+            names: List[str] = []
+            index: List[int] = []
+            ev_slots = []
+            for col, feature in enumerate(self.features['district']):
+                names.append(f'district__{feature}'); index.append(cell('district', 0, col))
+            for col, feature in enumerate(self.features['building']):
+                names.append(feature); index.append(cell('building', b, col))
+            for table_name in ('storage', 'pv', 'deferrable_appliance'):
+                ids = self.ids[table_name]
+                for row in rows_by[table_name][b]:
+                    entity_id = ids[row] if row < len(ids) else f'{table_name}_{row}'
+                    for col, feature in enumerate(self.features[table_name]):
+                        names.append(f'{table_name}::{entity_id}::{feature}'); index.append(cell(table_name, row, col))
+            charger_ids = self.ids['charger']
+            for row in rows_by['charger'][b]:
+                charger_id = charger_ids[row] if row < len(charger_ids) else f'charger_{row}'
+                for col, feature in enumerate(self.features['charger']):
+                    names.append(f'charger::{charger_id}::{feature}'); index.append(cell('charger', row, col))
+                for label in ('connected_ev', 'incoming_ev'):
+                    ev_slots.append((len(index), row, label == 'connected_ev'))
+                    for feature in self.features['ev']:
+                        names.append(f'charger::{charger_id}::{label}::{feature}'); index.append(self._zero)
+            for label, table_name in (('active_chargers_count', 'charger'), ('active_storages_count', 'storage'),
+                                      ('active_pvs_count', 'pv'), ('active_deferrable_appliances_count', 'deferrable_appliance')):
+                names.append(label); index.append(constant(len(rows_by[table_name][b])))
+            if rows_by['charger'][b]:
+                first = rows_by['charger'][b][0]
+                for legacy_name, source in _LEGACY_CHARGER_ALIASES.items():
+                    col = self._charger_col.get(source)
+                    if col is not None:
+                        names.append(legacy_name); index.append(cell('charger', first, col))
+            else:
+                for legacy_name in _LEGACY_CHARGER_ALIASES:
+                    names.append(legacy_name); index.append(self._zero)
+            names.append('electric_vehicle_is_flexible'); index.append(one)
+            if 'minute' not in names and 'minutes' in names:
+                index.append(index[names.index('minutes')]); names.append('minute')
+            if 'solar_generation' not in names and 'pv_power_kw' in names:
+                index.append(index[names.index('pv_power_kw')]); names.append('solar_generation')
+            headroom = np.asarray([i for i, n in enumerate(names) if 'headroom' in n and '::' not in n], dtype=int)
+            self._names.append(names)
+            self._plans.append((np.asarray(index, dtype=np.int64), ev_slots, headroom))
+        self._constants = np.asarray(constants, dtype=np.float64)
+
+    def flatten_reference(
+        self, payload: Mapping[str, Any], unlimited_buildings: Sequence[bool] = (),
+    ) -> Tuple[List[List[str]], List[np.ndarray]]:
+        """Return names and values per building (readable reference implementation).
+
         ``unlimited_buildings[b]`` marks a building without electrical service
         limits. The entity tables publish its headroom as 0 kW, which would read
         as "no capacity"; its headroom features are returned as NaN (unknown).

@@ -435,3 +435,97 @@ def test_headroom_of_buildings_without_service_limits_is_unknown_not_zero():
     assert np.isnan(values[0][names[0].index("charging_building_headroom_kw")])
     assert values[0][names[0].index("non_shiftable_load")] == 1.0
     assert values[1][names[1].index("charging_building_headroom_kw")] == 5.0
+
+
+@pytest.mark.parametrize("soc", [0.2, 0.8, 0.95])
+def test_full_charge_bau_requests_maximum_until_full_even_above_departure_target(soc):
+    env = _ev_env()
+    try:
+        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = soc
+        assert _ev_action(BusinessAsUsualAgent, env, ev_charge_target="full") == pytest.approx(1.0)
+        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 1.0
+        assert _ev_action(BusinessAsUsualAgent, env, ev_charge_target="full") == pytest.approx(0.0)
+    finally:
+        env.close()
+
+
+def test_bau_charge_target_is_validated_and_recorded():
+    env = _ev_env()
+    try:
+        with pytest.raises(ValueError, match="ev_charge_target"):
+            BusinessAsUsualAgent(env, ev_charge_target="half")
+        agent = BusinessAsUsualAgent(env, ev_charge_target="full")
+        assert agent.DEFINITION_VERSION == "immediate-full-charge-v2"
+        assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-user-target-v1"
+        parameters = agent.comparison_identity()["parameters"]
+        assert parameters["ev_charge_target"] == "full"
+        assert parameters["definition_version"] == "immediate-full-charge-v2"
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("target,definition", [("requested", "immediate-user-target-v1"), ("full", "immediate-full-charge-v2")])
+def test_evaluate_v2_uses_the_selected_bau(target, definition):
+    env = CityLearnEnv(str(SOURCE_DATASET / "schema.json"), central_agent=True, episode_time_steps=4,
+                       random_seed=0, business_as_usual_ev_charge_target=target)
+    try:
+        env.reset(seed=0)
+        env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery.soc[0] = 0.4
+        _run_zero_episode(env)
+        kpis = env.evaluate_v2()
+        assert "district_ev_total_charge_business_as_usual_kwh" in set(kpis["cost_function"])
+        reference = env.run_business_as_usual_baseline().env._native_reference_metadata
+        assert reference["definition_version"] == definition
+        assert env.get_metadata()["business_as_usual_ev_charge_target"] == target
+    finally:
+        env.close()
+
+
+def test_env_rejects_unknown_bau_charge_target():
+    with pytest.raises(ValueError, match="ev_charge_target"):
+        CityLearnEnv(str(SOURCE_DATASET / "schema.json"), episode_time_steps=4, business_as_usual_ev_charge_target="x")
+
+
+def _market_schema_with_bundles(tmp_path: Path) -> Path:
+    source = Path(__file__).resolve().parents[2] / "data/datasets/citylearn_three_phase_electrical_service_demo"
+    dataset_dir = tmp_path / "market_demo"
+    shutil.copytree(source, dataset_dir)
+    schema_path = dataset_dir / "schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema["root_directory"] = str(dataset_dir)
+    schema["observation_bundles"] = {
+        name: True for name in (
+            "entity_core_electrical", "entity_community_operational",
+            "entity_forecasts_existing", "entity_forecasts_derived",
+        )
+    }
+    schema_path.write_text(json.dumps(schema), encoding="utf-8")
+    return schema_path
+
+
+def test_smart_and_community_use_forecast_and_community_bundles(tmp_path: Path):
+    schema_path = _market_schema_with_bundles(tmp_path)
+    actions = {}
+    for agent_class in (RBCSmartPolicy, RBCCommunityPolicy):
+        env = CityLearnEnv(str(schema_path), central_agent=False, episode_time_steps=48, random_seed=0)
+        try:
+            observations, _ = env.reset(seed=0)
+            agent = agent_class(env)
+            names = set(agent._engine._obs_index[0])
+            # Both see the price and PV forecasts; only Community sees the community state.
+            assert any(name.startswith("forecast_pv_next_") for name in names)
+            assert any("price" in name and ("forecast" in name or "predicted" in name) for name in names)
+            has_community = any("community_import_power_kw" in name for name in names)
+            assert has_community == (agent_class is RBCCommunityPolicy)
+            assert agent._engine.uses_community_dispatch == (agent_class is RBCCommunityPolicy)
+            history = []
+            while not env.terminated:
+                action = agent.predict(observations)
+                history.append(action)
+                observations, *_ = env.step(action)
+            actions[agent_class] = np.asarray(history, dtype=object)
+        finally:
+            env.close()
+    smart = [np.concatenate(step) for step in actions[RBCSmartPolicy]]
+    community = [np.concatenate(step) for step in actions[RBCCommunityPolicy]]
+    assert any(not np.allclose(a, b) for a, b in zip(smart, community))

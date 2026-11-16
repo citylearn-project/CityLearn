@@ -10,9 +10,10 @@ entity interface and return flat-like action vectors in
 Agent                                       Behaviour
 ==========================================  ==========================================================
 :class:`BusinessAsUsualAgent`               Reference BAU. Charges a connected EV at once, at full
-                                            power, up to the user's requested departure SOC; starts
-                                            appliances at the first admissible step; the home battery
-                                            stores PV surplus and serves local import.
+                                            power, up to the user's requested departure SOC
+                                            (default) or to 100% (``ev_charge_target='full'``);
+                                            starts appliances at the first admissible step; the
+                                            home battery stores PV surplus and serves local import.
 :class:`RBCBasicPolicy`                     Current price and service urgency for EVs and
                                             appliances; battery self-consumption.
 :class:`RBCSmartPolicy`                     Price and local PV-surplus forecasts schedule EVs and
@@ -32,7 +33,7 @@ example ``RBCCommunityPolicy(env, community_import_threshold_kw=10.0)``.
 
 from __future__ import annotations
 
-from typing import Any, ClassVar, Dict, List, Mapping, Optional
+from typing import Any, ClassVar, Dict, List, Mapping, Optional, Tuple
 
 import numpy as np
 from gymnasium import spaces
@@ -175,6 +176,8 @@ class _RuleBaselineAgent(Agent):
     def comparison_identity(self):
         from citylearn import __version__
         parameters = {'definition_version': self.DEFINITION_VERSION}
+        if hasattr(self, 'ev_charge_target'):
+            parameters['ev_charge_target'] = self.ev_charge_target
         for key, value in sorted(vars(self._engine).items()):
             if key.startswith('_') or not isinstance(value, (bool, int, float, str)):
                 continue
@@ -193,18 +196,43 @@ class _RuleBaselineAgent(Agent):
 
 
 class BusinessAsUsualAgent(_RuleBaselineAgent):
-    """Reference BAU: immediate EV charging capped by the user's departure SOC.
+    """Reference BAU: immediate EV charging, earliest appliance start, PV self-consumption.
 
-    A connected EV is charged at once, at maximum power, until it reaches its
-    requested departure SOC. The last command is limited to the remaining
-    energy gap; when that command is below the charger minimum the EV stops
-    slightly below the target instead of overshooting it. Appliances start at
-    the first admissible step and the home battery stores local PV surplus and
-    serves local import (self-consumption).
+    A connected EV is charged at once and at maximum power. With
+    ``ev_charge_target='requested'`` (default, ``immediate-user-target-v1``) it
+    stops at the user's requested departure SOC: the last command is limited to
+    the remaining energy gap, and when that command is below the charger minimum
+    the EV stops slightly below the target instead of overshooting it. With
+    ``ev_charge_target='full'`` (``immediate-full-charge-v2``) it charges to 100%,
+    as the BAU of CityLearn 3.1–3.3 did. Appliances start at the first admissible
+    step and the home battery stores local PV surplus and serves local import.
+
+    Choose the BAU that ``evaluate_v2()`` uses with the environment's
+    ``business_as_usual_ev_charge_target``.
     """
 
+    EV_CHARGE_TARGETS: ClassVar[Mapping[str, Tuple[type, str]]] = {
+        'requested': (engines.NormalTargetPolicy, 'immediate-user-target-v1'),
+        'full': (engines.NormalPolicy, 'immediate-full-charge-v2'),
+    }
     ENGINE_CLASS = engines.NormalTargetPolicy
     DEFINITION_VERSION = 'immediate-user-target-v1'
+
+    def __init__(self, env: CityLearnEnv, ev_charge_target: str = 'requested', **hyperparameters: Any):
+        self.ENGINE_CLASS, self.DEFINITION_VERSION = self.definition(ev_charge_target)
+        self.ev_charge_target = str(ev_charge_target)
+        super().__init__(env, **hyperparameters)
+
+    @classmethod
+    def definition(cls, ev_charge_target: str) -> Tuple[type, str]:
+        """Engine class and definition version of a BAU ``ev_charge_target``."""
+
+        try:
+            return cls.EV_CHARGE_TARGETS[str(ev_charge_target)]
+        except KeyError:
+            raise ValueError(
+                f"ev_charge_target must be one of {sorted(cls.EV_CHARGE_TARGETS)}, got {ev_charge_target!r}."
+            ) from None
 
 
 class RBCBasicPolicy(_RuleBaselineAgent):
