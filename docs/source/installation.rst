@@ -65,6 +65,57 @@ For building new datasets from End-Use Load Profiles with
 
    python -m pip install "citylearn[end_use_load_profiles]"
 
+Version compatibility
+*********************
+
+The base requirements of each release, from its ``requirements.txt`` and
+``python_requires``; "any" means the release does not constrain the version.
+The last column gives the Python versions for which the pinned requirements
+publish wheels on PyPI. It is derived from those pins, not tested, and names
+the pin that sets the limit. CityLearn 2.4.0 to 2.4.2 were withdrawn from PyPI.
+
+.. csv-table::
+   :header: "CityLearn", "Tag date", "Python", "NumPy", "Gym / Gymnasium", "scikit-learn", "PyTorch", "Other pins", "Installable Python (derived)"
+
+   "3.3.0 - 3.5.0", "2026-11-13 - 2026-11-17", ">=3.9", "<3.0.0", "gymnasium>=0.28.1,<2.0.0", "any", "any", "none", "No pin limits Python; see the CI coverage below"
+   "3.2.0", "2026-11-06", ">=3.9", "<2.0.0", "gymnasium>=0.28.1,<2.0.0", "<=1.2.2", "any", "none; OpenStudio and doe_xstock moved to the end_use_load_profiles extra", "3.9 - 3.11 (scikit-learn 1.2.2)"
+   "3.0.0 - 3.1.1", "2026-09-09 - 2026-11-04", ">=3.9", "<2.0.0", "gymnasium<=0.28.1", "<=1.2.2", "any (with torchvision)", "doe_xstock>=2.0.0, openstudio<=3.10.0", "3.9 - 3.11 (scikit-learn 1.2.2), where OpenStudio <=3.10.0 has a wheel"
+   "2.5.0", "2025-10-30", ">=3.7.7", "<2.0.0", "gymnasium<=0.28.1", "<=1.2.2", "any (with torchvision)", "doe_xstock>=1.1.0, openstudio<=3.3.0, nrel-pysam", "Where OpenStudio <=3.3.0 has a wheel; reported to install on 3.9 and to fail on 3.10 and 3.11"
+   "2.2.0 - 2.4.2", "2024-11-06 - 2025-08-10", ">=3.7.7", "<2.0.0", "gymnasium (any)", "<=1.2.2", "any (with torchvision)", "doe_xstock>=1.0.0 (2.2.0) or >=1.1.0, openstudio<=3.3.0, nrel-pysam", "Where OpenStudio <=3.3.0 has a wheel; reported to install on 3.9 and to fail on 3.10 and 3.11"
+   "2.0.0 - 2.1.2", "2023-09-10 - 2024-02-25", ">=3.7", ">=1.21.6", "gym>=0.21.0", "==1.0.2", ">=1.12.0 (with torchvision>=0.13.0)", "pandas==1.3.5", "3.7 - 3.10 (pandas 1.3.5, scikit-learn 1.0.2)"
+   "1.5.0 - 1.8.0", "2023-01-28 - 2023-04-06", ">=3.7", "==1.21.6", "gym==0.25.1 (1.8.0: gym>=0.21.0)", "==1.0.2", "==1.12.0 (with torchvision==0.13.0)", "pandas==1.3.5", "3.7 - 3.10 (NumPy 1.21.6, PyTorch 1.12.0)"
+
+Continuous integration runs the test suite on Linux with Python 3.9, 3.10 and
+3.12 (NumPy 2, and NumPy 1 on Python 3.10). It also installs the built package
+with ``pip`` and runs a simulation on macOS (Apple Silicon) with Python 3.11,
+Windows with Python 3.12 and Linux with Python 3.13.
+
+Troubleshooting installation
+****************************
+
+``No matching distribution found for openstudio<=3.3.0``
+   CityLearn 2.2.0 to 2.5.0 required OpenStudio 3.3.0 or older, which PyPI does
+   not provide for recent Python versions (reported for 3.10 and 3.11). Install
+   CityLearn 3.2.0 or newer: OpenStudio and ``doe_xstock`` are then needed only
+   for ``citylearn.end_use_load_profiles`` and come with the
+   ``end_use_load_profiles`` extra.
+
+scikit-learn fails to compile, for example with an OpenMP error on macOS
+   CityLearn 2.2.0 to 3.2.0 pinned ``scikit-learn<=1.2.2``, which has no wheels
+   for Python 3.12 or newer, so ``pip`` tries to build it from source. Install
+   CityLearn 3.3.0 or newer, or use Python 3.11 or older for those releases.
+
+``TypeError: 'staticmethod' object is not callable`` when importing CityLearn
+   Reported for CityLearn 2.3.0 on Python 3.9. Install a current release.
+
+An old release is required to reproduce earlier results
+   Install it without dependencies and then the dependencies that the table
+   above lists for it, with versions available for your Python:
+
+   .. code-block:: console
+
+      python -m pip install --no-deps citylearn==2.3.1
+
 Datasets
 ********
 
