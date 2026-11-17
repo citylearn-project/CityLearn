@@ -8,6 +8,19 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## Unreleased
+
+### Fixed
+
+- **BAU time-series export.** The BAU export writes the executed time steps only, like the control exports. It used to add the terminal step, a copy of the last executed step, which inflated totals summed from the file.
+- **Charger exports.** Without an EV, the charger row writes `-1.00` under `EV SOC-%` instead of adding an `EV SOC` column.
+- **CLI evaluation.** `citylearn simulate ... evaluate` and `train --evaluate` no longer fail (`All arrays must be of the same length`, or `not enough values to unpack` with `-te`), and `train --evaluate` evaluates the trained agent instead of a new one. The CLI no longer uses `datetime.UTC`, so it runs on Python 3.9 and 3.10.
+- **Schema agent attributes.** `load_agent()` without `agent` keeps `schema['agent']['attributes']` when keyword arguments such as `env=` are passed; keyword arguments override them. `Simulator(..., agent_name=None)` therefore builds the schema's agent with the schema's parameters.
+- **Windows.** `run_work_order()` activates virtual environments with `activate.bat`, which `cmd.exe` can run. JSON and YAML files are read and written as UTF-8, so non-ASCII text in schemas is no longer decoded as cp1252.
+- **Multi-community KPI comparison.** `load_kpis()` and `compare_exports()` read multi-community KPI exports, which repeat each name once per community, instead of raising `Duplicate KPI/name rows`.
+
+Trajectories and KPIs are unchanged. The BAU and charger export files change, and so do runs that relied on `load_agent()` discarding the schema attributes. See the [migration guide](migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 ### What's new

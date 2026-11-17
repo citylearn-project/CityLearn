@@ -173,10 +173,8 @@ When `return_substeps=True`, `info` also includes `substep_rewards`, `substep_in
 ## CLI
 
 The current CLI requires Stable Baselines3 even for its listing commands:
-install `stable-baselines3==2.3.2` alongside CityLearn. Use Python 3.11 or newer
-for `simulate ... train/evaluate`, whose timestamp code uses `datetime.UTC`.
-The Python simulation loop above works on supported earlier Python versions
-without Stable Baselines3.
+install `stable-baselines3==2.3.2` alongside CityLearn. The Python simulation
+loop above works without Stable Baselines3.
 
 ```bash
 citylearn --version
