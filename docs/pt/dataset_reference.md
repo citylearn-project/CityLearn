@@ -20,7 +20,12 @@ CSV e Parquet sao intercambiaveis se:
 
 Use `DataSet().get_dataset_names()` para consultar o catálogo público. Pode passar
 um nome público ao `CityLearnEnv` ou indicar o caminho do seu próprio `schema.json`.
+Cada primeira descarga usa dois pedidos à API do GitHub; sem autenticação há 60
+por hora. Defina `CITYLEARN_GITHUB_TOKEN` ou `GITHUB_TOKEN` para subir esse limite.
 As [notas dos datasets retirados](retired_datasets.md) ficam separadas do guia atual.
+
+Os [datasets REC de Portugal](portugal_rec_datasets.md) oferecem quatro comunidades
+a 15 minutos, de 4 a 100 membros, cada uma com cenários de avaliação.
 
 ## Contrato de Unidades
 

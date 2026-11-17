@@ -6,6 +6,7 @@ from filelock import FileLock
 from platformdirs import user_cache_dir
 import shutil
 import tempfile
+from urllib.parse import quote
 from typing import Any, Dict, Iterable, Mapping, List, Optional, Union
 import numpy as np
 import pandas as pd
@@ -261,15 +262,15 @@ class DataSet:
                     f'Next time DataSet.get_dataset(\'{dataset_name}\') is called, it will read '
                     'from cache unless DataSet.clear_cache is run first.'
                 )
-                contents = self.get_github_contents(path)
+                files = self._get_github_dataset_files(path)
                 session = self.get_requests_session()
 
                 def download(staging: str):
-                    for c in contents:
-                        if c['type'] == 'file':
-                            relative_directory_content = c['path'].split(f'{dataset_name}/')[-1].split('/')[:-1]
-                            filepath = os.path.join(staging, *relative_directory_content, c['name'])
-                            self._download_file(c['download_url'], filepath, session=session)
+                    for relative_path, url in files:
+                        self._download_file(url, os.path.join(staging, *relative_path.split('/')), session=session)
+
+                    if not os.path.isfile(os.path.join(staging, 'schema.json')):
+                        raise FileNotFoundError(f'Dataset {dataset_name} has no schema.json at {path}.')
 
                 self._publish_directory(root_directory, download)
 
@@ -281,6 +282,106 @@ class DataSet:
             schema_filepath = os.path.join(target_directory, 'schema.json')
 
         return schema_filepath
+
+    @staticmethod
+    def _relative_dataset_path(relative_path: str, source: str) -> str:
+        parts = relative_path.split('/')
+
+        if relative_path.startswith('/') or any(p in ('', '.', '..') or '\\' in p for p in parts):
+            raise ValueError(f'Invalid dataset path: {source}')
+
+        return relative_path
+
+    def _get_github_dataset_files(self, path: str) -> List[tuple]:
+        """Return `(relative path, download URL)` for every file of the dataset at `path`, subfolders included.
+
+        The parent folder listing gives the dataset's Git tree, which one recursive Git trees request lists
+        in full, so a download costs two GitHub API requests however deeply the dataset is nested. Files
+        are then fetched from raw.githubusercontent.com, which does not count towards the API rate limit.
+        """
+
+        parent, _, name = path.rstrip('/').rpartition('/')
+        entry = None
+
+        if parent:
+            entry = next((
+                c for c in self.get_github_contents(parent)
+                if c.get('type') == 'dir' and c.get('name') == name and c.get('sha')
+            ), None)
+
+        if entry is not None:
+            return self._get_github_tree_files(path, entry['sha'], entry.get('path', path))
+
+        files = []
+
+        for c in self.get_github_contents(path):
+            name = self._relative_dataset_path(c['name'], c.get('path', c['name']))
+
+            if c['type'] == 'file':
+                files.append((name, c['download_url']))
+
+            elif c['type'] == 'dir':
+                files += [
+                    (f'{name}/{relative_path}', url) for relative_path, url
+                    in self._get_github_tree_files(FileHandler.join_url(path, name), c['sha'], c['path'])
+                ]
+
+            else:
+                raise ValueError(f"Unsupported dataset entry: {c.get('path', name)} ({c['type']})")
+
+        return files
+
+    def _get_github_tree_files(self, path: str, sha: str, source: str) -> List[tuple]:
+        files = []
+
+        for t in self.get_github_tree(sha):
+            if t['type'] == 'blob':
+                relative_path = self._relative_dataset_path(t['path'], f"{source}/{t['path']}")
+                files.append((relative_path, self.get_github_raw_url(FileHandler.join_url(path, relative_path))))
+
+            elif t['type'] != 'tree':
+                raise ValueError(f"Unsupported dataset entry: {source}/{t['path']} ({t['type']})")
+
+        return files
+
+    def get_github_tree(self, sha: str) -> List[Mapping[str, Any]]:
+        """Return every entry below the Git tree `sha`, recursively."""
+
+        if self.offline:
+            raise OfflineDataError(
+                'Offline mode is enabled and GitHub access is disabled. '
+                'Provide local data files or disable offline mode.'
+            )
+
+        url = FileHandler.join_url('https://api.github.com/repos/', self.github_account, self.repository, 'git', 'trees', sha)
+        response = self.get_requests_session().get(url, params=dict(recursive=1), **self._github_api_kwargs())
+
+        if response.status_code != 200:
+            raise Exception(f'Unable to get response from GitHub API for endpoint: {url}.'\
+                f'\rReturned status code: {response.status_code};\rContent: {response.content}')
+
+        tree = response.json()
+
+        if tree.get('truncated'):
+            raise Exception(f'GitHub API returned a truncated tree for endpoint: {url}.')
+
+        return tree['tree']
+
+    @staticmethod
+    def _github_api_kwargs() -> Mapping[str, Any]:
+        """Authenticate GitHub API requests with `CITYLEARN_GITHUB_TOKEN` or `GITHUB_TOKEN` when set.
+
+        Anonymous requests are limited to 60 per hour; authenticated ones to 5,000.
+        """
+
+        token = os.getenv('CITYLEARN_GITHUB_TOKEN') or os.getenv('GITHUB_TOKEN')
+
+        return dict(headers={'Authorization': f'Bearer {token}'}) if token else {}
+
+    def get_github_raw_url(self, path: str) -> str:
+        return FileHandler.join_url(
+            'https://raw.githubusercontent.com', self.github_account, self.repository, self.tag, quote(path)
+        )
 
     @staticmethod
     def _publish_directory(target_directory: str, populate) -> None:
@@ -507,9 +608,10 @@ class DataSet:
                 'Provide local data files or disable offline mode.'
             )
 
-        url = self.GITHUB_API_CONTENT_URL if path is None else FileHandler.join_url(self.GITHUB_API_CONTENT_URL, path) 
+        base_url = FileHandler.join_url('https://api.github.com/repos/', self.github_account, self.repository, 'contents')
+        url = base_url if path is None else FileHandler.join_url(base_url, path)
         params = dict(ref=self.tag)
-        contents = self.get_requests_session().get(url, params=params)
+        contents = self.get_requests_session().get(url, params=params, **self._github_api_kwargs())
 
         if contents.status_code == 200:
             contents = contents.json()

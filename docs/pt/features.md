@@ -84,6 +84,11 @@ Consultar o [guia de robustez](robustness_reference.md).
 
 ## Dados, desempenho e visualização
 
+Os [datasets REC de Portugal](portugal_rec_datasets.md) são comunidades em Parquet
+a 15 minutos, com 4, 15, 30 e 100 membros, em 2023-2024. Os cenários de avaliação
+acrescentam alterações de topologia, limites elétricos, falhas de equipamentos,
+cortes e resposta da procura.
+
 CSV e Parquet partilham o contrato de dados. O carregamento por janela e a cache
 comum de meteorologia, preços e carbono reduzem carregamento repetido.
 Os modos de renderização `none`, `during` e `end` controlam quando são escritos

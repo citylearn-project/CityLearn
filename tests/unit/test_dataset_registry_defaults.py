@@ -18,4 +18,14 @@ def test_retired_datasets_are_not_in_the_public_repository():
 
     assert "EC_Ermesinde" not in names
     assert not any(name.startswith("ALADI ") for name in names)
-    assert not any(name.startswith("rec_") for name in names)
+    assert not any(name.startswith("rec_2023_") for name in names)
+
+
+def test_portugal_rec_datasets_are_in_the_public_repository():
+    datasets_directory = Path(__file__).resolve().parents[2] / "data" / "datasets"
+
+    for name in (
+        "pt_rec_4", "pt_rec_15", "pt_rec_30", "pt_rec_100",
+    ):
+        assert (datasets_directory / name / "schema.json").is_file()
+        assert (datasets_directory / name / "shared").is_dir()
