@@ -20,6 +20,10 @@ CSV e Parquet sao intercambiaveis se:
 
 Use `DataSet().get_dataset_names()` para consultar o catálogo público. Pode passar
 um nome público ao `CityLearnEnv` ou indicar o caminho do seu próprio `schema.json`.
+`CITYLEARN_OFFLINE=1` torna o modo offline o valor por omissão de `DataSet` e
+`CityLearnEnv`, e `CITYLEARN_DATASET_GITHUB_ACCOUNT`, `CITYLEARN_DATASET_REPOSITORY`
+e `CITYLEARN_DATASET_TAG` escolhem de onde o `DataSet` descarrega. Cada objeto lê-as
+quando é criado; os argumentos explícitos têm prioridade.
 Cada primeira descarga usa dois pedidos à API do GitHub; sem autenticação há 60
 por hora. Defina `CITYLEARN_GITHUB_TOKEN` ou `GITHUB_TOKEN` para subir esse limite.
 As [notas dos datasets retirados](retired_datasets.md) ficam separadas do guia atual.
