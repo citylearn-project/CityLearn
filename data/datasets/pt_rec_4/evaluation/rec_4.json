@@ -1,0 +1,705 @@
+{
+  "dataset_id": "CORE-4",
+  "dataset_family": "PT-MICRO-4",
+  "dataset_contract_version": "portugal-native-2023-2024-v3.3",
+  "random_seed": 2023,
+  "root_directory": "..",
+  "central_agent": false,
+  "interface": "entity",
+  "simulation_start_time_step": 0,
+  "simulation_end_time_step": 70175,
+  "episode_time_steps": null,
+  "rolling_episode_split": false,
+  "random_episode_split": false,
+  "seconds_per_time_step": 900,
+  "start_date": "2023-01-01",
+  "timezone": "Europe/Lisbon",
+  "observations": {
+    "month": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "day_type": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "hour": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "minutes": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "daylight_savings_status": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "outdoor_dry_bulb_temperature": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "outdoor_dry_bulb_temperature_predicted_1": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "outdoor_dry_bulb_temperature_predicted_2": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "outdoor_dry_bulb_temperature_predicted_3": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "outdoor_relative_humidity": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "diffuse_solar_irradiance": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "direct_solar_irradiance": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "carbon_intensity": {
+      "active": true,
+      "shared_in_central_agent": true
+    },
+    "non_shiftable_load": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "solar_generation": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "electrical_storage_soc": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "net_electricity_consumption": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "electricity_pricing": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "electricity_pricing_predicted_1": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "electricity_pricing_predicted_2": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "electricity_pricing_predicted_3": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "power_outage": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "electric_vehicle_charger_connected_state": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "connected_electric_vehicle_at_charger_battery_capacity": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "connected_electric_vehicle_at_charger_departure_time": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "connected_electric_vehicle_at_charger_required_soc_departure": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "connected_electric_vehicle_at_charger_soc": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "electric_vehicle_charger_incoming_state": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "incoming_electric_vehicle_at_charger_estimated_arrival_time": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_pending": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_running": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_can_start": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_deadline_missed": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_earliest_start_time_step": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_latest_start_time_step": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_deadline_time_step": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_hours_until_latest_start": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_hours_until_deadline": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_slack_steps": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_slack_ratio": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_urgency_ratio": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_cycle_duration_steps": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_cycle_energy_kwh": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_remaining_energy_kwh": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_current_step_energy_kwh": {
+      "active": true,
+      "shared_in_central_agent": false
+    },
+    "deferrable_appliance_priority": {
+      "active": true,
+      "shared_in_central_agent": false
+    }
+  },
+  "actions": {
+    "cooling_storage": {
+      "active": false
+    },
+    "heating_storage": {
+      "active": false
+    },
+    "dhw_storage": {
+      "active": false
+    },
+    "electrical_storage": {
+      "active": true
+    },
+    "electric_vehicle_storage": {
+      "active": true
+    },
+    "deferrable_appliance": {
+      "active": true
+    }
+  },
+  "reward_function": {
+    "type": "citylearn.reward_function.RewardFunction",
+    "attributes": {}
+  },
+  "observation_bundles": {
+    "entity_core_electrical": true,
+    "entity_community_operational": true,
+    "entity_forecasts_existing": true,
+    "entity_forecasts_derived": true,
+    "entity_demand_response": false,
+    "entity_robustness": false,
+    "entity_action_feedback": true,
+    "entity_temporal_derived": true
+  },
+  "derived_forecasts": {
+    "load_pv_method": "daily_persistence",
+    "persistence_period_seconds": 86400,
+    "cold_start": "current_step",
+    "price_source": "publication_aware_day_ahead_market_input",
+    "price_publication_time_local": "13:00",
+    "price_unpublished_fallback": "daily_persistence",
+    "price_horizon_steps": [
+      4,
+      24,
+      96
+    ]
+  },
+  "community_market": {
+    "enabled": true,
+    "local_price_ratio_to_grid_import": 0.8,
+    "grid_export_price": 0.0
+  },
+  "electric_vehicles_def": {
+    "EV-M001-01": {
+      "type": "citylearn.electric_vehicle.ElectricVehicle",
+      "include": true,
+      "battery": {
+        "type": "citylearn.energy_model.Battery",
+        "autosize": false,
+        "attributes": {
+          "capacity": 50.0,
+          "nominal_power": 10.488,
+          "initial_soc": 0.7,
+          "depth_of_discharge": 1.0,
+          "loss_coefficient": 0.0,
+          "efficiency": 0.96,
+          "power_efficiency_curve": [
+            [
+              0,
+              0.96
+            ],
+            [
+              1,
+              0.96
+            ]
+          ],
+          "capacity_power_curve": [
+            [
+              0,
+              1
+            ],
+            [
+              0.9,
+              1
+            ],
+            [
+              1,
+              0.25
+            ]
+          ],
+          "capacity_loss_coefficient": 0.0
+        }
+      }
+    },
+    "EV-M003-01": {
+      "type": "citylearn.electric_vehicle.ElectricVehicle",
+      "include": true,
+      "battery": {
+        "type": "citylearn.energy_model.Battery",
+        "autosize": false,
+        "attributes": {
+          "capacity": 60.0,
+          "nominal_power": 10.488,
+          "initial_soc": 0.7,
+          "depth_of_discharge": 1.0,
+          "loss_coefficient": 0.0,
+          "efficiency": 0.96,
+          "power_efficiency_curve": [
+            [
+              0,
+              0.96
+            ],
+            [
+              1,
+              0.96
+            ]
+          ],
+          "capacity_power_curve": [
+            [
+              0,
+              1
+            ],
+            [
+              0.9,
+              1
+            ],
+            [
+              1,
+              0.25
+            ]
+          ],
+          "capacity_loss_coefficient": 0.0
+        }
+      }
+    }
+  },
+  "buildings": {
+    "Member_001": {
+      "include": true,
+      "type": "citylearn.building.Building",
+      "energy_simulation": "evaluation/native_inputs/rec_4/Member_001.parquet",
+      "weather": "shared/weather.parquet",
+      "carbon_intensity": "shared/carbon_intensity.parquet",
+      "pricing": "shared/pricing_omie.parquet",
+      "inactive_observations": [],
+      "inactive_actions": [],
+      "equity_group": "residential",
+      "pv": {
+        "type": "citylearn.energy_model.PV",
+        "autosize": false,
+        "attributes": {
+          "nominal_power": 3.78,
+          "generation_mode": "absolute"
+        }
+      },
+      "electrical_storage": {
+        "type": "citylearn.energy_model.Battery",
+        "autosize": false,
+        "attributes": {
+          "capacity": 10.24,
+          "nominal_power": 5.0,
+          "efficiency": 0.94,
+          "initial_soc": 0.5,
+          "depth_of_discharge": 0.9,
+          "loss_coefficient": 2.805892205981486e-05,
+          "capacity_loss_coefficient": 0.0,
+          "phase_connection": "L1",
+          "power_efficiency_curve": [
+            [
+              0,
+              0.94
+            ],
+            [
+              1,
+              0.94
+            ]
+          ],
+          "capacity_power_curve": [
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        }
+      },
+      "chargers": {
+        "CHG-M001-01": {
+          "type": "citylearn.electric_vehicle_charger.Charger",
+          "charger_simulation": "evaluation/native_inputs/rec_4/CHG-M001-01.parquet",
+          "autosize": false,
+          "noise_std": 0.0,
+          "attributes": {
+            "nominal_power": 3.68,
+            "efficiency": 0.95,
+            "charger_type": 0,
+            "max_charging_power": 3.68,
+            "min_charging_power": 1.38,
+            "max_discharging_power": 0.0,
+            "min_discharging_power": 0.0,
+            "phase_connection": "L1"
+          }
+        }
+      },
+      "electrical_service": {
+        "mode": "three_phase",
+        "default_split": "L1",
+        "connection_type": "single_phase",
+        "contracted_power_kva": 6.9,
+        "original_sampled_contracted_power_kva": 6.9,
+        "native_peak_import_kw": 4.344264997923607,
+        "native_peak_export_kw": 2.859632374402575,
+        "native_feasibility_margin": null,
+        "contract_level_upgraded_for_native_feasibility": false,
+        "active_power_factor_assumption": 1.0,
+        "limits": {
+          "total": {
+            "import_kw": 6.9,
+            "export_kw": 6.9
+          },
+          "per_phase": {
+            "L1": {
+              "import_kw": 6.9,
+              "export_kw": 6.9
+            },
+            "L2": {
+              "import_kw": 0.0,
+              "export_kw": 0.0
+            },
+            "L3": {
+              "import_kw": 0.0,
+              "export_kw": 0.0
+            }
+          }
+        },
+        "observations": {
+          "headroom": true,
+          "headroom_export": true,
+          "violation": true,
+          "phase_encoding": true
+        }
+      }
+    },
+    "Member_002": {
+      "include": true,
+      "type": "citylearn.building.Building",
+      "energy_simulation": "evaluation/native_inputs/rec_4/Member_002.parquet",
+      "weather": "shared/weather.parquet",
+      "carbon_intensity": "shared/carbon_intensity.parquet",
+      "pricing": "shared/pricing_omie.parquet",
+      "inactive_observations": [],
+      "inactive_actions": [
+        "electrical_storage"
+      ],
+      "equity_group": "residential",
+      "electrical_service": {
+        "mode": "three_phase",
+        "default_split": "L2",
+        "connection_type": "single_phase",
+        "contracted_power_kva": 6.9,
+        "original_sampled_contracted_power_kva": 6.9,
+        "native_peak_import_kw": 2.2081976122711633,
+        "native_peak_export_kw": 0.0,
+        "native_feasibility_margin": null,
+        "contract_level_upgraded_for_native_feasibility": false,
+        "active_power_factor_assumption": 1.0,
+        "limits": {
+          "total": {
+            "import_kw": 6.9,
+            "export_kw": 0.0
+          },
+          "per_phase": {
+            "L1": {
+              "import_kw": 0.0,
+              "export_kw": 0.0
+            },
+            "L2": {
+              "import_kw": 6.9,
+              "export_kw": 0.0
+            },
+            "L3": {
+              "import_kw": 0.0,
+              "export_kw": 0.0
+            }
+          }
+        },
+        "observations": {
+          "headroom": true,
+          "headroom_export": true,
+          "violation": true,
+          "phase_encoding": true
+        }
+      },
+      "deferrable_appliances": {
+        "DEF-M002-01": {
+          "type": "citylearn.energy_model.DeferrableAppliance",
+          "autosize": false,
+          "cycle_profiles_file": "deferrables/DEF-M002-01_profiles.parquet",
+          "flexibility_schedule_file": "evaluation/native_inputs/rec_4/DEF-M002-01_schedule.parquet",
+          "attributes": {
+            "trigger_threshold": 0.5
+          }
+        },
+        "DEF-M002-02": {
+          "type": "citylearn.energy_model.DeferrableAppliance",
+          "autosize": false,
+          "cycle_profiles_file": "deferrables/DEF-M002-02_profiles.parquet",
+          "flexibility_schedule_file": "evaluation/native_inputs/rec_4/DEF-M002-02_schedule.parquet",
+          "attributes": {
+            "trigger_threshold": 0.5
+          }
+        }
+      }
+    },
+    "Member_003": {
+      "include": true,
+      "type": "citylearn.building.Building",
+      "energy_simulation": "evaluation/native_inputs/rec_4/Member_003.parquet",
+      "weather": "shared/weather.parquet",
+      "carbon_intensity": "shared/carbon_intensity.parquet",
+      "pricing": "shared/pricing_omie.parquet",
+      "inactive_observations": [],
+      "inactive_actions": [
+        "electrical_storage"
+      ],
+      "equity_group": "residential",
+      "chargers": {
+        "CHG-M003-01": {
+          "type": "citylearn.electric_vehicle_charger.Charger",
+          "charger_simulation": "evaluation/native_inputs/rec_4/CHG-M003-01.parquet",
+          "autosize": false,
+          "noise_std": 0.0,
+          "attributes": {
+            "nominal_power": 7.36,
+            "efficiency": 0.95,
+            "charger_type": 0,
+            "max_charging_power": 7.36,
+            "min_charging_power": 1.38,
+            "max_discharging_power": 0.0,
+            "min_discharging_power": 0.0,
+            "phase_connection": "L3"
+          }
+        }
+      },
+      "electrical_service": {
+        "mode": "three_phase",
+        "default_split": "L3",
+        "connection_type": "single_phase",
+        "contracted_power_kva": 10.35,
+        "original_sampled_contracted_power_kva": 10.35,
+        "native_peak_import_kw": 4.497658844240423,
+        "native_peak_export_kw": 0.0,
+        "native_feasibility_margin": null,
+        "contract_level_upgraded_for_native_feasibility": false,
+        "active_power_factor_assumption": 1.0,
+        "limits": {
+          "total": {
+            "import_kw": 10.35,
+            "export_kw": 0.0
+          },
+          "per_phase": {
+            "L1": {
+              "import_kw": 0.0,
+              "export_kw": 0.0
+            },
+            "L2": {
+              "import_kw": 0.0,
+              "export_kw": 0.0
+            },
+            "L3": {
+              "import_kw": 10.35,
+              "export_kw": 0.0
+            }
+          }
+        },
+        "observations": {
+          "headroom": true,
+          "headroom_export": true,
+          "violation": true,
+          "phase_encoding": true
+        }
+      }
+    },
+    "Member_004": {
+      "include": true,
+      "type": "citylearn.building.Building",
+      "energy_simulation": "evaluation/native_inputs/rec_4/Member_004.parquet",
+      "weather": "shared/weather.parquet",
+      "carbon_intensity": "shared/carbon_intensity.parquet",
+      "pricing": "shared/pricing_omie.parquet",
+      "inactive_observations": [],
+      "inactive_actions": [
+        "electrical_storage"
+      ],
+      "equity_group": "residential",
+      "electrical_service": {
+        "mode": "three_phase",
+        "default_split": "L1",
+        "connection_type": "single_phase",
+        "contracted_power_kva": 4.6,
+        "original_sampled_contracted_power_kva": 4.6,
+        "native_peak_import_kw": 2.2650322451782503,
+        "native_peak_export_kw": 0.0,
+        "native_feasibility_margin": null,
+        "contract_level_upgraded_for_native_feasibility": false,
+        "active_power_factor_assumption": 1.0,
+        "limits": {
+          "total": {
+            "import_kw": 4.6,
+            "export_kw": 0.0
+          },
+          "per_phase": {
+            "L1": {
+              "import_kw": 4.6,
+              "export_kw": 0.0
+            },
+            "L2": {
+              "import_kw": 0.0,
+              "export_kw": 0.0
+            },
+            "L3": {
+              "import_kw": 0.0,
+              "export_kw": 0.0
+            }
+          }
+        },
+        "observations": {
+          "headroom": true,
+          "headroom_export": true,
+          "violation": true,
+          "phase_encoding": true
+        }
+      }
+    }
+  },
+  "render_file_format": "parquet",
+  "export_kpis_on_episode_end": false,
+  "physics_invariant_checks": true,
+  "topology_mode": "static",
+  "experimental_design": {
+    "version": "portugal-native-2023-2024-v3.3",
+    "name": "rec_4",
+    "label": "REC-4",
+    "purpose": "diagnostic",
+    "factors": {
+      "T": false,
+      "E": false,
+      "H": false,
+      "G": false,
+      "D": false
+    },
+    "agent_fault_labels": "known_faults explicitly enabled; not a fault-diagnosis benchmark",
+    "sensor_noise_stress": false,
+    "member_departures": [],
+    "mobility_semantics": "independent arrivals; SOC prescribed per session; no longitudinal trip-energy claim",
+    "tariff_policy": "omie_nonnegative",
+    "simulator_commit": "978be68b0e0740deab15ecf536805f323b86fa57",
+    "years": [
+      2023,
+      2024
+    ],
+    "year_windows": {
+      "2023": [
+        0,
+        35039
+      ],
+      "2024": [
+        35040,
+        70175
+      ]
+    },
+    "continuation": "Topology is not replayed. Permanent exits and retired assets remain absent; same equipment and members.",
+    "frozen_2023_source_fingerprint": "c073ab395a0a6340dfb4ababec167aeab2c733e22c2eff70facc09a90dc2596a",
+    "realism_revision": "portugal-realism-4",
+    "activity_calendar": "catalogs/household_activity.parquet",
+    "realism_parameter_status": "Residential aggregate parameters developed on seven raw SHEERM houses; commercial hourly anchors from predeclared BDG2 development buildings; domestic program shapes from REFIT houses 3/5. Independent identities held out. Transfer weights, service activities, occupancy, charging, flexibility and other behaviour remain scenario priors, not a Portuguese population fit.",
+    "fixed_thermal_placeholders": "Indoor temperature 21 C and humidity 50% are inactive nonthermal placeholders, not comfort ground truth",
+    "disturbance_regimes": "generation_regime distinguishes synthetic local/common faults and retained controlled stress; continuous noise remains an explicit sensor stress control",
+    "commercial_activity": null,
+    "occupancy_semantics": "occupant_count is sampled integer presence at commercial sites, separately tracking staff, clients and care residents; operations.expected_people is its compatibility alias; catalogue occupants counts household residents. Public opening hours are posted service constraints; preparation/cleanup may occur outside them."
+  },
+  "native_compatibility": {
+    "engine_commit": "978be68b0e0740deab15ecf536805f323b86fa57",
+    "no_runtime_modifications": true,
+    "appliance_phases": "native building default split",
+    "backup": "native aggregate supply; no extra hybrid inverter cap",
+    "dr_reference": "native rolling pre-event mean; no calibration/qualification claim",
+    "external_service": "source mobility is descriptive, not physically simulated",
+    "original_schema_sha256": "02b708764fda5664d76b8a187fcd61cfd0ef4059cacfcccf72054fc27e71bf10",
+    "declared_appliance_phases": {
+      "DEF-M002-01": "L2",
+      "DEF-M002-02": "L2"
+    }
+  },
+  "robustness": {
+    "agent_observation_contract": {
+      "mode": "known_faults"
+    }
+  }
+}
