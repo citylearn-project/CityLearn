@@ -189,20 +189,125 @@ class DataSet:
 
         return existing_directories
 
-    def _find_local_dataset_root(self, name: str) -> Optional[str]:
+    @staticmethod
+    def _dataset_input_files(schema: Mapping[str, Any], root_directory: str) -> List[str]:
+        """Return the input files that constructing `CityLearnEnv` from `schema` reads, as the schema names them.
+
+        This is the single list of the schema keys that name input files. It follows the loader
+        (`citylearn.internal.loading`, `loading_inputs` and `loading_components`, which also open the
+        dynamics and occupant models), the demand-response and robustness services, the community tariffs
+        and the time axis. Only buildings the loader loads count: every building of a dynamic topology,
+        otherwise those not set to `include: false`. Each value is resolved like the loader does, with
+        `os.path.join(root_directory, value)`. Constructor arguments that load more than the schema includes
+        (`buildings`, `deferrable_appliances`, `topology_mode`) can read files beyond this list.
+        `tests/test_dataset_cache_recovery.py` records the files a construction opens so the list stays complete.
+        """
+
+        files = []
+
+        def add(*values):
+            files.extend(v for v in values if v)
+
+        # CityLearnEnv requires topology_mode='dynamic' for such a schema, and the loader then loads every building.
+        events = schema.get('topology_events', [])
+        dynamic = str(schema.get('topology_mode', '')).strip().lower() == 'dynamic' or (
+            isinstance(events, list) and any(isinstance(e, Mapping) for e in events)
+        )
+
+        for name, building in (schema.get('buildings') or {}).items():
+            if not dynamic and not parse_bool(building.get('include', True), default=True, path=f'buildings.{name}.include'):
+                continue
+
+            add(building.get('energy_simulation'), building.get('weather'), building.get('carbon_intensity'), building.get('pricing'))
+
+            if building.get('dynamics') is not None:
+                add(building['dynamics'].get('attributes', {}).get('filename'))
+
+            if building.get('occupant') is not None:
+                attributes = building['occupant'].get('attributes', {})
+                add(
+                    building['occupant'].get('parameters_filename'),
+                    attributes.get('setpoint_increase_model_filename'),
+                    attributes.get('setpoint_decrease_model_filename'),
+                )
+
+            for charger in (building.get('chargers') or {}).values():
+                add(charger.get('charger_simulation'))
+
+            for appliance in (building.get('deferrable_appliances') or {}).values():
+                add(appliance.get('cycle_profiles_file'), appliance.get('flexibility_schedule_file'))
+
+            for escalator in (building.get('escalators') or {}).values():
+                add(escalator.get('simulation') or escalator.get('simulation_file'))
+
+            pv = building.get('pv')
+
+            if pv is not None and parse_bool(pv.get('autosize', False), default=False, path=f'buildings.{name}.pv.autosize'):
+                add((pv.get('autosize_attributes') or {}).get('epw_filepath'))
+
+        for service, key in (('demand_response', 'requests_file'), ('robustness', 'events_file')):
+            config = schema.get(service) or {}
+
+            if parse_bool(config.get('enabled', False), default=False, path=f'{service}.enabled'):
+                add(config.get(key))
+
+        add(*((schema.get('community_market') or {}).get('tariff_files') or {}).values())
+        calendar = (schema.get('time_axis') or {}).get('calendar_file')
+
+        # The time axis reads the implicit Portugal calendar only when it exists, so it is never missing.
+        if (
+            calendar is None and str(schema.get('dataset_contract_version', '')).startswith('portugal-native')
+            and os.path.isfile(os.path.join(root_directory, 'shared', 'calendar.parquet'))
+        ):
+            calendar = 'shared/calendar.parquet'
+
+        add(calendar)
+
+        return list(dict.fromkeys(files))
+
+    @classmethod
+    def _missing_dataset_files(cls, directory: Union[Path, str]) -> List[str]:
+        """Return the files of the dataset in `directory` that its loading needs but that do not exist."""
+
+        directory = str(directory)
+        schema_filepath = os.path.join(directory, 'schema.json')
+
+        if not os.path.isfile(schema_filepath):
+            return ['schema.json']
+
+        schema = FileHandler.read_json(schema_filepath)
+
+        return [
+            f for f in cls._dataset_input_files(schema, directory)
+            if not os.path.isfile(os.path.join(directory, f))
+        ]
+
+    def _local_dataset_roots(self, name: str) -> List[str]:
+        """Folders with a schema.json that hold dataset `name`, other than its cache folder.
+
+        They are `name` itself when it is such a folder, then `name` under each local datasets root.
+        """
+
         normalized_name = str(name).strip()
-        name_path = Path(normalized_name).expanduser()
+        cache_root = os.path.join(self.cache_directory, 'datasets', Path(normalized_name.rstrip('/')).name)
+        cache_root = os.path.normcase(os.path.realpath(cache_root))
+        candidates = [Path(normalized_name).expanduser()]
+        candidates += [Path(root) / normalized_name for root in self.local_datasets_directories]
+        roots = []
 
-        if name_path.is_dir() and (name_path / 'schema.json').is_file():
-            return str(name_path.resolve())
-
-        for root in self.local_datasets_directories:
-            candidate = Path(root) / normalized_name
-
+        for candidate in candidates:
             if candidate.is_dir() and (candidate / 'schema.json').is_file():
-                return str(candidate.resolve())
+                root = str(candidate.resolve())
 
-        return None
+                if os.path.normcase(root) != cache_root and root not in roots:
+                    roots.append(root)
+
+        return roots
+
+    def _find_local_dataset_root(self, name: str) -> Optional[str]:
+        """Return the first complete local copy of dataset `name`, or None."""
+
+        return next((r for r in self._local_dataset_roots(name) if len(self._missing_dataset_files(r)) == 0), None)
 
     def _find_local_misc_filepath(self, filename: str) -> Optional[str]:
         for root in self.local_misc_directories:
@@ -237,8 +342,11 @@ class DataSet:
         schema_filepath = os.path.join(root_directory, 'schema.json')
         path = FileHandler.join_url(self.datasets_path, dataset_name)
 
-        # check that dataset does not already exist using the schema as a proxy
-        if not os.path.isfile(schema_filepath):
+        # The cached dataset is complete when its schema and every input file the schema loads exist. An
+        # interrupted download by an earlier version can leave schema.json without the files it names.
+        missing_files = self._missing_dataset_files(root_directory)
+
+        if len(missing_files) > 0:
             local_root_directory = self._find_local_dataset_root(str(name))
 
             if local_root_directory is not None:
@@ -250,14 +358,23 @@ class DataSet:
                 if self.offline:
                     local_directories = self.local_datasets_directories
                     local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
+                    cached_message = (
+                        f"The cached copy at '{root_directory}' lacks {', '.join(missing_files)}."
+                        if os.path.isfile(schema_filepath) else f"There is no cached schema '{schema_filepath}'."
+                    )
+                    incomplete_message = ''.join(
+                        f" The local copy at '{r}' lacks {', '.join(self._missing_dataset_files(r))}."
+                        for r in self._local_dataset_roots(str(name))
+                    )
                     raise OfflineDataError(
-                        f"Offline mode is enabled and dataset '{dataset_name}' was not found locally. "
-                        f"Checked cache file '{schema_filepath}' and local dataset roots: {local_directories_message}. "
-                        "Pass a local schema.json file path or place the dataset under one of the local roots."
+                        f"Offline mode is enabled and no complete copy of dataset '{dataset_name}' was found locally. "
+                        f"{cached_message}{incomplete_message} Checked local dataset roots: {local_directories_message}. "
+                        "Pass a local schema.json file path, place the complete dataset under one of the local roots "
+                        "or disable offline mode to download it."
                     )
 
                 LOGGER.info(
-                    f'The {dataset_name} dataset DNE in cache/local roots. Will download from '
+                    f'The {dataset_name} dataset DNE or is incomplete in cache/local roots. Will download from '
                     f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {datasets_directory}. '
                     f'Next time DataSet.get_dataset(\'{dataset_name}\') is called, it will read '
                     'from cache unless DataSet.clear_cache is run first.'
@@ -268,9 +385,6 @@ class DataSet:
                 def download(staging: str):
                     for relative_path, url in files:
                         self._download_file(url, os.path.join(staging, *relative_path.split('/')), session=session)
-
-                    if not os.path.isfile(os.path.join(staging, 'schema.json')):
-                        raise FileNotFoundError(f'Dataset {dataset_name} has no schema.json at {path}.')
 
                 self._publish_directory(root_directory, download)
 
@@ -383,15 +497,16 @@ class DataSet:
             'https://raw.githubusercontent.com', self.github_account, self.repository, self.tag, quote(path)
         )
 
-    @staticmethod
-    def _publish_directory(target_directory: str, populate) -> None:
+    @classmethod
+    def _publish_directory(cls, target_directory: str, populate) -> None:
         """Fill a dataset folder in a private staging folder, then move it into place.
 
         Concurrent first downloads used to write into, and delete, the same cache folder. A dataset
-        now appears under `target_directory` only when complete; a process that loses the race to
-        publish keeps the complete copy that won. Publishing, including the removal of an incomplete
-        folder left by an earlier version, holds a lock and checks again for a complete copy first,
-        so a published dataset is never removed.
+        now appears under `target_directory` only when complete, that is when its schema and every
+        input file the schema loads exist; a process that loses the race to publish keeps the complete
+        copy that won. Publishing, including the replacement of an incomplete folder left by an earlier
+        version, holds a lock and checks again for a complete copy first, so a complete published
+        dataset is never removed.
         """
 
         parent = os.path.dirname(target_directory)
@@ -402,13 +517,17 @@ class DataSet:
 
         try:
             populate(staging)
+            missing_files = cls._missing_dataset_files(staging)
+
+            if len(missing_files) > 0:
+                raise FileNotFoundError(f"Dataset {name} lacks {', '.join(missing_files)} and was not cached.")
 
             # One lock per dataset, held by threads and processes alike and released by the operating
             # system if its holder dies. Downloads still run in parallel; only publishing is serialised.
             with FileLock(os.path.join(parent, f'.{name}.lock')):
-                if not os.path.isfile(os.path.join(target_directory, 'schema.json')):
+                if len(cls._missing_dataset_files(target_directory)) > 0:
                     if os.path.isdir(target_directory):
-                        # Incomplete folder left by an interrupted download of an earlier version. Move it
+                        # Incomplete folder, e.g. left by an interrupted download of an earlier version. Move it
                         # aside in one step (it is either gone or untouched), delete it after the lock.
                         stale = tempfile.mkdtemp(prefix=f'.{name}-stale-', dir=parent)
                         os.rename(target_directory, os.path.join(stale, name))

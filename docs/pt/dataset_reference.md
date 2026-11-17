@@ -22,6 +22,11 @@ Use `DataSet().get_dataset_names()` para consultar o catálogo público. Pode pa
 um nome público ao `CityLearnEnv` ou indicar o caminho do seu próprio `schema.json`.
 Cada primeira descarga usa dois pedidos à API do GitHub; sem autenticação há 60
 por hora. Defina `CITYLEARN_GITHUB_TOKEN` ou `GITHUB_TOKEN` para subir esse limite.
+Um dataset em cache só é usado quando o seu `schema.json` e todos os ficheiros de
+entrada que o schema carrega existem: os ficheiros dos edifícios carregados e os de
+eventos, tarifas e calendário. Caso contrário, é substituído de uma só vez por uma
+cópia local completa ou, com rede, por uma nova descarga; em modo offline sem cópia
+completa, `OfflineDataError` indica os ficheiros em falta.
 As [notas dos datasets retirados](retired_datasets.md) ficam separadas do guia atual.
 
 Os [datasets REC de Portugal](portugal_rec_datasets.md) oferecem quatro comunidades
