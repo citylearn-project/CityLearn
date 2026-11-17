@@ -17,6 +17,11 @@ Resolve available names with `DataSet().get_dataset_names()` or use the CLI afte
 installing its dependencies. Pass a dataset name to `CityLearnEnv` for automatic
 download and caching, or pass your own local `schema.json` path. Use
 `offline=True` with locally available files to disable network fallbacks.
+Each first download uses two GitHub API requests; anonymous clients get 60 per
+hour. Set `CITYLEARN_GITHUB_TOKEN` or `GITHUB_TOKEN` to raise that limit.
+
+The [Portugal REC datasets](portugal_rec_datasets.md) provide four 15-minute
+communities of 4 to 100 members, each with evaluation scenarios.
 
 ## Unit Contract
 

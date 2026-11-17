@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Releases &mdash; CityLearn 3.4.0 documentation</title>
+  <title>Releases &mdash; CityLearn 3.5.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=b0e360d0"></script>
+      <script src="../_static/documentation_options.js?v=c1362a89"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -62,6 +62,7 @@
 <li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
@@ -99,22 +100,28 @@
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Releases</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#v3-4-0-2026-11-16">v3.4.0 - 2026-11-16</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#v3-5-0-2026-11-17">v3.5.0 - 2026-11-17</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#what-s-new">What’s new</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#validation">Validation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#credits">Credits</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#v3-4-0-2026-11-16">v3.4.0 - 2026-11-16</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">What’s new</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Credits</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-3-1-2026-11-16">v3.3.1 - 2026-11-16</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id1">Validation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">Credits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Credits</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-3-0-2026-11-13">v3.3.0 - 2026-11-13</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id3">What’s new</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">Validation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id5">Credits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">What’s new</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Credits</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-2-0-2026-11-06">v3.2.0 - 2026-11-06</a><ul>
@@ -166,10 +173,30 @@
 CityLearn release. Older notes are retained in the <a class="reference internal" href="releases_archive.html"><span class="std std-doc">release archive</span></a>.</p>
 <p>For package publication, version policy and the release checklist, see the
 <a class="reference internal" href="publishing.html"><span class="std std-doc">publishing guide</span></a>.</p>
-<section id="v3-4-0-2026-11-16">
-<span id="v340---2026-11-16"></span><h2>v3.4.0 - 2026-11-16<a class="headerlink" href="#v3-4-0-2026-11-16" title="Link to this heading"></a></h2>
+<section id="v3-5-0-2026-11-17">
+<span id="v350---2026-11-17"></span><h2>v3.5.0 - 2026-11-17<a class="headerlink" href="#v3-5-0-2026-11-17" title="Link to this heading"></a></h2>
 <section id="what-s-new">
 <span id="whats-new"></span><h3>What’s new<a class="headerlink" href="#what-s-new" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Portugal REC datasets.</strong> Four synthetic Portuguese renewable energy communities with 4, 15, 30 and 100 residential and commercial members, 2023-2024 at 15 minutes: <code class="docutils literal notranslate"><span class="pre">pt_rec_4</span></code>, <code class="docutils literal notranslate"><span class="pre">pt_rec_15</span></code>, <code class="docutils literal notranslate"><span class="pre">pt_rec_30</span></code> and <code class="docutils literal notranslate"><span class="pre">pt_rec_100</span></code>. Nine main scenarios add membership changes, restricted import limits, grid interruptions, equipment faults, missing observations and demand response. Six comparison scenarios remove individual conditions. They are edition v3.4 of the dataset article <em>Synthetic electricity demand and flexibility datasets for Portuguese energy communities</em>, released under CC BY 4.0; series calculated from public sources carry the attribution of each source. See the <a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a> guide.</p></li>
+<li><p><strong>Nested dataset folders.</strong> <code class="docutils literal notranslate"><span class="pre">DataSet.get_dataset()</span></code> now downloads a dataset’s subfolders; it previously fetched only the top-level files. A download costs two GitHub API requests however deeply the dataset is nested, and the files come from raw.githubusercontent.com. Set <code class="docutils literal notranslate"><span class="pre">CITYLEARN_GITHUB_TOKEN</span></code> or <code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code> to raise the anonymous limit of 60 API requests per hour. The contents listing now uses the account and repository given to <code class="docutils literal notranslate"><span class="pre">DataSet</span></code>.</p></li>
+</ul>
+<p>No dataset, schema, export or BAU migration is required; existing datasets and KPIs are unchanged. See the <a class="reference internal" href="migration.html#upgrade-from-3-4-0-to-3-5-0"><span class="std std-ref">migration guide</span></a>.</p>
+</section>
+<section id="validation">
+<h3>Validation<a class="headerlink" href="#validation" title="Link to this heading"></a></h3>
+<p>CityLearn ships the 983 files that the schemas read (216 MB), each byte-identical to the v3.4 dataset package; its data tables, provenance records and checksums stay in the dataset deposit. The inventories match the article. On the 3.4.0 runtime, all 19 Portugal schemas (four dataset roots, nine main and six comparison scenarios) ran a one-week episode (672 steps) with <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> and <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> including the native BAU reference. Each week was the one with the most topology, robustness and demand-response events in the scenario, or a July week when it has none; peak memory was 1.7 GB. Unit tests cover nested, path-checked and token-authenticated downloads, and a real download of a nested dataset by name from GitHub loaded in CityLearn.</p>
+</section>
+<section id="credits">
+<h3>Credits<a class="headerlink" href="#credits" title="Link to this heading"></a></h3>
+<p>The datasets are by Fonseca et al.; <strong>Tiago Fonseca</strong> (<a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>) integrated them in CityLearn.</p>
+<p><a class="reference external" href="https://github.com/citylearn-project/CityLearn/compare/v3.4.0...v3.5.0">Full changelog</a></p>
+</section>
+</section>
+<section id="v3-4-0-2026-11-16">
+<span id="v340---2026-11-16"></span><h2>v3.4.0 - 2026-11-16<a class="headerlink" href="#v3-4-0-2026-11-16" title="Link to this heading"></a></h2>
+<section id="id1">
+<span id="whats-new-1"></span><h3>What’s new<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><strong>Two selectable BAUs.</strong> <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> charges a connected EV at once and at full power, to 100% by default (<code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v2</span></code>). With <code class="docutils literal notranslate"><span class="pre">ev_charge_target='requested'</span></code> (<code class="docutils literal notranslate"><span class="pre">immediate-user-target-v1</span></code>) it charges only up to the user’s requested departure SOC; the last command is limited to the remaining energy gap, and below the charger minimum the EV stops slightly short of the target instead of overshooting it. <code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target</span></code> (constructor or schema) selects which one <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> uses as the KPI reference. The previous Basic, Smart and Community controllers and the names <code class="docutils literal notranslate"><span class="pre">NormalPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">NormalNoBatteryPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">ServiceOnlyBaselineAgent</span></code>, <code class="docutils literal notranslate"><span class="pre">GridAwareBaselineAgent</span></code> and <code class="docutils literal notranslate"><span class="pre">CommunityAwareBaselineAgent</span></code> are removed.</p></li>
 <li><p><strong>Basic, Smart and Community baselines.</strong> <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> are replaced by the baselines validated in the Soft-CPS Algorithms repository. Basic uses the current price and service urgency. Smart schedules EVs and appliances from price and local PV-surplus forecasts and combines battery self-consumption, arbitrage and reserve. Community adds shareable member energy and, with the community market enabled, battery support during expensive periods once community import reaches 15 kW.</p></li>
@@ -178,13 +205,13 @@ CityLearn release. Older notes are retained in the <a class="reference internal"
 </ul>
 <p>BAU-relative KPIs change with the new reference. Rerun the controller and its reference together; see the <a class="reference internal" href="migration.html#upgrade-from-3-3-to-3-4-0"><span class="std std-ref">migration guide</span></a> and the <a class="reference internal" href="baselines.html"><span class="std std-doc">baselines guide</span></a>.</p>
 </section>
-<section id="validation">
-<h3>Validation<a class="headerlink" href="#validation" title="Link to this heading"></a></h3>
+<section id="id2">
+<span id="validation-1"></span><h3>Validation<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
 <p>On the same observations, the CityLearn baselines request exactly the same actions as the Algorithms policies (commit <code class="docutils literal notranslate"><span class="pre">725a72a</span></code>) at every step, for both BAUs, Basic, Smart and Community, on three bundled datasets (EVs, three-phase limits with a community market, dynamic topology).</p>
 <p>On 30 days of <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>, the default BAU delivers the same EV energy as the 3.3.1 BAU (7,512 kWh) and costs 4.8% more (2,723 € vs 2,598 €): its battery reacts to the last observed step instead of reading the current step from the simulator. The user-target BAU costs 2,290 € and delivers 4,797 kWh. Basic, Smart and Community meet the minimum acceptable SOC at every feasible departure.</p>
 </section>
-<section id="credits">
-<h3>Credits<a class="headerlink" href="#credits" title="Link to this heading"></a></h3>
+<section id="id3">
+<span id="credits-1"></span><h3>Credits<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
 <p><strong>Tiago Fonseca</strong> (<a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>) developed and validated the baselines in the Soft-CPS Algorithms repository and ported them to CityLearn in <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/189">#189</a>.</p>
 <p><a class="reference external" href="https://github.com/citylearn-project/CityLearn/compare/v3.3.1...v3.4.0">Full changelog</a></p>
 </section>
@@ -198,20 +225,20 @@ CityLearn release. Older notes are retained in the <a class="reference internal"
 </ul>
 <p>The BAU agent reads simulator state directly, so its actions and KPIs do not depend on the interface; on 13 Portugal schemas the reference KPIs were bit-identical before and after the change. No dataset, schema or export migration is required. See the <a class="reference internal" href="migration.html#upgrade-from-3-3-0-to-3-3-1"><span class="std std-ref">migration guide</span></a>.</p>
 </section>
-<section id="id1">
-<span id="validation-1"></span><h3>Validation<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<section id="id4">
+<span id="validation-2"></span><h3>Validation<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
 <p>A regression test covers an EV SOC robustness event on a static entity schema evaluated with the native BAU reference. The full test suite and the release CI matrix passed.</p>
 </section>
-<section id="id2">
-<span id="credits-1"></span><h3>Credits<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<section id="id5">
+<span id="credits-2"></span><h3>Credits<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
 <p><strong>Tiago Fonseca</strong> (<a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>) ported the fix from SoftCPS Simulator 2.1.1.</p>
 <p><a class="reference external" href="https://github.com/citylearn-project/CityLearn/compare/v3.3.0...v3.3.1">Full changelog</a></p>
 </section>
 </section>
 <section id="v3-3-0-2026-11-13">
 <span id="v330---2026-11-13"></span><h2>v3.3.0 - 2026-11-13<a class="headerlink" href="#v3-3-0-2026-11-13" title="Link to this heading"></a></h2>
-<section id="id3">
-<span id="whats-new-1"></span><h3>What’s new<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<section id="id6">
+<span id="whats-new-2"></span><h3>What’s new<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><strong>Battery and EV physics.</strong> Activation respects the configured SOC below the discharge reserve. EVs retain their identity and evolve through charger removal, re-entry and handover. Accounting includes standby losses, mobility and explicit arrival energy. CSV and Parquet exports report the charger that actually served the EV.</p></li>
 <li><p><strong>BAU and KPIs.</strong> Native BAU uses matching equipment, PV, actions and outages, including the same stochastic outages. Cost and net-exchange ratios, market comparisons and portfolio aggregation are corrected. Repeated evaluation retains only the latest BAU reference.</p></li>
@@ -219,12 +246,12 @@ CityLearn release. Older notes are retained in the <a class="reference internal"
 </ul>
 <p>Public dataset files and export layouts are preserved. If your scenario uses the corrected paths, rerun both the controller and its reference for comparisons. See the <a class="reference internal" href="migration.html#upgrade-from-3-2-0-to-3-3-0"><span class="std std-ref">migration guide</span></a>.</p>
 </section>
-<section id="id4">
-<span id="validation-2"></span><h3>Validation<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<section id="id7">
+<span id="validation-3"></span><h3>Validation<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
 <p>The integrated runtime passed the <a class="reference external" href="https://github.com/citylearn-project/CityLearn/actions/runs/43354734920">CI matrix</a> on Python 3.9, 3.10 and 3.12, covering NumPy 1 and 2, runtime audits and installed-wheel exports. The battery and EV regression tests cover one-hour and 15-minute steps.</p>
 </section>
-<section id="id5">
-<span id="credits-2"></span><h3>Credits<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<section id="id8">
+<span id="credits-3"></span><h3>Credits<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
 <p>Thanks to <strong>Mark Colley</strong> (<a class="reference external" href="https://github.com/M-Colley">&#64;M-Colley</a>) for the cross-platform, BAU, NumPy, KPI, EV arrival, agent and dataset-cache fixes in <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/170">#170</a>–<a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/175">#175</a>. <strong>Tiago Fonseca</strong> (<a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>) and the <strong>CityLearn maintainers</strong> reviewed, validated and integrated those changes, added matched stochastic outages, completed the EV session-ID and MARLISA fixes, and developed the battery reserve and EV lifecycle corrections in <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/179">#179</a> and <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/180">#180</a>.</p>
 <p><a class="reference external" href="https://github.com/citylearn-project/CityLearn/compare/v3.2.0...v3.3.0">Full changelog</a></p>
 </section>

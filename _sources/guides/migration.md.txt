@@ -46,6 +46,14 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Upgrade from 3.4.0 to 3.5.0
+
+No dataset, schema, export-file or BAU migration is required; existing datasets and
+KPIs are unchanged. 3.5.0 adds the [Portugal REC datasets](portugal_rec_datasets.md)
+and downloads nested dataset folders. If you download several datasets within an
+hour, set `CITYLEARN_GITHUB_TOKEN` (or `GITHUB_TOKEN`) to a GitHub token to raise
+the anonymous limit of 60 API requests per hour.
+
 ## Upgrade from 3.3 to 3.4.0
 
 No dataset, schema or export-file migration is required.

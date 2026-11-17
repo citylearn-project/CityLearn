@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dataset Reference &mdash; CityLearn 3.4.0 documentation</title>
+  <title>Dataset Reference &mdash; CityLearn 3.5.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=b0e360d0"></script>
+      <script src="../_static/documentation_options.js?v=c1362a89"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -27,7 +27,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Data Unit Contract" href="data_unit_contract.html" />
+    <link rel="next" title="Portugal REC Datasets" href="portugal_rec_datasets.html" />
     <link rel="prev" title="Schema Reference" href="schema_reference.html" /> 
 </head>
 
@@ -82,6 +82,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#new-dataset-checklist">New Dataset Checklist</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
@@ -180,7 +181,11 @@
 <p>Resolve available names with <code class="docutils literal notranslate"><span class="pre">DataSet().get_dataset_names()</span></code> or use the CLI after
 installing its dependencies. Pass a dataset name to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> for automatic
 download and caching, or pass your own local <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> path. Use
-<code class="docutils literal notranslate"><span class="pre">offline=True</span></code> with locally available files to disable network fallbacks.</p>
+<code class="docutils literal notranslate"><span class="pre">offline=True</span></code> with locally available files to disable network fallbacks.
+Each first download uses two GitHub API requests; anonymous clients get 60 per
+hour. Set <code class="docutils literal notranslate"><span class="pre">CITYLEARN_GITHUB_TOKEN</span></code> or <code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code> to raise that limit.</p>
+<p>The <a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a> provide four 15-minute
+communities of 4 to 100 members, each with evaluation scenarios.</p>
 </section>
 <section id="unit-contract">
 <h2>Unit Contract<a class="headerlink" href="#unit-contract" title="Link to this heading"></a></h2>
@@ -781,7 +786,7 @@ kW = kWh_per_step * 3600 / seconds_per_time_step
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="schema_reference.html" class="btn btn-neutral float-left" title="Schema Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="data_unit_contract.html" class="btn btn-neutral float-right" title="Data Unit Contract" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="portugal_rec_datasets.html" class="btn btn-neutral float-right" title="Portugal REC Datasets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

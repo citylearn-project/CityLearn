@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.4.0 documentation</title>
+  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.5.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -18,7 +18,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=b0e360d0"></script>
+      <script src="../_static/documentation_options.js?v=c1362a89"></script>
       <script src="../_static/doctools.js?v=9bcbadda"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,6 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-4-0-to-3-5-0">Upgrade from 3.4.0 to 3.5.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-3-to-3-4-0">Upgrade from 3.3 to 3.4.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-3-0-to-3-3-1">Upgrade from 3.3.0 to 3.3.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-2-0-to-3-3-0">Upgrade from 3.2.0 to 3.3.0</a></li>
@@ -74,6 +75,7 @@
 <li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
 <li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
@@ -181,6 +183,14 @@ local schema and files for data that are not in the public catalogue; a
 repository-relative path is not created by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>.</p>
 <p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
 development-line history.</p>
+</section>
+<section id="upgrade-from-3-4-0-to-3-5-0">
+<span id="upgrade-from-340-to-350"></span><h2>Upgrade from 3.4.0 to 3.5.0<a class="headerlink" href="#upgrade-from-3-4-0-to-3-5-0" title="Link to this heading"></a></h2>
+<p>No dataset, schema, export-file or BAU migration is required; existing datasets and
+KPIs are unchanged. 3.5.0 adds the <a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a>
+and downloads nested dataset folders. If you download several datasets within an
+hour, set <code class="docutils literal notranslate"><span class="pre">CITYLEARN_GITHUB_TOKEN</span></code> (or <code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code>) to a GitHub token to raise
+the anonymous limit of 60 API requests per hour.</p>
 </section>
 <section id="upgrade-from-3-3-to-3-4-0">
 <span id="upgrade-from-33-to-340"></span><h2>Upgrade from 3.3 to 3.4.0<a class="headerlink" href="#upgrade-from-3-3-to-3-4-0" title="Link to this heading"></a></h2>
