@@ -2359,7 +2359,7 @@ class WashingMachine(ElectricDevice):
             **{
                 k.lstrip('_'): v[self.time_step]
                 for k, v in vars(self.washing_machine_simulation).items()
-                if isinstance(v, np.ndarray) and k.lstrip('_') not in unwanted_keys
+                if k.startswith('_') and isinstance(v, np.ndarray) and k.lstrip('_') not in unwanted_keys
             },
             'washing_machine_initiated': float(self.initiated),
             'washing_machine_action': self.past_action_values[self.time_step] if self.past_action_values is not None else 0.0
@@ -2392,7 +2392,7 @@ class WashingMachine(ElectricDevice):
         simulation_attrs = {
             key: value
             for key, value in vars(self.washing_machine_simulation).items()
-            if isinstance(value, np.ndarray)
+            if key.startswith('_') and isinstance(value, np.ndarray)
         }
 
         time_steps = []
