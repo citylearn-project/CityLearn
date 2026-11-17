@@ -1,6 +1,7 @@
 import ast
 import logging
 import os
+import posixpath
 from pathlib import Path
 from filelock import FileLock
 from platformdirs import user_cache_dir
@@ -422,16 +423,16 @@ class DataSet:
                     shutil.rmtree(directory, ignore_errors=True)
 
     @staticmethod
-    def _copy_file(source: str, filepath: str) -> None:
-        """Copy under a temporary name, then move into place, so readers never see a partial file."""
+    def _write_file(filepath: str, write) -> None:
+        """Call `write` with a temporary path, then move it to `filepath`, so readers never see a partial file."""
 
         directory = os.path.dirname(filepath)
         os.makedirs(directory, exist_ok=True)
-        descriptor, temporary = tempfile.mkstemp(prefix='.copy-', dir=directory)
+        descriptor, temporary = tempfile.mkstemp(prefix='.write-', dir=directory)
         os.close(descriptor)
 
         try:
-            shutil.copyfile(source, temporary)
+            write(temporary)
             os.replace(temporary, filepath)
 
         except BaseException:
@@ -439,6 +440,12 @@ class DataSet:
                 os.remove(temporary)
 
             raise
+
+    @classmethod
+    def _copy_file(cls, source: str, filepath: str) -> None:
+        """Copy under a temporary name, then move into place, so readers never see a partial file."""
+
+        cls._write_file(filepath, lambda temporary: shutil.copyfile(source, temporary))
 
     def _download_file(self, url: str, filepath: str, session: requests.Session = None) -> None:
         """Download `url` to `filepath`, raising on an error response instead of caching it as data.
@@ -486,18 +493,23 @@ class DataSet:
             )
 
         else:
-            LOGGER.info(f'The dataset names DNE in cache. Will download from '
-                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {filepath}. '
-                    'Next time DataSet.get_dataset_names is called, it will read '
-                        'from cache unless DataSet.clear_cache is run first.')
-            contents = self.get_github_contents(self.datasets_path)
-            contents = [
-                r['name'] for r in contents 
-                    if r.get('type') == 'dir' 
-                        and r.get('path').replace(r['name'], '').strip('/') == self.datasets_path
-            ]
-            FileHandler.write_json(filepath, contents)
-            
+            # Concurrent first calls list the datasets once: the others wait, then read the cached list.
+            with FileLock(os.path.join(self.cache_directory, '.dataset_names.json.lock')):
+                if os.path.isfile(filepath):
+                    contents = FileHandler.read_json(filepath)
+
+                else:
+                    LOGGER.info(f'The dataset names DNE in cache. Will download from '
+                        f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {filepath}. '
+                            'Next time DataSet.get_dataset_names is called, it will read '
+                                'from cache unless DataSet.clear_cache is run first.')
+                    contents = [
+                        r['name'] for r in self.get_github_contents(self.datasets_path)
+                        if r.get('type') == 'dir' and posixpath.dirname(r['path']) == self.datasets_path.strip('/')
+                    ]
+                    # Readers do not take the lock, so they must never see a partly written file.
+                    self._write_file(filepath, lambda f: FileHandler.write_json(f, contents))
+
         contents = sorted(contents)
 
         return contents

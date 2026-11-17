@@ -1,5 +1,6 @@
 """Dataset downloads: error responses, concurrent first downloads and the `directory` argument."""
 
+import json
 import os
 import shutil
 import threading
@@ -353,3 +354,91 @@ def test_github_api_requests_use_a_token_when_set(monkeypatch):
     _ListingDataSet(offline=False).get_github_contents('data/datasets')
 
     assert headers == [None, {'Authorization': 'Bearer secret'}]
+
+
+def _remote_only_class(cache: Path, listing, session=None):
+    """A DataSet with no local dataset or misc roots, whose GitHub listings come from `listing(path)`."""
+
+    cache.mkdir(parents=True, exist_ok=True)
+
+    class _RemoteOnly(DataSet):
+        calls = []
+
+        @property
+        def cache_directory(self):
+            return str(cache)
+
+        @property
+        def local_datasets_directories(self):
+            return []
+
+        @property
+        def local_misc_directories(self):
+            return []
+
+        def get_github_contents(self, path=None):
+            self.calls.append(path)
+            return listing(path)
+
+        def get_requests_session(self, **kwargs):
+            return _Session() if session is None else session
+
+    return _RemoteOnly
+
+
+def test_dataset_names_are_the_direct_subfolders_of_the_datasets_path(tmp_path):
+    def listing(path):
+        return [
+            dict(type='dir', name='a', path='data/datasets/a'),
+            dict(type='dir', name='demo', path='data/datasets/demo'),
+            dict(type='file', name='README.md', path='data/datasets/README.md'),
+        ]
+
+    # Previously 'a' was dropped, because removing 'a' from 'data/datasets/a' also changed the parent path, and a
+    # datasets_path with a trailing slash matched nothing.
+    assert _remote_only_class(tmp_path/'1', listing)(offline=False).get_dataset_names() == ['a', 'demo']
+    assert _remote_only_class(tmp_path/'2', listing)(offline=False, datasets_path='data/datasets/').get_dataset_names() == ['a', 'demo']
+
+
+def _first_calls_overlap(dataset, call) -> list:
+    """Run `call` in workers A and B; A's GitHub listing waits up to 1 s for B's. Return the listed paths."""
+
+    a_listing, b_listing = threading.Event(), threading.Event()
+    listing = dataset.get_github_contents
+
+    def get_github_contents(self, path=None):
+        (a_listing if threading.current_thread().name == 'A' else b_listing).set()
+
+        if threading.current_thread().name == 'A':
+            b_listing.wait(1)
+
+        return listing(self, path)
+
+    dataset.get_github_contents = get_github_contents
+    errors = []
+
+    def worker():
+        try:
+            call(dataset(offline=False))
+        except Exception as error:  # pragma: no cover - reported below
+            errors.append(repr(error))
+
+    a = threading.Thread(target=worker, name='A')
+    b = threading.Thread(target=worker, name='B')
+    a.start()
+    assert a_listing.wait(10)
+    b.start()
+    a.join(20)
+    b.join(20)
+    assert errors == []
+
+    return dataset.calls
+
+
+def test_concurrent_first_listings_of_dataset_names_query_github_once(tmp_path):
+    dataset = _remote_only_class(tmp_path, lambda path: [dict(type='dir', name='demo', path='data/datasets/demo')])
+    calls = _first_calls_overlap(dataset, lambda d: d.get_dataset_names())
+
+    # Previously each worker found no cached list and spent its own GitHub API request.
+    assert calls == ['data/datasets']
+    assert json.loads((tmp_path/'dataset_names.json').read_text()) == ['demo']
