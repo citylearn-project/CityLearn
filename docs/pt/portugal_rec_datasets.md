@@ -6,13 +6,13 @@ de 15 minutos. O consumo dos edifícios e a produção fotovoltaica estão ligad
 pedidos explícitos de carregamento de VE e de aparelhos, meteorologia, preços e
 intensidade carbónica. Os cenários acrescentam alterações de membros, limites de
 importação restritos, interrupções da rede, falhas de equipamentos e observações em
-falta, todos identificados. Os cenários de comparação retiram uma condição de cada
-vez para isolar o seu efeito. Permitem assim verificar se um controlador continua a
+falta, todos identificados. Os cenários de comparação retiram condições individuais;
+cada um difere do cenário principal só na condição que retira. Permitem assim verificar se um controlador continua a
 prestar os serviços pedidos, com entradas idênticas e reprodutíveis.
 
 São a edição v3.4 de *Synthetic electricity demand and flexibility datasets for
-Portuguese energy communities* (Fonseca, Ferreira e Sousa; INESC TEC e ISEP,
-Politécnico do Porto), distribuída com o CityLearn a partir da 3.5.0.
+Portuguese energy communities* (Fonseca et al.), distribuída com o CityLearn a
+partir da 3.5.0.
 
 Versão inglesa: [../portugal_rec_datasets.md](../portugal_rec_datasets.md).
 
@@ -27,14 +27,14 @@ carregamento no local de trabalho e veículos visitantes.
 | Membros residenciais / comerciais | 4 / 0 | 15 / 0 | 24 / 6 | 80 / 20 |
 | Ligações trifásicas | 0 | 1 | 7 | 28 |
 | Soma dos limites de importação (kW) | 28,8 | 107,0 | 324,3 | 1 168,4 |
-| Locais FV / capacidade (kWp) | 1 / 3,8 | 4 / 16,8 | 10 / 89,5 | 36 / 312,5 |
-| Locais com bateria / capacidade (kWh) | 1 / 10,2 | 1 / 10,2 | 3 / 25,6 | 20 / 220,2 |
+| Membros com FV / capacidade (kWp) | 1 / 3,8 | 4 / 16,8 | 10 / 89,5 | 36 / 312,5 |
+| Membros com bateria / capacidade (kWh) | 1 / 10,2 | 1 / 10,2 | 3 / 25,6 | 20 / 220,2 |
 | Carregadores (kW) | 2 (3,7-7,4) | 6 (3,7-7,4) | 15 (3,7-22,1) | 65 (3,7-22,1) |
 | VE: residentes / visitantes | 2 / 0 | 6 / 0 | 9 / 10 | 37 / 48 |
 | Aparelhos: controlados / fixos | 2 / 5 | 10 / 18 | 19 / 27 | 64 / 84 |
 | Tamanho da descarga | 7 MB | 13 MB | 84 MB | 113 MB |
 
-São os inventários fixos; os cenários dinâmicos acrescentam ou retiram membros e
+São os inventários fixos; Topology, Combined e All-in acrescentam ou retiram membros e
 equipamentos. A maioria dos membros tem ligação monofásica com limite de importação
 de 6,9 kW; algumas casas maiores e membros comerciais têm ligações trifásicas até 82,8 kW.
 
@@ -57,8 +57,10 @@ alias do seu cenário Normal.
 | REC-100 Normal | `pt_rec_100` | `rec_100_normal.json` | Condições normais |
 | REC-100 All-in | `pt_rec_100` | `rec_100_allin.json` | Alterações de membros, perturbações, interrupções da rede e resposta da procura |
 
-Seis cenários de comparação em `evaluation/references/` mudam uma condição e
-partilham todos os outros ficheiros, incluindo todos os pedidos de serviço:
+Seis cenários de comparação em `evaluation/references/` retiram condições individuais.
+Cada um difere do cenário principal só na condição que retira; todos os outros
+ficheiros, incluindo todos os pedidos de serviço, são partilhados. No disturbances
+retira em conjunto as perturbações e as interrupções da rede.
 
 | Comparação | De | Alteração |
 |---|---|---|
@@ -67,12 +69,12 @@ partilham todos os outros ficheiros, incluindo todos os pedidos de serviço:
 | `rec_100_allin_no_dr` | All-in | Retira os pedidos de resposta da procura |
 | `rec_30_topology_frozen_2024`, `rec_100_allin_frozen_2024` | Topology, All-in | Mantém as alterações de membros de 2023 e suprime as de 2024 |
 
-As vistas de preparação limitadas a 2023, descritas no artigo, estão no depósito do
-dataset, não no CityLearn.
+Para ajustar em 2023 e avaliar em 2024, termine a janela de simulação no passo 35039,
+o último intervalo de 2023 em UTC.
 
 O cenário Safety só restringe limites de importação; não modela tensão, proteções ou
 segurança da rede por fase. Os cenários Robustness, Combined e All-in identificam as
-falhas; em estudos de deteção de falhas, essas etiquetas devem ficar ocultas ao controlador.
+perturbações; em estudos de deteção de falhas, essas etiquetas devem ficar ocultas ao controlador.
 
 ## Carregar
 
@@ -110,8 +112,12 @@ demoraram de 6 a 127 minutos, do REC-4 ao REC-100, no CityLearn 3.3.0. Uma janel
   preços em EUR/kWh; intensidade carbónica em kg CO2e/kWh; SOC como fração.
   As observações em falta usam -9999.
 - **Campos anuais:** os campos de resumo anual dos catálogos referem-se a 2023; as séries cobrem os dois anos.
-- **Visitas de VE:** uma visita vai do intervalo de chegada até ao de partida, exclusive.
-  Visitas ainda ligadas no fim do registo são censuradas à direita; o fim do ficheiro não é um prazo.
+- **Sessões de carregamento:** uma sessão de carregamento vai do intervalo de chegada
+  até ao de partida, exclusive. Sessões ainda ligadas no fim do registo são censuradas
+  à direita; o fim do ficheiro não é um prazo.
+- **Informação antecipada:** por omissão, cada carregador anuncia o veículo que chega
+  uma hora (quatro intervalos) antes, com a hora e o SOC de chegada previstos; à
+  ligação, cada sessão indica a hora de partida e o SOC alvo.
 - **Preços:** a compra à rede é `max(preço OMIE diário português / 1000, 0)` EUR/kWh,
   sem tarifas de acesso, impostos ou margens de retalho. As trocas locais liquidam a
   80 % desse preço e a exportação para a rede vale zero.
@@ -130,9 +136,9 @@ O CityLearn inclui apenas os ficheiros que os schemas leem:
 | `shared/` | Meteorologia, preço OMIE e intensidade carbónica |
 | `catalogs/`, `deferrables/` | Serviços elétricos e perfis de aparelhos lidos pelos schemas |
 
-As tabelas de dados descritas no artigo (usos finais dos membros, visitas de VE,
-pedidos de aparelhos, catálogos), as vistas de preparação de 2023, os registos de proveniência, os checksums e a
-documentação estão no depósito do dataset, não no CityLearn. O «2023» em alguns
+As tabelas de dados descritas no artigo (usos finais dos membros, sessões de
+carregamento, pedidos de aparelhos, catálogos), os registos de proveniência, os
+checksums e a documentação estão no depósito do dataset, não no CityLearn. O «2023» em alguns
 caminhos internos vem do gerador.
 
 ## Reportar resultados
@@ -148,7 +154,7 @@ e o arranque de cada aparelho com a sua janela e prazo.
 | Alvos de carregamento e janelas de aparelhos prescritos | Os requisitos de serviço são pressupostos de modelação, não preferências medidas. |
 | Consumo residencial 30-36 % acima das medições SHEERM | A autossuficiência é provavelmente menor do que nas casas medidas; normalize ou teste a sensibilidade quando os níveis absolutos importam. |
 | Ligações de VE mais longas do que nas sessões medidas | Pode favorecer controladores baseados em agendamento. |
-| SOC de chegada prescrito em cada visita | A continuidade das deslocações entre dias não é testada. |
+| SOC de chegada prescrito em cada sessão de carregamento | A continuidade das deslocações entre dias não é testada. |
 | Regras de preço experimentais; intensidade carbónica média | Os resultados não são poupanças com uma tarifa real nem reduções marginais de emissões. |
 | Taxas de eventos derivadas de comunidades piloto | Estudos de robustez devem também fazê-las variar. |
 
@@ -171,7 +177,17 @@ a coleção: o material derivado de fontes de terceiros mantém os seus próprio
 | [Building Data Genome 2](https://doi.org/10.1038/s41597-020-00712-x) | Apenas estatísticas de calibração comercial | Licença BDG2 de origem; sem extratos horários |
 | [SINTEF, carregamento residencial de VE](https://doi.org/10.5281/zenodo.13896176), [FIKElectricity](https://doi.org/10.1038/s41597-023-02698-8) | Comparação | CC BY 4.0 |
 
-O depósito do dataset (Zenodo, DOI 10.5281/zenodo.24182353, registado com a
-publicação) contém o mapa de licenças por ficheiro, a atribuição completa, o gerador e
-as ferramentas de reconstrução, o dicionário de dados e os relatórios de validação.
-Cite o artigo do dataset quando usar os dados.
+O depósito do dataset contém o mapa de licenças por ficheiro, a atribuição completa,
+o gerador e as ferramentas de reconstrução, o dicionário de dados e os relatórios de
+validação.
+
+## Citação
+
+Quando usar os dados, cite o dataset e o seu artigo:
+
+- Fonseca et al., *Synthetic electricity demand and flexibility datasets for
+  Portuguese energy communities*, edição v3.4 do dataset. Zenodo, DOI
+  [10.5281/zenodo.24182353](https://doi.org/10.5281/zenodo.24182353) (reservado;
+  registado com a publicação).
+- Fonseca et al., "Synthetic electricity demand and flexibility datasets for
+  Portuguese energy communities", *Scientific Data* (em revisão).

@@ -6,13 +6,14 @@ Four synthetic datasets of Portuguese renewable energy communities (RECs), with
 EV charging and appliance requests, weather, prices and carbon intensity.
 Scenarios add membership changes, restricted import limits, grid interruptions,
 equipment faults and missing observations, each labelled. Comparison scenarios
-remove one condition at a time to isolate its effect. Controllers can therefore
+remove individual conditions; each differs from its main scenario only in the
+condition it removes. Controllers can therefore
 be tested on whether they keep delivering the requested services, on identical
 and reproducible inputs.
 
 The datasets are edition v3.4 of *Synthetic electricity demand and flexibility
-datasets for Portuguese energy communities* (Fonseca, Ferreira and Sousa;
-INESC TEC and ISEP, Polytechnic of Porto), distributed with CityLearn from 3.5.0.
+datasets for Portuguese energy communities* (Fonseca et al.), distributed with
+CityLearn from 3.5.0.
 
 Portuguese version: [pt/portugal_rec_datasets.md](pt/portugal_rec_datasets.md).
 
@@ -27,15 +28,15 @@ workplace charging and visiting vehicles.
 | Residential / commercial members | 4 / 0 | 15 / 0 | 24 / 6 | 80 / 20 |
 | Three-phase connections | 0 | 1 | 7 | 28 |
 | Sum of import limits (kW) | 28.8 | 107.0 | 324.3 | 1,168.4 |
-| PV sites / capacity (kWp) | 1 / 3.8 | 4 / 16.8 | 10 / 89.5 | 36 / 312.5 |
-| Battery sites / capacity (kWh) | 1 / 10.2 | 1 / 10.2 | 3 / 25.6 | 20 / 220.2 |
+| Members with PV / capacity (kWp) | 1 / 3.8 | 4 / 16.8 | 10 / 89.5 | 36 / 312.5 |
+| Members with batteries / capacity (kWh) | 1 / 10.2 | 1 / 10.2 | 3 / 25.6 | 20 / 220.2 |
 | Chargers (kW) | 2 (3.7-7.4) | 6 (3.7-7.4) | 15 (3.7-22.1) | 65 (3.7-22.1) |
 | EVs: resident / visitor | 2 / 0 | 6 / 0 | 9 / 10 | 37 / 48 |
 | Appliances: controlled / fixed | 2 / 5 | 10 / 18 | 19 / 27 | 64 / 84 |
 | Download size | 7 MB | 13 MB | 84 MB | 113 MB |
 
-These are the fixed inventories; dynamic scenarios add or remove members and
-equipment. Most members have a single-phase connection with a 6.9 kW import limit;
+These are the fixed inventories; Topology, Combined and All-in add or remove
+members and equipment. Most members have a single-phase connection with a 6.9 kW import limit;
 some larger homes and commercial members have three-phase connections of up to 82.8 kW.
 
 ## Scenarios
@@ -56,8 +57,10 @@ the same records. Each dataset's root `schema.json` is an alias of its Normal sc
 | REC-100 Normal | `pt_rec_100` | `rec_100_normal.json` | Ordinary conditions |
 | REC-100 All-in | `pt_rec_100` | `rec_100_allin.json` | Membership changes, disturbances, grid interruptions and demand response |
 
-Six comparison scenarios in `evaluation/references/` change one condition and
-share every other input file, including every service request:
+Six comparison scenarios in `evaluation/references/` remove individual conditions.
+Each differs from its main scenario only in the condition it removes; every other
+input file, including every service request, is shared. No disturbances removes the
+disturbances and the grid interruptions together.
 
 | Comparison | Of | Change |
 |---|---|---|
@@ -66,12 +69,12 @@ share every other input file, including every service request:
 | `rec_100_allin_no_dr` | All-in | Removes the demand-response requests |
 | `rec_30_topology_frozen_2024`, `rec_100_allin_frozen_2024` | Topology, All-in | Keeps the 2023 membership changes and suppresses those of 2024 |
 
-The 2023-only preparation views described in the article are in the dataset
-deposit, not in CityLearn.
+To tune on 2023 and evaluate on 2024, end the simulation window at step 35039,
+the last interval of 2023 UTC.
 
 The Safety scenario restricts import limits only; it does not model voltage,
 protection or phase-level network safety. The Robustness, Combined and All-in
-scenarios label their faults; withhold these labels from controllers in
+scenarios label their disturbances; withhold these labels from controllers in
 fault-detection studies.
 
 ## Loading
@@ -108,9 +111,12 @@ Begin with a short window: full two-year runs without the BAU reference took
   for average kW); battery capacity in kWh; power limits in kW; prices in EUR/kWh;
   carbon intensity in kg CO2e/kWh; SOC as a fraction. Missing observations use -9999.
 - **Annual fields:** annual summary fields in the catalogues refer to 2023; the series cover both years.
-- **EV visits:** a visit runs from its arrival interval up to, but excluding, its
-  departure interval. Visits still connected at the end of the record are
-  right-censored; the end of the file is not a deadline.
+- **Charging sessions:** a charging session runs from its arrival interval up to,
+  but excluding, its departure interval. Sessions still connected at the end of
+  the record are right-censored; the end of the file is not a deadline.
+- **Advance information:** by default each charger announces an arriving vehicle
+  one hour (four intervals) ahead, with its expected arrival time and SOC; at
+  connection, each session gives its departure time and target SOC.
 - **Prices:** grid purchase is `max(Portuguese OMIE day-ahead price / 1000, 0)`
   EUR/kWh, without network tariffs, taxes or retail margins. Local exchanges settle
   at 80 % of it and grid export is valued at zero.
@@ -129,9 +135,9 @@ CityLearn ships only the files the schemas read:
 | `shared/` | Weather, OMIE price and carbon intensity |
 | `catalogs/`, `deferrables/` | Electrical services and appliance profiles read by the schemas |
 
-The data tables described in the article (member end uses, EV visits, appliance
-requests, catalogues), the 2023 preparation views, provenance records, checksums and documentation are in the
-dataset deposit, not in CityLearn. The `2023` in some internal paths is inherited
+The data tables described in the article (member end uses, charging sessions,
+appliance requests, catalogues), provenance records, checksums and documentation
+are in the dataset deposit, not in CityLearn. The `2023` in some internal paths is inherited
 from the generator.
 
 ## Reporting results
@@ -147,7 +153,7 @@ appliance start with its window and deadline.
 | Prescribed charging targets and appliance windows | Service requirements are modelling assumptions, not measured user preferences. |
 | Residential demand 30-36 % above SHEERM measurements | Self-sufficiency is likely lower than for the measured homes; normalise or test sensitivity where absolute levels matter. |
 | Longer EV connections than in measured sessions | May favour scheduling-based controllers. |
-| Arrival SOC prescribed at each visit | Travel continuity over consecutive days is not tested. |
+| Arrival SOC prescribed for each charging session | Travel continuity over consecutive days is not tested. |
 | Experimental price rules; average carbon intensity | Results are not savings under a real tariff or marginal emission reductions. |
 | Event rates derived from pilot communities | Robustness studies should also vary them. |
 
@@ -170,7 +176,16 @@ the collection: material derived from third-party sources keeps its own terms.
 | [Building Data Genome 2](https://doi.org/10.1038/s41597-020-00712-x) | Commercial calibration statistics only | Upstream BDG2 licence; no hourly extracts included |
 | [SINTEF residential EV charging](https://doi.org/10.5281/zenodo.13896176), [FIKElectricity](https://doi.org/10.1038/s41597-023-02698-8) | Comparison | CC BY 4.0 |
 
-The dataset deposit (Zenodo, DOI 10.5281/zenodo.24182353, registered on
-publication) holds the per-file licence map, full attribution, generator and
-reconstruction tools, data dictionary and validation reports. Cite the dataset
-article when you use the data.
+The dataset deposit holds the per-file licence map, full attribution, generator and
+reconstruction tools, data dictionary and validation reports.
+
+## Citation
+
+When you use the data, cite the dataset and its article:
+
+- Fonseca et al., *Synthetic electricity demand and flexibility datasets for
+  Portuguese energy communities*, dataset edition v3.4. Zenodo, DOI
+  [10.5281/zenodo.24182353](https://doi.org/10.5281/zenodo.24182353) (reserved;
+  registered on publication).
+- Fonseca et al., "Synthetic electricity demand and flexibility datasets for
+  Portuguese energy communities", *Scientific Data* (under review).

@@ -3,7 +3,7 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
-## v3.5.0 - 2026-11-16
+## v3.5.0 - 2026-11-17
 
 - **Datasets REC de Portugal.** Quatro comunidades de energia renovável
   portuguesas sintéticas, com 4, 15, 30 e 100 membros residenciais e comerciais,
@@ -11,9 +11,10 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   `pt_rec_100`. Nove cenários principais acrescentam alterações de membros,
   limites de importação restritos, interrupções da rede, falhas de equipamentos,
   observações em falta e resposta da procura. Seis cenários de comparação retiram
-  uma condição de cada vez. São a edição v3.4 do artigo de dados *Synthetic electricity demand and
-  flexibility datasets for Portuguese energy communities*, sob CC BY 4.0, mantendo
-  os termos de terceiros. Consultar o guia dos
+  condições individuais. São a edição v3.4 do artigo de dados *Synthetic electricity
+  demand and flexibility datasets for Portuguese energy communities* (Fonseca et al.),
+  publicados sob CC BY 4.0; as séries calculadas a partir de fontes públicas mantêm a
+  atribuição de cada fonte. Consultar o guia dos
   [datasets REC de Portugal](portugal_rec_datasets.md).
 - **Pastas de datasets com subpastas.** O `DataSet.get_dataset()` passa a
   descarregar as subpastas de um dataset; antes só trazia os ficheiros da raiz.
