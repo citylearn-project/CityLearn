@@ -442,3 +442,26 @@ def test_concurrent_first_listings_of_dataset_names_query_github_once(tmp_path):
     # Previously each worker found no cached list and spent its own GitHub API request.
     assert calls == ['data/datasets']
     assert json.loads((tmp_path/'dataset_names.json').read_text()) == ['demo']
+
+
+def test_concurrent_first_requests_for_sizing_data_download_it_once(tmp_path):
+    def listing(path):
+        return [dict(type='file', name=DataSet.BATTERY_CHOICES_FILENAME, download_url='https://raw.example/battery.yaml')]
+
+    class _YamlSession(_Session):
+        def get(self, url, **kwargs):
+            return _response(url, content=b'model_a:\n  attributes:\n    capacity: 1.0\n')
+
+    dataset = _remote_only_class(tmp_path, listing, _YamlSession())
+    calls = _first_calls_overlap(dataset, lambda d: d.get_battery_sizing_data())
+
+    assert calls == ['data/misc']
+    assert [p.name for p in (tmp_path/'misc').iterdir() if p.suffix != '.lock'] == ['battery_choices.yaml']
+
+
+def test_sizing_data_missing_from_the_repository_raises_a_clear_error(tmp_path):
+    dataset = _remote_only_class(tmp_path, lambda path: [dict(type='file', name='other.csv', download_url='https://raw.example/other.csv')])
+
+    # Previously an IndexError.
+    with pytest.raises(FileNotFoundError, match="'lbl-tracking_the_sun-res-pv.csv' is not in data/misc"):
+        dataset(offline=False).get_pv_sizing_data()
