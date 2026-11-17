@@ -109,6 +109,49 @@ jobs:
             --schema "$GITHUB_WORKSPACE/tests/data/minute_ev_demo/schema.json" \
             --output "${{ runner.temp }}/citylearn-installed-export"
 
+  install-smoke:
+    # A plain `pip install` must resolve and run on every platform users report, including
+    # Apple Silicon (issue #138); the test job above covers Linux only.
+    needs: lint
+    name: install (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14  # arm64
+            python-version: "3.11"
+          - os: windows-2022
+            python-version: "3.12"
+          - os: ubuntu-24.04
+            python-version: "3.13"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install the built wheel with its dependencies from PyPI
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip wheel --no-deps . --wheel-dir citylearn-wheel
+          python -c "import glob, subprocess, sys; subprocess.check_call([sys.executable, '-m', 'pip', 'install', *glob.glob('citylearn-wheel/*.whl')])"
+          python -m pip check
+          python -m pip list
+
+      - name: Run a simulation and export from the installed package
+        working-directory: ${{ runner.temp }}
+        shell: bash
+        run: >-
+          python -I "${{ github.workspace }}/scripts/ci/installed_export_smoke.py"
+          --schema "${{ github.workspace }}/tests/data/minute_ev_demo/schema.json"
+          --output "${{ runner.temp }}/citylearn-installed-export"
+
   runtime-audits:
     needs: lint
     runs-on: ubuntu-24.04
