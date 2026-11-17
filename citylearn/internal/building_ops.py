@@ -10,6 +10,7 @@ from citylearn.internal.scalars import clip_scalar, numpy1_scalar
 from citylearn.energy_model import HeatPump
 from citylearn.preprocessing import Normalize, PeriodicNormalization
 from citylearn.internal.units import energy_kwh_to_power_kw, power_kw_to_energy_kwh
+from citylearn.internal import grid_availability
 from citylearn.internal.electrical_limits import allocate_electrical_service, electrical_service_violation_kw
 
 if TYPE_CHECKING:
@@ -420,6 +421,11 @@ class BuildingOpsService:
             observations['occupant_count'] = building.energy_simulation.occupant_count[t]
         if wants('power_outage'):
             observations['power_outage'] = building._Building__power_outage_signal[t]
+        if getattr(building, '_expose_available_grid_power', False) and wants(grid_availability.OBSERVATION_NAME):
+            # The terminal observation may follow the last row; it reports the last limit.
+            last = len(building._available_grid_power.values) - 1
+            observations[grid_availability.OBSERVATION_NAME] = grid_availability.import_limit_kw(
+                building, min(max(int(t), 0), max(last, 0)))
         if wants('electric_vehicles_chargers_dict'):
             observations['electric_vehicles_chargers_dict'] = electric_vehicle_chargers_dict
         if wants('deferrable_appliances_dict'):
@@ -1069,12 +1075,13 @@ class BuildingOpsService:
         base_total_kw = cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw
         return float(base_total_kw), {phase: value for phase, value in self._split_unassigned_power(base_total_kw).items() if phase in phase_names}
 
-    def _electrical_service_allows(self, total_kw: float, phase_kw: Mapping[str, float]) -> bool:
+    def _electrical_service_allows(self, total_kw: float, phase_kw: Mapping[str, float], step: int = None) -> bool:
         building = self.building
         if not getattr(building, '_electrical_service_enabled', False):
             return True
 
-        total_limits = building._electrical_service_limits.get('total', {})
+        total_limits = grid_availability.total_limits_at(
+            building, building._electrical_service_limits.get('total', {}), step)
         import_limit = self._safe_scalar(total_limits.get('import_kw'), np.nan)
         export_limit = self._safe_scalar(total_limits.get('export_kw'), np.nan)
         tolerance = 1.0e-6
@@ -1122,7 +1129,7 @@ class BuildingOpsService:
 
             if self._power_outage_at_step(step) and total_kw > 1.0e-9:
                 return False
-            if not self._electrical_service_allows(total_kw, phase_kw):
+            if not self._electrical_service_allows(total_kw, phase_kw, step):
                 return False
 
         return True
@@ -1456,7 +1463,9 @@ class BuildingOpsService:
                 'request_phase_kw': request_phase_kw,
             }
 
-        total_limits = building._electrical_service_limits.get('total', {})
+        # A time-varying available grid power series lowers the total import limit at this step.
+        total_limits = grid_availability.total_limits_at(
+            building, building._electrical_service_limits.get('total', {}), getattr(building, 'time_step', None))
         per_phase_limits = building._electrical_service_limits.get('per_phase', {})
         allocation = allocate_electrical_service(
             base_total_kw, base_phase_kw, controls, total_limits, per_phase_limits, phase_names,

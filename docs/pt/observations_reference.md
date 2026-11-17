@@ -105,6 +105,7 @@ O simulador nao assume que os horizontes sejam sempre 6/12/24h. Eles sao o que o
 | `solar_generation` | kWh/step | Geracao PV ja convertida pelo modo PV. |
 | `net_electricity_consumption` | kWh/step | Import positivo, export negativo. |
 | `power_outage` | binario | Outage no timestep. |
+| `available_grid_power` | kW | Limite de importacao do proximo intervalo: o menor entre o `import_kw` estatico e a serie [available_grid_power](schema_reference.md#potencia-de-rede-disponivel). So com serie. |
 
 ### EV e Charger Flat
 
