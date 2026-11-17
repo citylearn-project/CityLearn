@@ -3,6 +3,28 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## v3.5.0 - 2026-11-16
+
+- **Datasets REC de Portugal.** Quatro comunidades de energia renovável
+  portuguesas sintéticas, com 4, 15, 30 e 100 membros residenciais e comerciais,
+  em 2023-2024 com passo de 15 minutos: `pt_rec_4`, `pt_rec_15`, `pt_rec_30` e
+  `pt_rec_100`. Nove cenários principais acrescentam alterações de membros,
+  limites de importação restritos, interrupções da rede, falhas de equipamentos,
+  observações em falta e resposta da procura. Seis cenários de comparação retiram
+  uma condição de cada vez. São a edição v3.4 do artigo de dados *Synthetic electricity demand and
+  flexibility datasets for Portuguese energy communities*, sob CC BY 4.0, mantendo
+  os termos de terceiros. Consultar o guia dos
+  [datasets REC de Portugal](portugal_rec_datasets.md).
+- **Pastas de datasets com subpastas.** O `DataSet.get_dataset()` passa a
+  descarregar as subpastas de um dataset; antes só trazia os ficheiros da raiz.
+  Uma descarga custa dois pedidos à API do GitHub, qualquer que seja a
+  profundidade, e os ficheiros vêm de raw.githubusercontent.com. Defina
+  `CITYLEARN_GITHUB_TOKEN` ou `GITHUB_TOKEN` para ultrapassar o limite anónimo de
+  60 pedidos por hora.
+- Não é necessária migração de datasets, schemas, exports ou BAU; os datasets e
+  KPIs existentes não mudam. Consultar o
+  [guia de migração](../migration.md#upgrade-from-340-to-350).
+
 ## v3.4.0 - 2026-11-16
 
 - **Dois BAU selecionáveis.** O `BusinessAsUsualAgent` carrega o EV assim que
