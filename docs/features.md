@@ -138,6 +138,11 @@ CSV and Parquet use the same column contract; Parquet is useful for large
 datasets. See the [dataset guide](dataset_reference.md) and
 [unit contract](data_unit_contract.md). Begin large simulations with a short window.
 
+The [Portugal REC datasets](portugal_rec_datasets.md) are 15-minute Parquet
+communities of 4, 15, 30 and 100 members over 2023-2024. Their evaluation
+scenarios add topology changes, electrical limits, asset failures, outages and
+demand response.
+
 ## Flat vectors and entity tables
 
 Flat mode provides vectors per building, or a combined vector in central-agent

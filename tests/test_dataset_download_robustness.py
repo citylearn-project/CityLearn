@@ -78,7 +78,7 @@ def test_error_response_raises_and_is_not_cached(tmp_path):
     working = _dataset_class(tmp_path, _Session(), calls)
     schema = working(offline=False).get_dataset('demo')
 
-    assert len(calls) == 2  # the second call downloads again
+    assert calls.count('data/datasets/demo') == 2  # the second call downloads again
     assert Path(schema).read_bytes() == b'{"buildings": {}}'
     assert (Path(schema).parent/'Building_3.csv').read_bytes() == b'a,b\n1,2\n'
 
@@ -224,3 +224,132 @@ def test_requests_retry_rate_limits():
 
     assert 429 in retry.status_forcelist
     assert retry.respect_retry_after_header
+
+
+def test_nested_dataset_folders_are_downloaded(tmp_path):
+    # Datasets such as the Portugal REC ones keep their series in subfolders; only the root was downloaded before.
+    urls = []
+    trees = {
+        'sha-timeseries': [
+            dict(type='blob', path='members/M01.parquet'),
+            dict(type='tree', path='members'),
+            dict(type='blob', path='weather.parquet'),
+        ],
+        'sha-evaluation': [dict(type='blob', path='scenario.json')],
+    }
+
+    class _RecordingSession(_Session):
+        def get(self, url, **kwargs):
+            urls.append(url)
+            return super().get(url, **kwargs)
+
+    class _NestedDataSet(_dataset_class(tmp_path, _RecordingSession())):
+        def get_github_contents(self, path=None):
+            return [
+                dict(type='file', name='schema.json', path=f'{path}/schema.json', download_url='https://raw.example/demo/schema.json'),
+                dict(type='dir', name='timeseries', path=f'{path}/timeseries', sha='sha-timeseries'),
+                dict(type='dir', name='evaluation', path=f'{path}/evaluation', sha='sha-evaluation'),
+            ]
+
+        def get_github_tree(self, sha):
+            return trees[sha]
+
+    dataset = _NestedDataSet(offline=False, github_account='owner', repository='repo', tag='v9')
+    root = Path(dataset.get_dataset('demo')).parent
+
+    assert sorted(str(p.relative_to(root)) for p in root.rglob('*') if p.is_file()) == [
+        'evaluation/scenario.json', 'schema.json', 'timeseries/members/M01.parquet', 'timeseries/weather.parquet',
+    ]
+    assert 'https://raw.githubusercontent.com/owner/repo/v9/data/datasets/demo/timeseries/members/M01.parquet' in urls
+
+
+def test_dataset_paths_outside_the_dataset_are_rejected(tmp_path):
+    class _EscapingDataSet(_dataset_class(tmp_path, _Session())):
+        def get_github_contents(self, path=None):
+            return [dict(type='dir', name='timeseries', path=f'{path}/timeseries', sha='sha')]
+
+        def get_github_tree(self, sha):
+            return [dict(type='blob', path='../../escape.csv')]
+
+    with pytest.raises(ValueError, match='Invalid dataset path'):
+        _EscapingDataSet(offline=False).get_dataset('demo')
+
+    assert not (tmp_path/'escape.csv').exists()
+    assert not (tmp_path/'datasets'/'demo').exists()
+
+
+def test_github_listing_uses_the_requested_repository():
+    urls = []
+
+    class _ListingSession:
+        def get(self, url, **kwargs):
+            urls.append((url, kwargs.get('params')))
+            response = _response(url, content=b'[]')
+            return response
+
+    class _ListingDataSet(DataSet):
+        def get_requests_session(self, **kwargs):
+            return _ListingSession()
+
+    _ListingDataSet(github_account='owner', repository='repo', tag='v9', offline=False).get_github_contents('data/datasets')
+
+    assert urls == [('https://api.github.com/repos/owner/repo/contents/data/datasets', {'ref': 'v9'})]
+
+
+def test_a_nested_dataset_costs_two_github_api_requests(tmp_path):
+    # Listing the dataset's parent gives its tree; one recursive tree request then lists every nested file.
+    listings, trees, urls = [], [], []
+
+    class _RecordingSession(_Session):
+        def get(self, url, **kwargs):
+            urls.append(url)
+            return super().get(url, **kwargs)
+
+    class _TreeDataSet(_dataset_class(tmp_path, _RecordingSession())):
+        def get_github_contents(self, path=None):
+            listings.append(path)
+            return [
+                dict(type='dir', name='other', path='data/datasets/other', sha='sha-other'),
+                dict(type='dir', name='demo', path='data/datasets/demo', sha='sha-demo'),
+            ]
+
+        def get_github_tree(self, sha):
+            trees.append(sha)
+            return [
+                dict(type='blob', path='schema.json'),
+                dict(type='tree', path='timeseries'),
+                dict(type='blob', path='timeseries/members/M01.parquet'),
+                dict(type='tree', path='timeseries/members'),
+            ]
+
+    root = Path(_TreeDataSet(offline=False, github_account='owner', repository='repo', tag='v9').get_dataset('demo')).parent
+
+    assert listings == ['data/datasets'] and trees == ['sha-demo']
+    assert sorted(str(p.relative_to(root)) for p in root.rglob('*') if p.is_file()) == [
+        'schema.json', 'timeseries/members/M01.parquet',
+    ]
+    assert sorted(urls) == [
+        'https://raw.githubusercontent.com/owner/repo/v9/data/datasets/demo/schema.json',
+        'https://raw.githubusercontent.com/owner/repo/v9/data/datasets/demo/timeseries/members/M01.parquet',
+    ]
+
+
+def test_github_api_requests_use_a_token_when_set(monkeypatch):
+    headers = []
+
+    class _ListingSession:
+        def get(self, url, **kwargs):
+            headers.append(kwargs.get('headers'))
+            return _response(url, content=b'[]')
+
+    class _ListingDataSet(DataSet):
+        def get_requests_session(self, **kwargs):
+            return _ListingSession()
+
+    monkeypatch.delenv('GITHUB_TOKEN', raising=False)
+    monkeypatch.delenv('CITYLEARN_GITHUB_TOKEN', raising=False)
+    _ListingDataSet(offline=False).get_github_contents('data/datasets')
+    monkeypatch.setenv('CITYLEARN_GITHUB_TOKEN', 'secret')
+    _ListingDataSet(offline=False).get_github_contents('data/datasets')
+
+    assert headers == [None, {'Authorization': 'Bearer secret'}]

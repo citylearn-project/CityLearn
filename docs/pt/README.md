@@ -9,6 +9,7 @@ em `docs/*.md`; os identificadores de campos, classes e KPIs mantêm o nome da A
 | [Funcionalidades](features.md) | Equipamentos e serviços disponíveis. |
 | [Schema](schema_reference.md) | Edifícios, equipamentos, topologia e mercado. |
 | [Datasets](dataset_reference.md) | Ficheiros, CSV/Parquet e conversão de unidades. |
+| [REC de Portugal](portugal_rec_datasets.md) | Quatro comunidades portuguesas e cenários de avaliação. |
 | [Unidades](data_unit_contract.md) | Contrato de energia, potência, preços e duração dos passos. |
 | [Observações](observations_reference.md) | Campos, unidades, tabelas de entidades e relações. |
 | [Ações](actions_reference.md) | Intervalos e significado físico das ações. |

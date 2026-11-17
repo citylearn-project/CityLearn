@@ -8,6 +8,25 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## v3.5.0 - 2026-11-17
+
+### What's new
+
+- **Portugal REC datasets.** Four synthetic Portuguese renewable energy communities with 4, 15, 30 and 100 residential and commercial members, 2023-2024 at 15 minutes: `pt_rec_4`, `pt_rec_15`, `pt_rec_30` and `pt_rec_100`. Nine main scenarios add membership changes, restricted import limits, grid interruptions, equipment faults, missing observations and demand response. Six comparison scenarios remove individual conditions. They are edition v3.4 of the dataset article *Synthetic electricity demand and flexibility datasets for Portuguese energy communities*, released under CC BY 4.0; series calculated from public sources carry the attribution of each source. See the [Portugal REC datasets](portugal_rec_datasets.md) guide.
+- **Nested dataset folders.** `DataSet.get_dataset()` now downloads a dataset's subfolders; it previously fetched only the top-level files. A download costs two GitHub API requests however deeply the dataset is nested, and the files come from raw.githubusercontent.com. Set `CITYLEARN_GITHUB_TOKEN` or `GITHUB_TOKEN` to raise the anonymous limit of 60 API requests per hour. The contents listing now uses the account and repository given to `DataSet`.
+
+No dataset, schema, export or BAU migration is required; existing datasets and KPIs are unchanged. See the [migration guide](migration.md#upgrade-from-340-to-350).
+
+### Validation
+
+CityLearn ships the 983 files that the schemas read (216 MB), each byte-identical to the v3.4 dataset package; its data tables, provenance records and checksums stay in the dataset deposit. The inventories match the article. On the 3.4.0 runtime, all 19 Portugal schemas (four dataset roots, nine main and six comparison scenarios) ran a one-week episode (672 steps) with `BusinessAsUsualAgent` and `evaluate_v2()` including the native BAU reference. Each week was the one with the most topology, robustness and demand-response events in the scenario, or a July week when it has none; peak memory was 1.7 GB. Unit tests cover nested, path-checked and token-authenticated downloads, and a real download of a nested dataset by name from GitHub loaded in CityLearn.
+
+### Credits
+
+The datasets are by Fonseca et al.; **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)) integrated them in CityLearn.
+
+[Full changelog](https://github.com/citylearn-project/CityLearn/compare/v3.4.0...v3.5.0)
+
 ## v3.4.0 - 2026-11-16
 
 ### What's new
