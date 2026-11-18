@@ -5,6 +5,27 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Baselines leem observações corrompidas na interface flat.** Na interface
+  flat, o env corrompe apenas os vetores flat, e as baselines, que leem
+  observações entity, decidiam a partir de valores sem corrupção; na interface
+  entity liam os valores corrompidos
+  ([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Usadas
+  como controladores (`predict(observations)`), recebem agora os eventos de
+  observação de robustez do timestep aplicados às suas observações entity, tal
+  como a interface entity os aplica, e tomam as mesmas ações nas duas
+  interfaces. Nenhum gerador aleatório é consumido, e as observações flat e o
+  histórico de robustez do env não mudam; os KPIs do controlador em execuções
+  flat com eventos de observação podem mudar. A referência BAU nativa de
+  `evaluate_v2()` (`predict([])`) continua sem corrupção.
+- **Ruído de robustez.** Com `noise_std > 0`, o ruído gaussiano podia tornar
+  negativas a produção solar, as irradiâncias solares e a intensidade
+  carbónica, acrescentar produção durante a noite e levar a humidade relativa
+  exterior para fora de [0, 100] %. Uma regra limita agora os valores com ruído:
+  as grandezas solares ficam `>= 0` e sem ruído à noite, a humidade fica em
+  [0, 100] % e a intensidade carbónica fica `>= 0`. O ruído gerado não muda,
+  por isso os valores dentro do intervalo são idênticos bit a bit.
+- As simulações com `noise_std = 0`, incluindo todos os datasets incluídos, não
+  mudam. Ver o [guia de migração](../migration.md#unreleased).
 - **Reward para a carga não servida durante falhas de energia.** Durante uma
   falha de energia o edifício não pode importar, por isso o consumo líquido é
   zero e as rewards baseadas na importação da rede não penalizam a carga que o
@@ -27,8 +48,8 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   schemas definem agora `"root_directory": null`, como os restantes datasets. O
   `CityLearnEnv(name)` e os caminhos de schema num clone do repositório já
   encontravam os ficheiros e continuam a ler a mesma pasta.
-- Os ficheiros de entrada e os resultados de simulação não mudam; não é
-  necessária migração.
+- A correção dos datasets Parquet não muda os ficheiros de entrada nem os
+  resultados de simulação; não é necessária migração.
 
 ## v3.5.0 - 2026-11-17
 

@@ -14,11 +14,16 @@ For package publication, version policy and the release checklist, see the
 
 - **Reward for load left unserved during power outages.** During an outage a building cannot import, so its net consumption is zero and rewards built on grid import give no signal about the load that PV and storage leave unserved. `OutageUnservedEnergyReward(coefficient, base_reward)` subtracts `coefficient` times that unserved energy from a base reward, and the new flat observation `power_outage_unserved_energy` (kWh per step, last settled step) gives it per building with the definition of the `power_outage_normalized_unserved_energy_total` KPI ([#188](https://github.com/citylearn-project/CityLearn/issues/188)). The reward works under both interfaces; the observation is flat only. Both are opt-in, so existing schemas and results are unchanged.
 
+### Changed
+
+- **Baselines read corrupted observations under the flat interface.** Under the flat interface the env corrupts only the flat vectors, and the baselines, which read entity observations, decided from uncorrupted values; under the entity interface they read the corrupted ones ([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Run as controllers (`predict(observations)`), they now get the step's robustness observation events applied to their entity observations as the entity interface applies them, and take the same actions under both interfaces. No random stream is consumed, and the env's flat observations and robustness history are unchanged; the controller KPIs of flat runs with observation events can change. The native BAU reference of `evaluate_v2()` (`predict([])`) stays uncorrupted. See the [migration guide](migration.md#unreleased).
+
 ### Fixed
 
+- **Robustness noise.** With `noise_std > 0`, Gaussian noise could make solar generation, solar irradiance and carbon intensity negative, add generation at night and push outdoor relative humidity outside [0, 100] %. One rule now bounds the noisy values: solar quantities stay `>= 0` and get no noise at night, humidity stays within [0, 100] % and carbon intensity stays `>= 0`. The noise draws are unchanged, so values within range are bit-identical. Solar generation noise uses the generation series for its shape instead of the indoor temperature series; both have the same length, so the draws are the same. Runs with `noise_std = 0`, including all bundled datasets, are unchanged. See the [migration guide](migration.md#unreleased).
 - **15 s Parquet datasets load from the dataset cache.** The schemas of `citylearn_three_phase_electrical_service_demo_15s_parquet`, `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` and `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` set a repository-relative `root_directory`. Passing the schema path returned by `DataSet().get_dataset(name)` to `CityLearnEnv` resolved it against the cache folder and raised `FileNotFoundError` for `<cache>/<dataset>/data/datasets/<dataset>/Building_1.parquet` ([#194](https://github.com/citylearn-project/CityLearn/issues/194)). The three schemas now set `"root_directory": null`, like the other datasets. `CityLearnEnv(name)` and schema paths inside a repository checkout already found the files and still read the same folder.
 
-Input files and simulation results are unchanged; no migration is required.
+The Parquet fix leaves input files and simulation results unchanged; no migration is required.
 
 ## v3.5.0 - 2026-11-17
 
