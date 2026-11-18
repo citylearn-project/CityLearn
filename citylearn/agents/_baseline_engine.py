@@ -1904,14 +1904,43 @@ class NormalPolicy(_OperationalBaselinePolicy):
         # first charger and prevent that allocator from sharing fairly.
         return value
 
+    def _connected_ev_context(self, agent_idx, obs, obs_map, charger_info, action_name):
+        ctx = super()._connected_ev_context(agent_idx, obs, obs_map, charger_info, action_name)
+        accepted_kw = self._ctx_float(ctx, "available_charge_power")
+        if not math.isfinite(accepted_kw):
+            # CityLearn: available_charge_power_kw is published only with the
+            # entity_core_electrical bundle. Without it, estimate the power the
+            # EV can accept from the observed SOC, battery capacity, charger
+            # power and charger efficiency, as the Simulator computes that
+            # observation. The estimate omits the service import limit and the
+            # efficiency curve, which are not observable without the bundle.
+            efficiency = self._get_ev_value(
+                obs,
+                obs_map,
+                charger_id=ctx["charger_id"],
+                building_name=self._agent_buildings.get(agent_idx),
+                feature="charger_efficiency_ratio",
+                generic_names=[],
+                default=1.0 if charger_info is None else charger_info.efficiency,
+            )
+            energy_to_full = max(1.0 - float(ctx["soc"]), 0.0) * float(ctx["capacity"])
+            accepted_kw = min(
+                float(ctx["max_power"]),
+                energy_to_full / max(efficiency * self.step_hours, 1.0e-6),
+            )
+        ctx["accepted_charge_power"] = accepted_kw
+        return ctx
+
     def _record_ev_charge_dispatch(self, agent_idx, ctx, rate) -> None:
         # Keep the EV command at maximum, but reserve only the power it can
         # accept. Near full SOC, nominal charger power would make the BESS
-        # discharge against fictitious local demand. The observation is an
-        # estimate; final accepted energy remains the Simulator's decision.
-        available_kw = self._ctx_float(ctx, "available_charge_power")
-        if math.isfinite(available_kw):
-            rate = min(rate, max(0.0, available_kw) / float(ctx["max_power"]))
+        # discharge against fictitious local demand. The observation or its
+        # estimate is not exact; final accepted energy remains the Simulator's
+        # decision.
+        # Storage and deferrable dispatch reuse this method without the key.
+        accepted_kw = self._ctx_float(ctx, "accepted_charge_power")
+        if math.isfinite(accepted_kw):
+            rate = min(rate, max(0.0, accepted_kw) / float(ctx["max_power"]))
         super()._record_ev_charge_dispatch(agent_idx, ctx, rate)
 
     def _compute_deferrable_action(

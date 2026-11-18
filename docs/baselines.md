@@ -52,11 +52,15 @@ action vectors in `env.action_names` order.
 
 The baselines decide from observations, so the battery reacts to the last
 settled step rather than reading the current step's load and PV from the
-simulator, as the 3.1–3.3 BAU did. Without the `entity_core_electrical` bundle
-the rules also do not see the power an EV can still accept, and reserve the
-charger's nominal power: near the end of a full charge the battery can then
-discharge more than the EV takes. Enabling that bundle in the schema gives the
-rules the accepted power.
+simulator, as the 3.1–3.3 BAU did. The BAU battery serves only the EV power the
+EV can still accept: the `available_charge_power_kw` observation of the
+`entity_core_electrical` bundle, or, without that bundle, an estimate from the
+observed SOC, battery capacity, charger power and charger efficiency and the
+step length, computed as the simulator computes that observation. Neither
+includes the EV battery's capacity-power curve, so at steps of a few seconds
+near 100% SOC the battery can still discharge more than the EV takes. The
+estimate also omits the electrical-service import limit, which the bundle
+includes. The rule-based baselines reserve the EV power they command.
 
 ### Default parameters
 

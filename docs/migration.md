@@ -46,6 +46,19 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Unreleased
+
+- **BAU without the `entity_core_electrical` bundle.** When an EV accepts less
+  than the charger's power (near 100% SOC), `BusinessAsUsualAgent` had the home
+  battery discharge for the charger's full power and export the surplus. It now
+  estimates the power the EV accepts and discharges only for that
+  ([#190](https://github.com/citylearn-project/CityLearn/issues/190)). On
+  datasets without that bundle, the BAU's battery actions and every
+  `business_as_usual`, `delta_to_business_as_usual` and
+  `ratio_to_business_as_usual` KPI of `evaluate_v2()` can change; rerun both the
+  controller and its reference. Datasets with the bundle, the rule-based
+  baselines and the EV commands are unchanged.
+
 ## Upgrade from 3.4.0 to 3.5.0
 
 No dataset, schema, export-file or BAU migration is required; existing datasets and
