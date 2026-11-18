@@ -100,6 +100,10 @@
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Releases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-5-0-2026-11-17">v3.5.0 - 2026-11-17</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#what-s-new">What’s new</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#validation">Validation</a></li>
@@ -113,15 +117,15 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-3-1-2026-11-16">v3.3.1 - 2026-11-16</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id4">Validation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id5">Credits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Fixed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Credits</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-3-0-2026-11-13">v3.3.0 - 2026-11-13</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id6">What’s new</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id7">Validation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id8">Credits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">What’s new</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Credits</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-2-0-2026-11-06">v3.2.0 - 2026-11-06</a><ul>
@@ -173,6 +177,16 @@
 CityLearn release. Older notes are retained in the <a class="reference internal" href="releases_archive.html"><span class="std std-doc">release archive</span></a>.</p>
 <p>For package publication, version policy and the release checklist, see the
 <a class="reference internal" href="publishing.html"><span class="std std-doc">publishing guide</span></a>.</p>
+<section id="unreleased">
+<h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<section id="fixed">
+<h3>Fixed<a class="headerlink" href="#fixed" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>15 s Parquet datasets load from the dataset cache.</strong> The schemas of <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo_15s_parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet</span></code> and <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_assets_only_demo_15s_parquet</span></code> set a repository-relative <code class="docutils literal notranslate"><span class="pre">root_directory</span></code>. Passing the schema path returned by <code class="docutils literal notranslate"><span class="pre">DataSet().get_dataset(name)</span></code> to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> resolved it against the cache folder and raised <code class="docutils literal notranslate"><span class="pre">FileNotFoundError</span></code> for <code class="docutils literal notranslate"><span class="pre">&lt;cache&gt;/&lt;dataset&gt;/data/datasets/&lt;dataset&gt;/Building_1.parquet</span></code> (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/194">#194</a>). The three schemas now set <code class="docutils literal notranslate"><span class="pre">&quot;root_directory&quot;:</span> <span class="pre">null</span></code>, like the other datasets. <code class="docutils literal notranslate"><span class="pre">CityLearnEnv(name)</span></code> and schema paths inside a repository checkout already found the files and still read the same folder.</p></li>
+</ul>
+<p>Input files and simulation results are unchanged; no migration is required.</p>
+</section>
+</section>
 <section id="v3-5-0-2026-11-17">
 <span id="v350---2026-11-17"></span><h2>v3.5.0 - 2026-11-17<a class="headerlink" href="#v3-5-0-2026-11-17" title="Link to this heading"></a></h2>
 <section id="what-s-new">
@@ -218,27 +232,27 @@ CityLearn release. Older notes are retained in the <a class="reference internal"
 </section>
 <section id="v3-3-1-2026-11-16">
 <span id="v331---2026-11-16"></span><h2>v3.3.1 - 2026-11-16<a class="headerlink" href="#v3-3-1-2026-11-16" title="Link to this heading"></a></h2>
-<section id="fixed">
-<h3>Fixed<a class="headerlink" href="#fixed" title="Link to this heading"></a></h3>
+<section id="id4">
+<span id="fixed-1"></span><h3>Fixed<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><strong>Native BAU reference with entity-only robustness targets.</strong> <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> no longer raises <code class="docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">robustness</span> <span class="pre">event</span> <span class="pre">...</span> <span class="pre">target</span> <span class="pre">does</span> <span class="pre">not</span> <span class="pre">match</span> <span class="pre">any</span> <span class="pre">declared</span> <span class="pre">observation</span> <span class="pre">target</span></code> on entity schemas with static topology whose robustness observation events target <code class="docutils literal notranslate"><span class="pre">ev</span></code>, <code class="docutils literal notranslate"><span class="pre">storage</span></code> or <code class="docutils literal notranslate"><span class="pre">pv</span></code> tables. The BAU reference env now uses the entity interface whenever the evaluated env does, as it already did for dynamic topology and demand response.</p></li>
 </ul>
 <p>The BAU agent reads simulator state directly, so its actions and KPIs do not depend on the interface; on 13 Portugal schemas the reference KPIs were bit-identical before and after the change. No dataset, schema or export migration is required. See the <a class="reference internal" href="migration.html#upgrade-from-3-3-0-to-3-3-1"><span class="std std-ref">migration guide</span></a>.</p>
 </section>
-<section id="id4">
-<span id="validation-2"></span><h3>Validation<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<section id="id5">
+<span id="validation-2"></span><h3>Validation<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
 <p>A regression test covers an EV SOC robustness event on a static entity schema evaluated with the native BAU reference. The full test suite and the release CI matrix passed.</p>
 </section>
-<section id="id5">
-<span id="credits-2"></span><h3>Credits<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<section id="id6">
+<span id="credits-2"></span><h3>Credits<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
 <p><strong>Tiago Fonseca</strong> (<a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>) ported the fix from SoftCPS Simulator 2.1.1.</p>
 <p><a class="reference external" href="https://github.com/citylearn-project/CityLearn/compare/v3.3.0...v3.3.1">Full changelog</a></p>
 </section>
 </section>
 <section id="v3-3-0-2026-11-13">
 <span id="v330---2026-11-13"></span><h2>v3.3.0 - 2026-11-13<a class="headerlink" href="#v3-3-0-2026-11-13" title="Link to this heading"></a></h2>
-<section id="id6">
-<span id="whats-new-2"></span><h3>What’s new<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<section id="id7">
+<span id="whats-new-2"></span><h3>What’s new<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p><strong>Battery and EV physics.</strong> Activation respects the configured SOC below the discharge reserve. EVs retain their identity and evolve through charger removal, re-entry and handover. Accounting includes standby losses, mobility and explicit arrival energy. CSV and Parquet exports report the charger that actually served the EV.</p></li>
 <li><p><strong>BAU and KPIs.</strong> Native BAU uses matching equipment, PV, actions and outages, including the same stochastic outages. Cost and net-exchange ratios, market comparisons and portfolio aggregation are corrected. Repeated evaluation retains only the latest BAU reference.</p></li>
@@ -246,12 +260,12 @@ CityLearn release. Older notes are retained in the <a class="reference internal"
 </ul>
 <p>Public dataset files and export layouts are preserved. If your scenario uses the corrected paths, rerun both the controller and its reference for comparisons. See the <a class="reference internal" href="migration.html#upgrade-from-3-2-0-to-3-3-0"><span class="std std-ref">migration guide</span></a>.</p>
 </section>
-<section id="id7">
-<span id="validation-3"></span><h3>Validation<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<section id="id8">
+<span id="validation-3"></span><h3>Validation<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
 <p>The integrated runtime passed the <a class="reference external" href="https://github.com/citylearn-project/CityLearn/actions/runs/43354734920">CI matrix</a> on Python 3.9, 3.10 and 3.12, covering NumPy 1 and 2, runtime audits and installed-wheel exports. The battery and EV regression tests cover one-hour and 15-minute steps.</p>
 </section>
-<section id="id8">
-<span id="credits-3"></span><h3>Credits<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<section id="id9">
+<span id="credits-3"></span><h3>Credits<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
 <p>Thanks to <strong>Mark Colley</strong> (<a class="reference external" href="https://github.com/M-Colley">&#64;M-Colley</a>) for the cross-platform, BAU, NumPy, KPI, EV arrival, agent and dataset-cache fixes in <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/170">#170</a>–<a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/175">#175</a>. <strong>Tiago Fonseca</strong> (<a class="reference external" href="https://github.com/calofonseca">&#64;calofonseca</a>) and the <strong>CityLearn maintainers</strong> reviewed, validated and integrated those changes, added matched stochastic outages, completed the EV session-ID and MARLISA fixes, and developed the battery reserve and EV lifecycle corrections in <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/179">#179</a> and <a class="reference external" href="https://github.com/citylearn-project/CityLearn/pull/180">#180</a>.</p>
 <p><a class="reference external" href="https://github.com/citylearn-project/CityLearn/compare/v3.2.0...v3.3.0">Full changelog</a></p>
 </section>
