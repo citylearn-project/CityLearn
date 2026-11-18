@@ -94,7 +94,8 @@ def test_plain_battery_ev_still_requires_nominal_power(tmp_path):
 @pytest.mark.parametrize('random_seed', range(8))
 def test_random_initial_soc_is_drawn_within_the_declared_soc_limits(tmp_path, random_seed):
     schema_path = _dataset(tmp_path, inventory_battery={
-        'capacity': 20.0, 'max_charge_kw': 11.0, 'max_discharge_kw': 7.5, 'min_soc': 0.25, 'max_soc': 0.85,
+        'capacity': 20.0, 'nominal_power': 11.0, 'max_charge_kw': 11.0, 'max_discharge_kw': 7.5,
+        'min_soc': 0.25, 'max_soc': 0.85,
     })
     # InventoryBattery used to reject draws from [0, 1] outside its limits.
     env = CityLearnEnv(str(schema_path), central_agent=True, random_seed=random_seed)
@@ -123,8 +124,8 @@ def test_random_initial_soc_without_declared_limits_is_unchanged(tmp_path):
 
 def test_entity_flexibility_metrics_stop_at_max_soc(tmp_path):
     schema_path = _dataset(tmp_path, entity_core=True, inventory_battery={
-        'capacity': 20.0, 'initial_soc': 0.4, 'max_charge_kw': 11.0, 'max_discharge_kw': 7.5,
-        'min_soc': 0.1, 'max_soc': 0.8,
+        'capacity': 20.0, 'nominal_power': 11.0, 'initial_soc': 0.4, 'max_charge_kw': 11.0,
+        'max_discharge_kw': 7.5, 'min_soc': 0.1, 'max_soc': 0.8,
     })
     env = CityLearnEnv(str(schema_path), interface='entity', central_agent=True)
 
