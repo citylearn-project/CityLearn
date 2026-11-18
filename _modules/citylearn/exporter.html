@@ -145,6 +145,20 @@
 <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_parquet_text_cell</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return a number or boolean as the text the CSV export writes for it.</span>
+
+<span class="sd">    ``str()`` gives NumPy's shortest round-trip text for the scalar's own precision,</span>
+<span class="sd">    so ``np.float32(0.1)`` becomes ``'0.1'``. Text, list and other cells are</span>
+<span class="sd">    returned unchanged; a list cell next to text still fails in PyArrow.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+
+
 <div class="viewcode-block" id="EpisodeExporter">
 <a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">EpisodeExporter</span><span class="p">:</span>
@@ -306,7 +320,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_file_format</span><span class="p">()</span> <span class="o">==</span> <span class="s1">'parquet'</span><span class="p">:</span>
             <span class="n">kpis</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">kpis</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">''</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">'utf-8'</span><span class="p">)</span>
+            <span class="c1"># na_rep writes missing KPIs as empty cells, as fillna('') did, without</span>
+            <span class="c1"># filling float columns with a string (deprecated in pandas 3).</span>
+            <span class="n">kpis</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">'utf-8'</span><span class="p">,</span> <span class="n">na_rep</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">include_business_as_usual</span> <span class="ow">and</span> <span class="n">export_business_as_usual_timeseries</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">export_business_as_usual_timeseries</span><span class="p">(</span><span class="n">export_env</span><span class="p">)</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.experiment</span><span class="w"> </span><span class="kn">import</span> <span class="n">experiment_manifest</span>
@@ -802,7 +818,9 @@
         <span class="c1"># is ``"-1.00"`` while idle and ``np.float32(1)`` while occupied).</span>
         <span class="c1"># Promote wholly numeric-like object columns to numbers before writing;</span>
         <span class="c1"># keep genuinely textual columns textual and normalize NumPy scalars.</span>
-        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'object'</span><span class="p">])</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="c1"># pandas 3 infers the ``str`` dtype for text columns; selecting 'string'</span>
+        <span class="c1"># includes them on pandas 2 and 3 without the deprecated 'object' fallback.</span>
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'object'</span><span class="p">,</span> <span class="s1">'string'</span><span class="p">])</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">series</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">column</span><span class="p">]</span>
             <span class="n">non_null</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">non_null</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
@@ -811,6 +829,14 @@
             <span class="n">numeric</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">non_null</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">'coerce'</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">numeric</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
                 <span class="n">dataframe</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">'coerce'</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">text_cells</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">non_null</span><span class="p">)</span>
+            <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">text_cells</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">non_null</span><span class="p">):</span>
+                <span class="c1"># A Parquet column has one type, so a column that mixes text with</span>
+                <span class="c1"># numbers or booleans (``"EV-1"`` and ``np.int64(42)``) is written as</span>
+                <span class="c1"># text. Only the number and boolean cells are converted; nulls stay null.</span>
+                <span class="n">dataframe</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_parquet_text_cell</span><span class="p">,</span> <span class="n">na_action</span><span class="o">=</span><span class="s1">'ignore'</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="n">dataframe</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
