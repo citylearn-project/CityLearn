@@ -782,6 +782,34 @@ class DataSet:
         
         return session
     
+
+
+def add_robustness_noise(values, noise_std: float, random_state=None, lower: float = None, upper: float = None,
+                         zero_stays_zero: bool = False) -> np.ndarray:
+    """Add Gaussian robustness noise to a time series without leaving its physical range.
+
+    The noise is additive with standard deviation `noise_std` in the unit of the series; it is not scaled by the
+    series. It is drawn exactly as for an unbounded series, so the noise of the other series is unchanged, and
+    with `noise_std` <= 0 the series is returned unchanged. Where the noise-free value lies within
+    [`lower`, `upper`], the noisy value is clipped to that range; values already outside it keep their noise.
+    With `zero_stays_zero`, values that are zero without noise (solar quantities at night) get no noise.
+    """
+
+    base = np.array(values, dtype='float32')
+    noisy = base + NoiseUtils.generate_gaussian_noise(base, noise_std, random_state=random_state)
+    if noise_std <= 0:
+        return noisy
+
+    low = -np.inf if lower is None else float(lower)
+    high = np.inf if upper is None else float(upper)
+    inside = (base >= low) & (base <= high)
+    noisy = np.where(inside, np.clip(noisy, low, high), noisy).astype('float32', copy=False)
+    if zero_stays_zero:
+        noisy = np.where(base == 0.0, base, noisy)
+
+    return noisy
+
+
 class TimeSeriesData:
     """Generic time series data class.
     
@@ -951,7 +979,10 @@ class EnergySimulation(TimeSeriesData):
         self.heating_demand = np.array(heating_demand, dtype = 'float32')
         assert (self.cooling_demand*self.heating_demand).sum() == 0, 'Cooling and heating in the same time step is not allowed.'
 
-        self.solar_generation = np.array(solar_generation, dtype = 'float32') + NoiseUtils.generate_gaussian_noise(indoor_dry_bulb_temperature, self.noise_std, random_state=noise_random_state)
+        # Generation cannot be negative, and there is none to perturb at night.
+        self.solar_generation = add_robustness_noise(
+            solar_generation, self.noise_std, noise_random_state, lower=0.0, zero_stays_zero=True,
+        )
 
         # optional
         self.minutes = np.array(minutes, dtype='int32') if minutes is not None else None
@@ -1120,35 +1151,33 @@ class Weather(TimeSeriesData):
         self.noise_std = noise_std
         from citylearn.utilities import IndexedNoise
         noise_random_state = None if noise_seed is None else IndexedNoise(noise_seed, noise_start_index)
-        self.outdoor_dry_bulb_temperature = np.array(outdoor_dry_bulb_temperature, dtype='float32')
-        self.outdoor_relative_humidity = np.array(outdoor_relative_humidity, dtype='float32')
-        self.diffuse_solar_irradiance = np.array(diffuse_solar_irradiance, dtype='float32')
-        self.direct_solar_irradiance = np.array(direct_solar_irradiance, dtype='float32')
+        # Add stochastic behavior by adding Gaussian noise to the data. The calls keep their order, which fixes
+        # the noise of each series. Humidity stays within [0, 100] %; irradiance stays >= 0 and zero at night.
+        humidity = dict(lower=0.0, upper=100.0)
+        irradiance = dict(lower=0.0, zero_stays_zero=True)
+        self.outdoor_dry_bulb_temperature = add_robustness_noise(outdoor_dry_bulb_temperature, self.noise_std, noise_random_state)
+        self.outdoor_relative_humidity = add_robustness_noise(outdoor_relative_humidity, self.noise_std, noise_random_state, **humidity)
+        self.diffuse_solar_irradiance = add_robustness_noise(diffuse_solar_irradiance, self.noise_std, noise_random_state, **irradiance)
+        self.direct_solar_irradiance = add_robustness_noise(direct_solar_irradiance, self.noise_std, noise_random_state, **irradiance)
 
-        # Add stochastic behavior by adding Gaussian noise to the data
-        self.outdoor_dry_bulb_temperature += NoiseUtils.generate_gaussian_noise(self.outdoor_dry_bulb_temperature, self.noise_std, random_state=noise_random_state)
-        self.outdoor_relative_humidity += NoiseUtils.generate_gaussian_noise(self.outdoor_relative_humidity, self.noise_std, random_state=noise_random_state)
-        self.diffuse_solar_irradiance += NoiseUtils.generate_gaussian_noise(self.diffuse_solar_irradiance, self.noise_std, random_state=noise_random_state)
-        self.direct_solar_irradiance += NoiseUtils.generate_gaussian_noise(self.direct_solar_irradiance, self.noise_std, random_state=noise_random_state)
-        
         # Predicted weather values (could also introduce noise here)
-        self.outdoor_dry_bulb_temperature_predicted_1 = np.array(outdoor_dry_bulb_temperature_predicted_1, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_dry_bulb_temperature_predicted_1, self.noise_std, random_state=noise_random_state)
-        self.outdoor_dry_bulb_temperature_predicted_2 = np.array(outdoor_dry_bulb_temperature_predicted_2, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_dry_bulb_temperature_predicted_2, self.noise_std, random_state=noise_random_state)
-        self.outdoor_dry_bulb_temperature_predicted_3 = np.array(outdoor_dry_bulb_temperature_predicted_3, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_dry_bulb_temperature_predicted_3, self.noise_std, random_state=noise_random_state)
+        self.outdoor_dry_bulb_temperature_predicted_1 = add_robustness_noise(outdoor_dry_bulb_temperature_predicted_1, self.noise_std, noise_random_state)
+        self.outdoor_dry_bulb_temperature_predicted_2 = add_robustness_noise(outdoor_dry_bulb_temperature_predicted_2, self.noise_std, noise_random_state)
+        self.outdoor_dry_bulb_temperature_predicted_3 = add_robustness_noise(outdoor_dry_bulb_temperature_predicted_3, self.noise_std, noise_random_state)
         
        
 
-        self.outdoor_relative_humidity_predicted_1 = np.array(outdoor_relative_humidity_predicted_1, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_relative_humidity_predicted_1, self.noise_std, random_state=noise_random_state)
-        self.outdoor_relative_humidity_predicted_2 = np.array(outdoor_relative_humidity_predicted_2, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_relative_humidity_predicted_2, self.noise_std, random_state=noise_random_state)
-        self.outdoor_relative_humidity_predicted_3 = np.array(outdoor_relative_humidity_predicted_3, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_relative_humidity_predicted_3, self.noise_std, random_state=noise_random_state)
+        self.outdoor_relative_humidity_predicted_1 = add_robustness_noise(outdoor_relative_humidity_predicted_1, self.noise_std, noise_random_state, **humidity)
+        self.outdoor_relative_humidity_predicted_2 = add_robustness_noise(outdoor_relative_humidity_predicted_2, self.noise_std, noise_random_state, **humidity)
+        self.outdoor_relative_humidity_predicted_3 = add_robustness_noise(outdoor_relative_humidity_predicted_3, self.noise_std, noise_random_state, **humidity)
 
-        self.diffuse_solar_irradiance_predicted_1 = np.array(diffuse_solar_irradiance_predicted_1, dtype='float32') + NoiseUtils.generate_gaussian_noise(diffuse_solar_irradiance_predicted_1, self.noise_std, random_state=noise_random_state)
-        self.diffuse_solar_irradiance_predicted_2 = np.array(diffuse_solar_irradiance_predicted_2, dtype='float32') + NoiseUtils.generate_gaussian_noise(diffuse_solar_irradiance_predicted_2, self.noise_std, random_state=noise_random_state)
-        self.diffuse_solar_irradiance_predicted_3 = np.array(diffuse_solar_irradiance_predicted_3, dtype='float32') + NoiseUtils.generate_gaussian_noise(diffuse_solar_irradiance_predicted_3, self.noise_std, random_state=noise_random_state)
+        self.diffuse_solar_irradiance_predicted_1 = add_robustness_noise(diffuse_solar_irradiance_predicted_1, self.noise_std, noise_random_state, **irradiance)
+        self.diffuse_solar_irradiance_predicted_2 = add_robustness_noise(diffuse_solar_irradiance_predicted_2, self.noise_std, noise_random_state, **irradiance)
+        self.diffuse_solar_irradiance_predicted_3 = add_robustness_noise(diffuse_solar_irradiance_predicted_3, self.noise_std, noise_random_state, **irradiance)
 
-        self.direct_solar_irradiance_predicted_1 = np.array(direct_solar_irradiance_predicted_1, dtype='float32') + NoiseUtils.generate_gaussian_noise(direct_solar_irradiance_predicted_1, self.noise_std, random_state=noise_random_state)
-        self.direct_solar_irradiance_predicted_2 = np.array(direct_solar_irradiance_predicted_2, dtype='float32') + NoiseUtils.generate_gaussian_noise(direct_solar_irradiance_predicted_2, self.noise_std, random_state=noise_random_state)
-        self.direct_solar_irradiance_predicted_3 = np.array(direct_solar_irradiance_predicted_3, dtype='float32') + NoiseUtils.generate_gaussian_noise(direct_solar_irradiance_predicted_3, self.noise_std, random_state=noise_random_state)
+        self.direct_solar_irradiance_predicted_1 = add_robustness_noise(direct_solar_irradiance_predicted_1, self.noise_std, noise_random_state, **irradiance)
+        self.direct_solar_irradiance_predicted_2 = add_robustness_noise(direct_solar_irradiance_predicted_2, self.noise_std, noise_random_state, **irradiance)
+        self.direct_solar_irradiance_predicted_3 = add_robustness_noise(direct_solar_irradiance_predicted_3, self.noise_std, noise_random_state, **irradiance)
 
 
 
@@ -1223,7 +1252,7 @@ class CarbonIntensity(TimeSeriesData):
         from citylearn.utilities import IndexedNoise
         noise_random_state = None if noise_seed is None else IndexedNoise(noise_seed, noise_start_index)
         super().__init__(start_time_step=start_time_step, end_time_step=end_time_step)
-        self.carbon_intensity = np.array(carbon_intensity, dtype='float32') + NoiseUtils.generate_gaussian_noise(carbon_intensity, self.noise_std, random_state=noise_random_state)
+        self.carbon_intensity = add_robustness_noise(carbon_intensity, self.noise_std, noise_random_state, lower=0.0)
 
 class ChargerSimulation(TimeSeriesData):
     """Charger-centric electric vehicle simulation data class.

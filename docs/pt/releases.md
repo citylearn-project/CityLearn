@@ -5,6 +5,54 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Baselines leem observações corrompidas na interface flat.** Na interface
+  flat, o env corrompe apenas os vetores flat, e as baselines, que leem
+  observações entity, decidiam a partir de valores sem corrupção; na interface
+  entity liam os valores corrompidos
+  ([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Usadas
+  como controladores (`predict(observations)`), recebem agora os eventos de
+  observação de robustez do timestep aplicados às suas observações entity, tal
+  como a interface entity os aplica, e tomam as mesmas ações nas duas
+  interfaces. Nenhum gerador aleatório é consumido, e as observações flat e o
+  histórico de robustez do env não mudam; os KPIs do controlador em execuções
+  flat com eventos de observação podem mudar. A referência BAU nativa de
+  `evaluate_v2()` (`predict([])`) continua sem corrupção.
+- **Ruído de robustez.** Com `noise_std > 0`, o ruído gaussiano podia tornar
+  negativas a produção solar, as irradiâncias solares e a intensidade
+  carbónica, acrescentar produção durante a noite e levar a humidade relativa
+  exterior para fora de [0, 100] %. Uma regra limita agora os valores com ruído:
+  as grandezas solares ficam `>= 0` e sem ruído à noite, a humidade fica em
+  [0, 100] % e a intensidade carbónica fica `>= 0`. O ruído gerado não muda,
+  por isso os valores dentro do intervalo são idênticos bit a bit.
+- As simulações com `noise_std = 0`, incluindo todos os datasets incluídos, não
+  mudam. Ver o [guia de migração](../migration.md#unreleased).
+- **Reward para a carga não servida durante falhas de energia.** Durante uma
+  falha de energia o edifício não pode importar, por isso o consumo líquido é
+  zero e as rewards baseadas na importação da rede não penalizam a carga que o
+  PV e o armazenamento deixam por servir. `OutageUnservedEnergyReward(coefficient,
+  base_reward)` subtrai `coefficient` vezes essa energia não servida a uma reward
+  base, e a nova observação flat `power_outage_unserved_energy` (kWh por
+  timestep, último timestep liquidado) dá-a por edifício com a definição do KPI
+  `power_outage_normalized_unserved_energy_total`
+  ([#188](https://github.com/citylearn-project/CityLearn/issues/188)). A reward
+  funciona nas duas interfaces; a observação existe apenas na interface flat.
+  Ambas são opcionais, pelo que os schemas e resultados existentes não mudam.
+- **Potência de rede disponível variável no tempo.** O campo
+  `buildings.<name>.electrical_service.available_grid_power` aponta para uma
+  série, por timestep, da potência que o edifício pode importar, em kW, num
+  ficheiro com uma coluna por edifício ou numa coluna indicada
+  ([#119](https://github.com/citylearn-project/CityLearn/issues/119)). O limite
+  de importação em vigor num timestep é o menor entre o `limits.total.import_kw`
+  estático e o valor da série, e todos os que leem o limite total de importação
+  o usam: a alocação do serviço elétrico (os carregadores de EV e a bateria são
+  reduzidos primeiro; a carga fixa continua servida e conta como violação), a
+  viabilidade do arranque de cargas deferíveis, as observações de margem, o KPI
+  de viabilidade dos EVs e o KPI de violação do serviço elétrico. Um limite de
+  0 kW não isola o edifício; as falhas de energia continuam em `power_outage`.
+  A nova observação flat `available_grid_power` indica o limite do próximo
+  intervalo quando há série, e as baselines baseadas em regras limitam com ela
+  a margem de importação planeada. Os edifícios sem série não mudam. Ver a
+  [referência do schema](schema_reference.md#potencia-de-rede-disponivel).
 - **Datasets Parquet de 15 s carregam a partir da cache.** Os schemas de
   `citylearn_three_phase_electrical_service_demo_15s_parquet`,
   `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` e
@@ -16,8 +64,8 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   schemas definem agora `"root_directory": null`, como os restantes datasets. O
   `CityLearnEnv(name)` e os caminhos de schema num clone do repositório já
   encontravam os ficheiros e continuam a ler a mesma pasta.
-- Os ficheiros de entrada e os resultados de simulação não mudam; não é
-  necessária migração.
+- A correção dos datasets Parquet não muda os ficheiros de entrada nem os
+  resultados de simulação; não é necessária migração.
 
 ## v3.5.0 - 2026-11-17
 
