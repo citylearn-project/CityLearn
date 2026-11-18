@@ -62,6 +62,7 @@ def external_charger_simulation(rows: int) -> ChargerSimulation:
     simulation.electric_vehicle_current_soc = np.full(rows, UNKNOWN_SOC, dtype='float32')
     simulation.electric_vehicle_connected_seconds = np.full(rows, np.nan, dtype='float64')
     simulation.electric_vehicle_discharge_soc_floor = np.full(rows, np.nan, dtype='float64')
+    simulation.electric_vehicle_connected_since_seconds = np.full(rows, np.nan, dtype='float64')
     simulation.source = EXTERNAL_SOURCE
     return simulation
 
@@ -81,6 +82,7 @@ _ROW_FIELDS = (
     'electric_vehicle_estimated_soc_arrival',
     'electric_vehicle_connected_seconds',
     'electric_vehicle_discharge_soc_floor',
+    'electric_vehicle_connected_since_seconds',
 )
 
 
@@ -244,6 +246,7 @@ class CityLearnMobilityService:
         simulation.electric_vehicle_current_soc[t] = UNKNOWN_SOC
         simulation.electric_vehicle_connected_seconds[t] = np.nan
         simulation.electric_vehicle_discharge_soc_floor[t] = np.nan
+        simulation.electric_vehicle_connected_since_seconds[t] = np.nan
 
     @staticmethod
     def _count_down(value) -> int:
@@ -378,7 +381,7 @@ class CityLearnMobilityService:
 
     def connect(
         self, charger_id, ev_id, *, soc=None, departure_steps=None, required_soc=None, session_id=None,
-        connected_seconds=None, discharge_soc_floor=None,
+        connected_seconds=None, discharge_soc_floor=None, connected_since_seconds=None,
     ):
         self._require_writes('connect')
         key, charger = self._resolve_charger(charger_id, external=True)
@@ -395,6 +398,16 @@ class CityLearnMobilityService:
             step_seconds = float(self.env.seconds_per_time_step)
             if not 0.0 <= connected_seconds <= step_seconds:
                 raise ValueError(f'connected_seconds must be in [0, {step_seconds:g}], got {connected_seconds!r}.')
+        if connected_since_seconds is not None:
+            connected_since_seconds = _finite_number(connected_since_seconds, 'connected_since_seconds')
+            step_seconds = float(self.env.seconds_per_time_step)
+            plugged_in_at = max(-connected_since_seconds, 0.0)
+            end = step_seconds if connected_seconds is None else connected_seconds
+            if plugged_in_at > end:
+                raise ValueError(
+                    f'connected_since_seconds={connected_since_seconds!r} plugs the vehicle in after it leaves '
+                    f'({end:g} s into the step).'
+                )
         if session_id is not None:
             session_id = str(session_id)
             if session_id.strip() in {'', 'nan'}:
@@ -427,6 +440,11 @@ class CityLearnMobilityService:
                     f"soc is accepted only when a session starts; '{ev.name}' continues its session at "
                     f"'{charger_id}'. CityLearn computes the SOC of a running session."
                 )
+            if connected_since_seconds is not None and not self._session_starts(simulation, t):
+                raise ValueError(
+                    f"connected_since_seconds is accepted only when a session starts; '{ev.name}' continues "
+                    f"its session at '{charger_id}'."
+                )
         else:
             self._write_away(simulation, t)
             simulation.electric_vehicle_charger_state[t] = CONNECTED
@@ -443,6 +461,8 @@ class CityLearnMobilityService:
             simulation.electric_vehicle_discharge_soc_floor[t] = discharge_soc_floor
         if connected_seconds is not None:
             simulation.electric_vehicle_connected_seconds[t] = connected_seconds
+        if connected_since_seconds is not None:
+            simulation.electric_vehicle_connected_since_seconds[t] = connected_since_seconds
         if soc is not None:
             simulation.electric_vehicle_current_soc[t] = UNKNOWN_SOC
             self._set_soc(ev, soc)

@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 from citylearn.data import ZERO_DIVISION_PLACEHOLDER, ChargerSimulation
+from citylearn.internal.charger_dynamics import SessionDynamics, SessionState, integrate_step, known_departure_seconds
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
@@ -737,6 +738,16 @@ class CityLearnKPIService:
         connected_steps = max(int(departure_index) - int(interval_start) + 1, 0)
         # Schedules written by a mobility provider may limit a step to the seconds plugged in.
         connected_seconds = getattr(sim, 'electric_vehicle_connected_seconds', None)
+        # Chargers with session dynamics deliver the exact energy of their power profile.
+        dynamics = getattr(charger, 'session_dynamics', None)
+        since = self._safe_sequence_value(getattr(sim, 'electric_vehicle_connected_since_seconds', None), interval_start)
+        since = None if since is None or not np.isfinite(float(since)) else float(since)
+        profile_state = (
+            SessionState(age_seconds=0.0 if since is None else since)
+            if (dynamics is not None and dynamics.enabled) or (since is not None and since < 0.0) else None
+        )
+        dynamics = dynamics if dynamics is not None else SessionDynamics()
+        countdowns = getattr(sim, 'electric_vehicle_departure_time', None)
 
         # Replay the concrete battery implementation in compact, isolated buffers.
         # No real state, RNG, degradation history or episode tracker is advanced.
@@ -771,7 +782,25 @@ class CityLearnKPIService:
                 if offset:
                     replay.next_time_step()
                 ratio = replay.time_step_ratio or 1.0
-                if transfer_seconds is None:
+                if profile_state is not None:
+                    profile = integrate_step(
+                        dynamics, profile_state, command_kw=power_kw, step_seconds=seconds_per_time_step,
+                        connected_seconds=transfer_seconds,
+                        departure_seconds=known_departure_seconds(
+                            self._safe_sequence_value(countdowns, step), transfer_seconds, seconds_per_time_step,
+                        ),
+                    )
+                    profile_state = profile.state
+                    charged = [(energy, seconds) for sign, energy, seconds in profile.parts() if sign > 0]
+                    energy, seconds = charged[0] if charged else (0.0, 0.0)
+                    if seconds > 0.0:
+                        efficiency = self._ev_charger_charge_efficiency(
+                            charger, energy / (seconds / 3600.0), charger_power_kw,
+                        )
+                        replay.charge(energy * efficiency / ratio, duration_seconds=seconds)
+                    else:
+                        replay.charge(0.0)
+                elif transfer_seconds is None:
                     replay.charge(power_kw * step_hours * charger_efficiency / ratio)
                 elif transfer_seconds > 0.0:
                     replay.charge(

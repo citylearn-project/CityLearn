@@ -92,6 +92,7 @@ for the bibliography.
    guides/multi_community_reference
    guides/robustness_reference
    guides/mobility_provider
+   guides/charger_session_dynamics
 
 .. toctree::
    :hidden:

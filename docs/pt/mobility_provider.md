@@ -80,13 +80,15 @@ a duração do episódio, o limite superior do espaço de observação.
 | `session_id` | Identidade da sessão; gerada se omitida. Um novo ID para o veículo já ligado inicia uma sessão seguida. |
 | `connected_seconds` | Segundos do passo atual em que o veículo está ligado, em [0, `seconds_per_time_step`]. A energia do passo é a potência comandada durante esse tempo; os limites de potência e a eficiência da bateria referem-se a ele. Aplica-se a um só passo. |
 | `discharge_soc_floor` | A descarga nesta sessão nunca leva a bateria abaixo deste SOC, por exemplo a energia necessária para a viagem seguinte. A carga não é afetada. |
+| `connected_since_seconds` | Idade da sessão no início deste passo, só quando a chamada inicia uma sessão: positiva se o veículo se ligou esse tempo antes do passo (conta para o `start_delay_seconds` do carregador), negativa se se liga esse tempo depois do início do passo (sem energia antes). Por omissão 0. Ver [dinâmica das sessões de carga](charger_session_dynamics.md). |
 
 Escritas inválidas lançam `ValueError` com o motivo: carregador ou veículo desconhecido, ID de
 carregador usado por vários edifícios (escreva `"<edifício>/<carregador>"`), carregador com ficheiro
 de calendário, veículo ligado a outro carregador no mesmo passo, carregador ligado a outro veículo
-(liberte-o primeiro com `away()`), `soc` numa
-sessão em curso ou `set_vehicle_soc` para um veículo que continua a sessão, SOC fora de [0, 1],
-contagem negativa ou fracionária e `connected_seconds` fora de [0, `seconds_per_time_step`].
+(liberte-o primeiro com `away()`), `soc` ou `connected_since_seconds` numa sessão em curso ou
+`set_vehicle_soc` para um veículo que continua a sessão, SOC fora de [0, 1], contagem negativa ou
+fracionária, `connected_seconds` fora de [0, `seconds_per_time_step`] e um `connected_since_seconds`
+que liga o veículo depois de ele sair.
 
 ## Ler resultados
 
@@ -118,7 +120,8 @@ As linhas escritas pelo fornecedor alimentam as observações habituais dos carr
 e a chegar, contagem até à partida, SOC pedido, capacidade da bateria, hora e SOC de chegada
 estimados e o SOC do veículo ligado. Esse SOC é o valor fechado do intervalo anterior, ou o SOC de
 chegada ou comunicado no passo atual quando o fornecedor o escreveu antes da ação.
-`connected_seconds` e `discharge_soc_floor` limitam a energia, mas não são observados.
+`connected_seconds`, `connected_since_seconds` e `discharge_soc_floor` limitam a energia, mas não são
+observados.
 
 ## Referência business-as-usual
 

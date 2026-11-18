@@ -336,6 +336,14 @@ interval, so they reflect the limit that was in force then.
 | `charge_efficiency_curve` | ratio vs normalized power | Optional charging efficiency curve. |
 | `discharge_efficiency_curve` | ratio vs normalized power | Optional discharging efficiency curve. |
 | `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Electrical phase assignment. |
+| `start_delay_seconds` | s | Optional. Time after a vehicle connects before energy flows. |
+| `setpoint_delay_seconds` | s | Optional. Delay before a step's command takes effect. |
+| `ramp_up_kw_per_second` | kW/s | Optional. Largest rise rate of the power magnitude. |
+| `ramp_down_kw_per_second` | kW/s | Optional. Largest fall rate of the power magnitude. |
+| `stop_delay_seconds` | s | Optional. The transfer stops this long before a known departure. |
+
+The last five attributes model [charger session dynamics](charger_session_dynamics.md); omitted, the
+commanded power applies for the whole connected time.
 
 An external charger's schedule starts away for the whole episode; the provider connects, announces and
 releases vehicles while the episode runs. External chargers are not supported with `topology_mode="dynamic"`.

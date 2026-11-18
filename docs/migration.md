@@ -638,7 +638,9 @@ connections from a traffic simulator, declare chargers with
 [external mobility providers](mobility_provider.md). Code that subclasses
 `citylearn.energy_model.Battery` and overrides `charge(energy)` should accept the new
 keyword-only arguments `duration_seconds` and `soc_floor` if its vehicles are connected
-through external chargers that use `connected_seconds` or `discharge_soc_floor`.
+through external chargers that use `connected_seconds` or `discharge_soc_floor`, or chargers
+with [session dynamics](charger_session_dynamics.md). Chargers without the session-dynamics
+attributes keep delivering the commanded power for the whole connected time.
 
 ## Upgrade from 3.4.0 to 3.5.0
 

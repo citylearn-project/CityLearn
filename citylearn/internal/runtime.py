@@ -1177,6 +1177,8 @@ class CityLearnRuntimeService:
                         previous_runtime_ev is not ev or session_changed
                     )
                     if is_new_connection:
+                        # Session boundary for the charger's session dynamics (start-up delay).
+                        charger._session_started_at = env.time_step
                         continuing_schedule = prev_state == 1 and prev_ev_id == ev_id and not session_changed
                         topology_connection = env._topology_service.enabled and (
                             getattr(charger, '_topology_added_time_step', None) == env.time_step

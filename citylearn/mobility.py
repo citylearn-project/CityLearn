@@ -113,6 +113,7 @@ class MobilityInterface:
         session_id: Optional[str] = None,
         connected_seconds: Optional[float] = None,
         discharge_soc_floor: Optional[float] = None,
+        connected_since_seconds: Optional[float] = None,
     ) -> None:
         """Plug ``ev_id`` into the external charger ``charger_id`` at the current time step.
 
@@ -144,12 +145,18 @@ class MobilityInterface:
         discharge_soc_floor: float, optional
             Discharging in this session never takes the battery below this SOC, e.g. the energy
             the vehicle needs for its next trip. Kept for the rest of the session.
+        connected_since_seconds: float, optional
+            Session age at the start of this time step, only when the call starts a session. A
+            positive value means the vehicle plugged in that many seconds before the step started,
+            e.g. during the previous interval; that time counts towards the charger's
+            ``start_delay_seconds``. A negative value means it plugs in that many seconds after the
+            step starts; no energy flows before. Default 0: plugged in at the start of the step.
         """
 
         self._service.connect(
             charger_id, ev_id, soc=soc, departure_steps=departure_steps, required_soc=required_soc,
             session_id=session_id, connected_seconds=connected_seconds,
-            discharge_soc_floor=discharge_soc_floor,
+            discharge_soc_floor=discharge_soc_floor, connected_since_seconds=connected_since_seconds,
         )
 
     def incoming(

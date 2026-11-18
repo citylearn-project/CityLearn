@@ -296,6 +296,14 @@ limite do proximo intervalo; o headroom descreve o ultimo intervalo executado.
 | `charge_efficiency_curve` | ratio vs potencia normalizada | Curva opcional de eficiencia de carga. |
 | `discharge_efficiency_curve` | ratio vs potencia normalizada | Curva opcional de eficiencia de descarga. |
 | `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Fase eletrica do charger. |
+| `start_delay_seconds` | s | Opcional. Tempo após a ligação do veículo antes de a energia fluir. |
+| `setpoint_delay_seconds` | s | Opcional. Atraso até o comando de um passo ter efeito. |
+| `ramp_up_kw_per_second` | kW/s | Opcional. Taxa máxima de subida do valor absoluto da potência. |
+| `ramp_down_kw_per_second` | kW/s | Opcional. Taxa máxima de descida do valor absoluto da potência. |
+| `stop_delay_seconds` | s | Opcional. A transferência termina este tempo antes de uma partida conhecida. |
+
+Os últimos cinco atributos modelam a [dinâmica das sessões de carga](charger_session_dynamics.md); omitidos,
+a potência comandada aplica-se durante todo o tempo de ligação.
 
 O schedule de um charger externo começa ausente durante todo o episódio; o fornecedor liga, anuncia e
 liberta veículos enquanto o episódio corre. Chargers externos não são suportados com `topology_mode="dynamic"`.

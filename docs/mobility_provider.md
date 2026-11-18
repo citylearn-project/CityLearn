@@ -82,13 +82,15 @@ the episode length, the upper bound of the observation space.
 | `session_id` | Session identity; generated when omitted. A new ID for the vehicle already connected starts a back-to-back session. |
 | `connected_seconds` | Seconds of the current step the vehicle is plugged in, in [0, `seconds_per_time_step`]. The step's energy is the commanded power over that time; battery power limits and efficiency refer to it. Applies to one step only. |
 | `discharge_soc_floor` | Discharging in this session never takes the battery below this SOC, e.g. the energy needed for the next trip. Charging is unaffected. |
+| `connected_since_seconds` | Session age at the start of this step, only when the call starts a session: positive if the vehicle plugged in that long before the step (it counts towards the charger's `start_delay_seconds`), negative if it plugs in that long into the step (no energy before). Default 0. See [charger session dynamics](charger_session_dynamics.md). |
 
 Invalid writes raise `ValueError` with the reason: an unknown charger or vehicle, a charger ID used
 by several buildings (write `"<building>/<charger>"`), a charger with a schedule file, a vehicle
 connected to another charger at the same step, a charger connected to another vehicle (free it with
-`away()` first), `soc` on a running session or
+`away()` first), `soc` or `connected_since_seconds` on a running session or
 `set_vehicle_soc` for a vehicle continuing its session, an SOC outside [0, 1], a negative or
-fractional countdown, and `connected_seconds` outside [0, `seconds_per_time_step`].
+fractional countdown, `connected_seconds` outside [0, `seconds_per_time_step`], and a `connected_since_seconds`
+that plugs the vehicle in after it leaves.
 
 ## Reading results
 
@@ -119,8 +121,8 @@ values, set them under `electric_vehicles_def.<EV>.battery.attributes`.
 The rows written by the provider feed the usual charger observations: connected and incoming
 state, departure countdown, required SOC, battery capacity, estimated arrival time and SOC, and the
 connected vehicle's SOC. That SOC is the settled value of the previous interval, or the arrival or
-reported SOC of the current step when the provider wrote it before the action. `connected_seconds`
-and `discharge_soc_floor` constrain the energy but are not observed.
+reported SOC of the current step when the provider wrote it before the action. `connected_seconds`,
+`connected_since_seconds` and `discharge_soc_floor` constrain the energy but are not observed.
 
 ## Business-as-usual reference
 
