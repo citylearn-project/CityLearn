@@ -5,6 +5,18 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Baselines leem observações corrompidas na interface flat.** Na interface
+  flat, o env corrompe apenas os vetores flat, e as baselines, que leem
+  observações entity, decidiam a partir de valores sem corrupção; na interface
+  entity liam os valores corrompidos
+  ([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Usadas
+  como controladores (`predict(observations)`), recebem agora os eventos de
+  observação de robustez do timestep aplicados às suas observações entity, tal
+  como a interface entity os aplica, e tomam as mesmas ações nas duas
+  interfaces. Nenhum gerador aleatório é consumido, e as observações flat e o
+  histórico de robustez do env não mudam; os KPIs do controlador em execuções
+  flat com eventos de observação podem mudar. A referência BAU nativa de
+  `evaluate_v2()` (`predict([])`) continua sem corrupção.
 - **Ruído de robustez.** Com `noise_std > 0`, o ruído gaussiano podia tornar
   negativas a produção solar, as irradiâncias solares e a intensidade
   carbónica, acrescentar produção durante a noite e levar a humidade relativa

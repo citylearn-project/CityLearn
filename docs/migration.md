@@ -48,6 +48,16 @@ development-line history.
 
 ## Unreleased
 
+### Baselines under the flat interface with robustness observation events
+
+`BusinessAsUsualAgent`, `RBCBasicPolicy`, `RBCSmartPolicy` and
+`RBCCommunityPolicy` run as controllers under the flat interface now read the
+corrupted observations, as they already did under the entity interface
+([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Their
+actions and the controller KPIs of such runs can change. The native BAU
+reference of `evaluate_v2()`, runs without observation events and runs under
+the entity interface are unchanged.
+
 ### Robustness noise stays within physical ranges
 
 Runs with `noise_std = 0`, which includes every bundled dataset, are unchanged.
