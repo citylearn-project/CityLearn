@@ -1,0 +1,46 @@
+[build-system]
+# setuptools 77 is the first release that accepts an SPDX `license` expression with
+# `license-files` (PEP 639); it also provides PEP 660 editable installs (`pip install -e .`).
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "citylearn"
+dynamic = ["version", "dependencies"]
+description = "CityLearn: an energy-community reinforcement-learning environment focused on EV/BESS/PV, electrical-service constraints, dynamic topology and community-market experimentation."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+authors = [
+    { name = "Soft-CPS Research Group, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy", email = "jose@isep.ipp.pt" },
+]
+maintainers = [
+    { name = "Tiago Fonseca", email = "calof@isep.ipp.pt" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+parquet = ["pyarrow"]
+pysam = ["nrel-pysam"]
+# Only citylearn.end_use_load_profiles (building new datasets from EULP/EnergyPlus) needs these.
+end_use_load_profiles = ["doe_xstock>=2.0.0", "openstudio<=3.10.0", "eppy"]
+
+[project.urls]
+Homepage = "https://github.com/citylearn-project/CityLearn"
+Source = "https://github.com/citylearn-project/CityLearn"
+Documentation = "https://www.citylearn.net/"
+
+[project.scripts]
+citylearn = "citylearn.__main__:main"
+
+[tool.setuptools.dynamic]
+# The version has one source, citylearn/__init__.py; CI installs requirements.txt directly.
+version = { attr = "citylearn.__version__" }
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.packages.find]
+include = ["citylearn*"]
