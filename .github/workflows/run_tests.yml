@@ -67,7 +67,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ "${{ matrix.numpy }}" = "1.x" ]; then echo "numpy<2" > constraints.txt; else : > constraints.txt; fi
+          # pyarrow (pulled in by ray[rllib]) refuses to import with NumPy 1.x from 26.0.0 on
+          # (apache/arrow GH-48473), so the NumPy 1.x job keeps it below 26.
+          if [ "${{ matrix.numpy }}" = "1.x" ]; then printf 'numpy<2\npyarrow<26\n' > constraints.txt; else : > constraints.txt; fi
           pip install -c constraints.txt -r requirements.txt
           pip install -c constraints.txt -r test_requirements.txt
           pip install -c constraints.txt -e .
