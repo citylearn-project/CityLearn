@@ -182,8 +182,17 @@
 installing its dependencies. Pass a dataset name to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> for automatic
 download and caching, or pass your own local <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> path. Use
 <code class="docutils literal notranslate"><span class="pre">offline=True</span></code> with locally available files to disable network fallbacks.
+<code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE=1</span></code> makes offline mode the default of <code class="docutils literal notranslate"><span class="pre">DataSet</span></code> and
+<code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>, and <code class="docutils literal notranslate"><span class="pre">CITYLEARN_DATASET_GITHUB_ACCOUNT</span></code>, <code class="docutils literal notranslate"><span class="pre">CITYLEARN_DATASET_REPOSITORY</span></code>
+and <code class="docutils literal notranslate"><span class="pre">CITYLEARN_DATASET_TAG</span></code> choose where <code class="docutils literal notranslate"><span class="pre">DataSet</span></code> downloads from. Each object reads
+them when it is created; explicit arguments take precedence.
 Each first download uses two GitHub API requests; anonymous clients get 60 per
-hour. Set <code class="docutils literal notranslate"><span class="pre">CITYLEARN_GITHUB_TOKEN</span></code> or <code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code> to raise that limit.</p>
+hour. Set <code class="docutils literal notranslate"><span class="pre">CITYLEARN_GITHUB_TOKEN</span></code> or <code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code> to raise that limit.
+A cached dataset is used only when its <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> and every input file the
+schema loads exist: the files of the buildings that load and the event, tariff
+and calendar files. Otherwise it is replaced in one step by a complete local copy or, online,
+by a new download; offline without a complete copy, <code class="docutils literal notranslate"><span class="pre">OfflineDataError</span></code> names the
+missing files.</p>
 <p>The <a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a> provide four 15-minute
 communities of 4 to 100 members, each with evaluation scenarios.</p>
 </section>
