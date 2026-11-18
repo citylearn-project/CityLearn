@@ -268,7 +268,7 @@ class Simulator:
     def __evaluate(self):
         observations, _ = self.env.reset()
         actions_list = []
-        self.__evaluation_start_timestamp = datetime.datetime.now(datetime.UTC)
+        self.__evaluation_start_timestamp = datetime.datetime.now(datetime.timezone.utc)
         
         while not self.env.terminated:
             if isinstance(self.agent, CityLearnAgent):
@@ -284,12 +284,12 @@ class Simulator:
 
             observations, _, _, _, _ = self.env.step(actions)
 
-        self.__evaluation_end_timestamp = datetime.datetime.now(datetime.UTC)
+        self.__evaluation_end_timestamp = datetime.datetime.now(datetime.timezone.utc)
         self.__actions_list = actions_list
 
     def __train(self, episodes: int):
         kwargs = {}
-        self.__train_start_timestamp = datetime.datetime.now(datetime.UTC)
+        self.__train_start_timestamp = datetime.datetime.now(datetime.timezone.utc)
         env = self.env.unwrapped
         previous_final_export_episode_index = (
             env.plan_final_episode_exports(episodes)
@@ -308,7 +308,7 @@ class Simulator:
             if hasattr(env, 'plan_final_episode_exports'):
                 env._final_export_episode_index = previous_final_export_episode_index
 
-        self.__train_end_timestamp = datetime.datetime.now(datetime.UTC)
+        self.__train_end_timestamp = datetime.datetime.now(datetime.timezone.utc)
 
     def __save_agent(self):
         if isinstance(self.agent, CityLearnAgent):

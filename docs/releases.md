@@ -10,6 +10,10 @@ For package publication, version policy and the release checklist, see the
 
 ## Unreleased
 
+### Changed
+
+- **Python 3.10 or newer.** CityLearn now requires Python 3.10 and is tested on Python 3.10 to 3.14, with NumPy 1.x on 3.10. Python 3.9 reached its end of life in October 2025. On Python 3.9, `pip` keeps resolving CityLearn 3.5.0. The CLI commands `simulate train` and `simulate evaluate` used `datetime.UTC`, which exists only from Python 3.11, and failed on Python 3.10; they now use `datetime.timezone.utc`. See the [migration guide](migration.md#unreleased).
+
 ### Fixed
 
 - **15 s Parquet datasets load from the dataset cache.** The schemas of `citylearn_three_phase_electrical_service_demo_15s_parquet`, `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` and `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` set a repository-relative `root_directory`. Passing the schema path returned by `DataSet().get_dataset(name)` to `CityLearnEnv` resolved it against the cache folder and raised `FileNotFoundError` for `<cache>/<dataset>/data/datasets/<dataset>/Building_1.parquet` ([#194](https://github.com/citylearn-project/CityLearn/issues/194)). The three schemas now set `"root_directory": null`, like the other datasets. `CityLearnEnv(name)` and schema paths inside a repository checkout already found the files and still read the same folder.

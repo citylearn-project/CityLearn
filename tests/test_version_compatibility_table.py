@@ -13,6 +13,7 @@ from citylearn import __version__
 ROOT = Path(__file__).resolve().parents[1]
 GUIDE = ROOT/'docs'/'source'/'installation.rst'
 # requirements.txt package -> table column holding its version specifier ("any" when unpinned).
+UNRELEASED = 'Unreleased'
 COLUMNS = {'numpy': 'NumPy', 'scikit-learn': 'scikit-learn', 'torch': 'PyTorch'}
 
 
@@ -37,9 +38,17 @@ def table_rows():
 
 
 def current_row():
+    """The row for the source tree: `Unreleased` if present, otherwise the row covering `__version__`."""
+
+    rows = table_rows()
+    unreleased = [row for row in rows if row['CityLearn'] == UNRELEASED]
+
+    if unreleased:
+        return unreleased[0]
+
     current = Version(__version__)
 
-    for row in table_rows():
+    for row in rows:
         versions = [Version(v) for v in re.findall(r'\d+\.\d+\.\d+', row['CityLearn'])]
         if versions[0] <= current <= versions[-1]:
             return row
@@ -67,7 +76,10 @@ def test_table_rows_are_complete_and_ordered():
     rows = table_rows()
     assert len(rows) >= 7
     assert all(len(row) == 9 and all(value.strip() for value in row.values()) for row in rows)
-    starts = [Version(re.findall(r'\d+\.\d+\.\d+', row['CityLearn'])[0]) for row in rows]
+    released = [row for row in rows if row['CityLearn'] != UNRELEASED]
+    # An Unreleased row, if any, describes the source tree and comes first.
+    assert rows[len(rows) - len(released):] == released
+    starts = [Version(re.findall(r'\d+\.\d+\.\d+', row['CityLearn'])[0]) for row in released]
     assert starts == sorted(starts, reverse=True)
 
 
