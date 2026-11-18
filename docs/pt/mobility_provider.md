@@ -63,7 +63,7 @@ chamadas lançam `RuntimeError`. Cada escrita aplica-se de imediato ao passo atu
 | Chamada | Efeito |
 |---|---|
 | `connect(charger_id, ev_id, *, soc=None, departure_steps=None, required_soc=None, session_id=None, connected_seconds=None, discharge_soc_floor=None)` | Liga o veículo. |
-| `incoming(charger_id, ev_id, *, arrival_steps=None, soc_on_arrival=None)` | Anuncia um veículo a caminho de um carregador livre; as estimativas são apenas observações. |
+| `incoming(charger_id, ev_id, *, arrival_steps=None, soc_on_arrival=None)` | Anuncia um veículo a caminho do carregador; as estimativas são apenas observações. Uma linha do calendário tem um só estado por passo, pelo que anunciar o veículo ligado a este carregador significa que ele saiu neste passo: a sessão termina como com `away()`. |
 | `away(charger_id)` | Liberta o carregador. |
 | `set_vehicle_soc(ev_id, soc)` | Define o SOC de um veículo que não continua uma sessão de carga, por exemplo depois de conduzir. |
 
@@ -83,7 +83,8 @@ a duração do episódio, o limite superior do espaço de observação.
 
 Escritas inválidas lançam `ValueError` com o motivo: carregador ou veículo desconhecido, ID de
 carregador usado por vários edifícios (escreva `"<edifício>/<carregador>"`), carregador com ficheiro
-de calendário, veículo ligado a outro carregador no mesmo passo, carregador ocupado, `soc` numa
+de calendário, veículo ligado a outro carregador no mesmo passo, carregador ligado a outro veículo
+(liberte-o primeiro com `away()`), `soc` numa
 sessão em curso ou `set_vehicle_soc` para um veículo que continua a sessão, SOC fora de [0, 1],
 contagem negativa ou fracionária e `connected_seconds` fora de [0, `seconds_per_time_step`].
 
@@ -95,6 +96,21 @@ contagem negativa ou fracionária e `connected_seconds` fora de [0, `seconds_per
 | `env.mobility.charger_energy_kwh(charger_id)` | Energia AC com sinal do último intervalo terminado, em kWh: positiva na carga, negativa em veículo-para-edifício. Qualquer carregador. |
 | `env.mobility.charger_power_kw(charger_id)` | Potência AC média do último intervalo terminado. |
 | `env.mobility.external_charger_ids`, `external_vehicle_ids`, `vehicle_ids` | Identificadores. |
+
+Leia o SOC dos veículos com `vehicle_soc`. O array `soc` da bateria também o guarda, indexado por
+passo, mas a sua última posição fica a 0 depois de um episódio: a transição terminal não tem ação, pelo
+que o CityLearn não avança as baterias para ela. Isto vale para todos os EV, com ou sem fornecedor.
+
+## Parâmetros da bateria
+
+A simulação usa os parâmetros guardados nos objetos dos veículos, por exemplo
+`env.electric_vehicles[i].battery.efficiency`, `.power_efficiency_curve`, `.capacity_power_curve`,
+`.nominal_power` e `.capacity` (todos em `battery.get_metadata()`). Leia-os aí quando um modelo de
+mobilidade precisar da mesma bateria. Os parâmetros que o schema omite são sorteados quando o ambiente
+é construído, com uma semente derivada do `random_seed` do schema e do nome do veículo, pelo que cada
+EV tem os seus valores; por exemplo, a curva de eficiência em função da potência é sorteada em torno
+da eficiência da bateria, e a curva por omissão na docstring de `Battery` mostra apenas a sua forma.
+Para usar valores conhecidos, defina-os em `electric_vehicles_def.<EV>.battery.attributes`.
 
 ## O que o controlador observa
 

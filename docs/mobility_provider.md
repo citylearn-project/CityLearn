@@ -65,7 +65,7 @@ raise `RuntimeError`. Each write applies to the current time step at once.
 | Call | Effect |
 |---|---|
 | `connect(charger_id, ev_id, *, soc=None, departure_steps=None, required_soc=None, session_id=None, connected_seconds=None, discharge_soc_floor=None)` | Plugs the vehicle in. |
-| `incoming(charger_id, ev_id, *, arrival_steps=None, soc_on_arrival=None)` | Announces a vehicle on its way to a free charger; the estimates are observations only. |
+| `incoming(charger_id, ev_id, *, arrival_steps=None, soc_on_arrival=None)` | Announces a vehicle on its way to the charger; the estimates are observations only. A schedule row holds one state per step, so announcing the vehicle that is connected to this charger means it has left at this step: its session ends as with `away()`. |
 | `away(charger_id)` | Frees the charger. |
 | `set_vehicle_soc(ev_id, soc)` | Sets the SOC of a vehicle that is not continuing a charging session, e.g. after driving. |
 
@@ -85,7 +85,8 @@ the episode length, the upper bound of the observation space.
 
 Invalid writes raise `ValueError` with the reason: an unknown charger or vehicle, a charger ID used
 by several buildings (write `"<building>/<charger>"`), a charger with a schedule file, a vehicle
-connected to another charger at the same step, an occupied charger, `soc` on a running session or
+connected to another charger at the same step, a charger connected to another vehicle (free it with
+`away()` first), `soc` on a running session or
 `set_vehicle_soc` for a vehicle continuing its session, an SOC outside [0, 1], a negative or
 fractional countdown, and `connected_seconds` outside [0, `seconds_per_time_step`].
 
@@ -97,6 +98,21 @@ fractional countdown, and `connected_seconds` outside [0, `seconds_per_time_step
 | `env.mobility.charger_energy_kwh(charger_id)` | Signed AC energy of the last finished interval in kWh: positive charging, negative vehicle-to-building. Any charger. |
 | `env.mobility.charger_power_kw(charger_id)` | Average AC power of the last finished interval. |
 | `env.mobility.external_charger_ids`, `external_vehicle_ids`, `vehicle_ids` | Identifiers. |
+
+Read vehicle SOCs with `vehicle_soc`. The battery's `soc` array also holds them, indexed by time step,
+but its last slot stays 0 after an episode: the terminal transition takes no action, so CityLearn does
+not advance the batteries into it. This holds for every EV, with or without a provider.
+
+## Battery parameters
+
+The simulation uses the parameters held by the vehicle objects, e.g.
+`env.electric_vehicles[i].battery.efficiency`, `.power_efficiency_curve`, `.capacity_power_curve`,
+`.nominal_power` and `.capacity` (all of them in `battery.get_metadata()`). Read them there when a
+mobility model needs the same battery. Parameters the schema leaves out are drawn when the
+environment is built, from a seed derived from the schema's `random_seed` and the vehicle name, so
+each EV has its own values; for example the power-efficiency curve is drawn around the battery's
+efficiency, and the default curve in the `Battery` docstring only shows its form. To use known
+values, set them under `electric_vehicles_def.<EV>.battery.attributes`.
 
 ## What the controller observes
 

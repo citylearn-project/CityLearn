@@ -456,12 +456,15 @@ class CityLearnMobilityService:
         arrival_steps = None if arrival_steps is None else self._countdown(arrival_steps, 'arrival_steps')
         soc_on_arrival = None if soc_on_arrival is None else _fraction(soc_on_arrival, 'soc_on_arrival')
 
-        if simulation.electric_vehicle_charger_state[t] == CONNECTED:
+        current_ev = simulation.electric_vehicle_id[t]
+        if simulation.electric_vehicle_charger_state[t] == CONNECTED and current_ev != ev.name:
             raise ValueError(
-                f"Charger '{charger_id}' is connected to '{simulation.electric_vehicle_id[t]}' at time step {t}; "
+                f"Charger '{charger_id}' is connected to '{current_ev}' at time step {t}; "
                 f"call away('{charger_id}') before announcing '{ev.name}'."
             )
 
+        # A row holds one state: announcing the vehicle connected here means it has left at this
+        # step and will come back, so its session ends as with away().
         self._write_away(simulation, t)
         simulation.electric_vehicle_charger_state[t] = INCOMING
         simulation.electric_vehicle_id[t] = ev.name

@@ -168,6 +168,11 @@ def test_update_runs_after_the_interval_and_before_association_for_every_non_ter
         assert energy == pytest.approx(float(charger.electricity_consumption[t - 1]))
         assert energy > 0.0
         assert soc == pytest.approx(float(battery.soc[t - 1]))
+    # After the episode the read API gives the last interval's SOC. The battery array's terminal
+    # slot is not advanced into (no action follows the terminal transition), as for every EV.
+    last = env.time_steps - 2
+    assert env.mobility.vehicle_soc(EV) == pytest.approx(float(battery.soc[last]))
+    assert battery.soc[-1] == 0.0
 
 
 @pytest.mark.parametrize("interface", ["flat", "entity"])
@@ -222,6 +227,35 @@ def test_vehicle_moves_between_buildings_with_soc_continuity(interface, central_
         assert _flat_observation(
             env, trace[6], "connected_electric_vehicle_at_charger_charger_2_1_departure_time") == 1.0
     assert np.all(_charger(env, "charger_1_1").electricity_consumption[2:] == 0.0)
+
+
+def test_incoming_for_the_connected_vehicle_ends_its_session():
+    plan = {
+        0: lambda env: env.mobility.connect("charger_1_1", EV, soc=0.3, departure_steps=2, required_soc=0.9),
+        # The vehicle left after interval 1 and announces its return in two steps, without away().
+        2: lambda env: env.mobility.incoming("charger_1_1", EV, arrival_steps=2, soc_on_arrival=0.25),
+        4: lambda env: env.mobility.connect("charger_1_1", EV, departure_steps=5, required_soc=0.8),
+    }
+    env = CityLearnEnv(_schema(), central_agent=True, random_seed=0, mobility_provider=Scripted(plan))
+    observations, _ = env.reset()
+    trace = [observations]
+    while not env.terminated:
+        observations, *_ = env.step(_flat_actions(env, ev=1.0))
+        trace.append(observations)
+
+    charger = _charger(env, "charger_1_1")
+    simulation = charger.charger_simulation
+    assert list(simulation.electric_vehicle_charger_state) == [1, 1, 2, 2, 1, 1, 1, 1]
+    assert list(simulation.electric_vehicle_estimated_arrival_time[2:4]) == [2, 1]
+    assert _flat_observation(env, trace[2], "electric_vehicle_charger_charger_1_1_incoming_state") == 1.0
+    assert _flat_observation(env, trace[2], "electric_vehicle_charger_charger_1_1_connected_state") == 0.0
+    assert np.all(charger.electricity_consumption[2:4] == 0.0)
+    # The return is a new session that starts from the vehicle's own SOC.
+    assert simulation.electric_vehicle_session_id[1] != simulation.electric_vehicle_session_id[4]
+    assert float(simulation.electric_vehicle_current_soc[4]) == pytest.approx(float(_vehicle(env).battery.soc[3]))
+    kpis = env.evaluate_v2(include_business_as_usual=False)
+    district = kpis[kpis["level"] == "district"].set_index("cost_function")["value"]
+    assert district["district_ev_events_departure_count"] == 1
 
 
 def test_set_vehicle_soc_is_observed_in_the_same_step():

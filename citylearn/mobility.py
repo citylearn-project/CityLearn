@@ -160,11 +160,16 @@ class MobilityInterface:
         arrival_steps: Optional[int] = None,
         soc_on_arrival: Optional[float] = None,
     ) -> None:
-        """Announce that ``ev_id`` is on its way to the free external charger ``charger_id``.
+        """Announce that ``ev_id`` is on its way to the external charger ``charger_id``.
 
         ``arrival_steps`` (time steps until arrival) and ``soc_on_arrival`` are estimates that the
         observations show; the SOC the session starts with is set by :meth:`connect` or
         :meth:`set_vehicle_soc`.
+
+        A schedule row holds one state per time step. If ``ev_id`` itself is connected to this
+        charger, the call means it has left at this time step and will return: its session ends as
+        with :meth:`away`. A charger connected to another vehicle must be freed with :meth:`away`
+        first.
         """
 
         self._service.incoming(charger_id, ev_id, arrival_steps=arrival_steps, soc_on_arrival=soc_on_arrival)
