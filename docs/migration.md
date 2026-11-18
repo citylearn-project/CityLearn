@@ -629,6 +629,17 @@ autosize or enlarge the devices, or rescale the demand to energy per step.
   for the rest of the episode, which changes their hourly results. Other
   building types ignore the key as before.
 
+### External mobility providers (opt in)
+
+No dataset, schema, export-file or BAU migration is required; environments without a
+mobility provider and without external chargers simulate exactly as before. To drive EV
+connections from a traffic simulator, declare chargers with
+`"charger_simulation": {"source": "external"}` and pass a `mobility_provider`; see
+[external mobility providers](mobility_provider.md). Code that subclasses
+`citylearn.energy_model.Battery` and overrides `charge(energy)` should accept the new
+keyword-only arguments `duration_seconds` and `soc_floor` if its vehicles are connected
+through external chargers that use `connected_seconds` or `discharge_soc_floor`.
+
 ## Upgrade from 3.4.0 to 3.5.0
 
 No dataset, schema, export-file or BAU migration is required; existing datasets and
