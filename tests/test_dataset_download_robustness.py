@@ -257,7 +257,7 @@ def test_nested_dataset_folders_are_downloaded(tmp_path):
     dataset = _NestedDataSet(offline=False, github_account='owner', repository='repo', tag='v9')
     root = Path(dataset.get_dataset('demo')).parent
 
-    assert sorted(str(p.relative_to(root)) for p in root.rglob('*') if p.is_file()) == [
+    assert sorted(p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()) == [
         'evaluation/scenario.json', 'schema.json', 'timeseries/members/M01.parquet', 'timeseries/weather.parquet',
     ]
     assert 'https://raw.githubusercontent.com/owner/repo/v9/data/datasets/demo/timeseries/members/M01.parquet' in urls
@@ -325,7 +325,7 @@ def test_a_nested_dataset_costs_two_github_api_requests(tmp_path):
     root = Path(_TreeDataSet(offline=False, github_account='owner', repository='repo', tag='v9').get_dataset('demo')).parent
 
     assert listings == ['data/datasets'] and trees == ['sha-demo']
-    assert sorted(str(p.relative_to(root)) for p in root.rglob('*') if p.is_file()) == [
+    assert sorted(p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()) == [
         'schema.json', 'timeseries/members/M01.parquet',
     ]
     assert sorted(urls) == [
