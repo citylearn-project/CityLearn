@@ -25,6 +25,11 @@ and `CITYLEARN_DATASET_TAG` choose where `DataSet` downloads from. Each object r
 them when it is created; explicit arguments take precedence.
 Each first download uses two GitHub API requests; anonymous clients get 60 per
 hour. Set `CITYLEARN_GITHUB_TOKEN` or `GITHUB_TOKEN` to raise that limit.
+A cached dataset is used only when its `schema.json` and every input file the
+schema loads exist: the files of the buildings that load and the event, tariff
+and calendar files. Otherwise it is replaced in one step by a complete local copy or, online,
+by a new download; offline without a complete copy, `OfflineDataError` names the
+missing files.
 
 The [Portugal REC datasets](portugal_rec_datasets.md) provide four 15-minute
 communities of 4 to 100 members, each with evaluation scenarios.

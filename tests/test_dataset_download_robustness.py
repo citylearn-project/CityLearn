@@ -211,6 +211,88 @@ def test_concurrent_downloads_replacing_an_incomplete_folder_keep_the_published_
     assert _leftovers(tmp_path) == []
 
 
+SCHEMA = json.dumps({'buildings': {
+    f'Building_{i}': {'energy_simulation': f'Building_{i}.csv', 'weather': 'weather.csv'} for i in range(1, 7)
+}}).encode()
+
+
+class _RepairSession(_Session):
+    """Serves a schema that names the building and weather files, and files that tell which worker downloaded them.
+    Worker A pauses before its last file until worker B has started downloading; B then waits until A has returned."""
+
+    def __init__(self):
+        super().__init__()
+        self.a_paused, self.b_started, self.a_returned = threading.Event(), threading.Event(), threading.Event()
+
+    def get(self, url, **kwargs):
+        worker = threading.current_thread().name
+
+        if worker == 'A' and url.endswith(FILES[-1]):
+            self.a_paused.set()
+            self.b_started.wait(10)
+        elif worker == 'B' and not self.b_started.is_set():
+            self.b_started.set()
+            self.a_returned.wait(10)
+
+        return _response(url, content=SCHEMA if url.endswith('schema.json') else worker.encode())
+
+
+def test_concurrent_repairs_of_a_cached_schema_without_its_files_keep_the_first_published_copy(tmp_path):
+    # An interrupted download left schema.json in the cache with only one of the files it names. Previously the folder
+    # counted as complete, so get_dataset returned it and loading failed on the first missing file.
+    folder = tmp_path/'datasets'/'demo'
+    folder.mkdir(parents=True)
+    (folder/'schema.json').write_bytes(SCHEMA)
+    (folder/'Building_1.csv').write_bytes(b'old')
+    session = _RepairSession()
+    dataset = _dataset_class(tmp_path, session)
+    contents, errors = {}, []
+
+    def worker(name):
+        try:
+            root = Path(dataset(offline=False).get_dataset('demo')).parent
+
+            if name == 'A':
+                session.a_returned.set()
+
+            contents[name] = {n: (root/n).read_bytes() for n in FILES if n != 'schema.json'}
+        except Exception as error:  # pragma: no cover - reported below
+            errors.append(f'{name}: {error!r}')
+        finally:
+            (session.a_returned if name == 'A' else session.b_started).set()
+
+    a = threading.Thread(target=worker, args=('A',), name='A')
+    b = threading.Thread(target=worker, args=('B',), name='B')
+    a.start()
+    assert session.a_paused.wait(10)
+    b.start()
+    a.join(30)
+    b.join(30)
+
+    # A replaced the incomplete folder; B, which had also found it incomplete, kept A's complete copy.
+    assert errors == []
+    assert contents['A'] == contents['B'] == {n: b'A' for n in FILES if n != 'schema.json'}
+    assert sorted(os.listdir(folder)) == sorted(FILES)
+    assert _leftovers(tmp_path) == []
+
+
+def test_a_download_lacking_files_its_schema_names_is_not_cached(tmp_path):
+    # Publishing it would make every later call find the cache incomplete and download it again.
+    class _SchemaSession(_Session):
+        def get(self, url, **kwargs):
+            return _response(url, content=SCHEMA)
+
+    class _IncompleteDataSet(_dataset_class(tmp_path, _SchemaSession())):
+        def get_github_contents(self, path=None):
+            return [dict(type='file', name='schema.json', path=f'{path}/schema.json', download_url='https://raw.example/demo/schema.json')]
+
+    with pytest.raises(FileNotFoundError, match='lacks Building_1.csv, weather.csv, Building_2.csv'):
+        _IncompleteDataSet(offline=False).get_dataset('demo')
+
+    assert not (tmp_path/'datasets'/'demo').exists()
+    assert _leftovers(tmp_path) == []
+
+
 def test_directory_argument_returns_an_existing_schema(tmp_path):
     dataset = _dataset_class(tmp_path/'cache', _Session())
     schema = Path(dataset(offline=False).get_dataset('demo', directory=tmp_path/'copy'))
