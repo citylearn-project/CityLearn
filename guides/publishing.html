@@ -140,7 +140,9 @@ The release maintainer is <a class="reference external" href="https://github.com
 <section id="prepare-the-release">
 <h2>Prepare the release<a class="headerlink" href="#prepare-the-release" title="Link to this heading"></a></h2>
 <ol class="arabic simple">
-<li><p>Update the version in <code class="docutils literal notranslate"><span class="pre">citylearn/__init__.py</span></code>.</p></li>
+<li><p>Update the version in <code class="docutils literal notranslate"><span class="pre">citylearn/__init__.py</span></code>. <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> holds the rest of
+the package metadata; it reads the version from that file and the runtime
+dependencies from <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>.</p></li>
 <li><p>Add a user-facing entry to <a class="reference internal" href="releases.html"><span class="std std-doc">releases.md</span></a>, including compatibility,
 dataset/schema impact, validation scope and migration instructions.</p></li>
 <li><p>Update the affected guides and <a class="reference internal" href="migration.html"><span class="std std-doc">migration notes</span></a>.</p></li>
