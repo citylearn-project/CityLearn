@@ -10,6 +10,10 @@ For package publication, version policy and the release checklist, see the
 
 ## Unreleased
 
+### Added
+
+- **Time-varying available grid power.** `buildings.<name>.electrical_service.available_grid_power` references a per-step series of the power a building may import, in kW, from a file with one column per building or a named column ([#119](https://github.com/citylearn-project/CityLearn/issues/119)). The import limit in force at a step is the smaller of the static `limits.total.import_kw` and the series value, and every reader of the total import limit uses it: the electrical-service allocation (EV chargers and the battery are curtailed first; fixed load stays served and counts as a violation), deferrable start feasibility, the headroom observations, the EV feasibility KPI and the electrical-service violation KPI. A limit of 0 kW does not island the building; outages stay in `power_outage`. The new flat observation `available_grid_power` reports the limit for the coming interval when a series is set, and the rule-based baselines cap their planned import headroom with it. Buildings without a series are unchanged. See the [schema reference](schema_reference.md#available-grid-power).
+
 ### Fixed
 
 - **15 s Parquet datasets load from the dataset cache.** The schemas of `citylearn_three_phase_electrical_service_demo_15s_parquet`, `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` and `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` set a repository-relative `root_directory`. Passing the schema path returned by `DataSet().get_dataset(name)` to `CityLearnEnv` resolved it against the cache folder and raised `FileNotFoundError` for `<cache>/<dataset>/data/datasets/<dataset>/Building_1.parquet` ([#194](https://github.com/citylearn-project/CityLearn/issues/194)). The three schemas now set `"root_directory": null`, like the other datasets. `CityLearnEnv(name)` and schema paths inside a repository checkout already found the files and still read the same folder.

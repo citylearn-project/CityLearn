@@ -98,7 +98,7 @@ The simulator does not assume fixed forecast horizons. They are whatever the dat
 | `solar_generation` | kWh/step | PV generation after PV mode conversion. |
 | `net_electricity_consumption` | kWh/step | Import positive, export negative. |
 | `power_outage` | binary | Power outage state. |
-| `available_grid_power` | kW | Grid import limit for the coming interval: the smaller of the static `import_kw` and the [available grid power](schema_reference.md#available-grid-power) series. Only with a series. |
+| `available_grid_power` | kW | Grid import limit for the coming interval: the smaller of the static `import_kw` and the [available grid power](schema_reference.md#available-grid-power) series. Only with a series. Flat interface only; under the entity interface the building headroom features follow the limit. |
 
 ### EV and Charger Flat Observations
 
