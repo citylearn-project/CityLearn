@@ -215,6 +215,112 @@ def test_baselines_take_the_same_actions_under_flat_and_entity_interfaces(agent_
     np.testing.assert_allclose(np.asarray(trajectories[0]), np.asarray(trajectories[1]))
 
 
+def _robust_minute_schema(tmp_path: Path, enabled: bool = True) -> str:
+    dataset_dir = tmp_path / f"minute_ev_demo_robust_{enabled}"
+    shutil.copytree(SOURCE_DATASET, dataset_dir)
+    # Events valid under both interfaces target building features, here ones
+    # the baselines read: the settled net import, the load and the battery SOC.
+    event = dict(module="observation", target_type="building", target_id="Building_1", std=None, value=None)
+    events = [
+        dict(event, event_id="net_noise", target_feature="net_electricity_consumption", start_time_step=0,
+             end_time_step=7, mode="noise", std=2.0),
+        dict(event, event_id="load_bias", target_feature="non_shiftable_load", start_time_step=2, end_time_step=5,
+             mode="bias", value=2.0),
+        dict(event, event_id="soc_stuck", target_feature="electrical_storage_soc", start_time_step=1,
+             end_time_step=7, mode="stuck"),
+    ]
+    pd.DataFrame(events).to_csv(dataset_dir / "robustness_events.csv", index=False)
+    schema_path = dataset_dir / "schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema["root_directory"] = str(dataset_dir)
+    schema["robustness"] = {"enabled": enabled, "events_file": "robustness_events.csv", "random_seed": 7}
+    schema_path.write_text(json.dumps(schema), encoding="utf-8")
+    return str(schema_path)
+
+
+def _baseline_actions(schema: str, interface: str, agent_class) -> np.ndarray:
+    env = CityLearnEnv(schema, central_agent=False, episode_time_steps=8, random_seed=0, interface=interface)
+    try:
+        observations, _ = env.reset(seed=0)
+        agent = agent_class(env)
+        actions = []
+        while not env.terminated:
+            action = agent.predict(observations)
+            actions.append(action)
+            observations, *_ = env.step(action)
+        return np.asarray(actions, dtype="float64")
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize(
+    "agent_class",
+    [BusinessAsUsualAgent, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy],
+)
+def test_baselines_read_the_same_corrupted_observations_under_flat_and_entity_interfaces(tmp_path, agent_class):
+    # Issue #192: under the flat interface the env corrupts only the flat
+    # vectors, which the baselines do not read.
+    schema = _robust_minute_schema(tmp_path)
+    flat = _baseline_actions(schema, "flat", agent_class)
+    np.testing.assert_array_equal(flat, _baseline_actions(schema, "entity", agent_class))
+    clean = _baseline_actions(_robust_minute_schema(tmp_path, enabled=False), "flat", agent_class)
+    assert not np.array_equal(flat, clean)
+
+
+def test_flat_baseline_robustness_view_leaves_the_env_and_its_random_streams_unchanged(tmp_path):
+    schema = _robust_minute_schema(tmp_path)
+
+    def run(actions=None):
+        env = CityLearnEnv(schema, central_agent=False, episode_time_steps=8, random_seed=0, interface="flat")
+        try:
+            observations, _ = env.reset(seed=0)
+            agent = BusinessAsUsualAgent(env) if actions is None else None
+            taken, seen = [], []
+            while not env.terminated:
+                seen.append(np.asarray(observations, dtype="float64"))
+                action = agent.predict(observations) if agent else actions[len(taken)]
+                taken.append(action)
+                observations, *_ = env.step(action)
+            service = env._robustness_service
+            return dict(
+                actions=taken, observations=seen, history=service.history, stuck=dict(service._stuck_values),
+                net=np.asarray(env.net_electricity_consumption, dtype="float64"),
+                np_random=env.np_random.bit_generator.state,
+                ev_drift=env._ev_drift_random_state.get_state(),
+            )
+        finally:
+            env.close()
+
+    # The baseline reads its corrupted entity payload; the replay reads nothing.
+    with_view = run()
+    replay = run(actions=with_view["actions"])
+    np.testing.assert_array_equal(np.asarray(with_view["observations"]), np.asarray(replay["observations"]))
+    np.testing.assert_array_equal(with_view["net"], replay["net"])
+    assert with_view["history"] == replay["history"]
+    assert with_view["stuck"] == replay["stuck"]
+    assert with_view["np_random"] == replay["np_random"]
+    left, right = with_view["ev_drift"], replay["ev_drift"]
+    np.testing.assert_array_equal(left[1], right[1])
+    assert (left[0],) + tuple(left[2:]) == (right[0],) + tuple(right[2:])
+
+
+def test_native_bau_reference_input_stays_uncorrupted_under_flat_robustness(tmp_path):
+    actions = []
+    for enabled in (True, False):
+        env = CityLearnEnv(
+            _robust_minute_schema(tmp_path, enabled), central_agent=False, episode_time_steps=8, random_seed=0,
+            interface="flat",
+        )
+        try:
+            env.reset(seed=0)
+            agent = BusinessAsUsualAgent(env)
+            env.step(agent.predict([]))
+            actions.append(agent.predict([]))
+        finally:
+            env.close()
+    np.testing.assert_array_equal(np.asarray(actions[0]), np.asarray(actions[1]))
+
+
 def test_baseline_comparison_identity_records_definition_and_parameters():
     env = _ev_env()
     try:
