@@ -3,6 +3,16 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## Por publicar
+
+- **Apoio do veículo ao edifício durante cortes (opcional).** Com
+  `power_outage.vehicle_to_building: true`, um VE ligado pode descarregar para o
+  seu edifício enquanto a rede está em falha, como apoio vehicle-to-home. A
+  descarga limita-se à carga não deslocável e à carga dos equipamentos térmicos
+  que o PV e a bateria não cobrem, pelo que o edifício não exporta para a rede em
+  falha. A opção está desligada por omissão e, sem ela, os resultados não mudam.
+  Ver o [guia de migração](../migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 - **Datasets REC de Portugal.** Quatro comunidades de energia renovável

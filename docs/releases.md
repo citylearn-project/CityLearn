@@ -8,6 +8,14 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## Unreleased
+
+### What's new
+
+- **Vehicle-to-building backup during outages (opt-in).** With `power_outage.vehicle_to_building: true`, a connected EV may discharge to its building while the grid is down, as a vehicle-to-home backup. The discharge is limited to the non-shiftable load and the thermal device load that PV and the battery leave uncovered, so the building exports nothing to the failed grid. The option is off by default, and results without it are unchanged.
+
+See the [migration guide](migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 ### What's new
