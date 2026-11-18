@@ -15,9 +15,9 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: '3.11'
     - name: Install dependencies
@@ -40,7 +40,7 @@ jobs:
         sphinx-build -b html docs/source docs/build/html
         python scripts/ci/check_docs.py docs/build/html
     - name: Save documentation preview
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: documentation-html
         path: docs/build/html
@@ -54,8 +54,8 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/download-artifact@v4
+    - uses: actions/checkout@v7
+    - uses: actions/download-artifact@v8
       with:
         name: documentation-html
         path: docs/build/html
@@ -64,7 +64,7 @@ jobs:
         CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
       run: printf '%s\n' "$CUSTOM_DOMAIN" > docs/build/html/CNAME
     - name: Deploy
-      uses: peaceiris/actions-gh-pages@v3
+      uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/build/html
