@@ -11,6 +11,7 @@ from array import array
 from citylearn.energy_model import Battery
 from citylearn.internal import ev_departure_audit, deferrable_service_audit
 from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
+from citylearn.internal.service_energy import service_energy_components
 
 from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Sequence, Tuple
 
@@ -1504,13 +1505,8 @@ class CityLearnKPIService:
     def _service_energy(self, building, t_start=0, t_final=None):
         """Demand/device histories use dataset energy; tank balances already use control kWh."""
         take = lambda name: self._thermal_values(building, getattr(building, name), t_start, t_final)
-        scale = float(getattr(building, 'time_step_ratio', 1.) or 1.)
-        expected = np.array([take(name)*scale for name in ('cooling_demand','heating_demand','dhw_demand','non_shiftable_load')]).T
-        served = np.array([take('energy_from_cooling_device')*scale+take('energy_from_cooling_storage'),
-                           take('energy_from_heating_device')*scale+take('energy_from_heating_storage'),
-                           take('energy_from_dhw_device')*scale+take('energy_from_dhw_storage'),
-                           take('energy_to_non_shiftable_load')*scale]).T
-        return expected, served
+        expected, served = service_energy_components(building, take)
+        return np.array(expected).T, np.array(served).T
 
     @population_scope
     @settled_cost_scope

@@ -18,6 +18,7 @@ from citylearn.energy_model import (
     StorageDevice, StorageTank, WashingMachine,
 )
 from citylearn.internal.building_ops import BuildingOpsService
+from citylearn.internal.service_energy import SERVICE_ENERGY_COMPONENTS
 from citylearn.internal.units import (
     normalized_capacity_action_to_energy_kwh,
     normalized_power_action_to_energy_kwh,
@@ -2344,6 +2345,11 @@ class Building(Environment):
             elif key == 'power_outage':
                 low_limit[key] = 0.0
                 high_limit[key] = 1.0
+
+            elif key == 'power_outage_unserved_energy':
+                low_limit[key] = 0.0
+                demand = sum(np.asarray(data[name], dtype='float64') for name, _, _ in SERVICE_ENERGY_COMPONENTS)
+                high_limit[key] = as_float(np.nanmax(demand))*float(self.time_step_ratio or 1.0)*self.demand_observation_limit_factor
 
             elif periodic_normalization and key in periodic_observations:
                 values = list(periodic_observations[key])

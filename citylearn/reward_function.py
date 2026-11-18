@@ -1,3 +1,4 @@
+import importlib
 from typing import Any, Iterable, List, Mapping, Optional, Set, Tuple, Union
 import numpy as np
 from citylearn.building import Building
@@ -602,27 +603,51 @@ class OutageUnservedEnergyReward(RewardFunction):
     .. math::
         r = r_{\textrm{base}} - \lambda \sum_{i} u_i
 
-    where :math:`u_i` is the unserved energy of building :math:`i` at the current time step and :math:`\lambda` is
-    `coefficient`. :math:`u_i` uses the same definition as the `power_outage_normalized_unserved_energy_total` KPI:
-    the shortfall of served cooling, heating, DHW and non-shiftable load energy below the expected demand, in kWh,
-    counted only at time steps when the building has an outage. With a central agent the per-building terms are
-    summed.
+    where :math:`u_i` is the `power_outage_unserved_energy` observation of building :math:`i` and :math:`\lambda` is
+    `coefficient`. That observation uses the same definition as the `power_outage_normalized_unserved_energy_total`
+    KPI and is zero at time steps without an outage. With a central agent the per-building terms are summed.
 
     Parameters
     ----------
-    env: citylearn.citylearn.CityLearnEnv
-        Environment whose buildings are read at each time step. Assign the reward with `env.reward_function = ...`.
+    env_metadata: Mapping[str, Any]:
+        General static information about the environment.
     coefficient: float, default: 1.0
         Penalty per kWh of unserved energy, in the units of the base reward.
-    base_reward: RewardFunction, optional
-        Reward the penalty is added to. Defaults to the environment's current reward function.
+    base_reward: Union[RewardFunction, str, Mapping[str, Any]], optional
+        Reward the penalty is added to: an instance, an import path such as
+        `'citylearn.reward_function.ComfortReward'`, or a mapping with `type` and optional `attributes` keys as in
+        the schema. Defaults to :py:class:`RewardFunction`. Passing another `OutageUnservedEnergyReward` applies the
+        penalty twice.
     """
 
-    def __init__(self, env, coefficient: float = None, base_reward: RewardFunction = None, **kwargs):
-        self.env = env
-        self.base_reward = env.reward_function if base_reward is None else base_reward
+    def __init__(
+        self, env_metadata: Mapping[str, Any], coefficient: float = None,
+        base_reward: Union[RewardFunction, str, Mapping[str, Any]] = None, **kwargs
+    ):
+        self.base_reward = self._build_base_reward(base_reward, env_metadata)
         self.coefficient = 1.0 if coefficient is None else float(coefficient)
-        super().__init__(env.get_metadata(), **kwargs)
+        super().__init__(env_metadata, **kwargs)
+
+    @staticmethod
+    def _build_base_reward(base_reward, env_metadata) -> RewardFunction:
+        if base_reward is None:
+            return RewardFunction(env_metadata)
+
+        if isinstance(base_reward, RewardFunction):
+            return base_reward
+
+        if isinstance(base_reward, str):
+            base_reward = {'type': base_reward}
+
+        if isinstance(base_reward, Mapping) and isinstance(base_reward.get('type'), str):
+            module_name, _, class_name = base_reward['type'].rpartition('.')
+            constructor = getattr(importlib.import_module(module_name), class_name)
+            return constructor(env_metadata, **(base_reward.get('attributes') or {}))
+
+        raise TypeError(
+            'base_reward must be a RewardFunction, an import path or a mapping with a "type" import path, '
+            f'got {base_reward!r}.'
+        )
 
     @property
     def env_metadata(self) -> Mapping[str, Any]:
@@ -636,46 +661,22 @@ class OutageUnservedEnergyReward(RewardFunction):
         if base_reward is not None:
             base_reward.env_metadata = env_metadata
 
-    @staticmethod
-    def unserved_energy(building: Building) -> float:
-        """Unserved energy of `building` at its current time step [kWh], zero when it has no outage."""
-
-        if not building.power_outage:
-            return 0.0
-
-        t = building.time_step
-        ratio = float(getattr(building, 'time_step_ratio', 1.0) or 1.0)
-        expected = (
-            building.cooling_demand[t]*ratio,
-            building.heating_demand[t]*ratio,
-            building.dhw_demand[t]*ratio,
-            building.non_shiftable_load[t]*ratio,
-        )
-        served = (
-            building.energy_from_cooling_device[t]*ratio + building.energy_from_cooling_storage[t],
-            building.energy_from_heating_device[t]*ratio + building.energy_from_heating_storage[t],
-            building.energy_from_dhw_device[t]*ratio + building.energy_from_dhw_storage[t],
-            building.energy_to_non_shiftable_load[t]*ratio,
-        )
-        shortfall = 0.0
-
-        for e, s in zip(expected, served):
-            e, s = float(e), float(s)
-
-            if np.isfinite(e) and e > 0.0:
-                shortfall += max(e - (s if np.isfinite(s) else 0.0), 0.0)
-
-        return shortfall
-
     def reset(self):
         self.base_reward.reset()
 
     def get_required_observation_names(self) -> Optional[Iterable[str]]:
-        return self.base_reward.get_required_observation_names()
+        names = self.base_reward.get_required_observation_names()
+
+        if names is None:
+            return None
+
+        return tuple(dict.fromkeys([*names, 'power_outage_unserved_energy']))
 
     def calculate(self, observations: List[Mapping[str, Union[int, float]]]) -> List[float]:
         base = np.asarray(self.base_reward.calculate(observations), dtype='float64').reshape(-1)
-        penalty = self.coefficient*np.array([self.unserved_energy(b) for b in self.env.buildings], dtype='float64')
+        penalty = self.coefficient*np.array(
+            [float(o.get('power_outage_unserved_energy', 0.0) or 0.0) for o in observations], dtype='float64'
+        )
 
         if self.central_agent:
             reward = [float(base.sum() - penalty.sum())]

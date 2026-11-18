@@ -98,6 +98,7 @@ The simulator does not assume fixed forecast horizons. They are whatever the dat
 | `solar_generation` | kWh/step | PV generation after PV mode conversion. |
 | `net_electricity_consumption` | kWh/step | Import positive, export negative. |
 | `power_outage` | binary | Power outage state. |
+| `power_outage_unserved_energy` | kWh/step | Load left unserved during a power outage, as in the `power_outage_normalized_unserved_energy_total` KPI. Zero without an outage. |
 
 ### EV and Charger Flat Observations
 

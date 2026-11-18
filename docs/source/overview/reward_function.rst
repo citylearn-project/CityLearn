@@ -50,15 +50,21 @@ Penalize unserved energy during power outages
 
 When ``simulate_power_outage`` is on, a building cannot import from the grid during an outage, so its net
 electricity consumption is zero and rewards built on grid imports give no signal about load left unserved.
-:py:class:`citylearn.reward_function.OutageUnservedEnergyReward` wraps any reward and subtracts a penalty for
-that shortfall, using the same definition as the ``power_outage_normalized_unserved_energy_total`` KPI:
+:py:class:`citylearn.reward_function.OutageUnservedEnergyReward` wraps a base reward and subtracts a penalty for
+that shortfall. It reads the ``power_outage_unserved_energy`` observation, which uses the same definition as the
+``power_outage_normalized_unserved_energy_total`` KPI, so it can be set in the schema like any other reward:
 
-.. code-block:: python
+.. code-block:: json
 
-   from citylearn.citylearn import CityLearnEnv
-   from citylearn.reward_function import OutageUnservedEnergyReward
+   {
+     "reward_function": {
+       "type": "citylearn.reward_function.OutageUnservedEnergyReward",
+       "attributes": {
+         "coefficient": 1.0,
+         "base_reward": {"type": "citylearn.reward_function.ComfortReward"}
+       }
+     }
+   }
 
-   env = CityLearnEnv('citylearn_challenge_2023_phase_2_online_evaluation_1')
-   env.reward_function = OutageUnservedEnergyReward(env, coefficient=1.0)
-
-``coefficient`` is the penalty per unserved kWh in the units of the wrapped reward.
+``coefficient`` is the penalty per unserved kWh in the units of the base reward. Without ``base_reward`` the
+penalty is added to :py:class:`citylearn.reward_function.RewardFunction`.
