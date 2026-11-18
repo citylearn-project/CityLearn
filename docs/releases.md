@@ -8,6 +8,12 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## Unreleased
+
+### Changed
+
+- **BAU without the `entity_core_electrical` bundle reserves only the EV power the EV accepts.** Without that bundle, `BusinessAsUsualAgent` could not observe `available_charge_power_kw` and reserved the charger's nominal power as local EV demand, so near 100% SOC the home battery discharged for power the EV did not take and the surplus was exported ([#190](https://github.com/citylearn-project/CityLearn/issues/190)). It now estimates the accepted power from the observed SOC, battery capacity, charger power, charger efficiency and step length, as the simulator computes that observation. Datasets with the bundle, the rule-based baselines and the EV commands are unchanged. See the [migration guide](migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 ### What's new

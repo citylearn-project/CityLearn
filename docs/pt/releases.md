@@ -3,6 +3,16 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## Por publicar
+
+- **A BAU sem o bundle `entity_core_electrical` reserva só a potência que o VE aceita.** Sem esse bundle, o
+  `BusinessAsUsualAgent` não observava `available_charge_power_kw` e reservava a potência nominal do carregador como
+  procura local do VE; perto de 100% de SOC, a bateria da casa descarregava para potência que o VE não aceitava e o
+  excedente era exportado ([#190](https://github.com/citylearn-project/CityLearn/issues/190)). Passa a estimar a
+  potência aceite a partir do SOC observado, da capacidade da bateria, da potência e da eficiência do carregador e da
+  duração do timestep, como o simulador calcula essa observação. Os datasets com o bundle, as baselines baseadas em
+  regras e os comandos dos VE não mudam.
+
 ## v3.5.0 - 2026-11-17
 
 - **Datasets REC de Portugal.** Quatro comunidades de energia renovável
