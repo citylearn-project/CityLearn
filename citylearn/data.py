@@ -1,6 +1,7 @@
 import ast
 import logging
 import os
+import posixpath
 from pathlib import Path
 from filelock import FileLock
 from platformdirs import user_cache_dir
@@ -452,16 +453,16 @@ class DataSet:
                     shutil.rmtree(directory, ignore_errors=True)
 
     @staticmethod
-    def _copy_file(source: str, filepath: str) -> None:
-        """Copy under a temporary name, then move into place, so readers never see a partial file."""
+    def _write_file(filepath: str, write) -> None:
+        """Call `write` with a temporary path, then move it to `filepath`, so readers never see a partial file."""
 
         directory = os.path.dirname(filepath)
         os.makedirs(directory, exist_ok=True)
-        descriptor, temporary = tempfile.mkstemp(prefix='.copy-', dir=directory)
+        descriptor, temporary = tempfile.mkstemp(prefix='.write-', dir=directory)
         os.close(descriptor)
 
         try:
-            shutil.copyfile(source, temporary)
+            write(temporary)
             os.replace(temporary, filepath)
 
         except BaseException:
@@ -469,6 +470,12 @@ class DataSet:
                 os.remove(temporary)
 
             raise
+
+    @classmethod
+    def _copy_file(cls, source: str, filepath: str) -> None:
+        """Copy under a temporary name, then move into place, so readers never see a partial file."""
+
+        cls._write_file(filepath, lambda temporary: shutil.copyfile(source, temporary))
 
     def _download_file(self, url: str, filepath: str, session: requests.Session = None) -> None:
         """Download `url` to `filepath`, raising on an error response instead of caching it as data.
@@ -516,22 +523,74 @@ class DataSet:
             )
 
         else:
-            LOGGER.info(f'The dataset names DNE in cache. Will download from '
-                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {filepath}. '
-                    'Next time DataSet.get_dataset_names is called, it will read '
-                        'from cache unless DataSet.clear_cache is run first.')
-            contents = self.get_github_contents(self.datasets_path)
-            contents = [
-                r['name'] for r in contents 
-                    if r.get('type') == 'dir' 
-                        and r.get('path').replace(r['name'], '').strip('/') == self.datasets_path
-            ]
-            FileHandler.write_json(filepath, contents)
-            
+            # Concurrent first calls list the datasets once: the others wait, then read the cached list.
+            with FileLock(os.path.join(self.cache_directory, '.dataset_names.json.lock')):
+                if os.path.isfile(filepath):
+                    contents = FileHandler.read_json(filepath)
+
+                else:
+                    LOGGER.info(f'The dataset names DNE in cache. Will download from '
+                        f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {filepath}. '
+                            'Next time DataSet.get_dataset_names is called, it will read '
+                                'from cache unless DataSet.clear_cache is run first.')
+                    contents = [
+                        r['name'] for r in self.get_github_contents(self.datasets_path)
+                        if r.get('type') == 'dir' and posixpath.dirname(r['path']) == self.datasets_path.strip('/')
+                    ]
+                    # Readers do not take the lock, so they must never see a partly written file.
+                    self._write_file(filepath, lambda f: FileHandler.write_json(f, contents))
+
         contents = sorted(contents)
 
         return contents
     
+    def _ensure_misc_cached_file(self, filename: str, label: str) -> str:
+        """Return the cached path of misc file `filename`, copying it from a local misc root or downloading it first.
+
+        Concurrent first calls fetch the file once: the others wait, then use the cached copy.
+        """
+
+        misc_directory = os.path.join(self.cache_directory, 'misc')
+        filepath = os.path.join(misc_directory, filename)
+
+        if os.path.isfile(filepath):
+            return filepath
+
+        os.makedirs(misc_directory, exist_ok=True)
+
+        with FileLock(os.path.join(misc_directory, f'.{filename}.lock')):
+            if os.path.isfile(filepath):
+                return filepath
+
+            # Prefer local data to avoid unnecessary network usage.
+            local_filepath = self._find_local_misc_filepath(filename)
+
+            if local_filepath is not None:
+                self._copy_file(local_filepath, filepath)
+
+                return filepath
+
+            if self.offline:
+                local_directories = self.local_misc_directories
+                local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
+                raise OfflineDataError(
+                    f"Offline mode is enabled and '{filename}' was not found locally. "
+                    f"Checked cache file '{filepath}' and local misc roots: {local_directories_message}."
+                )
+
+            LOGGER.info(f'The {label} data DNE in cache. Will download from '
+                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {misc_directory}. '
+                    'Next time it is requested, it will read from cache unless DataSet.clear_cache is run first.')
+            path = FileHandler.join_url(self.misc_path)
+            urls = [f['download_url'] for f in self.get_github_contents(path) if f.get('name') == filename]
+
+            if len(urls) == 0:
+                raise FileNotFoundError(f"'{filename}' is not in {path} of {self.github_account}/{self.repository}@{self.tag}.")
+
+            self._download_file(urls[0], filepath)
+
+        return filepath
+
     def get_pv_sizing_data(self) -> pd.DataFrame:
         """Reads and returns LBNL''s Tracking The Sun dataset that has been prefilered for completeness.
         
@@ -540,39 +599,7 @@ class DataSet:
         data: pd.DataFrame
         """
 
-        misc_directory = os.path.join(self.cache_directory, 'misc')
-        os.makedirs(misc_directory, exist_ok=True)
-        filepath = os.path.join(misc_directory, self.PV_CHOICES_FILENAME)
-        path = FileHandler.join_url(self.misc_path)
-
-        # Prefer local data to avoid unnecessary network usage.
-        if not os.path.isfile(filepath):
-            local_filepath = self._find_local_misc_filepath(self.PV_CHOICES_FILENAME)
-
-            if local_filepath is not None:
-                self._copy_file(local_filepath, filepath)
-
-        # check that file DNE
-        if not os.path.isfile(filepath):
-            if self.offline:
-                local_directories = self.local_misc_directories
-                local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
-                raise OfflineDataError(
-                    f"Offline mode is enabled and '{self.PV_CHOICES_FILENAME}' was not found locally. "
-                    f"Checked cache file '{filepath}' and local misc roots: {local_directories_message}."
-                )
-
-            LOGGER.info(f'The PV sizing data DNE in cache. Will download from '
-                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {misc_directory}. '
-                    'Next time DataSet.get_pv_sizing_data is called, it will read '
-                        'from cache unless DataSet.clear_cache is run first.')
-            contents = self.get_github_contents(path)
-            url = [f['download_url'] for f in contents if f['name'] == self.PV_CHOICES_FILENAME][0]
-            self._download_file(url, filepath)
-
-        else:
-            pass
-
+        filepath = self._ensure_misc_cached_file(self.PV_CHOICES_FILENAME, 'PV sizing')
         data = pd.read_csv(filepath, low_memory=False)
         
         return data
@@ -585,39 +612,7 @@ class DataSet:
         data: Mapping[str, Union[float, str]]
         """
 
-        misc_directory = os.path.join(self.cache_directory, 'misc')
-        os.makedirs(misc_directory, exist_ok=True)
-        filepath = os.path.join(misc_directory, self.BATTERY_CHOICES_FILENAME)
-        path = FileHandler.join_url(self.misc_path)
-
-        # Prefer local data to avoid unnecessary network usage.
-        if not os.path.isfile(filepath):
-            local_filepath = self._find_local_misc_filepath(self.BATTERY_CHOICES_FILENAME)
-
-            if local_filepath is not None:
-                self._copy_file(local_filepath, filepath)
-
-        # check that file DNE
-        if not os.path.isfile(filepath):
-            if self.offline:
-                local_directories = self.local_misc_directories
-                local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
-                raise OfflineDataError(
-                    f"Offline mode is enabled and '{self.BATTERY_CHOICES_FILENAME}' was not found locally. "
-                    f"Checked cache file '{filepath}' and local misc roots: {local_directories_message}."
-                )
-
-            LOGGER.info(f'The battery sizing data DNE in cache. Will download from '
-                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {misc_directory}. '
-                    'Next time DataSet.get_battery_sizing_data is called, it will read '
-                        'from cache unless DataSet.clear_cache is run first.')
-            contents = self.get_github_contents(path)
-            url = [f['download_url'] for f in contents if f['name'] == self.BATTERY_CHOICES_FILENAME][0]
-            self._download_file(url, filepath)
-
-        else:
-            pass
-
+        filepath = self._ensure_misc_cached_file(self.BATTERY_CHOICES_FILENAME, 'battery sizing')
         data = FileHandler.read_yaml(filepath)
         data = pd.DataFrame([{'model': k, **v['attributes']} for k, v in data.items()])
         data = data.set_index('model')
