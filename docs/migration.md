@@ -46,6 +46,23 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Unreleased
+
+No dataset, schema or simulation migration is required. Simulated trajectories,
+KPIs and export manifests are unchanged.
+
+- **JSON files with NumPy values.** `FileHandler.write_json` (in `citylearn.utilities`
+  and `citylearn.utils.file_handler`) writes NumPy booleans, integers and floats as
+  JSON booleans and numbers, and NumPy arrays of booleans and numbers as lists. They
+  used to be written as text: `np.float32(2.5)` as `"2.5"`, `np.bool_(True)` as
+  `"True"` and `np.array([1.0, np.nan])` as `"[ 1. nan]"`; they are now `2.5`,
+  `true` and `[1.0, null]`. A `np.float32` is written with its exact value, so
+  `np.float32(0.1)` becomes `0.10000000149011612`. Code that parsed these strings
+  must read numbers instead. With `ignore_nan=False`, a NaN or infinite NumPy float
+  now raises `ValueError`, as a Python float already did; it used to be written as
+  `"nan"`. namedtuples (written as objects), `Decimal` values (written as numbers
+  with their exact text) and all other values are written as before.
+
 ## Upgrade from 3.4.0 to 3.5.0
 
 No dataset, schema, export-file or BAU migration is required; existing datasets and

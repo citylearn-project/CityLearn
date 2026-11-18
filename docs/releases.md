@@ -8,6 +8,12 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## Unreleased
+
+### Changed
+
+- **JSON files with NumPy values.** `FileHandler.write_json` writes NumPy booleans, integers and floats as JSON booleans and numbers, and NumPy arrays of booleans and numbers as lists, instead of their text (`2.5` instead of `"2.5"`, `[1.0, null]` instead of `"[ 1. nan]"`). With `ignore_nan=False`, a NaN NumPy float raises `ValueError` like a Python float. namedtuples and `Decimal` values are written as before, and the export manifests are unchanged. See the [migration guide](migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 ### What's new
