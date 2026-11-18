@@ -20,7 +20,12 @@ from citylearn.data import (
     EscalatorSimulation,
     WashingMachineSimulation,
 )
-from citylearn.internal.units import power_kw_to_energy_kwh, seconds_to_hours, to_dataset_resolution_energy
+from citylearn.internal.units import (
+    energy_kwh_to_power_kw,
+    power_kw_to_energy_kwh,
+    seconds_to_hours,
+    to_dataset_resolution_energy,
+)
 from citylearn.internal.deferrable_cycles import CycleIndex
 np.seterr(divide='ignore', invalid='ignore')
 
@@ -144,13 +149,17 @@ class ElectricDevice(Device):
 
     @property
     def available_nominal_power(self) -> float:
-        r"""Difference between `nominal_power` and `electricity_consumption` at current `time_step`."""
+        r"""Difference between `nominal_power` and the average power drawn so far at current `time_step`, in [kW].
+
+        `electricity_consumption` is control-step energy in [kWh]; it is converted to average power over the
+        control step before it is subtracted from `nominal_power` in [kW]. The two only coincide at 3600 s steps.
+        """
 
         if self.nominal_power is None:
             return None
 
         consumption = float(self.__electricity_consumption[self.time_step]) * self._electricity_consumption_ratio()
-        return as_float(self.nominal_power) - consumption
+        return as_float(self.nominal_power) - energy_kwh_to_power_kw(consumption, self.seconds_per_time_step)
 
 
     def get_metadata(self) -> Mapping[str, Any]:
@@ -2169,18 +2178,38 @@ class Escalator(ElectricDevice):
     def _power_for_state(self, state: int) -> float:
         return (self.standby_power, self.slow_power, self.normal_power)[int(state)]
 
+    def preview_state(self, action_value: float) -> int:
+        """Return the operating state that :py:meth:`set_state` would select for `action_value` at the current step.
+
+        The state is not changed. This applies the same availability rule and minimum dwell time as
+        :py:meth:`set_state`, which uses it.
+        """
+
+        desired = self.action_to_state(action_value) if self._available() else self.STATE_STANDBY
+        if desired == self.__state:
+            return self.state
+
+        elapsed = int(self.time_step) - int(self.__state_start_time_step)
+        if elapsed >= self.minimum_state_steps or (not self._available() and desired == self.STATE_STANDBY):
+            return int(desired)
+
+        return self.state
+
+    def preview_power_kw(self, action_value: float) -> float:
+        """Return the power in [kW] the escalator would draw at the current step if `action_value` were applied."""
+
+        return self._power_for_state(self.preview_state(action_value))
+
     def set_state(self, action_value: float):
         """Apply the normalized action and record current-step power/service."""
 
         requested = self.action_to_state(action_value)
-        desired = requested if self._available() else self.STATE_STANDBY
+        state = self.preview_state(action_value)
         changed = False
-        if desired != self.__state:
-            elapsed = int(self.time_step) - int(self.__state_start_time_step)
-            if elapsed >= self.minimum_state_steps or (not self._available() and desired == self.STATE_STANDBY):
-                self.__state = desired
-                self.__state_start_time_step = int(self.time_step)
-                changed = True
+        if state != self.__state:
+            self.__state = state
+            self.__state_start_time_step = int(self.time_step)
+            changed = True
 
         self.__requested_state = requested
         self.state_history[self.time_step] = self.__state
