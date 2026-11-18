@@ -7,7 +7,8 @@ from platformdirs import user_cache_dir
 import shutil
 import tempfile
 from urllib.parse import quote
-from typing import Any, Dict, Iterable, Mapping, List, Optional, Union
+from typing import Any, Callable, Dict, Iterable, Mapping, List, Optional, Union
+import warnings
 import numpy as np
 import pandas as pd
 import requests
@@ -45,6 +46,19 @@ def _parse_env_bool(name: str, default: bool = False) -> bool:
 
     return bool(parse_bool(value, default=default, path=name))
 
+
+class _DeprecatedClassAttribute:
+    """A class attribute that warns when read and computes its value from the class it is read from."""
+
+    def __init__(self, value: Callable[[type], Any], message: str):
+        self.value = value
+        self.message = message
+
+    def __get__(self, instance, owner):
+        warnings.warn(self.message, DeprecationWarning, stacklevel=2)
+
+        return self.value(owner)
+
 def get_settings():
     directory = os.path.join(os.path.join(os.path.dirname(__file__), 'misc'))
     filepath = os.path.join(directory, 'settings.yaml')
@@ -55,15 +69,31 @@ def get_settings():
 class DataSet:
     """CityLearn input data set and schema class."""
 
-    GITHUB_ACCOUNT = os.getenv('CITYLEARN_DATASET_GITHUB_ACCOUNT', 'citylearn-project')
-    REPOSITORY_NAME = os.getenv('CITYLEARN_DATASET_REPOSITORY', 'CityLearn')
-    REPOSITORY_TAG = os.getenv('CITYLEARN_DATASET_TAG', f'v{__version__}')
-    OFFLINE = _parse_env_bool('CITYLEARN_OFFLINE', False)
+    # Defaults for arguments left as None. The environment variables CITYLEARN_DATASET_GITHUB_ACCOUNT,
+    # CITYLEARN_DATASET_REPOSITORY, CITYLEARN_DATASET_TAG and CITYLEARN_OFFLINE override them, read when
+    # a DataSet is created.
+    GITHUB_ACCOUNT = 'citylearn-project'
+    REPOSITORY_NAME = 'CityLearn'
+    REPOSITORY_TAG = f'v{__version__}'
+    OFFLINE = False
     REPOSITORY_DATA_PATH = FileHandler.join_url('data')
     REPOSITORY_DATA_DATASETS_PATH = FileHandler.join_url(REPOSITORY_DATA_PATH, 'datasets')
     REPOSITORY_DATA_MISC_PATH = FileHandler.join_url(REPOSITORY_DATA_PATH, 'misc')
-    GITHUB_API_CONTENT_URL = FileHandler.join_url('https://api.github.com/repos/', GITHUB_ACCOUNT, REPOSITORY_NAME, 'contents')
-    DEFAULT_CACHE_DIRECTORY = os.path.join(user_cache_dir('citylearn'), REPOSITORY_TAG)
+    GITHUB_API_CONTENT_URL = _DeprecatedClassAttribute(
+        lambda cls: FileHandler.join_url(
+            'https://api.github.com/repos/',
+            os.getenv('CITYLEARN_DATASET_GITHUB_ACCOUNT', cls.GITHUB_ACCOUNT),
+            os.getenv('CITYLEARN_DATASET_REPOSITORY', cls.REPOSITORY_NAME),
+            'contents',
+        ),
+        'DataSet.GITHUB_API_CONTENT_URL is deprecated and unused: get_github_contents() builds the URL from the '
+        'github_account and repository of the DataSet instance.',
+    )
+    DEFAULT_CACHE_DIRECTORY = _DeprecatedClassAttribute(
+        lambda cls: os.path.join(user_cache_dir('citylearn'), os.getenv('CITYLEARN_DATASET_TAG', cls.REPOSITORY_TAG)),
+        'DataSet.DEFAULT_CACHE_DIRECTORY is deprecated and unused; it is not the folder datasets are cached in. '
+        'Use DataSet().cache_directory.',
+    )
     BATTERY_CHOICES_FILENAME = 'battery_choices.yaml'
     PV_CHOICES_FILENAME = 'lbl-tracking_the_sun-res-pv.csv'
 
@@ -142,15 +172,15 @@ class DataSet:
     
     @github_account.setter
     def github_account(self, value: str):
-        self.__github_account = self.GITHUB_ACCOUNT if value is None else value
+        self.__github_account = os.getenv('CITYLEARN_DATASET_GITHUB_ACCOUNT', self.GITHUB_ACCOUNT) if value is None else value
 
     @repository.setter
     def repository(self, value: str):
-        self.__repository = self.REPOSITORY_NAME if value is None else value
+        self.__repository = os.getenv('CITYLEARN_DATASET_REPOSITORY', self.REPOSITORY_NAME) if value is None else value
 
     @tag.setter
     def tag(self, value: str):
-        self.__tag = self.REPOSITORY_TAG if value is None else value
+        self.__tag = os.getenv('CITYLEARN_DATASET_TAG', self.REPOSITORY_TAG) if value is None else value
 
     @datasets_path.setter
     def datasets_path(self, value: str):
@@ -167,7 +197,7 @@ class DataSet:
 
     @offline.setter
     def offline(self, value: bool):
-        self.__offline = self.OFFLINE if value is None else bool(parse_bool(value, default=False, path='offline'))
+        self.__offline = _parse_env_bool('CITYLEARN_OFFLINE', self.OFFLINE) if value is None else bool(parse_bool(value, default=False, path='offline'))
 
     @staticmethod
     def _existing_directories(directories: Iterable[str]) -> List[str]:
