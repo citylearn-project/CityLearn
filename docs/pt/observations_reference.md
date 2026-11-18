@@ -105,6 +105,7 @@ O simulador nao assume que os horizontes sejam sempre 6/12/24h. Eles sao o que o
 | `solar_generation` | kWh/step | Geracao PV ja convertida pelo modo PV. |
 | `net_electricity_consumption` | kWh/step | Import positivo, export negativo. |
 | `power_outage` | binario | Outage no timestep. |
+| `power_outage_unserved_energy` | kWh/step | Carga nao atendida durante o outage, como no KPI `power_outage_normalized_unserved_energy_total`. Zero sem outage. Apenas na interface flat; a tabela entity `building` não a inclui. |
 | `available_grid_power` | kW | Limite de importacao do proximo intervalo: o menor entre o `import_kw` estatico e a serie [available_grid_power](schema_reference.md#potencia-de-rede-disponivel). So com serie. Apenas na interface flat; na interface entity as margens do edificio seguem o limite. |
 
 ### EV e Charger Flat
