@@ -134,7 +134,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">quote</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
@@ -175,6 +176,19 @@
 
     <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">parse_bool</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">name</span><span class="p">))</span>
 
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_DeprecatedClassAttribute</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A class attribute that warns when read and computes its value from the class it is read from."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">type</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">owner</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span>
+
 <div class="viewcode-block" id="get_settings">
 <a class="viewcode-back" href="../../api/citylearn.data.html#citylearn.data.get_settings">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_settings</span><span class="p">():</span>
@@ -190,15 +204,31 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">DataSet</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""CityLearn input data set and schema class."""</span>
 
-    <span class="n">GITHUB_ACCOUNT</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">'CITYLEARN_DATASET_GITHUB_ACCOUNT'</span><span class="p">,</span> <span class="s1">'citylearn-project'</span><span class="p">)</span>
-    <span class="n">REPOSITORY_NAME</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">'CITYLEARN_DATASET_REPOSITORY'</span><span class="p">,</span> <span class="s1">'CityLearn'</span><span class="p">)</span>
-    <span class="n">REPOSITORY_TAG</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">'CITYLEARN_DATASET_TAG'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'v</span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
-    <span class="n">OFFLINE</span> <span class="o">=</span> <span class="n">_parse_env_bool</span><span class="p">(</span><span class="s1">'CITYLEARN_OFFLINE'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="c1"># Defaults for arguments left as None. The environment variables CITYLEARN_DATASET_GITHUB_ACCOUNT,</span>
+    <span class="c1"># CITYLEARN_DATASET_REPOSITORY, CITYLEARN_DATASET_TAG and CITYLEARN_OFFLINE override them, read when</span>
+    <span class="c1"># a DataSet is created.</span>
+    <span class="n">GITHUB_ACCOUNT</span> <span class="o">=</span> <span class="s1">'citylearn-project'</span>
+    <span class="n">REPOSITORY_NAME</span> <span class="o">=</span> <span class="s1">'CityLearn'</span>
+    <span class="n">REPOSITORY_TAG</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'v</span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="s1">'</span>
+    <span class="n">OFFLINE</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">REPOSITORY_DATA_PATH</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="s1">'data'</span><span class="p">)</span>
     <span class="n">REPOSITORY_DATA_DATASETS_PATH</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">REPOSITORY_DATA_PATH</span><span class="p">,</span> <span class="s1">'datasets'</span><span class="p">)</span>
     <span class="n">REPOSITORY_DATA_MISC_PATH</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">REPOSITORY_DATA_PATH</span><span class="p">,</span> <span class="s1">'misc'</span><span class="p">)</span>
-    <span class="n">GITHUB_API_CONTENT_URL</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="s1">'https://api.github.com/repos/'</span><span class="p">,</span> <span class="n">GITHUB_ACCOUNT</span><span class="p">,</span> <span class="n">REPOSITORY_NAME</span><span class="p">,</span> <span class="s1">'contents'</span><span class="p">)</span>
-    <span class="n">DEFAULT_CACHE_DIRECTORY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">user_cache_dir</span><span class="p">(</span><span class="s1">'citylearn'</span><span class="p">),</span> <span class="n">REPOSITORY_TAG</span><span class="p">)</span>
+    <span class="n">GITHUB_API_CONTENT_URL</span> <span class="o">=</span> <span class="n">_DeprecatedClassAttribute</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="bp">cls</span><span class="p">:</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span>
+            <span class="s1">'https://api.github.com/repos/'</span><span class="p">,</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">'CITYLEARN_DATASET_GITHUB_ACCOUNT'</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">GITHUB_ACCOUNT</span><span class="p">),</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">'CITYLEARN_DATASET_REPOSITORY'</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">REPOSITORY_NAME</span><span class="p">),</span>
+            <span class="s1">'contents'</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="s1">'DataSet.GITHUB_API_CONTENT_URL is deprecated and unused: get_github_contents() builds the URL from the '</span>
+        <span class="s1">'github_account and repository of the DataSet instance.'</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">DEFAULT_CACHE_DIRECTORY</span> <span class="o">=</span> <span class="n">_DeprecatedClassAttribute</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="bp">cls</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">user_cache_dir</span><span class="p">(</span><span class="s1">'citylearn'</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">'CITYLEARN_DATASET_TAG'</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">REPOSITORY_TAG</span><span class="p">)),</span>
+        <span class="s1">'DataSet.DEFAULT_CACHE_DIRECTORY is deprecated and unused; it is not the folder datasets are cached in. '</span>
+        <span class="s1">'Use DataSet().cache_directory.'</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">BATTERY_CHOICES_FILENAME</span> <span class="o">=</span> <span class="s1">'battery_choices.yaml'</span>
     <span class="n">PV_CHOICES_FILENAME</span> <span class="o">=</span> <span class="s1">'lbl-tracking_the_sun-res-pv.csv'</span>
 
@@ -277,15 +307,15 @@
     
     <span class="nd">@github_account</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">github_account</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__github_account</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_ACCOUNT</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__github_account</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">'CITYLEARN_DATASET_GITHUB_ACCOUNT'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">GITHUB_ACCOUNT</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
 
     <span class="nd">@repository</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">repository</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__repository</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">REPOSITORY_NAME</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__repository</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">'CITYLEARN_DATASET_REPOSITORY'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">REPOSITORY_NAME</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
 
     <span class="nd">@tag</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">REPOSITORY_TAG</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__tag</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">'CITYLEARN_DATASET_TAG'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">REPOSITORY_TAG</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
 
     <span class="nd">@datasets_path</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">datasets_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -302,7 +332,7 @@
 
     <span class="nd">@offline</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">offline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__offline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">OFFLINE</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">bool</span><span class="p">(</span><span class="n">parse_bool</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">'offline'</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__offline</span> <span class="o">=</span> <span class="n">_parse_env_bool</span><span class="p">(</span><span class="s1">'CITYLEARN_OFFLINE'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">OFFLINE</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">bool</span><span class="p">(</span><span class="n">parse_bool</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">'offline'</span><span class="p">))</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_existing_directories</span><span class="p">(</span><span class="n">directories</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
