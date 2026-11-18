@@ -12,7 +12,7 @@ CityLearn v3 brings together buildings and thermal systems, PV, batteries, EVs a
 python -m pip install citylearn
 ```
 
-Use Python 3.9 or newer in a virtual environment. See the [installation guide](https://www.citylearn.net/installation.html) for setup and optional dependencies, including Parquet support, the [dependency versions of each release](https://www.citylearn.net/installation.html#version-compatibility) and [installation troubleshooting](https://www.citylearn.net/installation.html#troubleshooting-installation).
+Use Python 3.11 or newer in a virtual environment. See the [installation guide](https://www.citylearn.net/installation.html) for setup and optional dependencies, including Parquet support, the [dependency versions of each release](https://www.citylearn.net/installation.html#version-compatibility) and [installation troubleshooting](https://www.citylearn.net/installation.html#troubleshooting-installation).
 
 ## Configure your community
 
