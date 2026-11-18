@@ -17,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.10"
 
@@ -48,15 +48,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Cache pip dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-py${{ matrix.python-version }}-numpy${{ matrix.numpy }}-pip-${{ hashFiles('requirements.txt', 'test_requirements.txt', 'setup.py') }}
@@ -94,7 +94,7 @@ jobs:
 
       - name: Upload performance smoke report
         if: always() && matrix.python-version == '3.10' && matrix.numpy == '2.x'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: perf-smoke-report
           path: ${{ runner.temp }}/perf/perf_smoke_report.json
@@ -119,19 +119,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14  # arm64
+          - os: macos-15  # arm64; macos-14 runners are deprecated
             python-version: "3.11"
-          - os: windows-2022
+          - os: windows-2025
             python-version: "3.12"
           - os: ubuntu-24.04
             python-version: "3.13"
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -156,8 +156,8 @@ jobs:
     needs: lint
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.10'
       - name: Install audit dependencies
@@ -166,7 +166,7 @@ jobs:
         run: python scripts/audit/run_full_audit.py --strict --output-dir "${{ runner.temp }}/citylearn-audits"
       - name: Upload runtime audit evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: citylearn-runtime-audits
           path: ${{ runner.temp }}/citylearn-audits/*.json
