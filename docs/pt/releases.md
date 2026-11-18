@@ -3,6 +3,20 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## Por publicar
+
+- **Baselines leem observações corrompidas na interface flat.** Na interface
+  flat, o env corrompe apenas os vetores flat, e as baselines, que leem
+  observações entity, decidiam a partir de valores sem corrupção; na interface
+  entity liam os valores corrompidos
+  ([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Usadas
+  como controladores (`predict(observations)`), recebem agora os eventos de
+  observação de robustez do timestep aplicados às suas observações entity, tal
+  como a interface entity os aplica, e tomam as mesmas ações nas duas
+  interfaces. Nenhum gerador aleatório é consumido, e as observações flat, o
+  histórico e os KPIs de robustez não mudam. A referência BAU nativa de
+  `evaluate_v2()` (`predict([])`) continua sem corrupção.
+
 ## v3.5.0 - 2026-11-17
 
 - **Datasets REC de Portugal.** Quatro comunidades de energia renovável

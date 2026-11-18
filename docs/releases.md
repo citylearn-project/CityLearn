@@ -8,6 +8,12 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## Unreleased
+
+### Changed
+
+- **Baselines read corrupted observations under the flat interface.** Under the flat interface the env corrupts only the flat vectors, and the baselines, which read entity observations, decided from uncorrupted values; under the entity interface they read the corrupted ones ([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Run as controllers (`predict(observations)`), they now get the step's robustness observation events applied to their entity observations as the entity interface applies them, and take the same actions under both interfaces. No random stream is consumed, and the flat observations, robustness history and KPIs are unchanged. The native BAU reference of `evaluate_v2()` (`predict([])`) stays uncorrupted. See the [migration guide](migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 ### What's new
