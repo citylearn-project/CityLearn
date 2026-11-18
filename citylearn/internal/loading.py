@@ -627,13 +627,21 @@ class CityLearnLoadingService:
         """Initialize and return an electric vehicle model."""
 
         attrs = electric_vehicle_schema['battery']['attributes']
+        battery_type = electric_vehicle_schema['battery'].get('type', 'citylearn.energy_model.Battery')
+        module, class_name = battery_type.rsplit('.', 1)
+        battery_constructor = getattr(importlib.import_module(module), class_name)
+        if not issubclass(battery_constructor, Battery):
+            raise ValueError('An electric vehicle battery must extend Battery')
+        from citylearn.community_dataset import InventoryBattery
         capacity = attrs['capacity']
-        nominal_power = attrs['nominal_power']
         initial_soc = attrs.get('initial_soc')
         if initial_soc is None:
             seed_source = f"{schema['random_seed']}:{electric_vehicle_name}:initial_soc"
             deterministic_seed = int(hashlib.md5(seed_source.encode('utf-8')).hexdigest()[:8], 16)
-            initial_soc = float(np.random.RandomState(deterministic_seed).uniform(0.0, 1.0))
+            # Draw within the declared SOC limits; InventoryBattery rejects an initial SOC outside them.
+            initial_soc = float(np.random.RandomState(deterministic_seed).uniform(
+                attrs.get('min_soc', 0.0), attrs.get('max_soc', 1.0),
+            ))
         depth_of_discharge = attrs.get('depth_of_discharge', 1.0)
         loss_coefficient = attrs.get('loss_coefficient', 0.0)
 
@@ -653,7 +661,6 @@ class CityLearnLoadingService:
 
         battery_kwargs = {
             'capacity': capacity,
-            'nominal_power': nominal_power,
             'initial_soc': initial_soc,
             'loss_coefficient': loss_coefficient,
             'seconds_per_time_step': schema['seconds_per_time_step'],
@@ -678,11 +685,10 @@ class CityLearnLoadingService:
             if attribute in attrs:
                 battery_kwargs[attribute] = attrs[attribute]
 
-        battery_type = electric_vehicle_schema['battery'].get('type', 'citylearn.energy_model.Battery')
-        module, class_name = battery_type.rsplit('.', 1)
-        battery_constructor = getattr(importlib.import_module(module), class_name)
-        if not issubclass(battery_constructor, Battery):
-            raise ValueError('An electric vehicle battery must extend Battery')
+        # InventoryBattery derives nominal_power from max_charge_kw and max_discharge_kw.
+        if 'nominal_power' in attrs or not issubclass(battery_constructor, InventoryBattery):
+            battery_kwargs['nominal_power'] = attrs['nominal_power']
+
         battery = battery_constructor(**battery_kwargs)
 
         electric_vehicle_type = 'citylearn.citylearn.ElectricVehicle' if electric_vehicle_schema.get('type', None) is None else electric_vehicle_schema['type']

@@ -1293,7 +1293,7 @@ class CityLearnEntityInterfaceService:
         depth_of_discharge = self._safe_scalar(getattr(battery, "depth_of_discharge", 1.0), 1.0)
         soc_min = float(np.clip(1.0 - depth_of_discharge, 0.0, 1.0))
         energy_available = max((current_soc - soc_min) * battery_capacity, 0.0)
-        energy_to_full = max((1.0 - current_soc) * battery_capacity, 0.0)
+        energy_to_full = max((self._soc_max(battery) - current_soc) * battery_capacity, 0.0)
         outage = bool(getattr(building, "power_outage", False))
 
         charge_efficiency = max(self._safe_scalar(charge_efficiency_at_max, 1.0), 1.0e-6)
@@ -1387,6 +1387,7 @@ class CityLearnEntityInterfaceService:
         step_hours: float,
         include_headroom: bool = True,
         current_power_kw: float = 0.0,
+        soc_max: float = 1.0,
     ) -> Mapping[str, float]:
         efficiency = max(self._safe_scalar(efficiency, 1.0), 1.0e-6)
         charge_power_by_soc = energy_to_full / max(efficiency * step_hours, 1.0e-6)
@@ -1415,7 +1416,7 @@ class CityLearnEntityInterfaceService:
         outage = bool(getattr(building, "power_outage", False))
         available_charge_power = 0.0 if outage else max(min(charge_candidates), 0.0)
         available_discharge_power = 0.0 if outage else max(min(discharge_candidates), 0.0)
-        usable_denominator = max(1.0 - soc_min, 1.0e-6)
+        usable_denominator = max(soc_max - soc_min, 1.0e-6)
 
         return {
             "can_charge": 1.0 if available_charge_power > 1.0e-9 else 0.0,
@@ -1453,8 +1454,9 @@ class CityLearnEntityInterfaceService:
             soc = self._safe_index(getattr(storage, "soc", []), endogenous_t, 0.0)
             depth_of_discharge = self._safe_scalar(getattr(storage, "depth_of_discharge", 1.0), 1.0)
             soc_min = max(1.0 - depth_of_discharge, 0.0)
+            soc_max = self._soc_max(storage)
             current_energy = soc * max(capacity, 0.0)
-            storage_energy_to_full = max(capacity - current_energy, 0.0)
+            storage_energy_to_full = max(soc_max * capacity - current_energy, 0.0)
             storage_energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
             max_charge_power = (
                 self._safe_scalar(storage.get_max_input_power(), nominal_power)
@@ -1480,6 +1482,7 @@ class CityLearnEntityInterfaceService:
                 efficiency=self._safe_scalar(getattr(storage, "efficiency", 1.0), 1.0),
                 step_hours=step_hours,
                 include_headroom=False,
+                soc_max=soc_max,
             )
             charge_power += self._safe_scalar(storage_metrics.get("available_charge_power_kw", 0.0), 0.0)
             discharge_power += self._safe_scalar(storage_metrics.get("available_discharge_power_kw", 0.0), 0.0)
@@ -1502,7 +1505,7 @@ class CityLearnEntityInterfaceService:
 
             depth_of_discharge = self._safe_scalar(getattr(battery, "depth_of_discharge", 1.0), 1.0)
             soc_min = max(1.0 - depth_of_discharge, 0.0)
-            ev_energy_to_full = max((1.0 - soc) * capacity, 0.0)
+            ev_energy_to_full = max((self._soc_max(battery) - soc) * capacity, 0.0)
             ev_energy_available = max((soc - soc_min) * capacity, 0.0)
             max_charge_power = self._safe_scalar(getattr(charger, "max_charging_power", 0.0), 0.0)
             max_discharge_power = self._safe_scalar(getattr(charger, "max_discharging_power", 0.0), 0.0)
@@ -2948,6 +2951,11 @@ class CityLearnEntityInterfaceService:
         current_topology_version = int(getattr(self.env, 'topology_version', 0))
         if current_topology_version != self._layout_topology_version:
             self.reset()
+
+    def _soc_max(self, battery) -> float:
+        """Upper SOC limit: InventoryBattery declares `max_soc`; a Battery charges to 1."""
+
+        return self._safe_scalar(getattr(battery, "max_soc", 1.0), 1.0)
 
     @staticmethod
     def _safe_scalar(value: Any, default: float = 0.0) -> float:

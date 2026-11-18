@@ -8,6 +8,17 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## Unreleased
+
+### Fixed
+
+- **Charger files with blank or float states.** Charger states are parsed as numbers. A blank cell used to make every state of the charger unreadable, so no EV connected.
+- **`InventoryBattery` EVs** load without `nominal_power`, which the battery derives from `max_charge_kw` and `max_discharge_kw`.
+- **Random initial EV SOC** is drawn within the battery's declared `min_soc` and `max_soc`; an `InventoryBattery` used to fail when the draw from [0, 1] fell outside them.
+- **Entity observations with `max_soc < 1`** report `soc_max_ratio`, the energy to full and the available charge power up to `max_soc` instead of a full battery.
+
+The shipped datasets are unaffected: none of their charger files is parsed differently and none of their EVs uses `InventoryBattery`. See the [migration guide](migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 ### What's new
