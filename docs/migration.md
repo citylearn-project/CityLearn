@@ -46,6 +46,40 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Unreleased
+
+No dataset, schema or export-file migration is required. Environment trajectories
+and KPIs for a given action sequence are unchanged; the results of the agents and
+wrappers below change.
+
+- **`TabularQLearning`.** A transition with `terminated=True` no longer bootstraps
+  from the next state's Q-values, as for `SAC`; truncated transitions still do.
+  Q-tables and the actions learned from them change.
+- **`MARLISARBC`.** Exploration now uses the RBC passed as `rbc`. It used to discard
+  the RBC's actions and explore with random actions while still advancing the RBC,
+  so its exploration and everything learned from it change.
+- **`MARLISA` with `pca_compression < 1`.** The networks read the PCA output
+  (`int(pca_compression*(observations + coordination variables))` features). These
+  runs used to fail at the first network update; `pca_compression=1` (the default)
+  is unchanged.
+- **Discrete and tabular wrappers.** `DiscreteObservationWrapper` puts values above
+  the observation space's upper bound into the top bin; they used to get an index
+  one past the `MultiDiscrete` space. `TabularQLearningObservationWrapper` numbers
+  the `prod(bins)` states of its `Discrete` space with `itertools.product` over the
+  bins; it used to enumerate one extra value per observation, declare
+  `prod(bins + 1) - 1` states and give the last state an index outside the space.
+  Saved Q-tables are therefore indexed differently and have a different size;
+  retrain them. Episodes whose observations stay within the observation space
+  otherwise learn the same Q-values.
+- **Wrapped spaces.** `DiscreteObservationWrapper` bins the observations and
+  bounds of the env it wraps, so over `NormalizedObservationWrapper` it bins the
+  normalized features, including the cos and sin of periodic observations.
+  `DiscreteActionWrapper` bins the action space of the env it wraps.
+  `ClippedObservationWrapper` returns new lists instead of clipping the
+  environment's cached observation lists in place.
+- **`OnehotEncoding`.** A value that is not one of the classes raises `ValueError`
+  naming the value, instead of `IndexError`.
+
 ## Upgrade from 3.4.0 to 3.5.0
 
 No dataset, schema, export-file or BAU migration is required; existing datasets and

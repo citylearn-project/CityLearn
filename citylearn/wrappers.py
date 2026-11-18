@@ -28,13 +28,16 @@ class ClippedObservationWrapper(ObservationWrapper):
         self.env: CityLearnEnv
 
     def observation(self, observations: List[List[float]]) -> List[List[float]]:
-        """Returns normalized observations."""
+        """Returns clipped observations.
 
-        for i, (o, s) in enumerate(zip(observations, self.observation_space)):
-            for j, (o_, l, u) in enumerate(zip(o, s.low, s.high)):
-                observations[i][j] = min(max(o_, l), u)
+        Returns new lists: the environment caches the observation lists it returns, so clipping them in place
+        would change the observations the environment itself reads at this time step.
+        """
 
-        return observations
+        return [
+            [min(max(o_, l), u) for o_, l, u in zip(o, s.low, s.high)]
+            for o, s in zip(observations, self.observation_space)
+        ]
 
 class NormalizedObservationWrapper(ObservationWrapper):
     """Wrapper for observations min-max and periodic normalization.
@@ -297,10 +300,27 @@ class DiscreteObservationWrapper(ObservationWrapper):
         assert bin_sizes is None or len(bin_sizes) == len(self.env.unwrapped.buildings), 'length of bin_size must equal number of buildings.'
         self.bin_sizes = [{} for _ in self.env.unwrapped.buildings] if bin_sizes is None else bin_sizes
         self.default_bin_size = 10 if default_bin_size is None else default_bin_size
+        building_observation_names, self.__shared_observations = self.__get_wrapped_observation_names()
         self.bin_sizes = [
-            {o: s.get(o, self.default_bin_size) for o in b.active_observations} 
-            for b, s in zip(self.env.unwrapped.buildings, self.bin_sizes)
+            {o: s.get(o, self.default_bin_size) for o in names} 
+            for names, s in zip(building_observation_names, self.bin_sizes)
         ]
+
+    def __get_wrapped_observation_names(self) -> Tuple[List[List[str]], List[str]]:
+        # Bin the observations the wrapped env returns: NormalizedObservationWrapper replaces each periodic
+        # observation with its cos and sin.
+        env = self.env
+
+        while env is not env.unwrapped:
+            if isinstance(env, NormalizedObservationWrapper):
+                return [
+                    list(b.observations(normalize=True, periodic_normalization=True).keys())
+                    for b in env.unwrapped.buildings
+                ], env.shared_observations
+
+            env = env.env
+
+        return [list(b.active_observations) for b in env.buildings], env.shared_observations
         
     @property
     def observation_space(self) -> List[spaces.MultiDiscrete]:
@@ -312,13 +332,13 @@ class DiscreteObservationWrapper(ObservationWrapper):
 
             for i, b in enumerate(self.bin_sizes):
                 for k, v in b.items():
-                    if i == 0 or k not in self.env.unwrapped.shared_observations or k not in shared_observations:
+                    if i == 0 or k not in self.__shared_observations or k not in shared_observations:
                         bin_sizes.append(v)
 
                     else:
                         pass
 
-                    if k in self.env.unwrapped.shared_observations and k not in shared_observations:
+                    if k in self.__shared_observations and k not in shared_observations:
                         shared_observations.append(k)
 
                     else:
@@ -336,11 +356,12 @@ class DiscreteObservationWrapper(ObservationWrapper):
 
         transformed_observations = []
 
-        for i, (cs, ds) in enumerate(zip(self.env.unwrapped.observation_space, self.observation_space)):
+        for i, (cs, ds) in enumerate(zip(self.env.observation_space, self.observation_space)):
             transformed_observations_ = []
 
             for j, (ll, hl, b) in enumerate(zip(cs.low, cs.high, ds)):
-                o = np.digitize(observations[i][j], np.linspace(ll, hl, b.n), right=True)
+                # Values above the space's high would get bin b.n, outside MultiDiscrete(b.n): use the top bin.
+                o = min(np.digitize(observations[i][j], np.linspace(ll, hl, b.n), right=True), b.n - 1)
                 transformed_observations_.append(o)
 
             transformed_observations.append(transformed_observations_)
@@ -394,7 +415,7 @@ class DiscreteActionWrapper(ActionWrapper):
 
         transformed_actions = []
 
-        for i, (cs, ds) in enumerate(zip(self.env.unwrapped.action_space, self.action_space)):
+        for i, (cs, ds) in enumerate(zip(self.env.action_space, self.action_space)):
             transformed_actions_ = []
             
             for j, (ll, hl, b) in enumerate(zip(cs.low, cs.high, ds)):
@@ -458,7 +479,7 @@ class TabularQLearningObservationWrapper(ObservationWrapper):
         observation_space = []
 
         for c in self.combinations:
-            observation_space.append(spaces.Discrete(len(c) - 1))
+            observation_space.append(spaces.Discrete(len(c)))
         
         return observation_space
     
@@ -473,7 +494,7 @@ class TabularQLearningObservationWrapper(ObservationWrapper):
         combs_list = []
 
         for s in self.env.observation_space:
-            options = [list(range(d.n + 1)) for d in s]
+            options = [list(range(d.n)) for d in s]
             combs = list(itertools.product(*options))
             combs_list.append(combs)
 

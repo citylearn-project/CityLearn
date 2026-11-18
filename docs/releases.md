@@ -8,6 +8,18 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## Unreleased
+
+### Fixed
+
+- **`TabularQLearning`** no longer bootstraps from the next state on terminal transitions.
+- **`MARLISARBC`** explores with its RBC; it used to explore with random actions.
+- **`MARLISA` with `pca_compression < 1`** sizes its networks to the PCA output instead of failing at the first update.
+- **Discrete wrappers.** `TabularQLearningObservationWrapper` declares exactly the `prod(bins)` states it encodes (it declared `prod(bins + 1) - 1` and could encode a state outside the space), and `DiscreteObservationWrapper` keeps values above the observation space in the top bin. `DiscreteObservationWrapper` and `DiscreteActionWrapper` bin the spaces of the env they wrap, so they work over the normalized wrappers. `ClippedObservationWrapper` no longer modifies the environment's cached observations.
+- **`OnehotEncoding`** raises `ValueError` for a value outside its classes.
+
+Environment trajectories and KPIs are unchanged; results of `TabularQLearning`, `MARLISARBC` and tabular Q-tables change. See the [migration guide](migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 ### What's new
