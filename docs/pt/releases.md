@@ -3,6 +3,18 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## Por publicar
+
+- **Ruído de robustez.** Com `noise_std > 0`, o ruído gaussiano podia tornar
+  negativas a produção solar, as irradiâncias solares e a intensidade
+  carbónica, acrescentar produção durante a noite e levar a humidade relativa
+  exterior para fora de [0, 100] %. Uma regra limita agora os valores com ruído:
+  as grandezas solares ficam `>= 0` e sem ruído à noite, a humidade fica em
+  [0, 100] % e a intensidade carbónica fica `>= 0`. O ruído gerado não muda,
+  por isso os valores dentro do intervalo são idênticos bit a bit.
+- As simulações com `noise_std = 0`, incluindo todos os datasets incluídos, não
+  mudam. Ver o [guia de migração](../migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 - **Datasets REC de Portugal.** Quatro comunidades de energia renovável

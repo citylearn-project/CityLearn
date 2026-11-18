@@ -8,6 +8,14 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## Unreleased
+
+### Fixed
+
+- **Robustness noise.** With `noise_std > 0`, Gaussian noise could make solar generation, solar irradiance and carbon intensity negative, add generation at night and push outdoor relative humidity outside [0, 100] %. One rule now bounds the noisy values: solar quantities stay `>= 0` and get no noise at night, humidity stays within [0, 100] % and carbon intensity stays `>= 0`. The noise draws are unchanged, so values within range are bit-identical. Solar generation noise uses the generation series for its shape instead of the indoor temperature series; both have the same length, so the draws are the same.
+
+Runs with `noise_std = 0`, including all bundled datasets, are unchanged. See the [migration guide](migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 ### What's new
