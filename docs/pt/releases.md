@@ -13,9 +13,23 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   como controladores (`predict(observations)`), recebem agora os eventos de
   observação de robustez do timestep aplicados às suas observações entity, tal
   como a interface entity os aplica, e tomam as mesmas ações nas duas
-  interfaces. Nenhum gerador aleatório é consumido, e as observações flat, o
-  histórico e os KPIs de robustez não mudam. A referência BAU nativa de
+  interfaces. Nenhum gerador aleatório é consumido, e as observações flat e o
+  histórico de robustez do env não mudam; os KPIs do controlador em execuções
+  flat com eventos de observação podem mudar. A referência BAU nativa de
   `evaluate_v2()` (`predict([])`) continua sem corrupção.
+- **Datasets Parquet de 15 s carregam a partir da cache.** Os schemas de
+  `citylearn_three_phase_electrical_service_demo_15s_parquet`,
+  `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` e
+  `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` definiam um
+  `root_directory` relativo ao repositório. O `CityLearnEnv` com o caminho do
+  schema devolvido por `DataSet().get_dataset(name)` procurava os ficheiros
+  dentro da pasta da cache e falhava com `FileNotFoundError`
+  ([#194](https://github.com/citylearn-project/CityLearn/issues/194)). Os três
+  schemas definem agora `"root_directory": null`, como os restantes datasets. O
+  `CityLearnEnv(name)` e os caminhos de schema num clone do repositório já
+  encontravam os ficheiros e continuam a ler a mesma pasta.
+- A correção dos datasets Parquet não muda os ficheiros de entrada nem os
+  resultados de simulação; não é necessária migração.
 
 ## v3.5.0 - 2026-11-17
 
