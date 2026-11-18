@@ -31,7 +31,7 @@ class ClippedObservationWrapper(ObservationWrapper):
         """Returns clipped observations.
 
         Returns new lists: the environment caches the observation lists it returns, so clipping them in place
-        would change the observations the environment itself reads at this time step.
+        would change what `env.observations` returns for the rest of the time step.
         """
 
         return [
