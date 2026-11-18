@@ -6,7 +6,7 @@ from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.data import ChargerSimulation
 from citylearn.data import ZERO_DIVISION_PLACEHOLDER
 from citylearn.internal.charger_dynamics import (
-    SessionDynamics, SessionState, integrate_step, known_departure_seconds,
+    SessionDynamics, SessionState, connected_until, integrate_step, known_departure_seconds,
 )
 from citylearn.internal.units import (
     energy_kwh_to_power_kw,
@@ -456,16 +456,23 @@ class Charger(Environment):
         return value if np.isfinite(value) else None
 
     def _session_limits(self) -> Tuple[float, float]:
-        """Connected seconds and discharge SOC floor of the current row, ``None`` when not set."""
+        """Connected seconds and discharge SOC floor of the current row, ``None`` when not set.
 
-        return (
-            self._schedule_value('electric_vehicle_connected_seconds'),
-            self._schedule_value('electric_vehicle_discharge_soc_floor'),
-        )
+        An exact departure within the step (``electric_vehicle_departure_seconds``) also ends the
+        connection.
+        """
+
+        connected_seconds = self._schedule_value('electric_vehicle_connected_seconds')
+        departure_seconds = self._schedule_value('electric_vehicle_departure_seconds')
+        if departure_seconds is not None:
+            connected_seconds = connected_until(connected_seconds, departure_seconds, self.seconds_per_time_step)
+
+        return connected_seconds, self._schedule_value('electric_vehicle_discharge_soc_floor')
 
     def _known_departure_seconds(self, connected_seconds: float) -> float:
         return known_departure_seconds(
             self._schedule_value('electric_vehicle_departure_time'), connected_seconds, self.seconds_per_time_step,
+            departure_seconds=self._schedule_value('electric_vehicle_departure_seconds'),
         )
 
     def _session_starts_now(self) -> bool:

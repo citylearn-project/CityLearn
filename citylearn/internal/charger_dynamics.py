@@ -124,22 +124,45 @@ class StepProfile:
         return sum(piece.energy_kwh for piece in self.pieces)
 
 
-def known_departure_seconds(countdown, connected_seconds, step_seconds) -> Optional[float]:
+def known_departure_seconds(countdown, connected_seconds, step_seconds, departure_seconds=None) -> Optional[float]:
     """Seconds from the start of a step to a known departure, else ``None``.
 
-    A departure countdown of 1 means the vehicle leaves at the end of this step (the convention of
-    charger schedules); a connection that ends within the step ends at ``connected_seconds``.
+    An exact ``departure_seconds`` (written by a mobility provider) is used when given. Otherwise a
+    departure countdown of 1 means the vehicle leaves at the end of this step (the convention of
+    charger schedules). A connection that ends within the step ends at ``connected_seconds``.
     """
 
     step_seconds = float(step_seconds)
     departure = None
-    if countdown is not None and math.isfinite(float(countdown)) and float(countdown) >= 1.0:
+    if departure_seconds is not None and math.isfinite(float(departure_seconds)):
+        departure = float(departure_seconds)
+    elif countdown is not None and math.isfinite(float(countdown)) and float(countdown) >= 1.0:
         departure = float(countdown) * step_seconds
 
     if connected_seconds is not None and connected_seconds < step_seconds:
         departure = connected_seconds if departure is None else min(departure, connected_seconds)
 
     return departure
+
+
+def connected_until(connected_seconds, departure_seconds, step_seconds) -> Optional[float]:
+    """Connected time from the start of the step: a departure within the step ends the connection."""
+
+    if departure_seconds is None or not math.isfinite(float(departure_seconds)) or departure_seconds >= step_seconds:
+        return connected_seconds
+
+    departure_seconds = max(float(departure_seconds), 0.0)
+    return departure_seconds if connected_seconds is None else min(float(connected_seconds), departure_seconds)
+
+
+def departure_countdown(departure_seconds, step_seconds) -> int:
+    """Whole-step departure countdown of a departure ``departure_seconds`` after the start of the step.
+
+    The vehicle leaves at the end of the step where the countdown is 1, so a departure in
+    (0, step] gives 1, in (step, 2 step] gives 2, and so on.
+    """
+
+    return int(math.ceil(float(departure_seconds) / float(step_seconds) - 1.0e-9))
 
 
 def _sign(value: float) -> int:

@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple
 import numpy as np
 
 from citylearn.data import ChargerSimulation
+from citylearn.internal.charger_dynamics import departure_countdown
 from citylearn.mobility import MobilityInterface, MobilityProvider, _finite_number, _fraction, _steps
 
 if TYPE_CHECKING:
@@ -63,6 +64,7 @@ def external_charger_simulation(rows: int) -> ChargerSimulation:
     simulation.electric_vehicle_connected_seconds = np.full(rows, np.nan, dtype='float64')
     simulation.electric_vehicle_discharge_soc_floor = np.full(rows, np.nan, dtype='float64')
     simulation.electric_vehicle_connected_since_seconds = np.full(rows, np.nan, dtype='float64')
+    simulation.electric_vehicle_departure_seconds = np.full(rows, np.nan, dtype='float64')
     simulation.source = EXTERNAL_SOURCE
     return simulation
 
@@ -83,6 +85,7 @@ _ROW_FIELDS = (
     'electric_vehicle_connected_seconds',
     'electric_vehicle_discharge_soc_floor',
     'electric_vehicle_connected_since_seconds',
+    'electric_vehicle_departure_seconds',
 )
 
 
@@ -247,6 +250,7 @@ class CityLearnMobilityService:
         simulation.electric_vehicle_connected_seconds[t] = np.nan
         simulation.electric_vehicle_discharge_soc_floor[t] = np.nan
         simulation.electric_vehicle_connected_since_seconds[t] = np.nan
+        simulation.electric_vehicle_departure_seconds[t] = np.nan
 
     @staticmethod
     def _count_down(value) -> int:
@@ -268,6 +272,11 @@ class CityLearnMobilityService:
             simulation.electric_vehicle_departure_time[t] = self._count_down(
                 simulation.electric_vehicle_departure_time[previous]
             )
+            # An exact departure counts down by the step length; once due it is no longer known.
+            departure_seconds = float(simulation.electric_vehicle_departure_seconds[previous]) - self._step_seconds
+            if np.isfinite(departure_seconds) and departure_seconds > 0.0:
+                simulation.electric_vehicle_departure_seconds[t] = departure_seconds
+                simulation.electric_vehicle_departure_time[t] = self._countdown_from_seconds(departure_seconds)
             simulation.electric_vehicle_required_soc_departure[t] = (
                 simulation.electric_vehicle_required_soc_departure[previous]
             )
@@ -377,11 +386,18 @@ class CityLearnMobilityService:
         steps = _steps(value, name)
         return min(steps, max(int(self.env.time_steps), 1))
 
+    @property
+    def _step_seconds(self) -> float:
+        return float(self.env.seconds_per_time_step)
+
+    def _countdown_from_seconds(self, departure_seconds: float) -> int:
+        return min(departure_countdown(departure_seconds, self._step_seconds), max(int(self.env.time_steps), 1))
+
     # ------------------------------------------------------------------ writes
 
     def connect(
         self, charger_id, ev_id, *, soc=None, departure_steps=None, required_soc=None, session_id=None,
-        connected_seconds=None, discharge_soc_floor=None, connected_since_seconds=None,
+        connected_seconds=None, discharge_soc_floor=None, connected_since_seconds=None, departure_seconds=None,
     ):
         self._require_writes('connect')
         key, charger = self._resolve_charger(charger_id, external=True)
@@ -392,7 +408,20 @@ class CityLearnMobilityService:
         soc = None if soc is None else _fraction(soc, 'soc')
         required_soc = None if required_soc is None else _fraction(required_soc, 'required_soc')
         discharge_soc_floor = None if discharge_soc_floor is None else _fraction(discharge_soc_floor, 'discharge_soc_floor')
-        departure_steps = None if departure_steps is None else self._countdown(departure_steps, 'departure_steps')
+        if departure_seconds is not None:
+            departure_seconds = _finite_number(departure_seconds, 'departure_seconds')
+            if departure_seconds <= 0.0:
+                raise ValueError(f'departure_seconds must be > 0, got {departure_seconds!r}.')
+            derived_steps = departure_countdown(departure_seconds, self._step_seconds)
+            if departure_steps is not None and _steps(departure_steps, 'departure_steps') != derived_steps:
+                raise ValueError(
+                    f'departure_steps={departure_steps!r} disagrees with departure_seconds={departure_seconds!r}: '
+                    f'a departure {departure_seconds:g} s after the start of this step has the countdown '
+                    f'{derived_steps} (ceil(departure_seconds / {self._step_seconds:g})).'
+                )
+            departure_steps = self._countdown_from_seconds(departure_seconds)
+        else:
+            departure_steps = None if departure_steps is None else self._countdown(departure_steps, 'departure_steps')
         if connected_seconds is not None:
             connected_seconds = _finite_number(connected_seconds, 'connected_seconds')
             step_seconds = float(self.env.seconds_per_time_step)
@@ -403,6 +432,8 @@ class CityLearnMobilityService:
             step_seconds = float(self.env.seconds_per_time_step)
             plugged_in_at = max(-connected_since_seconds, 0.0)
             end = step_seconds if connected_seconds is None else connected_seconds
+            if departure_seconds is not None:
+                end = min(end, departure_seconds)
             if plugged_in_at > end:
                 raise ValueError(
                     f'connected_since_seconds={connected_since_seconds!r} plugs the vehicle in after it leaves '
@@ -455,6 +486,8 @@ class CityLearnMobilityService:
 
         if departure_steps is not None:
             simulation.electric_vehicle_departure_time[t] = departure_steps
+            # A countdown given alone replaces an exact departure written earlier.
+            simulation.electric_vehicle_departure_seconds[t] = np.nan if departure_seconds is None else departure_seconds
         if required_soc is not None:
             simulation.electric_vehicle_required_soc_departure[t] = required_soc
         if discharge_soc_floor is not None:

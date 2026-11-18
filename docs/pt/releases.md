@@ -22,7 +22,9 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   conhecida). A energia de um passo é o integral exato, em forma fechada, do perfil de potência linear
   por troços resultante, e os KPI de viabilidade das partidas repetem o mesmo perfil. Valores medidos
   para começar estão citados em [dinâmica das sessões de carga](charger_session_dynamics.md). Um
-  fornecedor de mobilidade pode indicar a idade de uma sessão com `connected_since_seconds`. Não é necessária migração de datasets, schemas ou KPI; ambientes sem fornecedor, sem carregadores externos e sem atributos de dinâmica de sessão simulam exatamente como antes.
+  fornecedor de mobilidade pode indicar a idade de uma sessão com `connected_since_seconds` e o tempo
+  exato de partida com `departure_seconds`, que posiciona a paragem também quando ela cai num passo
+  anterior ao da partida; as observações mantêm a contagem em passos inteiros. Não é necessária migração de datasets, schemas ou KPI; ambientes sem fornecedor, sem carregadores externos e sem atributos de dinâmica de sessão simulam exatamente como antes.
 - **Agentes genéricos na interface de entidades.** Na interface de entidades os
   espaços de ações e de observações são dicionários de tabelas de entidades, pelo
   que `Agent` e `ZeroActionBaselineAgent` falhavam com `AttributeError` no

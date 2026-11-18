@@ -70,8 +70,11 @@ Os tempos contam-se a partir do início de um passo de controlo com duração `s
 - A energia flui a partir de `start_delay_seconds` após a ligação. A potência segue o *set-point* dentro
   dos limites de rampa.
 - A partida é conhecida pela contagem até à partida (uma contagem de 1 significa que o veículo sai no
-  fim do passo) ou por uma ligação que termina dentro do passo (`connected_seconds`). A transferência
-  termina `stop_delay_seconds` antes. A potência é zero quando o veículo está desligado.
+  fim do passo) ou por uma ligação que termina dentro do passo (`connected_seconds`). Um fornecedor de
+  mobilidade pode indicar o tempo exato com `departure_seconds`; a contagem em passos inteiros
+  arredonda a partida para o fim do seu passo, pelo que só o tempo exato posiciona uma paragem que cai
+  num passo anterior ao da partida. A transferência termina `stop_delay_seconds` antes da partida. A
+  potência é zero quando o veículo está desligado.
 
 A potência AC é portanto linear por troços no tempo. A energia de um passo é o seu integral exato, uma
 soma de trapézios sobre os troços lineares, calculada em forma fechada sem subpassos
@@ -94,8 +97,9 @@ energia efetivamente entregue no último intervalo (`last_charged_kwh` na interf
 aplicada no *feedback* de ações da interface entity). O estado de rampa, o *set-point* pendente e o
 tempo de arranque restante não são observados, mas resultam dos parâmetros documentados, dos comandos
 anteriores do próprio controlador e do histórico de ligações observado, pelo que não é exposta
-informação sobre o futuro. `connected_seconds` e `connected_since_seconds`, que um fornecedor de
-mobilidade pode conhecer antes de o controlador agir, limitam a energia mas não são observações.
+informação sobre o futuro. `connected_seconds`, `connected_since_seconds` e `departure_seconds`, que um
+fornecedor de mobilidade pode conhecer antes de o controlador agir, limitam a energia mas não são
+observações: o controlador vê a contagem até à partida em passos inteiros, como sem dinâmica de sessão.
 
 Com a dinâmica de sessão ativa, um carregador sem veículo ligado regista energia comandada zero nesse
 passo.

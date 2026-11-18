@@ -19,7 +19,9 @@ import numpy as np
 import pandas as pd
 
 from citylearn.data import ZERO_DIVISION_PLACEHOLDER, ChargerSimulation
-from citylearn.internal.charger_dynamics import SessionDynamics, SessionState, integrate_step, known_departure_seconds
+from citylearn.internal.charger_dynamics import (
+    SessionDynamics, SessionState, connected_until, integrate_step, known_departure_seconds,
+)
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
@@ -748,6 +750,7 @@ class CityLearnKPIService:
         )
         dynamics = dynamics if dynamics is not None else SessionDynamics()
         countdowns = getattr(sim, 'electric_vehicle_departure_time', None)
+        exact_departures = getattr(sim, 'electric_vehicle_departure_seconds', None)
 
         # Replay the concrete battery implementation in compact, isolated buffers.
         # No real state, RNG, degradation history or episode tracker is advanced.
@@ -777,6 +780,12 @@ class CityLearnKPIService:
                 None if transfer_seconds is None or not np.isfinite(float(transfer_seconds))
                 else min(max(float(transfer_seconds), 0.0), seconds_per_time_step)
             )
+            exact_departure = self._safe_sequence_value(exact_departures, step)
+            exact_departure = (
+                None if exact_departure is None or not np.isfinite(float(exact_departure)) else float(exact_departure)
+            )
+            if exact_departure is not None:
+                transfer_seconds = connected_until(transfer_seconds, exact_departure, seconds_per_time_step)
             transfer_hours = step_hours if transfer_seconds is None else transfer_seconds / 3600.0
             if replay is not None:
                 if offset:
@@ -788,6 +797,7 @@ class CityLearnKPIService:
                         connected_seconds=transfer_seconds,
                         departure_seconds=known_departure_seconds(
                             self._safe_sequence_value(countdowns, step), transfer_seconds, seconds_per_time_step,
+                            departure_seconds=exact_departure,
                         ),
                     )
                     profile_state = profile.state

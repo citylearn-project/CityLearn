@@ -44,11 +44,12 @@ def _toward(power, target, seconds, up, down):
     return power
 
 
-def reference(dynamics, state, schedule, duration, *, connected=None, departure=None, dt=0.001):
+def reference(dynamics, state, schedule, duration, *, connected=None, departure=None, dt=0.001, step=None):
     """(charge, discharge) kWh by time stepping at ``dt`` with the trapezoidal rule.
 
     ``schedule`` lists (seconds from the start, set-point kW) in time order, including the set-point
-    delay; ``duration`` may cover several control steps.
+    delay; ``duration`` may cover several control steps. With ``step``, the signed energy of each
+    control step is returned instead.
     """
 
     end = duration if connected is None else connected
@@ -57,6 +58,7 @@ def reference(dynamics, state, schedule, duration, *, connected=None, departure=
     schedule = list(state.pending) + list(schedule)
     power, setpoint = state.power_kw, state.setpoint_kw
     charge = discharge = 0.0
+    per_step = [0.0] * (1 if step is None else int(round(duration / step)))
     for i in range(int(round(duration / dt))):
         tau = i * dt
         while schedule and schedule[0][0] <= tau + 1e-9:
@@ -77,8 +79,10 @@ def reference(dynamics, state, schedule, duration, *, connected=None, departure=
                 charge += part / 3600.0
             else:
                 discharge += part / 3600.0
+            if step is not None:
+                per_step[int((tau + 0.5 * dt) // step)] += part / 3600.0
         power = following
-    return charge, discharge
+    return (charge, discharge) if step is None else per_step
 
 
 def closed_form(dynamics, state, command, step, *, connected=None, departure=None):
@@ -328,3 +332,141 @@ def test_departure_feasibility_replays_the_session_profile():
     # The audit charges only after the start-up, like the runtime; the target is then infeasible.
     assert delayed["district_ev_departure_audit_target_infeasible_count"] == 1
     assert delayed["district_ev_departure_audit_target_service_met_count"] == 0
+
+
+# ---------------------------------------------------------------- exact departure
+
+
+class _Departure:
+    """Connects at step 0, optionally announces an exact departure at ``update_at``, leaves after it."""
+
+    def __init__(self, step, *, at_start=None, update_at=None, update_seconds=None, countdown=8):
+        self.step, self.at_start, self.update_at, self.update_seconds = step, at_start, update_at, update_seconds
+        self.countdown = countdown
+        if update_at is not None:
+            self.departure_step = math.ceil((update_at * step + update_seconds) / step - 1e-9) - 1
+        elif at_start is not None:
+            self.departure_step = math.ceil(at_start / step - 1e-9) - 1
+        else:
+            self.departure_step = countdown - 1
+        self.observed = {}
+
+    def reset(self, env):
+        if self.at_start is None:
+            env.mobility.connect("charger_1_1", EV, soc=0.3, departure_steps=self.countdown)
+        else:
+            env.mobility.connect("charger_1_1", EV, soc=0.3, departure_seconds=self.at_start)
+
+    def update(self, env, time_step):
+        if time_step == self.update_at:
+            env.mobility.connect("charger_1_1", EV, departure_seconds=self.update_seconds)
+        if time_step == self.departure_step + 1:
+            env.mobility.away("charger_1_1")
+
+
+@pytest.mark.parametrize("step, scenario", [
+    (60.0, dict(at_start=130.0)),                   # leaves 10 s into step 2; the stop (108 s) is in step 1
+    (15.0, dict(at_start=95.0)),                    # leaves 5 s into step 6; the stop (73 s) is in step 4
+    (60.0, dict(update_at=2, update_seconds=70.0)),  # announced during the session; stop in step 2, departure in step 3
+    (15.0, dict(update_at=4, update_seconds=50.0)),  # stop 28 s after step 4 starts (step 5), departure in step 7
+])
+def test_exact_departure_places_the_stop_in_an_earlier_step(step, scenario):
+    provider = _Departure(step, **scenario)
+    env = CityLearnEnv(_schema(MEASURED, external=True), central_agent=True, random_seed=0,
+                       seconds_per_time_step=step, time_step_ratio_mode="compress",
+                       mobility_provider=provider)
+    observations, _ = env.reset()
+    trace = [observations]
+    while not env.terminated:
+        observations, *_ = env.step(_actions(env, 1.0))
+        trace.append(observations)
+
+    departure = (provider.at_start if provider.update_at is None
+                 else provider.update_at * step + provider.update_seconds)
+    stop = departure - MEASURED["stop_delay_seconds"]
+    steps = provider.departure_step + 1
+    assert int(stop // step) < provider.departure_step
+    expected = reference(DYNAMICS, SessionState(), [(4.0, 7.2)], steps * step,
+                         connected=departure, departure=departure, dt=0.001, step=step)
+    commanded = _charger(env).past_charging_action_values_kwh[:steps]
+    np.testing.assert_allclose(commanded, expected, rtol=2e-6, atol=1e-9)
+
+    # The controller still observes only the whole-step countdown.
+    key = "connected_electric_vehicle_at_charger_charger_1_1_departure_time"
+    names = env.observation_names[0]
+    known_from = 0 if provider.update_at is None else provider.update_at
+    for t in range(known_from, steps):
+        countdown = trace[t][0][names.index(key)]
+        assert countdown == math.ceil((departure - t * step) / step - 1e-9)
+
+
+@pytest.mark.parametrize("step", [60.0, 15.0])
+def test_whole_step_departure_keeps_its_previous_behaviour(step):
+    """Without departure_seconds the stop follows the countdown, as before: later than the exact stop."""
+
+    exact = _Departure(step, at_start=130.0 if step == 60.0 else 95.0)
+    countdown = _Departure(step, countdown=exact.departure_step + 1)
+    energies = []
+    for provider in (exact, countdown):
+        env = CityLearnEnv(_schema(MEASURED, external=True), central_agent=True, random_seed=0,
+                           seconds_per_time_step=step, time_step_ratio_mode="compress",
+                           mobility_provider=provider)
+        env.reset()
+        while not env.terminated:
+            env.step(_actions(env, 1.0))
+        energies.append(_charger(env).past_charging_action_values_kwh[:exact.departure_step + 1].copy())
+        assert np.all(np.isnan(_charger(env).charger_simulation.electric_vehicle_departure_seconds)) == (
+            provider is countdown)
+
+    end = (exact.departure_step + 1) * step
+    expected = reference(DYNAMICS, SessionState(), [(4.0, 7.2)], end, departure=end, dt=0.001, step=step)
+    np.testing.assert_allclose(energies[1], expected, rtol=2e-6, atol=1e-9)
+    assert energies[1].sum() > energies[0].sum()
+
+
+def test_exact_departure_validation_and_countdown():
+    class Plan(_Connect):
+        def __init__(self, plan):
+            self.plan = plan
+
+        def reset(self, env):
+            self.plan[0](env)
+
+        def update(self, env, time_step):
+            if time_step in self.plan:
+                self.plan[time_step](env)
+
+    def run(plan):
+        env = CityLearnEnv(_schema(external=True), central_agent=True, random_seed=0, mobility_provider=Plan(plan))
+        env.reset()
+        for _ in range(3):
+            env.step(_actions(env, 1.0))
+        return _charger(env).charger_simulation
+
+    simulation = run({0: lambda env: env.mobility.connect("charger_1_1", EV, departure_seconds=2000.0,
+                                                          departure_steps=3)})
+    np.testing.assert_allclose(simulation.electric_vehicle_departure_seconds[:4], [2000.0, 1100.0, 200.0, np.nan])
+    assert list(simulation.electric_vehicle_departure_time[:4]) == [3, 2, 1, 0]
+
+    # A countdown given alone replaces the exact departure.
+    simulation = run({0: lambda env: env.mobility.connect("charger_1_1", EV, departure_seconds=2000.0),
+                      1: lambda env: env.mobility.connect("charger_1_1", EV, departure_steps=5)})
+    assert np.isnan(simulation.electric_vehicle_departure_seconds[1])
+    assert list(simulation.electric_vehicle_departure_time[:3]) == [3, 5, 4]
+
+    for kwargs, message in [
+        (dict(departure_seconds=2000.0, departure_steps=2), "disagrees with departure_seconds"),
+        (dict(departure_seconds=0.0), "departure_seconds must be > 0"),
+        (dict(departure_seconds=float("nan")), "departure_seconds must be finite"),
+        (dict(departure_seconds=300.0, connected_since_seconds=-400.0), "plugs the vehicle in after it leaves"),
+    ]:
+        with pytest.raises(ValueError, match=message):
+            run({0: lambda env, kwargs=kwargs: env.mobility.connect("charger_1_1", EV, **kwargs)})
+
+
+def test_exact_departure_within_the_step_ends_the_connection_without_dynamics():
+    env = CityLearnEnv(_schema(external=True), central_agent=True, random_seed=0,
+                       mobility_provider=_Connect(departure_seconds=300.0))
+    env.reset()
+    env.step(_actions(env, 1.0))
+    assert _charger(env).electricity_consumption[0] == pytest.approx(7.2 * 300.0 / 3600.0, rel=1e-6)

@@ -83,14 +83,16 @@ the episode length, the upper bound of the observation space.
 | `connected_seconds` | Seconds of the current step the vehicle is plugged in, in [0, `seconds_per_time_step`]. The step's energy is the commanded power over that time; battery power limits and efficiency refer to it. Applies to one step only. |
 | `discharge_soc_floor` | Discharging in this session never takes the battery below this SOC, e.g. the energy needed for the next trip. Charging is unaffected. |
 | `connected_since_seconds` | Session age at the start of this step, only when the call starts a session: positive if the vehicle plugged in that long before the step (it counts towards the charger's `start_delay_seconds`), negative if it plugs in that long into the step (no energy before). Default 0. See [charger session dynamics](charger_session_dynamics.md). |
+| `departure_seconds` | Exact expected departure, in seconds (> 0) from the start of the current step; at session start or later. It counts down by the step length and sets `departure_steps` to `ceil(departure_seconds / seconds_per_time_step)`, the countdown the observations show; given together, the two must agree. The exact time is not observed: it places the charger's `stop_delay_seconds` and, in the step that contains it, ends the connection. Giving `departure_steps` alone later replaces it. |
 
 Invalid writes raise `ValueError` with the reason: an unknown charger or vehicle, a charger ID used
 by several buildings (write `"<building>/<charger>"`), a charger with a schedule file, a vehicle
 connected to another charger at the same step, a charger connected to another vehicle (free it with
 `away()` first), `soc` or `connected_since_seconds` on a running session or
 `set_vehicle_soc` for a vehicle continuing its session, an SOC outside [0, 1], a negative or
-fractional countdown, `connected_seconds` outside [0, `seconds_per_time_step`], and a `connected_since_seconds`
-that plugs the vehicle in after it leaves.
+fractional countdown, `connected_seconds` outside [0, `seconds_per_time_step`], a `connected_since_seconds`
+that plugs the vehicle in after it leaves, and a `departure_seconds` that is not positive or disagrees with
+`departure_steps`.
 
 ## Reading results
 
@@ -122,7 +124,8 @@ The rows written by the provider feed the usual charger observations: connected 
 state, departure countdown, required SOC, battery capacity, estimated arrival time and SOC, and the
 connected vehicle's SOC. That SOC is the settled value of the previous interval, or the arrival or
 reported SOC of the current step when the provider wrote it before the action. `connected_seconds`,
-`connected_since_seconds` and `discharge_soc_floor` constrain the energy but are not observed.
+`connected_since_seconds`, `departure_seconds` and `discharge_soc_floor` constrain the energy but are
+not observed; the observed departure is the whole-step countdown.
 
 ## Business-as-usual reference
 

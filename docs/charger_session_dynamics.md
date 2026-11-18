@@ -70,8 +70,11 @@ Times are measured from the start of a control step of length `seconds_per_time_
 - Energy flows from `start_delay_seconds` after the connection. The power follows the set-point within
   the ramp limits.
 - The departure is known from the departure countdown (a countdown of 1 means the vehicle leaves at the
-  end of the step) or from a connection that ends within the step (`connected_seconds`). The transfer
-  stops `stop_delay_seconds` before it. The power is zero once the vehicle is disconnected.
+  end of the step) or from a connection that ends within the step (`connected_seconds`). A mobility
+  provider can give the exact time with `departure_seconds`; the whole-step countdown rounds the
+  departure up to the end of its step, so only the exact time places a stop that falls in an earlier
+  step than the departure. The transfer stops `stop_delay_seconds` before the departure. The power is
+  zero once the vehicle is disconnected.
 
 The AC power is therefore piecewise linear in time. The energy of a step is its exact integral, a sum
 of trapezoids over the linear pieces, computed in closed form without sub-stepping
@@ -93,8 +96,9 @@ energy actually delivered in the last interval (`last_charged_kwh` in the flat i
 energy in the entity action feedback). The ramp state, the pending set-point and the remaining
 start-up time are not observed, but they follow from the documented parameters, the controller's own
 past commands and the observed connection history, so no information about the future is exposed.
-`connected_seconds` and `connected_since_seconds`, which a mobility provider may know before the
-controller acts, constrain the energy but are not observations.
+`connected_seconds`, `connected_since_seconds` and `departure_seconds`, which a mobility provider may
+know before the controller acts, constrain the energy but are not observations: the controller sees
+the whole-step departure countdown, as without session dynamics.
 
 With session dynamics enabled, a charger without a connected vehicle records zero commanded energy
 for the step.

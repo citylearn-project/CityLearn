@@ -114,6 +114,7 @@ class MobilityInterface:
         connected_seconds: Optional[float] = None,
         discharge_soc_floor: Optional[float] = None,
         connected_since_seconds: Optional[float] = None,
+        departure_seconds: Optional[float] = None,
     ) -> None:
         """Plug ``ev_id`` into the external charger ``charger_id`` at the current time step.
 
@@ -151,12 +152,20 @@ class MobilityInterface:
             e.g. during the previous interval; that time counts towards the charger's
             ``start_delay_seconds``. A negative value means it plugs in that many seconds after the
             step starts; no energy flows before. Default 0: plugged in at the start of the step.
+        departure_seconds: float, optional
+            Exact expected departure, in seconds (> 0) from the start of this time step. It counts down
+            by the step length at every step and sets ``departure_steps`` to
+            ``ceil(departure_seconds / seconds_per_time_step)``, the whole-step countdown that the
+            observations show; given together, the two must agree. The exact time is not observed:
+            it places the charger's ``stop_delay_seconds`` and, in the step that contains it, ends
+            the connection. Giving ``departure_steps`` alone later replaces it.
         """
 
         self._service.connect(
             charger_id, ev_id, soc=soc, departure_steps=departure_steps, required_soc=required_soc,
             session_id=session_id, connected_seconds=connected_seconds,
             discharge_soc_floor=discharge_soc_floor, connected_since_seconds=connected_since_seconds,
+            departure_seconds=departure_seconds,
         )
 
     def incoming(
