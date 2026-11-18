@@ -3,6 +3,22 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## Por publicar
+
+- **Datasets Parquet de 15 s carregam a partir da cache.** Os schemas de
+  `citylearn_three_phase_electrical_service_demo_15s_parquet`,
+  `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` e
+  `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` definiam um
+  `root_directory` relativo ao repositório. O `CityLearnEnv` com o caminho do
+  schema devolvido por `DataSet().get_dataset(name)` procurava os ficheiros
+  dentro da pasta da cache e falhava com `FileNotFoundError`
+  ([#194](https://github.com/citylearn-project/CityLearn/issues/194)). Os três
+  schemas definem agora `"root_directory": null`, como os restantes datasets. O
+  `CityLearnEnv(name)` e os caminhos de schema num clone do repositório já
+  encontravam os ficheiros e continuam a ler a mesma pasta.
+- Os ficheiros de entrada e os resultados de simulação não mudam; não é
+  necessária migração.
+
 ## v3.5.0 - 2026-11-17
 
 - **Datasets REC de Portugal.** Quatro comunidades de energia renovável
