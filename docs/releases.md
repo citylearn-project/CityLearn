@@ -8,6 +8,15 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## Unreleased
+
+### Fixed
+
+- **Dynamic topology district baseline.** The district reference series summed only the members active at evaluation time, while the control series keep every member's past consumption, so a departed member counted on the control side only. With all-zero actions on `citylearn_three_phase_dynamic_topology_demo` (24 steps, `Building_6` leaving at step 12), the district import delta to baseline was 12.76 kWh, the export delta -11.00 kWh and the emissions delta 4.44 kg, although control and baseline coincide; they are now below 4e-6, the float32 rounding of the reference series. The reference series now sum every member that has been active, each over the steps at which it was a member.
+- **Electrical-service histories across topology events.** A member's requested-pressure, total-power and per-phase power histories were erased when it rejoined or when one of its assets changed, and the electrical-service and phase KPIs lost the earlier steps. They are now kept.
+
+Static topology results are unchanged. See the [migration guide](migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 ### What's new
