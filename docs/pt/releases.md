@@ -3,6 +3,43 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## Por publicar
+
+- **Potência e energia em passos inferiores a uma hora.** Vários limites
+  comparavam uma potência em kW com uma energia por passo em kWh, que só
+  coincidem a 3600 s. `available_nominal_power` é agora uma potência em qualquer
+  duração de passo; as bombas de calor e os aquecedores elétricos já não
+  excedem `nominal_power` ao carregar o armazenamento térmico; com dados
+  nativos inferiores a uma hora, um equipamento fornece no máximo
+  `nominal_power` x duração do passo; durante um corte, a produção local
+  disponível para os equipamentos e para a carga não deslocável é convertida
+  em potência e para a resolução do dataset; e as observações `cooling_demand`,
+  `heating_demand` e `dhw_demand` convertem a descarga do armazenamento para a
+  resolução do dataset quando `time_step_ratio` é diferente de 1.
+- **Equipamentos subdimensionados.** Um equipamento que não satisfaz a procura
+  já não lança `AssertionError: demand is greater than ..._device max output`. A
+  sua produção é limitada, é emitido um `RuntimeWarning` uma vez por
+  equipamento e episódio, e a diferença é contabilizada como energia de serviço
+  térmico não servida.
+- **Estimativa da potência de base.** A estimativa usada na margem do serviço
+  elétrico e nos KPI de viabilidade já não subtrai duas vezes a descarga do
+  armazenamento térmico e inclui a potência das escadas rolantes, incluindo um
+  estado pedido no próprio passo.
+- **Motivos de limitação.** `clip_reason_phase_headroom` e
+  `clip_reason_export_headroom` indicam apenas as fases do próprio equipamento e
+  o sentido limitado.
+- **Observações normalizadas.** `observations(normalize=True,
+  periodic_normalization=False)` já não lança `KeyError: 'month'`.
+- **Retenção do set point do ocupante.** `set_point_hold_time_steps` no schema
+  de um edifício chega agora a `LogisticRegressionOccupantInteractionBuilding`.
+  Nos datasets do bairro do Quebec (4 passos), as alterações do set point pelo
+  ocupante voltam ao horário após 4 passos sem interação, em vez de se manterem
+  até ao fim do episódio.
+- As simulações com dados e passo de controlo de 3600 s não mudam, exceto nos
+  dois datasets do bairro do Quebec. As simulações com passos inferiores a uma
+  hora mudam quando um equipamento ou armazenamento térmico atingia um destes
+  limites. Ver o [guia de migração](../migration.md#unreleased).
+
 ## v3.5.0 - 2026-11-17
 
 - **Datasets REC de Portugal.** Quatro comunidades de energia renovável

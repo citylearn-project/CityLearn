@@ -46,6 +46,62 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
+## Unreleased
+
+### Sub-hourly power and energy units
+
+These fixes leave runs whose dataset and control step are both 3600 s unchanged.
+Runs with a sub-hourly `seconds_per_time_step`, or whose dataset resolution
+differs from the control step (`time_step_ratio` other than 1), can change:
+
+- Heat pumps and electric heaters no longer exceed `nominal_power` when they
+  charge thermal storage at sub-hourly steps, and `available_nominal_power` is a
+  power in kW at every step length.
+- On native sub-hourly data (`time_step_ratio` 1), a device delivers at most
+  `nominal_power` x step duration per step. Previously it could deliver
+  3600 / `seconds_per_time_step` times that energy. Autosized devices are not
+  affected, because autosizing already converts the demand per row to power; a
+  device whose `nominal_power` was set to the largest demand per row (kWh read
+  as kW) is now too small.
+- During an outage, the local supply available to devices and to the
+  non-shiftable load is converted from step energy to power and to dataset
+  resolution; with hourly data at a 900 s step, loads previously received a
+  quarter of that supply.
+- `cooling_demand`, `heating_demand` and `dhw_demand` observations convert the
+  storage discharge to dataset resolution, the unit of the device term and of the
+  observation bounds.
+
+**Undersized devices.** A device that cannot meet the demand left after its
+storage no longer raises `AssertionError: demand is greater than ..._device max
+output`. CityLearn clips the device output to its limit, as it already does
+during outages, and warns once per device and episode with a `RuntimeWarning`.
+The shortfall is unserved thermal energy: it is reported by
+`building_thermal_service_audit_unserved_service_energy_kwh` and
+`..._unserved_service_ratio` (and the district equivalents) and by
+`env.get_kpi_family_audit()`. If a dataset relabelled from hourly to sub-hourly
+rows now warns, its devices or its demand series do not match the new step:
+autosize or enlarge the devices, or rescale the demand to energy per step.
+
+### Estimates, diagnostics and schema options
+
+- The base-power estimate behind electrical-service headroom, deferrable start
+  checks, the outage battery limit and the feasibility KPIs no longer subtracts
+  thermal storage discharge twice, and it counts escalator power. A requested
+  escalator state now reduces the import headroom left for EV and battery
+  actions in the same step. This applies at every step length, but only to
+  buildings with an electrical-service limit and thermal storage or escalators;
+  no bundled dataset combines them.
+- `clip_reason_phase_headroom` and `clip_reason_export_headroom` are set only
+  for the phases that carry the asset and for the clipped direction.
+- `observations(normalize=True, periodic_normalization=False)` no longer raises
+  `KeyError: 'month'`.
+- `set_point_hold_time_steps` in a building schema now reaches building types
+  whose constructor accepts it (`LogisticRegressionOccupantInteractionBuilding`).
+  The Quebec neighbourhood datasets set it to 4: occupant set-point changes now
+  revert to the schedule after 4 steps without interaction instead of holding
+  for the rest of the episode, which changes their hourly results. Other
+  building types ignore the key as before.
+
 ## Upgrade from 3.4.0 to 3.5.0
 
 No dataset, schema, export-file or BAU migration is required; existing datasets and
