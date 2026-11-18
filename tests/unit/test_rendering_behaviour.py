@@ -4,6 +4,8 @@ import csv
 import json
 from pathlib import Path
 import shutil
+from types import SimpleNamespace
+import warnings
 import numpy as np
 import pytest
 
@@ -11,6 +13,7 @@ pytest.importorskip("gymnasium")
 
 from citylearn.agents.rbc import BasicElectricVehicleRBC_ReferenceController as Agent
 from citylearn.citylearn import CityLearnEnv
+from citylearn.exporter import EpisodeExporter
 
 
 DATASET = Path(__file__).resolve().parents[2] / 'data/datasets/citylearn_challenge_2022_phase_all_plus_evs/schema.json'
@@ -379,6 +382,82 @@ def test_parquet_render_normalizes_mixed_numeric_string_and_numpy_scalars(tmp_pa
     finally:
         env.close()
         _cleanup_env(env)
+
+
+def test_csv_kpi_export_writes_missing_kpis_as_empty_cells_without_warnings(tmp_path):
+    pd = pytest.importorskip("pandas")
+    env = CityLearnEnv(str(DATASET), central_agent=True, episode_time_steps=2, render_directory=tmp_path)
+
+    try:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            env.export_final_kpis(SimpleNamespace(env=env), filepath="kpis.csv")
+
+        # pandas 3 warns that fillna('') fills float columns with a string.
+        exporter_warnings = [str(w.message) for w in caught if Path(w.filename).name == "exporter.py"]
+        assert exporter_warnings == []
+        frame = pd.read_csv(Path(env.new_folder_path) / "kpis.csv", dtype=str, keep_default_na=False)
+        cells = set(frame.drop(columns="KPI").to_numpy().ravel())
+        assert "" in cells
+        assert not {"nan", "NaN", "<NA>"} & cells
+    finally:
+        _cleanup_env(env)
+        env.close()
+
+
+def _write_parquet_rows(tmp_path, rows):
+    pd = pytest.importorskip("pandas")
+    pytest.importorskip("pyarrow")
+    exporter = EpisodeExporter(SimpleNamespace(new_folder_path=str(tmp_path)))
+    exporter._write_parquet_rows("rows.parquet", rows)
+    return pd.read_parquet(tmp_path / "rows_part00000.parquet")
+
+
+def test_parquet_render_writes_text_mixed_with_numbers_as_text(tmp_path):
+    frame = _write_parquet_rows(
+        tmp_path,
+        [
+            {"ev": "EV-1"},
+            {"ev": np.int64(42)},
+            {"ev": np.float32(0.1)},
+            {"ev": np.bool_(True)},
+            {"ev": 3.5},
+            {"ev": ""},
+            {"ev": None},
+        ],
+    )
+
+    # The number and boolean cells hold the text the CSV export writes for them
+    # (str() of the value), not the float64 expansion of a float32.
+    assert frame["ev"].iloc[:5].tolist() == ["EV-1", "42", "0.1", "True", "3.5"]
+    assert frame["ev"].iloc[5:].isna().all()
+
+
+def test_parquet_render_selects_text_columns_without_deprecation_warnings(tmp_path):
+    with warnings.catch_warnings():
+        # pandas 3 emits Pandas4Warning (a DeprecationWarning) from
+        # select_dtypes(include=['object']) when a column has the str dtype.
+        warnings.simplefilter("error", DeprecationWarning)
+        warnings.simplefilter("error", FutureWarning)
+        frame = _write_parquet_rows(
+            tmp_path,
+            [{"name": "EV-1", "state": "-1.00"}, {"name": "EV-2", "state": np.float32(1.0)}],
+        )
+
+    assert frame["name"].tolist() == ["EV-1", "EV-2"]
+    assert frame["state"].tolist() == [-1.0, 1.0]
+
+
+def test_parquet_render_keeps_list_cells_as_lists(tmp_path):
+    pa = pytest.importorskip("pyarrow")
+    frame = _write_parquet_rows(tmp_path / "lists", [{"v": [1, 2]}, {"v": [3]}, {"v": ""}])
+    assert [list(value) for value in frame["v"].iloc[:2]] == [[1, 2], [3]]
+    assert frame["v"].iloc[2] is None
+
+    # No render row mixes lists with text. Such a column is not converted to
+    # text: PyArrow rejects it, as it does on earlier releases.
+    with pytest.raises(pa.ArrowInvalid):
+        _write_parquet_rows(tmp_path / "mixed", [{"v": [1, 2]}, {"v": "EV-1"}])
 
 
 def test_render_directory_override(tmp_path):
