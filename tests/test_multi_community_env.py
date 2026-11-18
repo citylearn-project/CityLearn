@@ -1,6 +1,7 @@
 import json
 import shutil
 from pathlib import Path
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -387,6 +388,38 @@ def test_export_final_kpis_writes_child_subfolders_and_global_csv(tmp_path: Path
         assert (root / "exported_kpis_multi_community.csv").is_file()
         assert (root / "community_a" / "exported_kpis.csv").is_file()
         assert (root / "community_b" / "exported_kpis.csv").is_file()
+    finally:
+        env.close()
+
+
+def test_export_final_kpis_csv_writes_missing_kpis_as_empty_cells_without_warnings(tmp_path: Path):
+    env = MultiCommunityEnv(
+        communities=[
+            _community("community_a", episode_time_steps=2),
+            _community("community_b", episode_time_steps=2),
+        ],
+        render_directory=tmp_path / "renders",
+        render_session_name="mc_export",
+    )
+
+    try:
+        env.reset(seed=0)
+        env.step(_multi_zero_actions(env))
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            env.export_final_kpis(include_business_as_usual=False, export_business_as_usual_timeseries=False)
+
+        # pandas 3 warns that fillna("") fills float columns with a string.
+        export_warnings = [
+            str(w.message) for w in caught if Path(w.filename).name in {"multi_community.py", "exporter.py"}
+        ]
+        assert export_warnings == []
+        frame = pd.read_csv(
+            tmp_path / "renders" / "mc_export" / "exported_kpis_multi_community.csv",
+            dtype=str,
+            keep_default_na=False,
+        )
+        assert not {"nan", "NaN", "<NA>"} & set(frame.to_numpy().ravel())
     finally:
         env.close()
 
