@@ -68,7 +68,11 @@ class _RuleBaselineAgent(Agent):
         self.observation_space = self.env.unwrapped.flat_observation_space
         self.action_space = self.env.unwrapped.flat_action_space
         self.reset()
-        self._build_engine()
+        # The engine parses the schema and the EV files once; resets keep it.
+        self._engine = self._build_engine()
+        # No observation payload exists yet, so the first attach builds one.
+        # Later attaches reuse the payload passed to predict().
+        self._attach(None)
 
     @property
     def hyperparameters(self) -> Dict[str, Any]:
@@ -89,9 +93,7 @@ class _RuleBaselineAgent(Agent):
         unknown = sorted(key for key in self._hyperparameters if not hasattr(engine, key))
         if unknown:
             raise ValueError(f'{type(self).__name__} got unknown hyperparameters: {unknown}.')
-        self._engine = engine
-        self._attached_topology_version = None
-        self._attach(None)
+        return engine
 
     def _attach(self, payload: Optional[Mapping[str, Any]]):
         env = self.env.unwrapped
@@ -147,7 +149,14 @@ class _RuleBaselineAgent(Agent):
     def _payload(self, observations: Any) -> Mapping[str, Any]:
         if isinstance(observations, Mapping) and 'tables' in observations:
             return observations
-        return self.env.unwrapped._entity_service.observation_payload()
+        env = self.env.unwrapped
+        payload = env._entity_service.observation_payload()
+        if observations is not None and len(observations) > 0:
+            # Flat interface: the env corrupts only the flat vectors, so apply
+            # this step's robustness observation events as the entity interface
+            # does. predict([]), used by the native BAU reference, stays uncorrupted.
+            payload = env._robustness_service.entity_observation_view(payload)
+        return payload
 
     def predict(self, observations: Any, deterministic: bool = None) -> List[List[float]]:
         env = self.env.unwrapped
@@ -187,8 +196,18 @@ class _RuleBaselineAgent(Agent):
 
     def reset(self):
         super().reset()
-        if getattr(self, '_engine', None) is not None:
-            self._build_engine()
+        engine = self._engine
+        if engine is None:
+            return
+        # The dataset info and the attachment depend on the schema and the
+        # observation layout, not on the episode. Clear only the caches.
+        engine._dispatch_budgets = {}
+        engine._obs_match_cache = {}
+        engine._storage_suffix_cache = {}
+        if getattr(self.env.unwrapped, 'topology_mode', 'static') == 'dynamic':
+            # Reset restores the initial members and assets and replays the
+            # topology events, so attach again to the next observation payload.
+            self._attached_topology_version = None
 
 
 class BusinessAsUsualAgent(_RuleBaselineAgent):

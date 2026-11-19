@@ -164,7 +164,7 @@ load or PV truth.
 | `chargers` | object | no | EV chargers. |
 | `deferrable_appliances` | object | no | Normalized deferrable appliances. |
 | `charging_constraints` | object | no | Building/phase charging limits. |
-| `electrical_service` | object | no | Import/export service limits. |
+| `electrical_service` | object | no | Import/export service limits, see [Electrical Service](#electrical-service). |
 | `equity_group` | string | no | Group used by equity KPIs. |
 | `dynamics` | object | no | Indoor temperature dynamics model. |
 | `occupant` | object | no | Occupant interaction model. |
@@ -232,6 +232,56 @@ Common classes:
 | `absolute` | `absolute_kwh`, `kwh`, `kwh_step`, `energy` | Absolute generation already in `kWh/step`. | `generation_kwh = value`. |
 
 Use `absolute` for real measured generation or converter-generated energy series. Use `per_kw` for normalized PV profiles.
+
+## Electrical Service
+
+`buildings.<name>.electrical_service` sets the building's grid connection limits. Limits are
+active power in kW; `null`, a missing key or `Infinity` means no limit.
+
+```json
+"electrical_service": {
+  "mode": "single_phase",
+  "limits": {
+    "total": {"import_kw": 17.25, "export_kw": 6.9},
+    "per_phase": {"L1": {"import_kw": 17.25, "export_kw": 6.9}}
+  },
+  "available_grid_power": {"filename": "available_grid_power.csv", "column": "Building_1"},
+  "observations": {"available_grid_power": true}
+}
+```
+
+| Field | Type | Purpose |
+|---|---:|---|
+| `mode` | `single_phase`, `three_phase` | Service type. Single-phase services only have `L1`. |
+| `default_split` | `balanced`, `L1`, `L2`, `L3` | Phase split of load without a phase connection. |
+| `limits.total.import_kw`, `limits.total.export_kw` | kW | Static connection capacity. |
+| `limits.per_phase.<L1/L2/L3>.import_kw`, `export_kw` | kW | Static per-phase limits. |
+| `available_grid_power` | path or object | Optional per-step import availability series, see below. |
+| `observations.headroom`, `observations.headroom_export` | bool | Expose import/export headroom observations. Default true. |
+| `observations.violation` | bool | Expose `charging_constraint_violation_kwh`. Default true. |
+| `observations.phase_encoding` | bool | Expose one-hot charger phase assignment. Default false. |
+| `observations.available_grid_power` | bool | Expose the `available_grid_power` observation when a series is set. Default true. |
+
+### Available grid power
+
+`available_grid_power` names a CSV or Parquet file with one row per time step, aligned with
+`energy_simulation`. Give it as a file name or as `{"filename": ..., "column": ...}`. Without
+`column`, the column named after the building is used, then a column named
+`available_grid_power`, so one file can hold a column per building. Values are the grid power
+the building may import at that step, in kW (power, not energy per step).
+
+The import limit in force at a step is the smaller of `limits.total.import_kw` and the series
+value. A blank value applies the static limit only; it is an error when `import_kw` is not
+set. Values must be finite and non-negative. Use it for curtailment below the connection
+capacity, such as a distribution system operator dimming controllable devices (German
+§14a EnWG) or a capacity reduction during grid stress.
+
+The limit acts like the static one: EV chargers and the electrical storage are curtailed
+first, and load that cannot be curtailed is still served and counted as an electrical-service
+violation. A limit of 0 kW does not island the building; use [`power_outage`](#buildings)
+for a blackout. Per-phase limits stay static. The `available_grid_power` observation reports
+the limit for the coming interval; the headroom observations describe the last executed
+interval, so they reflect the limit that was in force then.
 
 ## Chargers
 

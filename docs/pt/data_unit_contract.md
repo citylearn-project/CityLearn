@@ -128,6 +128,23 @@ Quando vários buildings apontam para o mesmo ficheiro de `weather`, `pricing` o
 `carbon_intensity`, e `noise_std = 0`, o simulador partilha a mesma série em
 memória. `energy_simulation` continua separado por building.
 
+O `noise_std` de um building acrescenta ruído gaussiano de média zero às
+temperaturas interior e exterior, à humidade relativa exterior, às irradiâncias
+solares difusa e direta e às suas previsões, à produção solar, ao preço da
+eletricidade e à intensidade carbónica. O desvio padrão está na unidade de cada
+série; o ruído não é proporcional à série. Uma regra mantém os valores físicos:
+
+| Série | Limite |
+|---|---|
+| `solar_generation`, `diffuse_solar_irradiance`, `direct_solar_irradiance` e previsões | `>= 0`; sem ruído onde o valor sem ruído é zero (noite) |
+| `outdoor_relative_humidity` e previsões | `[0, 100]` % |
+| `carbon_intensity` | `>= 0` |
+
+Só é limitado o ruído que sai do intervalo: um valor do dataset que já está fora
+dele mantém o seu ruído. A temperatura exterior e os preços, que podem ser
+negativos, não são limitados; a temperatura interior mantém o limite
+[-90, 57] C. Com `noise_std = 0` nenhuma série muda.
+
 Exemplo para dados a cada 15 segundos:
 
 ```text
