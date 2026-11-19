@@ -70,6 +70,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#bau-export-charger-exports-cli-and-file-encoding">BAU export, charger exports, CLI and file encoding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#agents-and-wrappers">Agents and wrappers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#data-loading-edge-cases">Data loading edge cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-district-kpis">Dynamic-topology district KPIs</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-4-0-to-3-5-0">Upgrade from 3.4.0 to 3.5.0</a></li>
@@ -355,6 +356,29 @@ battery can still take (<code class="docutils literal notranslate"><span class="
 <code class="docutils literal notranslate"><span class="pre">flexible_energy_to_full_kwh</span></code>, charge headroom and available charge power)
 stop at <code class="docutils literal notranslate"><span class="pre">max_soc</span></code> instead of a full battery; <code class="docutils literal notranslate"><span class="pre">usable_soc_ratio</span></code> is relative to
 <code class="docutils literal notranslate"><span class="pre">max_soc</span></code>. Batteries without <code class="docutils literal notranslate"><span class="pre">max_soc</span></code> give the same values as before.</p></li>
+</ul>
+</section>
+<section id="dynamic-topology-district-kpis">
+<h3>Dynamic-topology district KPIs<a class="headerlink" href="#dynamic-topology-district-kpis" title="Link to this heading"></a></h3>
+<p>No dataset, schema or export-file migration is required. Static topology results are
+unchanged. In dynamic topology, KPIs change in two cases; rerun both the controller and
+its reference before comparing with earlier results.</p>
+<ul class="simple">
+<li><p><strong>District reference series keep departed members.</strong> The district
+<code class="docutils literal notranslate"><span class="pre">net_electricity_consumption*_without_storage*</span></code> series (the conventional baseline) summed
+only the members active when they were read, while the control series keep each
+member’s consumption for the steps at which it belonged to the district. A member that
+had left therefore dropped out of the baseline side only. The reference series now sum
+every member that has been active, each over the steps at which it was a member, so a
+member that joins late no longer adds its PV-free series before it joins either. This
+changes the district baseline and delta totals (import, export, net exchange, emissions,
+and cost without the community market), the district export ratio to baseline and the
+district ramping, load-factor and peak ratios of scenarios with membership changes.</p></li>
+<li><p><strong>Electrical-service histories survive topology events.</strong> The requested-pressure,
+total-power and per-phase power histories of a member were erased when it rejoined or
+when one of its assets was added or removed. They are now kept, so the
+<code class="docutils literal notranslate"><span class="pre">electrical_service_*</span></code> violation and requested-pressure KPIs and the phase peak and
+imbalance KPIs include the steps before the event.</p></li>
 </ul>
 </section>
 </section>

@@ -201,6 +201,28 @@ parsed differently, and none of their EVs uses `InventoryBattery`.
   stop at `max_soc` instead of a full battery; `usable_soc_ratio` is relative to
   `max_soc`. Batteries without `max_soc` give the same values as before.
 
+### Dynamic-topology district KPIs
+
+No dataset, schema or export-file migration is required. Static topology results are
+unchanged. In dynamic topology, KPIs change in two cases; rerun both the controller and
+its reference before comparing with earlier results.
+
+- **District reference series keep departed members.** The district
+  `net_electricity_consumption*_without_storage*` series (the conventional baseline) summed
+  only the members active when they were read, while the control series keep each
+  member's consumption for the steps at which it belonged to the district. A member that
+  had left therefore dropped out of the baseline side only. The reference series now sum
+  every member that has been active, each over the steps at which it was a member, so a
+  member that joins late no longer adds its PV-free series before it joins either. This
+  changes the district baseline and delta totals (import, export, net exchange, emissions,
+  and cost without the community market), the district export ratio to baseline and the
+  district ramping, load-factor and peak ratios of scenarios with membership changes.
+- **Electrical-service histories survive topology events.** The requested-pressure,
+  total-power and per-phase power histories of a member were erased when it rejoined or
+  when one of its assets was added or removed. They are now kept, so the
+  `electrical_service_*` violation and requested-pressure KPIs and the phase peak and
+  imbalance KPIs include the steps before the event.
+
 ## Upgrade from 3.4.0 to 3.5.0
 
 No dataset, schema, export-file or BAU migration is required; existing datasets and
