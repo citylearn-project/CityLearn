@@ -130,6 +130,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">simplejson</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utils.file_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">json_default</span>
 
 
 <div class="viewcode-block" id="parse_bool">
@@ -233,7 +234,10 @@
 <span class="sd">        filepath : str</span>
 <span class="sd">            pathname of JSON document.</span>
 <span class="sd">        dictionary: dict</span>
-<span class="sd">            dictionary to convert to JSON.</span>
+<span class="sd">            dictionary to convert to JSON. NumPy booleans, numbers and numeric arrays are</span>
+<span class="sd">            written as JSON values (see `json_default`); with the default ``ignore_nan=True``,</span>
+<span class="sd">            NaN and infinity are written as ``null``. namedtuples are written as objects and</span>
+<span class="sd">            `Decimal` values as numbers.</span>
 
 <span class="sd">        Other Parameters</span>
 <span class="sd">        ----------------</span>
@@ -241,7 +245,7 @@
 <span class="sd">            Other infrequently used keyword arguments to be parsed to `simplejson.dump`.</span>
 <span class="sd">        """</span>
 
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'ignore_nan'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">'sort_keys'</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">'default'</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">'indent'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'ignore_nan'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">'sort_keys'</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">'default'</span><span class="p">:</span> <span class="n">json_default</span><span class="p">,</span> <span class="s1">'indent'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
         
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span><span class="s1">'w'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>

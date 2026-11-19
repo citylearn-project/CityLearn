@@ -64,6 +64,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#baselines-under-the-flat-interface-with-robustness-observation-events">Baselines under the flat interface with robustness observation events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#robustness-noise-stays-within-physical-ranges">Robustness noise stays within physical ranges</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#python-3-10-or-newer">Python 3.10 or newer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#json-files-with-numpy-values">JSON files with NumPy values</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-4-0-to-3-5-0">Upgrade from 3.4.0 to 3.5.0</a></li>
@@ -217,6 +218,24 @@ See the <a class="reference internal" href="data_unit_contract.html#robustness-n
 <span id="python-310-or-newer"></span><h3>Python 3.10 or newer<a class="headerlink" href="#python-3-10-or-newer" title="Link to this heading"></a></h3>
 <p>CityLearn requires Python 3.10 or newer. Environments on Python 3.9 keep
 resolving CityLearn 3.5.0; upgrade the interpreter to use later releases.</p>
+</section>
+<section id="json-files-with-numpy-values">
+<h3>JSON files with NumPy values<a class="headerlink" href="#json-files-with-numpy-values" title="Link to this heading"></a></h3>
+<p>No dataset, schema or simulation migration is required. Simulated trajectories,
+KPIs and export manifests are unchanged.</p>
+<ul class="simple">
+<li><p><strong>JSON files with NumPy values.</strong> <code class="docutils literal notranslate"><span class="pre">FileHandler.write_json</span></code> (in <code class="docutils literal notranslate"><span class="pre">citylearn.utilities</span></code>
+and <code class="docutils literal notranslate"><span class="pre">citylearn.utils.file_handler</span></code>) writes NumPy booleans, integers and floats as
+JSON booleans and numbers, and NumPy arrays of booleans and numbers as lists. They
+used to be written as text: <code class="docutils literal notranslate"><span class="pre">np.float32(2.5)</span></code> as <code class="docutils literal notranslate"><span class="pre">&quot;2.5&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">np.bool_(True)</span></code> as
+<code class="docutils literal notranslate"><span class="pre">&quot;True&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">np.array([1.0,</span> <span class="pre">np.nan])</span></code> as <code class="docutils literal notranslate"><span class="pre">&quot;[</span> <span class="pre">1.</span> <span class="pre">nan]&quot;</span></code>; they are now <code class="docutils literal notranslate"><span class="pre">2.5</span></code>,
+<code class="docutils literal notranslate"><span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">[1.0,</span> <span class="pre">null]</span></code>. A <code class="docutils literal notranslate"><span class="pre">np.float32</span></code> is written with its exact value, so
+<code class="docutils literal notranslate"><span class="pre">np.float32(0.1)</span></code> becomes <code class="docutils literal notranslate"><span class="pre">0.10000000149011612</span></code>. Code that parsed these strings
+must read numbers instead. With <code class="docutils literal notranslate"><span class="pre">ignore_nan=False</span></code>, a NaN or infinite NumPy float
+now raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>, as a Python float already did; it used to be written as
+<code class="docutils literal notranslate"><span class="pre">&quot;nan&quot;</span></code>. namedtuples (written as objects), <code class="docutils literal notranslate"><span class="pre">Decimal</span></code> values (written as numbers
+with their exact text) and all other values are written as before.</p></li>
+</ul>
 </section>
 </section>
 <section id="upgrade-from-3-4-0-to-3-5-0">

@@ -233,7 +233,10 @@ ancestor without changing the stored schema or consulting the cwd.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filepath</strong> (<em>str</em>) – pathname of JSON document.</p></li>
-<li><p><strong>dictionary</strong> (<em>dict</em>) – dictionary to convert to JSON.</p></li>
+<li><p><strong>dictionary</strong> (<em>dict</em>) – dictionary to convert to JSON. NumPy booleans, numbers and numeric arrays are
+written as JSON values (see <cite>json_default</cite>); with the default <code class="docutils literal notranslate"><span class="pre">ignore_nan=True</span></code>,
+NaN and infinity are written as <code class="docutils literal notranslate"><span class="pre">null</span></code>. namedtuples are written as objects and
+<cite>Decimal</cite> values as numbers.</p></li>
 <li><p><strong>**kwargs</strong> (<em>dict</em>) – Other infrequently used keyword arguments to be parsed to <cite>simplejson.dump</cite>.</p></li>
 </ul>
 </dd>
@@ -270,6 +273,19 @@ ancestor without changing the stored schema or consulting the cwd.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.utils.file_handler.json_default">
+<span class="sig-prename descclassname"><span class="pre">citylearn.utils.file_handler.</span></span><span class="sig-name descname"><span class="pre">json_default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../_modules/citylearn/utils/file_handler.html#json_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.utils.file_handler.json_default" title="Link to this definition"></a></dt>
+<dd><p>Return a JSON-serializable stand-in for <cite>value</cite>; the <cite>default</cite> of <cite>FileHandler.write_json</cite>.</p>
+<p>simplejson calls it only for objects it cannot write itself. NumPy booleans,
+integers and floats become the equal Python value, so they are written as JSON
+booleans and numbers (<code class="docutils literal notranslate"><span class="pre">np.float32(0.1)</span></code> is written as <code class="docutils literal notranslate"><span class="pre">0.10000000149011612</span></code>,
+its exact value). NumPy arrays of booleans and numbers become nested lists. With
+<code class="docutils literal notranslate"><span class="pre">ignore_nan=True</span></code>, NaN and infinite values in them are written as <code class="docutils literal notranslate"><span class="pre">null</span></code>.
+Anything else, including NumPy scalars without an equal Python value such as
+<code class="docutils literal notranslate"><span class="pre">np.longdouble</span></code> on some platforms, is written as <code class="docutils literal notranslate"><span class="pre">str(value)</span></code>.</p>
 </dd></dl>
 
 </section>

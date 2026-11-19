@@ -243,7 +243,10 @@
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filepath</strong> (<em>str</em>) – pathname of JSON document.</p></li>
-<li><p><strong>dictionary</strong> (<em>dict</em>) – dictionary to convert to JSON.</p></li>
+<li><p><strong>dictionary</strong> (<em>dict</em>) – dictionary to convert to JSON. NumPy booleans, numbers and numeric arrays are
+written as JSON values (see <cite>json_default</cite>); with the default <code class="docutils literal notranslate"><span class="pre">ignore_nan=True</span></code>,
+NaN and infinity are written as <code class="docutils literal notranslate"><span class="pre">null</span></code>. namedtuples are written as objects and
+<cite>Decimal</cite> values as numbers.</p></li>
 <li><p><strong>**kwargs</strong> (<em>dict</em>) – Other infrequently used keyword arguments to be parsed to <cite>simplejson.dump</cite>.</p></li>
 </ul>
 </dd>
