@@ -100,18 +100,6 @@ For large datasets, especially full-year 15s data, Parquet is usually better tha
 
 When several buildings point to the same `weather`, `pricing` or `carbon_intensity` file and `noise_std = 0`, the simulator shares the same in-memory time series. `energy_simulation` remains building-specific.
 
-### Robustness noise
-
-A building's `noise_std` adds zero-mean Gaussian noise to its indoor and outdoor temperature, outdoor relative humidity, diffuse and direct solar irradiance and their forecasts, solar generation, electricity price and carbon intensity. The standard deviation is in the unit of each series; the noise is not scaled by the series. One rule keeps the perturbed values physical:
-
-| Series | Bound |
-|---|---|
-| `solar_generation`, `diffuse_solar_irradiance`, `direct_solar_irradiance` and their forecasts | `>= 0`; no noise where the noise-free value is zero (night) |
-| `outdoor_relative_humidity` and its forecasts | `[0, 100]` % |
-| `carbon_intensity` | `>= 0` |
-
-Only noise that leaves the range is clipped: a dataset value that is already outside it keeps its noise. Outdoor temperature and electricity prices, which can be negative, are not bounded; indoor temperature keeps its clip to [-90, 57] C. With `noise_std = 0` every series is unchanged.
-
 ## Deferrable Appliances
 
 The official format for deferrable loads uses two files per appliance:
