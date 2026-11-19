@@ -1,5 +1,6 @@
 ray[rllib]
 stable-baselines3
-nrel-pysam
+# NREL-PySAM has no Python 3.14 wheels yet; the PV autosizing tests skip without it.
+nrel-pysam; python_version < "3.14"
 pytest
 ruff

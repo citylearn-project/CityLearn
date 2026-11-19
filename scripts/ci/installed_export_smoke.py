@@ -5,6 +5,7 @@ Run with ``python -I`` so the source tree cannot hide missing packaged modules.
 
 import argparse
 import json
+from importlib.metadata import version
 from pathlib import Path
 
 import citylearn
@@ -20,6 +21,8 @@ def main():
     source_root = Path(__file__).resolve().parents[2]
     installed_module = Path(citylearn.__file__).resolve()
     assert installed_module.parent != source_root / "citylearn", installed_module
+    # pyproject.toml reads the version from citylearn/__init__.py; the built metadata must agree.
+    assert version("citylearn") == citylearn.__version__, (version("citylearn"), citylearn.__version__)
 
     env = CityLearnEnv(
         str(args.schema.resolve()),
@@ -49,7 +52,7 @@ def main():
         assert manifest['runtime_versions']['numpy']
         assert manifest['reward']['resolved_class'] == 'citylearn.reward_function.RewardFunction'
         assert env.get_kpi_family_audit()['district']['executed_intervals_count'] > 0
-        assert manifest['business_as_usual_reference']['definition_version'] == 'immediate-full-charge-v2'
+        assert manifest['business_as_usual_reference']['definition_version'] == 'immediate-full-charge-v3'
         assert manifest['business_as_usual_reference']['evaluated']
         assert manifest['final_inventory'] is not None
         assert DEFINITION_VERSION in json.dumps(manifest)

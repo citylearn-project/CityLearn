@@ -68,7 +68,11 @@ class _RuleBaselineAgent(Agent):
         self.observation_space = self.env.unwrapped.flat_observation_space
         self.action_space = self.env.unwrapped.flat_action_space
         self.reset()
-        self._build_engine()
+        # The engine parses the schema and the EV files once; resets keep it.
+        self._engine = self._build_engine()
+        # No observation payload exists yet, so the first attach builds one.
+        # Later attaches reuse the payload passed to predict().
+        self._attach(None)
 
     @property
     def hyperparameters(self) -> Dict[str, Any]:
@@ -89,9 +93,7 @@ class _RuleBaselineAgent(Agent):
         unknown = sorted(key for key in self._hyperparameters if not hasattr(engine, key))
         if unknown:
             raise ValueError(f'{type(self).__name__} got unknown hyperparameters: {unknown}.')
-        self._engine = engine
-        self._attached_topology_version = None
-        self._attach(None)
+        return engine
 
     def _attach(self, payload: Optional[Mapping[str, Any]]):
         env = self.env.unwrapped
@@ -147,7 +149,14 @@ class _RuleBaselineAgent(Agent):
     def _payload(self, observations: Any) -> Mapping[str, Any]:
         if isinstance(observations, Mapping) and 'tables' in observations:
             return observations
-        return self.env.unwrapped._entity_service.observation_payload()
+        env = self.env.unwrapped
+        payload = env._entity_service.observation_payload()
+        if observations is not None and len(observations) > 0:
+            # Flat interface: the env corrupts only the flat vectors, so apply
+            # this step's robustness observation events as the entity interface
+            # does. predict([]), used by the native BAU reference, stays uncorrupted.
+            payload = env._robustness_service.entity_observation_view(payload)
+        return payload
 
     def predict(self, observations: Any, deterministic: bool = None) -> List[List[float]]:
         env = self.env.unwrapped
@@ -187,17 +196,27 @@ class _RuleBaselineAgent(Agent):
 
     def reset(self):
         super().reset()
-        if getattr(self, '_engine', None) is not None:
-            self._build_engine()
+        engine = self._engine
+        if engine is None:
+            return
+        # The dataset info and the attachment depend on the schema and the
+        # observation layout, not on the episode. Clear only the caches.
+        engine._dispatch_budgets = {}
+        engine._obs_match_cache = {}
+        engine._storage_suffix_cache = {}
+        if getattr(self.env.unwrapped, 'topology_mode', 'static') == 'dynamic':
+            # Reset restores the initial members and assets and replays the
+            # topology events, so attach again to the next observation payload.
+            self._attached_topology_version = None
 
 
 class BusinessAsUsualAgent(_RuleBaselineAgent):
     """Reference BAU: immediate EV charging, earliest appliance start, PV self-consumption.
 
     A connected EV is charged at once and at maximum power. With
-    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v2``) it charges
+    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v3``) it charges
     to 100%, as the BAU of CityLearn 3.1–3.3 did. With
-    ``ev_charge_target='requested'`` (``immediate-user-target-v1``) it stops at the
+    ``ev_charge_target='requested'`` (``immediate-user-target-v2``) it stops at the
     user's requested departure SOC: the last command is limited to the remaining
     energy gap, and when that command is below the charger minimum the EV stops
     slightly below the target instead of overshooting it. Appliances start at the first admissible
@@ -208,11 +227,11 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
     """
 
     EV_CHARGE_TARGETS: ClassVar[Mapping[str, Tuple[type, str]]] = {
-        'requested': (engines.NormalTargetPolicy, 'immediate-user-target-v1'),
-        'full': (engines.NormalPolicy, 'immediate-full-charge-v2'),
+        'requested': (engines.NormalTargetPolicy, 'immediate-user-target-v2'),
+        'full': (engines.NormalPolicy, 'immediate-full-charge-v3'),
     }
     ENGINE_CLASS = engines.NormalPolicy
-    DEFINITION_VERSION = 'immediate-full-charge-v2'
+    DEFINITION_VERSION = 'immediate-full-charge-v3'
 
     def __init__(self, env: CityLearnEnv, ev_charge_target: str = 'full', **hyperparameters: Any):
         self.ENGINE_CLASS, self.DEFINITION_VERSION = self.definition(ev_charge_target)
@@ -244,7 +263,7 @@ class RBCBasicPolicy(_RuleBaselineAgent):
     """
 
     ENGINE_CLASS = engines.RBCBasicPolicy
-    DEFINITION_VERSION = 'basic-v2'
+    DEFINITION_VERSION = 'basic-v3'
 
 
 class RBCSmartPolicy(_RuleBaselineAgent):
@@ -256,7 +275,7 @@ class RBCSmartPolicy(_RuleBaselineAgent):
     """
 
     ENGINE_CLASS = engines.RBCSmartLocalPolicy
-    DEFINITION_VERSION = 'smart-local-v2'
+    DEFINITION_VERSION = 'smart-local-v3'
 
 
 class RBCCommunityPolicy(_RuleBaselineAgent):
@@ -271,7 +290,7 @@ class RBCCommunityPolicy(_RuleBaselineAgent):
     """
 
     ENGINE_CLASS = engines.RBCCommunityPolicy
-    DEFINITION_VERSION = 'community-v2'
+    DEFINITION_VERSION = 'community-v3'
 
 
 class ZeroActionBaselineAgent(Agent):

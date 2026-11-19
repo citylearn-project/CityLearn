@@ -171,7 +171,6 @@ Quando `return_substeps=True`, o `info` tambem inclui `substep_rewards`, `subste
 ## CLI
 
 Na versão 3.0.2, a CLI requer `python -m pip install stable-baselines3==2.3.2`.
-Para os comandos de treino e avaliação, usar Python 3.11 ou mais recente.
 A primeira simulação pela API Python não exige esta dependência.
 
 ```bash

@@ -116,6 +116,8 @@ class CityLearnRobustnessService:
         self._active_cache: List[RobustnessEvent] = []
         self._history = RobustnessHistory()
         self._stuck_values: Dict[Tuple[str, str], float] = {}
+        # Stuck values of entity_observation_view(), kept apart from the env's own.
+        self._view_stuck_values: Dict[Tuple[str, str], float] = {}
         self._action_history: Dict[str, List[Tuple[int, float]]] = {}
         self._flat_layout_cache = None
         self._validated_layout_signature = None
@@ -182,6 +184,7 @@ class CityLearnRobustnessService:
         self._active_cache = []
         self._history = RobustnessHistory()
         self._stuck_values = {}
+        self._view_stuck_values = {}
         self._action_history = {}
         self._flat_layout_cache = None
         self._validated_layout_signature = None
@@ -300,14 +303,30 @@ class CityLearnRobustnessService:
             self._observed_steps.add(self._global_time_step())
         return apply(self, self._apply_observation_events(observations))
 
-    def _apply_observation_events(self, observations: Any) -> Any:
-        """Apply observation/forecast/telemetry events to the agent-facing payload."""
+    def entity_observation_view(self, payload: Mapping[str, Any]) -> Mapping[str, Any]:
+        """Apply this step's observation events to an entity payload in place, without recording them.
+
+        The flat interface corrupts only the flat vectors. Consumers that read
+        entity observations under the flat interface (the rule-based baselines)
+        get the values the entity interface returns for the same step. Noise
+        is a function of the seed, event, step and target, so nothing is drawn
+        from a random stream. Stuck values are kept apart from the env's own and
+        no application is recorded, so the env's observations, robustness
+        history and KPIs do not change.
+        """
 
         if not self.enabled:
-            return observations
-
+            return payload
         step = self._global_time_step()
-        active = [
+        active = self._active_observation_events(step)
+        if active:
+            self._apply_entity_observation_events(
+                payload, active, step, record=False, stuck_values=self._view_stuck_values
+            )
+        return payload
+
+    def _active_observation_events(self, step: int) -> List[RobustnessEvent]:
+        return [
             event for event in self._active_events(step)
             if self._module_enabled(event.module)
             and (
@@ -315,6 +334,15 @@ class CityLearnRobustnessService:
                 or (event.module == "asset" and event.target_feature in self.TELEMETRY_FEATURES)
             )
         ]
+
+    def _apply_observation_events(self, observations: Any) -> Any:
+        """Apply observation/forecast/telemetry events to the agent-facing payload."""
+
+        if not self.enabled:
+            return observations
+
+        step = self._global_time_step()
+        active = self._active_observation_events(step)
 
         if not active:
             return observations
@@ -790,7 +818,10 @@ class CityLearnRobustnessService:
                         self._record_application(event, "asset", descriptor, mode="unavailable")
                     self._record_application(event, kind, descriptor, mode=event.mode)
 
-    def _apply_entity_observation_events(self, payload: Mapping[str, Any], events: Sequence[RobustnessEvent], step: int):
+    def _apply_entity_observation_events(
+        self, payload: Mapping[str, Any], events: Sequence[RobustnessEvent], step: int, *, record: bool = True,
+        stuck_values: Optional[Dict[Tuple[str, str], float]] = None,
+    ):
         tables = payload.get("tables", {}) if isinstance(payload, Mapping) else {}
         if not isinstance(tables, Mapping):
             return
@@ -828,15 +859,22 @@ class CityLearnRobustnessService:
                     if event.module in {"observation", "forecast"} and not self._observation_feature_allowed(event, feature):
                         continue
                     original = float(table[row_index, feature_index])
-                    updated = self._apply_observation_value(event, original, descriptor["target_key"], step)
+                    updated = self._apply_observation_value(
+                        event, original, descriptor["target_key"], step, stuck_values=stuck_values
+                    )
                     table[row_index, feature_index] = updated
+                    if not record:
+                        continue
                     kind = "forecast" if event.module == "forecast" else "observation"
                     if event.module == "asset":
                         kind = "observation"
                         self._record_application(event, "asset", descriptor, mode="unavailable")
                     self._record_application(event, kind, descriptor, mode=event.mode)
 
-    def _apply_observation_value(self, event: RobustnessEvent, original: float, target_key: str, step: int) -> float:
+    def _apply_observation_value(
+        self, event: RobustnessEvent, original: float, target_key: str, step: int,
+        stuck_values: Optional[Dict[Tuple[str, str], float]] = None,
+    ) -> float:
         if event.module == "asset":
             return self._event_replacement_value(event)
 
@@ -848,10 +886,11 @@ class CityLearnRobustnessService:
         if event.mode == "bias":
             return float(original) + (0.0 if event.value is None else float(event.value))
         if event.mode == "stuck":
+            stuck_values = self._stuck_values if stuck_values is None else stuck_values
             key = (event.event_id, target_key)
-            if key not in self._stuck_values:
-                self._stuck_values[key] = float(original)
-            return self._stuck_values[key]
+            if key not in stuck_values:
+                stuck_values[key] = float(original)
+            return stuck_values[key]
         if event.mode == "clip":
             low = -np.inf if event.min_value is None else float(event.min_value)
             high = np.inf if event.max_value is None else float(event.max_value)
