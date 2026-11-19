@@ -68,6 +68,10 @@ The noise draws are the same, so all other values, and the series of other
 buildings and seeds, are unchanged. Runs whose solar or carbon series became
 negative under noise change; agents trained on such series may need retraining.
 See the [data unit contract](data_unit_contract.md#robustness-noise).
+### Python 3.10 or newer
+
+CityLearn requires Python 3.10 or newer. Environments on Python 3.9 keep
+resolving CityLearn 3.5.0; upgrade the interpreter to use later releases.
 
 ## Upgrade from 3.4.0 to 3.5.0
 

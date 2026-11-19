@@ -53,6 +53,12 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   intervalo quando há série, e as baselines baseadas em regras limitam com ela
   a margem de importação planeada. Os edifícios sem série não mudam. Ver a
   [referência do schema](schema_reference.md#potencia-de-rede-disponivel).
+- **Python 3.10 ou mais recente.** O CityLearn passa a exigir Python 3.10 e é
+  testado em Python 3.10 a 3.14, com NumPy 1.x em 3.10. O Python 3.9 chegou ao
+  fim de vida em outubro de 2025. Em Python 3.9, o `pip` continua a instalar o
+  CityLearn 3.5.0. Os comandos `simulate train` e `simulate evaluate` da CLI usavam
+  `datetime.UTC`, que só existe a partir do Python 3.11, e falhavam em Python
+  3.10; usam agora `datetime.timezone.utc`.
 - **Datasets Parquet de 15 s carregam a partir da cache.** Os schemas de
   `citylearn_three_phase_electrical_service_demo_15s_parquet`,
   `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` e
