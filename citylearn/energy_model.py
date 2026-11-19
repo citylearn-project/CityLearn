@@ -132,15 +132,28 @@ class ElectricDevice(Device):
         ratio = self.time_step_ratio
         return 1.0 if ratio is None else float(ratio)
 
-    @property
-    def electricity_consumption(self) -> np.ndarray:
-        r"""Electricity consumption time series [kWh]."""
+    def _scale_electricity_consumption(self, values: np.ndarray) -> np.ndarray:
         ratio = self._electricity_consumption_ratio()
 
         if ratio == 1.0:
-            return self.__electricity_consumption
+            return values
 
-        return self.__electricity_consumption * ratio
+        return values * ratio
+
+    @property
+    def electricity_consumption(self) -> np.ndarray:
+        r"""Electricity consumption time series [kWh]."""
+
+        return self._scale_electricity_consumption(self.__electricity_consumption)
+
+    def electricity_consumption_at(self, time_step: int = None):
+        r"""`electricity_consumption` at a non-negative `time_step` (default: current) [kWh].
+
+        Scales only that element instead of the whole time series, with the same result.
+        """
+
+        time_step = self.time_step if time_step is None else time_step
+        return self._scale_electricity_consumption(self.__electricity_consumption[time_step:time_step + 1])[0]
 
     @property
     def available_nominal_power(self) -> float:
