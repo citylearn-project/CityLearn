@@ -267,7 +267,8 @@ Estão desligadas por omissão; os schemas e resultados existentes não mudam.
   mesmos ficheiros ([#201](https://github.com/citylearn-project/CityLearn/pull/201)).
 - **Teste de instalação e tabela de compatibilidade.** O CI constrói o wheel,
   instala-o com as dependências do PyPI e corre um teste de simulação e export em
-  macOS, Windows e Ubuntu ([#138](https://github.com/citylearn-project/CityLearn/issues/138)). O guia de instalação ganha uma tabela de
+  macOS (arm64) e Windows com Python 3.10 e 3.14; o build em Ubuntu já o corria
+  sobre o wheel instalado ([#138](https://github.com/citylearn-project/CityLearn/issues/138)). O guia de instalação ganha uma tabela de
   compatibilidade das versões de Python e das dependências desde a 1.5.0
   ([#150](https://github.com/citylearn-project/CityLearn/issues/150)), e as GitHub Actions são atualizadas ([#217](https://github.com/citylearn-project/CityLearn/pull/217)).
 - **Caminhos em Windows nos testes.** Os testes de descarga de datasets com
@@ -283,8 +284,8 @@ instalado com as dependências num ambiente virtual limpo, passou o `pip check` 
 teste de simulação e export do pacote instalado. Os exports CSV e Parquet do
 `pt_rec_4` feitos com a 3.6.0 abriram no importador de resultados da CityLearn UI
 com as mesmas 1 036 linhas de KPIs e 15 séries, e os testes da UI passaram. O CI da
-versão cobre Python 3.10 a 3.14, NumPy 1 e o teste de instalação em macOS, Windows
-e Ubuntu.
+versão cobriu Python 3.10 a 3.14, NumPy 1 em 3.10, as auditorias e o teste de
+instalação em macOS e Windows.
 
 ### Contribuidores
 
