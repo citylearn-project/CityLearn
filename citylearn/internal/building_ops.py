@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
+from math import isfinite
 from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import numpy as np
 from citylearn.internal.scalars import clip_scalar, numpy1_scalar
+from citylearn.internal.service_energy import unserved_energy
 
 from citylearn.energy_model import HeatPump
 from citylearn.preprocessing import Normalize, PeriodicNormalization
 from citylearn.internal.units import energy_kwh_to_power_kw, power_kw_to_energy_kwh
+from citylearn.internal import grid_availability
 from citylearn.internal.electrical_limits import allocate_electrical_service, electrical_service_violation_kw
 
 if TYPE_CHECKING:
@@ -381,19 +384,19 @@ class BuildingOpsService:
         if wants('net_electricity_consumption'):
             observations['net_electricity_consumption'] = building.net_electricity_consumption[endogenous_t]
         if wants('cooling_electricity_consumption'):
-            observations['cooling_electricity_consumption'] = building.cooling_electricity_consumption[endogenous_t]
+            observations['cooling_electricity_consumption'] = building.cooling_device.electricity_consumption_at(endogenous_t)
         if wants('heating_electricity_consumption'):
-            observations['heating_electricity_consumption'] = building.heating_electricity_consumption[endogenous_t]
+            observations['heating_electricity_consumption'] = building.heating_device.electricity_consumption_at(endogenous_t)
         if wants('dhw_electricity_consumption'):
-            observations['dhw_electricity_consumption'] = building.dhw_electricity_consumption[endogenous_t]
+            observations['dhw_electricity_consumption'] = building.dhw_device.electricity_consumption_at(endogenous_t)
         if wants('cooling_storage_electricity_consumption'):
-            observations['cooling_storage_electricity_consumption'] = building.cooling_storage_electricity_consumption[endogenous_t]
+            observations['cooling_storage_electricity_consumption'] = building.storage_electricity_consumption_at('cooling', endogenous_t)
         if wants('heating_storage_electricity_consumption'):
-            observations['heating_storage_electricity_consumption'] = building.heating_storage_electricity_consumption[endogenous_t]
+            observations['heating_storage_electricity_consumption'] = building.storage_electricity_consumption_at('heating', endogenous_t)
         if wants('dhw_storage_electricity_consumption'):
-            observations['dhw_storage_electricity_consumption'] = building.dhw_storage_electricity_consumption[endogenous_t]
+            observations['dhw_storage_electricity_consumption'] = building.storage_electricity_consumption_at('dhw', endogenous_t)
         if wants('electrical_storage_electricity_consumption'):
-            observations['electrical_storage_electricity_consumption'] = building.electrical_storage_electricity_consumption[endogenous_t]
+            observations['electrical_storage_electricity_consumption'] = building.storage_electricity_consumption_at('electrical', endogenous_t)
         if wants('deferrable_appliance_electricity_consumption'):
             observations['deferrable_appliance_electricity_consumption'] = building.deferrable_appliances_electricity_consumption[endogenous_t]
         if wants('washing_machine_electricity_consumption'):
@@ -420,6 +423,15 @@ class BuildingOpsService:
             observations['occupant_count'] = building.energy_simulation.occupant_count[t]
         if wants('power_outage'):
             observations['power_outage'] = building._Building__power_outage_signal[t]
+        if wants('power_outage_unserved_energy'):
+            # Agent observations read the last settled step; nothing has been served yet at the first step.
+            settled = include_all or endogenous_t < t
+            observations['power_outage_unserved_energy'] = unserved_energy(building, endogenous_t) if settled else 0.0
+        if getattr(building, '_expose_available_grid_power', False) and wants(grid_availability.OBSERVATION_NAME):
+            # The terminal observation may follow the last row; it reports the last limit.
+            last = len(building._available_grid_power.values) - 1
+            observations[grid_availability.OBSERVATION_NAME] = grid_availability.import_limit_kw(
+                building, min(max(int(t), 0), max(last, 0)))
         if wants('electric_vehicles_chargers_dict'):
             observations['electric_vehicles_chargers_dict'] = electric_vehicle_chargers_dict
         if wants('deferrable_appliances_dict'):
@@ -617,6 +629,9 @@ class BuildingOpsService:
                 priority_list[device_ix] = storage
 
         limit_control_actions = bool(building.power_outage)
+        if limit_control_actions and building.outage_vehicle_to_building:
+            priority_list = self._vehicle_to_building_order(priority_list, actions)
+
         for key in priority_list:
             func, args = actions[key]
             if args and (limit_control_actions or key.startswith('deferrable_appliance_') or key.startswith('escalator_')):
@@ -683,12 +698,15 @@ class BuildingOpsService:
         return cache
 
     def _safe_scalar(self, value, default: float = 0.0) -> float:
+        if type(value) is float:
+            return value if isfinite(value) else float(default)
+
         try:
             scalar = float(value)
         except (TypeError, ValueError):
             return float(default)
 
-        if not np.isfinite(scalar):
+        if not isfinite(scalar):
             return float(default)
 
         return scalar
@@ -749,18 +767,30 @@ class BuildingOpsService:
         if 0 <= t < len(values):
             values[t] = self._safe_scalar(value, 0.0)
 
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def _clip_reason_names(prefix: str) -> Tuple[str, ...]:
+        return tuple(
+            f'{prefix}clip_reason_{reason}'
+            for reason in (
+                'availability',
+                'power_limit',
+                'soc_limit',
+                'building_headroom',
+                'phase_headroom',
+                'export_headroom',
+                'outage',
+                'deferrable_window',
+            )
+        )
+
     def _clear_feedback_reasons(self, owner, prefix: str = 'action_feedback_'):
-        for reason in (
-            'availability',
-            'power_limit',
-            'soc_limit',
-            'building_headroom',
-            'phase_headroom',
-            'export_headroom',
-            'outage',
-            'deferrable_window',
-        ):
-            self._set_feedback_value(owner, f'{prefix}clip_reason_{reason}', 0.0)
+        t = int(self.building.time_step)
+
+        for name in self._clip_reason_names(prefix):
+            values = self._ensure_feedback_array(owner, name)
+            if 0 <= t < len(values):
+                values[t] = False
 
     def _set_feedback_reason(self, owner, reason: str, prefix: str = 'action_feedback_'):
         self._set_feedback_value(owner, f'{prefix}clip_reason_{reason}', 1.0)
@@ -917,6 +947,13 @@ class BuildingOpsService:
 
         if action_key.startswith('electric_vehicle_storage_'):
             charger = getattr(func, '__self__', None)
+            if charger is not None and action < 0.0 and building.outage_vehicle_to_building \
+                    and charger.connected_electric_vehicle is not None:
+                # Vehicle-to-building backup supplies only the islanded load that local supply leaves uncovered.
+                requested_power_kw = min(self._charger_requested_power_kw(charger, action), 0.0)
+                target_power_kw = max(requested_power_kw, -self._outage_unserved_load_kw())
+                return (self._charger_action_from_power_kw(charger, target_power_kw),)
+
             if charger is None or action <= 0.0:
                 return (0.0,)
 
@@ -926,6 +963,62 @@ class BuildingOpsService:
             target_power_kw = min(requested_power_kw, available_power_kw)
             return (self._charger_action_from_power_kw(charger, target_power_kw),)
         return args
+
+    def _vehicle_to_building_order(self, priority_list: List[str], actions: Mapping[str, Tuple]) -> List[str]:
+        """Apply vehicle-to-building discharges after the supply they add to and before the loads they serve.
+
+        Discharging EVs follow the demand updates and the thermal and electrical storage discharges, so their limit
+        sees the thermal demand left for the devices and the battery output. They precede the devices, the
+        non-shiftable load and the other electric loads, which draw on them through `downward_electrical_flexibility`.
+        """
+
+        def discharging(key: str) -> bool:
+            return self._safe_scalar(actions[key][1][0], 0.0) < 0.0
+
+        vehicles = [key for key in priority_list if key.startswith('electric_vehicle_storage_') and discharging(key)]
+        if not vehicles:
+            return priority_list
+
+        storages = ('cooling_storage', 'heating_storage', 'dhw_storage', 'electrical_storage')
+        lead = {'cooling_demand', 'heating_demand', *(key for key in storages if key in actions and discharging(key))}
+        others = [key for key in priority_list if key not in vehicles]
+        return [key for key in others if key in lead] + vehicles + [key for key in others if key not in lead]
+
+    def _outage_unserved_load_kw(self) -> float:
+        """Islanded electric load at the current step that local supply does not cover yet, in [kW].
+
+        The load is the non-shiftable load plus, for each thermal end use, the electricity its device needs to serve
+        the demand left after its storage discharge, limited by the device's maximum output. Local supply is
+        `downward_electrical_flexibility`: PV and the battery and EV discharges already applied this step.
+        Deferrable appliances and escalators are not counted; they only run on supply that the other loads leave.
+        """
+
+        building = self.building
+        t = building.time_step
+        temperature = building.weather.outdoor_dry_bulb_temperature[t]
+        load_kwh = self._dataset_energy_to_control_step(max(self._safe_index(building.non_shiftable_load, t, 0.0), 0.0))
+
+        for end_use in ('cooling', 'heating', 'dhw'):
+            device = getattr(building, f'{end_use}_device')
+            storage = getattr(building, f'{end_use}_storage')
+            # Demand is dataset-resolution kWh; storage balances are control-step kWh.
+            demand_kwh = self._dataset_energy_to_control_step(self._safe_index(getattr(building, f'{end_use}_demand'), t, 0.0))
+            output_kwh = max(demand_kwh - max(-self._safe_index(storage.energy_balance, t, 0.0), 0.0), 0.0)
+            if output_kwh <= 0.0:
+                continue
+
+            heating = end_use != 'cooling'
+            heat_pump = isinstance(device, HeatPump)
+            max_output_kw = device.get_max_output_power(temperature, heating=heating) if heat_pump else device.get_max_output_power()
+            output_kwh = min(output_kwh, power_kw_to_energy_kwh(self._safe_scalar(max_output_kw, 0.0), building.seconds_per_time_step))
+            electricity_kwh = (
+                device.get_input_power(output_kwh, temperature, heating=heating) if heat_pump
+                else device.get_input_power(output_kwh)
+            )
+            load_kwh += max(self._safe_scalar(electricity_kwh, 0.0), 0.0)
+
+        supply_kwh = max(self._safe_scalar(building.downward_electrical_flexibility, 0.0), 0.0)
+        return self._control_step_energy_to_power_kw(max(load_kwh - supply_kwh, 0.0))
 
     def _current_phase_names(self):
         building = self.building
@@ -1069,12 +1162,13 @@ class BuildingOpsService:
         base_total_kw = cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw
         return float(base_total_kw), {phase: value for phase, value in self._split_unassigned_power(base_total_kw).items() if phase in phase_names}
 
-    def _electrical_service_allows(self, total_kw: float, phase_kw: Mapping[str, float]) -> bool:
+    def _electrical_service_allows(self, total_kw: float, phase_kw: Mapping[str, float], step: int = None) -> bool:
         building = self.building
         if not getattr(building, '_electrical_service_enabled', False):
             return True
 
-        total_limits = building._electrical_service_limits.get('total', {})
+        total_limits = grid_availability.total_limits_at(
+            building, building._electrical_service_limits.get('total', {}), step)
         import_limit = self._safe_scalar(total_limits.get('import_kw'), np.nan)
         export_limit = self._safe_scalar(total_limits.get('export_kw'), np.nan)
         tolerance = 1.0e-6
@@ -1122,7 +1216,7 @@ class BuildingOpsService:
 
             if self._power_outage_at_step(step) and total_kw > 1.0e-9:
                 return False
-            if not self._electrical_service_allows(total_kw, phase_kw):
+            if not self._electrical_service_allows(total_kw, phase_kw, step):
                 return False
 
         return True
@@ -1456,7 +1550,9 @@ class BuildingOpsService:
                 'request_phase_kw': request_phase_kw,
             }
 
-        total_limits = building._electrical_service_limits.get('total', {})
+        # A time-varying available grid power series lowers the total import limit at this step.
+        total_limits = grid_availability.total_limits_at(
+            building, building._electrical_service_limits.get('total', {}), getattr(building, 'time_step', None))
         per_phase_limits = building._electrical_service_limits.get('per_phase', {})
         allocation = allocate_electrical_service(
             base_total_kw, base_phase_kw, controls, total_limits, per_phase_limits, phase_names,

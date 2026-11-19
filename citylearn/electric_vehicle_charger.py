@@ -512,7 +512,7 @@ class Charger(Environment):
             }
         else:
             ev_data = {
-                "EV SOC": "-1.00",
+                "EV SOC-%": "-1.00",
                 "EV Charger State": "-1.00",
                 "EV Required SOC Departure-%": "-1.00",
                 "EV Estimated SOC Arrival-%": "-1.00",

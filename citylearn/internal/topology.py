@@ -393,17 +393,11 @@ class CityLearnTopologyService:
 
         return instances
 
-    @staticmethod
-    def _history_lookup(history: Mapping[int, Any], time_step: int, default: Any):
-        if time_step in history:
-            return deepcopy(history[time_step])
-
-        valid = (k for k in history.keys() if k <= time_step)
-        latest = max(valid, default=None)
-        if latest is None:
-            return deepcopy(default)
-
-        return deepcopy(history[latest])
+    @classmethod
+    def _history_lookup(cls, history: Mapping[int, Any], time_step: int, default: Any):
+        value = cls._history_lookup_reference(history, time_step, default)
+        # Histories hold lists of ID strings and integers: copying a list is a deep copy.
+        return list(value) if isinstance(value, list) else value
 
     @staticmethod
     def _history_lookup_reference(history: Mapping[int, Any], time_step: int, default: Any):

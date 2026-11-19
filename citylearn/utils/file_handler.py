@@ -1,8 +1,32 @@
 import pickle
 from pathlib import Path
 from typing import Any
+import numpy as np
 import simplejson as json
 import yaml
+
+
+def json_default(value: Any) -> Any:
+    """Return a JSON-serializable stand-in for `value`; the `default` of `FileHandler.write_json`.
+
+    simplejson calls it only for objects it cannot write itself. NumPy booleans,
+    integers and floats become the equal Python value, so they are written as JSON
+    booleans and numbers (``np.float32(0.1)`` is written as ``0.10000000149011612``,
+    its exact value). NumPy arrays of booleans and numbers become nested lists. With
+    ``ignore_nan=True``, NaN and infinite values in them are written as ``null``.
+    Anything else, including NumPy scalars without an equal Python value such as
+    ``np.longdouble`` on some platforms, is written as ``str(value)``.
+    """
+
+    if isinstance(value, (np.bool_, np.integer, np.floating)):
+        item = value.item()
+        if not isinstance(item, np.generic):
+            return item
+    elif isinstance(value, np.ndarray) and value.dtype.kind in 'biuf':
+        return value.tolist()
+
+    return str(value)
+
 
 class FileHandler:
     @staticmethod
@@ -63,7 +87,10 @@ class FileHandler:
         filepath : str
             pathname of JSON document.
         dictionary: dict
-            dictionary to convert to JSON.
+            dictionary to convert to JSON. NumPy booleans, numbers and numeric arrays are
+            written as JSON values (see `json_default`); with the default ``ignore_nan=True``,
+            NaN and infinity are written as ``null``. namedtuples are written as objects and
+            `Decimal` values as numbers.
 
         Other Parameters
         ----------------
@@ -71,9 +98,9 @@ class FileHandler:
             Other infrequently used keyword arguments to be parsed to `simplejson.dump`.
         """
 
-        kwargs = {'ignore_nan': True, 'sort_keys': False, 'default': str, 'indent': 2, **kwargs}
+        kwargs = {'ignore_nan': True, 'sort_keys': False, 'default': json_default, 'indent': 2, **kwargs}
 
-        with open(filepath,'w') as f:
+        with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(dictionary, f, **kwargs)
 
     @staticmethod
@@ -91,7 +118,7 @@ class FileHandler:
             YAML document converted to dictionary.
         """
 
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8-sig') as f:
             data = yaml.safe_load(f)
 
         return data
@@ -115,7 +142,7 @@ class FileHandler:
 
         kwargs = {'sort_keys': False, 'indent': 2, **kwargs}
 
-        with open(filepath, 'w') as f:
+        with open(filepath, 'w', encoding='utf-8') as f:
             yaml.safe_dump(dictionary, f, **kwargs)
 
     @staticmethod

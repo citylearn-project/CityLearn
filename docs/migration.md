@@ -48,6 +48,90 @@ development-line history.
 
 ## Unreleased
 
+### Baselines under the flat interface with robustness observation events
+
+`BusinessAsUsualAgent`, `RBCBasicPolicy`, `RBCSmartPolicy` and
+`RBCCommunityPolicy` run as controllers under the flat interface now read the
+corrupted observations, as they already did under the entity interface
+([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Their
+actions and the controller KPIs of such runs can change. The native BAU
+reference of `evaluate_v2()`, runs without observation events and runs under
+the entity interface are unchanged.
+
+### Robustness noise stays within physical ranges
+
+Runs with `noise_std = 0`, which includes every bundled dataset, are unchanged.
+With `noise_std > 0`, noisy solar generation and solar irradiance (and their
+forecasts) are no longer negative and stay zero at night, outdoor relative
+humidity stays within [0, 100] % and carbon intensity is no longer negative.
+The noise draws are the same, so all other values, and the series of other
+buildings and seeds, are unchanged. Runs whose solar or carbon series became
+negative under noise change; agents trained on such series may need retraining.
+See the [data unit contract](data_unit_contract.md#robustness-noise).
+### Python 3.10 or newer
+
+CityLearn requires Python 3.10 or newer. Environments on Python 3.9 keep
+resolving CityLearn 3.5.0; upgrade the interpreter to use later releases.
+### Vehicle-to-building backup during outages
+
+New and off by default: `power_outage.vehicle_to_building` in a building schema
+(`Building.outage_vehicle_to_building`). Without it nothing changes: an EV
+cannot discharge while the grid is down. With it, a negative EV action during an
+outage discharges the vehicle into the building, up to the islanded load that PV
+and the battery do not cover. Results change only for buildings that enable the
+option and request EV discharge during an outage.
+
+### JSON files with NumPy values
+
+No dataset, schema or simulation migration is required. Simulated trajectories,
+KPIs and export manifests are unchanged.
+
+- **JSON files with NumPy values.** `FileHandler.write_json` (in `citylearn.utilities`
+  and `citylearn.utils.file_handler`) writes NumPy booleans, integers and floats as
+  JSON booleans and numbers, and NumPy arrays of booleans and numbers as lists. They
+  used to be written as text: `np.float32(2.5)` as `"2.5"`, `np.bool_(True)` as
+  `"True"` and `np.array([1.0, np.nan])` as `"[ 1. nan]"`; they are now `2.5`,
+  `true` and `[1.0, null]`. A `np.float32` is written with its exact value, so
+  `np.float32(0.1)` becomes `0.10000000149011612`. Code that parsed these strings
+  must read numbers instead. With `ignore_nan=False`, a NaN or infinite NumPy float
+  now raises `ValueError`, as a Python float already did; it used to be written as
+  `"nan"`. namedtuples (written as objects), `Decimal` values (written as numbers
+  with their exact text) and all other values are written as before.
+
+### BAU export, charger exports, CLI and file encoding
+
+No dataset or schema migration is required. Simulated trajectories and KPIs are
+unchanged.
+
+- **BAU time-series export.** `exported_data_business_as_usual_ep<N>.csv` holds one
+  row per building and one district row for each executed time step, as the
+  control exports do. It used to add the terminal time step, whose values repeated
+  the last executed step, so totals summed from the file counted that step twice.
+- **Charger exports.** A charger without a connected or incoming EV writes `-1.00`
+  under `EV SOC-%`, the column used when an EV is present. Charger export files no
+  longer have a separate `EV SOC` column.
+- **Schema agent attributes.** `CityLearnEnv.load_agent()` called without `agent`
+  builds the schema's agent from `schema['agent']['attributes']` updated by the
+  keyword arguments. Any keyword argument, such as the `env=` that `Simulator`
+  always passes, used to discard the schema attributes, so
+  `Simulator(..., agent_name=None)` built the schema's agent with its default
+  parameters. Such runs now use the schema's parameters; pass keyword arguments to
+  override them. `"attributes": null` is read as no attributes. An explicitly named
+  agent, including the CLI default `BusinessAsUsualAgent`, still takes only the
+  keyword arguments.
+- **CLI.** `citylearn simulate ... evaluate` and `train --evaluate` complete and
+  write the evaluation JSON, also with `-te`; `train --evaluate` evaluates the
+  trained agent instead of a new one. Evaluation time series hold one row per
+  executed time step, and a variable that a building does not have is reported as
+  empty instead of repeating the previous variable. The CLI runs on Python 3.9 and
+  3.10.
+- **Windows.** `run_work_order(..., virtual_environment_path=...)` activates the
+  environment with `Scripts\activate.bat` on Windows, detected automatically when
+  `windows_system` is not given. JSON and YAML files are read and written as UTF-8
+  instead of the locale's code page.
+
+### Agents and wrappers
+
 No dataset, schema or export-file migration is required. Environment trajectories
 and KPIs for a given action sequence are unchanged; the results of the agents and
 wrappers below change.

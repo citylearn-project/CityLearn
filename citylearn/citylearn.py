@@ -15,7 +15,7 @@ import random
 from citylearn.base import Environment, EpisodeTracker
 from citylearn.building import Building, DynamicsBuilding
 from citylearn.cost_function import CostFunction
-from citylearn.data import CarbonIntensity, DataSet, OfflineDataError, ChargerSimulation, EnergySimulation, LogisticRegressionOccupantParameters, Pricing, Weather
+from citylearn.data import _parse_env_bool, CarbonIntensity, DataSet, OfflineDataError, ChargerSimulation, EnergySimulation, LogisticRegressionOccupantParameters, Pricing, Weather
 from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.energy_model import Battery, DeferrableAppliance, PV
 from citylearn.exporter import EpisodeExporter
@@ -124,9 +124,10 @@ class CityLearnEnv(Environment, Env):
         each building independently in a :code:`List[bool]`. Will override :code:`pv` defined in the :code:`schema`.
     random_seed: int, optional
         Pseudorandom number generator seed for repeatable results.
-    offline: bool, default: False
+    offline: bool, optional
         If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
-        error when required files are not available locally.
+        error when required files are not available locally. Defaults to the ``CITYLEARN_OFFLINE`` environment
+        variable, read at initialization, or False when it is unset.
 
     Other Parameters
     ----------------
@@ -1220,7 +1221,7 @@ class CityLearnEnv(Environment, Env):
 
     @offline.setter
     def offline(self, value: bool):
-        self.__offline = False if value is None else bool(parse_bool(value, default=False, path='offline'))
+        self.__offline = _parse_env_bool('CITYLEARN_OFFLINE') if value is None else bool(parse_bool(value, default=False, path='offline'))
 
     @render_enabled.setter
     def render_enabled(self, enabled: bool):
@@ -1778,8 +1779,9 @@ class CityLearnEnv(Environment, Env):
             If a value is not provided, defaults to the agent defined in the schema:agent:type.
 
         **kwargs : dict
-            Agent initialization attributes. For most agents e.g. CityLearn and Stable-Baselines3 agents, 
+            Agent initialization attributes. For most agents e.g. CityLearn and Stable-Baselines3 agents,
             an intialized :py:attr:`env` must be parsed to the agent :py:meth:`init` function.
+            When `agent` is not provided, these update the schema:agent:attributes instead of replacing them.
         
         Returns
         -------
@@ -1802,14 +1804,12 @@ class CityLearnEnv(Environment, Env):
         else:
             agent_type = self.schema['agent']['type']
 
-        if kwargs is not None and len(kwargs) > 0:
-            agent_attributes = dict(kwargs)
-
-        elif agent is None:
-            agent_attributes = dict(self.schema['agent'].get('attributes', {}))
+        if agent is None:
+            # The schema's agent keeps its schema attributes when keyword arguments, e.g. a wrapped `env`, are passed.
+            agent_attributes = {**(self.schema['agent'].get('attributes') or {}), **kwargs}
 
         else:
-            agent_attributes = {}
+            agent_attributes = dict(kwargs)
 
         if 'env' not in agent_attributes:
             agent_attributes['env'] = self
