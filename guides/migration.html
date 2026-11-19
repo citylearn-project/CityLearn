@@ -67,6 +67,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#vehicle-to-building-backup-during-outages">Vehicle-to-building backup during outages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#json-files-with-numpy-values">JSON files with NumPy values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bau-export-charger-exports-cli-and-file-encoding">BAU export, charger exports, CLI and file encoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#agents-and-wrappers">Agents and wrappers</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-4-0-to-3-5-0">Upgrade from 3.4.0 to 3.5.0</a></li>
@@ -279,6 +280,41 @@ empty instead of repeating the previous variable. The CLI runs on Python 3.9 and
 environment with <code class="docutils literal notranslate"><span class="pre">Scripts\activate.bat</span></code> on Windows, detected automatically when
 <code class="docutils literal notranslate"><span class="pre">windows_system</span></code> is not given. JSON and YAML files are read and written as UTF-8
 instead of the locale’s code page.</p></li>
+</ul>
+</section>
+<section id="agents-and-wrappers">
+<h3>Agents and wrappers<a class="headerlink" href="#agents-and-wrappers" title="Link to this heading"></a></h3>
+<p>No dataset, schema or export-file migration is required. Environment trajectories
+and KPIs for a given action sequence are unchanged; the results of the agents and
+wrappers below change.</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">TabularQLearning</span></code>.</strong> A transition with <code class="docutils literal notranslate"><span class="pre">terminated=True</span></code> no longer bootstraps
+from the next state’s Q-values, as for <code class="docutils literal notranslate"><span class="pre">SAC</span></code>; truncated transitions still do.
+Q-tables and the actions learned from them change.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code>.</strong> Exploration now uses the RBC passed as <code class="docutils literal notranslate"><span class="pre">rbc</span></code>. It used to discard
+the RBC’s actions and explore with random actions while still advancing the RBC,
+so its exploration and everything learned from it change.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> with <code class="docutils literal notranslate"><span class="pre">pca_compression</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>.</strong> The networks read the PCA output
+(<code class="docutils literal notranslate"><span class="pre">int(pca_compression*(observations</span> <span class="pre">+</span> <span class="pre">coordination</span> <span class="pre">variables))</span></code> features). These
+runs used to fail at the first network update; <code class="docutils literal notranslate"><span class="pre">pca_compression=1</span></code> (the default)
+is unchanged.</p></li>
+<li><p><strong>Discrete and tabular wrappers.</strong> <code class="docutils literal notranslate"><span class="pre">DiscreteObservationWrapper</span></code> puts values above
+the observation space’s upper bound into the top bin; they used to get an index
+one past the <code class="docutils literal notranslate"><span class="pre">MultiDiscrete</span></code> space. <code class="docutils literal notranslate"><span class="pre">TabularQLearningObservationWrapper</span></code> numbers
+the <code class="docutils literal notranslate"><span class="pre">prod(bins)</span></code> states of its <code class="docutils literal notranslate"><span class="pre">Discrete</span></code> space with <code class="docutils literal notranslate"><span class="pre">itertools.product</span></code> over the
+bins; it used to enumerate one extra value per observation, declare
+<code class="docutils literal notranslate"><span class="pre">prod(bins</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">-</span> <span class="pre">1</span></code> states and give the last state an index outside the space.
+Saved Q-tables are therefore indexed differently and have a different size;
+retrain them. Episodes whose observations stay within the observation space
+otherwise learn the same Q-values.</p></li>
+<li><p><strong>Wrapped spaces.</strong> <code class="docutils literal notranslate"><span class="pre">DiscreteObservationWrapper</span></code> bins the observations and
+bounds of the env it wraps, so over <code class="docutils literal notranslate"><span class="pre">NormalizedObservationWrapper</span></code> it bins the
+normalized features, including the cos and sin of periodic observations.
+<code class="docutils literal notranslate"><span class="pre">DiscreteActionWrapper</span></code> bins the action space of the env it wraps.
+<code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code> returns new lists instead of clipping the
+environment’s cached observation lists in place.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">OnehotEncoding</span></code>.</strong> A value that is not one of the classes raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>
+naming the value, instead of <code class="docutils literal notranslate"><span class="pre">IndexError</span></code>.</p></li>
 </ul>
 </section>
 </section>

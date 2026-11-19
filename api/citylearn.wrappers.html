@@ -173,7 +173,9 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.wrappers.ClippedObservationWrapper.observation">
 <span class="sig-name descname"><span class="pre">observation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/wrappers.html#ClippedObservationWrapper.observation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.ClippedObservationWrapper.observation" title="Link to this definition"></a></dt>
-<dd><p>Returns normalized observations.</p>
+<dd><p>Returns clipped observations.</p>
+<p>Returns new lists: the environment caches the observation lists it returns, so clipping them in place
+would change what <cite>env.observations</cite> returns for the rest of the time step.</p>
 </dd></dl>
 
 </dd></dl>

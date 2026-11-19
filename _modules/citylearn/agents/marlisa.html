@@ -160,12 +160,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__pending_transitions</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__start_regression_time_step</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">information_sharing</span> <span class="o">=</span> <span class="n">information_sharing</span>
+        <span class="c1"># SAC.__init__ builds the networks, whose input size depends on pca_compression.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pca_compression</span> <span class="o">=</span> <span class="n">pca_compression</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">regression_buffer_capacity</span> <span class="o">=</span> <span class="n">regression_buffer_capacity</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start_regression_time_step</span> <span class="o">=</span> <span class="n">start_regression_time_step</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pca_compression</span> <span class="o">=</span> <span class="n">pca_compression</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span> <span class="o">=</span> <span class="n">iterations</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">regression_frequency</span> <span class="o">=</span> <span class="n">regression_frequency</span>
 
@@ -577,14 +578,21 @@
         <span class="k">return</span> <span class="n">e</span><span class="o">*</span><span class="n">o</span></div>
 
 
+<div class="viewcode-block" id="MARLISA.get_pca_component_count">
+<a class="viewcode-back" href="../../../api/citylearn.agents.marlisa.html#citylearn.agents.marlisa.MARLISA.get_pca_component_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_pca_component_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Number of PCA components, i.e. the observation size the networks of building `index` read."""</span>
+
+        <span class="n">addition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__COORDINATION_VARIABLE_COUNT</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">information_sharing</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">pca_compression</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">addition</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_dimension</span><span class="p">[</span><span class="n">index</span><span class="p">]))</span></div>
+
+
 <div class="viewcode-block" id="MARLISA.set_pca">
 <a class="viewcode-back" href="../../../api/citylearn.agents.marlisa.html#citylearn.agents.marlisa.MARLISA.set_pca">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_pca</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">addition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__COORDINATION_VARIABLE_COUNT</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">information_sharing</span> <span class="k">else</span> <span class="mi">0</span>
-        
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="p">):</span>
-            <span class="n">n_components</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">pca_compression</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">addition</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_encoded_observations</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">low</span><span class="p">))))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pca</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_seed</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span></div>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pca</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_pca_component_count</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_seed</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="MARLISA.set_energy_coefficients">
@@ -654,8 +662,10 @@
 <div class="viewcode-block" id="MARLISA.set_networks">
 <a class="viewcode-back" href="../../../api/citylearn.agents.marlisa.html#citylearn.agents.marlisa.MARLISA.set_networks">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_networks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">internal_observation_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__COORDINATION_VARIABLE_COUNT</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">information_sharing</span> <span class="k">else</span> <span class="mi">0</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_networks</span><span class="p">(</span><span class="n">internal_observation_count</span><span class="o">=</span><span class="n">internal_observation_count</span><span class="p">)</span></div>
+        <span class="c1"># The networks read the PCA-compressed observations and coordination variables.</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_networks</span><span class="p">(</span>
+            <span class="n">observation_dimensions</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_pca_component_count</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_dimension</span><span class="p">))]</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MARLISA.set_training_schedule">
@@ -745,16 +755,8 @@
 <span class="sd">    """</span>
     
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">rbc</span><span class="p">:</span> <span class="n">RBC</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">rbc</span><span class="o">=</span><span class="n">rbc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-<div class="viewcode-block" id="MARLISARBC.get_exploration_prediction_without_information_sharing">
-<a class="viewcode-back" href="../../../api/citylearn.agents.marlisa.html#citylearn.agents.marlisa.MARLISARBC.get_exploration_prediction_without_information_sharing">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_exploration_prediction_without_information_sharing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]:</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">coordination_variables</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_exploration_prediction_without_information_sharing</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
-        <span class="n">actions</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">SACRBC</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">get_exploration_prediction</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">actions</span><span class="p">,</span> <span class="n">coordination_variables</span></div>
-</div>
+        <span class="c1"># MARLISA's exploration calls get_exploration_prediction, which resolves to SACRBC's in this MRO.</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">rbc</span><span class="o">=</span><span class="n">rbc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 </pre></div>
 
