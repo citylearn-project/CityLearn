@@ -1528,6 +1528,10 @@ class CityLearnEnv(Environment, Env):
         """Return executed appliance service, including partial and excluded requests."""
         return self._kpi_service.deferrable_service_audit()
 
+    def get_outage_resilience_audit(self) -> Mapping[str, Any]:
+        """Return per-outage-event, per-building and district service resilience metrics."""
+        return self._kpi_service.outage_resilience_audit()
+
     def get_robustness_audit(self):
         """Return versioned fault coverage, telemetry and completed-interval counters."""
         return self._robustness_service.audit_summary()
@@ -1778,6 +1782,10 @@ class CityLearnEnv(Environment, Env):
         """Return observed populations, thermal service and equity audit evidence."""
         return self._kpi_service.family_audit(comfort_band=comfort_band,
             control_condition=control_condition, baseline_condition=baseline_condition)
+
+    def evaluate_outage_events(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Return `(events_df, summary_df)` per-outage-event resilience tables for static topology."""
+        return self._kpi_service.evaluate_outage_events()
 
     def run_business_as_usual_baseline(self, force: bool = False):
         """Run or return the cached native business-as-usual baseline."""

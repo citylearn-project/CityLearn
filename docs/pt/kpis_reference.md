@@ -251,6 +251,21 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 
 Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo passa a ser indefinida; antes dava uma penalizacao infinita ou negativa, que a safe division reportava como um 0 perfeito.
 
+## Auditoria de Resiliencia por Evento de Outage
+
+Para inspecionar interrupcoes da rede evento a evento em cenarios de topologia estatica sem alterar `evaluate_v2()`, usar `env.evaluate_outage_events()` (devolve `(events_df, summary_df)`) ou `env.get_outage_resilience_audit()` (devolve um dicionario pronto para JSON incluindo `coincident_events` comunitarios).
+
+Um evento de corte e uma sequencia maxima de timesteps executados consecutivos em que `building.simulate_power_outage` esta ativo e `building.power_outage_signal > 0`. A energia de servico esperada, servida e nao servida vem de `citylearn/internal/service_energy.py` (usos finais `cooling`, `heating`, `dhw` e `non_shiftable`, limitados individualmente para que excessos num uso final nunca compensem falhas noutro), coincidindo com o numerador e denominador de `..._resilience_unserved_energy_outage_normalized_ratio`.
+
+| Campo | Nivel | Unidade | O que mede |
+|---|---|---:|---|
+| `start_time_step`, `end_time_step` | evento | step | Limites inclusivos (base 0 no episodio) da interrupcao. |
+| `duration_steps`, `duration_hours` | evento | count / hours | Duracao em steps e em horas (`duration_steps * seconds_per_time_step / 3600`). |
+| `expected_energy_kwh`, `served_energy_kwh`, `unserved_energy_kwh` | evento, building, district | kWh | Energia esperada, servida e nao servida durante cortes, mais divisao `<end_use>_*_energy_kwh`. |
+| `peak_unserved_power_kw` | evento, building, district | kW | Maior potencia nao servida num unico step (`max_step_unserved_kwh * 3600 / seconds_per_time_step`); no distrito, coincidente entre edificios simultaneamente em corte. |
+| `fully_served` / `fully_served_events_ratio` | evento / resumo | bool / ratio | Eventos sem energia por servir (`<= 1e-9` kWh) e respetiva fracao (`None` quando `events_count == 0`). |
+| `events_count`, `outage_hours`, `worst_event_unserved_energy_kwh` | building, district | count / hours / kWh | Contagem de eventos, horas em corte e pior energia nao servida num evento. |
+
 ## Export
 
 | Modo | Como obter |
