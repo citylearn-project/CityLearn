@@ -26,6 +26,17 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   por isso os valores dentro do intervalo são idênticos bit a bit.
 - As simulações com `noise_std = 0`, incluindo todos os datasets incluídos, não
   mudam. Ver o [guia de migração](../migration.md#unreleased).
+- **Reward para a carga não servida durante falhas de energia.** Durante uma
+  falha de energia o edifício não pode importar, por isso o consumo líquido é
+  zero e as rewards baseadas na importação da rede não penalizam a carga que o
+  PV e o armazenamento deixam por servir. `OutageUnservedEnergyReward(coefficient,
+  base_reward)` subtrai `coefficient` vezes essa energia não servida a uma reward
+  base, e a nova observação flat `power_outage_unserved_energy` (kWh por
+  timestep, último timestep liquidado) dá-a por edifício com a definição do KPI
+  `power_outage_normalized_unserved_energy_total`
+  ([#188](https://github.com/citylearn-project/CityLearn/issues/188)). A reward
+  funciona nas duas interfaces; a observação existe apenas na interface flat.
+  Ambas são opcionais, pelo que os schemas e resultados existentes não mudam.
 - **Datasets Parquet de 15 s carregam a partir da cache.** Os schemas de
   `citylearn_three_phase_electrical_service_demo_15s_parquet`,
   `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` e

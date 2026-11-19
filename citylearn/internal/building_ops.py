@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Set, 
 
 import numpy as np
 from citylearn.internal.scalars import clip_scalar, numpy1_scalar
+from citylearn.internal.service_energy import unserved_energy
 
 from citylearn.energy_model import HeatPump
 from citylearn.preprocessing import Normalize, PeriodicNormalization
@@ -421,6 +422,10 @@ class BuildingOpsService:
             observations['occupant_count'] = building.energy_simulation.occupant_count[t]
         if wants('power_outage'):
             observations['power_outage'] = building._Building__power_outage_signal[t]
+        if wants('power_outage_unserved_energy'):
+            # Agent observations read the last settled step; nothing has been served yet at the first step.
+            settled = include_all or endogenous_t < t
+            observations['power_outage_unserved_energy'] = unserved_energy(building, endogenous_t) if settled else 0.0
         if wants('electric_vehicles_chargers_dict'):
             observations['electric_vehicles_chargers_dict'] = electric_vehicle_chargers_dict
         if wants('deferrable_appliances_dict'):

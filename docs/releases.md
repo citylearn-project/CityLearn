@@ -10,6 +10,10 @@ For package publication, version policy and the release checklist, see the
 
 ## Unreleased
 
+### Added
+
+- **Reward for load left unserved during power outages.** During an outage a building cannot import, so its net consumption is zero and rewards built on grid import give no signal about the load that PV and storage leave unserved. `OutageUnservedEnergyReward(coefficient, base_reward)` subtracts `coefficient` times that unserved energy from a base reward, and the new flat observation `power_outage_unserved_energy` (kWh per step, last settled step) gives it per building with the definition of the `power_outage_normalized_unserved_energy_total` KPI ([#188](https://github.com/citylearn-project/CityLearn/issues/188)). The reward works under both interfaces; the observation is flat only. Both are opt-in, so existing schemas and results are unchanged.
+
 ### Changed
 
 - **Baselines read corrupted observations under the flat interface.** Under the flat interface the env corrupts only the flat vectors, and the baselines, which read entity observations, decided from uncorrupted values; under the entity interface they read the corrupted ones ([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Run as controllers (`predict(observations)`), they now get the step's robustness observation events applied to their entity observations as the entity interface applies them, and take the same actions under both interfaces. No random stream is consumed, and the env's flat observations and robustness history are unchanged; the controller KPIs of flat runs with observation events can change. The native BAU reference of `evaluate_v2()` (`predict([])`) stays uncorrupted. See the [migration guide](migration.md#unreleased).
