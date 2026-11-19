@@ -1419,6 +1419,10 @@ class CityLearnEntityInterfaceService:
         outage = bool(getattr(building, "power_outage", False))
         available_charge_power = 0.0 if outage else max(min(charge_candidates), 0.0)
         available_discharge_power = 0.0 if outage else max(min(discharge_candidates), 0.0)
+        if outage:
+            # The battery can discharge into the islanded building, where the grid export headroom does not
+            # apply. The simulator further limits the discharge to the building's local load.
+            available_discharge_power = max(min(max(max_discharge_power, 0.0), discharge_power_by_soc), 0.0)
         usable_denominator = max(1.0 - soc_min, 1.0e-6)
 
         return {
