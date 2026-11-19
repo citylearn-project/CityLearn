@@ -101,11 +101,15 @@ class OnehotEncoding(Encoder):
 
     def __mul__(self, x: Union[float, int, str]):
         identity_mat = np.eye(len(self.classes))
-        return identity_mat[np.array(self.classes) == x][0]
+        encoding = identity_mat[np.array(self.classes) == x]
+
+        if len(encoding) == 0:
+            raise ValueError(f'{x!r} is not one of the OnehotEncoding classes {list(self.classes)}.')
+
+        return encoding[0]
 
     def __rmul__(self, x: Union[float, int, str]):
-        identity_mat = np.eye(len(self.classes))
-        return identity_mat[np.array(self.classes) == x][0]
+        return self.__mul__(x)
     
 class Normalize(Encoder):
     r"""Use to transform observations to a value between `x_min` and `x_max` using min-max normalization.
