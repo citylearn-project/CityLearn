@@ -1508,7 +1508,8 @@ class Building(Environment):
         def _collect(source) -> List[Tuple[str, np.ndarray]]:
             collected: List[Tuple[str, np.ndarray]] = []
             for key, value in vars(source).items():
-                if not isinstance(value, np.ndarray):
+                # Keys without a leading underscore are the windowed views of `_<name>`.
+                if not key.startswith('_') or not isinstance(value, np.ndarray):
                     continue
                 observation_name = key.lstrip('_')
                 try:
@@ -2374,7 +2375,7 @@ class Building(Environment):
                 k.lstrip('_'), 
                 start_time_step=self.episode_tracker.simulation_start_time_step, 
                 end_time_step=self.episode_tracker.simulation_end_time_step
-            ) for k in vars(self.energy_simulation)},
+            ) for k in vars(self.energy_simulation) if k.startswith('_')},
             'solar_generation':self._pv_generation_to_control_step(self.energy_simulation.__getattr__(
                 'solar_generation', 
                 start_time_step=self.episode_tracker.simulation_start_time_step, 
@@ -2384,17 +2385,17 @@ class Building(Environment):
                 k.lstrip('_'), 
                 start_time_step=self.episode_tracker.simulation_start_time_step, 
                 end_time_step=self.episode_tracker.simulation_end_time_step
-            ) for k in vars(self.weather)},
+            ) for k in vars(self.weather) if k.startswith('_')},
             **{k.lstrip('_'): self.carbon_intensity.__getattr__(
                 k.lstrip('_'), 
                 start_time_step=self.episode_tracker.simulation_start_time_step, 
                 end_time_step=self.episode_tracker.simulation_end_time_step
-            ) for k in vars(self.carbon_intensity)},
+            ) for k in vars(self.carbon_intensity) if k.startswith('_')},
             **{k.lstrip('_'): self.pricing.__getattr__(
                 k.lstrip('_'), 
                 start_time_step=self.episode_tracker.simulation_start_time_step, 
                 end_time_step=self.episode_tracker.simulation_end_time_step
-            ) for k in vars(self.pricing)},
+            ) for k in vars(self.pricing) if k.startswith('_')},
         }
 
         timesteps = self.episode_tracker.simulation_time_steps
@@ -3799,7 +3800,7 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
                 k.lstrip('_'), 
                 start_time_step=self.episode_tracker.simulation_start_time_step, 
                 end_time_step=self.episode_tracker.simulation_end_time_step
-            ) for k in vars(self.occupant.parameters)},
+            ) for k in vars(self.occupant.parameters) if k.startswith('_')},
         }
 
         # The set-point delta is bounded by the occupant model's largest response in either direction.
