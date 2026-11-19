@@ -135,6 +135,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
@@ -184,9 +185,21 @@
 
 
 
+<div class="viewcode-block" id="accepts_keyword">
+<a class="viewcode-back" href="../../../api/citylearn.internal.loading_components.html#citylearn.internal.loading_components.accepts_keyword">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">accepts_keyword</span><span class="p">(</span><span class="n">constructor</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Whether `name` is an explicit `__init__` parameter of `constructor` or one of its base classes."""</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">name</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span>
+        <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">constructor</span><span class="p">,</span> <span class="s1">'__mro__'</span><span class="p">,</span> <span class="p">())</span>
+        <span class="k">if</span> <span class="s1">'__init__'</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="add_model_options">
 <a class="viewcode-back" href="../../../api/citylearn.internal.loading_components.html#citylearn.internal.loading_components.add_model_options">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">add_model_options</span><span class="p">(</span><span class="n">building_kwargs</span><span class="p">,</span> <span class="n">building_name</span><span class="p">,</span> <span class="n">building_schema</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">episode_tracker</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_model_options</span><span class="p">(</span><span class="n">building_kwargs</span><span class="p">,</span> <span class="n">building_name</span><span class="p">,</span> <span class="n">building_schema</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">episode_tracker</span><span class="p">,</span> <span class="n">constructor</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">building_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dynamics'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">dynamics_type</span> <span class="o">=</span> <span class="n">building_schema</span><span class="p">[</span><span class="s1">'dynamics'</span><span class="p">][</span><span class="s1">'type'</span><span class="p">]</span>
         <span class="n">dynamics_constructor</span> <span class="o">=</span> <span class="n">component_constructor</span><span class="p">(</span><span class="n">dynamics_type</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'buildings.</span><span class="si">{</span><span class="n">building_name</span><span class="si">}</span><span class="s1">.dynamics.type'</span><span class="p">)</span>
@@ -214,7 +227,12 @@
 
         <span class="n">building_kwargs</span><span class="p">[</span><span class="s1">'occupant'</span><span class="p">]</span> <span class="o">=</span> <span class="n">occupant_constructor</span><span class="p">(</span><span class="o">**</span><span class="n">attributes</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">building_kwargs</span><span class="p">[</span><span class="s1">'occupant'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+        <span class="n">building_kwargs</span><span class="p">[</span><span class="s1">'occupant'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Only building types with an occupant set-point hold take this option; others never received it.</span>
+    <span class="n">hold_time_steps</span> <span class="o">=</span> <span class="n">building_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'set_point_hold_time_steps'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hold_time_steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">accepts_keyword</span><span class="p">(</span><span class="n">constructor</span><span class="p">,</span> <span class="s1">'set_point_hold_time_steps'</span><span class="p">):</span>
+        <span class="n">building_kwargs</span><span class="p">[</span><span class="s1">'set_point_hold_time_steps'</span><span class="p">]</span> <span class="o">=</span> <span class="n">hold_time_steps</span></div>
 
 
 

@@ -559,7 +559,9 @@ lies after activation.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.ElectricDevice.available_nominal_power">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">available_nominal_power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.ElectricDevice.available_nominal_power" title="Link to this definition"></a></dt>
-<dd><p>Difference between <cite>nominal_power</cite> and <cite>electricity_consumption</cite> at current <cite>time_step</cite>.</p>
+<dd><p>Difference between <cite>nominal_power</cite> and the average power drawn so far at current <cite>time_step</cite>, in [kW].</p>
+<p><cite>electricity_consumption</cite> is control-step energy in [kWh]; it is converted to average power over the
+control step before it is subtracted from <cite>nominal_power</cite> in [kW]. The two only coincide at 3600 s steps.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -757,6 +759,20 @@ explicit to an agent.</p>
 <dt class="sig sig-object py" id="citylearn.energy_model.Escalator.observations">
 <span class="sig-name descname"><span class="pre">observations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#Escalator.observations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.Escalator.observations" title="Link to this definition"></a></dt>
 <dd><p>Return current aggregate operating and demand observations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.energy_model.Escalator.preview_power_kw">
+<span class="sig-name descname"><span class="pre">preview_power_kw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#Escalator.preview_power_kw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.Escalator.preview_power_kw" title="Link to this definition"></a></dt>
+<dd><p>Return the power in [kW] the escalator would draw at the current step if <cite>action_value</cite> were applied.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.energy_model.Escalator.preview_state">
+<span class="sig-name descname"><span class="pre">preview_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#Escalator.preview_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.Escalator.preview_state" title="Link to this definition"></a></dt>
+<dd><p>Return the operating state that <a class="reference internal" href="#citylearn.energy_model.Escalator.set_state" title="citylearn.energy_model.Escalator.set_state"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_state()</span></code></a> would select for <cite>action_value</cite> at the current step.</p>
+<p>The state is not changed. This applies the same availability rule and minimum dwell time as
+<a class="reference internal" href="#citylearn.energy_model.Escalator.set_state" title="citylearn.energy_model.Escalator.set_state"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_state()</span></code></a>, which uses it.</p>
 </dd></dl>
 
 <dl class="py property">

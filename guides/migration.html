@@ -72,6 +72,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#agents-and-wrappers">Agents and wrappers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#data-loading-edge-cases">Data loading edge cases</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-district-kpis">Dynamic-topology district KPIs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sub-hourly-power-and-energy-units">Sub-hourly power and energy units</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#estimates-diagnostics-and-schema-options">Estimates, diagnostics and schema options</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-4-0-to-3-5-0">Upgrade from 3.4.0 to 3.5.0</a></li>
@@ -394,6 +396,61 @@ total-power and per-phase power histories of a member were erased when it rejoin
 when one of its assets was added or removed. They are now kept, so the
 <code class="docutils literal notranslate"><span class="pre">electrical_service_*</span></code> violation and requested-pressure KPIs and the phase peak and
 imbalance KPIs include the steps before the event.</p></li>
+</ul>
+</section>
+<section id="sub-hourly-power-and-energy-units">
+<h3>Sub-hourly power and energy units<a class="headerlink" href="#sub-hourly-power-and-energy-units" title="Link to this heading"></a></h3>
+<p>These fixes leave runs whose dataset and control step are both 3600 s unchanged.
+Runs with a sub-hourly <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code>, or whose dataset resolution
+differs from the control step (<code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code> other than 1), can change:</p>
+<ul class="simple">
+<li><p>Heat pumps and electric heaters no longer exceed <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> when they
+charge thermal storage at sub-hourly steps, and <code class="docutils literal notranslate"><span class="pre">available_nominal_power</span></code> is a
+power in kW at every step length.</p></li>
+<li><p>On native sub-hourly data (<code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code> 1), a device delivers at most
+<code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> x step duration per step. Previously it could deliver
+3600 / <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> times that energy. Autosized devices are not
+affected, because autosizing already converts the demand per row to power; a
+device whose <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> was set to the largest demand per row (kWh read
+as kW) is now too small.</p></li>
+<li><p>During an outage, the local supply available to devices and to the
+non-shiftable load is converted from step energy to power and to dataset
+resolution; with hourly data at a 900 s step, loads previously received a
+quarter of that supply.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cooling_demand</span></code>, <code class="docutils literal notranslate"><span class="pre">heating_demand</span></code> and <code class="docutils literal notranslate"><span class="pre">dhw_demand</span></code> observations convert the
+storage discharge to dataset resolution, the unit of the device term and of the
+observation bounds.</p></li>
+</ul>
+<p><strong>Undersized devices.</strong> A device that cannot meet the demand left after its
+storage no longer raises <code class="docutils literal notranslate"><span class="pre">AssertionError:</span> <span class="pre">demand</span> <span class="pre">is</span> <span class="pre">greater</span> <span class="pre">than</span> <span class="pre">..._device</span> <span class="pre">max</span> <span class="pre">output</span></code>. CityLearn clips the device output to its limit, as it already does
+during outages, and warns once per device and episode with a <code class="docutils literal notranslate"><span class="pre">RuntimeWarning</span></code>.
+The shortfall is unserved thermal energy: it is reported by
+<code class="docutils literal notranslate"><span class="pre">building_thermal_service_audit_unserved_service_energy_kwh</span></code> and
+<code class="docutils literal notranslate"><span class="pre">..._unserved_service_ratio</span></code> (and the district equivalents) and by
+<code class="docutils literal notranslate"><span class="pre">env.get_kpi_family_audit()</span></code>. If a dataset relabelled from hourly to sub-hourly
+rows now warns, its devices or its demand series do not match the new step:
+autosize or enlarge the devices, or rescale the demand to energy per step.</p>
+</section>
+<section id="estimates-diagnostics-and-schema-options">
+<h3>Estimates, diagnostics and schema options<a class="headerlink" href="#estimates-diagnostics-and-schema-options" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>The base-power estimate behind electrical-service headroom, deferrable start
+checks, the outage battery limit and the feasibility KPIs no longer subtracts
+thermal storage discharge twice, and it counts escalator power. A requested
+escalator state now reduces the import headroom left for EV and battery
+actions in the same step. This applies at every step length, but only to
+buildings with an electrical-service limit and thermal storage or escalators;
+no bundled dataset combines them.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clip_reason_phase_headroom</span></code> and <code class="docutils literal notranslate"><span class="pre">clip_reason_export_headroom</span></code> are set only
+for the phases that carry the asset and for the clipped direction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">observations(normalize=True,</span> <span class="pre">periodic_normalization=False)</span></code> no longer raises
+<code class="docutils literal notranslate"><span class="pre">KeyError:</span> <span class="pre">'month'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set_point_hold_time_steps</span></code> in a building schema now reaches building types
+whose constructor accepts it (<code class="docutils literal notranslate"><span class="pre">LogisticRegressionOccupantInteractionBuilding</span></code>).
+The Quebec neighbourhood datasets set it to 4: occupant set-point changes now
+revert to the schedule after 4 steps without interaction instead of holding
+for the rest of the episode, which changes their hourly results. Other
+building types ignore the key as before.</p></li>
 </ul>
 </section>
 </section>

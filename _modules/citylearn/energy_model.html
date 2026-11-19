@@ -147,7 +147,12 @@
     <span class="n">EscalatorSimulation</span><span class="p">,</span>
     <span class="n">WashingMachineSimulation</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">,</span> <span class="n">seconds_to_hours</span><span class="p">,</span> <span class="n">to_dataset_resolution_energy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.units</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">energy_kwh_to_power_kw</span><span class="p">,</span>
+    <span class="n">power_kw_to_energy_kwh</span><span class="p">,</span>
+    <span class="n">seconds_to_hours</span><span class="p">,</span>
+    <span class="n">to_dataset_resolution_energy</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.deferrable_cycles</span><span class="w"> </span><span class="kn">import</span> <span class="n">CycleIndex</span>
 <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">'ignore'</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">'ignore'</span><span class="p">)</span>
 
@@ -295,13 +300,17 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">available_nominal_power</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Difference between `nominal_power` and `electricity_consumption` at current `time_step`."""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Difference between `nominal_power` and the average power drawn so far at current `time_step`, in [kW].</span>
+
+<span class="sd">        `electricity_consumption` is control-step energy in [kWh]; it is converted to average power over the</span>
+<span class="sd">        control step before it is subtracted from `nominal_power` in [kW]. The two only coincide at 3600 s steps.</span>
+<span class="sd">        """</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nominal_power</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="n">consumption</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electricity_consumption_ratio</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nominal_power</span><span class="p">)</span> <span class="o">-</span> <span class="n">consumption</span>
+        <span class="k">return</span> <span class="n">as_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nominal_power</span><span class="p">)</span> <span class="o">-</span> <span class="n">energy_kwh_to_power_kw</span><span class="p">(</span><span class="n">consumption</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ElectricDevice.get_metadata">
@@ -2494,20 +2503,46 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_power_for_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">standby_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">slow_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">normal_power</span><span class="p">)[</span><span class="nb">int</span><span class="p">(</span><span class="n">state</span><span class="p">)]</span>
 
+<div class="viewcode-block" id="Escalator.preview_state">
+<a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.Escalator.preview_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preview_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the operating state that :py:meth:`set_state` would select for `action_value` at the current step.</span>
+
+<span class="sd">        The state is not changed. This applies the same availability rule and minimum dwell time as</span>
+<span class="sd">        :py:meth:`set_state`, which uses it.</span>
+<span class="sd">        """</span>
+
+        <span class="n">desired</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_to_state</span><span class="p">(</span><span class="n">action_value</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available</span><span class="p">()</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATE_STANDBY</span>
+        <span class="k">if</span> <span class="n">desired</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span>
+
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__state_start_time_step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">elapsed</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimum_state_steps</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available</span><span class="p">()</span> <span class="ow">and</span> <span class="n">desired</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATE_STANDBY</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">desired</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span></div>
+
+
+<div class="viewcode-block" id="Escalator.preview_power_kw">
+<a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.Escalator.preview_power_kw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preview_power_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the power in [kW] the escalator would draw at the current step if `action_value` were applied."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_for_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preview_state</span><span class="p">(</span><span class="n">action_value</span><span class="p">))</span></div>
+
+
 <div class="viewcode-block" id="Escalator.set_state">
 <a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.Escalator.set_state">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Apply the normalized action and record current-step power/service."""</span>
 
         <span class="n">requested</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_to_state</span><span class="p">(</span><span class="n">action_value</span><span class="p">)</span>
-        <span class="n">desired</span> <span class="o">=</span> <span class="n">requested</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available</span><span class="p">()</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATE_STANDBY</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preview_state</span><span class="p">(</span><span class="n">action_value</span><span class="p">)</span>
         <span class="n">changed</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">desired</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span><span class="p">:</span>
-            <span class="n">elapsed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__state_start_time_step</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">elapsed</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minimum_state_steps</span> <span class="ow">or</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available</span><span class="p">()</span> <span class="ow">and</span> <span class="n">desired</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATE_STANDBY</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">desired</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">__state_start_time_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
-                <span class="n">changed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__state</span> <span class="o">=</span> <span class="n">state</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__state_start_time_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+            <span class="n">changed</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">__requested_state</span> <span class="o">=</span> <span class="n">requested</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state_history</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__state</span>
