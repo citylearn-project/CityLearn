@@ -17,6 +17,15 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   histórico de robustez do env não mudam; os KPIs do controlador em execuções
   flat com eventos de observação podem mudar. A referência BAU nativa de
   `evaluate_v2()` (`predict([])`) continua sem corrupção.
+- **Ruído de robustez.** Com `noise_std > 0`, o ruído gaussiano podia tornar
+  negativas a produção solar, as irradiâncias solares e a intensidade
+  carbónica, acrescentar produção durante a noite e levar a humidade relativa
+  exterior para fora de [0, 100] %. Uma regra limita agora os valores com ruído:
+  as grandezas solares ficam `>= 0` e sem ruído à noite, a humidade fica em
+  [0, 100] % e a intensidade carbónica fica `>= 0`. O ruído gerado não muda,
+  por isso os valores dentro do intervalo são idênticos bit a bit.
+- As simulações com `noise_std = 0`, incluindo todos os datasets incluídos, não
+  mudam. Ver o [guia de migração](../migration.md#unreleased).
 - **Datasets Parquet de 15 s carregam a partir da cache.** Os schemas de
   `citylearn_three_phase_electrical_service_demo_15s_parquet`,
   `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` e
