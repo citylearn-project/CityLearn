@@ -57,6 +57,31 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 - **Saldo do operador do mercado comunitário.** Com tarifas diferentes entre membros, os importadores podem pagar um valor diferente do que os exportadores recebem pela mesma energia. Esse resíduo era registado em cada passo mas não aparecia nos KPIs; passa a ser reportado no KPI de distrito `community_operator_balance_total_eur`. Os custos dos membros não mudam e o KPI é zero com uma tarifa única, como em todos os datasets incluídos ([#239](https://github.com/citylearn-project/CityLearn/issues/239)).
 - **Engenharia.** Os testes copiam os datasets para uma cache temporária própria de cada processo, e não para a cache do utilizador, o que evitava corridas concorrentes a falhar com `FileNotFoundError`; novos testes do COP da bomba de calor e do saldo do operador; o workflow de publicação pode usar a publicação confiável do PyPI (OIDC), preparada mas desligada; documentação do mercado (`settlement_version`, `grid_export_price`, `tariff_files`, `local_trading_enabled`) e correções de fórmulas e docstrings ([#256](https://github.com/citylearn-project/CityLearn/issues/256)).
 
+- **Procura líquida passiva do passo atual nas baselines.** Mesmo com o bundle
+  `entity_core_electrical` ativo, `pv_power_kw`, `load_power_kw` e
+  `net_power_kw - bess_power_kw - ev_charging_power_kw` indicam o último passo
+  liquidado (`t - 1`), e sem esse bundle `_get_import_power` lia
+  `net_electricity_consumption` (`t - 1`), pelo que a bateria carregava da rede
+  ao pôr do sol e exportava energia armazenada quando a carga caía
+  ([#190](https://github.com/citylearn-project/CityLearn/issues/190)). Quando
+  `non_shiftable_load` e `solar_generation` são observados, as baselines
+  estimam agora a procura líquida passiva a partir desses valores exógenos do
+  passo atual (escalados por `time_step_ratio`), somando `current_step_power_kw`
+  dos ciclos deferíveis em curso e o consumo elétrico térmico observado,
+  recorrendo aos valores liquidados apenas quando essas observações estão
+  desativadas. Em 30 dias no `citylearn_challenge_2022_phase_all_plus_evs`, no
+  `citylearn_challenge_2022_phase_all` e no
+  `citylearn_challenge_2023_phase_2_local_evaluation`, o custo de controlo desce
+  entre 2,5% e 5,3% e as emissões entre 2,7% e 4,4% nas cinco baselines (`2 723 €`
+  para `2 657 €` no BAU por omissão no `2022_phase_all_plus_evs`, com a mesma
+  energia entregue aos VEs). Em `pt_rec_4` (7 dias) as emissões descem entre
+  2,7% e 3,5% com custo até +0,2%; no
+  `citylearn_three_phase_electrical_service_demo` as emissões descem entre 0,9%
+  e 4,5%, custando o BAU mais 1,4% a 2,2% por guardar PV local em vez de o
+  exportar para o mercado da comunidade. Mantém as versões de definição por
+  publicar (`*-v3` e `immediate-user-target-v2`). Ver o
+  [guia de migração](../migration.md#unreleased).
+
 ### Topologia dinâmica e alinhamento de dados
 
 Pacote de trabalho 3 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-project/CityLearn/issues/226)), em [#274](https://github.com/citylearn-project/CityLearn/pull/274). Os resultados mudam em execuções com topologia dinâmica e ficheiros de janela de membro, e em splits consecutivos de episódios; o [guia de migração](../migration.md#unreleased) indica as opções que repõem o comportamento da 3.6.0.

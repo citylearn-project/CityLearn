@@ -106,6 +106,7 @@ class RulePolicyBase:
         self._agent_buildings: Dict[int, str] = {}
         self._ev_action_mapping: Dict[int, List[Optional[ChargerInfo]]] = {}
         self._ev_action_position_mapping: Dict[int, Dict[int, Optional[ChargerInfo]]] = {}
+        self._time_step_ratios: Dict[int, float] = {}
 
         self.step_hours: float = 1.0
 
@@ -137,6 +138,7 @@ class RulePolicyBase:
                 high = []
             self._action_bounds.append({"low": low, "high": high})
 
+        self._time_step_ratios = {}
         if metadata:
             seconds = metadata.get("seconds_per_time_step")
             if seconds:
@@ -145,6 +147,15 @@ class RulePolicyBase:
                 except (TypeError, ValueError):
                     self.step_hours = 1.0
             building_names = metadata.get("building_names")
+            ratios = metadata.get("time_step_ratios")
+            if isinstance(ratios, Sequence):
+                for idx, ratio in enumerate(ratios[: len(observation_names)]):
+                    try:
+                        parsed = float(ratio)
+                    except (TypeError, ValueError):
+                        continue
+                    if math.isfinite(parsed) and parsed > 0.0:
+                        self._time_step_ratios[idx] = parsed
         else:
             building_names = None
 
@@ -547,7 +558,7 @@ class RulePolicyBase:
         if service_info is None:
             return float("nan")
 
-        base_total_kw = self._current_base_power_kw(obs, obs_map)
+        base_total_kw = self._current_base_power_kw(obs, obs_map, agent_idx=agent_idx)
         if not math.isfinite(base_total_kw):
             return float("nan")
 
@@ -596,8 +607,21 @@ class RulePolicyBase:
             )
         )
 
-    def _current_base_power_kw(self, obs: np.ndarray, obs_map: Dict[str, int]) -> float:
-        load_power = self._non_controllable_load_power_kw(obs, obs_map)
+    def _load_time_step_ratio(self, agent_idx: Optional[int] = None) -> float:
+        ratios = getattr(self, "_time_step_ratios", {}) or {}
+        if agent_idx is not None and agent_idx in ratios:
+            return float(ratios[agent_idx])
+        unique = set(ratios.values())
+        return float(next(iter(unique))) if len(unique) == 1 else 1.0
+
+    def _current_base_power_kw(
+        self,
+        obs: np.ndarray,
+        obs_map: Dict[str, int],
+        *,
+        agent_idx: Optional[int] = None,
+    ) -> float:
+        load_power = self._non_controllable_load_power_kw(obs, obs_map, agent_idx=agent_idx)
         pv_power = self._pv_generation_power_kw(obs, obs_map)
         if math.isfinite(load_power):
             return float(load_power - pv_power)
@@ -623,7 +647,13 @@ class RulePolicyBase:
         base_load_power = max(0.0, float(load_power) - controllable_power)
         return float(base_load_power - pv_power)
 
-    def _non_controllable_load_power_kw(self, obs: np.ndarray, obs_map: Dict[str, int]) -> float:
+    def _non_controllable_load_power_kw(
+        self,
+        obs: np.ndarray,
+        obs_map: Dict[str, int],
+        *,
+        agent_idx: Optional[int] = None,
+    ) -> float:
         load_power = self._get_value(
             obs, obs_map, "non_shiftable_load_power_kw", default=float("nan")
         )
@@ -632,7 +662,8 @@ class RulePolicyBase:
 
         load_energy = self._get_value(obs, obs_map, "non_shiftable_load", default=float("nan"))
         if math.isfinite(load_energy):
-            return float(load_energy) / max(float(self.step_hours), 1.0e-6)
+            ratio = self._load_time_step_ratio(agent_idx)
+            return float(load_energy) * ratio / max(float(self.step_hours), 1.0e-6)
 
         load_energy = self._get_value(obs, obs_map, "load_energy_kwh_step", default=float("nan"))
         if math.isfinite(load_energy):
@@ -641,9 +672,11 @@ class RulePolicyBase:
         return float("nan")
 
     def _pv_generation_power_kw(self, obs: np.ndarray, obs_map: Dict[str, int]) -> float:
-        pv_energy = self._get_value(obs, obs_map, "solar_generation", default=float("nan"))
-        if math.isfinite(pv_energy):
-            return max(0.0, float(pv_energy) / max(float(self.step_hours), 1.0e-6))
+        solar_idx = obs_map.get("solar_generation")
+        if solar_idx is not None and solar_idx != obs_map.get("pv_power_kw"):
+            pv_energy = self._get_value(obs, obs_map, "solar_generation", default=float("nan"))
+            if math.isfinite(pv_energy):
+                return max(0.0, float(pv_energy) / max(float(self.step_hours), 1.0e-6))
 
         pv_power = self._first_available_observation_value(
             obs,
