@@ -178,7 +178,7 @@ load or PV truth.
 | `simulate_power_outage` | bool | `false` | Simulate grid outages for this building. |
 | `stochastic_power_outage` | bool | `false` | Draw outages from `stochastic_power_outage_model` instead of the `power_outage` column. |
 | `stochastic_power_outage_model` | object | `PowerOutage` | Outage model class and attributes. |
-| `vehicle_to_building` | bool | `false` | Let a connected EV discharge to the building during an outage (vehicle-to-building backup), up to the islanded load that PV and the battery leave uncovered. |
+| `vehicle_to_building` | bool | `false` | Let a connected EV discharge to the building during an outage (vehicle-to-building backup), up to the islanded load that PV and the battery leave uncovered. The entity charger features `can_discharge` and `available_discharge_power_kw` report the vehicle's discharge capacity during the outage. The discharge can take the vehicle below its required departure SOC. |
 
 ## Device Sections
 

@@ -22,7 +22,7 @@ STEP_HOURS = 0.25  # the dataset and the control step are 900 s
 
 
 def _env(tmp_path: Path, vehicle_to_building, non_shiftable_load=2.0, solar_generation=0.0,
-         cooling_demand=0.0) -> CityLearnEnv:
+         cooling_demand=0.0, interface='flat') -> CityLearnEnv:
     dataset = tmp_path / 'v2b'
     shutil.copytree(MINUTE_DATASET, dataset)
     frame = pd.read_csv(dataset / 'Building_1.csv')
@@ -48,9 +48,15 @@ def _env(tmp_path: Path, vehicle_to_building, non_shiftable_load=2.0, solar_gene
         building['cooling_device'] = {'type': 'citylearn.energy_model.HeatPump', 'autosize': False,
                                       'attributes': {'nominal_power': 20.0, 'efficiency': 0.3,
                                                      'target_cooling_temperature': 8.0}}
+    if interface == 'entity':
+        # The charger capability features (`can_discharge`, `available_discharge_power_kw`) are in this bundle.
+        schema.setdefault('observation_bundles', {})['entity_core_electrical'] = True
     path = dataset / 'schema.json'
     path.write_text(json.dumps(schema), encoding='utf-8')
-    env = CityLearnEnv(str(path), central_agent=True, episode_time_steps=4, random_seed=0)
+    if interface == 'entity':
+        env = CityLearnEnv(str(path), interface='entity', episode_time_steps=4, random_seed=0)
+    else:
+        env = CityLearnEnv(str(path), central_agent=True, episode_time_steps=4, random_seed=0)
     env.reset(seed=0)
     return env
 
@@ -134,3 +140,27 @@ def test_charging_during_an_outage_is_unchanged_by_the_option(tmp_path):
             assert building.electric_vehicle_chargers[0].electricity_consumption[0] == pytest.approx(0.5, abs=1.0e-5)
         finally:
             env.close()
+
+
+@pytest.mark.parametrize('vehicle_to_building', [None, True])
+def test_entity_charger_observations_report_vehicle_to_building_discharge(tmp_path, vehicle_to_building):
+    # During an outage the entity charger table reported no discharge capacity even when the option lets the
+    # vehicle supply the building, so a controller was told the vehicle could not discharge.
+    env = _env(tmp_path, vehicle_to_building=vehicle_to_building, interface='entity')
+    try:
+        # `_env` has reset the env; another reset would move to the next episode, where the vehicle is away.
+        observations = env._entity_service.observation_payload()
+        assert env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle is not None
+        features = list(env.entity_specs['tables']['charger']['features'])
+        row = observations['tables']['charger'][0]
+        can_discharge = float(row[features.index('can_discharge')])
+        available_kw = float(row[features.index('available_discharge_power_kw')])
+        charger = env.buildings[0].electric_vehicle_chargers[0]
+        if vehicle_to_building:
+            assert can_discharge == 1.0
+            assert 0.0 < available_kw <= charger.max_discharging_power + 1.0e-6
+        else:
+            assert can_discharge == 0.0
+            assert available_kw == 0.0
+    finally:
+        env.close()

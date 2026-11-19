@@ -159,6 +159,15 @@ Usado apenas na entity interface.
 | `power_outage` | object | nao | Config de outage. |
 | `set_point_hold_time_steps` | int | nao | Hold time para occupant interaction. |
 
+Chaves de `power_outage`:
+
+| Chave | Tipo | Padrao | O que faz |
+|---|---:|---|---|
+| `simulate_power_outage` | bool | `false` | Simula falhas da rede neste edificio. |
+| `stochastic_power_outage` | bool | `false` | Gera as falhas com `stochastic_power_outage_model` em vez da coluna `power_outage`. |
+| `stochastic_power_outage_model` | object | `PowerOutage` | Classe e atributos do modelo de falhas. |
+| `vehicle_to_building` | bool | `false` | Deixa um VE ligado descarregar para o edificio durante uma falha (apoio vehicle-to-building), ate a carga isolada que o PV e a bateria nao cobrem. As features entity do carregador `can_discharge` e `available_discharge_power_kw` indicam a capacidade de descarga do veiculo durante a falha. A descarga pode deixar o veiculo abaixo do SOC pedido para a partida. |
+
 ## Secoes de Dispositivo
 
 Padrao comum:
