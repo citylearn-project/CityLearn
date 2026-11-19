@@ -1321,10 +1321,11 @@ class ChargerSimulation(TimeSeriesData):
         default_time_value = -1
         default_soc_value = -0.1
 
-        self.electric_vehicle_charger_state = np.array([
-            int(str(s)) if str(s).isdigit() else np.nan
-            for s in electric_vehicle_charger_state
-        ], dtype='float32')
+        # A blank cell makes pandas read the column as floats (1.0, 2.0, NaN), so parse numbers, not digit
+        # strings. Anything that is not a non-negative integer is no state (NaN).
+        charger_state = pd.to_numeric(pd.Series(electric_vehicle_charger_state, dtype=object), errors='coerce')
+        charger_state = charger_state.where((charger_state >= 0) & (charger_state == np.floor(charger_state)))
+        self.electric_vehicle_charger_state = charger_state.to_numpy(dtype='float32')
 
         self.electric_vehicle_id = np.array(electric_vehicle_id, dtype=object)
         self.electric_vehicle_session_id = np.array(

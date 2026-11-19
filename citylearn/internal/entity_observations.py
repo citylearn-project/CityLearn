@@ -355,11 +355,12 @@ def fill_ev_rows(entity: "CityLearnEntityInterfaceService", context: Observation
         entity._set_obs_value(row, entity._ev_feature_cols, "depth_of_discharge_ratio", depth_of_discharge)
         if core_bundle_enabled:
             soc_min = max(1.0 - depth_of_discharge, 0.0)
+            soc_max = entity._soc_max(ev.battery)
             energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
-            energy_to_full = max((1.0 - soc) * max(capacity, 0.0), 0.0)
+            energy_to_full = max((soc_max - soc) * max(capacity, 0.0), 0.0)
             entity._set_obs_value(row, entity._ev_feature_cols, "soc_ratio", soc)
             entity._set_obs_value(row, entity._ev_feature_cols, "soc_min_ratio", soc_min)
-            entity._set_obs_value(row, entity._ev_feature_cols, "soc_max_ratio", 1.0)
+            entity._set_obs_value(row, entity._ev_feature_cols, "soc_max_ratio", soc_max)
             entity._set_obs_value(row, entity._ev_feature_cols, "energy_available_kwh", energy_available)
             entity._set_obs_value(row, entity._ev_feature_cols, "energy_to_full_kwh", energy_to_full)
 
@@ -410,8 +411,9 @@ def fill_storage_rows(entity: "CityLearnEntityInterfaceService", context: Observ
         if core_bundle_enabled:
             depth_of_discharge = entity._safe_scalar(getattr(storage, "depth_of_discharge", 1.0), 1.0)
             soc_min = max(1.0 - depth_of_discharge, 0.0)
+            soc_max = entity._soc_max(storage)
             current_energy = soc * max(capacity, 0.0)
-            energy_to_full = max(capacity - current_energy, 0.0)
+            energy_to_full = max(soc_max * capacity - current_energy, 0.0)
             energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
             max_charge_power = (
                 entity._safe_scalar(storage.get_max_input_power(), nominal_power)
@@ -441,6 +443,7 @@ def fill_storage_rows(entity: "CityLearnEntityInterfaceService", context: Observ
                     building.electrical_storage_electricity_consumption[endogenous_t],
                     0.0,
                 ) / step_hours,
+                soc_max=soc_max,
             )
             entity._set_obs_value(row, entity._storage_feature_cols, "electrical_storage_soc_ratio", soc)
             entity._set_obs_value(row, entity._storage_feature_cols, "max_charge_power_kw", max_charge_power)

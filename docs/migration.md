@@ -190,6 +190,31 @@ wrappers below change.
 - **`OnehotEncoding`.** A value that is not one of the classes raises `ValueError`
   naming the value, instead of `IndexError`.
 
+### Data loading edge cases
+
+No dataset, schema or export-file migration is required. The datasets shipped
+with CityLearn load and simulate as before: none of their 455 charger files is
+parsed differently, and none of their EVs uses `InventoryBattery`.
+
+- **Charger states.** `electric_vehicle_charger_state` is parsed as a number. A
+  blank cell makes pandas read the whole column as floats (`1.0`, `2.0`), which
+  used to turn every state of that charger into "no state", so no EV ever
+  connected. Values that are not non-negative integers remain "no state".
+- **`InventoryBattery` EVs.** `nominal_power` may be omitted for an EV battery of
+  type `InventoryBattery`, which derives it from `max_charge_kw` and
+  `max_discharge_kw`. A `Battery` still requires it.
+- **Random initial SOC.** An EV battery without `initial_soc` draws it uniformly
+  between its `min_soc` and `max_soc` (0 and 1 when they are not declared, which
+  gives the same values as before). An `InventoryBattery` with declared limits
+  used to receive a draw from [0, 1], and the run failed when it fell outside them;
+  where it fell inside, the initial SOC now differs.
+- **Entity SOC limits.** For an `InventoryBattery` with `max_soc < 1`, the entity
+  observations report `soc_max_ratio` as `max_soc`, and the energy and power a
+  battery can still take (`energy_to_full_kwh`, `connected_ev_energy_to_full_kwh`,
+  `flexible_energy_to_full_kwh`, charge headroom and available charge power)
+  stop at `max_soc` instead of a full battery; `usable_soc_ratio` is relative to
+  `max_soc`. Batteries without `max_soc` give the same values as before.
+
 ## Upgrade from 3.4.0 to 3.5.0
 
 No dataset, schema, export-file or BAU migration is required; existing datasets and
