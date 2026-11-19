@@ -80,11 +80,6 @@ Configure `buildings.<name>.electrical_service` using the
 connection constraints; they do not calculate feeder voltage or AC power flow.
 See [electrical KPIs](kpis_reference.md#electrical-service-and-phase-kpis).
 
-The import limit can also vary in time. An [available grid power](schema_reference.md#available-grid-power)
-series lowers it below the connection capacity per step, for example when a distribution system
-operator dims controllable devices or reduces capacity during grid stress. Controllers can
-observe the limit for the coming interval as `available_grid_power`.
-
 ## Local energy sharing and settlement
 
 Enable `community_market.enabled` to match same-timestep surplus and demand
