@@ -16,6 +16,7 @@ For package publication, version policy and the release checklist, see the
 ### Changed
 
 - **Baselines read corrupted observations under the flat interface.** Under the flat interface the env corrupts only the flat vectors, and the baselines, which read entity observations, decided from uncorrupted values; under the entity interface they read the corrupted ones ([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Run as controllers (`predict(observations)`), they now get the step's robustness observation events applied to their entity observations as the entity interface applies them, and take the same actions under both interfaces. No random stream is consumed, and the env's flat observations and robustness history are unchanged; the controller KPIs of flat runs with observation events can change. The native BAU reference of `evaluate_v2()` (`predict([])`) stays uncorrupted. See the [migration guide](migration.md#unreleased).
+- **Python 3.10 or newer.** CityLearn now requires Python 3.10 and is tested on Python 3.10 to 3.14, with NumPy 1.x on 3.10. Python 3.9 reached its end of life in October 2025. On Python 3.9, `pip` keeps resolving CityLearn 3.5.0. The CLI commands `simulate train` and `simulate evaluate` used `datetime.UTC`, which exists only from Python 3.11, and failed on Python 3.10; they now use `datetime.timezone.utc`. See the [migration guide](migration.md#unreleased).
 
 ### Fixed
 
