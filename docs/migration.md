@@ -48,6 +48,50 @@ development-line history.
 
 ## Unreleased
 
+### Baselines under the flat interface with robustness observation events
+
+`BusinessAsUsualAgent`, `RBCBasicPolicy`, `RBCSmartPolicy` and
+`RBCCommunityPolicy` run as controllers under the flat interface now read the
+corrupted observations, as they already did under the entity interface
+([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Their
+actions and the controller KPIs of such runs can change. The native BAU
+reference of `evaluate_v2()`, runs without observation events and runs under
+the entity interface are unchanged.
+
+### Robustness noise stays within physical ranges
+
+Runs with `noise_std = 0`, which includes every bundled dataset, are unchanged.
+With `noise_std > 0`, noisy solar generation and solar irradiance (and their
+forecasts) are no longer negative and stay zero at night, outdoor relative
+humidity stays within [0, 100] % and carbon intensity is no longer negative.
+The noise draws are the same, so all other values, and the series of other
+buildings and seeds, are unchanged. Runs whose solar or carbon series became
+negative under noise change; agents trained on such series may need retraining.
+See the [data unit contract](data_unit_contract.md#robustness-noise).
+### Python 3.10 or newer
+
+CityLearn requires Python 3.10 or newer. Environments on Python 3.9 keep
+resolving CityLearn 3.5.0; upgrade the interpreter to use later releases.
+
+### JSON files with NumPy values
+
+No dataset, schema or simulation migration is required. Simulated trajectories,
+KPIs and export manifests are unchanged.
+
+- **JSON files with NumPy values.** `FileHandler.write_json` (in `citylearn.utilities`
+  and `citylearn.utils.file_handler`) writes NumPy booleans, integers and floats as
+  JSON booleans and numbers, and NumPy arrays of booleans and numbers as lists. They
+  used to be written as text: `np.float32(2.5)` as `"2.5"`, `np.bool_(True)` as
+  `"True"` and `np.array([1.0, np.nan])` as `"[ 1. nan]"`; they are now `2.5`,
+  `true` and `[1.0, null]`. A `np.float32` is written with its exact value, so
+  `np.float32(0.1)` becomes `0.10000000149011612`. Code that parsed these strings
+  must read numbers instead. With `ignore_nan=False`, a NaN or infinite NumPy float
+  now raises `ValueError`, as a Python float already did; it used to be written as
+  `"nan"`. namedtuples (written as objects), `Decimal` values (written as numbers
+  with their exact text) and all other values are written as before.
+
+### BAU export, charger exports, CLI and file encoding
+
 No dataset or schema migration is required. Simulated trajectories and KPIs are
 unchanged.
 

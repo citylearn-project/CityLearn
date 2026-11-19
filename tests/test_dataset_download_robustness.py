@@ -1,5 +1,6 @@
 """Dataset downloads: error responses, concurrent first downloads and the `directory` argument."""
 
+import json
 import os
 import shutil
 import threading
@@ -210,6 +211,88 @@ def test_concurrent_downloads_replacing_an_incomplete_folder_keep_the_published_
     assert _leftovers(tmp_path) == []
 
 
+SCHEMA = json.dumps({'buildings': {
+    f'Building_{i}': {'energy_simulation': f'Building_{i}.csv', 'weather': 'weather.csv'} for i in range(1, 7)
+}}).encode()
+
+
+class _RepairSession(_Session):
+    """Serves a schema that names the building and weather files, and files that tell which worker downloaded them.
+    Worker A pauses before its last file until worker B has started downloading; B then waits until A has returned."""
+
+    def __init__(self):
+        super().__init__()
+        self.a_paused, self.b_started, self.a_returned = threading.Event(), threading.Event(), threading.Event()
+
+    def get(self, url, **kwargs):
+        worker = threading.current_thread().name
+
+        if worker == 'A' and url.endswith(FILES[-1]):
+            self.a_paused.set()
+            self.b_started.wait(10)
+        elif worker == 'B' and not self.b_started.is_set():
+            self.b_started.set()
+            self.a_returned.wait(10)
+
+        return _response(url, content=SCHEMA if url.endswith('schema.json') else worker.encode())
+
+
+def test_concurrent_repairs_of_a_cached_schema_without_its_files_keep_the_first_published_copy(tmp_path):
+    # An interrupted download left schema.json in the cache with only one of the files it names. Previously the folder
+    # counted as complete, so get_dataset returned it and loading failed on the first missing file.
+    folder = tmp_path/'datasets'/'demo'
+    folder.mkdir(parents=True)
+    (folder/'schema.json').write_bytes(SCHEMA)
+    (folder/'Building_1.csv').write_bytes(b'old')
+    session = _RepairSession()
+    dataset = _dataset_class(tmp_path, session)
+    contents, errors = {}, []
+
+    def worker(name):
+        try:
+            root = Path(dataset(offline=False).get_dataset('demo')).parent
+
+            if name == 'A':
+                session.a_returned.set()
+
+            contents[name] = {n: (root/n).read_bytes() for n in FILES if n != 'schema.json'}
+        except Exception as error:  # pragma: no cover - reported below
+            errors.append(f'{name}: {error!r}')
+        finally:
+            (session.a_returned if name == 'A' else session.b_started).set()
+
+    a = threading.Thread(target=worker, args=('A',), name='A')
+    b = threading.Thread(target=worker, args=('B',), name='B')
+    a.start()
+    assert session.a_paused.wait(10)
+    b.start()
+    a.join(30)
+    b.join(30)
+
+    # A replaced the incomplete folder; B, which had also found it incomplete, kept A's complete copy.
+    assert errors == []
+    assert contents['A'] == contents['B'] == {n: b'A' for n in FILES if n != 'schema.json'}
+    assert sorted(os.listdir(folder)) == sorted(FILES)
+    assert _leftovers(tmp_path) == []
+
+
+def test_a_download_lacking_files_its_schema_names_is_not_cached(tmp_path):
+    # Publishing it would make every later call find the cache incomplete and download it again.
+    class _SchemaSession(_Session):
+        def get(self, url, **kwargs):
+            return _response(url, content=SCHEMA)
+
+    class _IncompleteDataSet(_dataset_class(tmp_path, _SchemaSession())):
+        def get_github_contents(self, path=None):
+            return [dict(type='file', name='schema.json', path=f'{path}/schema.json', download_url='https://raw.example/demo/schema.json')]
+
+    with pytest.raises(FileNotFoundError, match='lacks Building_1.csv, weather.csv, Building_2.csv'):
+        _IncompleteDataSet(offline=False).get_dataset('demo')
+
+    assert not (tmp_path/'datasets'/'demo').exists()
+    assert _leftovers(tmp_path) == []
+
+
 def test_directory_argument_returns_an_existing_schema(tmp_path):
     dataset = _dataset_class(tmp_path/'cache', _Session())
     schema = Path(dataset(offline=False).get_dataset('demo', directory=tmp_path/'copy'))
@@ -257,7 +340,7 @@ def test_nested_dataset_folders_are_downloaded(tmp_path):
     dataset = _NestedDataSet(offline=False, github_account='owner', repository='repo', tag='v9')
     root = Path(dataset.get_dataset('demo')).parent
 
-    assert sorted(str(p.relative_to(root)) for p in root.rglob('*') if p.is_file()) == [
+    assert sorted(p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()) == [
         'evaluation/scenario.json', 'schema.json', 'timeseries/members/M01.parquet', 'timeseries/weather.parquet',
     ]
     assert 'https://raw.githubusercontent.com/owner/repo/v9/data/datasets/demo/timeseries/members/M01.parquet' in urls
@@ -325,7 +408,7 @@ def test_a_nested_dataset_costs_two_github_api_requests(tmp_path):
     root = Path(_TreeDataSet(offline=False, github_account='owner', repository='repo', tag='v9').get_dataset('demo')).parent
 
     assert listings == ['data/datasets'] and trees == ['sha-demo']
-    assert sorted(str(p.relative_to(root)) for p in root.rglob('*') if p.is_file()) == [
+    assert sorted(p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()) == [
         'schema.json', 'timeseries/members/M01.parquet',
     ]
     assert sorted(urls) == [
@@ -353,3 +436,114 @@ def test_github_api_requests_use_a_token_when_set(monkeypatch):
     _ListingDataSet(offline=False).get_github_contents('data/datasets')
 
     assert headers == [None, {'Authorization': 'Bearer secret'}]
+
+
+def _remote_only_class(cache: Path, listing, session=None):
+    """A DataSet with no local dataset or misc roots, whose GitHub listings come from `listing(path)`."""
+
+    cache.mkdir(parents=True, exist_ok=True)
+
+    class _RemoteOnly(DataSet):
+        calls = []
+
+        @property
+        def cache_directory(self):
+            return str(cache)
+
+        @property
+        def local_datasets_directories(self):
+            return []
+
+        @property
+        def local_misc_directories(self):
+            return []
+
+        def get_github_contents(self, path=None):
+            self.calls.append(path)
+            return listing(path)
+
+        def get_requests_session(self, **kwargs):
+            return _Session() if session is None else session
+
+    return _RemoteOnly
+
+
+def test_dataset_names_are_the_direct_subfolders_of_the_datasets_path(tmp_path):
+    def listing(path):
+        return [
+            dict(type='dir', name='a', path='data/datasets/a'),
+            dict(type='dir', name='demo', path='data/datasets/demo'),
+            dict(type='file', name='README.md', path='data/datasets/README.md'),
+        ]
+
+    # Previously 'a' was dropped, because removing 'a' from 'data/datasets/a' also changed the parent path, and a
+    # datasets_path with a trailing slash matched nothing.
+    assert _remote_only_class(tmp_path/'1', listing)(offline=False).get_dataset_names() == ['a', 'demo']
+    assert _remote_only_class(tmp_path/'2', listing)(offline=False, datasets_path='data/datasets/').get_dataset_names() == ['a', 'demo']
+
+
+def _first_calls_overlap(dataset, call) -> list:
+    """Run `call` in workers A and B; A's GitHub listing waits up to 1 s for B's. Return the listed paths."""
+
+    a_listing, b_listing = threading.Event(), threading.Event()
+    listing = dataset.get_github_contents
+
+    def get_github_contents(self, path=None):
+        (a_listing if threading.current_thread().name == 'A' else b_listing).set()
+
+        if threading.current_thread().name == 'A':
+            b_listing.wait(1)
+
+        return listing(self, path)
+
+    dataset.get_github_contents = get_github_contents
+    errors = []
+
+    def worker():
+        try:
+            call(dataset(offline=False))
+        except Exception as error:  # pragma: no cover - reported below
+            errors.append(repr(error))
+
+    a = threading.Thread(target=worker, name='A')
+    b = threading.Thread(target=worker, name='B')
+    a.start()
+    assert a_listing.wait(10)
+    b.start()
+    a.join(20)
+    b.join(20)
+    assert errors == []
+
+    return dataset.calls
+
+
+def test_concurrent_first_listings_of_dataset_names_query_github_once(tmp_path):
+    dataset = _remote_only_class(tmp_path, lambda path: [dict(type='dir', name='demo', path='data/datasets/demo')])
+    calls = _first_calls_overlap(dataset, lambda d: d.get_dataset_names())
+
+    # Previously each worker found no cached list and spent its own GitHub API request.
+    assert calls == ['data/datasets']
+    assert json.loads((tmp_path/'dataset_names.json').read_text()) == ['demo']
+
+
+def test_concurrent_first_requests_for_sizing_data_download_it_once(tmp_path):
+    def listing(path):
+        return [dict(type='file', name=DataSet.BATTERY_CHOICES_FILENAME, download_url='https://raw.example/battery.yaml')]
+
+    class _YamlSession(_Session):
+        def get(self, url, **kwargs):
+            return _response(url, content=b'model_a:\n  attributes:\n    capacity: 1.0\n')
+
+    dataset = _remote_only_class(tmp_path, listing, _YamlSession())
+    calls = _first_calls_overlap(dataset, lambda d: d.get_battery_sizing_data())
+
+    assert calls == ['data/misc']
+    assert [p.name for p in (tmp_path/'misc').iterdir() if p.suffix != '.lock'] == ['battery_choices.yaml']
+
+
+def test_sizing_data_missing_from_the_repository_raises_a_clear_error(tmp_path):
+    dataset = _remote_only_class(tmp_path, lambda path: [dict(type='file', name='other.csv', download_url='https://raw.example/other.csv')])
+
+    # Previously an IndexError.
+    with pytest.raises(FileNotFoundError, match="'lbl-tracking_the_sun-res-pv.csv' is not in data/misc"):
+        dataset(offline=False).get_pv_sizing_data()

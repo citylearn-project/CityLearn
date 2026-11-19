@@ -3,6 +3,7 @@ from typing import Any, Iterable, Union
 import numpy as np
 import simplejson as json
 import yaml
+from citylearn.utils.file_handler import json_default
 
 
 def parse_bool(value: Any, default: Any = None, path: str = 'value'):
@@ -93,7 +94,10 @@ class FileHandler:
         filepath : str
             pathname of JSON document.
         dictionary: dict
-            dictionary to convert to JSON.
+            dictionary to convert to JSON. NumPy booleans, numbers and numeric arrays are
+            written as JSON values (see `json_default`); with the default ``ignore_nan=True``,
+            NaN and infinity are written as ``null``. namedtuples are written as objects and
+            `Decimal` values as numbers.
 
         Other Parameters
         ----------------
@@ -101,7 +105,7 @@ class FileHandler:
             Other infrequently used keyword arguments to be parsed to `simplejson.dump`.
         """
 
-        kwargs = {'ignore_nan': True, 'sort_keys': False, 'default': str, 'indent': 2, **kwargs}
+        kwargs = {'ignore_nan': True, 'sort_keys': False, 'default': json_default, 'indent': 2, **kwargs}
         
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(dictionary, f, **kwargs)

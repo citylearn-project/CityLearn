@@ -7,7 +7,9 @@ Portuguese version: [pt/publishing.md](pt/publishing.md).
 
 ## Prepare the release
 
-1. Update the version in `citylearn/__init__.py`.
+1. Update the version in `citylearn/__init__.py`. `pyproject.toml` holds the rest of
+   the package metadata; it reads the version from that file and the runtime
+   dependencies from `requirements.txt`.
 2. Add a user-facing entry to [releases.md](releases.md), including compatibility,
    dataset/schema impact, validation scope and migration instructions.
 3. Update the affected guides and [migration notes](migration.md).

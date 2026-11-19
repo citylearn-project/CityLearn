@@ -15,7 +15,7 @@ import random
 from citylearn.base import Environment, EpisodeTracker
 from citylearn.building import Building, DynamicsBuilding
 from citylearn.cost_function import CostFunction
-from citylearn.data import CarbonIntensity, DataSet, OfflineDataError, ChargerSimulation, EnergySimulation, LogisticRegressionOccupantParameters, Pricing, Weather
+from citylearn.data import _parse_env_bool, CarbonIntensity, DataSet, OfflineDataError, ChargerSimulation, EnergySimulation, LogisticRegressionOccupantParameters, Pricing, Weather
 from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.energy_model import Battery, DeferrableAppliance, PV
 from citylearn.exporter import EpisodeExporter
@@ -124,9 +124,10 @@ class CityLearnEnv(Environment, Env):
         each building independently in a :code:`List[bool]`. Will override :code:`pv` defined in the :code:`schema`.
     random_seed: int, optional
         Pseudorandom number generator seed for repeatable results.
-    offline: bool, default: False
+    offline: bool, optional
         If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
-        error when required files are not available locally.
+        error when required files are not available locally. Defaults to the ``CITYLEARN_OFFLINE`` environment
+        variable, read at initialization, or False when it is unset.
 
     Other Parameters
     ----------------
@@ -1220,7 +1221,7 @@ class CityLearnEnv(Environment, Env):
 
     @offline.setter
     def offline(self, value: bool):
-        self.__offline = False if value is None else bool(parse_bool(value, default=False, path='offline'))
+        self.__offline = _parse_env_bool('CITYLEARN_OFFLINE') if value is None else bool(parse_bool(value, default=False, path='offline'))
 
     @render_enabled.setter
     def render_enabled(self, enabled: bool):
