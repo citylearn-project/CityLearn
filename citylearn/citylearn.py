@@ -856,7 +856,24 @@ class CityLearnEnv(Environment, Env):
                 row[~population.mask(name, length, energy=True)] = 0.0
                 rows.append(row)
 
-        return pd.DataFrame(rows).sum(axis=0, min_count=1).to_numpy()
+        return self._sum_member_rows(rows)
+
+    @staticmethod
+    def _sum_member_rows(rows: List[np.ndarray]) -> np.ndarray:
+        """Sum equal-length member series per step; a step is NaN only if every member is NaN there.
+
+        Bit-identical to `pd.DataFrame(rows).sum(axis=0, min_count=1).to_numpy()` without building
+        the DataFrame: the rows are promoted to the same common dtype and reduced in the same order,
+        over a C-contiguous (step, member) matrix with NaN read as zero. Rows of different lengths
+        raise `ValueError`, where pandas would pad them with NaN and return float64;
+        `_sum_counterfactual_series` pads departed members itself.
+        """
+
+        matrix = np.column_stack(rows)
+        total = np.nansum(matrix, axis=1)
+        total[np.isnan(matrix).all(axis=1)] = np.nan
+
+        return total
 
     @property
     def net_electricity_consumption_emission_without_storage_and_partial_load_and_pv(self) -> np.ndarray:
