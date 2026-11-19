@@ -36,12 +36,18 @@ For package publication, version policy and the release checklist, see the
 - **`MARLISA` with `pca_compression < 1`** sizes its networks to the PCA output instead of failing at the first update.
 - **Discrete wrappers.** `TabularQLearningObservationWrapper` declares exactly the `prod(bins)` states it encodes (it declared `prod(bins + 1) - 1` and could encode a state outside the space), and `DiscreteObservationWrapper` keeps values above the observation space in the top bin. `DiscreteObservationWrapper` and `DiscreteActionWrapper` bin the spaces of the env they wrap, so they work over the normalized wrappers. `ClippedObservationWrapper` no longer modifies the environment's cached observations.
 - **`OnehotEncoding`** raises `ValueError` for a value outside its classes.
+- **Charger files with blank or float states.** Charger states are parsed as numbers. A blank cell used to make every state of the charger unreadable, so no EV connected.
+- **`InventoryBattery` EVs** load without `nominal_power`, which the battery derives from `max_charge_kw` and `max_discharge_kw`.
+- **Random initial EV SOC** is drawn within the battery's declared `min_soc` and `max_soc`; an `InventoryBattery` used to fail when the draw from [0, 1] fell outside them.
+- **Entity observations with `max_soc < 1`** report `soc_max_ratio`, the energy to full and the available charge power up to `max_soc` instead of a full battery.
 
 The Parquet fix leaves input files and simulation results unchanged; no migration is required.
 
 Trajectories and KPIs are unchanged. The BAU and charger export files change, and so do runs that relied on `load_agent()` discarding the schema attributes. See the [migration guide](migration.md#unreleased).
 
 Environment trajectories and KPIs are unchanged; results of `TabularQLearning`, `MARLISARBC` and tabular Q-tables change. See the [migration guide](migration.md#unreleased).
+
+The shipped datasets are unaffected: none of their charger files is parsed differently and none of their EVs uses `InventoryBattery`. See the [migration guide](migration.md#unreleased).
 
 ## v3.5.0 - 2026-11-17
 

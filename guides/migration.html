@@ -69,6 +69,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#json-files-with-numpy-values">JSON files with NumPy values</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bau-export-charger-exports-cli-and-file-encoding">BAU export, charger exports, CLI and file encoding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#agents-and-wrappers">Agents and wrappers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-loading-edge-cases">Data loading edge cases</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-4-0-to-3-5-0">Upgrade from 3.4.0 to 3.5.0</a></li>
@@ -328,6 +329,32 @@ normalized features, including the cos and sin of periodic observations.
 environment’s cached observation lists in place.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">OnehotEncoding</span></code>.</strong> A value that is not one of the classes raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>
 naming the value, instead of <code class="docutils literal notranslate"><span class="pre">IndexError</span></code>.</p></li>
+</ul>
+</section>
+<section id="data-loading-edge-cases">
+<h3>Data loading edge cases<a class="headerlink" href="#data-loading-edge-cases" title="Link to this heading"></a></h3>
+<p>No dataset, schema or export-file migration is required. The datasets shipped
+with CityLearn load and simulate as before: none of their 455 charger files is
+parsed differently, and none of their EVs uses <code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code>.</p>
+<ul class="simple">
+<li><p><strong>Charger states.</strong> <code class="docutils literal notranslate"><span class="pre">electric_vehicle_charger_state</span></code> is parsed as a number. A
+blank cell makes pandas read the whole column as floats (<code class="docutils literal notranslate"><span class="pre">1.0</span></code>, <code class="docutils literal notranslate"><span class="pre">2.0</span></code>), which
+used to turn every state of that charger into “no state”, so no EV ever
+connected. Values that are not non-negative integers remain “no state”.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code> EVs.</strong> <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> may be omitted for an EV battery of
+type <code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code>, which derives it from <code class="docutils literal notranslate"><span class="pre">max_charge_kw</span></code> and
+<code class="docutils literal notranslate"><span class="pre">max_discharge_kw</span></code>. A <code class="docutils literal notranslate"><span class="pre">Battery</span></code> still requires it.</p></li>
+<li><p><strong>Random initial SOC.</strong> An EV battery without <code class="docutils literal notranslate"><span class="pre">initial_soc</span></code> draws it uniformly
+between its <code class="docutils literal notranslate"><span class="pre">min_soc</span></code> and <code class="docutils literal notranslate"><span class="pre">max_soc</span></code> (0 and 1 when they are not declared, which
+gives the same values as before). An <code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code> with declared limits
+used to receive a draw from [0, 1], and the run failed when it fell outside them;
+where it fell inside, the initial SOC now differs.</p></li>
+<li><p><strong>Entity SOC limits.</strong> For an <code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code> with <code class="docutils literal notranslate"><span class="pre">max_soc</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>, the entity
+observations report <code class="docutils literal notranslate"><span class="pre">soc_max_ratio</span></code> as <code class="docutils literal notranslate"><span class="pre">max_soc</span></code>, and the energy and power a
+battery can still take (<code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_to_full_kwh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">flexible_energy_to_full_kwh</span></code>, charge headroom and available charge power)
+stop at <code class="docutils literal notranslate"><span class="pre">max_soc</span></code> instead of a full battery; <code class="docutils literal notranslate"><span class="pre">usable_soc_ratio</span></code> is relative to
+<code class="docutils literal notranslate"><span class="pre">max_soc</span></code>. Batteries without <code class="docutils literal notranslate"><span class="pre">max_soc</span></code> give the same values as before.</p></li>
 </ul>
 </section>
 </section>
