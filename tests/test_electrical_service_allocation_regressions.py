@@ -33,7 +33,7 @@ def allocation_case(powers, connections, base_kw, total_limits, phase_limits):
         _record_charging_constraint_state=lambda **kwargs: None,
     )
     ops = BuildingOpsService(building)
-    ops._estimate_non_controllable_base_power = lambda actions: (
+    ops._estimate_non_controllable_base_power = lambda actions, escalator_actions=None: (
         base_kw, {phase: base_kw / 3 for phase in PHASES})
     building._ops_service = ops
     return building

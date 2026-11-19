@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+import inspect
 import os
 from typing import TYPE_CHECKING
 
@@ -51,7 +52,16 @@ def base_building_options(building_schema):
     return building_kwargs
 
 
-def add_model_options(building_kwargs, building_name, building_schema, schema, episode_tracker):
+def accepts_keyword(constructor, name):
+    """Whether `name` is an explicit `__init__` parameter of `constructor` or one of its base classes."""
+    return any(
+        name in inspect.signature(cls.__init__).parameters
+        for cls in getattr(constructor, '__mro__', ())
+        if '__init__' in vars(cls)
+    )
+
+
+def add_model_options(building_kwargs, building_name, building_schema, schema, episode_tracker, constructor):
     if building_schema.get('dynamics', None) is not None:
         dynamics_type = building_schema['dynamics']['type']
         dynamics_constructor = component_constructor(dynamics_type, f'buildings.{building_name}.dynamics.type')
@@ -80,6 +90,11 @@ def add_model_options(building_kwargs, building_name, building_schema, schema, e
         building_kwargs['occupant'] = occupant_constructor(**attributes)
     else:
         building_kwargs['occupant'] = None
+
+    # Only building types with an occupant set-point hold take this option; others never received it.
+    hold_time_steps = building_schema.get('set_point_hold_time_steps')
+    if hold_time_steps is not None and accepts_keyword(constructor, 'set_point_hold_time_steps'):
+        building_kwargs['set_point_hold_time_steps'] = hold_time_steps
 
 
 def outage_options(index, building_name, building_schema, kwargs):

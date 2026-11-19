@@ -45,6 +45,12 @@ For package publication, version policy and the release checklist, see the
 - **Entity observations with `max_soc < 1`** report `soc_max_ratio`, the energy to full and the available charge power up to `max_soc` instead of a full battery.
 - **Dynamic topology district baseline.** The district reference series summed only the members active at evaluation time, while the control series keep every member's past consumption, so a departed member counted on the control side only. With all-zero actions on `citylearn_three_phase_dynamic_topology_demo` (24 steps, `Building_6` leaving at step 12), the district import delta to baseline was 12.76 kWh, the export delta -11.00 kWh and the emissions delta 4.44 kg, although control and baseline coincide; they are now below 4e-6, the float32 rounding of the reference series. The reference series now sum every member that has been active, each over the steps at which it was a member.
 - **Electrical-service histories across topology events.** A member's requested-pressure, total-power and per-phase power histories were erased when it rejoined or when one of its assets changed, and the electrical-service and phase KPIs lost the earlier steps. They are now kept.
+- **Power and energy at sub-hourly steps.** Several limits compared a power in kW with an energy per step in kWh, which only coincide at 3600 s. `available_nominal_power` is now a power at every step length; heat pumps and electric heaters no longer exceed `nominal_power` when they charge thermal storage; on native sub-hourly data a device delivers at most `nominal_power` x step duration per step; during an outage, the local supply passed to devices and to the non-shiftable load is converted to power and to dataset resolution; and the `cooling_demand`, `heating_demand` and `dhw_demand` observations convert the storage discharge to dataset resolution when `time_step_ratio` is not 1.
+- **Undersized devices.** A device that cannot meet its demand no longer raises `AssertionError: demand is greater than ..._device max output`. Its output is clipped, a `RuntimeWarning` is issued once per device and episode, and the shortfall is reported as unserved thermal service energy.
+- **Base-power estimate.** The estimate behind electrical-service headroom and the feasibility KPIs no longer subtracts thermal storage discharge twice, and it counts escalator power, including a requested escalator state in the step it is requested.
+- **Clip reasons.** `clip_reason_phase_headroom` and `clip_reason_export_headroom` name only the asset's own phases and the clipped direction.
+- **Normalized observations.** `observations(normalize=True, periodic_normalization=False)` no longer raises `KeyError: 'month'`.
+- **Occupant set-point hold.** `set_point_hold_time_steps` in a building schema now reaches `LogisticRegressionOccupantInteractionBuilding`. On the Quebec neighbourhood datasets (4 steps), occupant set-point changes revert to the schedule after 4 steps without interaction instead of holding for the rest of the episode.
 
 The Parquet fix leaves input files and simulation results unchanged; no migration is required.
 
@@ -55,6 +61,8 @@ Environment trajectories and KPIs are unchanged; results of `TabularQLearning`, 
 The shipped datasets are unaffected: none of their charger files is parsed differently and none of their EVs uses `InventoryBattery`. See the [migration guide](migration.md#unreleased).
 
 Static topology results are unchanged. See the [migration guide](migration.md#unreleased).
+
+Runs with 3600 s data and control steps are unchanged, except on the two Quebec neighbourhood datasets. Sub-hourly runs change where a device or a thermal storage reached one of these limits. See the [migration guide](migration.md#unreleased).
 
 ## v3.5.0 - 2026-11-17
 

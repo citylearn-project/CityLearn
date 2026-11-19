@@ -21,6 +21,7 @@ from citylearn.internal import grid_availability
 from citylearn.internal.building_ops import BuildingOpsService
 from citylearn.internal.service_energy import SERVICE_ENERGY_COMPONENTS
 from citylearn.internal.units import (
+    energy_kwh_to_power_kw,
     normalized_capacity_action_to_energy_kwh,
     normalized_power_action_to_energy_kwh,
     power_kw_to_energy_kwh,
@@ -1690,6 +1691,19 @@ class Building(Environment):
 
         raise NotImplementedError
 
+    def _max_outage_electric_power_kw(self) -> float:
+        """Electric power in [kW] that local supply can still deliver to a device; `np.inf` without an outage.
+
+        `downward_electrical_flexibility` is control-step energy in [kWh]; device limits take power.
+        """
+
+        return energy_kwh_to_power_kw(self.downward_electrical_flexibility, self.seconds_per_time_step)
+
+    def _device_power_to_dataset_energy(self, power_kw: float) -> float:
+        """Convert a device power limit in [kW] to energy per dataset step in [kWh], the unit of the demand series."""
+
+        return to_dataset_resolution_energy(power_kw_to_energy_kwh(power_kw, self.seconds_per_time_step), self.time_step_ratio)
+
     def update_energy_from_cooling_device(self):
         r"""Update cooling device electricity consumption and energy tranfer for current time step's cooling demand."""
 
@@ -1699,9 +1713,11 @@ class Building(Environment):
         storage_output = to_dataset_resolution_energy(
             self._energy_from_storage(self.cooling_storage, slice(self.time_step, self.time_step + 1))[0], self.time_step_ratio
         )
-        max_electric_power = self.downward_electrical_flexibility
-        max_device_output = self.cooling_device.get_max_output_power(temperature, heating=False, max_electric_power=max_electric_power)
-        self.___demand_limit_check('cooling', demand, max_device_output)
+        max_electric_power = self._max_outage_electric_power_kw()
+        max_device_output = self._device_power_to_dataset_energy(
+            self.cooling_device.get_max_output_power(temperature, heating=False, max_electric_power=max_electric_power)
+        )
+        self.___demand_limit_check('cooling', demand - storage_output, max_device_output)
         device_output = min(demand - storage_output, max_device_output)
         self.__energy_from_cooling_device[self.time_step] = device_output
         electricity_consumption = self.cooling_device.get_input_power(device_output, temperature, heating=False)
@@ -1733,8 +1749,12 @@ class Building(Environment):
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
 
         if energy > 0.0:
-            max_electric_power = self.downward_electrical_flexibility
-            max_output = self.cooling_device.get_max_output_power(temperature, heating=False, max_electric_power=max_electric_power)
+            # `energy` is control-step kWh; the device limit is power in kW.
+            max_electric_power = self._max_outage_electric_power_kw()
+            max_output = power_kw_to_energy_kwh(
+                self.cooling_device.get_max_output_power(temperature, heating=False, max_electric_power=max_electric_power),
+                self.seconds_per_time_step,
+            )
             energy = min(max_output, energy)
 
         else:
@@ -1764,10 +1784,12 @@ class Building(Environment):
         storage_output = to_dataset_resolution_energy(
             self._energy_from_storage(self.heating_storage, slice(self.time_step, self.time_step + 1))[0], self.time_step_ratio
         )
-        max_electric_power = self.downward_electrical_flexibility
-        max_device_output = self.heating_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
+        max_electric_power = self._max_outage_electric_power_kw()
+        max_device_output = self._device_power_to_dataset_energy(
+            self.heating_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power)
             if isinstance(self.heating_device, HeatPump) else self.heating_device.get_max_output_power(max_electric_power=max_electric_power)
-        self.___demand_limit_check('heating', demand, max_device_output)
+        )
+        self.___demand_limit_check('heating', demand - storage_output, max_device_output)
         device_output = min(demand - storage_output, max_device_output)
         self.__energy_from_heating_device[self.time_step] = device_output
         electricity_consumption = self.heating_device.get_input_power(device_output, temperature, heating=True) \
@@ -1793,9 +1815,13 @@ class Building(Environment):
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
 
         if energy > 0.0:
-            max_electric_power = self.downward_electrical_flexibility
-            max_output = self.heating_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
-                if isinstance(self.heating_device, HeatPump) else self.heating_device.get_max_output_power(max_electric_power=max_electric_power)
+            # `energy` is control-step kWh; the device limit is power in kW.
+            max_electric_power = self._max_outage_electric_power_kw()
+            max_output = power_kw_to_energy_kwh(
+                self.heating_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power)
+                if isinstance(self.heating_device, HeatPump) else self.heating_device.get_max_output_power(max_electric_power=max_electric_power),
+                self.seconds_per_time_step,
+            )
             energy = min(max_output, energy)
 
         else:
@@ -1820,10 +1846,12 @@ class Building(Environment):
         storage_output = to_dataset_resolution_energy(
             self._energy_from_storage(self.dhw_storage, slice(self.time_step, self.time_step + 1))[0], self.time_step_ratio
         )
-        max_electric_power = self.downward_electrical_flexibility
-        max_device_output = self.dhw_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
+        max_electric_power = self._max_outage_electric_power_kw()
+        max_device_output = self._device_power_to_dataset_energy(
+            self.dhw_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power)
             if isinstance(self.dhw_device, HeatPump) else self.dhw_device.get_max_output_power(max_electric_power=max_electric_power)
-        self.___demand_limit_check('dhw', demand, max_device_output)
+        )
+        self.___demand_limit_check('dhw', demand - storage_output, max_device_output)
         device_output = min(demand - storage_output, max_device_output)
         self.__energy_from_dhw_device[self.time_step] = device_output
         electricity_consumption = self.dhw_device.get_input_power(device_output, temperature, heating=True) \
@@ -1849,9 +1877,13 @@ class Building(Environment):
         temperature = self.weather.outdoor_dry_bulb_temperature[self.time_step]
 
         if energy > 0.0:
-            max_electric_power = self.downward_electrical_flexibility
-            max_output = self.dhw_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power) \
-                if isinstance(self.dhw_device, HeatPump) else self.dhw_device.get_max_output_power(max_electric_power=max_electric_power)
+            # `energy` is control-step kWh; the device limit is power in kW.
+            max_electric_power = self._max_outage_electric_power_kw()
+            max_output = power_kw_to_energy_kwh(
+                self.dhw_device.get_max_output_power(temperature, heating=True, max_electric_power=max_electric_power)
+                if isinstance(self.dhw_device, HeatPump) else self.dhw_device.get_max_output_power(max_electric_power=max_electric_power),
+                self.seconds_per_time_step,
+            )
             energy = min(max_output, energy)
 
         else:
@@ -1870,7 +1902,11 @@ class Building(Environment):
     def update_non_shiftable_load(self):
         r"""Update non shiftable loads electricity consumption for current time step non shiftable load."""
 
-        demand = min(self.non_shiftable_load[self.time_step], self.downward_electrical_flexibility)
+        # The load series is dataset-resolution kWh; the islanded supply is control-step kWh.
+        demand = min(
+            self.non_shiftable_load[self.time_step],
+            to_dataset_resolution_energy(self.downward_electrical_flexibility, self.time_step_ratio),
+        )
         self.__energy_to_non_shiftable_load[self.time_step] = demand
         self.non_shiftable_load_device.update_electricity_consumption(demand)
 
@@ -2004,10 +2040,29 @@ class Building(Environment):
             available = max(available - served, 0.0)
 
     def ___demand_limit_check(self, end_use: str, demand: float, max_device_output: float):
-        message = f'timestep: {self.time_step}, building: {self.name}, outage: {self.power_outage}, demand: {demand},' \
-            f'output: {max_device_output}, difference: {demand - max_device_output}, check: {demand <= max_device_output},'
-        assert self.power_outage or demand <= max_device_output or abs(demand - max_device_output) < TOLERANCE, \
-            f'demand is greater than {end_use}_device max output | {message}'
+        """Warn once per device and episode when the device cannot meet the demand left after storage.
+
+        The caller clips the device output to `max_device_output`; the shortfall is unserved thermal energy,
+        which the thermal service KPIs report. During an outage the islanded supply sets the limit and clipping
+        is expected, so it is not reported here.
+        """
+
+        if self.power_outage or demand <= max_device_output or abs(demand - max_device_output) < TOLERANCE:
+            return
+
+        warned = self.__demand_limit_warnings
+        if end_use in warned:
+            return
+
+        warned.add(end_use)
+        warnings.warn(
+            f'Building {self.name}: {end_use}_device cannot meet the {end_use} demand at time step {self.time_step} '
+            f'({demand:.6g} kWh requested, {max_device_output:.6g} kWh available per dataset step). Its output is '
+            'clipped and the shortfall is reported as unserved thermal service energy. Further shortfalls of this '
+            'device are not reported again this episode.',
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
     def ___electricity_consumption_polarity_check(self, end_use: str, device_output: float, electricity_consumption: float):
         message = f'timestep: {self.time_step}, building: {self.name}, device_output: {device_output}, electricity_consumption: {electricity_consumption}'
@@ -2968,6 +3023,8 @@ class Building(Environment):
         self._archived_storage_electricity = None
         # Row of the agent-facing terminal observation; set by the runtime after the last transition.
         self._terminal_observation_time_step = None
+        # End uses whose device shortfall has been reported this episode.
+        self.__demand_limit_warnings = set()
         self.cooling_storage.reset()
         self.heating_storage.reset()
         self.dhw_storage.reset()

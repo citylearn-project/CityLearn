@@ -11,7 +11,7 @@ from citylearn.internal.service_energy import unserved_energy
 
 from citylearn.energy_model import HeatPump
 from citylearn.preprocessing import Normalize, PeriodicNormalization
-from citylearn.internal.units import energy_kwh_to_power_kw, power_kw_to_energy_kwh
+from citylearn.internal.units import energy_kwh_to_power_kw, power_kw_to_energy_kwh, to_dataset_resolution_energy
 from citylearn.internal import grid_availability
 from citylearn.internal.electrical_limits import allocate_electrical_service, electrical_service_violation_kw
 
@@ -130,12 +130,16 @@ class BuildingOpsService:
                     observations[key] = value
 
         if normalize:
-            periodic_low_limit, periodic_high_limit = building.periodic_normalized_observation_space_limits
+            # Without periodic encoding the keys are the raw names (e.g. `month`, not `month_cos`).
+            low_limit, high_limit = (
+                building.periodic_normalized_observation_space_limits if periodic_normalization
+                else building.non_periodic_normalized_observation_space_limits
+            )
             normalizer = Normalize(0.0, 1.0)
 
             for key, value in observations.items():
-                normalizer.x_min = periodic_low_limit[key]
-                normalizer.x_max = periodic_high_limit[key]
+                normalizer.x_min = low_limit[key]
+                normalizer.x_max = high_limit[key]
                 observations[key] = value * normalizer
 
         return observations
@@ -376,11 +380,17 @@ class BuildingOpsService:
         if wants('electrical_storage_soc'):
             observations['electrical_storage_soc'] = building.electrical_storage.soc[endogenous_t]
         if wants('cooling_demand'):
-            observations['cooling_demand'] = building.energy_from_cooling_device[endogenous_t] + numpy1_scalar(abs(min(building.cooling_storage.energy_balance[endogenous_t], 0.0)))
+            observations['cooling_demand'] = building.energy_from_cooling_device[endogenous_t] + numpy1_scalar(
+                self._storage_discharge_dataset_energy(building.cooling_storage, endogenous_t)
+            )
         if wants('heating_demand'):
-            observations['heating_demand'] = building.energy_from_heating_device[endogenous_t] + numpy1_scalar(abs(min(building.heating_storage.energy_balance[endogenous_t], 0.0)))
+            observations['heating_demand'] = building.energy_from_heating_device[endogenous_t] + numpy1_scalar(
+                self._storage_discharge_dataset_energy(building.heating_storage, endogenous_t)
+            )
         if wants('dhw_demand'):
-            observations['dhw_demand'] = building.energy_from_dhw_device[endogenous_t] + numpy1_scalar(abs(min(building.dhw_storage.energy_balance[endogenous_t], 0.0)))
+            observations['dhw_demand'] = building.energy_from_dhw_device[endogenous_t] + numpy1_scalar(
+                self._storage_discharge_dataset_energy(building.dhw_storage, endogenous_t)
+            )
         if wants('net_electricity_consumption'):
             observations['net_electricity_consumption'] = building.net_electricity_consumption[endogenous_t]
         if wants('cooling_electricity_consumption'):
@@ -533,6 +543,7 @@ class BuildingOpsService:
                 electric_vehicle_storage_actions,
                 electrical_storage_action,
                 deferrable_appliance_actions,
+                requested_escalator_actions,
             )
         else:
             building._charging_constraint_penalty_kwh = 0.0
@@ -795,32 +806,44 @@ class BuildingOpsService:
     def _set_feedback_reason(self, owner, reason: str, prefix: str = 'action_feedback_'):
         self._set_feedback_value(owner, f'{prefix}clip_reason_{reason}', 1.0)
 
-    def _constraint_clip_reasons(self, requested_power_kw: float, limited_power_kw: float) -> List[str]:
+    def _connected_phase_names(self, phase_connection: Optional[str]) -> List[str]:
+        """Phases that carry an asset's power: service phases from its connection, else its charging-constraint phase."""
+
+        if getattr(self.building, '_electrical_service_enabled', False):
+            return [phase for phase, share in self._split_power_by_connection(1.0, phase_connection).items() if share != 0.0]
+
+        return [] if phase_connection is None else [phase_connection]
+
+    def _constraint_clip_reasons(
+        self,
+        requested_power_kw: float,
+        limited_power_kw: float,
+        phase_connection: Optional[str] = None,
+    ) -> List[str]:
+        """Name the exhausted limits in the clipped direction, on the asset's own phases only."""
+
         if abs(requested_power_kw - limited_power_kw) <= 1.0e-6:
             return []
 
         building = self.building
         state = getattr(building, '_charging_constraints_state', {}) or {}
+        phases = self._connected_phase_names(phase_connection)
+        exhausted = lambda value: np.isfinite(value) and value <= 1.0e-6
         reasons: List[str] = []
-        building_headroom = self._safe_scalar(state.get('building_headroom_kw'), np.nan)
-        export_headroom = self._safe_scalar(state.get('building_export_headroom_kw'), np.nan)
-        phase_headrooms = [
-            self._safe_scalar(value, np.nan)
-            for value in (state.get('phase_headroom_kw') or {}).values()
-        ]
-        phase_export_headrooms = [
-            self._safe_scalar(value, np.nan)
-            for value in (state.get('phase_export_headroom_kw') or {}).values()
-        ]
 
-        if requested_power_kw > limited_power_kw and np.isfinite(building_headroom) and building_headroom <= 1.0e-6:
-            reasons.append('building_headroom')
-        if requested_power_kw < limited_power_kw and np.isfinite(export_headroom) and export_headroom <= 1.0e-6:
-            reasons.append('export_headroom')
-        if any(np.isfinite(value) and value <= 1.0e-6 for value in phase_headrooms):
-            reasons.append('phase_headroom')
-        if any(np.isfinite(value) and value <= 1.0e-6 for value in phase_export_headrooms):
-            reasons.append('export_headroom')
+        if requested_power_kw > limited_power_kw:
+            phase_headroom = state.get('phase_headroom_kw') or {}
+            if exhausted(self._safe_scalar(state.get('building_headroom_kw'), np.nan)):
+                reasons.append('building_headroom')
+            if any(exhausted(self._safe_scalar(phase_headroom.get(phase), np.nan)) for phase in phases):
+                reasons.append('phase_headroom')
+        else:
+            phase_export_headroom = state.get('phase_export_headroom_kw') or {}
+            if exhausted(self._safe_scalar(state.get('building_export_headroom_kw'), np.nan)) or any(
+                exhausted(self._safe_scalar(phase_export_headroom.get(phase), np.nan)) for phase in phases
+            ):
+                reasons.append('export_headroom')
+
         if not reasons:
             reasons.append('power_limit')
         return reasons
@@ -841,7 +864,8 @@ class BuildingOpsService:
             self._set_feedback_reason(charger, 'power_limit')
         if abs(requested_power) > 1.0e-9 and charger.connected_electric_vehicle is None:
             self._set_feedback_reason(charger, 'availability')
-        for reason in self._constraint_clip_reasons(requested_power, limited_power):
+        phase_connection = getattr(self.building, '_charger_phase_map', {}).get(charger.charger_id)
+        for reason in self._constraint_clip_reasons(requested_power, limited_power, phase_connection):
             self._set_feedback_reason(charger, reason)
 
     def _record_charger_post_apply_feedback(self, charger):
@@ -868,7 +892,8 @@ class BuildingOpsService:
         self._set_feedback_value(building, f'{prefix}requested_power_kw', requested_power)
         self._set_feedback_value(building, f'{prefix}limited_power_kw', limited_power)
         self._clear_feedback_reasons(building, prefix=prefix)
-        for reason in self._constraint_clip_reasons(requested_power, limited_power):
+        phase_connection = building.electrical_storage_phase_connection if getattr(building, '_electrical_service_enabled', False) else None
+        for reason in self._constraint_clip_reasons(requested_power, limited_power, phase_connection):
             self._set_feedback_reason(building, reason, prefix=prefix)
 
     def _record_storage_post_apply_feedback(self):
@@ -1114,6 +1139,46 @@ class BuildingOpsService:
             values = getattr(self.building, public_name, [])
         return self._safe_index(values, step, default)
 
+    def _storage_discharge_dataset_energy(self, storage, step: int) -> float:
+        """Energy that `storage` supplies to the building at `step`, in dataset-resolution kWh.
+
+        Storage balances are control-step kWh while `energy_from_*_device` is dataset-resolution kWh. When
+        the two resolutions match, the stored value is returned unchanged.
+        """
+
+        discharge = abs(min(storage.energy_balance[step], 0.0))
+        ratio = self.building.time_step_ratio
+        return discharge if ratio in (None, 0, 1) else to_dataset_resolution_energy(discharge, ratio)
+
+    def _storage_charging_energy(self, storage, step: int) -> float:
+        """Thermal energy in control-step kWh that the device delivers to charge `storage` at `step`.
+
+        `energy_from_*_device` is already net of the storage discharge, so only charging adds device output;
+        adding a negative balance would subtract the discharge a second time.
+        """
+
+        return max(self._safe_index(storage.energy_balance, step, 0.0), 0.0)
+
+    def _escalator_power_kw(self, step: int, escalator_actions: Optional[Mapping[str, float]] = None) -> float:
+        """Escalator power at `step`: recorded consumption, or the preview of a requested action not yet applied."""
+
+        building = self.building
+        escalator_by_action = self._get_apply_action_cache()['escalator_by_action']
+        pending = {
+            escalator_by_action[name].name: action
+            for name, action in (escalator_actions or {}).items()
+            if name in escalator_by_action
+        }
+        total_kw = 0.0
+
+        for escalator in building.escalators or []:
+            if escalator.name in pending:
+                total_kw += self._safe_scalar(escalator.preview_power_kw(pending[escalator.name]), 0.0)
+            else:
+                total_kw += self._control_step_energy_to_power_kw(self._safe_index(escalator.electricity_consumption, step, 0.0))
+
+        return total_kw
+
     def _estimate_base_power_at_step(self, step: int) -> Tuple[float, Dict[str, float]]:
         building = self.building
         phase_names = self._current_phase_names()
@@ -1121,7 +1186,7 @@ class BuildingOpsService:
 
         cooling_demand = self._dataset_energy_to_control_step(
             self._building_series_value('energy_from_cooling_device', 'energy_from_cooling_device', step, 0.0)
-        ) + self._safe_index(building.cooling_storage.energy_balance, step, 0.0)
+        ) + self._storage_charging_energy(building.cooling_storage, step)
         cooling_energy = self._safe_scalar(
             building.cooling_device.get_input_power(cooling_demand, temperature, heating=False),
             0.0,
@@ -1130,7 +1195,7 @@ class BuildingOpsService:
 
         heating_demand = self._dataset_energy_to_control_step(
             self._building_series_value('energy_from_heating_device', 'energy_from_heating_device', step, 0.0)
-        ) + self._safe_index(building.heating_storage.energy_balance, step, 0.0)
+        ) + self._storage_charging_energy(building.heating_storage, step)
         if isinstance(building.heating_device, HeatPump):
             heating_energy = self._safe_scalar(
                 building.heating_device.get_input_power(heating_demand, temperature, heating=True),
@@ -1142,7 +1207,7 @@ class BuildingOpsService:
 
         dhw_demand = self._dataset_energy_to_control_step(
             self._building_series_value('energy_from_dhw_device', 'energy_from_dhw_device', step, 0.0)
-        ) + self._safe_index(building.dhw_storage.energy_balance, step, 0.0)
+        ) + self._storage_charging_energy(building.dhw_storage, step)
         if isinstance(building.dhw_device, HeatPump):
             dhw_energy = self._safe_scalar(building.dhw_device.get_input_power(dhw_demand, temperature, heating=True), 0.0)
         else:
@@ -1158,8 +1223,9 @@ class BuildingOpsService:
             self._control_step_energy_to_power_kw(self._safe_index(appliance.electricity_consumption, step, 0.0))
             for appliance in building.deferrable_appliances or []
         )
+        escalator_kw = self._escalator_power_kw(step)
 
-        base_total_kw = cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw
+        base_total_kw = cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw + escalator_kw
         return float(base_total_kw), {phase: value for phase, value in self._split_unassigned_power(base_total_kw).items() if phase in phase_names}
 
     def _electrical_service_allows(self, total_kw: float, phase_kw: Mapping[str, float], step: int = None) -> bool:
@@ -1268,6 +1334,7 @@ class BuildingOpsService:
     def _estimate_non_controllable_base_power(
         self,
         deferrable_appliance_actions: Optional[Mapping[str, float]] = None,
+        escalator_actions: Optional[Mapping[str, float]] = None,
     ) -> Tuple[float, Dict[str, float]]:
         building = self.building
         t = building.time_step
@@ -1280,7 +1347,7 @@ class BuildingOpsService:
 
         cooling_demand = self._dataset_energy_to_control_step(
             self._safe_index(building.energy_from_cooling_device, t, 0.0)
-        ) + self._safe_index(building.cooling_storage.energy_balance, t, 0.0)
+        ) + self._storage_charging_energy(building.cooling_storage, t)
         cooling_energy = self._safe_scalar(
             building.cooling_device.get_input_power(cooling_demand, temperature, heating=False),
             0.0,
@@ -1289,7 +1356,7 @@ class BuildingOpsService:
 
         heating_demand = self._dataset_energy_to_control_step(
             self._safe_index(building.energy_from_heating_device, t, 0.0)
-        ) + self._safe_index(building.heating_storage.energy_balance, t, 0.0)
+        ) + self._storage_charging_energy(building.heating_storage, t)
         if isinstance(building.heating_device, HeatPump):
             heating_energy = self._safe_scalar(
                 building.heating_device.get_input_power(heating_demand, temperature, heating=True),
@@ -1301,7 +1368,7 @@ class BuildingOpsService:
 
         dhw_demand = self._dataset_energy_to_control_step(
             self._safe_index(building.energy_from_dhw_device, t, 0.0)
-        ) + self._safe_index(building.dhw_storage.energy_balance, t, 0.0)
+        ) + self._storage_charging_energy(building.dhw_storage, t)
         if isinstance(building.dhw_device, HeatPump):
             dhw_energy = self._safe_scalar(building.dhw_device.get_input_power(dhw_demand, temperature, heating=True), 0.0)
         else:
@@ -1318,8 +1385,9 @@ class BuildingOpsService:
             for appliance in building.deferrable_appliances or []
         )
         deferrable_kw += self._prospective_deferrable_start_power_kw(deferrable_appliance_actions)
+        escalator_kw = self._escalator_power_kw(t, escalator_actions)
 
-        base_total_kw = cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw
+        base_total_kw = cooling_kw + heating_kw + dhw_kw + non_shiftable_kw + solar_kw + deferrable_kw + escalator_kw
         base_phase_kw = self._split_unassigned_power(base_total_kw)
 
         return float(base_total_kw), base_phase_kw
@@ -1516,10 +1584,11 @@ class BuildingOpsService:
         actions: Optional[Mapping[str, float]],
         electrical_storage_action: Optional[float],
         deferrable_appliance_actions: Optional[Mapping[str, float]] = None,
+        escalator_actions: Optional[Mapping[str, float]] = None,
     ) -> Tuple[Optional[Mapping[str, float]], Optional[float]]:
         building = self.building
         phase_names = self._current_phase_names()
-        base_total_kw, base_phase_kw = self._estimate_non_controllable_base_power(deferrable_appliance_actions)
+        base_total_kw, base_phase_kw = self._estimate_non_controllable_base_power(deferrable_appliance_actions, escalator_actions)
         base_phase_kw = {phase: base_phase_kw.get(phase, 0.0) for phase in phase_names}
 
         controls = {}
@@ -1617,6 +1686,7 @@ class BuildingOpsService:
         actions: Optional[Mapping[str, float]],
         electrical_storage_action: Optional[float] = None,
         deferrable_appliance_actions: Optional[Mapping[str, float]] = None,
+        escalator_actions: Optional[Mapping[str, float]] = None,
     ) -> Tuple[Optional[Mapping[str, float]], Optional[float]]:
         """Apply configured electrical constraints and return adjusted EV/storage actions."""
 
@@ -1633,6 +1703,7 @@ class BuildingOpsService:
                 actions,
                 electrical_storage_action,
                 deferrable_appliance_actions,
+                escalator_actions,
             )
 
         adjusted_actions = self._apply_legacy_charging_constraints(actions)

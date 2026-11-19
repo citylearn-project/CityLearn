@@ -436,7 +436,7 @@ class CityLearnLoadingService:
         building_type = ('citylearn.citylearn.Building' if building_schema.get('type') is None
                          else building_schema['type'])
         constructor = loading_components.component_constructor(building_type, f'buildings.{building_name}.type')
-        loading_components.add_model_options(options, building_name, building_schema, schema, episode_tracker)
+        loading_components.add_model_options(options, building_name, building_schema, schema, episode_tracker, constructor)
         outage = loading_components.outage_options(index, building_name, building_schema, kwargs)
         chargers = loading_components.load_chargers(
             self, building_name, building_schema, schema, episode_tracker, expected_rows, inputs.time_step_ratio)
