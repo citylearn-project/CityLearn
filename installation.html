@@ -54,6 +54,8 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#optional-dependencies">Optional dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-compatibility">Version compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting-installation">Troubleshooting installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#datasets">Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#existing-projects-and-development">Existing projects and development</a></li>
 </ul>
@@ -178,6 +180,127 @@ CPU, and NumPy 1 and 2 wheels ship different OpenBLAS releases.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install "citylearn[end_use_load_profiles]"</span>
 </pre></div>
 </div>
+</section>
+<section id="version-compatibility">
+<h2>Version compatibility<a class="headerlink" href="#version-compatibility" title="Link to this heading"></a></h2>
+<p>The base requirements of each release, from its <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> and
+<code class="docutils literal notranslate"><span class="pre">python_requires</span></code>; “any” means the release does not constrain the version.
+The last column gives the Python versions for which the pinned requirements
+publish wheels on PyPI. It is derived from those pins, not tested, and names
+the pin that sets the limit. CityLearn 2.4.0 to 2.4.2 were withdrawn from PyPI.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>CityLearn</p></th>
+<th class="head"><p>Tag date</p></th>
+<th class="head"><p>Python</p></th>
+<th class="head"><p>NumPy</p></th>
+<th class="head"><p>Gym / Gymnasium</p></th>
+<th class="head"><p>scikit-learn</p></th>
+<th class="head"><p>PyTorch</p></th>
+<th class="head"><p>Other pins</p></th>
+<th class="head"><p>Installable Python (derived)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>3.3.0 - 3.5.0</p></td>
+<td><p>2026-11-13 - 2026-11-17</p></td>
+<td><p>&gt;=3.9</p></td>
+<td><p>&lt;3.0.0</p></td>
+<td><p>gymnasium&gt;=0.28.1,&lt;2.0.0</p></td>
+<td><p>any</p></td>
+<td><p>any</p></td>
+<td><p>none</p></td>
+<td><p>No pin limits Python; see the CI coverage below</p></td>
+</tr>
+<tr class="row-odd"><td><p>3.2.0</p></td>
+<td><p>2026-11-06</p></td>
+<td><p>&gt;=3.9</p></td>
+<td><p>&lt;2.0.0</p></td>
+<td><p>gymnasium&gt;=0.28.1,&lt;2.0.0</p></td>
+<td><p>&lt;=1.2.2</p></td>
+<td><p>any</p></td>
+<td><p>none; OpenStudio and doe_xstock moved to the end_use_load_profiles extra</p></td>
+<td><p>3.9 - 3.11 (scikit-learn 1.2.2)</p></td>
+</tr>
+<tr class="row-even"><td><p>3.0.0 - 3.1.1</p></td>
+<td><p>2026-09-09 - 2026-11-04</p></td>
+<td><p>&gt;=3.9</p></td>
+<td><p>&lt;2.0.0</p></td>
+<td><p>gymnasium&lt;=0.28.1</p></td>
+<td><p>&lt;=1.2.2</p></td>
+<td><p>any (with torchvision)</p></td>
+<td><p>doe_xstock&gt;=2.0.0, openstudio&lt;=3.10.0</p></td>
+<td><p>3.9 - 3.11 (scikit-learn 1.2.2), where OpenStudio &lt;=3.10.0 has a wheel</p></td>
+</tr>
+<tr class="row-odd"><td><p>2.5.0</p></td>
+<td><p>2025-10-30</p></td>
+<td><p>&gt;=3.7.7</p></td>
+<td><p>&lt;2.0.0</p></td>
+<td><p>gymnasium&lt;=0.28.1</p></td>
+<td><p>&lt;=1.2.2</p></td>
+<td><p>any (with torchvision)</p></td>
+<td><p>doe_xstock&gt;=1.1.0, openstudio&lt;=3.3.0, nrel-pysam</p></td>
+<td><p>Where OpenStudio &lt;=3.3.0 has a wheel; reported to install on 3.9 and to fail on 3.10 and 3.11</p></td>
+</tr>
+<tr class="row-even"><td><p>2.2.0 - 2.4.2</p></td>
+<td><p>2024-11-06 - 2025-08-10</p></td>
+<td><p>&gt;=3.7.7</p></td>
+<td><p>&lt;2.0.0</p></td>
+<td><p>gymnasium (any)</p></td>
+<td><p>&lt;=1.2.2</p></td>
+<td><p>any (with torchvision)</p></td>
+<td><p>doe_xstock&gt;=1.0.0 (2.2.0) or &gt;=1.1.0, openstudio&lt;=3.3.0, nrel-pysam</p></td>
+<td><p>Where OpenStudio &lt;=3.3.0 has a wheel; reported to install on 3.9 and to fail on 3.10 and 3.11</p></td>
+</tr>
+<tr class="row-odd"><td><p>2.0.0 - 2.1.2</p></td>
+<td><p>2023-09-10 - 2024-02-25</p></td>
+<td><p>&gt;=3.7</p></td>
+<td><p>&gt;=1.21.6</p></td>
+<td><p>gym&gt;=0.21.0</p></td>
+<td><p>==1.0.2</p></td>
+<td><p>&gt;=1.12.0 (with torchvision&gt;=0.13.0)</p></td>
+<td><p>pandas==1.3.5</p></td>
+<td><p>3.7 - 3.10 (pandas 1.3.5, scikit-learn 1.0.2)</p></td>
+</tr>
+<tr class="row-even"><td><p>1.5.0 - 1.8.0</p></td>
+<td><p>2023-01-28 - 2023-04-06</p></td>
+<td><p>&gt;=3.7</p></td>
+<td><p>==1.21.6</p></td>
+<td><p>gym==0.25.1 (1.8.0: gym&gt;=0.21.0)</p></td>
+<td><p>==1.0.2</p></td>
+<td><p>==1.12.0 (with torchvision==0.13.0)</p></td>
+<td><p>pandas==1.3.5</p></td>
+<td><p>3.7 - 3.10 (NumPy 1.21.6, PyTorch 1.12.0)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Continuous integration runs the test suite on Linux with Python 3.9, 3.10 and
+3.12 (NumPy 2, and NumPy 1 on Python 3.10). It also installs the built package
+with <code class="docutils literal notranslate"><span class="pre">pip</span></code> and runs a simulation on macOS (Apple Silicon) with Python 3.11,
+Windows with Python 3.12 and Linux with Python 3.13.</p>
+</section>
+<section id="troubleshooting-installation">
+<h2>Troubleshooting installation<a class="headerlink" href="#troubleshooting-installation" title="Link to this heading"></a></h2>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">matching</span> <span class="pre">distribution</span> <span class="pre">found</span> <span class="pre">for</span> <span class="pre">openstudio&lt;=3.3.0</span></code></dt><dd><p>CityLearn 2.2.0 to 2.5.0 required OpenStudio 3.3.0 or older, which PyPI does
+not provide for recent Python versions (reported for 3.10 and 3.11). Install
+CityLearn 3.2.0 or newer: OpenStudio and <code class="docutils literal notranslate"><span class="pre">doe_xstock</span></code> are then needed only
+for <code class="docutils literal notranslate"><span class="pre">citylearn.end_use_load_profiles</span></code> and come with the
+<code class="docutils literal notranslate"><span class="pre">end_use_load_profiles</span></code> extra.</p>
+</dd>
+<dt>scikit-learn fails to compile, for example with an OpenMP error on macOS</dt><dd><p>CityLearn 2.2.0 to 3.2.0 pinned <code class="docutils literal notranslate"><span class="pre">scikit-learn&lt;=1.2.2</span></code>, which has no wheels
+for Python 3.12 or newer, so <code class="docutils literal notranslate"><span class="pre">pip</span></code> tries to build it from source. Install
+CityLearn 3.3.0 or newer, or use Python 3.11 or older for those releases.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">TypeError:</span> <span class="pre">'staticmethod'</span> <span class="pre">object</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">callable</span></code> when importing CityLearn</dt><dd><p>Reported for CityLearn 2.3.0 on Python 3.9. Install a current release.</p>
+</dd>
+<dt>An old release is required to reproduce earlier results</dt><dd><p>Install it without dependencies and then the dependencies that the table
+above lists for it, with versions available for your Python:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install --no-deps citylearn==2.3.1</span>
+</pre></div>
+</div>
+</dd>
+</dl>
 </section>
 <section id="datasets">
 <h2>Datasets<a class="headerlink" href="#datasets" title="Link to this heading"></a></h2>

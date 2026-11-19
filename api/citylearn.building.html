@@ -326,6 +326,14 @@ LBNL’s Tracking The Sun dataset.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="citylearn.building.Building.available_grid_power">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">available_grid_power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#citylearn.building.Building.available_grid_power" title="Link to this definition"></a></dt>
+<dd><p>Grid import power available at the current time step in [kW], or None without a series.</p>
+<p>It is the smaller of <cite>electrical_service.limits.total.import_kw</cite> and the
+<cite>electrical_service.available_grid_power</cite> series value at the current time step.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="citylearn.building.Building.carbon_intensity">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">carbon_intensity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="citylearn.data.html#citylearn.data.CarbonIntensity" title="citylearn.data.CarbonIntensity"><span class="pre">CarbonIntensity</span></a></em><a class="headerlink" href="#citylearn.building.Building.carbon_intensity" title="Link to this definition"></a></dt>
 <dd><p>Carbon dioxide emission rate time series.</p>
@@ -478,6 +486,12 @@ is <cite>np.inf</cite>.</p>
 <dt class="sig sig-object py" id="citylearn.building.Building.electrical_service_enabled">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">electrical_service_enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#citylearn.building.Building.electrical_service_enabled" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.building.Building.electrical_service_import_limit_kw">
+<span class="sig-name descname"><span class="pre">electrical_service_import_limit_kw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/building.html#Building.electrical_service_import_limit_kw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.building.Building.electrical_service_import_limit_kw" title="Link to this definition"></a></dt>
+<dd><p>Total grid import limit in force at an episode time step in [kW]; NaN when unlimited.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.building.Building.electrical_service_mode">

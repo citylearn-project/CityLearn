@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.internal.grid_availability module &mdash; CityLearn 3.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c1362a89"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="citylearn.internal.kpi module" href="citylearn.internal.kpi.html" />
+    <link rel="prev" title="citylearn.internal.experiment module" href="citylearn.internal.experiment.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="citylearn.agents.html">citylearn.agents package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.end_use_load_profiles.html">citylearn.end_use_load_profiles package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="citylearn.internal.html">citylearn.internal package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.utils.html">citylearn.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">citylearn</a></li>
+          <li class="breadcrumb-item"><a href="citylearn.html">citylearn package</a></li>
+          <li class="breadcrumb-item"><a href="citylearn.internal.html">citylearn.internal package</a></li>
+      <li class="breadcrumb-item active">citylearn.internal.grid_availability module</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/api/citylearn.internal.grid_availability.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-citylearn.internal.grid_availability">
+<span id="citylearn-internal-grid-availability-module"></span><h1>citylearn.internal.grid_availability module<a class="headerlink" href="#module-citylearn.internal.grid_availability" title="Link to this heading"></a></h1>
+<p>Time-varying grid import availability for a building’s electrical service.</p>
+<p>A building’s <code class="docutils literal notranslate"><span class="pre">electrical_service</span></code> may reference a per-time-step series of the grid power
+that the building may import, in [kW]. It models curtailment of the grid connection below its
+static capacity, for example a distribution system operator dimming controllable devices
+(the German §14a EnWG scheme) or a temporary capacity reduction during grid stress.</p>
+<p>The import limit in force at a time step is the smaller of the static
+<code class="docutils literal notranslate"><span class="pre">electrical_service.limits.total.import_kw</span></code> and the series value. A missing (NaN) series value
+falls back to the static limit. The limit acts through the existing electrical-service
+allocation: EV chargers and the electrical storage are curtailed first, and load that cannot be
+curtailed stays served and is recorded as a service violation. It does not island the building;
+model a blackout with <code class="docutils literal notranslate"><span class="pre">power_outage</span></code> instead.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.AvailableGridPower">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.internal.grid_availability.</span></span><span class="sig-name descname"><span class="pre">AvailableGridPower</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citylearn.internal.grid_availability.GridAvailabilityData" title="citylearn.internal.grid_availability.GridAvailabilityData"><span class="pre">GridAvailabilityData</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#AvailableGridPower"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.AvailableGridPower" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>One building’s available grid import power series, in [kW].</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.AvailableGridPower.has_missing_values">
+<span class="sig-name descname"><span class="pre">has_missing_values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#AvailableGridPower.has_missing_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.AvailableGridPower.has_missing_values" title="Link to this definition"></a></dt>
+<dd><p>Whether any loaded row, in or out of the current episode, has no value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.AvailableGridPower.value">
+<span class="sig-name descname"><span class="pre">value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#AvailableGridPower.value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.AvailableGridPower.value" title="Link to this definition"></a></dt>
+<dd><p>Series value at an episode time step; NaN outside the episode or where the file has none.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.AvailableGridPower.values">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">values</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#citylearn.internal.grid_availability.AvailableGridPower.values" title="Link to this definition"></a></dt>
+<dd><p>Series in the current episode window, indexed by the building’s time step.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.AvailableGridPower.window">
+<span class="sig-name descname"><span class="pre">window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#AvailableGridPower.window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.AvailableGridPower.window" title="Link to this definition"></a></dt>
+<dd><p>Series between two simulation (file) time steps, inclusive.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.GridAvailabilityData">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.internal.grid_availability.</span></span><span class="sig-name descname"><span class="pre">GridAvailabilityData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_std</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_start_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#GridAvailabilityData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.GridAvailabilityData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="citylearn.data.html#citylearn.data.TimeSeriesData" title="citylearn.data.TimeSeriesData"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeSeriesData</span></code></a></p>
+<p>Columns of an available grid power file; one row per dataset time step.</p>
+<p>Every column is kept, so buildings that share one file (one column per building) also share
+one loaded copy. Column values are read through <a class="reference internal" href="#citylearn.internal.grid_availability.GridAvailabilityData.column" title="citylearn.internal.grid_availability.GridAvailabilityData.column"><code class="xref py py-meth docutils literal notranslate"><span class="pre">column()</span></code></a> and follow the episode window
+like any other time series.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.GridAvailabilityData.column">
+<span class="sig-name descname"><span class="pre">column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#GridAvailabilityData.column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.GridAvailabilityData.column" title="Link to this definition"></a></dt>
+<dd><p>Column values in the current episode window, or in an explicit file-index window.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.GridAvailabilityData.column_names">
+<span class="sig-name descname"><span class="pre">column_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#GridAvailabilityData.column_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.GridAvailabilityData.column_names" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.GridAvailabilityData.replace_column">
+<span class="sig-name descname"><span class="pre">replace_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#GridAvailabilityData.replace_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.GridAvailabilityData.replace_column" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.combine">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.grid_availability.</span></span><span class="sig-name descname"><span class="pre">combine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">static_kw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">available_kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#combine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.combine" title="Link to this definition"></a></dt>
+<dd><p>Import limit from the static limit and the series value(s); NaN where neither limits import.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.import_limit_kw">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.grid_availability.</span></span><span class="sig-name descname"><span class="pre">import_limit_kw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">building</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#import_limit_kw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.import_limit_kw" title="Link to this definition"></a></dt>
+<dd><p>Total grid import limit in force at an episode time step, in [kW]; NaN when unlimited.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.import_limit_series_kw">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.grid_availability.</span></span><span class="sig-name descname"><span class="pre">import_limit_series_kw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">building</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#import_limit_series_kw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.import_limit_series_kw" title="Link to this definition"></a></dt>
+<dd><p>Import limits over episode time steps <code class="docutils literal notranslate"><span class="pre">start</span></code> to <code class="docutils literal notranslate"><span class="pre">end</span></code> inclusive, or None when static.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.load">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.grid_availability.</span></span><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.internal.loading.html#citylearn.internal.loading.CityLearnLoadingService" title="citylearn.internal.loading.CityLearnLoadingService"><span class="pre">CityLearnLoadingService</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_rows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citylearn.internal.grid_availability.AvailableGridPower" title="citylearn.internal.grid_availability.AvailableGridPower"><span class="pre">AvailableGridPower</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.load" title="Link to this definition"></a></dt>
+<dd><p>Load a building’s available grid power series aligned with its other time series.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.parse_config">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.grid_availability.</span></span><span class="sig-name descname"><span class="pre">parse_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">electrical_service</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#parse_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.parse_config" title="Link to this definition"></a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">(filename,</span> <span class="pre">column)</span></code> from <code class="docutils literal notranslate"><span class="pre">electrical_service.available_grid_power</span></code>, if set.</p>
+<p>The value is either a file name or a mapping with <code class="docutils literal notranslate"><span class="pre">filename</span></code> and an optional <code class="docutils literal notranslate"><span class="pre">column</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.simulation_limits_kw">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.grid_availability.</span></span><span class="sig-name descname"><span class="pre">simulation_limits_kw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">building</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#simulation_limits_kw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.simulation_limits_kw" title="Link to this definition"></a></dt>
+<dd><p>Import limits over the whole simulation period (for observation-space bounds).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.internal.grid_availability.total_limits_at">
+<span class="sig-prename descclassname"><span class="pre">citylearn.internal.grid_availability.</span></span><span class="sig-name descname"><span class="pre">total_limits_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">building</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_limits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/internal/grid_availability.html#total_limits_at"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.grid_availability.total_limits_at" title="Link to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">total_limits</span></code> with the import limit in force at <code class="docutils literal notranslate"><span class="pre">step</span></code>; unchanged without a series.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="citylearn.internal.experiment.html" class="btn btn-neutral float-left" title="citylearn.internal.experiment module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="citylearn.internal.kpi.html" class="btn btn-neutral float-right" title="citylearn.internal.kpi module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -27,6 +27,7 @@ Submodules
    citylearn.internal.ev_departure_audit
    citylearn.internal.evaluation_progress
    citylearn.internal.experiment
+   citylearn.internal.grid_availability
    citylearn.internal.kpi
    citylearn.internal.kpi_community
    citylearn.internal.kpi_energy
