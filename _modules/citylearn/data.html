@@ -953,6 +953,11 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">TimeSeriesData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Generic time series data class.</span>
 <span class="sd">    </span>
+<span class="sd">    Each variable is stored in full as ``_&lt;name&gt;`` and read as ``&lt;name&gt;``, the part of it between</span>
+<span class="sd">    `start_time_step` and `end_time_step`. The windowed values are kept in the instance</span>
+<span class="sd">    ``__dict__``, so reading a variable is a plain attribute lookup. They are refreshed when a</span>
+<span class="sd">    variable is set or the window changes, and they are left out of pickles and copies, which</span>
+<span class="sd">    rebuild them from the full variables.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -983,20 +988,16 @@
 
         <span class="k">return</span> <span class="n">variable</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'__'</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_refresh_windowed_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+        <span class="n">start_time_step</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'_start_time_step'</span><span class="p">)</span>
+        <span class="n">end_time_step</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'_end_time_step'</span><span class="p">)</span>
 
-        <span class="n">data</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'__dict__'</span><span class="p">)</span>
-        <span class="n">variable_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">'</span>
-
-        <span class="k">if</span> <span class="n">variable_name</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-            <span class="n">start_time_step</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'_start_time_step'</span><span class="p">)</span>
-            <span class="n">end_time_step</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'_end_time_step'</span><span class="p">)</span>
-            <span class="n">variable</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">variable_name</span><span class="p">]</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slice_variable</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">start_time_step</span><span class="p">,</span> <span class="n">end_time_step</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="c1"># `_&lt;name&gt;` is a full variable. A name that starts with an underscore is stored as</span>
+            <span class="c1"># `__&lt;name&gt;` and read through `__getattr__`.</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'__'</span><span class="p">):</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slice_variable</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">start_time_step</span><span class="p">,</span> <span class="n">end_time_step</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start_time_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end_time_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Returns values of the named variable within the specified time steps and</span>
@@ -1027,7 +1028,23 @@
 <span class="sd">        Variables are named with a single underscore prefix.</span>
 <span class="sd">        """</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="sa">f</span><span class="s1">'_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+        <span class="n">data</span><span class="p">[</span><span class="sa">f</span><span class="s1">'_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'_'</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'start_time_step'</span><span class="p">,</span> <span class="s1">'end_time_step'</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_windowed_variables</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slice_variable</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'_start_time_step'</span><span class="p">),</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'_end_time_step'</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_windowed_variables</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="EnergySimulation">
@@ -1213,19 +1230,9 @@
             <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'Invalid hvac_mode values were found: </span><span class="si">{</span><span class="n">unique</span><span class="si">}</span><span class="s1">. '</span>\
                 <span class="s1">'Valid values are 0, 1, 2, 3 to indicate off, cooling mode, heating mode, and automatic mode.'</span>
             
-        <span class="bp">self</span><span class="o">.</span><span class="n">hvac_mode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hvac_mode</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'int32'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hvac_mode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hvac_mode</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'int32'</span><span class="p">)</span></div>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">time_step_ratios</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Getter for the time_step_ratio variable."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__time_step_ratios</span>
 
-    <span class="nd">@time_step_ratios</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">time_step_ratios</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Setter for the time_step_ratio variable."""</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__time_step_ratios</span> <span class="o">=</span> <span class="n">value</span>    </div>
-
-    
 <div class="viewcode-block" id="LogisticRegressionOccupantParameters">
 <a class="viewcode-back" href="../../api/citylearn.data.html#citylearn.data.LogisticRegressionOccupantParameters">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LogisticRegressionOccupantParameters</span><span class="p">(</span><span class="n">TimeSeriesData</span><span class="p">):</span>

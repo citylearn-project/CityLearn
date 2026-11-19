@@ -558,12 +558,6 @@ to and subtracted from the set point to set the upper and lower bounds of comfor
 <span class="sig-name descname"><span class="pre">DEFUALT_COMFORT_BAND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2.0</span></em><a class="headerlink" href="#citylearn.data.EnergySimulation.DEFUALT_COMFORT_BAND" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="citylearn.data.EnergySimulation.time_step_ratios">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step_ratios</span></span><a class="headerlink" href="#citylearn.data.EnergySimulation.time_step_ratios" title="Link to this definition"></a></dt>
-<dd><p>Getter for the time_step_ratio variable.</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -640,6 +634,11 @@ with keys matching the class attribute names.</p>
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.data.</span></span><span class="sig-name descname"><span class="pre">TimeSeriesData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/data.html#TimeSeriesData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.data.TimeSeriesData" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Generic time series data class.</p>
+<p>Each variable is stored in full as <code class="docutils literal notranslate"><span class="pre">_&lt;name&gt;</span></code> and read as <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code>, the part of it between
+<cite>start_time_step</cite> and <cite>end_time_step</cite>. The windowed values are kept in the instance
+<code class="docutils literal notranslate"><span class="pre">__dict__</span></code>, so reading a variable is a plain attribute lookup. They are refreshed when a
+variable is set or the window changes, and they are left out of pickles and copies, which
+rebuild them from the full variables.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

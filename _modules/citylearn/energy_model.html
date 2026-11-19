@@ -267,15 +267,31 @@
         <span class="n">ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span>
         <span class="k">return</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">ratio</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">electricity_consumption</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Electricity consumption time series [kWh]."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_scale_electricity_consumption</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="n">ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electricity_consumption_ratio</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">ratio</span> <span class="o">==</span> <span class="mf">1.0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span>
+            <span class="k">return</span> <span class="n">values</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span> <span class="o">*</span> <span class="n">ratio</span>
+        <span class="k">return</span> <span class="n">values</span> <span class="o">*</span> <span class="n">ratio</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">electricity_consumption</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Electricity consumption time series [kWh]."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_electricity_consumption</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ElectricDevice.electricity_consumption_at">
+<a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.ElectricDevice.electricity_consumption_at">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">electricity_consumption_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""`electricity_consumption` at a non-negative `time_step` (default: current) [kWh].</span>
+
+<span class="sd">        Scales only that element instead of the whole time series, with the same result.</span>
+<span class="sd">        """</span>
+
+        <span class="n">time_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="k">if</span> <span class="n">time_step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">time_step</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_electricity_consumption</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__electricity_consumption</span><span class="p">[</span><span class="n">time_step</span><span class="p">:</span><span class="n">time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">available_nominal_power</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -2691,7 +2707,7 @@
             <span class="o">**</span><span class="p">{</span>
                 <span class="n">k</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">'_'</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span>
                 <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">washing_machine_simulation</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unwanted_keys</span>
+                <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unwanted_keys</span>
             <span class="p">},</span>
             <span class="s1">'washing_machine_initiated'</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">initiated</span><span class="p">),</span>
             <span class="s1">'washing_machine_action'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">past_action_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">past_action_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span>
@@ -2733,7 +2749,7 @@
         <span class="n">simulation_attrs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">key</span><span class="p">:</span> <span class="n">value</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">washing_machine_simulation</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
         <span class="p">}</span>
 
         <span class="n">time_steps</span> <span class="o">=</span> <span class="p">[]</span>
