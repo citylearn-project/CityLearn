@@ -72,6 +72,14 @@ See the [data unit contract](data_unit_contract.md#robustness-noise).
 
 CityLearn requires Python 3.10 or newer. Environments on Python 3.9 keep
 resolving CityLearn 3.5.0; upgrade the interpreter to use later releases.
+### Vehicle-to-building backup during outages
+
+New and off by default: `power_outage.vehicle_to_building` in a building schema
+(`Building.outage_vehicle_to_building`). Without it nothing changes: an EV
+cannot discharge while the grid is down. With it, a negative EV action during an
+outage discharges the vehicle into the building, up to the islanded load that PV
+and the battery do not cover. Results change only for buildings that enable the
+option and request EV discharge during an outage.
 
 ### JSON files with NumPy values
 

@@ -632,6 +632,38 @@ load or PV truth.</p>
 </tr>
 </tbody>
 </table>
+<p><code class="docutils literal notranslate"><span class="pre">power_outage</span></code> keys:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Simulate grid outages for this building.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stochastic_power_outage</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Draw outages from <code class="docutils literal notranslate"><span class="pre">stochastic_power_outage_model</span></code> instead of the <code class="docutils literal notranslate"><span class="pre">power_outage</span></code> column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stochastic_power_outage_model</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PowerOutage</span></code></p></td>
+<td><p>Outage model class and attributes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vehicle_to_building</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Let a connected EV discharge to the building during an outage (vehicle-to-building backup), up to the islanded load that PV and the battery leave uncovered. The entity charger features <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code> and <code class="docutils literal notranslate"><span class="pre">available_discharge_power_kw</span></code> report the vehicle’s discharge capacity during the outage. The discharge can take the vehicle below its required departure SOC.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="device-sections">
 <h2>Device Sections<a class="headerlink" href="#device-sections" title="Link to this heading"></a></h2>

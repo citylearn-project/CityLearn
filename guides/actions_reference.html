@@ -352,6 +352,7 @@ not simulate passenger queues or capacity limits.</p>
 <li><p>Update net balance, rewards, KPIs and observations.</p></li>
 </ol>
 <p>When <code class="docutils literal notranslate"><span class="pre">electrical_storage_action</span> <span class="pre">&lt;</span> <span class="pre">0</span></code>, BESS discharge is prioritized before other electrical consumption.</p>
+<p>During a power outage, EV charger actions are limited to local supply, and a negative (discharge) action is set to zero unless the building’s <code class="docutils literal notranslate"><span class="pre">power_outage.vehicle_to_building</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>. With that option, a connected EV may discharge to the building. The discharge is limited to the non-shiftable load plus the electricity the cooling, heating and DHW devices need for the demand left after storage discharge, less the PV and battery output already available, so nothing is exported to the failed grid. It is applied after the thermal and battery discharges and before those loads; deferrable appliances still start only on supply that the loads leave.</p>
 </section>
 </section>
 

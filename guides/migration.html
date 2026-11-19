@@ -64,6 +64,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#baselines-under-the-flat-interface-with-robustness-observation-events">Baselines under the flat interface with robustness observation events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#robustness-noise-stays-within-physical-ranges">Robustness noise stays within physical ranges</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#python-3-10-or-newer">Python 3.10 or newer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vehicle-to-building-backup-during-outages">Vehicle-to-building backup during outages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#json-files-with-numpy-values">JSON files with NumPy values</a></li>
 </ul>
 </li>
@@ -218,6 +219,15 @@ See the <a class="reference internal" href="data_unit_contract.html#robustness-n
 <span id="python-310-or-newer"></span><h3>Python 3.10 or newer<a class="headerlink" href="#python-3-10-or-newer" title="Link to this heading"></a></h3>
 <p>CityLearn requires Python 3.10 or newer. Environments on Python 3.9 keep
 resolving CityLearn 3.5.0; upgrade the interpreter to use later releases.</p>
+</section>
+<section id="vehicle-to-building-backup-during-outages">
+<h3>Vehicle-to-building backup during outages<a class="headerlink" href="#vehicle-to-building-backup-during-outages" title="Link to this heading"></a></h3>
+<p>New and off by default: <code class="docutils literal notranslate"><span class="pre">power_outage.vehicle_to_building</span></code> in a building schema
+(<code class="docutils literal notranslate"><span class="pre">Building.outage_vehicle_to_building</span></code>). Without it nothing changes: an EV
+cannot discharge while the grid is down. With it, a negative EV action during an
+outage discharges the vehicle into the building, up to the islanded load that PV
+and the battery do not cover. Results change only for buildings that enable the
+option and request EV discharge during an outage.</p>
 </section>
 <section id="json-files-with-numpy-values">
 <h3>JSON files with NumPy values<a class="headerlink" href="#json-files-with-numpy-values" title="Link to this heading"></a></h3>
