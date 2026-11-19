@@ -1779,8 +1779,9 @@ class CityLearnEnv(Environment, Env):
             If a value is not provided, defaults to the agent defined in the schema:agent:type.
 
         **kwargs : dict
-            Agent initialization attributes. For most agents e.g. CityLearn and Stable-Baselines3 agents, 
+            Agent initialization attributes. For most agents e.g. CityLearn and Stable-Baselines3 agents,
             an intialized :py:attr:`env` must be parsed to the agent :py:meth:`init` function.
+            When `agent` is not provided, these update the schema:agent:attributes instead of replacing them.
         
         Returns
         -------
@@ -1803,14 +1804,12 @@ class CityLearnEnv(Environment, Env):
         else:
             agent_type = self.schema['agent']['type']
 
-        if kwargs is not None and len(kwargs) > 0:
-            agent_attributes = dict(kwargs)
-
-        elif agent is None:
-            agent_attributes = dict(self.schema['agent'].get('attributes', {}))
+        if agent is None:
+            # The schema's agent keeps its schema attributes when keyword arguments, e.g. a wrapped `env`, are passed.
+            agent_attributes = {**(self.schema['agent'].get('attributes') or {}), **kwargs}
 
         else:
-            agent_attributes = {}
+            agent_attributes = dict(kwargs)
 
         if 'env' not in agent_attributes:
             agent_attributes['env'] = self

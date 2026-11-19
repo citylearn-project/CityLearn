@@ -19,6 +19,7 @@ from citylearn.citylearn import CityLearnEnv
 from citylearn.data import DataSet, get_settings
 from citylearn.__init__ import __version__
 from citylearn.utilities import FileHandler
+import numpy as np
 import pandas as pd
 import simplejson as json
 
@@ -31,10 +32,12 @@ except (ImportError, ModuleNotFoundError):
 
 def run_work_order(work_order_filepath, max_workers=None, start_index=None, end_index=None, virtual_environment_path=None, windows_system=None):
     work_order_filepath = Path(work_order_filepath)
+    windows_system = os.name == 'nt' if windows_system is None else windows_system
     
     if virtual_environment_path is not None:    
         if windows_system:
-            virtual_environment_command = f'"{os.path.join(virtual_environment_path, "Scripts", "Activate.ps1")}"'
+            # subprocess.run(..., shell=True) runs the commands in cmd.exe, which cannot run Activate.ps1.
+            virtual_environment_command = f'call "{os.path.join(virtual_environment_path, "Scripts", "activate.bat")}"'
         
         else:
             virtual_environment_command = f'source "{os.path.join(virtual_environment_path, "bin", "activate")}"'
@@ -226,23 +229,23 @@ class Simulator:
         data_list = []
 
         for b in self.env.unwrapped.buildings:
+            # Building results hold one value per executed time step. Data and storage SOC series also
+            # hold the terminal time step, which is observed but not executed.
+            time_steps = len(b.net_electricity_consumption)
             data = {}
 
             for variable in self.time_series_variables:
-                key = b
-                values = variable.split('.')
+                value = b
 
-                for i in range(len(values)):
-                    if hasattr(key, values[i]):
-                        value = getattr(key, values[i])
-                        key = value
-                    
-                    else:
-                        pass
-                
-                data[variable.replace('.', '_')] = value
-            
-            data = pd.DataFrame(data)
+                for name in variable.split('.'):
+                    value = getattr(value, name, None)
+
+                    if value is None:
+                        break
+
+                data[variable.replace('.', '_')] = value[:time_steps] if np.ndim(value) > 0 else value
+
+            data = pd.DataFrame(data, index=range(time_steps))
             data.insert(0, 'time_step', data.index)
             data.insert(1, 'building_name', b.name)
             data_list.append(data)
@@ -358,11 +361,11 @@ class Simulator:
         self.__actions_list = None
     
     @classmethod
-    def evaluate(cls, evaluation_episode_time_steps: Tuple[int, int] = None, **kwargs):
+    def evaluate(cls, evaluation_episode_time_steps: Union[Tuple[int, int], List[Tuple[int, int]]] = None, **kwargs):
         kwargs['env_kwargs'] = {} if kwargs.get('env_kwargs') is None else kwargs['env_kwargs']
 
         if evaluation_episode_time_steps is not None:
-            kwargs['env_kwargs']['episode_time_steps'] = [evaluation_episode_time_steps]
+            kwargs['env_kwargs']['episode_time_steps'] = cls.__episode_time_steps(evaluation_episode_time_steps)
         
         else:
             pass
@@ -374,7 +377,7 @@ class Simulator:
         FileHandler.write_json(filepath, simulator.__get_evaluation_summary())
 
     @classmethod
-    def train(cls, episodes: int = None, evaluate: bool = None, evaluation_episode_time_steps: Tuple[int, int] = None, save_agent: bool = None, **kwargs):
+    def train(cls, episodes: int = None, evaluate: bool = None, evaluation_episode_time_steps: Union[Tuple[int, int], List[Tuple[int, int]]] = None, save_agent: bool = None, **kwargs):
         simulator = cls(**kwargs)
         episodes = 1 if episodes is None else episodes
         simulator.__train(episodes)
@@ -388,19 +391,25 @@ class Simulator:
             pass
 
         if evaluate:
-            evaluation_episode_time_steps = [[
+            # Evaluate the agent trained above, not a new agent built from the same arguments.
+            simulator.env.unwrapped.episode_time_steps = [[
                 simulator.env.unwrapped.episode_tracker.simulation_start_time_step, 
                 simulator.env.unwrapped.episode_tracker.simulation_end_time_step
-            ]] if evaluation_episode_time_steps is None else [evaluation_episode_time_steps]
-            kwargs['env_kwargs'] = {} if kwargs.get('env_kwargs') is None else kwargs['env_kwargs']
-            kwargs['overwrite'] = False
-            kwargs['output_directory'] = simulator.output_directory
-            kwargs['env_kwargs']['episode_time_steps'] = evaluation_episode_time_steps
-            kwargs['simulation_id'] = f'{simulator.simulation_id}'
-            simulator.evaluate(**kwargs)
+            ]] if evaluation_episode_time_steps is None else cls.__episode_time_steps(evaluation_episode_time_steps)
+            simulator.__evaluate()
+            filepath = os.path.join(simulator.output_directory, f'{simulator.simulation_id}-evaluation.json')
+            FileHandler.write_json(filepath, simulator.__get_evaluation_summary())
 
         else:
             pass
+
+    @staticmethod
+    def __episode_time_steps(evaluation_episode_time_steps) -> List[List[int]]:
+        # The CLI collects each `-te start end` pair in a list; the Python API also accepts one (start, end) pair.
+        if np.ndim(evaluation_episode_time_steps) == 1:
+            evaluation_episode_time_steps = [evaluation_episode_time_steps]
+
+        return [[int(start), int(end)] for start, end in evaluation_episode_time_steps]
 
     @staticmethod
     def get_default_time_series_variables():

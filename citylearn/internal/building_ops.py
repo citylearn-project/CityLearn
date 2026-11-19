@@ -629,6 +629,9 @@ class BuildingOpsService:
                 priority_list[device_ix] = storage
 
         limit_control_actions = bool(building.power_outage)
+        if limit_control_actions and building.outage_vehicle_to_building:
+            priority_list = self._vehicle_to_building_order(priority_list, actions)
+
         for key in priority_list:
             func, args = actions[key]
             if args and (limit_control_actions or key.startswith('deferrable_appliance_') or key.startswith('escalator_')):
@@ -944,6 +947,13 @@ class BuildingOpsService:
 
         if action_key.startswith('electric_vehicle_storage_'):
             charger = getattr(func, '__self__', None)
+            if charger is not None and action < 0.0 and building.outage_vehicle_to_building \
+                    and charger.connected_electric_vehicle is not None:
+                # Vehicle-to-building backup supplies only the islanded load that local supply leaves uncovered.
+                requested_power_kw = min(self._charger_requested_power_kw(charger, action), 0.0)
+                target_power_kw = max(requested_power_kw, -self._outage_unserved_load_kw())
+                return (self._charger_action_from_power_kw(charger, target_power_kw),)
+
             if charger is None or action <= 0.0:
                 return (0.0,)
 
@@ -953,6 +963,62 @@ class BuildingOpsService:
             target_power_kw = min(requested_power_kw, available_power_kw)
             return (self._charger_action_from_power_kw(charger, target_power_kw),)
         return args
+
+    def _vehicle_to_building_order(self, priority_list: List[str], actions: Mapping[str, Tuple]) -> List[str]:
+        """Apply vehicle-to-building discharges after the supply they add to and before the loads they serve.
+
+        Discharging EVs follow the demand updates and the thermal and electrical storage discharges, so their limit
+        sees the thermal demand left for the devices and the battery output. They precede the devices, the
+        non-shiftable load and the other electric loads, which draw on them through `downward_electrical_flexibility`.
+        """
+
+        def discharging(key: str) -> bool:
+            return self._safe_scalar(actions[key][1][0], 0.0) < 0.0
+
+        vehicles = [key for key in priority_list if key.startswith('electric_vehicle_storage_') and discharging(key)]
+        if not vehicles:
+            return priority_list
+
+        storages = ('cooling_storage', 'heating_storage', 'dhw_storage', 'electrical_storage')
+        lead = {'cooling_demand', 'heating_demand', *(key for key in storages if key in actions and discharging(key))}
+        others = [key for key in priority_list if key not in vehicles]
+        return [key for key in others if key in lead] + vehicles + [key for key in others if key not in lead]
+
+    def _outage_unserved_load_kw(self) -> float:
+        """Islanded electric load at the current step that local supply does not cover yet, in [kW].
+
+        The load is the non-shiftable load plus, for each thermal end use, the electricity its device needs to serve
+        the demand left after its storage discharge, limited by the device's maximum output. Local supply is
+        `downward_electrical_flexibility`: PV and the battery and EV discharges already applied this step.
+        Deferrable appliances and escalators are not counted; they only run on supply that the other loads leave.
+        """
+
+        building = self.building
+        t = building.time_step
+        temperature = building.weather.outdoor_dry_bulb_temperature[t]
+        load_kwh = self._dataset_energy_to_control_step(max(self._safe_index(building.non_shiftable_load, t, 0.0), 0.0))
+
+        for end_use in ('cooling', 'heating', 'dhw'):
+            device = getattr(building, f'{end_use}_device')
+            storage = getattr(building, f'{end_use}_storage')
+            # Demand is dataset-resolution kWh; storage balances are control-step kWh.
+            demand_kwh = self._dataset_energy_to_control_step(self._safe_index(getattr(building, f'{end_use}_demand'), t, 0.0))
+            output_kwh = max(demand_kwh - max(-self._safe_index(storage.energy_balance, t, 0.0), 0.0), 0.0)
+            if output_kwh <= 0.0:
+                continue
+
+            heating = end_use != 'cooling'
+            heat_pump = isinstance(device, HeatPump)
+            max_output_kw = device.get_max_output_power(temperature, heating=heating) if heat_pump else device.get_max_output_power()
+            output_kwh = min(output_kwh, power_kw_to_energy_kwh(self._safe_scalar(max_output_kw, 0.0), building.seconds_per_time_step))
+            electricity_kwh = (
+                device.get_input_power(output_kwh, temperature, heating=heating) if heat_pump
+                else device.get_input_power(output_kwh)
+            )
+            load_kwh += max(self._safe_scalar(electricity_kwh, 0.0), 0.0)
+
+        supply_kwh = max(self._safe_scalar(building.downward_electrical_flexibility, 0.0), 0.0)
+        return self._control_step_energy_to_power_kw(max(load_kwh - supply_kwh, 0.0))
 
     def _current_phase_names(self):
         building = self.building
