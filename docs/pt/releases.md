@@ -5,6 +5,22 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Capacidade de descarga da bateria durante cortes.** Durante um corte de
+  energia, a tabela entity `storage` indicava `can_discharge = 0` e
+  `available_discharge_power_kw = 0`, embora a bateria possa descarregar para o
+  edifício isolado até à sua carga local
+  ([#220](https://github.com/citylearn-project/CityLearn/issues/220)). Estas
+  features indicam agora a capacidade de descarga da bateria sem a margem de
+  exportação da rede, como a #205 faz para a descarga do veículo para o
+  edifício; o simulador continua a limitar a descarga à carga local. As baselines
+  baseadas em regras leem `can_discharge`, pelo que passam a usar a bateria
+  durante os cortes. Na semana com mais cortes de
+  `pt_rec_30/evaluation/rec_30_robustness.json` e `rec_30_combined.json`, o BAU
+  descarrega mais 1,2 kWh e a energia não servida normalizada durante os cortes
+  desce de 0,0015 para 0,0007 e de 0,0017 para 0,0008; o custo e as emissões não
+  mudam. Em `pt_rec_100/evaluation/rec_100_allin.json` as observações mudam, mas
+  os KPIs do BAU dessa semana não. Os datasets sem cortes e a interface flat não
+  mudam. Ver o [guia de migração](../migration.md#unreleased).
 - **Baselines sem o bundle `entity_core_electrical`.** Duas alterações aplicam-se
   apenas aos datasets cujo schema não ativa esse bundle; os `pt_rec_*` e o
   `citylearn_challenge_2022_phase_all_plus_evs` ativam-no e não mudam. Primeiro,
