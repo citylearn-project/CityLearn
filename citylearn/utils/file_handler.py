@@ -100,7 +100,7 @@ class FileHandler:
 
         kwargs = {'ignore_nan': True, 'sort_keys': False, 'default': json_default, 'indent': 2, **kwargs}
 
-        with open(filepath,'w') as f:
+        with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(dictionary, f, **kwargs)
 
     @staticmethod
@@ -118,7 +118,7 @@ class FileHandler:
             YAML document converted to dictionary.
         """
 
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8-sig') as f:
             data = yaml.safe_load(f)
 
         return data
@@ -142,7 +142,7 @@ class FileHandler:
 
         kwargs = {'sort_keys': False, 'indent': 2, **kwargs}
 
-        with open(filepath, 'w') as f:
+        with open(filepath, 'w', encoding='utf-8') as f:
             yaml.safe_dump(dictionary, f, **kwargs)
 
     @staticmethod

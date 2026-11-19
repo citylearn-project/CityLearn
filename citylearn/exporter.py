@@ -209,7 +209,9 @@ class EpisodeExporter:
         result = source_env.run_business_as_usual_baseline()
         baseline_env = result.env
         episode_num = source_env.episode_tracker.episode
-        final_index = int(result.time_step)
+        # Like the control export, write the executed steps 0 .. time_step - 1. Step time_step is the
+        # terminal observation, never executed; reading it would repeat the last value.
+        executed_time_steps = int(result.time_step)
         filename = self._export_filename(f"exported_data_business_as_usual_ep{episode_num}.csv")
         file_path = Path(env.new_folder_path) / filename
         if file_path.exists():
@@ -237,7 +239,7 @@ class EpisodeExporter:
         if self._render_file_format() == 'parquet':
             rows = []
             chunk_size = self._render_chunk_size()
-            for t in range(final_index + 1):
+            for t in range(executed_time_steps):
                 building_rows = []
                 for building in self._buildings_for_time_step(t, baseline_env):
                     row = self._business_as_usual_building_row(building, t, baseline_env)
@@ -259,7 +261,7 @@ class EpisodeExporter:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
-            for t in range(final_index + 1):
+            for t in range(executed_time_steps):
                 building_rows = []
                 for building in self._buildings_for_time_step(t, baseline_env):
                     row = self._business_as_usual_building_row(building, t, baseline_env)
