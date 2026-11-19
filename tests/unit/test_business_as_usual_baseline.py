@@ -524,7 +524,7 @@ def test_baselines_request_zero_for_actions_they_do_not_control(tmp_path: Path, 
         agent = agent_class(env)
         # Pretend the storage action is not controlled: it must be zero, the EV still served.
         agent._is_controlled_action = lambda name: name.startswith("electric_vehicle_storage")
-        agent._build_engine()
+        agent._attach(None)
         action = agent.predict([])[0]
         names = env.action_names[0]
         assert action[names.index("electrical_storage")] == 0.0
@@ -677,3 +677,114 @@ def test_bau_reference_cache_follows_the_selected_target():
         assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v1"
     finally:
         env.close()
+
+
+def _multi_episode_actions(env: CityLearnEnv, make_agent, episodes: int, fresh_agent_per_episode: bool):
+    actions, agent = [], None
+    for _ in range(episodes):
+        observations, _ = env.reset()
+        if agent is None or fresh_agent_per_episode:
+            agent = make_agent(env)
+        while not env.terminated:
+            action = agent.predict(observations)
+            actions.append([np.asarray(a, dtype="float64") for a in action])
+            observations, *_ = env.step(action)
+    return actions
+
+
+def _assert_same_actions(left, right):
+    assert len(left) == len(right)
+    for step_left, step_right in zip(left, right):
+        assert len(step_left) == len(step_right)
+        for a, b in zip(step_left, step_right):
+            np.testing.assert_array_equal(a, b)
+
+
+@pytest.mark.parametrize(
+    "agent_class",
+    [BusinessAsUsualAgent, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy],
+)
+@pytest.mark.parametrize("interface", ["flat", "entity"])
+def test_baselines_parse_the_dataset_once_and_keep_their_actions_across_episodes(agent_class, interface):
+    from unittest import mock
+
+    from citylearn.agents._rule_engine import RulePolicyBase
+    from citylearn.agents.baseline import _RuleBaselineAgent
+
+    def make_env():
+        return CityLearnEnv(
+            str(SOURCE_DATASET / "schema.json"), central_agent=False, episode_time_steps=4,
+            rolling_episode_split=True, random_seed=0, interface=interface,
+        )
+
+    env = make_env()
+    try:
+        with mock.patch.object(
+            RulePolicyBase, "_load_dataset_info", autospec=True, side_effect=RulePolicyBase._load_dataset_info,
+        ) as parse, mock.patch.object(
+            _RuleBaselineAgent, "_attach", autospec=True, side_effect=_RuleBaselineAgent._attach,
+        ) as attach:
+            reused = _multi_episode_actions(env, agent_class, episodes=3, fresh_agent_per_episode=False)
+        # One agent, three episodes: the schema and EV files are parsed once and,
+        # with a static topology, the engine is attached once.
+        assert parse.call_count == 1
+        assert attach.call_count == 1
+    finally:
+        env.close()
+
+    env = make_env()
+    try:
+        # A new agent per episode builds and attaches a new engine, as every reset did before.
+        rebuilt = _multi_episode_actions(env, agent_class, episodes=3, fresh_agent_per_episode=True)
+    finally:
+        env.close()
+    _assert_same_actions(reused, rebuilt)
+
+
+def test_baseline_attaches_again_when_the_topology_changes():
+    from unittest import mock
+
+    from citylearn.agents._rule_engine import RulePolicyBase
+    from citylearn.agents.baseline import _RuleBaselineAgent
+
+    def make_env():
+        # Building_18 joins at global step 1000. Rolling episodes start at steps 995 and 996.
+        return CityLearnEnv(
+            "citylearn_three_phase_dynamic_topology_demo", central_agent=False,
+            simulation_start_time_step=995, simulation_end_time_step=1014, episode_time_steps=10,
+            rolling_episode_split=True, random_seed=0,
+        )
+
+    env = make_env()
+    try:
+        versions = []
+        with mock.patch.object(
+            RulePolicyBase, "_load_dataset_info", autospec=True, side_effect=RulePolicyBase._load_dataset_info,
+        ) as parse, mock.patch.object(
+            _RuleBaselineAgent, "_attach", autospec=True, side_effect=_RuleBaselineAgent._attach,
+        ) as attach:
+            agent = None
+            reused = []
+            for _ in range(2):
+                observations, _ = env.reset()
+                if agent is None:
+                    agent = BusinessAsUsualAgent(env)
+                while not env.terminated:
+                    versions.append(env.topology_version)
+                    action = agent.predict(observations)
+                    reused.append([np.asarray(a, dtype="float64") for a in action])
+                    observations, *_ = env.step(action)
+        assert versions == [0] * 5 + [1] * 4 + [0] * 4 + [1] * 5
+        assert parse.call_count == 1
+        # Construction, the reset that restored the initial members, and the
+        # member added at step 1000 in each episode.
+        assert attach.call_count == 4
+    finally:
+        env.close()
+
+    env = make_env()
+    try:
+        rebuilt = _multi_episode_actions(env, BusinessAsUsualAgent, episodes=2, fresh_agent_per_episode=True)
+    finally:
+        env.close()
+    _assert_same_actions(reused, rebuilt)

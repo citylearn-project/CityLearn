@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
+from math import isfinite
 from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import numpy as np
@@ -383,19 +384,19 @@ class BuildingOpsService:
         if wants('net_electricity_consumption'):
             observations['net_electricity_consumption'] = building.net_electricity_consumption[endogenous_t]
         if wants('cooling_electricity_consumption'):
-            observations['cooling_electricity_consumption'] = building.cooling_electricity_consumption[endogenous_t]
+            observations['cooling_electricity_consumption'] = building.cooling_device.electricity_consumption_at(endogenous_t)
         if wants('heating_electricity_consumption'):
-            observations['heating_electricity_consumption'] = building.heating_electricity_consumption[endogenous_t]
+            observations['heating_electricity_consumption'] = building.heating_device.electricity_consumption_at(endogenous_t)
         if wants('dhw_electricity_consumption'):
-            observations['dhw_electricity_consumption'] = building.dhw_electricity_consumption[endogenous_t]
+            observations['dhw_electricity_consumption'] = building.dhw_device.electricity_consumption_at(endogenous_t)
         if wants('cooling_storage_electricity_consumption'):
-            observations['cooling_storage_electricity_consumption'] = building.cooling_storage_electricity_consumption[endogenous_t]
+            observations['cooling_storage_electricity_consumption'] = building.storage_electricity_consumption_at('cooling', endogenous_t)
         if wants('heating_storage_electricity_consumption'):
-            observations['heating_storage_electricity_consumption'] = building.heating_storage_electricity_consumption[endogenous_t]
+            observations['heating_storage_electricity_consumption'] = building.storage_electricity_consumption_at('heating', endogenous_t)
         if wants('dhw_storage_electricity_consumption'):
-            observations['dhw_storage_electricity_consumption'] = building.dhw_storage_electricity_consumption[endogenous_t]
+            observations['dhw_storage_electricity_consumption'] = building.storage_electricity_consumption_at('dhw', endogenous_t)
         if wants('electrical_storage_electricity_consumption'):
-            observations['electrical_storage_electricity_consumption'] = building.electrical_storage_electricity_consumption[endogenous_t]
+            observations['electrical_storage_electricity_consumption'] = building.storage_electricity_consumption_at('electrical', endogenous_t)
         if wants('deferrable_appliance_electricity_consumption'):
             observations['deferrable_appliance_electricity_consumption'] = building.deferrable_appliances_electricity_consumption[endogenous_t]
         if wants('washing_machine_electricity_consumption'):
@@ -694,12 +695,15 @@ class BuildingOpsService:
         return cache
 
     def _safe_scalar(self, value, default: float = 0.0) -> float:
+        if type(value) is float:
+            return value if isfinite(value) else float(default)
+
         try:
             scalar = float(value)
         except (TypeError, ValueError):
             return float(default)
 
-        if not np.isfinite(scalar):
+        if not isfinite(scalar):
             return float(default)
 
         return scalar
@@ -760,18 +764,30 @@ class BuildingOpsService:
         if 0 <= t < len(values):
             values[t] = self._safe_scalar(value, 0.0)
 
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def _clip_reason_names(prefix: str) -> Tuple[str, ...]:
+        return tuple(
+            f'{prefix}clip_reason_{reason}'
+            for reason in (
+                'availability',
+                'power_limit',
+                'soc_limit',
+                'building_headroom',
+                'phase_headroom',
+                'export_headroom',
+                'outage',
+                'deferrable_window',
+            )
+        )
+
     def _clear_feedback_reasons(self, owner, prefix: str = 'action_feedback_'):
-        for reason in (
-            'availability',
-            'power_limit',
-            'soc_limit',
-            'building_headroom',
-            'phase_headroom',
-            'export_headroom',
-            'outage',
-            'deferrable_window',
-        ):
-            self._set_feedback_value(owner, f'{prefix}clip_reason_{reason}', 0.0)
+        t = int(self.building.time_step)
+
+        for name in self._clip_reason_names(prefix):
+            values = self._ensure_feedback_array(owner, name)
+            if 0 <= t < len(values):
+                values[t] = False
 
     def _set_feedback_reason(self, owner, reason: str, prefix: str = 'action_feedback_'):
         self._set_feedback_value(owner, f'{prefix}clip_reason_{reason}', 1.0)
