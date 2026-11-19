@@ -1321,6 +1321,10 @@ class CityLearnEntityInterfaceService:
 
         available_charge_power = 0.0 if outage else max(min(charge_candidates), 0.0)
         available_discharge_power = 0.0 if outage else max(min(discharge_candidates), 0.0)
+        if outage and bool(getattr(building, "outage_vehicle_to_building", False)):
+            # Vehicle-to-building backup: the islanded building cannot export, so the grid headroom does not
+            # apply. The simulator further limits the discharge to the load that local supply leaves uncovered.
+            available_discharge_power = max(min(max(max_discharging_power, 0.0), discharge_power_by_soc), 0.0)
         # Battery headroom limits energy actually accepted in the last interval,
         # not the minimum viable charger command. Below the charger deadband a
         # positive command produces no energy at all. Permit the minimum command

@@ -222,6 +222,9 @@ def load_kpis(path):
         frame = frame.melt(id_vars='KPI', var_name='name', value_name='value').rename(columns={'KPI': 'cost_function'})
     elif not {'cost_function', 'name', 'value'} <= set(frame):
         raise ValueError('Expected a V2 KPI export or long-form cost_function/name/value columns')
+    if 'community_id' in frame:
+        # Multi-community exports repeat each name (e.g. District) once per community.
+        frame = frame.assign(name=frame['community_id'].astype(str) + ':' + frame['name'].astype(str))
     if frame.duplicated(['name', 'cost_function']).any():
         raise ValueError('Duplicate KPI/name rows cannot be compared safely')
     return {(r['name'], r['cost_function']): (None if pd.isna(r['value']) or not math.isfinite(float(r['value'])) else float(r['value']))
@@ -307,7 +310,7 @@ def compare_exports(left_path, right_path, mode='controller'):
         rows.append(dict(name=name, kpi=key, left=a, right=b,
                          delta_right_minus_left=b-a if a is not None and b is not None else None))
     report['kpis'] = rows
-    report['outcome_summary'] = [r for r in rows if r['name']=='District' and any(
+    report['outcome_summary'] = [r for r in rows if r['name'].rsplit(':', 1)[-1]=='District' and any(
         text in r['kpi'] for text in ('cost_total_control', 'departure_audit_', 'deferrable_appliance_audit_',
                                      'provenance_pv_useful_', 'provenance_external_purchase_emissions'))]
     report['observed_differences'] = [r['kpi'] for r in report['outcome_summary']

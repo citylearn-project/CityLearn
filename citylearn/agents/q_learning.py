@@ -138,8 +138,8 @@ class TabularQLearning(Agent):
 
             next_q = self.q[i][n]
             # Bellman target uses the best next-state value, not its action index;
-            # unvisited (all-NaN) states contribute zero.
-            next_max_q = 0.0 if np.all(np.isnan(next_q)) else float(np.nanmax(next_q))
+            # terminal transitions and unvisited (all-NaN) states contribute zero.
+            next_max_q = 0.0 if terminated or np.all(np.isnan(next_q)) else float(np.nanmax(next_q))
             
             # update q
             new_q = current_q + self.learning_rate*(r + self.discount_factor*next_max_q - current_q)

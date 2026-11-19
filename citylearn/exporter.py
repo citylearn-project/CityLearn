@@ -18,6 +18,20 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
+def _parquet_text_cell(value: Any) -> Any:
+    """Return a number or boolean as the text the CSV export writes for it.
+
+    ``str()`` gives NumPy's shortest round-trip text for the scalar's own precision,
+    so ``np.float32(0.1)`` becomes ``'0.1'``. Text, list and other cells are
+    returned unchanged; a list cell next to text still fails in PyArrow.
+    """
+
+    if isinstance(value, (np.generic, bool, int, float)):
+        return str(value)
+
+    return value
+
+
 class EpisodeExporter:
     """Internal helper that owns rendering/export behaviour for ``CityLearnEnv``."""
 
@@ -172,7 +186,9 @@ class EpisodeExporter:
         if self._render_file_format() == 'parquet':
             kpis.to_parquet(file_path, index=False)
         else:
-            kpis.fillna('').to_csv(file_path, index=False, encoding='utf-8')
+            # na_rep writes missing KPIs as empty cells, as fillna('') did, without
+            # filling float columns with a string (deprecated in pandas 3).
+            kpis.to_csv(file_path, index=False, encoding='utf-8', na_rep='')
         if include_business_as_usual and export_business_as_usual_timeseries:
             self.export_business_as_usual_timeseries(export_env)
         from citylearn.internal.experiment import experiment_manifest
@@ -193,7 +209,9 @@ class EpisodeExporter:
         result = source_env.run_business_as_usual_baseline()
         baseline_env = result.env
         episode_num = source_env.episode_tracker.episode
-        final_index = int(result.time_step)
+        # Like the control export, write the executed steps 0 .. time_step - 1. Step time_step is the
+        # terminal observation, never executed; reading it would repeat the last value.
+        executed_time_steps = int(result.time_step)
         filename = self._export_filename(f"exported_data_business_as_usual_ep{episode_num}.csv")
         file_path = Path(env.new_folder_path) / filename
         if file_path.exists():
@@ -221,7 +239,7 @@ class EpisodeExporter:
         if self._render_file_format() == 'parquet':
             rows = []
             chunk_size = self._render_chunk_size()
-            for t in range(final_index + 1):
+            for t in range(executed_time_steps):
                 building_rows = []
                 for building in self._buildings_for_time_step(t, baseline_env):
                     row = self._business_as_usual_building_row(building, t, baseline_env)
@@ -243,7 +261,7 @@ class EpisodeExporter:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
-            for t in range(final_index + 1):
+            for t in range(executed_time_steps):
                 building_rows = []
                 for building in self._buildings_for_time_step(t, baseline_env):
                     row = self._business_as_usual_building_row(building, t, baseline_env)
@@ -649,7 +667,9 @@ class EpisodeExporter:
         # is ``"-1.00"`` while idle and ``np.float32(1)`` while occupied).
         # Promote wholly numeric-like object columns to numbers before writing;
         # keep genuinely textual columns textual and normalize NumPy scalars.
-        for column in dataframe.select_dtypes(include=['object']).columns:
+        # pandas 3 infers the ``str`` dtype for text columns; selecting 'string'
+        # includes them on pandas 2 and 3 without the deprecated 'object' fallback.
+        for column in dataframe.select_dtypes(include=['object', 'string']).columns:
             series = dataframe[column]
             non_null = series.dropna()
             if non_null.empty:
@@ -658,6 +678,14 @@ class EpisodeExporter:
             numeric = pd.to_numeric(non_null, errors='coerce')
             if numeric.notna().all():
                 dataframe[column] = pd.to_numeric(series, errors='coerce')
+                continue
+
+            text_cells = sum(isinstance(value, str) for value in non_null)
+            if 0 < text_cells < len(non_null):
+                # A Parquet column has one type, so a column that mixes text with
+                # numbers or booleans (``"EV-1"`` and ``np.int64(42)``) is written as
+                # text. Only the number and boolean cells are converted; nulls stay null.
+                dataframe[column] = series.map(_parquet_text_cell, na_action='ignore')
                 continue
 
             dataframe[column] = series.map(

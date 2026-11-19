@@ -22,7 +22,7 @@ from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.energy_model import Battery, DeferrableAppliance, Escalator
 from citylearn.reward_function import MultiBuildingRewardFunction, RewardFunction
 from citylearn.utilities import parse_bool
-from citylearn.internal import loading_inputs, loading_components
+from citylearn.internal import grid_availability, loading_inputs, loading_components
 
 LOGGER = logging.getLogger()
 
@@ -427,6 +427,12 @@ class CityLearnLoadingService:
         member_window = self._dynamic_member_windows.get(building_name)
         inputs = loading_inputs.load_building_inputs(self, building_name, schema, expected_rows, member_window)
         options['time_step_ratio'] = inputs.time_step_ratio
+        available_grid_power = grid_availability.load(
+            self, building_name, building_schema, schema, expected_rows, member_window)
+
+        if available_grid_power is not None:
+            options['available_grid_power'] = available_grid_power
+
         building_type = ('citylearn.citylearn.Building' if building_schema.get('type') is None
                          else building_schema['type'])
         constructor = loading_components.component_constructor(building_type, f'buildings.{building_name}.type')

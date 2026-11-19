@@ -9,8 +9,9 @@ from types import SimpleNamespace
 from array import array
 
 from citylearn.energy_model import Battery
-from citylearn.internal import ev_departure_audit, deferrable_service_audit
+from citylearn.internal import ev_departure_audit, deferrable_service_audit, grid_availability
 from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
+from citylearn.internal.service_energy import service_energy_components
 
 from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Sequence, Tuple
 
@@ -564,7 +565,8 @@ class CityLearnKPIService:
             per_phase_limits = getattr(building, '_electrical_service_limits', {}).get('per_phase', {}) or {}
             cap_kw = requested_power_kw
 
-            import_limit = self._to_scalar(total_limits.get('import_kw'), np.nan)
+            import_limit = self._to_scalar(
+                grid_availability.total_limits_at(building, total_limits, step).get('import_kw'), np.nan)
             if np.isfinite(import_limit):
                 cap_kw = min(cap_kw, max(import_limit - base_total_kw, 0.0))
 
@@ -1057,11 +1059,15 @@ class CityLearnKPIService:
             if history_limit < t_start:
                 continue
 
+            ev_ids = getattr(sim, 'electric_vehicle_id', None)
+            session_ids = getattr(sim, 'electric_vehicle_session_id', None)
+            departure_times = getattr(sim, 'electric_vehicle_departure_time', None)
+
             for t in range(t_start, history_limit + 1):
                 current_state = states[t]
+                if current_state != 1:
+                    continue
                 next_state = states[t + 1] if t + 1 < len(states) else np.nan
-                ev_ids = getattr(sim, 'electric_vehicle_id', None)
-                session_ids = getattr(sim, 'electric_vehicle_session_id', None)
                 current_ev_id = self._normal_ev_id(
                     self._safe_sequence_value(ev_ids, t)
                 )
@@ -1076,14 +1082,14 @@ class CityLearnKPIService:
                 )
                 departure_countdown = self._to_scalar(
                     self._safe_sequence_value(
-                        getattr(sim, 'electric_vehicle_departure_time', None),
+                        departure_times,
                         t,
                     ),
                     np.nan,
                 )
                 next_departure_countdown = self._to_scalar(
                     self._safe_sequence_value(
-                        getattr(sim, 'electric_vehicle_departure_time', None),
+                        departure_times,
                         t + 1,
                     ),
                     np.nan,
@@ -1504,13 +1510,8 @@ class CityLearnKPIService:
     def _service_energy(self, building, t_start=0, t_final=None):
         """Demand/device histories use dataset energy; tank balances already use control kWh."""
         take = lambda name: self._thermal_values(building, getattr(building, name), t_start, t_final)
-        scale = float(getattr(building, 'time_step_ratio', 1.) or 1.)
-        expected = np.array([take(name)*scale for name in ('cooling_demand','heating_demand','dhw_demand','non_shiftable_load')]).T
-        served = np.array([take('energy_from_cooling_device')*scale+take('energy_from_cooling_storage'),
-                           take('energy_from_heating_device')*scale+take('energy_from_heating_storage'),
-                           take('energy_from_dhw_device')*scale+take('energy_from_dhw_storage'),
-                           take('energy_to_non_shiftable_load')*scale]).T
-        return expected, served
+        expected, served = service_energy_components(building, take)
+        return np.array(expected).T, np.array(served).T
 
     @population_scope
     @settled_cost_scope
@@ -1923,8 +1924,13 @@ class CityLearnKPIService:
             return
 
         bau_lookup = {
-            (str(row['level']), str(row['name']), str(row['cost_function'])): row['value']
-            for _, row in bau_df.iterrows()
+            (str(level), str(name), str(cf)): val
+            for level, name, cf, val in zip(
+                bau_df['level'].tolist(),
+                bau_df['name'].tolist(),
+                bau_df['cost_function'].tolist(),
+                bau_df['value'].tolist(),
+            )
         }
 
         # These references use the same provenance definition and physical
@@ -2280,8 +2286,25 @@ class CityLearnKPIService:
             dynamics_building_cls=dynamics_building_cls,
             progress=progress,
         )
-        legacy_df = all_metrics[all_metrics['cost_function'].isin(self.LEGACY_COST_FUNCTIONS)].copy()
-        extended_df = all_metrics[~all_metrics['cost_function'].isin(self.LEGACY_COST_FUNCTIONS)].copy()
+        legacy_by_cf: Dict[str, List[Tuple[str, str, object]]] = {}
+        extended_by_cf: Dict[str, List[Tuple[str, str, object]]] = {}
+        district_extended_values: Dict[str, object] = {}
+        legacy_set = self.LEGACY_COST_FUNCTIONS
+        for cf_raw, level_raw, name_raw, val in zip(
+            all_metrics['cost_function'].tolist(),
+            all_metrics['level'].tolist(),
+            all_metrics['name'].tolist(),
+            all_metrics['value'].tolist(),
+        ):
+            cf_str = str(cf_raw)
+            level_str = str(level_raw)
+            name_str = str(name_raw)
+            if cf_raw in legacy_set:
+                legacy_by_cf.setdefault(cf_str, []).append((level_str, name_str, val))
+            else:
+                extended_by_cf.setdefault(cf_str, []).append((level_str, name_str, val))
+                if level_str == 'district' and name_str == 'District' and cf_str not in district_extended_values:
+                    district_extended_values[cf_str] = val
         simulated_days = self._simulated_days(env)
 
         records: Dict[Tuple[str, str, str], Dict[str, object]] = {}
@@ -2312,7 +2335,7 @@ class CityLearnKPIService:
             )
 
         def map_from(
-            source_df: pd.DataFrame,
+            source_group: Mapping[str, List[Tuple[str, str, object]]],
             old_name: str,
             family: str,
             subfamily: str,
@@ -2320,14 +2343,12 @@ class CityLearnKPIService:
             variant: Optional[str] = None,
             unit: Optional[str] = None,
         ):
-            subset = source_df[source_df['cost_function'] == old_name]
-            for _, row in subset.iterrows():
-                level = str(row['level'])
+            for level, name, val in source_group.get(old_name, ()):
                 put(
                     level,
-                    str(row['name']),
+                    name,
                     v2(level, family, subfamily, metric, variant, unit),
-                    row['value'],
+                    val,
                 )
 
         # Ratios to baseline and comfort/resilience from legacy.
@@ -2355,7 +2376,7 @@ class CityLearnKPIService:
             ('annual_normalized_unserved_energy_total', 'comfort_resilience', 'resilience', 'unserved_energy_annual_normalized', None, 'ratio'),
         ]
         for old_name, family, subfamily, metric, variant, unit in legacy_map:
-            map_from(legacy_df, old_name, family, subfamily, metric, variant, unit)
+            map_from(legacy_by_cf, old_name, family, subfamily, metric, variant, unit)
 
         extended_map = [
             ('cost_control_total_eur', 'cost', 'total', 'control', None, 'eur'),
@@ -2470,30 +2491,28 @@ class CityLearnKPIService:
             metric, unit = key.rsplit('_', 1)
             extended_map.append((f'ev_departure_audit_{key}', 'ev', 'departure_audit', metric, None, unit))
         for old_name, family, subfamily, metric, variant, unit in extended_map:
-            map_from(extended_df, old_name, family, subfamily, metric, variant, unit)
+            map_from(extended_by_cf, old_name, family, subfamily, metric, variant, unit)
 
         # Phase peaks have dynamic suffixes (L1/L2/L3) and are conditionally present.
-        for _, row in extended_df.iterrows():
-            old_name = str(row['cost_function'])
-            level = str(row['level'])
-            name = str(row['name'])
-
+        for old_name, rows in extended_by_cf.items():
             if old_name.startswith('phase_import_peak_kw_'):
                 phase = old_name.split('phase_import_peak_kw_', 1)[1].lower()
-                put(
-                    level,
-                    name,
-                    v2(level, 'electrical_service_phase', 'phase_peaks', f'import_peak_{phase}', None, 'kw'),
-                    row['value'],
-                )
+                for level, name, val in rows:
+                    put(
+                        level,
+                        name,
+                        v2(level, 'electrical_service_phase', 'phase_peaks', f'import_peak_{phase}', None, 'kw'),
+                        val,
+                    )
             elif old_name.startswith('phase_export_peak_kw_'):
                 phase = old_name.split('phase_export_peak_kw_', 1)[1].lower()
-                put(
-                    level,
-                    name,
-                    v2(level, 'electrical_service_phase', 'phase_peaks', f'export_peak_{phase}', None, 'kw'),
-                    row['value'],
-                )
+                for level, name, val in rows:
+                    put(
+                        level,
+                        name,
+                        v2(level, 'electrical_service_phase', 'phase_peaks', f'export_peak_{phase}', None, 'kw'),
+                        val,
+                    )
 
         kpi_buildings = self._get_kpi_buildings()
         building_windows = {building.name: self._building_active_window(building) for building in kpi_buildings}
@@ -2502,35 +2521,35 @@ class CityLearnKPIService:
 
         # Optional community KPIs are district-only.
         if getattr(env, 'community_market_enabled', False):
-            district_rows = extended_df[(extended_df['level'] == 'district') & (extended_df['name'] == 'District')]
             if getattr(env, 'community_market_kpi_local_traded_enabled', True):
-                local_total = district_rows[district_rows['cost_function'] == 'community_local_import_total_kwh']['value']
-                local_daily = district_rows[district_rows['cost_function'] == 'community_local_import_daily_average_kwh']['value']
-                if len(local_total) > 0:
+                if 'community_local_import_total_kwh' in district_extended_values:
                     put(
                         'district',
                         'District',
                         v2('district', 'energy_grid', 'community_market', 'local_traded', 'total', 'kwh'),
-                        local_total.iloc[0],
+                        district_extended_values['community_local_import_total_kwh'],
                     )
-                if len(local_daily) > 0:
+                if 'community_local_import_daily_average_kwh' in district_extended_values:
                     put(
                         'district',
                         'District',
                         v2('district', 'energy_grid', 'community_market', 'local_traded', 'daily_average', 'kwh'),
-                        local_daily.iloc[0],
+                        district_extended_values['community_local_import_daily_average_kwh'],
                     )
 
             if getattr(env, 'community_market_kpi_self_consumption_enabled', True):
-                local_total = district_rows[district_rows['cost_function'] == 'community_local_import_total_kwh']['value']
-                if len(local_total) > 0:
-                    local_total_value = self._to_scalar(local_total.iloc[0], 0.0)
-                    grid_import_after_local = district_rows[
-                        district_rows['cost_function'] == 'community_grid_import_after_local_total_kwh'
-                    ]['value']
+                if 'community_local_import_total_kwh' in district_extended_values:
+                    local_total_value = self._to_scalar(
+                        district_extended_values['community_local_import_total_kwh'],
+                        0.0,
+                    )
                     grid_import_after_local_value = (
-                        self._to_scalar(grid_import_after_local.iloc[0], 0.0)
-                        if len(grid_import_after_local) > 0 else 0.0
+                        self._to_scalar(
+                            district_extended_values['community_grid_import_after_local_total_kwh'],
+                            0.0,
+                        )
+                        if 'community_grid_import_after_local_total_kwh' in district_extended_values
+                        else 0.0
                     )
                     total_member_demand = local_total_value + grid_import_after_local_value
                     share = None if total_member_demand <= float(ZERO_DIVISION_PLACEHOLDER) else local_total_value / total_member_demand
