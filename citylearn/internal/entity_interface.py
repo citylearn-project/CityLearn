@@ -1024,12 +1024,13 @@ class CityLearnEntityInterfaceService:
         import_energy = max(net_energy, 0.0)
         export_energy = max(-net_energy, 0.0)
         pv_energy = abs(self._safe_index(building.solar_generation, endogenous_t, 0.0))
-        bess_energy = self._safe_index(building.electrical_storage_electricity_consumption, endogenous_t, 0.0)
+        # Settled values at `endogenous_t` (<= building.time_step), read without building the series.
+        bess_energy = self._safe_scalar(building.storage_electricity_consumption_at('electrical', endogenous_t), 0.0)
         ev_energy = self._safe_index(building.chargers_electricity_consumption, endogenous_t, 0.0)
-        cooling = self._safe_index(building.cooling_electricity_consumption, endogenous_t, 0.0)
-        heating = self._safe_index(building.heating_electricity_consumption, endogenous_t, 0.0)
-        dhw = self._safe_index(building.dhw_electricity_consumption, endogenous_t, 0.0)
-        non_shiftable = self._safe_index(building.non_shiftable_load_electricity_consumption, endogenous_t, 0.0)
+        cooling = self._safe_scalar(building.cooling_device.electricity_consumption_at(endogenous_t), 0.0)
+        heating = self._safe_scalar(building.heating_device.electricity_consumption_at(endogenous_t), 0.0)
+        dhw = self._safe_scalar(building.dhw_device.electricity_consumption_at(endogenous_t), 0.0)
+        non_shiftable = self._safe_scalar(building.non_shiftable_load_device.electricity_consumption_at(endogenous_t), 0.0)
         deferrable = self._safe_index(building.deferrable_appliances_electricity_consumption, endogenous_t, 0.0)
         load_energy = max(cooling + heating + dhw + non_shiftable + deferrable + ev_energy, 0.0)
         pv_surplus_energy = max(pv_energy - load_energy, 0.0)
@@ -1916,10 +1917,10 @@ class CityLearnEntityInterfaceService:
             )
         load_energy = max(non_shiftable + cooling + heating + dhw + deferrable, 0.0)
         try:
-            solar_generation = building._pv_generation_to_control_step([
+            solar_generation = building._pv_generation_to_control_step(
                 self._safe_index(series(energy_simulation, "solar_generation"), step, 0.0)
-            ])
-            pv_energy = abs(self._safe_index(solar_generation, 0, 0.0))
+            )
+            pv_energy = abs(self._safe_scalar(solar_generation, 0.0))
         except Exception:
             pv_energy = abs(self._safe_index(getattr(building, "solar_generation", []), step, 0.0))
 
@@ -2951,29 +2952,31 @@ class CityLearnEntityInterfaceService:
 
     @staticmethod
     def _safe_scalar(value: Any, default: float = 0.0) -> float:
+        if value is None:
+            return float(default)
         try:
             scalar = float(value)
         except (TypeError, ValueError):
             return float(default)
-        if not isfinite(scalar):
-            return float(default)
-        return scalar
+        return scalar if isfinite(scalar) else float(default)
 
-    @classmethod
-    def _safe_index(cls, values: Any, index: int, default: float = 0.0) -> float:
+    @staticmethod
+    def _safe_index(values: Any, index: int, default: float = 0.0) -> float:
         try:
-            return cls._safe_scalar(values[index], default)
+            scalar = float(values[index])
         except Exception:
             return float(default)
+        return scalar if isfinite(scalar) else float(default)
 
     @staticmethod
     def _fill_obs_row_from_mapping(row: np.ndarray, feature_names: Sequence[str], values: Mapping[str, Any]) -> None:
         if len(feature_names) == 0:
             return
 
+        get_value = values.get
         for index, name in enumerate(feature_names):
             try:
-                row[index] = values.get(name, 0.0)
+                row[index] = get_value(name, 0.0)
             except (TypeError, ValueError):
                 row[index] = 0.0
 
@@ -3004,8 +3007,15 @@ class CityLearnEntityInterfaceService:
         feature_cols: Mapping[str, int],
         values: Mapping[str, Any],
     ) -> None:
+        # `_set_obs_value` inlined: this runs for every feature of every row at every step.
+        get_col = feature_cols.get
         for name, value in values.items():
-            cls._set_obs_value(row, feature_cols, name, value)
+            col = get_col(name)
+            if col is not None:
+                try:
+                    row[col] = value
+                except (TypeError, ValueError):
+                    row[col] = 0.0
 
     @staticmethod
     def _to_2d_array(value: Any, *, rows: int, cols: int) -> Optional[np.ndarray]:
