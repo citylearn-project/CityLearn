@@ -813,6 +813,11 @@ def add_robustness_noise(values, noise_std: float, random_state=None, lower: flo
 class TimeSeriesData:
     """Generic time series data class.
     
+    Each variable is stored in full as ``_<name>`` and read as ``<name>``, the part of it between
+    `start_time_step` and `end_time_step`. The windowed values are kept in the instance
+    ``__dict__``, so reading a variable is a plain attribute lookup. They are refreshed when a
+    variable is set or the window changes, and they are left out of pickles and copies, which
+    rebuild them from the full variables.
     
     Parameters
     ----------
@@ -843,20 +848,16 @@ class TimeSeriesData:
 
         return variable
 
-    def __getattribute__(self, name: str):
-        if name.startswith('__'):
-            return object.__getattribute__(self, name)
+    def _refresh_windowed_variables(self):
+        data = self.__dict__
+        start_time_step = data.get('_start_time_step')
+        end_time_step = data.get('_end_time_step')
 
-        data = object.__getattribute__(self, '__dict__')
-        variable_name = f'_{name}'
-
-        if variable_name in data:
-            start_time_step = data.get('_start_time_step')
-            end_time_step = data.get('_end_time_step')
-            variable = data[variable_name]
-            return self._slice_variable(variable, start_time_step, end_time_step)
-
-        return object.__getattribute__(self, name)
+        for key, variable in list(data.items()):
+            # `_<name>` is a full variable. A name that starts with an underscore is stored as
+            # `__<name>` and read through `__getattr__`.
+            if key.startswith('_') and not key.startswith('__'):
+                data[key[1:]] = self._slice_variable(variable, start_time_step, end_time_step)
 
     def __getattr__(self, name: str, start_time_step: int = None, end_time_step: int = None):
         """Returns values of the named variable within the specified time steps and
@@ -887,7 +888,23 @@ class TimeSeriesData:
         Variables are named with a single underscore prefix.
         """
 
-        self.__dict__[f'_{name}'] = value
+        data = self.__dict__
+        data[f'_{name}'] = value
+
+        if name.startswith('_'):
+            return
+
+        if name in ('start_time_step', 'end_time_step'):
+            self._refresh_windowed_variables()
+        else:
+            data[name] = self._slice_variable(value, data.get('_start_time_step'), data.get('_end_time_step'))
+
+    def __getstate__(self) -> Dict[str, Any]:
+        return {key: value for key, value in self.__dict__.items() if key.startswith('_')}
+
+    def __setstate__(self, state: Mapping[str, Any]):
+        self.__dict__.update(state)
+        self._refresh_windowed_variables()
 
 class EnergySimulation(TimeSeriesData):
     """`Building` `energy_simulation` data class.
@@ -1075,16 +1092,6 @@ class EnergySimulation(TimeSeriesData):
             
         self.hvac_mode = np.array(hvac_mode, dtype='int32')
 
-    @property
-    def time_step_ratios(self):
-        """Getter for the time_step_ratio variable."""
-        return self.__time_step_ratios
-
-    @time_step_ratios.setter
-    def time_step_ratios(self, value):
-        """Setter for the time_step_ratio variable."""
-        self.__time_step_ratios = value    
-    
 class LogisticRegressionOccupantParameters(TimeSeriesData):
     def __init__(self, a_increase: Iterable[float], b_increase: Iterable[float], a_decrease: Iterable[float], b_decrease: Iterable[float], start_time_step: int = None, end_time_step: int = None):
         super().__init__(start_time_step=start_time_step, end_time_step=end_time_step)
