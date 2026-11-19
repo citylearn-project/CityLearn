@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from array import array
 
 from citylearn.energy_model import Battery
-from citylearn.internal import ev_departure_audit, deferrable_service_audit
+from citylearn.internal import ev_departure_audit, deferrable_service_audit, grid_availability
 from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
 from citylearn.internal.service_energy import service_energy_components
 
@@ -565,7 +565,8 @@ class CityLearnKPIService:
             per_phase_limits = getattr(building, '_electrical_service_limits', {}).get('per_phase', {}) or {}
             cap_kw = requested_power_kw
 
-            import_limit = self._to_scalar(total_limits.get('import_kw'), np.nan)
+            import_limit = self._to_scalar(
+                grid_availability.total_limits_at(building, total_limits, step).get('import_kw'), np.nan)
             if np.isfinite(import_limit):
                 cap_kw = min(cap_kw, max(import_limit - base_total_kw, 0.0))
 

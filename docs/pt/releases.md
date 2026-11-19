@@ -37,6 +37,22 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   ([#188](https://github.com/citylearn-project/CityLearn/issues/188)). A reward
   funciona nas duas interfaces; a observação existe apenas na interface flat.
   Ambas são opcionais, pelo que os schemas e resultados existentes não mudam.
+- **Potência de rede disponível variável no tempo.** O campo
+  `buildings.<name>.electrical_service.available_grid_power` aponta para uma
+  série, por timestep, da potência que o edifício pode importar, em kW, num
+  ficheiro com uma coluna por edifício ou numa coluna indicada
+  ([#119](https://github.com/citylearn-project/CityLearn/issues/119)). O limite
+  de importação em vigor num timestep é o menor entre o `limits.total.import_kw`
+  estático e o valor da série, e todos os que leem o limite total de importação
+  o usam: a alocação do serviço elétrico (os carregadores de EV e a bateria são
+  reduzidos primeiro; a carga fixa continua servida e conta como violação), a
+  viabilidade do arranque de cargas deferíveis, as observações de margem, o KPI
+  de viabilidade dos EVs e o KPI de violação do serviço elétrico. Um limite de
+  0 kW não isola o edifício; as falhas de energia continuam em `power_outage`.
+  A nova observação flat `available_grid_power` indica o limite do próximo
+  intervalo quando há série, e as baselines baseadas em regras limitam com ela
+  a margem de importação planeada. Os edifícios sem série não mudam. Ver a
+  [referência do schema](schema_reference.md#potencia-de-rede-disponivel).
 - **Datasets Parquet de 15 s carregam a partir da cache.** Os schemas de
   `citylearn_three_phase_electrical_service_demo_15s_parquet`,
   `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` e
