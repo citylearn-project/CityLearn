@@ -149,7 +149,14 @@ class _RuleBaselineAgent(Agent):
     def _payload(self, observations: Any) -> Mapping[str, Any]:
         if isinstance(observations, Mapping) and 'tables' in observations:
             return observations
-        return self.env.unwrapped._entity_service.observation_payload()
+        env = self.env.unwrapped
+        payload = env._entity_service.observation_payload()
+        if observations is not None and len(observations) > 0:
+            # Flat interface: the env corrupts only the flat vectors, so apply
+            # this step's robustness observation events as the entity interface
+            # does. predict([]), used by the native BAU reference, stays uncorrupted.
+            payload = env._robustness_service.entity_observation_view(payload)
+        return payload
 
     def predict(self, observations: Any, deterministic: bool = None) -> List[List[float]]:
         env = self.env.unwrapped

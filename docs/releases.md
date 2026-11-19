@@ -10,11 +10,15 @@ For package publication, version policy and the release checklist, see the
 
 ## Unreleased
 
+### Changed
+
+- **Baselines read corrupted observations under the flat interface.** Under the flat interface the env corrupts only the flat vectors, and the baselines, which read entity observations, decided from uncorrupted values; under the entity interface they read the corrupted ones ([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Run as controllers (`predict(observations)`), they now get the step's robustness observation events applied to their entity observations as the entity interface applies them, and take the same actions under both interfaces. No random stream is consumed, and the env's flat observations and robustness history are unchanged; the controller KPIs of flat runs with observation events can change. The native BAU reference of `evaluate_v2()` (`predict([])`) stays uncorrupted. See the [migration guide](migration.md#unreleased).
+
 ### Fixed
 
 - **15 s Parquet datasets load from the dataset cache.** The schemas of `citylearn_three_phase_electrical_service_demo_15s_parquet`, `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` and `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` set a repository-relative `root_directory`. Passing the schema path returned by `DataSet().get_dataset(name)` to `CityLearnEnv` resolved it against the cache folder and raised `FileNotFoundError` for `<cache>/<dataset>/data/datasets/<dataset>/Building_1.parquet` ([#194](https://github.com/citylearn-project/CityLearn/issues/194)). The three schemas now set `"root_directory": null`, like the other datasets. `CityLearnEnv(name)` and schema paths inside a repository checkout already found the files and still read the same folder.
 
-Input files and simulation results are unchanged; no migration is required.
+This fix leaves input files and simulation results unchanged; no migration is required.
 
 ## v3.5.0 - 2026-11-17
 
