@@ -519,10 +519,8 @@
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading"></a></h2>
 <p>The current CLI requires Stable Baselines3 even for its listing commands:
-install <code class="docutils literal notranslate"><span class="pre">stable-baselines3==2.3.2</span></code> alongside CityLearn. Use Python 3.11 or newer
-for <code class="docutils literal notranslate"><span class="pre">simulate</span> <span class="pre">...</span> <span class="pre">train/evaluate</span></code>, whose timestamp code uses <code class="docutils literal notranslate"><span class="pre">datetime.UTC</span></code>.
-The Python simulation loop above works on supported earlier Python versions
-without Stable Baselines3.</p>
+install <code class="docutils literal notranslate"><span class="pre">stable-baselines3==2.3.2</span></code> alongside CityLearn. The Python simulation
+loop above works without Stable Baselines3.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>citylearn<span class="w"> </span>--version
 citylearn<span class="w"> </span>list_datasets
 citylearn<span class="w"> </span>list_default_time_series_variables

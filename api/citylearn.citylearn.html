@@ -569,7 +569,8 @@ captured at its last <cite>reset()</cite>; see the baselines guide for the setti
 <li><p><strong>agent</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>'citylearn.agents.base.Agent</em><em>]</em><em>, </em><em>optional</em>) – Agent class or string describing path to agent class, e.g. ‘citylearn.agents.base.BaselineAgent’.
 If a value is not provided, defaults to the agent defined in the schema:agent:type.</p></li>
 <li><p><strong>**kwargs</strong> (<em>dict</em>) – Agent initialization attributes. For most agents e.g. CityLearn and Stable-Baselines3 agents,
-an intialized <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> must be parsed to the agent <code class="xref py py-meth docutils literal notranslate"><span class="pre">init()</span></code> function.</p></li>
+an intialized <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> must be parsed to the agent <code class="xref py py-meth docutils literal notranslate"><span class="pre">init()</span></code> function.
+When <cite>agent</cite> is not provided, these update the schema:agent:attributes instead of replacing them.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

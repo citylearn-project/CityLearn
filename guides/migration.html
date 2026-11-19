@@ -66,6 +66,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#python-3-10-or-newer">Python 3.10 or newer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#vehicle-to-building-backup-during-outages">Vehicle-to-building backup during outages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#json-files-with-numpy-values">JSON files with NumPy values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bau-export-charger-exports-cli-and-file-encoding">BAU export, charger exports, CLI and file encoding</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-4-0-to-3-5-0">Upgrade from 3.4.0 to 3.5.0</a></li>
@@ -245,6 +246,39 @@ must read numbers instead. With <code class="docutils literal notranslate"><span
 now raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>, as a Python float already did; it used to be written as
 <code class="docutils literal notranslate"><span class="pre">&quot;nan&quot;</span></code>. namedtuples (written as objects), <code class="docutils literal notranslate"><span class="pre">Decimal</span></code> values (written as numbers
 with their exact text) and all other values are written as before.</p></li>
+</ul>
+</section>
+<section id="bau-export-charger-exports-cli-and-file-encoding">
+<h3>BAU export, charger exports, CLI and file encoding<a class="headerlink" href="#bau-export-charger-exports-cli-and-file-encoding" title="Link to this heading"></a></h3>
+<p>No dataset or schema migration is required. Simulated trajectories and KPIs are
+unchanged.</p>
+<ul class="simple">
+<li><p><strong>BAU time-series export.</strong> <code class="docutils literal notranslate"><span class="pre">exported_data_business_as_usual_ep&lt;N&gt;.csv</span></code> holds one
+row per building and one district row for each executed time step, as the
+control exports do. It used to add the terminal time step, whose values repeated
+the last executed step, so totals summed from the file counted that step twice.</p></li>
+<li><p><strong>Charger exports.</strong> A charger without a connected or incoming EV writes <code class="docutils literal notranslate"><span class="pre">-1.00</span></code>
+under <code class="docutils literal notranslate"><span class="pre">EV</span> <span class="pre">SOC-%</span></code>, the column used when an EV is present. Charger export files no
+longer have a separate <code class="docutils literal notranslate"><span class="pre">EV</span> <span class="pre">SOC</span></code> column.</p></li>
+<li><p><strong>Schema agent attributes.</strong> <code class="docutils literal notranslate"><span class="pre">CityLearnEnv.load_agent()</span></code> called without <code class="docutils literal notranslate"><span class="pre">agent</span></code>
+builds the schema’s agent from <code class="docutils literal notranslate"><span class="pre">schema['agent']['attributes']</span></code> updated by the
+keyword arguments. Any keyword argument, such as the <code class="docutils literal notranslate"><span class="pre">env=</span></code> that <code class="docutils literal notranslate"><span class="pre">Simulator</span></code>
+always passes, used to discard the schema attributes, so
+<code class="docutils literal notranslate"><span class="pre">Simulator(...,</span> <span class="pre">agent_name=None)</span></code> built the schema’s agent with its default
+parameters. Such runs now use the schema’s parameters; pass keyword arguments to
+override them. <code class="docutils literal notranslate"><span class="pre">&quot;attributes&quot;:</span> <span class="pre">null</span></code> is read as no attributes. An explicitly named
+agent, including the CLI default <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>, still takes only the
+keyword arguments.</p></li>
+<li><p><strong>CLI.</strong> <code class="docutils literal notranslate"><span class="pre">citylearn</span> <span class="pre">simulate</span> <span class="pre">...</span> <span class="pre">evaluate</span></code> and <code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code> complete and
+write the evaluation JSON, also with <code class="docutils literal notranslate"><span class="pre">-te</span></code>; <code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code> evaluates the
+trained agent instead of a new one. Evaluation time series hold one row per
+executed time step, and a variable that a building does not have is reported as
+empty instead of repeating the previous variable. The CLI runs on Python 3.9 and
+3.10.</p></li>
+<li><p><strong>Windows.</strong> <code class="docutils literal notranslate"><span class="pre">run_work_order(...,</span> <span class="pre">virtual_environment_path=...)</span></code> activates the
+environment with <code class="docutils literal notranslate"><span class="pre">Scripts\activate.bat</span></code> on Windows, detected automatically when
+<code class="docutils literal notranslate"><span class="pre">windows_system</span></code> is not given. JSON and YAML files are read and written as UTF-8
+instead of the locale’s code page.</p></li>
 </ul>
 </section>
 </section>

@@ -98,6 +98,38 @@ KPIs and export manifests are unchanged.
   `"nan"`. namedtuples (written as objects), `Decimal` values (written as numbers
   with their exact text) and all other values are written as before.
 
+### BAU export, charger exports, CLI and file encoding
+
+No dataset or schema migration is required. Simulated trajectories and KPIs are
+unchanged.
+
+- **BAU time-series export.** `exported_data_business_as_usual_ep<N>.csv` holds one
+  row per building and one district row for each executed time step, as the
+  control exports do. It used to add the terminal time step, whose values repeated
+  the last executed step, so totals summed from the file counted that step twice.
+- **Charger exports.** A charger without a connected or incoming EV writes `-1.00`
+  under `EV SOC-%`, the column used when an EV is present. Charger export files no
+  longer have a separate `EV SOC` column.
+- **Schema agent attributes.** `CityLearnEnv.load_agent()` called without `agent`
+  builds the schema's agent from `schema['agent']['attributes']` updated by the
+  keyword arguments. Any keyword argument, such as the `env=` that `Simulator`
+  always passes, used to discard the schema attributes, so
+  `Simulator(..., agent_name=None)` built the schema's agent with its default
+  parameters. Such runs now use the schema's parameters; pass keyword arguments to
+  override them. `"attributes": null` is read as no attributes. An explicitly named
+  agent, including the CLI default `BusinessAsUsualAgent`, still takes only the
+  keyword arguments.
+- **CLI.** `citylearn simulate ... evaluate` and `train --evaluate` complete and
+  write the evaluation JSON, also with `-te`; `train --evaluate` evaluates the
+  trained agent instead of a new one. Evaluation time series hold one row per
+  executed time step, and a variable that a building does not have is reported as
+  empty instead of repeating the previous variable. The CLI runs on Python 3.9 and
+  3.10.
+- **Windows.** `run_work_order(..., virtual_environment_path=...)` activates the
+  environment with `Scripts\activate.bat` on Windows, detected automatically when
+  `windows_system` is not given. JSON and YAML files are read and written as UTF-8
+  instead of the locale's code page.
+
 ## Upgrade from 3.4.0 to 3.5.0
 
 No dataset, schema, export-file or BAU migration is required; existing datasets and
