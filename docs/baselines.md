@@ -48,6 +48,13 @@ entity observations (current state, schedules and the simulator's published
 forecasts). They work with the flat and the entity interface and return flat
 action vectors in `env.action_names` order.
 
+With [robustness](robustness_reference.md) observation events, a baseline run as
+a controller reads the corrupted observations under both interfaces and takes the
+same actions. Under the flat interface the env corrupts only the flat vectors, so
+`predict(observations)` applies the step's events to the entity observations the
+baseline reads, as the entity interface does. `predict([])`, which the native BAU
+reference of `evaluate_v2()` uses, reads them uncorrupted.
+
 ### Known limits
 
 The baselines decide from observations, so the battery reacts to the last

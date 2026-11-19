@@ -1,6 +1,6 @@
 {
   "random_seed": 2022,
-  "root_directory": "data/datasets/citylearn_three_phase_electrical_service_demo_15s_parquet",
+  "root_directory": null,
   "interface": "entity",
   "central_agent": false,
   "simulation_start_time_step": 0,
