@@ -61,6 +61,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#baselines-without-the-entity-core-electrical-bundle">Baselines without the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#baselines-under-the-flat-interface-with-robustness-observation-events">Baselines under the flat interface with robustness observation events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#robustness-noise-stays-within-physical-ranges">Robustness noise stays within physical ranges</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#python-3-10-or-newer">Python 3.10 or newer</a></li>
@@ -196,6 +197,18 @@ development-line history.</p>
 </section>
 <section id="unreleased">
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<section id="baselines-without-the-entity-core-electrical-bundle">
+<span id="baselines-without-the-entity_core_electrical-bundle"></span><h3>Baselines without the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle<a class="headerlink" href="#baselines-without-the-entity-core-electrical-bundle" title="Link to this heading"></a></h3>
+<p>On datasets whose schema does not enable <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code>, the BAU and
+the rule-based baselines take different actions: the BAU reserves only the EV
+power the EV can accept, and no baseline counts the last interval’s export as
+PV surplus. Their definition versions change to <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v3</span></code>,
+<code class="docutils literal notranslate"><span class="pre">immediate-user-target-v2</span></code>, <code class="docutils literal notranslate"><span class="pre">basic-v3</span></code>, <code class="docutils literal notranslate"><span class="pre">smart-local-v3</span></code> and <code class="docutils literal notranslate"><span class="pre">community-v3</span></code>, and
+the native BAU reference of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> changes with them. Rerun the
+controller and its reference before comparing with earlier results. Datasets
+with the bundle, including <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> and
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>, are unchanged.</p>
+</section>
 <section id="baselines-under-the-flat-interface-with-robustness-observation-events">
 <h3>Baselines under the flat interface with robustness observation events<a class="headerlink" href="#baselines-under-the-flat-interface-with-robustness-observation-events" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and

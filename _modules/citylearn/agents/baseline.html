@@ -343,9 +343,9 @@
 <span class="w">    </span><span class="sd">"""Reference BAU: immediate EV charging, earliest appliance start, PV self-consumption.</span>
 
 <span class="sd">    A connected EV is charged at once and at maximum power. With</span>
-<span class="sd">    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v2``) it charges</span>
+<span class="sd">    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v3``) it charges</span>
 <span class="sd">    to 100%, as the BAU of CityLearn 3.1–3.3 did. With</span>
-<span class="sd">    ``ev_charge_target='requested'`` (``immediate-user-target-v1``) it stops at the</span>
+<span class="sd">    ``ev_charge_target='requested'`` (``immediate-user-target-v2``) it stops at the</span>
 <span class="sd">    user's requested departure SOC: the last command is limited to the remaining</span>
 <span class="sd">    energy gap, and when that command is below the charger minimum the EV stops</span>
 <span class="sd">    slightly below the target instead of overshooting it. Appliances start at the first admissible</span>
@@ -356,11 +356,11 @@
 <span class="sd">    """</span>
 
     <span class="n">EV_CHARGE_TARGETS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">'requested'</span><span class="p">:</span> <span class="p">(</span><span class="n">engines</span><span class="o">.</span><span class="n">NormalTargetPolicy</span><span class="p">,</span> <span class="s1">'immediate-user-target-v1'</span><span class="p">),</span>
-        <span class="s1">'full'</span><span class="p">:</span> <span class="p">(</span><span class="n">engines</span><span class="o">.</span><span class="n">NormalPolicy</span><span class="p">,</span> <span class="s1">'immediate-full-charge-v2'</span><span class="p">),</span>
+        <span class="s1">'requested'</span><span class="p">:</span> <span class="p">(</span><span class="n">engines</span><span class="o">.</span><span class="n">NormalTargetPolicy</span><span class="p">,</span> <span class="s1">'immediate-user-target-v2'</span><span class="p">),</span>
+        <span class="s1">'full'</span><span class="p">:</span> <span class="p">(</span><span class="n">engines</span><span class="o">.</span><span class="n">NormalPolicy</span><span class="p">,</span> <span class="s1">'immediate-full-charge-v3'</span><span class="p">),</span>
     <span class="p">}</span>
     <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">NormalPolicy</span>
-    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'immediate-full-charge-v2'</span>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'immediate-full-charge-v3'</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">ev_charge_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'full'</span><span class="p">,</span> <span class="o">**</span><span class="n">hyperparameters</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ENGINE_CLASS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="p">(</span><span class="n">ev_charge_target</span><span class="p">)</span>
@@ -398,7 +398,7 @@
 <span class="sd">    """</span>
 
     <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">RBCBasicPolicy</span>
-    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'basic-v2'</span></div>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'basic-v3'</span></div>
 
 
 
@@ -413,7 +413,7 @@
 <span class="sd">    """</span>
 
     <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">RBCSmartLocalPolicy</span>
-    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'smart-local-v2'</span></div>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'smart-local-v3'</span></div>
 
 
 
@@ -431,7 +431,7 @@
 <span class="sd">    """</span>
 
     <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">RBCCommunityPolicy</span>
-    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'community-v2'</span></div>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'community-v3'</span></div>
 
 
 

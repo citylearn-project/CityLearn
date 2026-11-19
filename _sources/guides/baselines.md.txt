@@ -28,8 +28,8 @@ It is not a scenario with all equipment switched off.
 
 | `ev_charge_target` | Definition | EV behaviour |
 |---|---|---|
-| `'full'` (default) | `immediate-full-charge-v2` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. |
-| `'requested'` | `immediate-user-target-v1` | Charges up to the user's requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger's minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC. |
+| `'full'` (default) | `immediate-full-charge-v3` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. |
+| `'requested'` | `immediate-user-target-v2` | Charges up to the user's requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger's minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC. |
 
 Everything else is the same. Select the BAU used as the KPI reference by
 `evaluate_v2()` with the environment setting
@@ -59,11 +59,21 @@ reference of `evaluate_v2()` uses, reads them uncorrupted.
 
 The baselines decide from observations, so the battery reacts to the last
 settled step rather than reading the current step's load and PV from the
-simulator, as the 3.1–3.3 BAU did. Without the `entity_core_electrical` bundle
-the rules also do not see the power an EV can still accept, and reserve the
-charger's nominal power: near the end of a full charge the battery can then
-discharge more than the EV takes. Enabling that bundle in the schema gives the
-rules the accepted power.
+simulator, as the 3.1–3.3 BAU did. The BAU battery serves only the EV power the
+EV can still accept: the `available_charge_power_kw` observation of the
+`entity_core_electrical` bundle, or, without that bundle, an estimate from the
+observed SOC, battery capacity, charger power and charger efficiency and the
+step length, computed as the simulator computes that observation. Neither
+includes the EV battery's capacity-power curve, so at steps of a few seconds
+near 100% SOC the battery can still discharge more than the EV takes. The
+estimate also omits the electrical-service import limit, which the bundle
+includes. The rule-based baselines reserve the EV power they command.
+
+Without that bundle the baselines also do not observe the building's import and
+export, so they take PV generation above the observed load as the surplus the
+battery may store. Export alone is not counted as surplus, because it can come
+from a battery discharge that overshot the load in the last step; counting it
+made the battery recharge from the grid in the next step.
 
 ### Default parameters
 
@@ -236,8 +246,9 @@ their simulator-defined meaning.
 Read [the scorecard](scorecard.md) for matched-controller comparisons and
 [the UI guide](https://www.citylearn.net/ui.html) for the visual workflow.
 
-From 3.4.0, the BAU is `immediate-full-charge-v2` by default: it still charges
-EVs to 100%, now decided from the entity observations like the other baselines.
-`immediate-user-target-v1` charges only to the requested departure SOC. BAU
-references computed with earlier versions are not comparable with 3.4.0
-results; rerun both the controller and its reference.
+From 3.4.0, the BAU still charges EVs to 100% by default, now decided from the
+entity observations like the other baselines; `ev_charge_target='requested'`
+charges only to the requested departure SOC. The definition version, recorded
+with every native reference, changes whenever the baseline's actions change.
+References computed with another definition version are not comparable;
+rerun both the controller and its reference.
