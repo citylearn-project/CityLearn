@@ -5,6 +5,17 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Apoio do veículo ao edifício durante cortes (opcional).** Com
+  `power_outage.vehicle_to_building: true`, um VE ligado pode descarregar para o
+  seu edifício enquanto a rede está em falha, como apoio vehicle-to-home. A
+  descarga limita-se à carga não deslocável e à carga dos equipamentos térmicos
+  que o PV e a bateria não cobrem, pelo que o edifício não exporta para a rede em
+  falha. Na interface entity, `can_discharge` e `available_discharge_power_kw` do
+  carregador indicam a capacidade de descarga do veículo durante o corte. A
+  descarga pode deixar o veículo abaixo do SOC pedido para a partida; isso fica a
+  cargo do controlador e aparece nos KPIs de partida dos VEs. A opção está
+  desligada por omissão e, sem ela, os resultados não mudam. Ver o
+  [guia de migração](../migration.md#unreleased).
 - **Baselines leem observações corrompidas na interface flat.** Na interface
   flat, o env corrompe apenas os vetores flat, e as baselines, que leem
   observações entity, decidiam a partir de valores sem corrupção; na interface

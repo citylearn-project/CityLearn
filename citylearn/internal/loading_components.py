@@ -99,7 +99,8 @@ def outage_options(index, building_name, building_schema, kwargs):
         stochastic_power_outage_model = None
     return dict(simulate_power_outage=simulate_power_outage,
                 stochastic_power_outage=stochastic_power_outage,
-                stochastic_power_outage_model=stochastic_power_outage_model)
+                stochastic_power_outage_model=stochastic_power_outage_model,
+                outage_vehicle_to_building=building_schema_power_outage.get('vehicle_to_building'))
 
 
 def load_chargers(loader: "CityLearnLoadingService", building_name, building_schema,

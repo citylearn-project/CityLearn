@@ -86,6 +86,10 @@ class Building(Environment):
         :py:class:`citylearn.building.Building.energy_simulation.power_outage` time series is used.
     stochastic_power_outage_model: PowerOutage, optional
         Power outage model class used to generate stochastic power outage signals.
+    outage_vehicle_to_building: bool, default: False
+        Whether a connected electric vehicle may discharge to the building during a power outage
+        (vehicle-to-building backup). The discharge is limited to the islanded electric load that local supply
+        does not cover. By default, electric vehicles cannot discharge during an outage.
     carbon_intensity : CarbonIntensity, optional
         Carbon dioxide emission rate time series.
     electric_vehicle_chargers : Charger, optional
@@ -108,6 +112,7 @@ class Building(Environment):
         maximum_temperature_delta: float = None, observation_space_limit_delta: float = None,
         demand_observation_limit_factor: float = None, simulate_power_outage: bool = None,
         stochastic_power_outage: bool = None, stochastic_power_outage_model: PowerOutage = None,
+        outage_vehicle_to_building: bool = None,
         electric_vehicle_chargers: List[Charger] = None, time_step_ratio: int = None,
         deferrable_appliances: List[DeferrableAppliance] = None, washing_machines: List[WashingMachine] = None,
         escalators: List[Escalator] = None,
@@ -151,6 +156,7 @@ class Building(Environment):
         self.demand_observation_limit_factor = demand_observation_limit_factor
         self.simulate_power_outage = simulate_power_outage
         self.stochastic_power_outage = stochastic_power_outage
+        self.outage_vehicle_to_building = outage_vehicle_to_building
         self.non_periodic_normalized_observation_space_limits = None
         self.periodic_normalized_observation_space_limits = None
         self._energy_simulation_observation_sources: List[Tuple[str, np.ndarray]] = []
@@ -355,6 +361,12 @@ class Building(Environment):
         :py:class:`citylearn.building.Building.energy_simulation.power_outage` time series is used."""
 
         return self.__stochastic_power_outage
+
+    @property
+    def outage_vehicle_to_building(self) -> bool:
+        """Whether a connected electric vehicle may discharge to the building during a power outage."""
+
+        return self.__outage_vehicle_to_building
 
     @property
     def observation_space(self) -> spaces.Box:
@@ -1438,6 +1450,10 @@ class Building(Environment):
     def stochastic_power_outage(self, stochastic_power_outage: bool):
         self.__stochastic_power_outage = False if stochastic_power_outage is None else stochastic_power_outage
 
+    @outage_vehicle_to_building.setter
+    def outage_vehicle_to_building(self, outage_vehicle_to_building: bool):
+        self.__outage_vehicle_to_building = bool(outage_vehicle_to_building)
+
     @Environment.random_seed.setter
     def random_seed(self, seed: int):
         Environment.random_seed.fset(self, seed)
@@ -1973,6 +1989,8 @@ class Building(Environment):
 
         t = self.time_step
         available = abs(float(self.solar_generation[t])) + max(-float(self.electrical_storage.electricity_consumption[t]), 0.0)
+        # Vehicle-to-building discharge is local supply too; it is zero unless `outage_vehicle_to_building` is set.
+        available += sum(max(-float(charger.electricity_consumption[t]), 0.0) for charger in self.electric_vehicle_chargers or [])
         for device in (
             self.non_shiftable_load_device,
             self.dhw_device,
