@@ -201,7 +201,7 @@ def test_bau_definition_and_removed_names():
     for name in ("NormalPolicy", "NormalTargetPolicy", "NormalNoBatteryPolicy", "ServiceOnlyBaselineAgent",
                  "GridAwareBaselineAgent", "CommunityAwareBaselineAgent"):
         assert not hasattr(baseline, name)
-    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-full-charge-v2"
+    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-full-charge-v3"
 
 
 @pytest.mark.parametrize("kwargs", [
@@ -619,15 +619,15 @@ def test_bau_charge_target_is_validated_and_recorded():
             BusinessAsUsualAgent(env, ev_charge_target="half")
         assert BusinessAsUsualAgent(env).ev_charge_target == "full"
         agent = BusinessAsUsualAgent(env, ev_charge_target="requested")
-        assert agent.DEFINITION_VERSION == "immediate-user-target-v1"
+        assert agent.DEFINITION_VERSION == "immediate-user-target-v2"
         parameters = agent.comparison_identity()["parameters"]
         assert parameters["ev_charge_target"] == "requested"
-        assert parameters["definition_version"] == "immediate-user-target-v1"
+        assert parameters["definition_version"] == "immediate-user-target-v2"
     finally:
         env.close()
 
 
-@pytest.mark.parametrize("target,definition", [("requested", "immediate-user-target-v1"), ("full", "immediate-full-charge-v2")])
+@pytest.mark.parametrize("target,definition", [("requested", "immediate-user-target-v2"), ("full", "immediate-full-charge-v3")])
 def test_evaluate_v2_uses_the_selected_bau(target, definition):
     env = CityLearnEnv(str(SOURCE_DATASET / "schema.json"), central_agent=True, episode_time_steps=4,
                        random_seed=0, business_as_usual_ev_charge_target=target)
@@ -721,7 +721,7 @@ def test_bau_reference_cache_follows_the_selected_target():
         env.business_as_usual_ev_charge_target = "requested"
         requested = env.run_business_as_usual_baseline()
         assert requested is not full
-        assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v1"
+        assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v2"
     finally:
         env.close()
 
@@ -835,3 +835,31 @@ def test_baseline_attaches_again_when_the_topology_changes():
     finally:
         env.close()
     _assert_same_actions(reused, rebuilt)
+
+
+@pytest.mark.parametrize("agent_class", [BusinessAsUsualAgent, RBCBasicPolicy])
+def test_battery_does_not_recharge_from_the_grid_after_its_own_export(agent_class):
+    # These baselines charge the battery only from PV surplus. (RBCSmartPolicy and RBCCommunityPolicy
+    # also charge it from the grid at cheap prices by design, so they are not checked here.) Without the entity_core_electrical bundle the baselines took the last interval's export as PV
+    # surplus. When a battery discharge overshot the load and was exported, the battery recharged from
+    # the grid in the next step: 22.8 kWh in 27 of the first 48 hours of this dataset with the BAU.
+    env = CityLearnEnv(
+        "citylearn_three_phase_electrical_service_demo", central_agent=True, episode_time_steps=48,
+        random_seed=0, interface="flat",
+    )
+    try:
+        observations, _ = env.reset(seed=0)
+        agent = agent_class(env)
+        while not env.terminated:
+            observations, *_ = env.step(agent.predict(observations))
+        steps = env.time_step
+        grid_charge = 0.0
+        for building in env.buildings:
+            battery = np.asarray(building.electrical_storage.electricity_consumption[:steps], dtype="float64")
+            net = np.asarray(building.net_electricity_consumption[:steps], dtype="float64")
+            charge = np.clip(battery, 0.0, None)
+            surplus_without_battery = np.clip(battery - net, 0.0, None)
+            grid_charge += float(np.sum(charge - np.minimum(charge, surplus_without_battery)))
+        assert grid_charge == pytest.approx(0.0, abs=1.0e-6)
+    finally:
+        env.close()

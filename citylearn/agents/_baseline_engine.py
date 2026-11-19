@@ -1056,8 +1056,9 @@ class _OperationalBaselinePolicy(RulePolicyBase):
             if import_power > self.energy_epsilon:
                 return 0.0
             return physical_surplus
-        if export_power > self.energy_epsilon:
-            return max(export_power, physical_surplus)
+        # Without explicit import/export (no entity_core_electrical bundle) the export of the last
+        # interval may come from a storage discharge that overshot the load. Counting it as PV surplus
+        # made the battery recharge from the grid in the next step; only PV above the load is surplus.
         return physical_surplus
 
     def _is_grid_stressed(self, obs: np.ndarray, obs_map: Mapping[str, int]) -> bool:

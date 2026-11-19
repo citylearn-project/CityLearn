@@ -48,6 +48,18 @@ development-line history.
 
 ## Unreleased
 
+### Baselines without the `entity_core_electrical` bundle
+
+On datasets whose schema does not enable `entity_core_electrical`, the BAU and
+the rule-based baselines take different actions: the BAU reserves only the EV
+power the EV can accept, and no baseline counts the last interval's export as
+PV surplus. Their definition versions change to `immediate-full-charge-v3`,
+`immediate-user-target-v2`, `basic-v3`, `smart-local-v3` and `community-v3`, and
+the native BAU reference of `evaluate_v2()` changes with them. Rerun the
+controller and its reference before comparing with earlier results. Datasets
+with the bundle, including `pt_rec_*` and
+`citylearn_challenge_2022_phase_all_plus_evs`, are unchanged.
+
 ### Baselines under the flat interface with robustness observation events
 
 `BusinessAsUsualAgent`, `RBCBasicPolicy`, `RBCSmartPolicy` and
