@@ -33,10 +33,17 @@ For package publication, version policy and the release checklist, see the
 - **Schema agent attributes.** `load_agent()` without `agent` keeps `schema['agent']['attributes']` when keyword arguments such as `env=` are passed; keyword arguments override them. `Simulator(..., agent_name=None)` therefore builds the schema's agent with the schema's parameters.
 - **Windows.** `run_work_order()` activates virtual environments with `activate.bat`, which `cmd.exe` can run. JSON and YAML files are read and written as UTF-8, so non-ASCII text in schemas is no longer decoded as cp1252.
 - **Multi-community KPI comparison.** `load_kpis()` and `compare_exports()` read multi-community KPI exports, which repeat each name once per community, instead of raising `Duplicate KPI/name rows`.
+- **`TabularQLearning`** no longer bootstraps from the next state on terminal transitions.
+- **`MARLISARBC`** explores with its RBC; it used to explore with random actions.
+- **`MARLISA` with `pca_compression < 1`** sizes its networks to the PCA output instead of failing at the first update.
+- **Discrete wrappers.** `TabularQLearningObservationWrapper` declares exactly the `prod(bins)` states it encodes (it declared `prod(bins + 1) - 1` and could encode a state outside the space), and `DiscreteObservationWrapper` keeps values above the observation space in the top bin. `DiscreteObservationWrapper` and `DiscreteActionWrapper` bin the spaces of the env they wrap, so they work over the normalized wrappers. `ClippedObservationWrapper` no longer modifies the environment's cached observations.
+- **`OnehotEncoding`** raises `ValueError` for a value outside its classes.
 
 The Parquet fix leaves input files and simulation results unchanged; no migration is required.
 
 Trajectories and KPIs are unchanged. The BAU and charger export files change, and so do runs that relied on `load_agent()` discarding the schema attributes. See the [migration guide](migration.md#unreleased).
+
+Environment trajectories and KPIs are unchanged; results of `TabularQLearning`, `MARLISARBC` and tabular Q-tables change. See the [migration guide](migration.md#unreleased).
 
 ## v3.5.0 - 2026-11-17
 

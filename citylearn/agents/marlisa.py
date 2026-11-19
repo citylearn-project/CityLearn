@@ -31,12 +31,13 @@ class MARLISA(SAC):
         self.__pending_transitions = None
         self.__start_regression_time_step = None
         self.information_sharing = information_sharing
+        # SAC.__init__ builds the networks, whose input size depends on pca_compression.
+        self.pca_compression = pca_compression
 
         super().__init__(*args, **kwargs)
 
         self.regression_buffer_capacity = regression_buffer_capacity
         self.start_regression_time_step = start_regression_time_step
-        self.pca_compression = pca_compression
         self.iterations = iterations
         self.regression_frequency = regression_frequency
 
@@ -415,12 +416,16 @@ class MARLISA(SAC):
         
         return e*o
 
-    def set_pca(self):
+    def get_pca_component_count(self, index: int) -> int:
+        """Number of PCA components, i.e. the observation size the networks of building `index` read."""
+
         addition = self.__COORDINATION_VARIABLE_COUNT if self.information_sharing else 0
-        
-        for i, s in enumerate(self.observation_space):
-            n_components = int((self.pca_compression)*(addition + len(self.get_encoded_observations(i, s.low))))
-            self.pca[i] = PCA(n_components=n_components, random_state=self._get_seed(3, i))
+
+        return int((self.pca_compression)*(addition + self.observation_dimension[index]))
+
+    def set_pca(self):
+        for i in range(len(self.observation_space)):
+            self.pca[i] = PCA(n_components=self.get_pca_component_count(i), random_state=self._get_seed(3, i))
 
     def set_energy_coefficients(self):
         self.energy_size_coefficient = []
@@ -481,8 +486,10 @@ class MARLISA(SAC):
         return encoders
 
     def set_networks(self):
-        internal_observation_count = self.__COORDINATION_VARIABLE_COUNT if self.information_sharing else 0
-        return super().set_networks(internal_observation_count=internal_observation_count)
+        # The networks read the PCA-compressed observations and coordination variables.
+        return super().set_networks(
+            observation_dimensions=[self.get_pca_component_count(i) for i in range(len(self.action_dimension))]
+        )
 
     def set_training_schedule(self, *args, **kwargs):
         # SAC.__init__ calls this before start_regression_time_step exists; MARLISA.__init__ calls it again afterwards.
@@ -562,10 +569,5 @@ class MARLISARBC(MARLISA, SACRBC):
     """
     
     def __init__(self, env: CityLearnEnv, rbc: RBC = None, **kwargs: Any):
+        # MARLISA's exploration calls get_exploration_prediction, which resolves to SACRBC's in this MRO.
         super().__init__(env=env, rbc=rbc, **kwargs)
-
-    def get_exploration_prediction_without_information_sharing(self, observations: List[List[float]]) -> Tuple[List[List[float]], List[List[float]]]:
-        _, coordination_variables = super().get_exploration_prediction_without_information_sharing(observations)
-        actions = super(SACRBC, self).get_exploration_prediction(observations)
-
-        return actions, coordination_variables
