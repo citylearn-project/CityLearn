@@ -48,6 +48,20 @@ development-line history.
 
 ## Unreleased
 
+### Battery discharge features during outages
+
+During a power outage the entity `storage` features `can_discharge` and
+`available_discharge_power_kw` now report the battery's discharge capacity
+instead of zero. Controllers that read them, including the BAU and the
+rule-based baselines, can take different actions during outages, so the
+native BAU reference changes on scenarios with outages under the entity
+interface, such as `pt_rec_30/evaluation/rec_30_robustness.json`,
+`rec_30_combined.json` and `pt_rec_100/evaluation/rec_100_allin.json`. This
+change belongs to the same unreleased baseline definitions as the change for
+datasets without `entity_core_electrical` (`immediate-full-charge-v3` and the
+others). Rerun the controller and its reference on those scenarios. Agents
+trained on these features may need retraining.
+
 ### Baselines without the `entity_core_electrical` bundle
 
 On datasets whose schema does not enable `entity_core_electrical`, the BAU and

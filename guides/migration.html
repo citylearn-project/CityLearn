@@ -61,6 +61,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#battery-discharge-features-during-outages">Battery discharge features during outages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#baselines-without-the-entity-core-electrical-bundle">Baselines without the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#baselines-under-the-flat-interface-with-robustness-observation-events">Baselines under the flat interface with robustness observation events</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#robustness-noise-stays-within-physical-ranges">Robustness noise stays within physical ranges</a></li>
@@ -199,6 +200,20 @@ development-line history.</p>
 </section>
 <section id="unreleased">
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<section id="battery-discharge-features-during-outages">
+<h3>Battery discharge features during outages<a class="headerlink" href="#battery-discharge-features-during-outages" title="Link to this heading"></a></h3>
+<p>During a power outage the entity <code class="docutils literal notranslate"><span class="pre">storage</span></code> features <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code> and
+<code class="docutils literal notranslate"><span class="pre">available_discharge_power_kw</span></code> now report the battery’s discharge capacity
+instead of zero. Controllers that read them, including the BAU and the
+rule-based baselines, can take different actions during outages, so the
+native BAU reference changes on scenarios with outages under the entity
+interface, such as <code class="docutils literal notranslate"><span class="pre">pt_rec_30/evaluation/rec_30_robustness.json</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rec_30_combined.json</span></code> and <code class="docutils literal notranslate"><span class="pre">pt_rec_100/evaluation/rec_100_allin.json</span></code>. This
+change belongs to the same unreleased baseline definitions as the change for
+datasets without <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> (<code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v3</span></code> and the
+others). Rerun the controller and its reference on those scenarios. Agents
+trained on these features may need retraining.</p>
+</section>
 <section id="baselines-without-the-entity-core-electrical-bundle">
 <span id="baselines-without-the-entity_core_electrical-bundle"></span><h3>Baselines without the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle<a class="headerlink" href="#baselines-without-the-entity-core-electrical-bundle" title="Link to this heading"></a></h3>
 <p>On datasets whose schema does not enable <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code>, the BAU and
