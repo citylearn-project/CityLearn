@@ -43,6 +43,8 @@ For package publication, version policy and the release checklist, see the
 - **`InventoryBattery` EVs** load without `nominal_power`, which the battery derives from `max_charge_kw` and `max_discharge_kw`.
 - **Random initial EV SOC** is drawn within the battery's declared `min_soc` and `max_soc`; an `InventoryBattery` used to fail when the draw from [0, 1] fell outside them.
 - **Entity observations with `max_soc < 1`** report `soc_max_ratio`, the energy to full and the available charge power up to `max_soc` instead of a full battery.
+- **Dynamic topology district baseline.** The district reference series summed only the members active at evaluation time, while the control series keep every member's past consumption, so a departed member counted on the control side only. With all-zero actions on `citylearn_three_phase_dynamic_topology_demo` (24 steps, `Building_6` leaving at step 12), the district import delta to baseline was 12.76 kWh, the export delta -11.00 kWh and the emissions delta 4.44 kg, although control and baseline coincide; they are now below 4e-6, the float32 rounding of the reference series. The reference series now sum every member that has been active, each over the steps at which it was a member.
+- **Electrical-service histories across topology events.** A member's requested-pressure, total-power and per-phase power histories were erased when it rejoined or when one of its assets changed, and the electrical-service and phase KPIs lost the earlier steps. They are now kept.
 
 The Parquet fix leaves input files and simulation results unchanged; no migration is required.
 
@@ -51,6 +53,8 @@ Trajectories and KPIs are unchanged. The BAU and charger export files change, an
 Environment trajectories and KPIs are unchanged; results of `TabularQLearning`, `MARLISARBC` and tabular Q-tables change. See the [migration guide](migration.md#unreleased).
 
 The shipped datasets are unaffected: none of their charger files is parsed differently and none of their EVs uses `InventoryBattery`. See the [migration guide](migration.md#unreleased).
+
+Static topology results are unchanged. See the [migration guide](migration.md#unreleased).
 
 ## v3.5.0 - 2026-11-17
 

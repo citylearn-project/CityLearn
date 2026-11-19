@@ -21,6 +21,7 @@ from citylearn.energy_model import Battery, DeferrableAppliance, PV
 from citylearn.exporter import EpisodeExporter
 from citylearn.internal.market_history import MarketSettlementHistory
 from citylearn.internal.kpi import CityLearnKPIService
+from citylearn.internal.kpi_population import ActivePopulation
 from citylearn.internal.loading import CityLearnLoadingService
 from citylearn.internal.baseline import CityLearnBusinessAsUsualBaselineService
 from citylearn.internal.physics_invariants import CityLearnPhysicsInvariantService
@@ -824,121 +825,130 @@ class CityLearnEnv(Environment, Env):
         self._active_actions_cache = [list(b.active_actions) for b in self.buildings]
         self._expected_central_action_count = sum(len(actions) for actions in self._active_actions_cache)
 
+    def _sum_counterfactual_series(self, attribute: str, non_dynamics_attribute: str = None) -> np.ndarray:
+        """Sum a building counterfactual series over the members that make up the control series.
+
+        The control series (`net_electricity_consumption*`) add up the members that are active at
+        each step, so a member that has left keeps its past contribution. In dynamic topology the
+        counterfactual sums therefore cover every member that has been active, each masked to the
+        steps at which it belonged to the district and padded with zeros to the district horizon, so
+        that every row keeps its dtype. `non_dynamics_attribute` replaces `attribute` for buildings
+        that are not `DynamicsBuilding`.
+        """
+
+        def series(building):
+            use_attribute = non_dynamics_attribute is None or isinstance(building, DynamicsBuilding)
+            return getattr(building, attribute if use_attribute else non_dynamics_attribute)
+
+        if self.topology_mode != 'dynamic':
+            rows = [series(b) for b in self.buildings]
+
+        else:
+            population = ActivePopulation(self)
+            members = [(b.name, np.asarray(series(b))) for b in self._kpi_service._get_kpi_buildings()]
+            length = max(len(values) for _, values in members)
+            rows = []
+
+            for name, values in members:
+                # A member counts as zero before it joins and after it leaves, where its series stops.
+                row = np.zeros(length, dtype=values.dtype)
+                row[:len(values)] = values
+                row[~population.mask(name, length, energy=True)] = 0.0
+                rows.append(row)
+
+        return pd.DataFrame(rows).sum(axis=0, min_count=1).to_numpy()
+
     @property
     def net_electricity_consumption_emission_without_storage_and_partial_load_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage_and_partial_load_and_pv` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage_and_partial_load_and_pv
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_emission_without_storage_and_pv
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series(
+            'net_electricity_consumption_emission_without_storage_and_partial_load_and_pv',
+            non_dynamics_attribute='net_electricity_consumption_emission_without_storage_and_pv',
+        )
 
     @property
     def net_electricity_consumption_cost_without_storage_and_partial_load_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage_and_partial_load_and_pv` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage_and_partial_load_and_pv
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_cost_without_storage_and_pv
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series(
+            'net_electricity_consumption_cost_without_storage_and_partial_load_and_pv',
+            non_dynamics_attribute='net_electricity_consumption_cost_without_storage_and_pv',
+        )
 
     @property
     def net_electricity_consumption_without_storage_and_partial_load_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage_and_partial_load_and_pv` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage_and_partial_load_and_pv
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_without_storage_and_pv
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series(
+            'net_electricity_consumption_without_storage_and_partial_load_and_pv',
+            non_dynamics_attribute='net_electricity_consumption_without_storage_and_pv',
+        )
 
 
     @property
     def net_electricity_consumption_emission_without_storage_and_partial_load(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage_and_partial_load` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage_and_partial_load
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_emission_without_storage
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series(
+            'net_electricity_consumption_emission_without_storage_and_partial_load',
+            non_dynamics_attribute='net_electricity_consumption_emission_without_storage',
+        )
 
     @property
     def net_electricity_consumption_cost_without_storage_and_partial_load(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage_and_partial_load` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage_and_partial_load
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_cost_without_storage
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series(
+            'net_electricity_consumption_cost_without_storage_and_partial_load',
+            non_dynamics_attribute='net_electricity_consumption_cost_without_storage',
+        )
 
     @property
     def net_electricity_consumption_without_storage_and_partial_load(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage_and_partial_load` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage_and_partial_load
-                if isinstance(b, DynamicsBuilding) else b.net_electricity_consumption_without_storage
-                    for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series(
+            'net_electricity_consumption_without_storage_and_partial_load',
+            non_dynamics_attribute='net_electricity_consumption_without_storage',
+        )
 
     @property
     def net_electricity_consumption_emission_without_storage_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage_and_pv` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage_and_pv
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series('net_electricity_consumption_emission_without_storage_and_pv')
 
     @property
     def net_electricity_consumption_cost_without_storage_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage_and_pv` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage_and_pv
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series('net_electricity_consumption_cost_without_storage_and_pv')
 
     @property
     def net_electricity_consumption_without_storage_and_pv(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage_and_pv` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage_and_pv
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series('net_electricity_consumption_without_storage_and_pv')
 
 
     @property
     def net_electricity_consumption_emission_without_storage(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_emission_without_storage` time series, in [kg_co2]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_emission_without_storage
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series('net_electricity_consumption_emission_without_storage')
 
     @property
     def net_electricity_consumption_cost_without_storage(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_cost_without_storage` time series, in [$]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_cost_without_storage
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series('net_electricity_consumption_cost_without_storage')
 
     @property
     def net_electricity_consumption_without_storage(self) -> np.ndarray:
         """Summed `Building.net_electricity_consumption_without_storage` time series, in [kWh]."""
 
-        return pd.DataFrame([
-            b.net_electricity_consumption_without_storage
-                for b in self.buildings
-        ]).sum(axis = 0, min_count = 1).to_numpy()
+        return self._sum_counterfactual_series('net_electricity_consumption_without_storage')
 
     @property
     def net_electricity_consumption_emission(self) -> List[float]:
