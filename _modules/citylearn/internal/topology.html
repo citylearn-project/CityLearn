@@ -564,11 +564,17 @@
 
         <span class="k">return</span> <span class="n">instances</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_history_lookup</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">history</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_history_lookup_reference</span><span class="p">(</span><span class="n">history</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
-        <span class="c1"># Histories hold lists of ID strings and integers: copying a list is a deep copy.</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_history_lookup</span><span class="p">(</span><span class="n">history</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">time_step</span> <span class="ow">in</span> <span class="n">history</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">history</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span>
+
+        <span class="n">valid</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">history</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="n">time_step</span><span class="p">)</span>
+        <span class="n">latest</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">valid</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">latest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">history</span><span class="p">[</span><span class="n">latest</span><span class="p">])</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_history_lookup_reference</span><span class="p">(</span><span class="n">history</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
