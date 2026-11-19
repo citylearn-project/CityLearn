@@ -862,3 +862,122 @@ def test_battery_does_not_recharge_from_the_grid_after_its_own_export(agent_clas
         assert grid_charge == pytest.approx(0.0, abs=1.0e-6)
     finally:
         env.close()
+
+
+@pytest.mark.parametrize("seconds", [900, 3600])
+@pytest.mark.parametrize("core_bundle", [False, True])
+def test_bau_bess_uses_current_step_load_and_pv_without_one_step_lag(
+    tmp_path: Path, seconds: int, core_bundle: bool
+):
+    # Issue #190, consequence 1: with settled t-1 electrical observations, the
+    # battery charged from the grid at sunset (when step 0 had PV surplus and
+    # step 1 had dark load) and discharged into export when load dropped to zero.
+    dataset_dir = tmp_path / f"lag_{seconds}_{core_bundle}"
+    shutil.copytree(SOURCE_DATASET, dataset_dir)
+    load_path = dataset_dir / "Building_1.csv"
+    frame = pd.read_csv(load_path)
+    # Dataset rows are 900 s: 0.5 kWh per row is 2.0 kW.
+    frame["non_shiftable_load"] = 0.0
+    frame.loc[1, "non_shiftable_load"] = 0.5
+    frame.loc[2, "non_shiftable_load"] = 0.0
+    frame["solar_generation"] = 0.0
+    frame.to_csv(load_path, index=False)
+
+    schema_path = dataset_dir / "schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema["root_directory"] = str(dataset_dir)
+    schema["buildings"]["Building_1"]["electrical_storage"]["attributes"]["initial_soc"] = 0.5
+    if core_bundle:
+        schema["observation_bundles"] = {"entity_core_electrical": True}
+    schema_path.write_text(json.dumps(schema), encoding="utf-8")
+
+    env = CityLearnEnv(
+        str(schema_path),
+        central_agent=True,
+        seconds_per_time_step=seconds,
+        episode_time_steps=4,
+        random_seed=0,
+    )
+    try:
+        env.reset(seed=0)
+        building = env.buildings[0]
+        ev = building.electric_vehicle_chargers[0].connected_electric_vehicle
+        for idx in range(len(ev.battery.soc)):
+            ev.battery.soc[idx] = 1.0
+        step_hours = seconds / 3600.0
+        # Step 0 has 3.0 kW PV surplus (net export remains after BESS charges); steps 1..2 have 0 PV.
+        building._Building__solar_generation[0] = -(3.0 * step_hours)
+        building._Building__solar_generation[1] = 0.0
+        building._Building__solar_generation[2] = 0.0
+
+        storage_idx = env.action_names[0].index("electrical_storage")
+        agent = BusinessAsUsualAgent(env)
+
+        # Step 0: PV surplus -> charge battery.
+        a0 = agent.predict([])
+        assert a0[0][storage_idx] > 0.0
+        env.step(a0)
+        ev.battery.soc[0] = 1.0
+
+        # Step 1 (sunset): 0 PV, 2.0 kW non-shiftable load -> must discharge, not charge from grid.
+        a1 = agent.predict([])
+        assert a1[0][storage_idx] == pytest.approx(-2.0 / building.electrical_storage.nominal_power)
+        env.step(a1)
+        ev.battery.soc[1] = 1.0
+
+        # Step 2: 0 PV, 0 load -> must stay idle (0.0), not export stored energy.
+        a2 = agent.predict([])
+        assert a2[0][storage_idx] == pytest.approx(0.0, abs=1.0e-6)
+        env.step(a2)
+        assert building.net_electricity_consumption[2] == pytest.approx(0.0, abs=1.0e-5)
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize(
+    "make_agent,max_grid_charge_kwh,max_export_kwh",
+    [
+        # Full-charge BAU targets soc=1.0 of nominal capacity; ~0.003% battery capacity fade leaves
+        # ~0.003 kWh/step of unaccepted headroom vs the 15.96 kWh exported under the 1-step lag.
+        (lambda env: BusinessAsUsualAgent(env, ev_charge_target="full"), 1.0e-5, 0.05),
+        (lambda env: BusinessAsUsualAgent(env, ev_charge_target="requested"), 1.0e-3, 1.0e-5),
+        (RBCBasicPolicy, 1.0e-5, 1.0e-5),
+    ],
+)
+def test_battery_does_not_charge_from_grid_or_export_due_to_lag_with_core_bundle(
+    make_agent, max_grid_charge_kwh, max_export_kwh
+):
+    # Issue #190, consequence 1 on a dataset with `entity_core_electrical` enabled:
+    # self-consumption batteries must neither charge from the grid after a sunny
+    # step (33.0 kWh before) nor export stored energy after an importing step (16.0 kWh before).
+    env = CityLearnEnv(
+        "citylearn_challenge_2022_phase_all_plus_evs",
+        central_agent=True,
+        episode_time_steps=48,
+        random_seed=0,
+        interface="flat",
+        offline=True,
+    )
+    try:
+        observations, _ = env.reset(seed=0)
+        agent = make_agent(env)
+        while not env.terminated:
+            observations, *_ = env.step(agent.predict(observations))
+        steps = env.time_step
+        grid_charge = 0.0
+        battery_export = 0.0
+        for building in env.buildings:
+            battery = np.asarray(building.electrical_storage.electricity_consumption[:steps], dtype="float64")
+            net = np.asarray(building.net_electricity_consumption[:steps], dtype="float64")
+            charge = np.clip(battery, 0.0, None)
+            surplus_without_battery = np.clip(battery - net, 0.0, None)
+            grid_charge += float(np.sum(charge - np.minimum(charge, surplus_without_battery)))
+
+            discharge = np.clip(-battery, 0.0, None)
+            import_without_battery = np.clip(net - battery, 0.0, None)
+            battery_export += float(np.sum(discharge - np.minimum(discharge, import_without_battery)))
+
+        assert grid_charge <= max_grid_charge_kwh
+        assert battery_export <= max_export_kwh
+    finally:
+        env.close()

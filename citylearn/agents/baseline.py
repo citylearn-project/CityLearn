@@ -129,6 +129,9 @@ class _RuleBaselineAgent(Agent):
             metadata={
                 'seconds_per_time_step': env.seconds_per_time_step,
                 'building_names': [b.name for b in buildings],
+                'time_step_ratios': [
+                    float(getattr(b, 'time_step_ratio', 1.0) or 1.0) for b in buildings
+                ],
                 'community_market': {
                     'enabled': bool(getattr(env, 'community_market_enabled', False)),
                     'local_price_ratio_to_grid_import': getattr(env, 'community_market_sell_ratio', 1.0),

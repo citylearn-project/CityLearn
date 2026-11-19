@@ -57,9 +57,13 @@ reference of `evaluate_v2()` uses, reads them uncorrupted.
 
 ### Known limits
 
-The baselines decide from observations, so the battery reacts to the last
-settled step rather than reading the current step's load and PV from the
-simulator, as the 3.1–3.3 BAU did. The BAU battery serves only the EV power the
+The baselines decide from observations. When the current step's exogenous
+`non_shiftable_load` and `solar_generation` are observed (as in the bundled
+schemas), passive net demand is estimated from those current-step values plus
+any already-running deferrable appliance power and observed thermal-device
+electricity consumption, falling back to the last settled step only when those
+observations are disabled. Unobserved current-step HVAC/DHW electrical power
+still uses the settled observation when enabled. The BAU battery serves only the EV power the
 EV can still accept: the `available_charge_power_kw` observation of the
 `entity_core_electrical` bundle, or, without that bundle, an estimate from the
 observed SOC, battery capacity, charger power and charger efficiency and the
