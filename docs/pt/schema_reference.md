@@ -152,12 +152,21 @@ Usado apenas na entity interface.
 | `chargers` | object | nao | Chargers associados ao building. |
 | `deferrable_appliances` | object | nao | Appliances deferiveis normalizados. |
 | `charging_constraints` | object | nao | Limites de charging por building/fase. |
-| `electrical_service` | object | nao | Limites de import/export por fase e total. |
+| `electrical_service` | object | nao | Limites de import/export por fase e total; ver [Servico eletrico](#servico-eletrico). |
 | `equity_group` | string | nao | Grupo usado nos KPIs de equity. |
 | `dynamics` | object | nao | Modelo dinamico para indoor temperature. |
 | `occupant` | object | nao | Modelo occupant interaction. |
 | `power_outage` | object | nao | Config de outage. |
 | `set_point_hold_time_steps` | int | nao | Hold time para occupant interaction. |
+
+Chaves de `power_outage`:
+
+| Chave | Tipo | Padrao | O que faz |
+|---|---:|---|---|
+| `simulate_power_outage` | bool | `false` | Simula falhas da rede neste edificio. |
+| `stochastic_power_outage` | bool | `false` | Gera as falhas com `stochastic_power_outage_model` em vez da coluna `power_outage`. |
+| `stochastic_power_outage_model` | object | `PowerOutage` | Classe e atributos do modelo de falhas. |
+| `vehicle_to_building` | bool | `false` | Deixa um VE ligado descarregar para o edificio durante uma falha (apoio vehicle-to-building), ate a carga isolada que o PV e a bateria nao cobrem. As features entity do carregador `can_discharge` e `available_discharge_power_kw` indicam a capacidade de descarga do veiculo durante a falha. A descarga pode deixar o veiculo abaixo do SOC pedido para a partida. |
 
 ## Secoes de Dispositivo
 
@@ -211,6 +220,28 @@ Padrao comum:
 | `absolute` | `absolute_kwh`, `kwh`, `kwh_step`, `energy` | Geracao absoluta ja em `kWh/step`. | `generation_kwh = value`. |
 
 Usa `absolute` quando o dataset vem de medicao real ou de conversor externo ja em energia por step. Usa `per_kw` quando o dataset contem perfil normalizado por capacidade instalada.
+
+## Servico eletrico
+
+`buildings.<name>.electrical_service` define os limites da ligacao a rede do edificio. Os
+limites sao potencia ativa em kW; `null`, chave ausente ou `Infinity` significa sem limite.
+Campos: `mode` (`single_phase`/`three_phase`), `default_split`, `limits.total`,
+`limits.per_phase`, `available_grid_power` e `observations` (`headroom`,
+`headroom_export`, `violation`, `phase_encoding`, `available_grid_power`).
+
+### Potencia de rede disponivel
+
+`available_grid_power` indica um ficheiro CSV ou Parquet com uma linha por timestep,
+alinhado com `energy_simulation`, como nome de ficheiro ou `{"filename": ..., "column": ...}`.
+Sem `column`, usa a coluna com o nome do edificio e depois `available_grid_power`. Os valores
+sao a potencia (kW, nao energia por step) que o edificio pode importar nesse timestep.
+
+O limite de importacao em vigor e o menor entre `limits.total.import_kw` e o valor da serie.
+Um valor vazio aplica so o limite estatico; sem `import_kw` e um erro. Os valores devem ser
+finitos e nao negativos. Os carregadores de EV e a bateria sao limitados primeiro; a carga
+nao controlavel continua servida e conta como violacao do servico eletrico. 0 kW nao isola o
+edificio; use `power_outage` para um apagao. A observacao `available_grid_power` indica o
+limite do proximo intervalo; o headroom descreve o ultimo intervalo executado.
 
 ## Chargers
 

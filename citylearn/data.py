@@ -1,13 +1,15 @@
 import ast
 import logging
 import os
+import posixpath
 from pathlib import Path
 from filelock import FileLock
 from platformdirs import user_cache_dir
 import shutil
 import tempfile
 from urllib.parse import quote
-from typing import Any, Dict, Iterable, Mapping, List, Optional, Union
+from typing import Any, Callable, Dict, Iterable, Mapping, List, Optional, Union
+import warnings
 import numpy as np
 import pandas as pd
 import requests
@@ -45,6 +47,19 @@ def _parse_env_bool(name: str, default: bool = False) -> bool:
 
     return bool(parse_bool(value, default=default, path=name))
 
+
+class _DeprecatedClassAttribute:
+    """A class attribute that warns when read and computes its value from the class it is read from."""
+
+    def __init__(self, value: Callable[[type], Any], message: str):
+        self.value = value
+        self.message = message
+
+    def __get__(self, instance, owner):
+        warnings.warn(self.message, DeprecationWarning, stacklevel=2)
+
+        return self.value(owner)
+
 def get_settings():
     directory = os.path.join(os.path.join(os.path.dirname(__file__), 'misc'))
     filepath = os.path.join(directory, 'settings.yaml')
@@ -55,15 +70,31 @@ def get_settings():
 class DataSet:
     """CityLearn input data set and schema class."""
 
-    GITHUB_ACCOUNT = os.getenv('CITYLEARN_DATASET_GITHUB_ACCOUNT', 'citylearn-project')
-    REPOSITORY_NAME = os.getenv('CITYLEARN_DATASET_REPOSITORY', 'CityLearn')
-    REPOSITORY_TAG = os.getenv('CITYLEARN_DATASET_TAG', f'v{__version__}')
-    OFFLINE = _parse_env_bool('CITYLEARN_OFFLINE', False)
+    # Defaults for arguments left as None. The environment variables CITYLEARN_DATASET_GITHUB_ACCOUNT,
+    # CITYLEARN_DATASET_REPOSITORY, CITYLEARN_DATASET_TAG and CITYLEARN_OFFLINE override them, read when
+    # a DataSet is created.
+    GITHUB_ACCOUNT = 'citylearn-project'
+    REPOSITORY_NAME = 'CityLearn'
+    REPOSITORY_TAG = f'v{__version__}'
+    OFFLINE = False
     REPOSITORY_DATA_PATH = FileHandler.join_url('data')
     REPOSITORY_DATA_DATASETS_PATH = FileHandler.join_url(REPOSITORY_DATA_PATH, 'datasets')
     REPOSITORY_DATA_MISC_PATH = FileHandler.join_url(REPOSITORY_DATA_PATH, 'misc')
-    GITHUB_API_CONTENT_URL = FileHandler.join_url('https://api.github.com/repos/', GITHUB_ACCOUNT, REPOSITORY_NAME, 'contents')
-    DEFAULT_CACHE_DIRECTORY = os.path.join(user_cache_dir('citylearn'), REPOSITORY_TAG)
+    GITHUB_API_CONTENT_URL = _DeprecatedClassAttribute(
+        lambda cls: FileHandler.join_url(
+            'https://api.github.com/repos/',
+            os.getenv('CITYLEARN_DATASET_GITHUB_ACCOUNT', cls.GITHUB_ACCOUNT),
+            os.getenv('CITYLEARN_DATASET_REPOSITORY', cls.REPOSITORY_NAME),
+            'contents',
+        ),
+        'DataSet.GITHUB_API_CONTENT_URL is deprecated and unused: get_github_contents() builds the URL from the '
+        'github_account and repository of the DataSet instance.',
+    )
+    DEFAULT_CACHE_DIRECTORY = _DeprecatedClassAttribute(
+        lambda cls: os.path.join(user_cache_dir('citylearn'), os.getenv('CITYLEARN_DATASET_TAG', cls.REPOSITORY_TAG)),
+        'DataSet.DEFAULT_CACHE_DIRECTORY is deprecated and unused; it is not the folder datasets are cached in. '
+        'Use DataSet().cache_directory.',
+    )
     BATTERY_CHOICES_FILENAME = 'battery_choices.yaml'
     PV_CHOICES_FILENAME = 'lbl-tracking_the_sun-res-pv.csv'
 
@@ -142,15 +173,15 @@ class DataSet:
     
     @github_account.setter
     def github_account(self, value: str):
-        self.__github_account = self.GITHUB_ACCOUNT if value is None else value
+        self.__github_account = os.getenv('CITYLEARN_DATASET_GITHUB_ACCOUNT', self.GITHUB_ACCOUNT) if value is None else value
 
     @repository.setter
     def repository(self, value: str):
-        self.__repository = self.REPOSITORY_NAME if value is None else value
+        self.__repository = os.getenv('CITYLEARN_DATASET_REPOSITORY', self.REPOSITORY_NAME) if value is None else value
 
     @tag.setter
     def tag(self, value: str):
-        self.__tag = self.REPOSITORY_TAG if value is None else value
+        self.__tag = os.getenv('CITYLEARN_DATASET_TAG', self.REPOSITORY_TAG) if value is None else value
 
     @datasets_path.setter
     def datasets_path(self, value: str):
@@ -167,7 +198,7 @@ class DataSet:
 
     @offline.setter
     def offline(self, value: bool):
-        self.__offline = self.OFFLINE if value is None else bool(parse_bool(value, default=False, path='offline'))
+        self.__offline = _parse_env_bool('CITYLEARN_OFFLINE', self.OFFLINE) if value is None else bool(parse_bool(value, default=False, path='offline'))
 
     @staticmethod
     def _existing_directories(directories: Iterable[str]) -> List[str]:
@@ -189,20 +220,125 @@ class DataSet:
 
         return existing_directories
 
-    def _find_local_dataset_root(self, name: str) -> Optional[str]:
+    @staticmethod
+    def _dataset_input_files(schema: Mapping[str, Any], root_directory: str) -> List[str]:
+        """Return the input files that constructing `CityLearnEnv` from `schema` reads, as the schema names them.
+
+        This is the single list of the schema keys that name input files. It follows the loader
+        (`citylearn.internal.loading`, `loading_inputs` and `loading_components`, which also open the
+        dynamics and occupant models), the demand-response and robustness services, the community tariffs
+        and the time axis. Only buildings the loader loads count: every building of a dynamic topology,
+        otherwise those not set to `include: false`. Each value is resolved like the loader does, with
+        `os.path.join(root_directory, value)`. Constructor arguments that load more than the schema includes
+        (`buildings`, `deferrable_appliances`, `topology_mode`) can read files beyond this list.
+        `tests/test_dataset_cache_recovery.py` records the files a construction opens so the list stays complete.
+        """
+
+        files = []
+
+        def add(*values):
+            files.extend(v for v in values if v)
+
+        # CityLearnEnv requires topology_mode='dynamic' for such a schema, and the loader then loads every building.
+        events = schema.get('topology_events', [])
+        dynamic = str(schema.get('topology_mode', '')).strip().lower() == 'dynamic' or (
+            isinstance(events, list) and any(isinstance(e, Mapping) for e in events)
+        )
+
+        for name, building in (schema.get('buildings') or {}).items():
+            if not dynamic and not parse_bool(building.get('include', True), default=True, path=f'buildings.{name}.include'):
+                continue
+
+            add(building.get('energy_simulation'), building.get('weather'), building.get('carbon_intensity'), building.get('pricing'))
+
+            if building.get('dynamics') is not None:
+                add(building['dynamics'].get('attributes', {}).get('filename'))
+
+            if building.get('occupant') is not None:
+                attributes = building['occupant'].get('attributes', {})
+                add(
+                    building['occupant'].get('parameters_filename'),
+                    attributes.get('setpoint_increase_model_filename'),
+                    attributes.get('setpoint_decrease_model_filename'),
+                )
+
+            for charger in (building.get('chargers') or {}).values():
+                add(charger.get('charger_simulation'))
+
+            for appliance in (building.get('deferrable_appliances') or {}).values():
+                add(appliance.get('cycle_profiles_file'), appliance.get('flexibility_schedule_file'))
+
+            for escalator in (building.get('escalators') or {}).values():
+                add(escalator.get('simulation') or escalator.get('simulation_file'))
+
+            pv = building.get('pv')
+
+            if pv is not None and parse_bool(pv.get('autosize', False), default=False, path=f'buildings.{name}.pv.autosize'):
+                add((pv.get('autosize_attributes') or {}).get('epw_filepath'))
+
+        for service, key in (('demand_response', 'requests_file'), ('robustness', 'events_file')):
+            config = schema.get(service) or {}
+
+            if parse_bool(config.get('enabled', False), default=False, path=f'{service}.enabled'):
+                add(config.get(key))
+
+        add(*((schema.get('community_market') or {}).get('tariff_files') or {}).values())
+        calendar = (schema.get('time_axis') or {}).get('calendar_file')
+
+        # The time axis reads the implicit Portugal calendar only when it exists, so it is never missing.
+        if (
+            calendar is None and str(schema.get('dataset_contract_version', '')).startswith('portugal-native')
+            and os.path.isfile(os.path.join(root_directory, 'shared', 'calendar.parquet'))
+        ):
+            calendar = 'shared/calendar.parquet'
+
+        add(calendar)
+
+        return list(dict.fromkeys(files))
+
+    @classmethod
+    def _missing_dataset_files(cls, directory: Union[Path, str]) -> List[str]:
+        """Return the files of the dataset in `directory` that its loading needs but that do not exist."""
+
+        directory = str(directory)
+        schema_filepath = os.path.join(directory, 'schema.json')
+
+        if not os.path.isfile(schema_filepath):
+            return ['schema.json']
+
+        schema = FileHandler.read_json(schema_filepath)
+
+        return [
+            f for f in cls._dataset_input_files(schema, directory)
+            if not os.path.isfile(os.path.join(directory, f))
+        ]
+
+    def _local_dataset_roots(self, name: str) -> List[str]:
+        """Folders with a schema.json that hold dataset `name`, other than its cache folder.
+
+        They are `name` itself when it is such a folder, then `name` under each local datasets root.
+        """
+
         normalized_name = str(name).strip()
-        name_path = Path(normalized_name).expanduser()
+        cache_root = os.path.join(self.cache_directory, 'datasets', Path(normalized_name.rstrip('/')).name)
+        cache_root = os.path.normcase(os.path.realpath(cache_root))
+        candidates = [Path(normalized_name).expanduser()]
+        candidates += [Path(root) / normalized_name for root in self.local_datasets_directories]
+        roots = []
 
-        if name_path.is_dir() and (name_path / 'schema.json').is_file():
-            return str(name_path.resolve())
-
-        for root in self.local_datasets_directories:
-            candidate = Path(root) / normalized_name
-
+        for candidate in candidates:
             if candidate.is_dir() and (candidate / 'schema.json').is_file():
-                return str(candidate.resolve())
+                root = str(candidate.resolve())
 
-        return None
+                if os.path.normcase(root) != cache_root and root not in roots:
+                    roots.append(root)
+
+        return roots
+
+    def _find_local_dataset_root(self, name: str) -> Optional[str]:
+        """Return the first complete local copy of dataset `name`, or None."""
+
+        return next((r for r in self._local_dataset_roots(name) if len(self._missing_dataset_files(r)) == 0), None)
 
     def _find_local_misc_filepath(self, filename: str) -> Optional[str]:
         for root in self.local_misc_directories:
@@ -237,8 +373,11 @@ class DataSet:
         schema_filepath = os.path.join(root_directory, 'schema.json')
         path = FileHandler.join_url(self.datasets_path, dataset_name)
 
-        # check that dataset does not already exist using the schema as a proxy
-        if not os.path.isfile(schema_filepath):
+        # The cached dataset is complete when its schema and every input file the schema loads exist. An
+        # interrupted download by an earlier version can leave schema.json without the files it names.
+        missing_files = self._missing_dataset_files(root_directory)
+
+        if len(missing_files) > 0:
             local_root_directory = self._find_local_dataset_root(str(name))
 
             if local_root_directory is not None:
@@ -250,14 +389,23 @@ class DataSet:
                 if self.offline:
                     local_directories = self.local_datasets_directories
                     local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
+                    cached_message = (
+                        f"The cached copy at '{root_directory}' lacks {', '.join(missing_files)}."
+                        if os.path.isfile(schema_filepath) else f"There is no cached schema '{schema_filepath}'."
+                    )
+                    incomplete_message = ''.join(
+                        f" The local copy at '{r}' lacks {', '.join(self._missing_dataset_files(r))}."
+                        for r in self._local_dataset_roots(str(name))
+                    )
                     raise OfflineDataError(
-                        f"Offline mode is enabled and dataset '{dataset_name}' was not found locally. "
-                        f"Checked cache file '{schema_filepath}' and local dataset roots: {local_directories_message}. "
-                        "Pass a local schema.json file path or place the dataset under one of the local roots."
+                        f"Offline mode is enabled and no complete copy of dataset '{dataset_name}' was found locally. "
+                        f"{cached_message}{incomplete_message} Checked local dataset roots: {local_directories_message}. "
+                        "Pass a local schema.json file path, place the complete dataset under one of the local roots "
+                        "or disable offline mode to download it."
                     )
 
                 LOGGER.info(
-                    f'The {dataset_name} dataset DNE in cache/local roots. Will download from '
+                    f'The {dataset_name} dataset DNE or is incomplete in cache/local roots. Will download from '
                     f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {datasets_directory}. '
                     f'Next time DataSet.get_dataset(\'{dataset_name}\') is called, it will read '
                     'from cache unless DataSet.clear_cache is run first.'
@@ -268,9 +416,6 @@ class DataSet:
                 def download(staging: str):
                     for relative_path, url in files:
                         self._download_file(url, os.path.join(staging, *relative_path.split('/')), session=session)
-
-                    if not os.path.isfile(os.path.join(staging, 'schema.json')):
-                        raise FileNotFoundError(f'Dataset {dataset_name} has no schema.json at {path}.')
 
                 self._publish_directory(root_directory, download)
 
@@ -383,15 +528,16 @@ class DataSet:
             'https://raw.githubusercontent.com', self.github_account, self.repository, self.tag, quote(path)
         )
 
-    @staticmethod
-    def _publish_directory(target_directory: str, populate) -> None:
+    @classmethod
+    def _publish_directory(cls, target_directory: str, populate) -> None:
         """Fill a dataset folder in a private staging folder, then move it into place.
 
         Concurrent first downloads used to write into, and delete, the same cache folder. A dataset
-        now appears under `target_directory` only when complete; a process that loses the race to
-        publish keeps the complete copy that won. Publishing, including the removal of an incomplete
-        folder left by an earlier version, holds a lock and checks again for a complete copy first,
-        so a published dataset is never removed.
+        now appears under `target_directory` only when complete, that is when its schema and every
+        input file the schema loads exist; a process that loses the race to publish keeps the complete
+        copy that won. Publishing, including the replacement of an incomplete folder left by an earlier
+        version, holds a lock and checks again for a complete copy first, so a complete published
+        dataset is never removed.
         """
 
         parent = os.path.dirname(target_directory)
@@ -402,13 +548,17 @@ class DataSet:
 
         try:
             populate(staging)
+            missing_files = cls._missing_dataset_files(staging)
+
+            if len(missing_files) > 0:
+                raise FileNotFoundError(f"Dataset {name} lacks {', '.join(missing_files)} and was not cached.")
 
             # One lock per dataset, held by threads and processes alike and released by the operating
             # system if its holder dies. Downloads still run in parallel; only publishing is serialised.
             with FileLock(os.path.join(parent, f'.{name}.lock')):
-                if not os.path.isfile(os.path.join(target_directory, 'schema.json')):
+                if len(cls._missing_dataset_files(target_directory)) > 0:
                     if os.path.isdir(target_directory):
-                        # Incomplete folder left by an interrupted download of an earlier version. Move it
+                        # Incomplete folder, e.g. left by an interrupted download of an earlier version. Move it
                         # aside in one step (it is either gone or untouched), delete it after the lock.
                         stale = tempfile.mkdtemp(prefix=f'.{name}-stale-', dir=parent)
                         os.rename(target_directory, os.path.join(stale, name))
@@ -422,16 +572,16 @@ class DataSet:
                     shutil.rmtree(directory, ignore_errors=True)
 
     @staticmethod
-    def _copy_file(source: str, filepath: str) -> None:
-        """Copy under a temporary name, then move into place, so readers never see a partial file."""
+    def _write_file(filepath: str, write) -> None:
+        """Call `write` with a temporary path, then move it to `filepath`, so readers never see a partial file."""
 
         directory = os.path.dirname(filepath)
         os.makedirs(directory, exist_ok=True)
-        descriptor, temporary = tempfile.mkstemp(prefix='.copy-', dir=directory)
+        descriptor, temporary = tempfile.mkstemp(prefix='.write-', dir=directory)
         os.close(descriptor)
 
         try:
-            shutil.copyfile(source, temporary)
+            write(temporary)
             os.replace(temporary, filepath)
 
         except BaseException:
@@ -439,6 +589,12 @@ class DataSet:
                 os.remove(temporary)
 
             raise
+
+    @classmethod
+    def _copy_file(cls, source: str, filepath: str) -> None:
+        """Copy under a temporary name, then move into place, so readers never see a partial file."""
+
+        cls._write_file(filepath, lambda temporary: shutil.copyfile(source, temporary))
 
     def _download_file(self, url: str, filepath: str, session: requests.Session = None) -> None:
         """Download `url` to `filepath`, raising on an error response instead of caching it as data.
@@ -486,22 +642,74 @@ class DataSet:
             )
 
         else:
-            LOGGER.info(f'The dataset names DNE in cache. Will download from '
-                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {filepath}. '
-                    'Next time DataSet.get_dataset_names is called, it will read '
-                        'from cache unless DataSet.clear_cache is run first.')
-            contents = self.get_github_contents(self.datasets_path)
-            contents = [
-                r['name'] for r in contents 
-                    if r.get('type') == 'dir' 
-                        and r.get('path').replace(r['name'], '').strip('/') == self.datasets_path
-            ]
-            FileHandler.write_json(filepath, contents)
-            
+            # Concurrent first calls list the datasets once: the others wait, then read the cached list.
+            with FileLock(os.path.join(self.cache_directory, '.dataset_names.json.lock')):
+                if os.path.isfile(filepath):
+                    contents = FileHandler.read_json(filepath)
+
+                else:
+                    LOGGER.info(f'The dataset names DNE in cache. Will download from '
+                        f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {filepath}. '
+                            'Next time DataSet.get_dataset_names is called, it will read '
+                                'from cache unless DataSet.clear_cache is run first.')
+                    contents = [
+                        r['name'] for r in self.get_github_contents(self.datasets_path)
+                        if r.get('type') == 'dir' and posixpath.dirname(r['path']) == self.datasets_path.strip('/')
+                    ]
+                    # Readers do not take the lock, so they must never see a partly written file.
+                    self._write_file(filepath, lambda f: FileHandler.write_json(f, contents))
+
         contents = sorted(contents)
 
         return contents
     
+    def _ensure_misc_cached_file(self, filename: str, label: str) -> str:
+        """Return the cached path of misc file `filename`, copying it from a local misc root or downloading it first.
+
+        Concurrent first calls fetch the file once: the others wait, then use the cached copy.
+        """
+
+        misc_directory = os.path.join(self.cache_directory, 'misc')
+        filepath = os.path.join(misc_directory, filename)
+
+        if os.path.isfile(filepath):
+            return filepath
+
+        os.makedirs(misc_directory, exist_ok=True)
+
+        with FileLock(os.path.join(misc_directory, f'.{filename}.lock')):
+            if os.path.isfile(filepath):
+                return filepath
+
+            # Prefer local data to avoid unnecessary network usage.
+            local_filepath = self._find_local_misc_filepath(filename)
+
+            if local_filepath is not None:
+                self._copy_file(local_filepath, filepath)
+
+                return filepath
+
+            if self.offline:
+                local_directories = self.local_misc_directories
+                local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
+                raise OfflineDataError(
+                    f"Offline mode is enabled and '{filename}' was not found locally. "
+                    f"Checked cache file '{filepath}' and local misc roots: {local_directories_message}."
+                )
+
+            LOGGER.info(f'The {label} data DNE in cache. Will download from '
+                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {misc_directory}. '
+                    'Next time it is requested, it will read from cache unless DataSet.clear_cache is run first.')
+            path = FileHandler.join_url(self.misc_path)
+            urls = [f['download_url'] for f in self.get_github_contents(path) if f.get('name') == filename]
+
+            if len(urls) == 0:
+                raise FileNotFoundError(f"'{filename}' is not in {path} of {self.github_account}/{self.repository}@{self.tag}.")
+
+            self._download_file(urls[0], filepath)
+
+        return filepath
+
     def get_pv_sizing_data(self) -> pd.DataFrame:
         """Reads and returns LBNL''s Tracking The Sun dataset that has been prefilered for completeness.
         
@@ -510,39 +718,7 @@ class DataSet:
         data: pd.DataFrame
         """
 
-        misc_directory = os.path.join(self.cache_directory, 'misc')
-        os.makedirs(misc_directory, exist_ok=True)
-        filepath = os.path.join(misc_directory, self.PV_CHOICES_FILENAME)
-        path = FileHandler.join_url(self.misc_path)
-
-        # Prefer local data to avoid unnecessary network usage.
-        if not os.path.isfile(filepath):
-            local_filepath = self._find_local_misc_filepath(self.PV_CHOICES_FILENAME)
-
-            if local_filepath is not None:
-                self._copy_file(local_filepath, filepath)
-
-        # check that file DNE
-        if not os.path.isfile(filepath):
-            if self.offline:
-                local_directories = self.local_misc_directories
-                local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
-                raise OfflineDataError(
-                    f"Offline mode is enabled and '{self.PV_CHOICES_FILENAME}' was not found locally. "
-                    f"Checked cache file '{filepath}' and local misc roots: {local_directories_message}."
-                )
-
-            LOGGER.info(f'The PV sizing data DNE in cache. Will download from '
-                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {misc_directory}. '
-                    'Next time DataSet.get_pv_sizing_data is called, it will read '
-                        'from cache unless DataSet.clear_cache is run first.')
-            contents = self.get_github_contents(path)
-            url = [f['download_url'] for f in contents if f['name'] == self.PV_CHOICES_FILENAME][0]
-            self._download_file(url, filepath)
-
-        else:
-            pass
-
+        filepath = self._ensure_misc_cached_file(self.PV_CHOICES_FILENAME, 'PV sizing')
         data = pd.read_csv(filepath, low_memory=False)
         
         return data
@@ -555,39 +731,7 @@ class DataSet:
         data: Mapping[str, Union[float, str]]
         """
 
-        misc_directory = os.path.join(self.cache_directory, 'misc')
-        os.makedirs(misc_directory, exist_ok=True)
-        filepath = os.path.join(misc_directory, self.BATTERY_CHOICES_FILENAME)
-        path = FileHandler.join_url(self.misc_path)
-
-        # Prefer local data to avoid unnecessary network usage.
-        if not os.path.isfile(filepath):
-            local_filepath = self._find_local_misc_filepath(self.BATTERY_CHOICES_FILENAME)
-
-            if local_filepath is not None:
-                self._copy_file(local_filepath, filepath)
-
-        # check that file DNE
-        if not os.path.isfile(filepath):
-            if self.offline:
-                local_directories = self.local_misc_directories
-                local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
-                raise OfflineDataError(
-                    f"Offline mode is enabled and '{self.BATTERY_CHOICES_FILENAME}' was not found locally. "
-                    f"Checked cache file '{filepath}' and local misc roots: {local_directories_message}."
-                )
-
-            LOGGER.info(f'The battery sizing data DNE in cache. Will download from '
-                f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {misc_directory}. '
-                    'Next time DataSet.get_battery_sizing_data is called, it will read '
-                        'from cache unless DataSet.clear_cache is run first.')
-            contents = self.get_github_contents(path)
-            url = [f['download_url'] for f in contents if f['name'] == self.BATTERY_CHOICES_FILENAME][0]
-            self._download_file(url, filepath)
-
-        else:
-            pass
-
+        filepath = self._ensure_misc_cached_file(self.BATTERY_CHOICES_FILENAME, 'battery sizing')
         data = FileHandler.read_yaml(filepath)
         data = pd.DataFrame([{'model': k, **v['attributes']} for k, v in data.items()])
         data = data.set_index('model')
@@ -638,9 +782,42 @@ class DataSet:
         
         return session
     
+
+
+def add_robustness_noise(values, noise_std: float, random_state=None, lower: float = None, upper: float = None,
+                         zero_stays_zero: bool = False) -> np.ndarray:
+    """Add Gaussian robustness noise to a time series without leaving its physical range.
+
+    The noise is additive with standard deviation `noise_std` in the unit of the series; it is not scaled by the
+    series. It is drawn exactly as for an unbounded series, so the noise of the other series is unchanged, and
+    with `noise_std` <= 0 the series is returned unchanged. Where the noise-free value lies within
+    [`lower`, `upper`], the noisy value is clipped to that range; values already outside it keep their noise.
+    With `zero_stays_zero`, values that are zero without noise (solar quantities at night) get no noise.
+    """
+
+    base = np.array(values, dtype='float32')
+    noisy = base + NoiseUtils.generate_gaussian_noise(base, noise_std, random_state=random_state)
+    if noise_std <= 0:
+        return noisy
+
+    low = -np.inf if lower is None else float(lower)
+    high = np.inf if upper is None else float(upper)
+    inside = (base >= low) & (base <= high)
+    noisy = np.where(inside, np.clip(noisy, low, high), noisy).astype('float32', copy=False)
+    if zero_stays_zero:
+        noisy = np.where(base == 0.0, base, noisy)
+
+    return noisy
+
+
 class TimeSeriesData:
     """Generic time series data class.
     
+    Each variable is stored in full as ``_<name>`` and read as ``<name>``, the part of it between
+    `start_time_step` and `end_time_step`. The windowed values are kept in the instance
+    ``__dict__``, so reading a variable is a plain attribute lookup. They are refreshed when a
+    variable is set or the window changes, and they are left out of pickles and copies, which
+    rebuild them from the full variables.
     
     Parameters
     ----------
@@ -671,20 +848,16 @@ class TimeSeriesData:
 
         return variable
 
-    def __getattribute__(self, name: str):
-        if name.startswith('__'):
-            return object.__getattribute__(self, name)
+    def _refresh_windowed_variables(self):
+        data = self.__dict__
+        start_time_step = data.get('_start_time_step')
+        end_time_step = data.get('_end_time_step')
 
-        data = object.__getattribute__(self, '__dict__')
-        variable_name = f'_{name}'
-
-        if variable_name in data:
-            start_time_step = data.get('_start_time_step')
-            end_time_step = data.get('_end_time_step')
-            variable = data[variable_name]
-            return self._slice_variable(variable, start_time_step, end_time_step)
-
-        return object.__getattribute__(self, name)
+        for key, variable in list(data.items()):
+            # `_<name>` is a full variable. A name that starts with an underscore is stored as
+            # `__<name>` and read through `__getattr__`.
+            if key.startswith('_') and not key.startswith('__'):
+                data[key[1:]] = self._slice_variable(variable, start_time_step, end_time_step)
 
     def __getattr__(self, name: str, start_time_step: int = None, end_time_step: int = None):
         """Returns values of the named variable within the specified time steps and
@@ -715,7 +888,23 @@ class TimeSeriesData:
         Variables are named with a single underscore prefix.
         """
 
-        self.__dict__[f'_{name}'] = value
+        data = self.__dict__
+        data[f'_{name}'] = value
+
+        if name.startswith('_'):
+            return
+
+        if name in ('start_time_step', 'end_time_step'):
+            self._refresh_windowed_variables()
+        else:
+            data[name] = self._slice_variable(value, data.get('_start_time_step'), data.get('_end_time_step'))
+
+    def __getstate__(self) -> Dict[str, Any]:
+        return {key: value for key, value in self.__dict__.items() if key.startswith('_')}
+
+    def __setstate__(self, state: Mapping[str, Any]):
+        self.__dict__.update(state)
+        self._refresh_windowed_variables()
 
 class EnergySimulation(TimeSeriesData):
     """`Building` `energy_simulation` data class.
@@ -807,7 +996,10 @@ class EnergySimulation(TimeSeriesData):
         self.heating_demand = np.array(heating_demand, dtype = 'float32')
         assert (self.cooling_demand*self.heating_demand).sum() == 0, 'Cooling and heating in the same time step is not allowed.'
 
-        self.solar_generation = np.array(solar_generation, dtype = 'float32') + NoiseUtils.generate_gaussian_noise(indoor_dry_bulb_temperature, self.noise_std, random_state=noise_random_state)
+        # Generation cannot be negative, and there is none to perturb at night.
+        self.solar_generation = add_robustness_noise(
+            solar_generation, self.noise_std, noise_random_state, lower=0.0, zero_stays_zero=True,
+        )
 
         # optional
         self.minutes = np.array(minutes, dtype='int32') if minutes is not None else None
@@ -900,16 +1092,6 @@ class EnergySimulation(TimeSeriesData):
             
         self.hvac_mode = np.array(hvac_mode, dtype='int32')
 
-    @property
-    def time_step_ratios(self):
-        """Getter for the time_step_ratio variable."""
-        return self.__time_step_ratios
-
-    @time_step_ratios.setter
-    def time_step_ratios(self, value):
-        """Setter for the time_step_ratio variable."""
-        self.__time_step_ratios = value    
-    
 class LogisticRegressionOccupantParameters(TimeSeriesData):
     def __init__(self, a_increase: Iterable[float], b_increase: Iterable[float], a_decrease: Iterable[float], b_decrease: Iterable[float], start_time_step: int = None, end_time_step: int = None):
         super().__init__(start_time_step=start_time_step, end_time_step=end_time_step)
@@ -976,35 +1158,33 @@ class Weather(TimeSeriesData):
         self.noise_std = noise_std
         from citylearn.utilities import IndexedNoise
         noise_random_state = None if noise_seed is None else IndexedNoise(noise_seed, noise_start_index)
-        self.outdoor_dry_bulb_temperature = np.array(outdoor_dry_bulb_temperature, dtype='float32')
-        self.outdoor_relative_humidity = np.array(outdoor_relative_humidity, dtype='float32')
-        self.diffuse_solar_irradiance = np.array(diffuse_solar_irradiance, dtype='float32')
-        self.direct_solar_irradiance = np.array(direct_solar_irradiance, dtype='float32')
+        # Add stochastic behavior by adding Gaussian noise to the data. The calls keep their order, which fixes
+        # the noise of each series. Humidity stays within [0, 100] %; irradiance stays >= 0 and zero at night.
+        humidity = dict(lower=0.0, upper=100.0)
+        irradiance = dict(lower=0.0, zero_stays_zero=True)
+        self.outdoor_dry_bulb_temperature = add_robustness_noise(outdoor_dry_bulb_temperature, self.noise_std, noise_random_state)
+        self.outdoor_relative_humidity = add_robustness_noise(outdoor_relative_humidity, self.noise_std, noise_random_state, **humidity)
+        self.diffuse_solar_irradiance = add_robustness_noise(diffuse_solar_irradiance, self.noise_std, noise_random_state, **irradiance)
+        self.direct_solar_irradiance = add_robustness_noise(direct_solar_irradiance, self.noise_std, noise_random_state, **irradiance)
 
-        # Add stochastic behavior by adding Gaussian noise to the data
-        self.outdoor_dry_bulb_temperature += NoiseUtils.generate_gaussian_noise(self.outdoor_dry_bulb_temperature, self.noise_std, random_state=noise_random_state)
-        self.outdoor_relative_humidity += NoiseUtils.generate_gaussian_noise(self.outdoor_relative_humidity, self.noise_std, random_state=noise_random_state)
-        self.diffuse_solar_irradiance += NoiseUtils.generate_gaussian_noise(self.diffuse_solar_irradiance, self.noise_std, random_state=noise_random_state)
-        self.direct_solar_irradiance += NoiseUtils.generate_gaussian_noise(self.direct_solar_irradiance, self.noise_std, random_state=noise_random_state)
-        
         # Predicted weather values (could also introduce noise here)
-        self.outdoor_dry_bulb_temperature_predicted_1 = np.array(outdoor_dry_bulb_temperature_predicted_1, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_dry_bulb_temperature_predicted_1, self.noise_std, random_state=noise_random_state)
-        self.outdoor_dry_bulb_temperature_predicted_2 = np.array(outdoor_dry_bulb_temperature_predicted_2, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_dry_bulb_temperature_predicted_2, self.noise_std, random_state=noise_random_state)
-        self.outdoor_dry_bulb_temperature_predicted_3 = np.array(outdoor_dry_bulb_temperature_predicted_3, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_dry_bulb_temperature_predicted_3, self.noise_std, random_state=noise_random_state)
+        self.outdoor_dry_bulb_temperature_predicted_1 = add_robustness_noise(outdoor_dry_bulb_temperature_predicted_1, self.noise_std, noise_random_state)
+        self.outdoor_dry_bulb_temperature_predicted_2 = add_robustness_noise(outdoor_dry_bulb_temperature_predicted_2, self.noise_std, noise_random_state)
+        self.outdoor_dry_bulb_temperature_predicted_3 = add_robustness_noise(outdoor_dry_bulb_temperature_predicted_3, self.noise_std, noise_random_state)
         
        
 
-        self.outdoor_relative_humidity_predicted_1 = np.array(outdoor_relative_humidity_predicted_1, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_relative_humidity_predicted_1, self.noise_std, random_state=noise_random_state)
-        self.outdoor_relative_humidity_predicted_2 = np.array(outdoor_relative_humidity_predicted_2, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_relative_humidity_predicted_2, self.noise_std, random_state=noise_random_state)
-        self.outdoor_relative_humidity_predicted_3 = np.array(outdoor_relative_humidity_predicted_3, dtype='float32') + NoiseUtils.generate_gaussian_noise(outdoor_relative_humidity_predicted_3, self.noise_std, random_state=noise_random_state)
+        self.outdoor_relative_humidity_predicted_1 = add_robustness_noise(outdoor_relative_humidity_predicted_1, self.noise_std, noise_random_state, **humidity)
+        self.outdoor_relative_humidity_predicted_2 = add_robustness_noise(outdoor_relative_humidity_predicted_2, self.noise_std, noise_random_state, **humidity)
+        self.outdoor_relative_humidity_predicted_3 = add_robustness_noise(outdoor_relative_humidity_predicted_3, self.noise_std, noise_random_state, **humidity)
 
-        self.diffuse_solar_irradiance_predicted_1 = np.array(diffuse_solar_irradiance_predicted_1, dtype='float32') + NoiseUtils.generate_gaussian_noise(diffuse_solar_irradiance_predicted_1, self.noise_std, random_state=noise_random_state)
-        self.diffuse_solar_irradiance_predicted_2 = np.array(diffuse_solar_irradiance_predicted_2, dtype='float32') + NoiseUtils.generate_gaussian_noise(diffuse_solar_irradiance_predicted_2, self.noise_std, random_state=noise_random_state)
-        self.diffuse_solar_irradiance_predicted_3 = np.array(diffuse_solar_irradiance_predicted_3, dtype='float32') + NoiseUtils.generate_gaussian_noise(diffuse_solar_irradiance_predicted_3, self.noise_std, random_state=noise_random_state)
+        self.diffuse_solar_irradiance_predicted_1 = add_robustness_noise(diffuse_solar_irradiance_predicted_1, self.noise_std, noise_random_state, **irradiance)
+        self.diffuse_solar_irradiance_predicted_2 = add_robustness_noise(diffuse_solar_irradiance_predicted_2, self.noise_std, noise_random_state, **irradiance)
+        self.diffuse_solar_irradiance_predicted_3 = add_robustness_noise(diffuse_solar_irradiance_predicted_3, self.noise_std, noise_random_state, **irradiance)
 
-        self.direct_solar_irradiance_predicted_1 = np.array(direct_solar_irradiance_predicted_1, dtype='float32') + NoiseUtils.generate_gaussian_noise(direct_solar_irradiance_predicted_1, self.noise_std, random_state=noise_random_state)
-        self.direct_solar_irradiance_predicted_2 = np.array(direct_solar_irradiance_predicted_2, dtype='float32') + NoiseUtils.generate_gaussian_noise(direct_solar_irradiance_predicted_2, self.noise_std, random_state=noise_random_state)
-        self.direct_solar_irradiance_predicted_3 = np.array(direct_solar_irradiance_predicted_3, dtype='float32') + NoiseUtils.generate_gaussian_noise(direct_solar_irradiance_predicted_3, self.noise_std, random_state=noise_random_state)
+        self.direct_solar_irradiance_predicted_1 = add_robustness_noise(direct_solar_irradiance_predicted_1, self.noise_std, noise_random_state, **irradiance)
+        self.direct_solar_irradiance_predicted_2 = add_robustness_noise(direct_solar_irradiance_predicted_2, self.noise_std, noise_random_state, **irradiance)
+        self.direct_solar_irradiance_predicted_3 = add_robustness_noise(direct_solar_irradiance_predicted_3, self.noise_std, noise_random_state, **irradiance)
 
 
 
@@ -1079,7 +1259,7 @@ class CarbonIntensity(TimeSeriesData):
         from citylearn.utilities import IndexedNoise
         noise_random_state = None if noise_seed is None else IndexedNoise(noise_seed, noise_start_index)
         super().__init__(start_time_step=start_time_step, end_time_step=end_time_step)
-        self.carbon_intensity = np.array(carbon_intensity, dtype='float32') + NoiseUtils.generate_gaussian_noise(carbon_intensity, self.noise_std, random_state=noise_random_state)
+        self.carbon_intensity = add_robustness_noise(carbon_intensity, self.noise_std, noise_random_state, lower=0.0)
 
 class ChargerSimulation(TimeSeriesData):
     """Charger-centric electric vehicle simulation data class.
@@ -1141,10 +1321,11 @@ class ChargerSimulation(TimeSeriesData):
         default_time_value = -1
         default_soc_value = -0.1
 
-        self.electric_vehicle_charger_state = np.array([
-            int(str(s)) if str(s).isdigit() else np.nan
-            for s in electric_vehicle_charger_state
-        ], dtype='float32')
+        # A blank cell makes pandas read the column as floats (1.0, 2.0, NaN), so parse numbers, not digit
+        # strings. Anything that is not a non-negative integer is no state (NaN).
+        charger_state = pd.to_numeric(pd.Series(electric_vehicle_charger_state, dtype=object), errors='coerce')
+        charger_state = charger_state.where((charger_state >= 0) & (charger_state == np.floor(charger_state)))
+        self.electric_vehicle_charger_state = charger_state.to_numpy(dtype='float32')
 
         self.electric_vehicle_id = np.array(electric_vehicle_id, dtype=object)
         self.electric_vehicle_session_id = np.array(

@@ -22,7 +22,7 @@ from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.energy_model import Battery, DeferrableAppliance, Escalator
 from citylearn.reward_function import MultiBuildingRewardFunction, RewardFunction
 from citylearn.utilities import parse_bool
-from citylearn.internal import loading_inputs, loading_components
+from citylearn.internal import grid_availability, loading_inputs, loading_components
 
 LOGGER = logging.getLogger()
 
@@ -427,6 +427,12 @@ class CityLearnLoadingService:
         member_window = self._dynamic_member_windows.get(building_name)
         inputs = loading_inputs.load_building_inputs(self, building_name, schema, expected_rows, member_window)
         options['time_step_ratio'] = inputs.time_step_ratio
+        available_grid_power = grid_availability.load(
+            self, building_name, building_schema, schema, expected_rows, member_window)
+
+        if available_grid_power is not None:
+            options['available_grid_power'] = available_grid_power
+
         building_type = ('citylearn.citylearn.Building' if building_schema.get('type') is None
                          else building_schema['type'])
         constructor = loading_components.component_constructor(building_type, f'buildings.{building_name}.type')
@@ -627,13 +633,21 @@ class CityLearnLoadingService:
         """Initialize and return an electric vehicle model."""
 
         attrs = electric_vehicle_schema['battery']['attributes']
+        battery_type = electric_vehicle_schema['battery'].get('type', 'citylearn.energy_model.Battery')
+        module, class_name = battery_type.rsplit('.', 1)
+        battery_constructor = getattr(importlib.import_module(module), class_name)
+        if not issubclass(battery_constructor, Battery):
+            raise ValueError('An electric vehicle battery must extend Battery')
+        from citylearn.community_dataset import InventoryBattery
         capacity = attrs['capacity']
-        nominal_power = attrs['nominal_power']
         initial_soc = attrs.get('initial_soc')
         if initial_soc is None:
             seed_source = f"{schema['random_seed']}:{electric_vehicle_name}:initial_soc"
             deterministic_seed = int(hashlib.md5(seed_source.encode('utf-8')).hexdigest()[:8], 16)
-            initial_soc = float(np.random.RandomState(deterministic_seed).uniform(0.0, 1.0))
+            # Draw within the declared SOC limits; InventoryBattery rejects an initial SOC outside them.
+            initial_soc = float(np.random.RandomState(deterministic_seed).uniform(
+                attrs.get('min_soc', 0.0), attrs.get('max_soc', 1.0),
+            ))
         depth_of_discharge = attrs.get('depth_of_discharge', 1.0)
         loss_coefficient = attrs.get('loss_coefficient', 0.0)
 
@@ -653,7 +667,6 @@ class CityLearnLoadingService:
 
         battery_kwargs = {
             'capacity': capacity,
-            'nominal_power': nominal_power,
             'initial_soc': initial_soc,
             'loss_coefficient': loss_coefficient,
             'seconds_per_time_step': schema['seconds_per_time_step'],
@@ -678,11 +691,10 @@ class CityLearnLoadingService:
             if attribute in attrs:
                 battery_kwargs[attribute] = attrs[attribute]
 
-        battery_type = electric_vehicle_schema['battery'].get('type', 'citylearn.energy_model.Battery')
-        module, class_name = battery_type.rsplit('.', 1)
-        battery_constructor = getattr(importlib.import_module(module), class_name)
-        if not issubclass(battery_constructor, Battery):
-            raise ValueError('An electric vehicle battery must extend Battery')
+        # InventoryBattery derives nominal_power from max_charge_kw and max_discharge_kw.
+        if 'nominal_power' in attrs or not issubclass(battery_constructor, InventoryBattery):
+            battery_kwargs['nominal_power'] = attrs['nominal_power']
+
         battery = battery_constructor(**battery_kwargs)
 
         electric_vehicle_type = 'citylearn.citylearn.ElectricVehicle' if electric_vehicle_schema.get('type', None) is None else electric_vehicle_schema['type']
