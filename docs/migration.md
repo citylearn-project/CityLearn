@@ -48,6 +48,195 @@ development-line history.
 
 ## Unreleased
 
+### Battery discharge features during outages
+
+During a power outage the entity `storage` features `can_discharge` and
+`available_discharge_power_kw` now report the battery's discharge capacity
+instead of zero. Controllers that read them, including the BAU and the
+rule-based baselines, can take different actions during outages, so the
+native BAU reference changes on scenarios with outages under the entity
+interface, such as `pt_rec_30/evaluation/rec_30_robustness.json`,
+`rec_30_combined.json` and `pt_rec_100/evaluation/rec_100_allin.json`. This
+change belongs to the same unreleased baseline definitions as the change for
+datasets without `entity_core_electrical` (`immediate-full-charge-v3` and the
+others). Rerun the controller and its reference on those scenarios. Agents
+trained on these features may need retraining.
+
+### Baselines without the `entity_core_electrical` bundle
+
+On datasets whose schema does not enable `entity_core_electrical`, the BAU and
+the rule-based baselines take different actions: the BAU reserves only the EV
+power the EV can accept, and no baseline counts the last interval's export as
+PV surplus. Their definition versions change to `immediate-full-charge-v3`,
+`immediate-user-target-v2`, `basic-v3`, `smart-local-v3` and `community-v3`, and
+the native BAU reference of `evaluate_v2()` changes with them. Rerun the
+controller and its reference before comparing with earlier results. Datasets
+with the bundle, including `pt_rec_*` and
+`citylearn_challenge_2022_phase_all_plus_evs`, are unchanged.
+
+### Baselines under the flat interface with robustness observation events
+
+`BusinessAsUsualAgent`, `RBCBasicPolicy`, `RBCSmartPolicy` and
+`RBCCommunityPolicy` run as controllers under the flat interface now read the
+corrupted observations, as they already did under the entity interface
+([#192](https://github.com/citylearn-project/CityLearn/issues/192)). Their
+actions and the controller KPIs of such runs can change. The native BAU
+reference of `evaluate_v2()`, runs without observation events and runs under
+the entity interface are unchanged.
+
+### Robustness noise stays within physical ranges
+
+Runs with `noise_std = 0`, which includes every bundled dataset, are unchanged.
+With `noise_std > 0`, noisy solar generation and solar irradiance (and their
+forecasts) are no longer negative and stay zero at night, outdoor relative
+humidity stays within [0, 100] % and carbon intensity is no longer negative.
+The noise draws are the same, so all other values, and the series of other
+buildings and seeds, are unchanged. Runs whose solar or carbon series became
+negative under noise change; agents trained on such series may need retraining.
+See the [data unit contract](data_unit_contract.md#robustness-noise).
+### Python 3.10 or newer
+
+CityLearn requires Python 3.10 or newer. Environments on Python 3.9 keep
+resolving CityLearn 3.5.0; upgrade the interpreter to use later releases.
+### Vehicle-to-building backup during outages
+
+New and off by default: `power_outage.vehicle_to_building` in a building schema
+(`Building.outage_vehicle_to_building`). Without it nothing changes: an EV
+cannot discharge while the grid is down. With it, a negative EV action during an
+outage discharges the vehicle into the building, up to the islanded load that PV
+and the battery do not cover. Results change only for buildings that enable the
+option and request EV discharge during an outage.
+
+### JSON files with NumPy values
+
+No dataset, schema or simulation migration is required. Simulated trajectories,
+KPIs and export manifests are unchanged.
+
+- **JSON files with NumPy values.** `FileHandler.write_json` (in `citylearn.utilities`
+  and `citylearn.utils.file_handler`) writes NumPy booleans, integers and floats as
+  JSON booleans and numbers, and NumPy arrays of booleans and numbers as lists. They
+  used to be written as text: `np.float32(2.5)` as `"2.5"`, `np.bool_(True)` as
+  `"True"` and `np.array([1.0, np.nan])` as `"[ 1. nan]"`; they are now `2.5`,
+  `true` and `[1.0, null]`. A `np.float32` is written with its exact value, so
+  `np.float32(0.1)` becomes `0.10000000149011612`. Code that parsed these strings
+  must read numbers instead. With `ignore_nan=False`, a NaN or infinite NumPy float
+  now raises `ValueError`, as a Python float already did; it used to be written as
+  `"nan"`. namedtuples (written as objects), `Decimal` values (written as numbers
+  with their exact text) and all other values are written as before.
+
+### BAU export, charger exports, CLI and file encoding
+
+No dataset or schema migration is required. Simulated trajectories and KPIs are
+unchanged.
+
+- **BAU time-series export.** `exported_data_business_as_usual_ep<N>.csv` holds one
+  row per building and one district row for each executed time step, as the
+  control exports do. It used to add the terminal time step, whose values repeated
+  the last executed step, so totals summed from the file counted that step twice.
+- **Charger exports.** A charger without a connected or incoming EV writes `-1.00`
+  under `EV SOC-%`, the column used when an EV is present. Charger export files no
+  longer have a separate `EV SOC` column.
+- **Schema agent attributes.** `CityLearnEnv.load_agent()` called without `agent`
+  builds the schema's agent from `schema['agent']['attributes']` updated by the
+  keyword arguments. Any keyword argument, such as the `env=` that `Simulator`
+  always passes, used to discard the schema attributes, so
+  `Simulator(..., agent_name=None)` built the schema's agent with its default
+  parameters. Such runs now use the schema's parameters; pass keyword arguments to
+  override them. `"attributes": null` is read as no attributes. An explicitly named
+  agent, including the CLI default `BusinessAsUsualAgent`, still takes only the
+  keyword arguments.
+- **CLI.** `citylearn simulate ... evaluate` and `train --evaluate` complete and
+  write the evaluation JSON, also with `-te`; `train --evaluate` evaluates the
+  trained agent instead of a new one. Evaluation time series hold one row per
+  executed time step, and a variable that a building does not have is reported as
+  empty instead of repeating the previous variable. The CLI runs on Python 3.9 and
+  3.10.
+- **Windows.** `run_work_order(..., virtual_environment_path=...)` activates the
+  environment with `Scripts\activate.bat` on Windows, detected automatically when
+  `windows_system` is not given. JSON and YAML files are read and written as UTF-8
+  instead of the locale's code page.
+
+### Agents and wrappers
+
+No dataset, schema or export-file migration is required. Environment trajectories
+and KPIs for a given action sequence are unchanged; the results of the agents and
+wrappers below change.
+
+- **`TabularQLearning`.** A transition with `terminated=True` no longer bootstraps
+  from the next state's Q-values, as for `SAC`; truncated transitions still do.
+  Q-tables and the actions learned from them change.
+- **`MARLISARBC`.** Exploration now uses the RBC passed as `rbc`. It used to discard
+  the RBC's actions and explore with random actions while still advancing the RBC,
+  so its exploration and everything learned from it change.
+- **`MARLISA` with `pca_compression < 1`.** The networks read the PCA output
+  (`int(pca_compression*(observations + coordination variables))` features). These
+  runs used to fail at the first network update; `pca_compression=1` (the default)
+  is unchanged.
+- **Discrete and tabular wrappers.** `DiscreteObservationWrapper` puts values above
+  the observation space's upper bound into the top bin; they used to get an index
+  one past the `MultiDiscrete` space. `TabularQLearningObservationWrapper` numbers
+  the `prod(bins)` states of its `Discrete` space with `itertools.product` over the
+  bins; it used to enumerate one extra value per observation, declare
+  `prod(bins + 1) - 1` states and give the last state an index outside the space.
+  Saved Q-tables are therefore indexed differently and have a different size;
+  retrain them. Episodes whose observations stay within the observation space
+  otherwise learn the same Q-values.
+- **Wrapped spaces.** `DiscreteObservationWrapper` bins the observations and
+  bounds of the env it wraps, so over `NormalizedObservationWrapper` it bins the
+  normalized features, including the cos and sin of periodic observations.
+  `DiscreteActionWrapper` bins the action space of the env it wraps.
+  `ClippedObservationWrapper` returns new lists instead of clipping the
+  environment's cached observation lists in place.
+- **`OnehotEncoding`.** A value that is not one of the classes raises `ValueError`
+  naming the value, instead of `IndexError`.
+
+### Data loading edge cases
+
+No dataset, schema or export-file migration is required. The datasets shipped
+with CityLearn load and simulate as before: none of their 455 charger files is
+parsed differently, and none of their EVs uses `InventoryBattery`.
+
+- **Charger states.** `electric_vehicle_charger_state` is parsed as a number. A
+  blank cell makes pandas read the whole column as floats (`1.0`, `2.0`), which
+  used to turn every state of that charger into "no state", so no EV ever
+  connected. Values that are not non-negative integers remain "no state".
+- **`InventoryBattery` EVs.** `nominal_power` may be omitted for an EV battery of
+  type `InventoryBattery`, which derives it from `max_charge_kw` and
+  `max_discharge_kw`. A `Battery` still requires it.
+- **Random initial SOC.** An EV battery without `initial_soc` draws it uniformly
+  between its `min_soc` and `max_soc` (0 and 1 when they are not declared, which
+  gives the same values as before). An `InventoryBattery` with declared limits
+  used to receive a draw from [0, 1], and the run failed when it fell outside them;
+  where it fell inside, the initial SOC now differs.
+- **Entity SOC limits.** For an `InventoryBattery` with `max_soc < 1`, the entity
+  observations report `soc_max_ratio` as `max_soc`, and the energy and power a
+  battery can still take (`energy_to_full_kwh`, `connected_ev_energy_to_full_kwh`,
+  `flexible_energy_to_full_kwh`, charge headroom and available charge power)
+  stop at `max_soc` instead of a full battery; `usable_soc_ratio` is relative to
+  `max_soc`. Batteries without `max_soc` give the same values as before.
+
+### Dynamic-topology district KPIs
+
+No dataset, schema or export-file migration is required. Static topology results are
+unchanged. In dynamic topology, KPIs change in two cases; rerun both the controller and
+its reference before comparing with earlier results.
+
+- **District reference series keep departed members.** The district
+  `net_electricity_consumption*_without_storage*` series (the conventional baseline) summed
+  only the members active when they were read, while the control series keep each
+  member's consumption for the steps at which it belonged to the district. A member that
+  had left therefore dropped out of the baseline side only. The reference series now sum
+  every member that has been active, each over the steps at which it was a member, so a
+  member that joins late no longer adds its PV-free series before it joins either. This
+  changes the district baseline and delta totals (import, export, net exchange, emissions,
+  and cost without the community market), the district export ratio to baseline and the
+  district ramping, load-factor and peak ratios of scenarios with membership changes.
+- **Electrical-service histories survive topology events.** The requested-pressure,
+  total-power and per-phase power histories of a member were erased when it rejoined or
+  when one of its assets was added or removed. They are now kept, so the
+  `electrical_service_*` violation and requested-pressure KPIs and the phase peak and
+  imbalance KPIs include the steps before the event.
+
 ### Sub-hourly power and energy units
 
 These fixes leave runs whose dataset and control step are both 3600 s unchanged.

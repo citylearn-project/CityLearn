@@ -6,7 +6,9 @@ Versão inglesa: [Publishing CityLearn](../publishing.md).
 
 ## Preparar a versão
 
-1. Atualizar a versão em `citylearn/__init__.py`.
+1. Atualizar a versão em `citylearn/__init__.py`. O `pyproject.toml` contém os
+   restantes metadados do pacote e lê a versão desse ficheiro e as dependências
+   de `requirements.txt`.
 2. Acrescentar às [notas da versão](releases.md) as alterações para utilizadores,
    compatibilidade, impacto nos dados, validação e instruções de migração.
 3. Atualizar os guias afetados e as [instruções de migração](../migration.md).

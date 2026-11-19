@@ -137,15 +137,28 @@ class ElectricDevice(Device):
         ratio = self.time_step_ratio
         return 1.0 if ratio is None else float(ratio)
 
-    @property
-    def electricity_consumption(self) -> np.ndarray:
-        r"""Electricity consumption time series [kWh]."""
+    def _scale_electricity_consumption(self, values: np.ndarray) -> np.ndarray:
         ratio = self._electricity_consumption_ratio()
 
         if ratio == 1.0:
-            return self.__electricity_consumption
+            return values
 
-        return self.__electricity_consumption * ratio
+        return values * ratio
+
+    @property
+    def electricity_consumption(self) -> np.ndarray:
+        r"""Electricity consumption time series [kWh]."""
+
+        return self._scale_electricity_consumption(self.__electricity_consumption)
+
+    def electricity_consumption_at(self, time_step: int = None):
+        r"""`electricity_consumption` at a non-negative `time_step` (default: current) [kWh].
+
+        Scales only that element instead of the whole time series, with the same result.
+        """
+
+        time_step = self.time_step if time_step is None else time_step
+        return self._scale_electricity_consumption(self.__electricity_consumption[time_step:time_step + 1])[0]
 
     @property
     def available_nominal_power(self) -> float:
@@ -2388,7 +2401,7 @@ class WashingMachine(ElectricDevice):
             **{
                 k.lstrip('_'): v[self.time_step]
                 for k, v in vars(self.washing_machine_simulation).items()
-                if isinstance(v, np.ndarray) and k.lstrip('_') not in unwanted_keys
+                if k.startswith('_') and isinstance(v, np.ndarray) and k.lstrip('_') not in unwanted_keys
             },
             'washing_machine_initiated': float(self.initiated),
             'washing_machine_action': self.past_action_values[self.time_step] if self.past_action_values is not None else 0.0
@@ -2421,7 +2434,7 @@ class WashingMachine(ElectricDevice):
         simulation_attrs = {
             key: value
             for key, value in vars(self.washing_machine_simulation).items()
-            if isinstance(value, np.ndarray)
+            if key.startswith('_') and isinstance(value, np.ndarray)
         }
 
         time_steps = []

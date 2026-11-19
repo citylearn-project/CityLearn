@@ -50,6 +50,11 @@ Carregadores e baterias podem ligar-se a `L1`, `L2`, `L3` ou `all_phases`.
 As observações e os KPIs expõem potência, margem de importação/exportação,
 violações residuais, desequilíbrio e picos por fase. Estes são limites de potência
 ativa na ligação; não representam um cálculo de tensão ou fluxo de potência AC.
+O limite de importação também pode variar no tempo: uma série
+[available_grid_power](schema_reference.md#potencia-de-rede-disponivel) reduz-o abaixo da
+capacidade da ligação em cada timestep, por exemplo quando o operador da rede de distribuição
+limita equipamentos controláveis. Os controladores observam o limite do próximo intervalo como
+`available_grid_power`.
 
 ## Mercado local e indicadores
 

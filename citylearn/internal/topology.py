@@ -393,17 +393,11 @@ class CityLearnTopologyService:
 
         return instances
 
-    @staticmethod
-    def _history_lookup(history: Mapping[int, Any], time_step: int, default: Any):
-        if time_step in history:
-            return deepcopy(history[time_step])
-
-        valid = (k for k in history.keys() if k <= time_step)
-        latest = max(valid, default=None)
-        if latest is None:
-            return deepcopy(default)
-
-        return deepcopy(history[latest])
+    @classmethod
+    def _history_lookup(cls, history: Mapping[int, Any], time_step: int, default: Any):
+        value = cls._history_lookup_reference(history, time_step, default)
+        # Histories hold lists of ID strings and integers: copying a list is a deep copy.
+        return list(value) if isinstance(value, list) else value
 
     @staticmethod
     def _history_lookup_reference(history: Mapping[int, Any], time_step: int, default: Any):
@@ -637,7 +631,9 @@ class CityLearnTopologyService:
 
         building = self._member_pool[target_member_id]
         rejoining = self._member_lifecycle.get(target_member_id, {}).get('born_at') is not None
-        prefix, storage_prefix = self._capture_member_energy_prefix(building, time_step) if rejoining else ([], None)
+        prefix, storage_prefix, phase_prefix = (
+            self._capture_member_energy_prefix(building, time_step) if rejoining else ([], None, {})
+        )
         if rejoining:
             # Histories keep physical instances; resetting them would erase
             # pre-exit throughput and charger service as well as building totals.
@@ -649,6 +645,8 @@ class CityLearnTopologyService:
         for obj, key, values in prefix:
             current = getattr(obj, key)
             current[:len(values)] = values
+        for phase_name, values in phase_prefix.items():
+            building._charging_phase_power_history_kw[phase_name][:len(values)] = values
         building._archived_storage_electricity = storage_prefix
         self._set_building_time_step(building, time_step)
         self._initialize_storage_at_activation(building)
@@ -673,7 +671,12 @@ class CityLearnTopologyService:
 
     @staticmethod
     def _capture_member_energy_prefix(building, time_step):
-        """Preserve completed electrical/thermal flows, not recommissioned SoC."""
+        """Preserve completed electrical/thermal flows, not recommissioned SoC.
+
+        The charging-constraint and electrical-service histories (requested pressure, total and
+        per-phase power) are kept as well: the electrical-service KPIs read them over the member's
+        whole window, which a rejoin does not restart.
+        """
         objects = [building, building.cooling_device, building.heating_device,
                    building.dhw_device, building.non_shiftable_load_device,
                    building.cooling_storage, building.heating_storage, building.dhw_storage]
@@ -684,15 +687,20 @@ class CityLearnTopologyService:
                 continue
             seen.add(id(obj))
             for key, values in vars(obj).items():
-                is_flow = any(token in key for token in ('electricity_consumption', 'solar_generation',
+                is_flow = key in ('_charging_constraint_violation_history', '_charging_total_power_history_kw') or any(
+                    token in key for token in ('electricity_consumption', 'solar_generation',
                     'energy_balance', 'energy_from_', 'energy_to_', 'power_outage_signal', 'pv_curtailment'))
                 if is_flow and isinstance(values, np.ndarray) and values.ndim == 1:
                     prefixes.append((obj, key, values[:time_step].copy()))
+        phase_prefix = {
+            phase_name: values[:time_step].copy()
+            for phase_name, values in building._charging_phase_power_history_kw.items()
+        }
         storage_prefix = np.zeros(time_step, dtype=float)
         values = building.electrical_storage_electricity_consumption
         size = min(time_step, len(values))
         storage_prefix[:size] = values[:size]
-        return prefixes, storage_prefix
+        return prefixes, storage_prefix, phase_prefix
 
     def _global_time_step(self, local_time_step: int) -> int:
         tracker = getattr(self.env, 'episode_tracker', None)
@@ -1034,11 +1042,22 @@ class CityLearnTopologyService:
             building._update_charger_lookup()
 
         if hasattr(building, '_initialize_charging_constraints'):
+            # Re-reading the limits must not erase the recorded steps: the electrical-service
+            # KPIs read these histories over the member's whole window.
+            violation_history = building._charging_constraint_violation_history
+            total_power_history = building._charging_total_power_history_kw
+            phase_power_history = building._charging_phase_power_history_kw
             building._initialize_charging_constraints(
                 getattr(building, '_charging_constraints_config', {}) or {},
                 electrical_service=getattr(building, '_electrical_service_config', {}) or {},
                 electrical_storage_phase_connection=getattr(building, '_electrical_storage_phase_connection', None),
             )
+            building._charging_constraint_violation_history = violation_history
+            building._charging_total_power_history_kw = total_power_history
+            building._charging_phase_power_history_kw = {
+                name: phase_power_history.get(name, values)
+                for name, values in building._charging_phase_power_history_kw.items()
+            }
 
         self._sync_dynamic_asset_metadata(building)
         building.observation_space = building.estimate_observation_space(include_all=False, normalize=False)

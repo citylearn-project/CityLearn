@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Dict, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 from citylearn.internal.evaluation_progress import run
-from citylearn.internal import ev_departure_audit
+from citylearn.internal import ev_departure_audit, grid_availability
 
 if TYPE_CHECKING:
     from citylearn.internal.kpi import CityLearnKPIService
@@ -225,10 +225,15 @@ def compute_phase_metrics(kpi, building, *, t_start: int = 0, t_final: Optional[
     )
     residual_violation_kw = np.zeros(len(total_history), dtype='float64')
 
-    def accumulate_limit(values: np.ndarray, limits: Mapping[str, float]) -> None:
+    def accumulate_limit(values: np.ndarray, limits: Mapping[str, float], import_limits=None) -> None:
         import_limit = kpi._to_scalar(limits.get('import_kw'), np.nan)
         export_limit = kpi._to_scalar(limits.get('export_kw'), np.nan)
-        if np.isfinite(import_limit):
+        if import_limits is not None:
+            # Per-step limits from an available grid power series; NaN steps have no import limit.
+            excess = np.clip(values - np.where(np.isnan(import_limits), np.inf, import_limits), 0.0, None)
+            excess[excess <= kpi.ELECTRICAL_RESIDUAL_EPS_KW] = 0.0
+            residual_violation_kw[:] += excess
+        elif np.isfinite(import_limit):
             excess = np.clip(values - import_limit, 0.0, None)
             excess[excess <= kpi.ELECTRICAL_RESIDUAL_EPS_KW] = 0.0
             residual_violation_kw[:] += excess
@@ -237,7 +242,10 @@ def compute_phase_metrics(kpi, building, *, t_start: int = 0, t_final: Optional[
             excess[excess <= kpi.ELECTRICAL_RESIDUAL_EPS_KW] = 0.0
             residual_violation_kw[:] += excess
 
-    accumulate_limit(total_history, total_limits)
+    accumulate_limit(
+        total_history, total_limits,
+        grid_availability.import_limit_series_kw(building, t_start, t_start + len(total_history) - 1),
+    )
     for phase_name in kpi._electrical_service_phase_names(building):
         full_values = np.array(
             phase_history.get(phase_name, np.zeros(len(all_total_history))),
