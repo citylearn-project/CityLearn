@@ -125,7 +125,8 @@
            <div itemprop="articleBody">
              
   <h1>Source code for citylearn.reward_function</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span>
@@ -796,6 +797,111 @@
             <span class="n">penalty_total</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">contributions</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
         <span class="k">return</span> <span class="n">penalty_total</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="OutageUnservedEnergyReward">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.OutageUnservedEnergyReward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">OutageUnservedEnergyReward</span><span class="p">(</span><span class="n">RewardFunction</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Base reward plus a penalty on energy left unserved during power outages.</span>
+
+<span class="sd">    During a power outage a building cannot draw from the grid, so loads that its PV and storage cannot cover go</span>
+<span class="sd">    unserved. Rewards built on net grid consumption see zero consumption at those time steps and do not penalize</span>
+<span class="sd">    the shortfall. This reward adds that penalty to a base reward:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        r = r_{\textrm{base}} - \lambda \sum_{i} u_i</span>
+
+<span class="sd">    where :math:`u_i` is the `power_outage_unserved_energy` observation of building :math:`i` and :math:`\lambda` is</span>
+<span class="sd">    `coefficient`. That observation uses the same definition as the `power_outage_normalized_unserved_energy_total`</span>
+<span class="sd">    KPI and is zero at time steps without an outage. With a central agent the per-building terms are summed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env_metadata: Mapping[str, Any]:</span>
+<span class="sd">        General static information about the environment.</span>
+<span class="sd">    coefficient: float, default: 1.0</span>
+<span class="sd">        Penalty per kWh of unserved energy, in the units of the base reward.</span>
+<span class="sd">    base_reward: Union[RewardFunction, str, Mapping[str, Any]], optional</span>
+<span class="sd">        Reward the penalty is added to: an instance, an import path such as</span>
+<span class="sd">        `'citylearn.reward_function.ComfortReward'`, or a mapping with `type` and optional `attributes` keys as in</span>
+<span class="sd">        the schema. Defaults to :py:class:`RewardFunction`. Passing another `OutageUnservedEnergyReward` applies the</span>
+<span class="sd">        penalty twice.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">coefficient</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">base_reward</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">RewardFunction</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_base_reward</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">coefficient</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_base_reward</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RewardFunction</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">base_reward</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RewardFunction</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="n">RewardFunction</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">base_reward</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">base_reward</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'type'</span><span class="p">:</span> <span class="n">base_reward</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_reward</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_reward</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'type'</span><span class="p">),</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">module_name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">class_name</span> <span class="o">=</span> <span class="n">base_reward</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)</span>
+            <span class="n">constructor</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_name</span><span class="p">),</span> <span class="n">class_name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">constructor</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">base_reward</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'attributes'</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}))</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s1">'base_reward must be a RewardFunction, an import path or a mapping with a "type" import path, '</span>
+            <span class="sa">f</span><span class="s1">'got </span><span class="si">{</span><span class="n">base_reward</span><span class="si">!r}</span><span class="s1">.'</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_metadata</span>
+
+    <span class="nd">@env_metadata</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_env_metadata</span> <span class="o">=</span> <span class="n">env_metadata</span>
+        <span class="n">base_reward</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'base_reward'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">base_reward</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base_reward</span><span class="o">.</span><span class="n">env_metadata</span> <span class="o">=</span> <span class="n">env_metadata</span>
+
+<div class="viewcode-block" id="OutageUnservedEnergyReward.reset">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.OutageUnservedEnergyReward.reset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_reward</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="OutageUnservedEnergyReward.get_required_observation_names">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.OutageUnservedEnergyReward.get_required_observation_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_required_observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_reward</span><span class="o">.</span><span class="n">get_required_observation_names</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">([</span><span class="o">*</span><span class="n">names</span><span class="p">,</span> <span class="s1">'power_outage_unserved_energy'</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="OutageUnservedEnergyReward.calculate">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.OutageUnservedEnergyReward.calculate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_reward</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">observations</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">penalty</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coefficient</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'power_outage_unserved_energy'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">observations</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="n">penalty</span><span class="o">.</span><span class="n">sum</span><span class="p">())]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="p">(</span><span class="n">base</span> <span class="o">-</span> <span class="n">penalty</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">reward</span></div>
 </div>
 
 </pre></div>

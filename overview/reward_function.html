@@ -93,6 +93,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Reward Function</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#choose-a-reward">Choose a reward</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#define-a-custom-reward">Define a custom reward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#penalize-unserved-energy-during-power-outages">Penalize unserved energy during power outages</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="dataset.html">Dataset</a></li>
@@ -218,6 +219,27 @@ exposes the environment setting.</p>
 <p>A reward can declare <code class="docutils literal notranslate"><span class="pre">required_observation_names</span></code> to receive a smaller
 observation payload. The <a class="reference internal" href="../usage/custom_controller.html"><span class="doc">Custom agents and rewards</span></a> tutorial demonstrates
 this together with a complete simulation.</p>
+</section>
+<section id="penalize-unserved-energy-during-power-outages">
+<h2>Penalize unserved energy during power outages<a class="headerlink" href="#penalize-unserved-energy-during-power-outages" title="Link to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code> is on, a building cannot import from the grid during an outage, so its net
+electricity consumption is zero and rewards built on grid imports give no signal about load left unserved.
+<a class="reference internal" href="../api/citylearn.reward_function.html#citylearn.reward_function.OutageUnservedEnergyReward" title="citylearn.reward_function.OutageUnservedEnergyReward"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.reward_function.OutageUnservedEnergyReward</span></code></a> wraps a base reward and subtracts a penalty for
+that shortfall. It reads the <code class="docutils literal notranslate"><span class="pre">power_outage_unserved_energy</span></code> observation, which uses the same definition as the
+<code class="docutils literal notranslate"><span class="pre">power_outage_normalized_unserved_energy_total</span></code> KPI, so it can be set in the schema like any other reward:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"reward_function"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.reward_function.OutageUnservedEnergyReward"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"coefficient"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"base_reward"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.reward_function.ComfortReward"</span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">coefficient</span></code> is the penalty per unserved kWh in the units of the base reward. Without <code class="docutils literal notranslate"><span class="pre">base_reward</span></code> the
+penalty is added to <a class="reference internal" href="../api/citylearn.reward_function.html#citylearn.reward_function.RewardFunction" title="citylearn.reward_function.RewardFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.reward_function.RewardFunction</span></code></a>.</p>
 </section>
 </section>
 

@@ -69,6 +69,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#buildings"><code class="docutils literal notranslate"><span class="pre">buildings</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#device-sections">Device Sections</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pv">PV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#electrical-service">Electrical Service</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#available-grid-power">Available grid power</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#chargers">Chargers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#ev-definitions">EV Definitions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#deferrable-appliances">Deferrable Appliances</a></li>
@@ -599,7 +603,7 @@ load or PV truth.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_service</span></code></p></td>
 <td class="text-right"><p>object</p></td>
 <td class="text-right"><p>no</p></td>
-<td><p>Import/export service limits.</p></td>
+<td><p>Import/export service limits, see <a class="reference internal" href="#electrical-service"><span class="std std-ref">Electrical Service</span></a>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">equity_group</span></code></p></td>
 <td class="text-right"><p>string</p></td>
@@ -729,6 +733,87 @@ load or PV truth.</p>
 </tbody>
 </table>
 <p>Use <code class="docutils literal notranslate"><span class="pre">absolute</span></code> for real measured generation or converter-generated energy series. Use <code class="docutils literal notranslate"><span class="pre">per_kw</span></code> for normalized PV profiles.</p>
+</section>
+<section id="electrical-service">
+<h2>Electrical Service<a class="headerlink" href="#electrical-service" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">buildings.&lt;name&gt;.electrical_service</span></code> sets the building’s grid connection limits. Limits are
+active power in kW; <code class="docutils literal notranslate"><span class="pre">null</span></code>, a missing key or <code class="docutils literal notranslate"><span class="pre">Infinity</span></code> means no limit.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"electrical_service"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"single_phase"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"total"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"import_kw"</span><span class="p">:</span><span class="w"> </span><span class="mf">17.25</span><span class="p">,</span><span class="w"> </span><span class="nt">"export_kw"</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"per_phase"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"L1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"import_kw"</span><span class="p">:</span><span class="w"> </span><span class="mf">17.25</span><span class="p">,</span><span class="w"> </span><span class="nt">"export_kw"</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span><span class="p">}}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"available_grid_power"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"filename"</span><span class="p">:</span><span class="w"> </span><span class="s2">"available_grid_power.csv"</span><span class="p">,</span><span class="w"> </span><span class="nt">"column"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Building_1"</span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"observations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"available_grid_power"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mode</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">single_phase</span></code>, <code class="docutils literal notranslate"><span class="pre">three_phase</span></code></p></td>
+<td><p>Service type. Single-phase services only have <code class="docutils literal notranslate"><span class="pre">L1</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">default_split</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">balanced</span></code>, <code class="docutils literal notranslate"><span class="pre">L1</span></code>, <code class="docutils literal notranslate"><span class="pre">L2</span></code>, <code class="docutils literal notranslate"><span class="pre">L3</span></code></p></td>
+<td><p>Phase split of load without a phase connection.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">limits.total.import_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">limits.total.export_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Static connection capacity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">limits.per_phase.&lt;L1/L2/L3&gt;.import_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">export_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Static per-phase limits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code></p></td>
+<td class="text-right"><p>path or object</p></td>
+<td><p>Optional per-step import availability series, see below.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observations.headroom</span></code>, <code class="docutils literal notranslate"><span class="pre">observations.headroom_export</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Expose import/export headroom observations. Default true.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">observations.violation</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Expose <code class="docutils literal notranslate"><span class="pre">charging_constraint_violation_kwh</span></code>. Default true.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observations.phase_encoding</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Expose one-hot charger phase assignment. Default false.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">observations.available_grid_power</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Expose the <code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code> observation when a series is set. Default true.</p></td>
+</tr>
+</tbody>
+</table>
+<section id="available-grid-power">
+<h3>Available grid power<a class="headerlink" href="#available-grid-power" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code> names a CSV or Parquet file with one row per time step, aligned with
+<code class="docutils literal notranslate"><span class="pre">energy_simulation</span></code>. Give it as a file name or as <code class="docutils literal notranslate"><span class="pre">{&quot;filename&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;column&quot;:</span> <span class="pre">...}</span></code>. Without
+<code class="docutils literal notranslate"><span class="pre">column</span></code>, the column named after the building is used, then a column named
+<code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code>, so one file can hold a column per building. Values are the grid power
+the building may import at that step, in kW (power, not energy per step).</p>
+<p>The import limit in force at a step is the smaller of <code class="docutils literal notranslate"><span class="pre">limits.total.import_kw</span></code> and the series
+value. A blank value applies the static limit only; it is an error when <code class="docutils literal notranslate"><span class="pre">import_kw</span></code> is not
+set. Values must be finite and non-negative. Use it for curtailment below the connection
+capacity, such as a distribution system operator dimming controllable devices (German
+§14a EnWG) or a capacity reduction during grid stress.</p>
+<p>The limit acts like the static one: EV chargers and the electrical storage are curtailed
+first, and load that cannot be curtailed is still served and counted as an electrical-service
+violation. A limit of 0 kW does not island the building; use <a class="reference internal" href="#buildings"><span class="std std-ref">power_outage</span></a>
+for a blackout. Per-phase limits stay static. The <code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code> observation reports
+the limit for the coming interval; the headroom observations describe the last executed
+interval, so they reflect the limit that was in force then.</p>
+</section>
 </section>
 <section id="chargers">
 <h2>Chargers<a class="headerlink" href="#chargers" title="Link to this heading"></a></h2>

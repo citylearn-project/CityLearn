@@ -144,7 +144,9 @@
     <span class="n">Battery</span><span class="p">,</span> <span class="n">DeferrableAppliance</span><span class="p">,</span> <span class="n">ElectricDevice</span><span class="p">,</span> <span class="n">ElectricHeater</span><span class="p">,</span> <span class="n">Escalator</span><span class="p">,</span> <span class="n">HeatPump</span><span class="p">,</span> <span class="n">PLACEHOLDER_DEVICE_RANDOM_SEED</span><span class="p">,</span> <span class="n">PV</span><span class="p">,</span>
     <span class="n">StorageDevice</span><span class="p">,</span> <span class="n">StorageTank</span><span class="p">,</span> <span class="n">WashingMachine</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal</span><span class="w"> </span><span class="kn">import</span> <span class="n">grid_availability</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.building_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">BuildingOpsService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.service_energy</span><span class="w"> </span><span class="kn">import</span> <span class="n">SERVICE_ENERGY_COMPONENTS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.units</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">normalized_capacity_action_to_energy_kwh</span><span class="p">,</span>
     <span class="n">normalized_power_action_to_energy_kwh</span><span class="p">,</span>
@@ -243,6 +245,7 @@
         <span class="n">charging_constraints</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'charging_constraints'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">electrical_service</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'electrical_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">electrical_storage_phase_connection</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'electrical_storage_phase_connection'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_available_grid_power</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">grid_availability</span><span class="o">.</span><span class="n">AvailableGridPower</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'available_grid_power'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">equity_group</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'equity_group'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage</span> <span class="o">=</span> <span class="n">dhw_storage</span>
@@ -395,6 +398,27 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">charging_building_limit_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_building_charger_limit_kw'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">available_grid_power</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Grid import power available at the current time step in [kW], or None without a series.</span>
+
+<span class="sd">        It is the smaller of `electrical_service.limits.total.import_kw` and the</span>
+<span class="sd">        `electrical_service.available_grid_power` series value at the current time step.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_available_grid_power'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">grid_availability</span><span class="o">.</span><span class="n">import_limit_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Building.electrical_service_import_limit_kw">
+<a class="viewcode-back" href="../../api/citylearn.building.html#citylearn.building.Building.electrical_service_import_limit_kw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">electrical_service_import_limit_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Total grid import limit in force at an episode time step in [kW]; NaN when unlimited."""</span>
+
+        <span class="k">return</span> <span class="n">grid_availability</span><span class="o">.</span><span class="n">import_limit_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">electrical_service_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -1029,6 +1053,20 @@
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_include_phase_encoding'</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_phase_encoding_observations</span><span class="p">()</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_available_grid_power</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">availability</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_available_grid_power'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">availability</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electrical_service_limits</span><span class="p">[</span><span class="s1">'total'</span><span class="p">][</span><span class="s1">'import_kw'</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">availability</span><span class="o">.</span><span class="n">has_missing_values</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Building '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">': the available grid power series '</span><span class="si">{</span><span class="n">availability</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2">' "</span>
+                <span class="sa">f</span><span class="s2">"(column '</span><span class="si">{</span><span class="n">availability</span><span class="o">.</span><span class="n">column</span><span class="si">}</span><span class="s2">') has missing values and "</span>
+                <span class="s1">'electrical_service.limits.total.import_kw is not set, so those time steps have no import limit. '</span>
+                <span class="s1">'Fill the gaps or set the static import_kw connection capacity that applies when no value is given.'</span>
+            <span class="p">)</span>
+
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_non_negative_limit</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1151,6 +1189,11 @@
             <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">path</span><span class="o">=</span><span class="s1">'charging_constraints.observations.phase_encoding'</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expose_available_grid_power</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_available_grid_power'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">parse_bool</span><span class="p">(</span>
+            <span class="n">observations_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">grid_availability</span><span class="o">.</span><span class="n">OBSERVATION_NAME</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s1">'electrical_service.observations.</span><span class="si">{</span><span class="n">grid_availability</span><span class="o">.</span><span class="n">OBSERVATION_NAME</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_building_charger_limit_kw</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_phase_limits</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_charger_phase_map</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1188,6 +1231,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_electrical_service_limits</span><span class="p">[</span><span class="s1">'total'</span><span class="p">][</span><span class="s1">'export_kw'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_non_negative_limit</span><span class="p">(</span>
                 <span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">),</span> <span class="s1">'electrical_service.limits.total.export_kw'</span>
             <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_available_grid_power</span><span class="p">()</span>
 
             <span class="n">per_phase_limits</span> <span class="o">=</span> <span class="n">limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'per_phase'</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{}</span>
             <span class="n">phase_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'L1'</span><span class="p">]</span> <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">'single_phase'</span> <span class="k">else</span> <span class="p">[</span><span class="s1">'L1'</span><span class="p">,</span> <span class="s1">'L2'</span><span class="p">,</span> <span class="s1">'L3'</span><span class="p">]</span>
@@ -1276,7 +1320,7 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expose_charging_constraints</span><span class="p">:</span>
             <span class="n">observation_keys</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building_charger_limit_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building_charger_limit_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_available_grid_power'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">observation_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'charging_building_headroom_kw'</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">phase</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_limits</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">phase</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_kw'</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1294,6 +1338,10 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">observation_metadata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_observation_space</span><span class="p">(</span><span class="n">include_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expose_available_grid_power</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'observation_metadata'</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">grid_availability</span><span class="o">.</span><span class="n">OBSERVATION_NAME</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_metadata</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">observation_metadata</span><span class="p">[</span><span class="n">grid_availability</span><span class="o">.</span><span class="n">OBSERVATION_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="n">violation_key</span> <span class="o">=</span> <span class="s1">'charging_constraint_violation_kwh'</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'observation_metadata'</span><span class="p">):</span>
@@ -1430,6 +1478,9 @@
                 <span class="n">base_phase_kw</span> <span class="o">=</span> <span class="p">{</span><span class="n">phase</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">phase</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_limits</span><span class="p">}</span>
 
         <span class="n">building_headroom</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building_charger_limit_kw</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_building_charger_limit_kw</span><span class="p">)</span> <span class="o">-</span> <span class="n">base_total_kw</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_available_grid_power'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">import_limit</span> <span class="o">=</span> <span class="n">grid_availability</span><span class="o">.</span><span class="n">import_limit_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+            <span class="n">building_headroom</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">import_limit</span><span class="p">)</span> <span class="k">else</span> <span class="n">import_limit</span> <span class="o">-</span> <span class="n">base_total_kw</span>
         <span class="n">building_export_headroom</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="n">export_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electrical_service_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'total'</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">)</span>
@@ -2573,6 +2624,11 @@
                 <span class="n">low_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
                 <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
 
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">'power_outage_unserved_energy'</span><span class="p">:</span>
+                <span class="n">low_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">demand</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">SERVICE_ENERGY_COMPONENTS</span><span class="p">)</span>
+                <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">as_float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">demand</span><span class="p">))</span><span class="o">*</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="ow">or</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">demand_observation_limit_factor</span>
+
             <span class="k">elif</span> <span class="n">periodic_normalization</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">periodic_observations</span><span class="p">:</span>
                 <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">periodic_observations</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
                 <span class="n">pn</span> <span class="o">=</span> <span class="n">PeriodicNormalization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">periodic_cycle_length</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
@@ -2661,21 +2717,32 @@
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="k">pass</span>
 
-            <span class="k">def</span><span class="w"> </span><span class="nf">_headroom_bounds</span><span class="p">(</span><span class="n">limit</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">export</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">_headroom_bounds</span><span class="p">(</span><span class="n">limit</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">export</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">limit_low</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
                 <span class="n">limit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+                <span class="n">limit_low</span> <span class="o">=</span> <span class="n">limit</span> <span class="k">if</span> <span class="n">limit_low</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">limit_low</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
                     <span class="n">min_total_kw</span> <span class="o">=</span> <span class="n">base_power_min_kw</span> <span class="o">-</span> <span class="n">control_margin_kw</span>
                     <span class="n">max_total_kw</span> <span class="o">=</span> <span class="n">base_power_max_kw</span> <span class="o">+</span> <span class="n">control_margin_kw</span>
                     <span class="k">if</span> <span class="n">export</span><span class="p">:</span>
-                        <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">limit</span> <span class="o">+</span> <span class="n">min_total_kw</span><span class="p">,</span> <span class="n">limit</span> <span class="o">+</span> <span class="n">max_total_kw</span><span class="p">]</span>
+                        <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">limit_low</span> <span class="o">+</span> <span class="n">min_total_kw</span><span class="p">,</span> <span class="n">limit</span> <span class="o">+</span> <span class="n">max_total_kw</span><span class="p">]</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">limit</span> <span class="o">-</span> <span class="n">max_total_kw</span><span class="p">,</span> <span class="n">limit</span> <span class="o">-</span> <span class="n">min_total_kw</span><span class="p">]</span>
+                        <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">limit_low</span> <span class="o">-</span> <span class="n">max_total_kw</span><span class="p">,</span> <span class="n">limit</span> <span class="o">-</span> <span class="n">min_total_kw</span><span class="p">]</span>
                     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">bounds</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">bounds</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
 
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">limit</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
 
+            <span class="n">available_limits_kw</span> <span class="o">=</span> <span class="n">grid_availability</span><span class="o">.</span><span class="n">simulation_limits_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">available_limits_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">grid_availability</span><span class="o">.</span><span class="n">OBSERVATION_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">available_limits_kw</span>
+
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_expose_charging_constraints'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building_charger_limit_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">available_limits_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="s1">'charging_building_headroom_kw'</span><span class="p">]</span> <span class="o">=</span> <span class="n">_headroom_bounds</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_series_bound</span><span class="p">(</span><span class="n">available_limits_kw</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                        <span class="n">limit_low</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_series_bound</span><span class="p">(</span><span class="n">available_limits_kw</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building_charger_limit_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">data</span><span class="p">[</span><span class="s1">'charging_building_headroom_kw'</span><span class="p">]</span> <span class="o">=</span> <span class="n">_headroom_bounds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_building_charger_limit_kw</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
                     <span class="n">export_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electrical_service_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'total'</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">)</span>
@@ -3256,7 +3323,10 @@
             <span class="n">set_data_window</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span><span class="p">,</span> <span class="n">start_time_step</span><span class="p">,</span> <span class="n">end_time_step</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">escalator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">escalators</span> <span class="ow">or</span> <span class="p">[]:</span>
-            <span class="n">set_data_window</span><span class="p">(</span><span class="n">escalator</span><span class="o">.</span><span class="n">escalator_simulation</span><span class="p">,</span> <span class="n">start_time_step</span><span class="p">,</span> <span class="n">end_time_step</span><span class="p">)</span></div>
+            <span class="n">set_data_window</span><span class="p">(</span><span class="n">escalator</span><span class="o">.</span><span class="n">escalator_simulation</span><span class="p">,</span> <span class="n">start_time_step</span><span class="p">,</span> <span class="n">end_time_step</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_available_grid_power'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">set_data_window</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_available_grid_power</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">start_time_step</span><span class="p">,</span> <span class="n">end_time_step</span><span class="p">)</span></div>
 
 
         <span class="c1"># Deferrable appliance schedules use global time-step indices and are sparse,</span>

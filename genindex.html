@@ -255,6 +255,8 @@
 </li>
       <li><a href="api/citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.add_other_equipment">add_other_equipment() (citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator method)</a>
 </li>
+      <li><a href="api/citylearn.data.html#citylearn.data.add_robustness_noise">add_robustness_noise() (in module citylearn.data)</a>
+</li>
       <li><a href="api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.adjust_observation_space">adjust_observation_space() (citylearn.internal.robustness.CityLearnRobustnessService method)</a>
 </li>
       <li><a href="api/citylearn.internal.robustness_spaces.html#citylearn.internal.robustness_spaces.adjusted_space">adjusted_space() (in module citylearn.internal.robustness_spaces)</a>
@@ -369,7 +371,11 @@
 </li>
       <li><a href="api/citylearn.building.html#citylearn.building.Building.autosize_pv">autosize_pv() (citylearn.building.Building method)</a>
 </li>
+      <li><a href="api/citylearn.building.html#citylearn.building.Building.available_grid_power">available_grid_power (citylearn.building.Building property)</a>
+</li>
       <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.ElectricDevice.available_nominal_power">available_nominal_power (citylearn.energy_model.ElectricDevice property)</a>
+</li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.AvailableGridPower">AvailableGridPower (class in citylearn.internal.grid_availability)</a>
 </li>
       <li><a href="api/citylearn.internal.temporal.html#citylearn.internal.temporal.axis_metadata">axis_metadata() (in module citylearn.internal.temporal)</a>
 </li>
@@ -501,6 +507,8 @@
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.MARL.calculate">(citylearn.reward_function.MARL method)</a>
 </li>
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.MultiBuildingRewardFunction.calculate">(citylearn.reward_function.MultiBuildingRewardFunction method)</a>
+</li>
+        <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.OutageUnservedEnergyReward.calculate">(citylearn.reward_function.OutageUnservedEnergyReward method)</a>
 </li>
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.RewardFunction.calculate">(citylearn.reward_function.RewardFunction method)</a>
 </li>
@@ -903,6 +911,13 @@
 </li>
       </ul></li>
       <li>
+    citylearn.internal.grid_availability
+
+      <ul>
+        <li><a href="api/citylearn.internal.grid_availability.html#module-citylearn.internal.grid_availability">module</a>
+</li>
+      </ul></li>
+      <li>
     citylearn.internal.kpi
 
       <ul>
@@ -1056,6 +1071,13 @@
 
       <ul>
         <li><a href="api/citylearn.internal.scalars.html#module-citylearn.internal.scalars">module</a>
+</li>
+      </ul></li>
+      <li>
+    citylearn.internal.service_energy
+
+      <ul>
+        <li><a href="api/citylearn.internal.service_energy.html#module-citylearn.internal.service_energy">module</a>
 </li>
       </ul></li>
       <li>
@@ -1216,6 +1238,12 @@
       <li><a href="api/citylearn.end_use_load_profiles.clustering.html#citylearn.end_use_load_profiles.clustering.Clustering">Clustering (class in citylearn.end_use_load_profiles.clustering)</a>
 </li>
       <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.SolarPenaltyAndComfortReward.coefficients">coefficients (citylearn.reward_function.SolarPenaltyAndComfortReward property)</a>
+</li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.GridAvailabilityData.column">column() (citylearn.internal.grid_availability.GridAvailabilityData method)</a>
+</li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.GridAvailabilityData.column_names">column_names() (citylearn.internal.grid_availability.GridAvailabilityData method)</a>
+</li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.combine">combine() (in module citylearn.internal.grid_availability)</a>
 </li>
       <li><a href="api/citylearn.building.html#citylearn.building.Building.comfort_band">comfort_band (citylearn.building.Building property)</a>
 </li>
@@ -1523,6 +1551,8 @@
 </li>
       <li><a href="api/citylearn.building.html#citylearn.building.Building.electrical_service_enabled">electrical_service_enabled (citylearn.building.Building property)</a>
 </li>
+      <li><a href="api/citylearn.building.html#citylearn.building.Building.electrical_service_import_limit_kw">electrical_service_import_limit_kw() (citylearn.building.Building method)</a>
+</li>
       <li><a href="api/citylearn.building.html#citylearn.building.Building.electrical_service_mode">electrical_service_mode (citylearn.building.Building property)</a>
 </li>
       <li><a href="api/citylearn.internal.electrical_limits.html#citylearn.internal.electrical_limits.electrical_service_violation_kw">electrical_service_violation_kw() (in module citylearn.internal.electrical_limits)</a>
@@ -1710,6 +1740,8 @@
       <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.MultiBuildingRewardFunction.env_metadata">env_metadata (citylearn.reward_function.MultiBuildingRewardFunction property)</a>
 
       <ul>
+        <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.OutageUnservedEnergyReward.env_metadata">(citylearn.reward_function.OutageUnservedEnergyReward property)</a>
+</li>
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.RewardFunction.env_metadata">(citylearn.reward_function.RewardFunction property)</a>
 </li>
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.SolarPenaltyAndComfortReward.env_metadata">(citylearn.reward_function.SolarPenaltyAndComfortReward property)</a>
@@ -2128,6 +2160,8 @@
 </li>
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.MultiBuildingRewardFunction.get_required_observation_names">(citylearn.reward_function.MultiBuildingRewardFunction method)</a>
 </li>
+        <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.OutageUnservedEnergyReward.get_required_observation_names">(citylearn.reward_function.OutageUnservedEnergyReward method)</a>
+</li>
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.RewardFunction.get_required_observation_names">(citylearn.reward_function.RewardFunction method)</a>
 </li>
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.SolarPenaltyAndComfortReward.get_required_observation_names">(citylearn.reward_function.SolarPenaltyAndComfortReward method)</a>
@@ -2167,6 +2201,8 @@
         <li><a href="api/citylearn.internal.entity_interface.html#citylearn.internal.entity_interface.StorageRef.global_id">(citylearn.internal.entity_interface.StorageRef attribute)</a>
 </li>
       </ul></li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.GridAvailabilityData">GridAvailabilityData (class in citylearn.internal.grid_availability)</a>
+</li>
       <li><a href="api/citylearn.electric_vehicle_charger.html#citylearn.electric_vehicle_charger.Charger.gross_energy_charge">gross_energy_charge (citylearn.electric_vehicle_charger.Charger property)</a>
 
       <ul>
@@ -2185,6 +2221,8 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.AvailableGridPower.has_missing_values">has_missing_values() (citylearn.internal.grid_availability.AvailableGridPower method)</a>
+</li>
       <li><a href="api/citylearn.building.html#citylearn.building.Building.heating_demand">heating_demand (citylearn.building.Building property)</a>
 
       <ul>
@@ -2244,6 +2282,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.end_use_load_profiles.simulate.html#citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator.ideal_loads_simulator">ideal_loads_simulator (citylearn.end_use_load_profiles.simulate.EndUseLoadProfilesEnergyPlusPartialLoadSimulator property)</a>
+</li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.import_limit_kw">import_limit_kw() (in module citylearn.internal.grid_availability)</a>
+</li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.import_limit_series_kw">import_limit_series_kw() (in module citylearn.internal.grid_availability)</a>
 </li>
       <li><a href="api/citylearn.electric_vehicle_charger.html#citylearn.electric_vehicle_charger.Charger.incoming_electric_vehicle">incoming_electric_vehicle (citylearn.electric_vehicle_charger.Charger property)</a>
 </li>
@@ -2368,7 +2410,11 @@
       <li><a href="api/citylearn.internal.entity_interface.html#citylearn.internal.entity_interface.CityLearnEntityInterfaceService.LEGACY_STORAGE_FEATURES">LEGACY_STORAGE_FEATURES (citylearn.internal.entity_interface.CityLearnEntityInterfaceService attribute)</a>
 </li>
       <li><a href="api/citylearn.internal.loading.html#citylearn.internal.loading.CityLearnLoadingService.load">load() (citylearn.internal.loading.CityLearnLoadingService method)</a>
+
+      <ul>
+        <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.load">(in module citylearn.internal.grid_availability)</a>
 </li>
+      </ul></li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.load_agent">load_agent() (citylearn.citylearn.CityLearnEnv method)</a>
 </li>
       <li><a href="api/citylearn.internal.loading.html#citylearn.internal.loading.CityLearnLoadingService.load_building">load_building() (citylearn.internal.loading.CityLearnLoadingService method)</a>
@@ -2583,6 +2629,8 @@
 </li>
         <li><a href="api/citylearn.internal.experiment.html#module-citylearn.internal.experiment">citylearn.internal.experiment</a>
 </li>
+        <li><a href="api/citylearn.internal.grid_availability.html#module-citylearn.internal.grid_availability">citylearn.internal.grid_availability</a>
+</li>
         <li><a href="api/citylearn.internal.kpi.html#module-citylearn.internal.kpi">citylearn.internal.kpi</a>
 </li>
         <li><a href="api/citylearn.internal.kpi_community.html#module-citylearn.internal.kpi_community">citylearn.internal.kpi_community</a>
@@ -2626,6 +2674,8 @@
         <li><a href="api/citylearn.internal.runtime.html#module-citylearn.internal.runtime">citylearn.internal.runtime</a>
 </li>
         <li><a href="api/citylearn.internal.scalars.html#module-citylearn.internal.scalars">citylearn.internal.scalars</a>
+</li>
+        <li><a href="api/citylearn.internal.service_energy.html#module-citylearn.internal.service_energy">citylearn.internal.service_energy</a>
 </li>
         <li><a href="api/citylearn.internal.temporal.html#module-citylearn.internal.temporal">citylearn.internal.temporal</a>
 </li>
@@ -2992,6 +3042,8 @@
       </ul></li>
       <li><a href="api/citylearn.internal.loading_components.html#citylearn.internal.loading_components.outage_options">outage_options() (in module citylearn.internal.loading_components)</a>
 </li>
+      <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.OutageUnservedEnergyReward">OutageUnservedEnergyReward (class in citylearn.reward_function)</a>
+</li>
       <li><a href="api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.override_render_time_step">override_render_time_step() (citylearn.exporter.EpisodeExporter method)</a>
 </li>
       <li><a href="api/citylearn.internal.topology.html#citylearn.internal.topology.TopologyEvent.overrides">overrides (citylearn.internal.topology.TopologyEvent attribute)</a>
@@ -3011,6 +3063,8 @@
 </li>
       </ul></li>
       <li><a href="api/citylearn.utilities.html#citylearn.utilities.parse_bool">parse_bool() (in module citylearn.utilities)</a>
+</li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.parse_config">parse_config() (in module citylearn.internal.grid_availability)</a>
 </li>
       <li><a href="api/citylearn.data.html#citylearn.data.DeferrableApplianceSimulation.parse_load_profile">parse_load_profile() (citylearn.data.DeferrableApplianceSimulation static method)</a>
 </li>
@@ -3272,6 +3326,8 @@
       </ul></li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.render_start_date">render_start_date (citylearn.citylearn.CityLearnEnv property)</a>
 </li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.GridAvailabilityData.replace_column">replace_column() (citylearn.internal.grid_availability.GridAvailabilityData method)</a>
+</li>
       <li><a href="api/citylearn.internal.robustness.html#citylearn.internal.robustness.RobustnessEvent.replacement_value">replacement_value (citylearn.internal.robustness.RobustnessEvent attribute)</a>
 </li>
       <li><a href="api/citylearn.agents.rlc.html#citylearn.agents.rlc.RLC.replay_buffer_capacity">replay_buffer_capacity (citylearn.agents.rlc.RLC property)</a>
@@ -3360,6 +3416,8 @@
         <li><a href="api/citylearn.occupant.html#citylearn.occupant.LogisticRegressionOccupant.reset">(citylearn.occupant.LogisticRegressionOccupant method)</a>
 </li>
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.MultiBuildingRewardFunction.reset">(citylearn.reward_function.MultiBuildingRewardFunction method)</a>
+</li>
+        <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.OutageUnservedEnergyReward.reset">(citylearn.reward_function.OutageUnservedEnergyReward method)</a>
 </li>
         <li><a href="api/citylearn.reward_function.html#citylearn.reward_function.RewardFunction.reset">(citylearn.reward_function.RewardFunction method)</a>
 </li>
@@ -3540,6 +3598,8 @@
 </li>
       <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.DeferrableAppliance.service_audit">service_audit() (citylearn.energy_model.DeferrableAppliance method)</a>
 </li>
+      <li><a href="api/citylearn.internal.service_energy.html#citylearn.internal.service_energy.service_energy_components">service_energy_components() (in module citylearn.internal.service_energy)</a>
+</li>
       <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.DeferrableAppliance.service_summary">service_summary() (citylearn.energy_model.DeferrableAppliance method)</a>
 
       <ul>
@@ -3656,6 +3716,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.simulation_limits_kw">simulation_limits_kw() (in module citylearn.internal.grid_availability)</a>
+</li>
       <li><a href="api/citylearn.base.html#citylearn.base.EpisodeTracker.simulation_start_time_step">simulation_start_time_step (citylearn.base.EpisodeTracker property)</a>
 </li>
       <li><a href="api/citylearn.base.html#citylearn.base.EpisodeTracker.simulation_time_steps">simulation_time_steps (citylearn.base.EpisodeTracker property)</a>
@@ -3950,6 +4012,8 @@
 </li>
       <li><a href="api/citylearn.internal.electrical_limits.html#citylearn.internal.electrical_limits.ElectricalServiceAllocation.total_kw">total_kw (citylearn.internal.electrical_limits.ElectricalServiceAllocation attribute)</a>
 </li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.total_limits_at">total_limits_at() (in module citylearn.internal.grid_availability)</a>
+</li>
       <li><a href="api/citylearn.internal.kpi.html#citylearn.internal.kpi.CityLearnKPIService.total_ratio_components">total_ratio_components() (citylearn.internal.kpi.CityLearnKPIService class method)</a>
 </li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.total_self_consumption">total_self_consumption (citylearn.citylearn.CityLearnEnv property)</a>
@@ -3983,6 +4047,8 @@
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.UnknownSchemaError">UnknownSchemaError</a>
 </li>
       <li><a href="api/citylearn.internal.entity_interface.html#citylearn.internal.entity_interface.CityLearnEntityInterfaceService.UNLIMITED_HEADROOM_KW">UNLIMITED_HEADROOM_KW (citylearn.internal.entity_interface.CityLearnEntityInterfaceService attribute)</a>
+</li>
+      <li><a href="api/citylearn.internal.service_energy.html#citylearn.internal.service_energy.unserved_energy">unserved_energy() (in module citylearn.internal.service_energy)</a>
 </li>
       <li><a href="api/citylearn.internal.capabilities.html#citylearn.internal.capabilities.unsupported_reason">unsupported_reason() (in module citylearn.internal.capabilities)</a>
 </li>
@@ -4022,10 +4088,10 @@
 </li>
       <li><a href="api/citylearn.energy_model.html#citylearn.energy_model.ElectricDevice.update_electricity_consumption">update_electricity_consumption() (citylearn.energy_model.ElectricDevice method)</a>
 </li>
-      <li><a href="api/citylearn.building.html#citylearn.building.Building.update_energy_from_cooling_device">update_energy_from_cooling_device() (citylearn.building.Building method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/citylearn.building.html#citylearn.building.Building.update_energy_from_cooling_device">update_energy_from_cooling_device() (citylearn.building.Building method)</a>
+</li>
       <li><a href="api/citylearn.building.html#citylearn.building.Building.update_energy_from_dhw_device">update_energy_from_dhw_device() (citylearn.building.Building method)</a>
 </li>
       <li><a href="api/citylearn.building.html#citylearn.building.Building.update_energy_from_heating_device">update_energy_from_heating_device() (citylearn.building.Building method)</a>
@@ -4092,15 +4158,19 @@
 </li>
       <li><a href="api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.VALID_TARGET_TYPES">VALID_TARGET_TYPES (citylearn.internal.robustness.CityLearnRobustnessService attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.internal.observation_contract.html#citylearn.internal.observation_contract.validate">validate() (in module citylearn.internal.observation_contract)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/citylearn.internal.baseline.html#citylearn.internal.baseline.validate_business_as_usual_ev_charge_target">validate_business_as_usual_ev_charge_target() (in module citylearn.internal.baseline)</a>
 </li>
       <li><a href="api/citylearn.internal.robustness.html#citylearn.internal.robustness.CityLearnRobustnessService.validate_targets">validate_targets() (citylearn.internal.robustness.CityLearnRobustnessService method)</a>
 </li>
       <li><a href="api/citylearn.internal.robustness.html#citylearn.internal.robustness.RobustnessEvent.value">value (citylearn.internal.robustness.RobustnessEvent attribute)</a>
+</li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.AvailableGridPower.value">value() (citylearn.internal.grid_availability.AvailableGridPower method)</a>
+</li>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.AvailableGridPower.values">values (citylearn.internal.grid_availability.AvailableGridPower property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -4132,12 +4202,14 @@
 </li>
       <li><a href="api/citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.weights">weights (citylearn.multi_community.MultiCommunityEnv property)</a>
 </li>
-      <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.EvaluationCondition.WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV">WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV (citylearn.citylearn.EvaluationCondition attribute)</a>
+      <li><a href="api/citylearn.internal.grid_availability.html#citylearn.internal.grid_availability.AvailableGridPower.window">window() (citylearn.internal.grid_availability.AvailableGridPower method)</a>
 </li>
-      <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.EvaluationCondition.WITH_STORAGE_AND_PV">WITH_STORAGE_AND_PV (citylearn.citylearn.EvaluationCondition attribute)</a>
+      <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.EvaluationCondition.WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV">WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV (citylearn.citylearn.EvaluationCondition attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.EvaluationCondition.WITH_STORAGE_AND_PV">WITH_STORAGE_AND_PV (citylearn.citylearn.EvaluationCondition attribute)</a>
+</li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.EvaluationCondition.WITHOUT_STORAGE_AND_PARTIAL_LOAD_AND_PV">WITHOUT_STORAGE_AND_PARTIAL_LOAD_AND_PV (citylearn.citylearn.EvaluationCondition attribute)</a>
 </li>
       <li><a href="api/citylearn.citylearn.html#citylearn.citylearn.EvaluationCondition.WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV">WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV (citylearn.citylearn.EvaluationCondition attribute)</a>

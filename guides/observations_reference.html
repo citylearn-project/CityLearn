@@ -458,6 +458,14 @@
 <td class="text-right"><p>binary</p></td>
 <td><p>Power outage state.</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">power_outage_unserved_energy</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Load left unserved during a power outage, as in the <code class="docutils literal notranslate"><span class="pre">power_outage_normalized_unserved_energy_total</span></code> KPI. Zero without an outage. Flat interface only; the entity <code class="docutils literal notranslate"><span class="pre">building</span></code> table does not include it.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Grid import limit for the coming interval: the smaller of the static <code class="docutils literal notranslate"><span class="pre">import_kw</span></code> and the <a class="reference internal" href="schema_reference.html#available-grid-power"><span class="std std-ref">available grid power</span></a> series. Only with a series. Flat interface only; under the entity interface the building headroom features follow the limit.</p></td>
+</tr>
 </tbody>
 </table>
 </section>
