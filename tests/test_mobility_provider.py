@@ -273,12 +273,14 @@ def test_set_vehicle_soc_is_observed_in_the_same_step():
 # -------------------------------------------------------------------- energy limits
 
 
-def _single_step_energy(*, connected_seconds=None, action=1.0, soc=0.4, floor=None):
+def _single_step_energy(*, connected_seconds=None, action=1.0, soc=0.4, floor=None, ceiling=None):
     kwargs = {}
     if connected_seconds is not None:
         kwargs["connected_seconds"] = connected_seconds
     if floor is not None:
         kwargs["discharge_soc_floor"] = floor
+    if ceiling is not None:
+        kwargs["charge_soc_ceiling"] = ceiling
     plan = {0: lambda env: env.mobility.connect("charger_1_1", EV, soc=soc, **kwargs)}
     env = CityLearnEnv(_schema(), central_agent=True, random_seed=0, mobility_provider=Scripted(plan))
     env.reset()
@@ -348,6 +350,67 @@ def test_discharge_floor_lasts_for_the_session():
     soc = _vehicle(env).battery.soc[:4]
     assert np.all(soc >= 0.42 - 1e-6)
     assert soc[3] == pytest.approx(0.42, abs=1e-6)
+
+
+def test_charge_soc_ceiling_stops_charging_at_the_ceiling():
+    _, free_energy, free_soc = _single_step_energy(action=1.0, soc=0.4)
+    _, ceil_energy, ceil_soc = _single_step_energy(action=1.0, soc=0.4, ceiling=0.43)
+    _, above_energy, above_soc = _single_step_energy(action=1.0, soc=0.5, ceiling=0.45)
+    _, discharge_energy, discharge_soc = _single_step_energy(action=-1.0, soc=0.5, ceiling=0.45)
+
+    assert free_soc > 0.43 and free_energy > 0.0
+    assert ceil_soc == pytest.approx(0.43, abs=1e-6)
+    assert 0.0 < ceil_energy < free_energy
+    # Above the ceiling there is nothing to charge, and stored energy is never lowered by the cap.
+    assert above_energy == 0.0 and above_soc == pytest.approx(0.5)
+    assert discharge_energy < 0.0 and discharge_soc < 0.5
+
+    plan = {0: lambda env: env.mobility.connect("charger_1_1", EV, soc=0.4, charge_soc_ceiling=0.46)}
+    env = CityLearnEnv(_schema(), central_agent=True, random_seed=0, mobility_provider=Scripted(plan))
+    env.reset()
+    for _ in range(4):
+        env.step(_flat_actions(env, ev=1.0))
+    soc = _vehicle(env).battery.soc[:4]
+    assert np.all(soc <= 0.46 + 1e-6)
+    assert soc[3] == pytest.approx(0.46, abs=1e-6)
+
+
+def test_transfer_efficiency_and_optional_finalize_hook():
+    terminal = {}
+
+    class WithFinalize(Scripted):
+        def finalize(self, env):
+            terminal["step"] = int(env.time_step)
+            terminal["energy"] = env.mobility.charger_energy_kwh("charger_1_1")
+            terminal["soc"] = env.mobility.vehicle_soc(EV)
+            with pytest.raises(RuntimeError, match="only while CityLearn calls the mobility provider"):
+                env.mobility.away("charger_1_1")
+
+    provider = WithFinalize({0: lambda env: env.mobility.connect("charger_1_1", EV, soc=0.4)})
+    env = CityLearnEnv(_schema(), central_agent=True, random_seed=0, mobility_provider=provider)
+    env.reset()
+    eta_ch = env.mobility.transfer_efficiency("charger_1_1", EV, 7.2, charging=True)
+    eta_dis = env.mobility.transfer_efficiency("charger_1_1", EV, 3.6, charging=False)
+    assert 0.5 < eta_ch <= 1.0 and 0.5 < eta_dis <= 1.0
+
+    env.step(_flat_actions(env, ev=1.0))
+    battery = _vehicle(env).battery
+    ac_0 = float(_charger(env, "charger_1_1").electricity_consumption[0])
+    assert (float(battery.soc[0]) - 0.4) * battery.capacity == pytest.approx(ac_0 * eta_ch, rel=1e-5)
+
+    soc_before = float(battery.soc[0])
+    env.step(_flat_actions(env, ev=-0.5))
+    ac_1 = float(_charger(env, "charger_1_1").electricity_consumption[1])
+    assert -ac_1 == pytest.approx((soc_before - float(battery.soc[1])) * battery.capacity * eta_dis, rel=1e-5)
+
+    while not env.terminated:
+        env.step(_flat_actions(env, ev=0.5))
+    last = env.time_steps - 2
+    assert terminal == {
+        "step": env.time_steps - 1,
+        "energy": pytest.approx(float(_charger(env, "charger_1_1").electricity_consumption[last])),
+        "soc": pytest.approx(float(battery.soc[last])),
+    }
 
 
 def test_external_vehicle_has_no_random_drift_but_other_vehicles_keep_it():
@@ -468,6 +531,9 @@ def _error_env(action, *, second_ev=True, file_charger=False):
         (lambda env: env.mobility.connect("charger_1_1", EV, soc=float("nan")), "soc must be finite"),
         (lambda env: env.mobility.connect("charger_1_1", EV, required_soc=-0.1), "required_soc must be in"),
         (lambda env: env.mobility.connect("charger_1_1", EV, discharge_soc_floor=2), "discharge_soc_floor must be in"),
+        (lambda env: env.mobility.connect("charger_1_1", EV, charge_soc_ceiling=1.1), "charge_soc_ceiling must be in"),
+        (lambda env: env.mobility.connect("charger_1_1", EV, discharge_soc_floor=0.6, charge_soc_ceiling=0.5),
+         "charge_soc_ceiling .* must be >= discharge_soc_floor"),
         (lambda env: env.mobility.set_vehicle_soc(EV, -0.01), r"soc must be in \[0, 1\]"),
         (lambda env: env.mobility.incoming("charger_1_1", EV, soc_on_arrival=1.5), "soc_on_arrival must be in"),
         (lambda env: env.mobility.connect("charger_1_1", EV, connected_seconds=901), r"connected_seconds must be in \[0, 900\]"),

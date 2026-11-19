@@ -455,8 +455,8 @@ class Charger(Environment):
         value = float(values[self.time_step])
         return value if np.isfinite(value) else None
 
-    def _session_limits(self) -> Tuple[float, float]:
-        """Connected seconds and discharge SOC floor of the current row, ``None`` when not set.
+    def _session_limits(self) -> Tuple[float, float, float]:
+        """Connected seconds, discharge SOC floor and charge SOC ceiling of the current row, ``None`` when not set.
 
         An exact departure within the step (``electric_vehicle_departure_seconds``) also ends the
         connection.
@@ -467,7 +467,11 @@ class Charger(Environment):
         if departure_seconds is not None:
             connected_seconds = connected_until(connected_seconds, departure_seconds, self.seconds_per_time_step)
 
-        return connected_seconds, self._schedule_value('electric_vehicle_discharge_soc_floor')
+        return (
+            connected_seconds,
+            self._schedule_value('electric_vehicle_discharge_soc_floor'),
+            self._schedule_value('electric_vehicle_charge_soc_ceiling'),
+        )
 
     def _known_departure_seconds(self, connected_seconds: float) -> float:
         return known_departure_seconds(
@@ -501,13 +505,14 @@ class Charger(Environment):
         -----
         When a mobility provider limits the connection to part of the time step
         (``connected_seconds``), the commanded power is applied for that time only. A session's
-        ``discharge_soc_floor`` caps discharging so that the battery SOC stays at or above it.
+        ``discharge_soc_floor`` caps discharging so that the battery SOC stays at or above it;
+        ``charge_soc_ceiling`` caps charging so that the battery SOC stays at or below it.
         """
         signed_power_kw, charging = self._signed_power_from_action(action_value)
-        connected_seconds, soc_floor = self._session_limits()
+        connected_seconds, soc_floor, soc_ceiling = self._session_limits()
 
         if self._uses_session_profile():
-            self._update_from_session_profile(signed_power_kw, connected_seconds, soc_floor)
+            self._update_from_session_profile(signed_power_kw, connected_seconds, soc_floor, soc_ceiling)
             return
 
         if connected_seconds is not None and connected_seconds <= 0.0:
@@ -533,7 +538,7 @@ class Charger(Environment):
             # Battery model expects dataset-resolution energy. Convert from control-step kWh when needed.
             ratio = getattr(electric_vehicle.battery, 'time_step_ratio', None)
             battery_command = to_dataset_resolution_energy(battery_energy_kwh, ratio)
-            if connected_seconds is None and (soc_floor is None or charging):
+            if connected_seconds is None and (soc_floor is None or charging) and (soc_ceiling is None or not charging):
                 electric_vehicle.battery.charge(battery_command)
             else:
                 # Battery power limits and efficiency refer to the time the vehicle is plugged in.
@@ -541,6 +546,7 @@ class Charger(Environment):
                     battery_command,
                     duration_seconds=connected_seconds,
                     soc_floor=None if charging else soc_floor,
+                    soc_ceiling=soc_ceiling if charging else None,
                 )
 
             self._record_battery_transfer(electric_vehicle, efficiency)
@@ -548,7 +554,13 @@ class Charger(Environment):
     def _record_battery_transfer(self, electric_vehicle: ElectricVehicle, efficiency: float):
         """Add the AC energy of the battery's last charge call to this step's charger series."""
 
-        battery_energy_balance = float(electric_vehicle.battery.energy_balance[self.time_step])
+        battery_energy_balance = float(
+            getattr(
+                electric_vehicle.battery,
+                '_last_transfer_energy',
+                electric_vehicle.battery.energy_balance[self.time_step],
+            )
+        )
         ac_energy = (
             battery_energy_balance / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
             if battery_energy_balance >= 0 else battery_energy_balance * efficiency
@@ -562,7 +574,13 @@ class Charger(Environment):
         if events:
             events[-1]['bus'] = float(ac_energy)
 
-    def _update_from_session_profile(self, command_kw: float, connected_seconds: float, soc_floor: float):
+    def _update_from_session_profile(
+        self,
+        command_kw: float,
+        connected_seconds: float,
+        soc_floor: float,
+        soc_ceiling: float = None,
+    ):
         """Charge or discharge the connected vehicle with the exact energy of the session power profile.
 
         The profile (:func:`citylearn.internal.charger_dynamics.integrate_step`) is integrated in
@@ -614,6 +632,7 @@ class Charger(Environment):
                 to_dataset_resolution_energy(battery_energy_kwh, ratio),
                 duration_seconds=seconds,
                 soc_floor=None if charging else soc_floor,
+                soc_ceiling=soc_ceiling if charging else None,
             )
             self._record_battery_transfer(electric_vehicle, efficiency)
             commanded_energy_kwh += energy_kwh

@@ -16,7 +16,8 @@ The provider writes through :attr:`citylearn.citylearn.CityLearnEnv.mobility`, a
   interval has been computed and the environment has advanced to ``time_step``, and before the
   chargers are associated for ``time_step``. The observations that ``step()`` returns therefore
   already show the connections written here. It is not called for the terminal transition, after
-  which no action is taken.
+  which no action is taken; if the provider defines ``finalize(env)``, CityLearn calls that
+  read-only hook instead so the last interval's settled energy and SOC can be read inside ``step()``.
 
 See ``docs/mobility_provider.md`` for the contract, the schema keys and an example.
 """
@@ -38,7 +39,8 @@ class MobilityProvider(Protocol):
     """Source of EV connections, arrivals, departures and driving SOC changes.
 
     Any object with these two methods can be passed as ``CityLearnEnv(mobility_provider=...)`` or
-    assigned to ``env.mobility_provider`` before ``env.reset()``.
+    assigned to ``env.mobility_provider`` before ``env.reset()``. An optional ``finalize(env)``
+    method, when present, is called after the terminal transition settles (read-only).
     """
 
     def reset(self, env: 'CityLearnEnv') -> None:
@@ -113,6 +115,7 @@ class MobilityInterface:
         session_id: Optional[str] = None,
         connected_seconds: Optional[float] = None,
         discharge_soc_floor: Optional[float] = None,
+        charge_soc_ceiling: Optional[float] = None,
         connected_since_seconds: Optional[float] = None,
         departure_seconds: Optional[float] = None,
     ) -> None:
@@ -146,6 +149,10 @@ class MobilityInterface:
         discharge_soc_floor: float, optional
             Discharging in this session never takes the battery below this SOC, e.g. the energy
             the vehicle needs for its next trip. Kept for the rest of the session.
+        charge_soc_ceiling: float, optional
+            Charging in this session never takes the battery above this SOC, e.g. a target SOC
+            cap when an external controller commands full power. Discharging is unaffected. Kept
+            for the rest of the session.
         connected_since_seconds: float, optional
             Session age at the start of this time step, only when the call starts a session. A
             positive value means the vehicle plugged in that many seconds before the step started,
@@ -164,7 +171,8 @@ class MobilityInterface:
         self._service.connect(
             charger_id, ev_id, soc=soc, departure_steps=departure_steps, required_soc=required_soc,
             session_id=session_id, connected_seconds=connected_seconds,
-            discharge_soc_floor=discharge_soc_floor, connected_since_seconds=connected_since_seconds,
+            discharge_soc_floor=discharge_soc_floor, charge_soc_ceiling=charge_soc_ceiling,
+            connected_since_seconds=connected_since_seconds,
             departure_seconds=departure_seconds,
         )
 
@@ -229,6 +237,23 @@ class MobilityInterface:
         """Average AC power of ``charger_id`` over the last finished interval, in kW."""
 
         return self._service.charger_power_kw(charger_id)
+
+    def transfer_efficiency(
+        self,
+        charger_id: str,
+        ev_id: str,
+        power_kw: Optional[float] = None,
+        *,
+        charging: bool = True,
+    ) -> float:
+        """Combined one-way AC-to-stored (or stored-to-AC) efficiency of ``charger_id`` and ``ev_id``.
+
+        Evaluates the charger's charge/discharge efficiency curve at ``power_kw`` (AC power at the
+        charger inlet; defaults to the charger's maximum power for that direction) together with the
+        vehicle battery's one-way efficiency at the corresponding DC terminal power.
+        """
+
+        return self._service.transfer_efficiency(charger_id, ev_id, power_kw, charging=charging)
 
     @property
     def external_charger_ids(self) -> List[str]:

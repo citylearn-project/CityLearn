@@ -1025,10 +1025,17 @@ class StorageDevice(Device):
         self.__soc[self.time_step] = energy_final/max(as_float(self.capacity), ZERO_DIVISION_PLACEHOLDER)
         self.__soc_initialized[self.time_step] = True
         delta_energy = energy_final - energy_init
-        self.__energy_balance[self.time_step] = (
+        call_balance = (
             delta_energy / one_way_efficiency if delta_energy >= 0 else delta_energy * one_way_efficiency
         )
-        terminal_energy = float(self.__energy_balance[self.time_step])
+        if getattr(self, '_balance_time_step', -1) == self.time_step:
+            terminal_energy = float(np.float32(call_balance))
+            self.__energy_balance[self.time_step] = float(self.__energy_balance[self.time_step]) + terminal_energy
+        else:
+            self.__energy_balance[self.time_step] = call_balance
+            terminal_energy = float(self.__energy_balance[self.time_step])
+            self._balance_time_step = self.time_step
+        self._last_transfer_energy = terminal_energy
         stored_change = (terminal_energy * one_way_efficiency if terminal_energy >= 0.0
                          else terminal_energy / one_way_efficiency)
         self.__stored_energy_transfer = self.stored_energy_transfer + stored_change
@@ -1141,6 +1148,8 @@ class StorageDevice(Device):
         self.__gross_energy_discharge = np.zeros(self.episode_tracker.episode_time_steps, dtype='float32') if self.__gross_energy_charge is not None else None
         self.__stored_energy_transfer = 0.0
         self.__transfer_time_step = self.time_step
+        self._balance_time_step = -1
+        self._last_transfer_energy = 0.0
         self._energy_events = []
         self._energy_event_step = self.time_step
 
@@ -1436,7 +1445,14 @@ class Battery(StorageDevice, ElectricDevice):
             ),
         }
 
-    def charge(self, energy: float, *, duration_seconds: float = None, soc_floor: float = None):
+    def charge(
+        self,
+        energy: float,
+        *,
+        duration_seconds: float = None,
+        soc_floor: float = None,
+        soc_ceiling: float = None,
+    ):
         """Charges or discharges storage with respect to specified energy while considering `capacity` degradation and `soc_init` 
         limitations, losses to the environment quantified by `efficiency`, `power_efficiency_curve` and `capacity_power_curve`.
 
@@ -1450,6 +1466,8 @@ class Battery(StorageDevice, ElectricDevice):
             this time. Defaults to the whole step.
         soc_floor : float, optional
             Discharging stops at this SOC if it is above the depth-of-discharge limit.
+        soc_ceiling : float, optional
+            Charging stops at this SOC if it is below the degraded-capacity limit.
         """
         _require_finite_energy(energy, self)
 
@@ -1457,20 +1475,26 @@ class Battery(StorageDevice, ElectricDevice):
             self.capacity_before_step[self.time_step] = self.degraded_capacity
         energy_init = self.energy_init
         degraded_capacity = self.degraded_capacity
+        same_step_transfer = getattr(self, '_balance_time_step', -1) == self.time_step
         # Read by subclasses whose power limits depend on the transfer time.
         self._transfer_seconds = duration_seconds
         try:
             energy, efficiency = self._limit_charge_energy(
-                energy, energy_init, degraded_capacity, duration_seconds=duration_seconds, soc_floor=soc_floor,
+                energy, energy_init, degraded_capacity,
+                duration_seconds=duration_seconds, soc_floor=soc_floor, soc_ceiling=soc_ceiling,
             )
         finally:
             self._transfer_seconds = None
         # One efficiency entry per operation: the efficiency at the power finally applied.
         self.efficiency = efficiency
         super()._charge(energy, energy_init=energy_init)
-        self._capacity_history.append(max(degraded_capacity - self.degrade(), 0.0))
         ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
-        dataset_resolution_balance = self.energy_balance[self.time_step]/ratio
+        if same_step_transfer and len(self._capacity_history) > 1:
+            self._capacity_history[-1] = max(degraded_capacity - self.degrade(self._last_transfer_energy), 0.0)
+            dataset_resolution_balance = self._last_transfer_energy / ratio
+        else:
+            self._capacity_history.append(max(degraded_capacity - self.degrade(), 0.0))
+            dataset_resolution_balance = self.energy_balance[self.time_step] / ratio
         self.update_electricity_consumption(dataset_resolution_balance, enforce_polarity=False)
 
     def preview_charge(self, energy: float) -> float:
@@ -1493,7 +1517,7 @@ class Battery(StorageDevice, ElectricDevice):
 
     def _limit_charge_energy(
         self, energy: float, energy_init: float, degraded_capacity: float, *,
-        duration_seconds: float = None, soc_floor: float = None,
+        duration_seconds: float = None, soc_floor: float = None, soc_ceiling: float = None,
     ) -> Tuple[float, float]:
         """Limit a requested charge (+) or discharge (-) and return it with the efficiency at that power.
 
@@ -1516,7 +1540,10 @@ class Battery(StorageDevice, ElectricDevice):
 
             for _ in range(2):
                 efficiency = self._validated_efficiency(self.get_current_efficiency(abs(limited_energy) / step_hours))
-                energy_wrt_degrade = max(degraded_capacity - energy_init, 0.0)
+                maximum_energy = degraded_capacity
+                if soc_ceiling is not None:
+                    maximum_energy = min(maximum_energy, float(soc_ceiling) * self.capacity)
+                energy_wrt_degrade = max(maximum_energy - energy_init, 0.0)
                 capacity_limited_energy = energy_wrt_degrade / max(efficiency**0.5, ZERO_DIVISION_PLACEHOLDER)
                 limited_energy = min(requested_energy, max_input_energy, capacity_limited_energy)
 
@@ -1631,7 +1658,7 @@ class Battery(StorageDevice, ElectricDevice):
 
         return efficiency
 
-    def degrade(self) -> float:
+    def degrade(self, energy_balance: float = None) -> float:
         r"""Get amount of capacity degradation.
 
         Returns
@@ -1641,7 +1668,8 @@ class Battery(StorageDevice, ElectricDevice):
         """
 
         # Calculating the degradation of the battery: new max. capacity of the battery after charge/discharge
-        capacity_degrade = self.capacity_loss_coefficient*self.capacity*abs(float(self.energy_balance[self.time_step]))/(2*max(self.degraded_capacity, ZERO_DIVISION_PLACEHOLDER))
+        balance = float(self.energy_balance[self.time_step]) if energy_balance is None else float(energy_balance)
+        capacity_degrade = self.capacity_loss_coefficient*self.capacity*abs(balance)/(2*max(self.degraded_capacity, ZERO_DIVISION_PLACEHOLDER))
         return capacity_degrade
     
     def autosize(

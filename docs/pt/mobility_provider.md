@@ -49,6 +49,7 @@ Um fornecedor é qualquer objeto com dois métodos (`citylearn.mobility.Mobility
 |---|---|
 | `reset(env)` | Em cada `env.reset()`, depois de os edifícios e veículos serem reiniciados e antes de os carregadores serem associados para o passo 0. O construtor também executa `reset()`, pelo que um fornecedor passado ao construtor é reiniciado durante a construção. |
 | `update(env, time_step)` | Em `env.step()`, depois de a energia do intervalo `time_step - 1` estar calculada e de o ambiente avançar para `time_step`, antes de os carregadores serem associados para `time_step`. Não é chamado na transição terminal, após a qual não há mais ações. |
+| `finalize(env)` *(opcional)* | No `env.step()` terminal, depois de a energia e o SOC do último intervalo estarem fechados. Apenas de leitura (escritas em `env.mobility` lançam `RuntimeError`, pois não há intervalo seguinte). |
 
 Passe-o como `CityLearnEnv(..., mobility_provider=provider)` ou atribua `env.mobility_provider` antes
 de `env.reset()`. Como `update` corre antes da associação, as observações devolvidas por `step()` já
@@ -62,7 +63,7 @@ chamadas lançam `RuntimeError`. Cada escrita aplica-se de imediato ao passo atu
 
 | Chamada | Efeito |
 |---|---|
-| `connect(charger_id, ev_id, *, soc=None, departure_steps=None, required_soc=None, session_id=None, connected_seconds=None, discharge_soc_floor=None)` | Liga o veículo. |
+| `connect(charger_id, ev_id, *, soc=None, departure_steps=None, required_soc=None, session_id=None, connected_seconds=None, discharge_soc_floor=None, charge_soc_ceiling=None, connected_since_seconds=None, departure_seconds=None)` | Liga o veículo. |
 | `incoming(charger_id, ev_id, *, arrival_steps=None, soc_on_arrival=None)` | Anuncia um veículo a caminho do carregador; as estimativas são apenas observações. Uma linha do calendário tem um só estado por passo, pelo que anunciar o veículo ligado a este carregador significa que ele saiu neste passo: a sessão termina como com `away()`. |
 | `away(charger_id)` | Liberta o carregador. |
 | `set_vehicle_soc(ev_id, soc)` | Define o SOC de um veículo que não continua uma sessão de carga, por exemplo depois de conduzir. |
@@ -80,6 +81,7 @@ a duração do episódio, o limite superior do espaço de observação.
 | `session_id` | Identidade da sessão; gerada se omitida. Um novo ID para o veículo já ligado inicia uma sessão seguida. |
 | `connected_seconds` | Segundos do passo atual em que o veículo está ligado, em [0, `seconds_per_time_step`]. A energia do passo é a potência comandada durante esse tempo; os limites de potência e a eficiência da bateria referem-se a ele. Aplica-se a um só passo. |
 | `discharge_soc_floor` | A descarga nesta sessão nunca leva a bateria abaixo deste SOC, por exemplo a energia necessária para a viagem seguinte. A carga não é afetada. |
+| `charge_soc_ceiling` | A carga nesta sessão nunca leva a bateria acima deste SOC, por exemplo um limite de SOC alvo quando o controlador comanda potência máxima. A descarga não é afetada. |
 | `connected_since_seconds` | Idade da sessão no início deste passo, só quando a chamada inicia uma sessão: positiva se o veículo se ligou esse tempo antes do passo (conta para o `start_delay_seconds` do carregador), negativa se se liga esse tempo depois do início do passo (sem energia antes). Por omissão 0. Ver [dinâmica das sessões de carga](charger_session_dynamics.md). |
 | `departure_seconds` | Partida esperada exata, em segundos (> 0) a partir do início do passo atual; no início da sessão ou depois. Diminui pela duração do passo e define `departure_steps` como `ceil(departure_seconds / seconds_per_time_step)`, a contagem que as observações mostram; dados em conjunto, os dois têm de concordar. O tempo exato não é observado: posiciona o `stop_delay_seconds` do carregador e, no passo que o contém, termina a ligação. Indicar depois só `departure_steps` substitui-o. |
 
@@ -88,7 +90,8 @@ carregador usado por vários edifícios (escreva `"<edifício>/<carregador>"`), 
 de calendário, veículo ligado a outro carregador no mesmo passo, carregador ligado a outro veículo
 (liberte-o primeiro com `away()`), `soc` ou `connected_since_seconds` numa sessão em curso ou
 `set_vehicle_soc` para um veículo que continua a sessão, SOC fora de [0, 1], contagem negativa ou
-fracionária, `connected_seconds` fora de [0, `seconds_per_time_step`], um `connected_since_seconds`
+fracionária, `connected_seconds` fora de [0, `seconds_per_time_step`], `charge_soc_ceiling` inferior a
+`discharge_soc_floor`, um `connected_since_seconds`
 que liga o veículo depois de ele sair e um `departure_seconds` que não é positivo ou não concorda com
 `departure_steps`.
 
@@ -96,9 +99,10 @@ que liga o veículo depois de ele sair e um `departure_seconds` que não é posi
 
 | Chamada | Valor |
 |---|---|
-| `env.mobility.vehicle_soc(ev_id)` | O SOC que o CityLearn tem agora. Em `update` é o SOC com que o veículo inicia o novo intervalo, depois da carga do intervalo terminado e da perda em repouso. |
+| `env.mobility.vehicle_soc(ev_id)` | O SOC que o CityLearn tem agora. Em `update` (e `finalize`) é o SOC após o intervalo terminado e a perda em repouso. |
 | `env.mobility.charger_energy_kwh(charger_id)` | Energia AC com sinal do último intervalo terminado, em kWh: positiva na carga, negativa em veículo-para-edifício. Qualquer carregador. |
 | `env.mobility.charger_power_kw(charger_id)` | Potência AC média do último intervalo terminado. |
+| `env.mobility.transfer_efficiency(charger_id, ev_id, power_kw=None, *, charging=True)` | Eficiência combinada unidirecional AC-para-bateria (ou bateria-para-AC) de `charger_id` e `ev_id` a `power_kw`. |
 | `env.mobility.external_charger_ids`, `external_vehicle_ids`, `vehicle_ids` | Identificadores. |
 
 Leia o SOC dos veículos com `vehicle_soc`. O array `soc` da bateria também o guarda, indexado por
@@ -122,7 +126,7 @@ As linhas escritas pelo fornecedor alimentam as observações habituais dos carr
 e a chegar, contagem até à partida, SOC pedido, capacidade da bateria, hora e SOC de chegada
 estimados e o SOC do veículo ligado. Esse SOC é o valor fechado do intervalo anterior, ou o SOC de
 chegada ou comunicado no passo atual quando o fornecedor o escreveu antes da ação.
-`connected_seconds`, `connected_since_seconds`, `departure_seconds` e `discharge_soc_floor` limitam a
+`connected_seconds`, `connected_since_seconds`, `departure_seconds`, `discharge_soc_floor` e `charge_soc_ceiling` limitam a
 energia, mas não são observados; a partida observada é a contagem em passos inteiros.
 
 ## Referência business-as-usual

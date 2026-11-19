@@ -738,8 +738,10 @@ class CityLearnKPIService:
 
         soc = float(arrival_soc)
         connected_steps = max(int(departure_index) - int(interval_start) + 1, 0)
-        # Schedules written by a mobility provider may limit a step to the seconds plugged in.
+        # Schedules written by a mobility provider may limit a step to the seconds plugged in
+        # or cap charging at a session SOC ceiling.
         connected_seconds = getattr(sim, 'electric_vehicle_connected_seconds', None)
+        charge_ceilings = getattr(sim, 'electric_vehicle_charge_soc_ceiling', None)
         # Chargers with session dynamics deliver the exact energy of their power profile.
         dynamics = getattr(charger, 'session_dynamics', None)
         since = self._safe_sequence_value(getattr(sim, 'electric_vehicle_connected_since_seconds', None), interval_start)
@@ -786,6 +788,10 @@ class CityLearnKPIService:
             )
             if exact_departure is not None:
                 transfer_seconds = connected_until(transfer_seconds, exact_departure, seconds_per_time_step)
+            soc_ceiling = self._safe_sequence_value(charge_ceilings, step)
+            soc_ceiling = (
+                None if soc_ceiling is None or not np.isfinite(float(soc_ceiling)) else float(soc_ceiling)
+            )
             transfer_hours = step_hours if transfer_seconds is None else transfer_seconds / 3600.0
             if replay is not None:
                 if offset:
@@ -807,14 +813,22 @@ class CityLearnKPIService:
                         efficiency = self._ev_charger_charge_efficiency(
                             charger, energy / (seconds / 3600.0), charger_power_kw,
                         )
-                        replay.charge(energy * efficiency / ratio, duration_seconds=seconds)
+                        replay.charge(
+                            energy * efficiency / ratio,
+                            duration_seconds=seconds,
+                            soc_ceiling=soc_ceiling,
+                        )
                     else:
                         replay.charge(0.0)
-                elif transfer_seconds is None:
+                elif transfer_seconds is None and soc_ceiling is None:
                     replay.charge(power_kw * step_hours * charger_efficiency / ratio)
+                elif transfer_seconds is None:
+                    replay.charge(power_kw * step_hours * charger_efficiency / ratio, soc_ceiling=soc_ceiling)
                 elif transfer_seconds > 0.0:
                     replay.charge(
-                        power_kw * transfer_hours * charger_efficiency / ratio, duration_seconds=transfer_seconds,
+                        power_kw * transfer_hours * charger_efficiency / ratio,
+                        duration_seconds=transfer_seconds,
+                        soc_ceiling=soc_ceiling,
                     )
                 else:
                     replay.charge(0.0)

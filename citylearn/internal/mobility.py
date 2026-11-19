@@ -63,6 +63,7 @@ def external_charger_simulation(rows: int) -> ChargerSimulation:
     simulation.electric_vehicle_current_soc = np.full(rows, UNKNOWN_SOC, dtype='float32')
     simulation.electric_vehicle_connected_seconds = np.full(rows, np.nan, dtype='float64')
     simulation.electric_vehicle_discharge_soc_floor = np.full(rows, np.nan, dtype='float64')
+    simulation.electric_vehicle_charge_soc_ceiling = np.full(rows, np.nan, dtype='float64')
     simulation.electric_vehicle_connected_since_seconds = np.full(rows, np.nan, dtype='float64')
     simulation.electric_vehicle_departure_seconds = np.full(rows, np.nan, dtype='float64')
     simulation.source = EXTERNAL_SOURCE
@@ -84,6 +85,7 @@ _ROW_FIELDS = (
     'electric_vehicle_estimated_soc_arrival',
     'electric_vehicle_connected_seconds',
     'electric_vehicle_discharge_soc_floor',
+    'electric_vehicle_charge_soc_ceiling',
     'electric_vehicle_connected_since_seconds',
     'electric_vehicle_departure_seconds',
 )
@@ -193,7 +195,7 @@ class CityLearnMobilityService:
         self._call_provider(lambda provider: provider.reset(self.env))
 
     def advance(self, time_step: int, *, call_provider: bool):
-        """Carry the external rows into ``time_step``, then run the provider's ``update``."""
+        """Carry the external rows into ``time_step``, then run the provider's ``update`` (or ``finalize``)."""
 
         self._soc_set_this_step = set()
 
@@ -202,6 +204,10 @@ class CityLearnMobilityService:
 
         if call_provider:
             self._call_provider(lambda provider: provider.update(self.env, int(time_step)))
+        elif self._provider is not None:
+            finalize = getattr(self._provider, 'finalize', None)
+            if callable(finalize):
+                finalize(self.env)
 
     def before_association(self):
         """Record the SOC a session on an external charger starts with.
@@ -249,6 +255,7 @@ class CityLearnMobilityService:
         simulation.electric_vehicle_current_soc[t] = UNKNOWN_SOC
         simulation.electric_vehicle_connected_seconds[t] = np.nan
         simulation.electric_vehicle_discharge_soc_floor[t] = np.nan
+        simulation.electric_vehicle_charge_soc_ceiling[t] = np.nan
         simulation.electric_vehicle_connected_since_seconds[t] = np.nan
         simulation.electric_vehicle_departure_seconds[t] = np.nan
 
@@ -282,6 +289,9 @@ class CityLearnMobilityService:
             )
             simulation.electric_vehicle_discharge_soc_floor[t] = (
                 simulation.electric_vehicle_discharge_soc_floor[previous]
+            )
+            simulation.electric_vehicle_charge_soc_ceiling[t] = (
+                simulation.electric_vehicle_charge_soc_ceiling[previous]
             )
 
         elif state == INCOMING:
@@ -397,7 +407,8 @@ class CityLearnMobilityService:
 
     def connect(
         self, charger_id, ev_id, *, soc=None, departure_steps=None, required_soc=None, session_id=None,
-        connected_seconds=None, discharge_soc_floor=None, connected_since_seconds=None, departure_seconds=None,
+        connected_seconds=None, discharge_soc_floor=None, charge_soc_ceiling=None,
+        connected_since_seconds=None, departure_seconds=None,
     ):
         self._require_writes('connect')
         key, charger = self._resolve_charger(charger_id, external=True)
@@ -408,6 +419,7 @@ class CityLearnMobilityService:
         soc = None if soc is None else _fraction(soc, 'soc')
         required_soc = None if required_soc is None else _fraction(required_soc, 'required_soc')
         discharge_soc_floor = None if discharge_soc_floor is None else _fraction(discharge_soc_floor, 'discharge_soc_floor')
+        charge_soc_ceiling = None if charge_soc_ceiling is None else _fraction(charge_soc_ceiling, 'charge_soc_ceiling')
         if departure_seconds is not None:
             departure_seconds = _finite_number(departure_seconds, 'departure_seconds')
             if departure_seconds <= 0.0:
@@ -476,7 +488,21 @@ class CityLearnMobilityService:
                     f"connected_since_seconds is accepted only when a session starts; '{ev.name}' continues "
                     f"its session at '{charger_id}'."
                 )
-        else:
+
+        effective_floor = (
+            discharge_soc_floor if discharge_soc_floor is not None
+            else (float(simulation.electric_vehicle_discharge_soc_floor[t]) if same_session else np.nan)
+        )
+        effective_ceiling = (
+            charge_soc_ceiling if charge_soc_ceiling is not None
+            else (float(simulation.electric_vehicle_charge_soc_ceiling[t]) if same_session else np.nan)
+        )
+        if np.isfinite(effective_floor) and np.isfinite(effective_ceiling) and effective_ceiling < effective_floor:
+            raise ValueError(
+                f'charge_soc_ceiling ({effective_ceiling:g}) must be >= discharge_soc_floor ({effective_floor:g}).'
+            )
+
+        if not same_session:
             self._write_away(simulation, t)
             simulation.electric_vehicle_charger_state[t] = CONNECTED
             simulation.electric_vehicle_id[t] = ev.name
@@ -492,6 +518,8 @@ class CityLearnMobilityService:
             simulation.electric_vehicle_required_soc_departure[t] = required_soc
         if discharge_soc_floor is not None:
             simulation.electric_vehicle_discharge_soc_floor[t] = discharge_soc_floor
+        if charge_soc_ceiling is not None:
+            simulation.electric_vehicle_charge_soc_ceiling[t] = charge_soc_ceiling
         if connected_seconds is not None:
             simulation.electric_vehicle_connected_seconds[t] = connected_seconds
         if connected_since_seconds is not None:
@@ -586,6 +614,27 @@ class CityLearnMobilityService:
     def charger_power_kw(self, charger_id) -> float:
         step_hours = max(float(self.env.seconds_per_time_step) / 3600.0, 1.0e-12)
         return self.charger_energy_kwh(charger_id) / step_hours
+
+    def transfer_efficiency(self, charger_id, ev_id, power_kw=None, *, charging: bool = True) -> float:
+        _, charger = self._resolve_charger(charger_id, external=False)
+        battery = self._resolve_vehicle(ev_id).battery
+        charging = bool(charging)
+        max_power = float(charger.max_charging_power if charging else charger.max_discharging_power)
+        if power_kw is None:
+            applied_kw = max_power
+        else:
+            applied_kw = _finite_number(power_kw, 'power_kw')
+            if applied_kw < 0.0:
+                raise ValueError(f'power_kw must be >= 0, got {applied_kw!r}.')
+        normalized = min(max(applied_kw / max(max_power, 1.0e-12), 0.0), 1.0)
+        charger_eff = float(charger.get_efficiency(normalized, charging))
+        directional_attr = 'charging_efficiency' if charging else 'discharging_efficiency'
+        if hasattr(battery, directional_attr):
+            battery_eff = float(getattr(battery, directional_attr))
+        else:
+            dc_power_kw = applied_kw * charger_eff if charging else applied_kw / max(charger_eff, 1.0e-12)
+            battery_eff = float(max(float(battery.get_current_efficiency(dc_power_kw)), 0.0) ** 0.5)
+        return charger_eff * battery_eff
 
     # ------------------------------------------------------------------- replay
 

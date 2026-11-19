@@ -51,6 +51,7 @@ A provider is any object with two methods (`citylearn.mobility.MobilityProvider`
 |---|---|
 | `reset(env)` | In every `env.reset()`, after the buildings and vehicles are reset and before the chargers are associated for time step 0. The constructor runs `reset()` too, so a provider passed to it is reset during construction. |
 | `update(env, time_step)` | In `env.step()`, after the energy of interval `time_step - 1` is computed and the environment has advanced to `time_step`, before the chargers are associated for `time_step`. Not called for the terminal transition, after which no action follows. |
+| `finalize(env)` *(optional)* | In the terminal `env.step()`, after the last interval's energy and SOC are settled. Read-only (`env.mobility` writes raise `RuntimeError` because no interval follows). |
 
 Pass it as `CityLearnEnv(..., mobility_provider=provider)` or assign `env.mobility_provider` before
 `env.reset()`. Because `update` runs before the association, the observations that `step()`
@@ -64,7 +65,7 @@ raise `RuntimeError`. Each write applies to the current time step at once.
 
 | Call | Effect |
 |---|---|
-| `connect(charger_id, ev_id, *, soc=None, departure_steps=None, required_soc=None, session_id=None, connected_seconds=None, discharge_soc_floor=None)` | Plugs the vehicle in. |
+| `connect(charger_id, ev_id, *, soc=None, departure_steps=None, required_soc=None, session_id=None, connected_seconds=None, discharge_soc_floor=None, charge_soc_ceiling=None, connected_since_seconds=None, departure_seconds=None)` | Plugs the vehicle in. |
 | `incoming(charger_id, ev_id, *, arrival_steps=None, soc_on_arrival=None)` | Announces a vehicle on its way to the charger; the estimates are observations only. A schedule row holds one state per step, so announcing the vehicle that is connected to this charger means it has left at this step: its session ends as with `away()`. |
 | `away(charger_id)` | Frees the charger. |
 | `set_vehicle_soc(ev_id, soc)` | Sets the SOC of a vehicle that is not continuing a charging session, e.g. after driving. |
@@ -82,6 +83,7 @@ the episode length, the upper bound of the observation space.
 | `session_id` | Session identity; generated when omitted. A new ID for the vehicle already connected starts a back-to-back session. |
 | `connected_seconds` | Seconds of the current step the vehicle is plugged in, in [0, `seconds_per_time_step`]. The step's energy is the commanded power over that time; battery power limits and efficiency refer to it. Applies to one step only. |
 | `discharge_soc_floor` | Discharging in this session never takes the battery below this SOC, e.g. the energy needed for the next trip. Charging is unaffected. |
+| `charge_soc_ceiling` | Charging in this session never takes the battery above this SOC, e.g. a target SOC cap when the controller commands full power. Discharging is unaffected. |
 | `connected_since_seconds` | Session age at the start of this step, only when the call starts a session: positive if the vehicle plugged in that long before the step (it counts towards the charger's `start_delay_seconds`), negative if it plugs in that long into the step (no energy before). Default 0. See [charger session dynamics](charger_session_dynamics.md). |
 | `departure_seconds` | Exact expected departure, in seconds (> 0) from the start of the current step; at session start or later. It counts down by the step length and sets `departure_steps` to `ceil(departure_seconds / seconds_per_time_step)`, the countdown the observations show; given together, the two must agree. The exact time is not observed: it places the charger's `stop_delay_seconds` and, in the step that contains it, ends the connection. Giving `departure_steps` alone later replaces it. |
 
@@ -90,7 +92,8 @@ by several buildings (write `"<building>/<charger>"`), a charger with a schedule
 connected to another charger at the same step, a charger connected to another vehicle (free it with
 `away()` first), `soc` or `connected_since_seconds` on a running session or
 `set_vehicle_soc` for a vehicle continuing its session, an SOC outside [0, 1], a negative or
-fractional countdown, `connected_seconds` outside [0, `seconds_per_time_step`], a `connected_since_seconds`
+fractional countdown, `connected_seconds` outside [0, `seconds_per_time_step`], `charge_soc_ceiling` below
+`discharge_soc_floor`, a `connected_since_seconds`
 that plugs the vehicle in after it leaves, and a `departure_seconds` that is not positive or disagrees with
 `departure_steps`.
 
@@ -98,9 +101,10 @@ that plugs the vehicle in after it leaves, and a `departure_seconds` that is not
 
 | Call | Value |
 |---|---|
-| `env.mobility.vehicle_soc(ev_id)` | The SOC CityLearn holds now. In `update` it is the SOC the vehicle starts the new interval with, after the charging of the finished interval and the standby loss. |
+| `env.mobility.vehicle_soc(ev_id)` | The SOC CityLearn holds now. In `update` (and `finalize`) it is the SOC after the finished interval and standby loss. |
 | `env.mobility.charger_energy_kwh(charger_id)` | Signed AC energy of the last finished interval in kWh: positive charging, negative vehicle-to-building. Any charger. |
 | `env.mobility.charger_power_kw(charger_id)` | Average AC power of the last finished interval. |
+| `env.mobility.transfer_efficiency(charger_id, ev_id, power_kw=None, *, charging=True)` | Combined one-way AC-to-stored (or stored-to-AC) efficiency of `charger_id` and `ev_id` at `power_kw`. |
 | `env.mobility.external_charger_ids`, `external_vehicle_ids`, `vehicle_ids` | Identifiers. |
 
 Read vehicle SOCs with `vehicle_soc`. The battery's `soc` array also holds them, indexed by time step,
@@ -124,7 +128,7 @@ The rows written by the provider feed the usual charger observations: connected 
 state, departure countdown, required SOC, battery capacity, estimated arrival time and SOC, and the
 connected vehicle's SOC. That SOC is the settled value of the previous interval, or the arrival or
 reported SOC of the current step when the provider wrote it before the action. `connected_seconds`,
-`connected_since_seconds`, `departure_seconds` and `discharge_soc_floor` constrain the energy but are
+`connected_since_seconds`, `departure_seconds`, `discharge_soc_floor` and `charge_soc_ceiling` constrain the energy but are
 not observed; the observed departure is the whole-step countdown.
 
 ## Business-as-usual reference

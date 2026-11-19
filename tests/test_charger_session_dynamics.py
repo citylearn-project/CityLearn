@@ -470,3 +470,39 @@ def test_exact_departure_within_the_step_ends_the_connection_without_dynamics():
     env.reset()
     env.step(_actions(env, 1.0))
     assert _charger(env).electricity_consumption[0] == pytest.approx(7.2 * 300.0 / 3600.0, rel=1e-6)
+
+
+def test_polarity_reversal_in_environment_conserves_battery_and_charger_energy():
+    """A charge-to-discharge reversal within one step accumulates both parts on battery and charger."""
+
+    schema = _schema({**MEASURED, "setpoint_delay_seconds": 60.0}, external=True)
+    schema["electric_vehicles_def"][EV]["battery"]["attributes"]["loss_coefficient"] = 0.0
+    env = CityLearnEnv(
+        schema,
+        central_agent=True,
+        random_seed=0,
+        physics_invariant_checks=True,
+        mobility_provider=_Connect(),
+    )
+    env.reset()
+    env.step(_actions(env, 1.0))
+    battery = env.electric_vehicles[0].battery
+    charger = _charger(env)
+    cap_len_after_step0 = len(battery.capacity_history)
+
+    # Step 1 reverses from +7.2 kW (held during the 60 s set-point delay) to -7.2 kW.
+    env.step(_actions(env, -1.0))
+    assert charger.gross_energy_charge[1] > 0.0
+    assert charger.gross_energy_discharge[1] > 0.0
+    assert charger.electricity_consumption[1] == pytest.approx(
+        charger.gross_energy_charge[1] - charger.gross_energy_discharge[1], rel=1e-6
+    )
+    assert battery.gross_energy_charge[1] > 0.0
+    assert battery.gross_energy_discharge[1] > 0.0
+    assert battery.energy_balance[1] == pytest.approx(
+        battery.gross_energy_charge[1] - battery.gross_energy_discharge[1], rel=1e-6
+    )
+    ratio = battery.time_step_ratio or 1.0
+    assert battery.electricity_consumption[1] == pytest.approx(battery.energy_balance[1] / ratio, rel=1e-6)
+    assert len(battery.capacity_history) == cap_len_after_step0 + 1
+    assert env._provenance_service.max_bus_residual < 1e-6
