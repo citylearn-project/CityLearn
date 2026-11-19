@@ -5,6 +5,29 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Baselines sem o bundle `entity_core_electrical`.** Duas alterações aplicam-se
+  apenas aos datasets cujo schema não ativa esse bundle; os `pt_rec_*` e o
+  `citylearn_challenge_2022_phase_all_plus_evs` ativam-no e não mudam. Primeiro,
+  a bateria do BAU reservava a potência nominal do carregador para um VE ligado
+  mesmo quando o VE aceitava muito menos, por exemplo no último passo antes de
+  100% de SOC, e descarregava para essa procura; passa a reservar a potência que
+  o VE pode aceitar, estimada a partir do SOC, da capacidade da bateria e da
+  potência e eficiência do carregador observados, como o simulador calcula
+  `available_charge_power_kw`
+  ([#190](https://github.com/citylearn-project/CityLearn/issues/190)). Segundo,
+  todas as baselines tomavam a exportação do intervalo anterior como excedente
+  PV, pelo que, quando uma descarga da bateria ultrapassava a carga e era
+  exportada, a bateria voltava a carregar da rede no passo seguinte (22,8 kWh
+  nas primeiras 48 horas do `citylearn_three_phase_electrical_service_demo` com
+  o BAU); passa a contar como excedente apenas o PV acima da carga observada. As
+  versões de definição passam a `immediate-full-charge-v3`,
+  `immediate-user-target-v2`, `basic-v3`, `smart-local-v3` e `community-v3`. Em
+  30 dias, o custo de controlo varia entre −0,2% e −2,4% e as emissões entre
+  −0,8% e −2,5% para todas as baselines no `citylearn_challenge_2022_phase_all`,
+  no `citylearn_challenge_2023_phase_2_local_evaluation` e no
+  `citylearn_three_phase_electrical_service_demo`, exceto o BAU por omissão neste
+  último, que custa mais 0,4% porque a bateria guarda agora PV que antes ia para
+  o mercado da comunidade. Ver o [guia de migração](../migration.md#unreleased).
 - **Apoio do veículo ao edifício durante cortes (opcional).** Com
   `power_outage.vehicle_to_building: true`, um VE ligado pode descarregar para o
   seu edifício enquanto a rede está em falha, como apoio vehicle-to-home. A

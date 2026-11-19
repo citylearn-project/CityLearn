@@ -115,6 +115,53 @@ def test_requested_target_bau_charges_at_once_up_to_user_target_and_never_discha
         env.close()
 
 
+def _bau_step_with_nearly_full_ev(tmp_path: Path, seconds: int, core_bundle: bool):
+    # The load is zero in the data, so the settled net observation at reset is
+    # zero and the one-step lag of issue #190 plays no part.
+    dataset_dir = tmp_path / f"minute_ev_demo_{seconds}_{core_bundle}"
+    shutil.copytree(SOURCE_DATASET, dataset_dir)
+    load_path = dataset_dir / "Building_1.csv"
+    load = pd.read_csv(load_path)
+    load["non_shiftable_load"] = 0.0
+    load.to_csv(load_path, index=False)
+    schema_path = dataset_dir / "schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema["root_directory"] = str(dataset_dir)
+    if core_bundle:
+        schema["observation_bundles"] = {"entity_core_electrical": True}
+    schema_path.write_text(json.dumps(schema), encoding="utf-8")
+    env = CityLearnEnv(
+        str(schema_path), central_agent=True, seconds_per_time_step=seconds, episode_time_steps=4, random_seed=0
+    )
+    try:
+        env.reset(seed=0)
+        building = env.buildings[0]
+        ev = building.electric_vehicle_chargers[0].connected_electric_vehicle
+        ev.battery.soc[0] = 0.999
+        actions = BusinessAsUsualAgent(env).predict([])
+        env.step(actions)
+        return actions[0], float(ev.battery.soc[0]), float(building.net_electricity_consumption[0])
+    finally:
+        env.close()
+
+
+# At 15 s steps the EV battery's capacity-power curve limits charging below the
+# available_charge_power_kw observation, which leaves a small export with and
+# without the bundle. That curve is not observable, see docs/baselines.md.
+@pytest.mark.parametrize("seconds", [900, 3600])
+def test_bau_battery_covers_accepted_ev_energy_instead_of_exporting_nominal_request(tmp_path: Path, seconds: int):
+    # Issue #190, consequence 2: without entity_core_electrical, BAU reserved
+    # the charger's 7.2 kW for an EV that accepts ~0.02 kWh, and the home
+    # battery discharged for it and exported.
+    results = {bundle: _bau_step_with_nearly_full_ev(tmp_path, seconds, bundle) for bundle in (False, True)}
+    for actions, soc, net in results.values():
+        assert actions[-1] == 1.0
+        assert soc == pytest.approx(1.0, abs=1e-6)
+        assert net >= -1.0e-5
+    # Without the bundle, the estimate leads to the decision the observation gives.
+    np.testing.assert_allclose(results[False][0], results[True][0], rtol=0.0, atol=1.0e-6)
+
+
 def test_business_as_usual_stops_below_target_instead_of_overshooting_charger_minimum(tmp_path: Path):
     dataset_dir = tmp_path / "minute_ev_demo"
     shutil.copytree(SOURCE_DATASET, dataset_dir)
@@ -154,7 +201,7 @@ def test_bau_definition_and_removed_names():
     for name in ("NormalPolicy", "NormalTargetPolicy", "NormalNoBatteryPolicy", "ServiceOnlyBaselineAgent",
                  "GridAwareBaselineAgent", "CommunityAwareBaselineAgent"):
         assert not hasattr(baseline, name)
-    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-full-charge-v2"
+    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-full-charge-v3"
 
 
 @pytest.mark.parametrize("kwargs", [
@@ -572,15 +619,15 @@ def test_bau_charge_target_is_validated_and_recorded():
             BusinessAsUsualAgent(env, ev_charge_target="half")
         assert BusinessAsUsualAgent(env).ev_charge_target == "full"
         agent = BusinessAsUsualAgent(env, ev_charge_target="requested")
-        assert agent.DEFINITION_VERSION == "immediate-user-target-v1"
+        assert agent.DEFINITION_VERSION == "immediate-user-target-v2"
         parameters = agent.comparison_identity()["parameters"]
         assert parameters["ev_charge_target"] == "requested"
-        assert parameters["definition_version"] == "immediate-user-target-v1"
+        assert parameters["definition_version"] == "immediate-user-target-v2"
     finally:
         env.close()
 
 
-@pytest.mark.parametrize("target,definition", [("requested", "immediate-user-target-v1"), ("full", "immediate-full-charge-v2")])
+@pytest.mark.parametrize("target,definition", [("requested", "immediate-user-target-v2"), ("full", "immediate-full-charge-v3")])
 def test_evaluate_v2_uses_the_selected_bau(target, definition):
     env = CityLearnEnv(str(SOURCE_DATASET / "schema.json"), central_agent=True, episode_time_steps=4,
                        random_seed=0, business_as_usual_ev_charge_target=target)
@@ -674,7 +721,7 @@ def test_bau_reference_cache_follows_the_selected_target():
         env.business_as_usual_ev_charge_target = "requested"
         requested = env.run_business_as_usual_baseline()
         assert requested is not full
-        assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v1"
+        assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v2"
     finally:
         env.close()
 
@@ -788,3 +835,31 @@ def test_baseline_attaches_again_when_the_topology_changes():
     finally:
         env.close()
     _assert_same_actions(reused, rebuilt)
+
+
+@pytest.mark.parametrize("agent_class", [BusinessAsUsualAgent, RBCBasicPolicy])
+def test_battery_does_not_recharge_from_the_grid_after_its_own_export(agent_class):
+    # These baselines charge the battery only from PV surplus. (RBCSmartPolicy and RBCCommunityPolicy
+    # also charge it from the grid at cheap prices by design, so they are not checked here.) Without the entity_core_electrical bundle the baselines took the last interval's export as PV
+    # surplus. When a battery discharge overshot the load and was exported, the battery recharged from
+    # the grid in the next step: 22.8 kWh in 27 of the first 48 hours of this dataset with the BAU.
+    env = CityLearnEnv(
+        "citylearn_three_phase_electrical_service_demo", central_agent=True, episode_time_steps=48,
+        random_seed=0, interface="flat",
+    )
+    try:
+        observations, _ = env.reset(seed=0)
+        agent = agent_class(env)
+        while not env.terminated:
+            observations, *_ = env.step(agent.predict(observations))
+        steps = env.time_step
+        grid_charge = 0.0
+        for building in env.buildings:
+            battery = np.asarray(building.electrical_storage.electricity_consumption[:steps], dtype="float64")
+            net = np.asarray(building.net_electricity_consumption[:steps], dtype="float64")
+            charge = np.clip(battery, 0.0, None)
+            surplus_without_battery = np.clip(battery - net, 0.0, None)
+            grid_charge += float(np.sum(charge - np.minimum(charge, surplus_without_battery)))
+        assert grid_charge == pytest.approx(0.0, abs=1.0e-6)
+    finally:
+        env.close()

@@ -214,9 +214,9 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
     """Reference BAU: immediate EV charging, earliest appliance start, PV self-consumption.
 
     A connected EV is charged at once and at maximum power. With
-    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v2``) it charges
+    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v3``) it charges
     to 100%, as the BAU of CityLearn 3.1–3.3 did. With
-    ``ev_charge_target='requested'`` (``immediate-user-target-v1``) it stops at the
+    ``ev_charge_target='requested'`` (``immediate-user-target-v2``) it stops at the
     user's requested departure SOC: the last command is limited to the remaining
     energy gap, and when that command is below the charger minimum the EV stops
     slightly below the target instead of overshooting it. Appliances start at the first admissible
@@ -227,11 +227,11 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
     """
 
     EV_CHARGE_TARGETS: ClassVar[Mapping[str, Tuple[type, str]]] = {
-        'requested': (engines.NormalTargetPolicy, 'immediate-user-target-v1'),
-        'full': (engines.NormalPolicy, 'immediate-full-charge-v2'),
+        'requested': (engines.NormalTargetPolicy, 'immediate-user-target-v2'),
+        'full': (engines.NormalPolicy, 'immediate-full-charge-v3'),
     }
     ENGINE_CLASS = engines.NormalPolicy
-    DEFINITION_VERSION = 'immediate-full-charge-v2'
+    DEFINITION_VERSION = 'immediate-full-charge-v3'
 
     def __init__(self, env: CityLearnEnv, ev_charge_target: str = 'full', **hyperparameters: Any):
         self.ENGINE_CLASS, self.DEFINITION_VERSION = self.definition(ev_charge_target)
@@ -263,7 +263,7 @@ class RBCBasicPolicy(_RuleBaselineAgent):
     """
 
     ENGINE_CLASS = engines.RBCBasicPolicy
-    DEFINITION_VERSION = 'basic-v2'
+    DEFINITION_VERSION = 'basic-v3'
 
 
 class RBCSmartPolicy(_RuleBaselineAgent):
@@ -275,7 +275,7 @@ class RBCSmartPolicy(_RuleBaselineAgent):
     """
 
     ENGINE_CLASS = engines.RBCSmartLocalPolicy
-    DEFINITION_VERSION = 'smart-local-v2'
+    DEFINITION_VERSION = 'smart-local-v3'
 
 
 class RBCCommunityPolicy(_RuleBaselineAgent):
@@ -290,7 +290,7 @@ class RBCCommunityPolicy(_RuleBaselineAgent):
     """
 
     ENGINE_CLASS = engines.RBCCommunityPolicy
-    DEFINITION_VERSION = 'community-v2'
+    DEFINITION_VERSION = 'community-v3'
 
 
 class ZeroActionBaselineAgent(Agent):
