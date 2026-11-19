@@ -3,8 +3,71 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
-## Por publicar
+## v3.6.0 - 2026-11-19
 
+A 3.6.0 reúne 26 pull requests: correções da física, dos KPIs, das baselines, dos
+agentes, do carregamento de dados e dos exports, passos de simulação mais rápidos,
+três funcionalidades opcionais e Python 3.10 como versão mínima, com um CI mais
+amplo. Os resultados só mudam onde se aplica uma correção; o
+[guia de migração](../migration.md#upgrade-from-350-to-360) indica que corridas
+repetir.
+
+### Correções
+
+Física e KPIs:
+
+- **Potência e energia em passos inferiores a uma hora.** Vários limites
+  comparavam uma potência em kW com uma energia por passo em kWh, que só
+  coincidem a 3600 s. `available_nominal_power` é agora uma potência em qualquer
+  duração de passo; as bombas de calor e os aquecedores elétricos já não
+  excedem `nominal_power` ao carregar o armazenamento térmico; com dados
+  nativos inferiores a uma hora, um equipamento fornece no máximo
+  `nominal_power` x duração do passo; durante um corte, a produção local
+  disponível para os equipamentos e para a carga não deslocável é convertida
+  em potência e para a resolução do dataset; e as observações `cooling_demand`,
+  `heating_demand` e `dhw_demand` convertem a descarga do armazenamento para a
+  resolução do dataset quando `time_step_ratio` é diferente de 1.
+  ([#185](https://github.com/citylearn-project/CityLearn/pull/185))
+- **Equipamentos subdimensionados.** Um equipamento que não satisfaz a procura
+  já não lança `AssertionError: demand is greater than ..._device max output`. A
+  sua produção é limitada, é emitido um `RuntimeWarning` uma vez por
+  equipamento e episódio, e a diferença é contabilizada como energia de serviço
+  térmico não servida.
+  ([#185](https://github.com/citylearn-project/CityLearn/pull/185))
+- **Estimativa da potência de base.** A estimativa usada na margem do serviço
+  elétrico e nos KPI de viabilidade já não subtrai duas vezes a descarga do
+  armazenamento térmico e inclui a potência das escadas rolantes, incluindo um
+  estado pedido no próprio passo.
+  ([#185](https://github.com/citylearn-project/CityLearn/pull/185))
+- **Motivos de limitação.** `clip_reason_phase_headroom` e
+  `clip_reason_export_headroom` indicam apenas as fases do próprio equipamento e
+  o sentido limitado.
+  ([#185](https://github.com/citylearn-project/CityLearn/pull/185))
+- **Observações normalizadas.** `observations(normalize=True,
+  periodic_normalization=False)` já não lança `KeyError: 'month'`.
+  ([#185](https://github.com/citylearn-project/CityLearn/pull/185))
+- **Retenção do set point do ocupante.** `set_point_hold_time_steps` no schema
+  de um edifício chega agora a `LogisticRegressionOccupantInteractionBuilding`.
+  Nos datasets do bairro do Quebec (4 passos), as alterações do set point pelo
+  ocupante voltam ao horário após 4 passos sem interação, em vez de se manterem
+  até ao fim do episódio.
+  ([#185](https://github.com/citylearn-project/CityLearn/pull/185))
+- **Baseline do distrito com topologia dinâmica.** As séries de referência do
+  distrito somavam só os membros ativos no momento da avaliação, enquanto as
+  séries de controlo guardam o consumo passado de todos os membros; um membro que
+  saía contava só do lado do controlo. Passam a somar todos os membros que
+  estiveram ativos, cada um nos passos em que foi membro ([#182](https://github.com/citylearn-project/CityLearn/pull/182)).
+- **Históricos do serviço elétrico em eventos de topologia.** Os históricos de
+  pressão pedida e de potência total e por fase de um membro já não se apagam
+  quando ele volta a entrar ou quando um dos seus equipamentos muda ([#182](https://github.com/citylearn-project/CityLearn/pull/182)).
+- **Ruído de robustez.** Com `noise_std > 0`, o ruído gaussiano podia tornar
+  negativas a produção solar, as irradiâncias solares e a intensidade
+  carbónica, acrescentar produção durante a noite e levar a humidade relativa
+  exterior para fora de [0, 100] %. Uma regra limita agora os valores com ruído:
+  as grandezas solares ficam `>= 0` e sem ruído à noite, a humidade fica em
+  [0, 100] % e a intensidade carbónica fica `>= 0`. O ruído gerado não muda,
+  por isso os valores dentro do intervalo são idênticos bit a bit.
+  ([#204](https://github.com/citylearn-project/CityLearn/pull/204))
 - **Capacidade de descarga da bateria durante cortes.** Durante um corte de
   energia, a tabela entity `storage` indicava `can_discharge = 0` e
   `available_discharge_power_kw = 0`, embora a bateria possa descarregar para o
@@ -20,7 +83,12 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   desce de 0,0015 para 0,0007 e de 0,0017 para 0,0008; o custo e as emissões não
   mudam. Em `pt_rec_100/evaluation/rec_100_allin.json` as observações mudam, mas
   os KPIs do BAU dessa semana não. Os datasets sem cortes e a interface flat não
-  mudam. Ver o [guia de migração](../migration.md#unreleased).
+  mudam. Ver o [guia de migração](../migration.md#upgrade-from-350-to-360).
+  Fecha a [#220](https://github.com/citylearn-project/CityLearn/issues/220).
+  ([#221](https://github.com/citylearn-project/CityLearn/pull/221))
+
+Baselines:
+
 - **Baselines sem o bundle `entity_core_electrical`.** Duas alterações aplicam-se
   apenas aos datasets cujo schema não ativa esse bundle; os `pt_rec_*` e o
   `citylearn_challenge_2022_phase_all_plus_evs` ativam-no e não mudam. Primeiro,
@@ -43,18 +111,9 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   no `citylearn_challenge_2023_phase_2_local_evaluation` e no
   `citylearn_three_phase_electrical_service_demo`, exceto o BAU por omissão neste
   último, que custa mais 0,4% porque a bateria guarda agora PV que antes ia para
-  o mercado da comunidade. Ver o [guia de migração](../migration.md#unreleased).
-- **Apoio do veículo ao edifício durante cortes (opcional).** Com
-  `power_outage.vehicle_to_building: true`, um VE ligado pode descarregar para o
-  seu edifício enquanto a rede está em falha, como apoio vehicle-to-home. A
-  descarga limita-se à carga não deslocável e à carga dos equipamentos térmicos
-  que o PV e a bateria não cobrem, pelo que o edifício não exporta para a rede em
-  falha. Na interface entity, `can_discharge` e `available_discharge_power_kw` do
-  carregador indicam a capacidade de descarga do veículo durante o corte. A
-  descarga pode deixar o veículo abaixo do SOC pedido para a partida; isso fica a
-  cargo do controlador e aparece nos KPIs de partida dos VEs. A opção está
-  desligada por omissão e, sem ela, os resultados não mudam. Ver o
-  [guia de migração](../migration.md#unreleased).
+  o mercado da comunidade. Ver o [guia de migração](../migration.md#upgrade-from-350-to-360).
+  A primeira alteração resolve a consequência 2 da [#190](https://github.com/citylearn-project/CityLearn/issues/190); a consequência 1, o atraso de um passo da bateria, mantém-se, e a [#190](https://github.com/citylearn-project/CityLearn/issues/190) continua aberta.
+  ([#213](https://github.com/citylearn-project/CityLearn/pull/213))
 - **Baselines leem observações corrompidas na interface flat.** Na interface
   flat, o env corrompe apenas os vetores flat, e as baselines, que leem
   observações entity, decidiam a partir de valores sem corrupção; na interface
@@ -67,15 +126,91 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   histórico de robustez do env não mudam; os KPIs do controlador em execuções
   flat com eventos de observação podem mudar. A referência BAU nativa de
   `evaluate_v2()` (`predict([])`) continua sem corrupção.
-- **Ruído de robustez.** Com `noise_std > 0`, o ruído gaussiano podia tornar
-  negativas a produção solar, as irradiâncias solares e a intensidade
-  carbónica, acrescentar produção durante a noite e levar a humidade relativa
-  exterior para fora de [0, 100] %. Uma regra limita agora os valores com ruído:
-  as grandezas solares ficam `>= 0` e sem ruído à noite, a humidade fica em
-  [0, 100] % e a intensidade carbónica fica `>= 0`. O ruído gerado não muda,
-  por isso os valores dentro do intervalo são idênticos bit a bit.
-- As simulações com `noise_std = 0`, incluindo todos os datasets incluídos, não
-  mudam. Ver o [guia de migração](../migration.md#unreleased).
+  ([#212](https://github.com/citylearn-project/CityLearn/pull/212))
+
+Agentes e wrappers ([#208](https://github.com/citylearn-project/CityLearn/pull/208)):
+
+- **`TabularQLearning`** deixa de usar o estado seguinte nas transições terminais;
+  **`MARLISARBC`** explora com o seu RBC em vez de ações aleatórias; **`MARLISA`**
+  com `pca_compression < 1` dimensiona as redes para a saída da PCA.
+- **Wrappers discretos** declaram exatamente os estados que codificam e
+  funcionam sobre os wrappers normalizados; `ClippedObservationWrapper` já não
+  altera as observações em cache do ambiente; **`OnehotEncoding`** dá `ValueError`
+  para um valor fora das classes.
+
+Carregamento de dados ([#209](https://github.com/citylearn-project/CityLearn/pull/209)):
+
+- **Ficheiros de carregadores com estados vazios ou decimais** são lidos como
+  números; uma célula vazia tornava ilegíveis todos os estados do carregador.
+- **VE `InventoryBattery`** carregam sem `nominal_power`, e o **SOC inicial
+  aleatório** dos VE respeita `min_soc` e `max_soc`.
+- **Observações de entidades com `max_soc < 1`** contam a energia e a potência de
+  carga disponíveis até `max_soc`.
+
+Datasets e cache de datasets:
+
+- **Caches incompletas.** Um dataset em cache passa a estar completo só quando
+  existem todos os ficheiros que o `CityLearnEnv` lê do schema; uma cache
+  incompleta é substituída de uma vez e o modo offline indica os ficheiros em
+  falta ([#176](https://github.com/citylearn-project/CityLearn/issues/176), [#181](https://github.com/citylearn-project/CityLearn/pull/181)).
+- **Variáveis de ambiente.** `CITYLEARN_OFFLINE`, `CITYLEARN_DATASET_GITHUB_ACCOUNT`,
+  `CITYLEARN_DATASET_REPOSITORY` e `CITYLEARN_DATASET_TAG` são lidas quando o
+  `CityLearnEnv` ou o `DataSet` é criado, e não só na importação ([#198](https://github.com/citylearn-project/CityLearn/pull/198)).
+- **Nomes dos datasets.** `DataSet.get_dataset_names()` já não descarta um dataset
+  cujo nome aparece no caminho pai e aceita `datasets_path` com barra final;
+  chamadas simultâneas listam o GitHub uma só vez ([#199](https://github.com/citylearn-project/CityLearn/pull/199)).
+- **Datasets Parquet de 15 s carregam a partir da cache.** Os schemas de
+  `citylearn_three_phase_electrical_service_demo_15s_parquet`,
+  `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` e
+  `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` definiam um
+  `root_directory` relativo ao repositório. O `CityLearnEnv` com o caminho do
+  schema devolvido por `DataSet().get_dataset(name)` procurava os ficheiros
+  dentro da pasta da cache e falhava com `FileNotFoundError`
+  ([#194](https://github.com/citylearn-project/CityLearn/issues/194)). Os três
+  schemas definem agora `"root_directory": null`, como os restantes datasets. O
+  `CityLearnEnv(name)` e os caminhos de schema num clone do repositório já
+  encontravam os ficheiros e continuam a ler a mesma pasta.
+  ([#197](https://github.com/citylearn-project/CityLearn/pull/197))
+
+Exports, CLI e ficheiros ([#207](https://github.com/citylearn-project/CityLearn/pull/207), [#202](https://github.com/citylearn-project/CityLearn/pull/202), [#203](https://github.com/citylearn-project/CityLearn/pull/203)):
+
+- **Export do BAU** escreve só os passos executados, como os exports de controlo;
+  o **export dos carregadores** sem VE escreve `-1.00` em `EV SOC-%` em vez de
+  acrescentar a coluna `EV SOC`.
+- **CLI.** `citylearn simulate ... evaluate` e `train --evaluate` deixam de
+  falhar, e `train --evaluate` avalia o agente treinado. `load_agent()` mantém os
+  atributos do agente no schema.
+- **Windows.** Os ficheiros JSON e YAML são lidos e escritos em UTF-8 e
+  `run_work_order()` ativa ambientes virtuais com `activate.bat`.
+- **Comparação de KPIs de várias comunidades.** `load_kpis()` e `compare_exports()`
+  leem exports com nomes repetidos por comunidade.
+- **JSON com valores NumPy.** `FileHandler.write_json` escreve booleanos, números e
+  arrays NumPy como booleanos, números e listas JSON, em vez de texto.
+- **pandas 3.** Os exports deixam de emitir os dois avisos de descontinuação do
+  pandas 3, e uma coluna Parquet que mistura texto e números é escrita sem erro.
+
+### Desempenho
+
+Nenhuma destas alterações muda resultados; cada PR comparou trajetórias e KPIs bit
+a bit com o master.
+
+- **Passos individuais.** O código de cada passo lê um único passo das séries dos
+  equipamentos e do armazenamento em vez de reconstruir a série toda, e o
+  `evaluate_v2()` constrói os registos sem varrer DataFrames ([#183](https://github.com/citylearn-project/CityLearn/pull/183)).
+- **Janelas das séries temporais.** O `TimeSeriesData` guarda a janela de cada
+  variável como atributo simples, sem `__getattribute__` em Python nem nova cópia
+  em cada leitura ([#210](https://github.com/citylearn-project/CityLearn/pull/210)).
+- **Contrafactuais do distrito.** As doze séries `*_without_storage*` do distrito
+  somam uma matriz NumPy em vez de construir um DataFrame ([#206](https://github.com/citylearn-project/CityLearn/pull/206)).
+- **Reinícios das baselines.** As baselines constroem o motor de políticas uma vez
+  por agente; o primeiro `predict()` depois de um reset passa de 81 para 48 ms
+  (flat) e de 54 para 22 ms (entity) em
+  `citylearn_challenge_2022_phase_all_plus_evs` ([#211](https://github.com/citylearn-project/CityLearn/pull/211)).
+
+### Novas funcionalidades opcionais
+
+Estão desligadas por omissão; os schemas e resultados existentes não mudam.
+
 - **Reward para a carga não servida durante falhas de energia.** Durante uma
   falha de energia o edifício não pode importar, por isso o consumo líquido é
   zero e as rewards baseadas na importação da rede não penalizam a carga que o
@@ -87,6 +222,7 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   ([#188](https://github.com/citylearn-project/CityLearn/issues/188)). A reward
   funciona nas duas interfaces; a observação existe apenas na interface flat.
   Ambas são opcionais, pelo que os schemas e resultados existentes não mudam.
+  ([#195](https://github.com/citylearn-project/CityLearn/pull/195))
 - **Potência de rede disponível variável no tempo.** O campo
   `buildings.<name>.electrical_service.available_grid_power` aponta para uma
   série, por timestep, da potência que o edifício pode importar, em kW, num
@@ -103,60 +239,70 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   intervalo quando há série, e as baselines baseadas em regras limitam com ela
   a margem de importação planeada. Os edifícios sem série não mudam. Ver a
   [referência do schema](schema_reference.md#potencia-de-rede-disponivel).
+  ([#216](https://github.com/citylearn-project/CityLearn/pull/216))
+- **Apoio do veículo ao edifício durante cortes (opcional).** Com
+  `power_outage.vehicle_to_building: true`, um VE ligado pode descarregar para o
+  seu edifício enquanto a rede está em falha, como apoio vehicle-to-home. A
+  descarga limita-se à carga não deslocável e à carga dos equipamentos térmicos
+  que o PV e a bateria não cobrem, pelo que o edifício não exporta para a rede em
+  falha. Na interface entity, `can_discharge` e `available_discharge_power_kw` do
+  carregador indicam a capacidade de descarga do veículo durante o corte. A
+  descarga pode deixar o veículo abaixo do SOC pedido para a partida; isso fica a
+  cargo do controlador e aparece nos KPIs de partida dos VEs. A opção está
+  desligada por omissão e, sem ela, os resultados não mudam. Ver o
+  [guia de migração](../migration.md#upgrade-from-350-to-360).
+  ([#205](https://github.com/citylearn-project/CityLearn/pull/205))
+
+### Build e CI
+
 - **Python 3.10 ou mais recente.** O CityLearn passa a exigir Python 3.10 e é
   testado em Python 3.10 a 3.14, com NumPy 1.x em 3.10. O Python 3.9 chegou ao
   fim de vida em outubro de 2025. Em Python 3.9, o `pip` continua a instalar o
   CityLearn 3.5.0. Os comandos `simulate train` e `simulate evaluate` da CLI usavam
   `datetime.UTC`, que só existe a partir do Python 3.11, e falhavam em Python
   3.10; usam agora `datetime.timezone.utc`.
-- **Datasets Parquet de 15 s carregam a partir da cache.** Os schemas de
-  `citylearn_three_phase_electrical_service_demo_15s_parquet`,
-  `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet` e
-  `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` definiam um
-  `root_directory` relativo ao repositório. O `CityLearnEnv` com o caminho do
-  schema devolvido por `DataSet().get_dataset(name)` procurava os ficheiros
-  dentro da pasta da cache e falhava com `FileNotFoundError`
-  ([#194](https://github.com/citylearn-project/CityLearn/issues/194)). Os três
-  schemas definem agora `"root_directory": null`, como os restantes datasets. O
-  `CityLearnEnv(name)` e os caminhos de schema num clone do repositório já
-  encontravam os ficheiros e continuam a ler a mesma pasta.
-- A correção dos datasets Parquet não muda os ficheiros de entrada nem os
-  resultados de simulação; não é necessária migração.
+  ([#218](https://github.com/citylearn-project/CityLearn/pull/218))
+- **Metadados em `pyproject.toml`.** Os metadados do pacote passam do `setup.py`
+  para uma tabela PEP 621 `[project]` e o `setup.py` é removido; o wheel contém os
+  mesmos ficheiros ([#201](https://github.com/citylearn-project/CityLearn/pull/201)).
+- **Teste de instalação e tabela de compatibilidade.** O CI constrói o wheel,
+  instala-o com as dependências do PyPI e corre um teste de simulação e export em
+  macOS, Windows e Ubuntu ([#138](https://github.com/citylearn-project/CityLearn/issues/138)). O guia de instalação ganha uma tabela de
+  compatibilidade das versões de Python e das dependências desde a 1.5.0
+  ([#150](https://github.com/citylearn-project/CityLearn/issues/150)), e as GitHub Actions são atualizadas ([#217](https://github.com/citylearn-project/CityLearn/pull/217)).
+- **Caminhos em Windows nos testes.** Os testes de descarga de datasets com
+  subpastas comparam caminhos em formato POSIX ([#200](https://github.com/citylearn-project/CityLearn/pull/200)).
 
-- **Potência e energia em passos inferiores a uma hora.** Vários limites
-  comparavam uma potência em kW com uma energia por passo em kWh, que só
-  coincidem a 3600 s. `available_nominal_power` é agora uma potência em qualquer
-  duração de passo; as bombas de calor e os aquecedores elétricos já não
-  excedem `nominal_power` ao carregar o armazenamento térmico; com dados
-  nativos inferiores a uma hora, um equipamento fornece no máximo
-  `nominal_power` x duração do passo; durante um corte, a produção local
-  disponível para os equipamentos e para a carga não deslocável é convertida
-  em potência e para a resolução do dataset; e as observações `cooling_demand`,
-  `heating_demand` e `dhw_demand` convertem a descarga do armazenamento para a
-  resolução do dataset quando `time_step_ratio` é diferente de 1.
-- **Equipamentos subdimensionados.** Um equipamento que não satisfaz a procura
-  já não lança `AssertionError: demand is greater than ..._device max output`. A
-  sua produção é limitada, é emitido um `RuntimeWarning` uma vez por
-  equipamento e episódio, e a diferença é contabilizada como energia de serviço
-  térmico não servida.
-- **Estimativa da potência de base.** A estimativa usada na margem do serviço
-  elétrico e nos KPI de viabilidade já não subtrai duas vezes a descarga do
-  armazenamento térmico e inclui a potência das escadas rolantes, incluindo um
-  estado pedido no próprio passo.
-- **Motivos de limitação.** `clip_reason_phase_headroom` e
-  `clip_reason_export_headroom` indicam apenas as fases do próprio equipamento e
-  o sentido limitado.
-- **Observações normalizadas.** `observations(normalize=True,
-  periodic_normalization=False)` já não lança `KeyError: 'month'`.
-- **Retenção do set point do ocupante.** `set_point_hold_time_steps` no schema
-  de um edifício chega agora a `LogisticRegressionOccupantInteractionBuilding`.
-  Nos datasets do bairro do Quebec (4 passos), as alterações do set point pelo
-  ocupante voltam ao horário após 4 passos sem interação, em vez de se manterem
-  até ao fim do episódio.
-- As simulações com dados e passo de controlo de 3600 s não mudam, exceto nos
-  dois datasets do bairro do Quebec. As simulações com passos inferiores a uma
-  hora mudam quando um equipamento ou armazenamento térmico atingia um destes
-  limites. Ver o [guia de migração](../migration.md#unreleased).
+### Validação
+
+No master, no commit da versão, com Python 3.10 e NumPy 2: o conjunto completo de
+testes passou (1 897 testes, 2 ignorados) e a auditoria estrita passou (física,
+contratos de entidades, os 41 datasets incluídos e as referências de comandos
+fixos). O sdist e o wheel foram construídos e passaram o `twine check`. O wheel,
+instalado com as dependências num ambiente virtual limpo, passou o `pip check` e o
+teste de simulação e export do pacote instalado. Os exports CSV e Parquet do
+`pt_rec_4` feitos com a 3.6.0 abriram no importador de resultados da CityLearn UI
+com as mesmas 1 036 linhas de KPIs e 15 séries, e os testes da UI passaram. O CI da
+versão cobre Python 3.10 a 3.14, NumPy 1 e o teste de instalação em macOS, Windows
+e Ubuntu.
+
+### Contribuidores
+
+- **Mark Colley** ([@M-Colley](https://github.com/M-Colley)): as correções da
+  física, KPIs, baselines, agentes, carregamento de dados, cache de datasets,
+  exports e build, o trabalho de desempenho e o apoio do veículo ao edifício em
+  [#181](https://github.com/citylearn-project/CityLearn/pull/181), [#182](https://github.com/citylearn-project/CityLearn/pull/182), [#183](https://github.com/citylearn-project/CityLearn/pull/183), [#185](https://github.com/citylearn-project/CityLearn/pull/185), [#197](https://github.com/citylearn-project/CityLearn/pull/197), [#198](https://github.com/citylearn-project/CityLearn/pull/198), [#199](https://github.com/citylearn-project/CityLearn/pull/199), [#200](https://github.com/citylearn-project/CityLearn/pull/200), [#201](https://github.com/citylearn-project/CityLearn/pull/201), [#202](https://github.com/citylearn-project/CityLearn/pull/202), [#203](https://github.com/citylearn-project/CityLearn/pull/203), [#204](https://github.com/citylearn-project/CityLearn/pull/204), [#205](https://github.com/citylearn-project/CityLearn/pull/205), [#206](https://github.com/citylearn-project/CityLearn/pull/206), [#207](https://github.com/citylearn-project/CityLearn/pull/207), [#208](https://github.com/citylearn-project/CityLearn/pull/208), [#209](https://github.com/citylearn-project/CityLearn/pull/209), [#210](https://github.com/citylearn-project/CityLearn/pull/210), [#211](https://github.com/citylearn-project/CityLearn/pull/211), [#212](https://github.com/citylearn-project/CityLearn/pull/212), [#213](https://github.com/citylearn-project/CityLearn/pull/213),
+  e a potência de rede disponível variável, o teste de instalação, a tabela de
+  compatibilidade e a versão mínima de Python da #196, integrados como [#216](https://github.com/citylearn-project/CityLearn/pull/216),
+  [#217](https://github.com/citylearn-project/CityLearn/pull/217) e [#218](https://github.com/citylearn-project/CityLearn/pull/218).
+- **Prawal Pokharel** ([@prawalpokharel](https://github.com/prawalpokharel)): a
+  reward e a observação da energia não servida durante cortes em [#195](https://github.com/citylearn-project/CityLearn/pull/195).
+- **Tiago Fonseca** ([@calofonseca](https://github.com/calofonseca)): revisão,
+  validação e integração da versão, divisão da #196 em [#216](https://github.com/citylearn-project/CityLearn/pull/216), [#217](https://github.com/citylearn-project/CityLearn/pull/217) e
+  [#218](https://github.com/citylearn-project/CityLearn/pull/218) com a versão mínima Python 3.10, e correção da capacidade de descarga
+  da bateria durante cortes em [#221](https://github.com/citylearn-project/CityLearn/pull/221).
+
+[Alterações completas](https://github.com/citylearn-project/CityLearn/compare/v3.5.0...v3.6.0)
 
 ## v3.5.0 - 2026-11-17
 

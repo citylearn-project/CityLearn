@@ -46,7 +46,7 @@ repository-relative path is not created by `pip install`.
 The [release history](releases.md) retains version-specific changes and the
 development-line history.
 
-## Unreleased
+## Upgrade from 3.5.0 to 3.6.0
 
 ### Battery discharge features during outages
 
@@ -57,7 +57,7 @@ rule-based baselines, can take different actions during outages, so the
 native BAU reference changes on scenarios with outages under the entity
 interface, such as `pt_rec_30/evaluation/rec_30_robustness.json`,
 `rec_30_combined.json` and `pt_rec_100/evaluation/rec_100_allin.json`. This
-change belongs to the same unreleased baseline definitions as the change for
+change belongs to the same 3.6.0 baseline definitions as the change for
 datasets without `entity_core_electrical` (`immediate-full-charge-v3` and the
 others). Rerun the controller and its reference on those scenarios. Agents
 trained on these features may need retraining.
