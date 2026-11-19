@@ -219,6 +219,12 @@ against references with the same definition.</p>
 entity observations (current state, schedules and the simulator’s published
 forecasts). They work with the flat and the entity interface and return flat
 action vectors in <code class="docutils literal notranslate"><span class="pre">env.action_names</span></code> order.</p>
+<p>With <a class="reference internal" href="robustness_reference.html"><span class="std std-doc">robustness</span></a> observation events, a baseline run as
+a controller reads the corrupted observations under both interfaces and takes the
+same actions. Under the flat interface the env corrupts only the flat vectors, so
+<code class="docutils literal notranslate"><span class="pre">predict(observations)</span></code> applies the step’s events to the entity observations the
+baseline reads, as the entity interface does. <code class="docutils literal notranslate"><span class="pre">predict([])</span></code>, which the native BAU
+reference of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> uses, reads them uncorrupted.</p>
 </section>
 <section id="known-limits">
 <h3>Known limits<a class="headerlink" href="#known-limits" title="Link to this heading"></a></h3>

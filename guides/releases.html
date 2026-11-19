@@ -101,6 +101,7 @@
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Releases</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#changed">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#fixed">Fixed</a></li>
 </ul>
 </li>
@@ -179,12 +180,19 @@ CityLearn release. Older notes are retained in the <a class="reference internal"
 <a class="reference internal" href="publishing.html"><span class="std std-doc">publishing guide</span></a>.</p>
 <section id="unreleased">
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<section id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Baselines read corrupted observations under the flat interface.</strong> Under the flat interface the env corrupts only the flat vectors, and the baselines, which read entity observations, decided from uncorrupted values; under the entity interface they read the corrupted ones (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/192">#192</a>). Run as controllers (<code class="docutils literal notranslate"><span class="pre">predict(observations)</span></code>), they now get the step’s robustness observation events applied to their entity observations as the entity interface applies them, and take the same actions under both interfaces. No random stream is consumed, and the env’s flat observations and robustness history are unchanged; the controller KPIs of flat runs with observation events can change. The native BAU reference of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> (<code class="docutils literal notranslate"><span class="pre">predict([])</span></code>) stays uncorrupted. See the <a class="reference internal" href="migration.html#unreleased"><span class="std std-ref">migration guide</span></a>.</p></li>
+</ul>
+</section>
 <section id="fixed">
 <h3>Fixed<a class="headerlink" href="#fixed" title="Link to this heading"></a></h3>
 <ul class="simple">
+<li><p><strong>Robustness noise.</strong> With <code class="docutils literal notranslate"><span class="pre">noise_std</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, Gaussian noise could make solar generation, solar irradiance and carbon intensity negative, add generation at night and push outdoor relative humidity outside [0, 100] %. One rule now bounds the noisy values: solar quantities stay <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code> and get no noise at night, humidity stays within [0, 100] % and carbon intensity stays <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code>. The noise draws are unchanged, so values within range are bit-identical. Solar generation noise uses the generation series for its shape instead of the indoor temperature series; both have the same length, so the draws are the same. Runs with <code class="docutils literal notranslate"><span class="pre">noise_std</span> <span class="pre">=</span> <span class="pre">0</span></code>, including all bundled datasets, are unchanged. See the <a class="reference internal" href="migration.html#unreleased"><span class="std std-ref">migration guide</span></a>.</p></li>
 <li><p><strong>15 s Parquet datasets load from the dataset cache.</strong> The schemas of <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo_15s_parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet</span></code> and <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_assets_only_demo_15s_parquet</span></code> set a repository-relative <code class="docutils literal notranslate"><span class="pre">root_directory</span></code>. Passing the schema path returned by <code class="docutils literal notranslate"><span class="pre">DataSet().get_dataset(name)</span></code> to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> resolved it against the cache folder and raised <code class="docutils literal notranslate"><span class="pre">FileNotFoundError</span></code> for <code class="docutils literal notranslate"><span class="pre">&lt;cache&gt;/&lt;dataset&gt;/data/datasets/&lt;dataset&gt;/Building_1.parquet</span></code> (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/194">#194</a>). The three schemas now set <code class="docutils literal notranslate"><span class="pre">&quot;root_directory&quot;:</span> <span class="pre">null</span></code>, like the other datasets. <code class="docutils literal notranslate"><span class="pre">CityLearnEnv(name)</span></code> and schema paths inside a repository checkout already found the files and still read the same folder.</p></li>
 </ul>
-<p>Input files and simulation results are unchanged; no migration is required.</p>
+<p>The Parquet fix leaves input files and simulation results unchanged; no migration is required.</p>
 </section>
 </section>
 <section id="v3-5-0-2026-11-17">

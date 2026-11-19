@@ -212,6 +212,19 @@
 <span class="sig-name descname"><span class="pre">audit_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/robustness.html#CityLearnRobustnessService.audit_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.robustness.CityLearnRobustnessService.audit_summary" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.internal.robustness.CityLearnRobustnessService.entity_observation_view">
+<span class="sig-name descname"><span class="pre">entity_observation_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/internal/robustness.html#CityLearnRobustnessService.entity_observation_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.robustness.CityLearnRobustnessService.entity_observation_view" title="Link to this definition"></a></dt>
+<dd><p>Apply this step’s observation events to an entity payload in place, without recording them.</p>
+<p>The flat interface corrupts only the flat vectors. Consumers that read
+entity observations under the flat interface (the rule-based baselines)
+get the values the entity interface returns for the same step. Noise
+is a function of the seed, event, step and target, so nothing is drawn
+from a random stream. Stuck values are kept apart from the env’s own and
+no application is recorded, so the env’s observations, robustness
+history and KPIs do not change.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.internal.robustness.CityLearnRobustnessService.events">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">events</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#citylearn.internal.robustness.RobustnessEvent" title="citylearn.internal.robustness.RobustnessEvent"><span class="pre">RobustnessEvent</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.internal.robustness.CityLearnRobustnessService.events" title="Link to this definition"></a></dt>

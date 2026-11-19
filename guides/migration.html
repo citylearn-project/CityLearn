@@ -60,6 +60,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#baselines-under-the-flat-interface-with-robustness-observation-events">Baselines under the flat interface with robustness observation events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#robustness-noise-stays-within-physical-ranges">Robustness noise stays within physical ranges</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-4-0-to-3-5-0">Upgrade from 3.4.0 to 3.5.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-3-to-3-4-0">Upgrade from 3.3 to 3.4.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-3-0-to-3-3-1">Upgrade from 3.3.0 to 3.3.1</a></li>
@@ -183,6 +188,30 @@ local schema and files for data that are not in the public catalogue; a
 repository-relative path is not created by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>.</p>
 <p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
 development-line history.</p>
+</section>
+<section id="unreleased">
+<h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<section id="baselines-under-the-flat-interface-with-robustness-observation-events">
+<h3>Baselines under the flat interface with robustness observation events<a class="headerlink" href="#baselines-under-the-flat-interface-with-robustness-observation-events" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and
+<code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> run as controllers under the flat interface now read the
+corrupted observations, as they already did under the entity interface
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/192">#192</a>). Their
+actions and the controller KPIs of such runs can change. The native BAU
+reference of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>, runs without observation events and runs under
+the entity interface are unchanged.</p>
+</section>
+<section id="robustness-noise-stays-within-physical-ranges">
+<h3>Robustness noise stays within physical ranges<a class="headerlink" href="#robustness-noise-stays-within-physical-ranges" title="Link to this heading"></a></h3>
+<p>Runs with <code class="docutils literal notranslate"><span class="pre">noise_std</span> <span class="pre">=</span> <span class="pre">0</span></code>, which includes every bundled dataset, are unchanged.
+With <code class="docutils literal notranslate"><span class="pre">noise_std</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, noisy solar generation and solar irradiance (and their
+forecasts) are no longer negative and stay zero at night, outdoor relative
+humidity stays within [0, 100] % and carbon intensity is no longer negative.
+The noise draws are the same, so all other values, and the series of other
+buildings and seeds, are unchanged. Runs whose solar or carbon series became
+negative under noise change; agents trained on such series may need retraining.
+See the <a class="reference internal" href="data_unit_contract.html#robustness-noise"><span class="std std-ref">data unit contract</span></a>.</p>
+</section>
 </section>
 <section id="upgrade-from-3-4-0-to-3-5-0">
 <span id="upgrade-from-340-to-350"></span><h2>Upgrade from 3.4.0 to 3.5.0<a class="headerlink" href="#upgrade-from-3-4-0-to-3-5-0" title="Link to this heading"></a></h2>

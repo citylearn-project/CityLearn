@@ -1189,11 +1189,15 @@
             <span class="k">if</span> <span class="n">history_limit</span> <span class="o">&lt;</span> <span class="n">t_start</span><span class="p">:</span>
                 <span class="k">continue</span>
 
+            <span class="n">ev_ids</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_id'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">session_ids</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_session_id'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">departure_times</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_departure_time'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
             <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">history_limit</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
                 <span class="n">current_state</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">current_state</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">continue</span>
                 <span class="n">next_state</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-                <span class="n">ev_ids</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_id'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                <span class="n">session_ids</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_session_id'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
                 <span class="n">current_ev_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normal_ev_id</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_safe_sequence_value</span><span class="p">(</span><span class="n">ev_ids</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
                 <span class="p">)</span>
@@ -1208,14 +1212,14 @@
                 <span class="p">)</span>
                 <span class="n">departure_countdown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_safe_sequence_value</span><span class="p">(</span>
-                        <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_departure_time'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                        <span class="n">departure_times</span><span class="p">,</span>
                         <span class="n">t</span><span class="p">,</span>
                     <span class="p">),</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">next_departure_countdown</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_safe_sequence_value</span><span class="p">(</span>
-                        <span class="nb">getattr</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="s1">'electric_vehicle_departure_time'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                        <span class="n">departure_times</span><span class="p">,</span>
                         <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
                     <span class="p">),</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
@@ -2070,8 +2074,13 @@
             <span class="k">return</span>
 
         <span class="n">bau_lookup</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'level'</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">])):</span> <span class="n">row</span><span class="p">[</span><span class="s1">'value'</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">bau_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()</span>
+            <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">level</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">cf</span><span class="p">)):</span> <span class="n">val</span>
+            <span class="k">for</span> <span class="n">level</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">cf</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">bau_df</span><span class="p">[</span><span class="s1">'level'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                <span class="n">bau_df</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                <span class="n">bau_df</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                <span class="n">bau_df</span><span class="p">[</span><span class="s1">'value'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="p">)</span>
         <span class="p">}</span>
 
         <span class="c1"># These references use the same provenance definition and physical</span>
@@ -2430,8 +2439,25 @@
             <span class="n">dynamics_building_cls</span><span class="o">=</span><span class="n">dynamics_building_cls</span><span class="p">,</span>
             <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">legacy_df</span> <span class="o">=</span> <span class="n">all_metrics</span><span class="p">[</span><span class="n">all_metrics</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LEGACY_COST_FUNCTIONS</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">extended_df</span> <span class="o">=</span> <span class="n">all_metrics</span><span class="p">[</span><span class="o">~</span><span class="n">all_metrics</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LEGACY_COST_FUNCTIONS</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">legacy_by_cf</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">extended_by_cf</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">district_extended_values</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">legacy_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LEGACY_COST_FUNCTIONS</span>
+        <span class="k">for</span> <span class="n">cf_raw</span><span class="p">,</span> <span class="n">level_raw</span><span class="p">,</span> <span class="n">name_raw</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">all_metrics</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="n">all_metrics</span><span class="p">[</span><span class="s1">'level'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="n">all_metrics</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="n">all_metrics</span><span class="p">[</span><span class="s1">'value'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+        <span class="p">):</span>
+            <span class="n">cf_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cf_raw</span><span class="p">)</span>
+            <span class="n">level_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">level_raw</span><span class="p">)</span>
+            <span class="n">name_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name_raw</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cf_raw</span> <span class="ow">in</span> <span class="n">legacy_set</span><span class="p">:</span>
+                <span class="n">legacy_by_cf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">cf_str</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">level_str</span><span class="p">,</span> <span class="n">name_str</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">extended_by_cf</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">cf_str</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">level_str</span><span class="p">,</span> <span class="n">name_str</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">level_str</span> <span class="o">==</span> <span class="s1">'district'</span> <span class="ow">and</span> <span class="n">name_str</span> <span class="o">==</span> <span class="s1">'District'</span> <span class="ow">and</span> <span class="n">cf_str</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">district_extended_values</span><span class="p">:</span>
+                    <span class="n">district_extended_values</span><span class="p">[</span><span class="n">cf_str</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
         <span class="n">simulated_days</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simulated_days</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
         <span class="n">records</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -2462,7 +2488,7 @@
             <span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">map_from</span><span class="p">(</span>
-            <span class="n">source_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+            <span class="n">source_group</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]]],</span>
             <span class="n">old_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
             <span class="n">family</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
             <span class="n">subfamily</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -2470,14 +2496,12 @@
             <span class="n">variant</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">unit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">):</span>
-            <span class="n">subset</span> <span class="o">=</span> <span class="n">source_df</span><span class="p">[</span><span class="n">source_df</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span> <span class="o">==</span> <span class="n">old_name</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">subset</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-                <span class="n">level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'level'</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">level</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">source_group</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">old_name</span><span class="p">,</span> <span class="p">()):</span>
                 <span class="n">put</span><span class="p">(</span>
                     <span class="n">level</span><span class="p">,</span>
-                    <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]),</span>
+                    <span class="n">name</span><span class="p">,</span>
                     <span class="n">v2</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="n">subfamily</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">unit</span><span class="p">),</span>
-                    <span class="n">row</span><span class="p">[</span><span class="s1">'value'</span><span class="p">],</span>
+                    <span class="n">val</span><span class="p">,</span>
                 <span class="p">)</span>
 
         <span class="c1"># Ratios to baseline and comfort/resilience from legacy.</span>
@@ -2505,7 +2529,7 @@
             <span class="p">(</span><span class="s1">'annual_normalized_unserved_energy_total'</span><span class="p">,</span> <span class="s1">'comfort_resilience'</span><span class="p">,</span> <span class="s1">'resilience'</span><span class="p">,</span> <span class="s1">'unserved_energy_annual_normalized'</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'ratio'</span><span class="p">),</span>
         <span class="p">]</span>
         <span class="k">for</span> <span class="n">old_name</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="n">subfamily</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">legacy_map</span><span class="p">:</span>
-            <span class="n">map_from</span><span class="p">(</span><span class="n">legacy_df</span><span class="p">,</span> <span class="n">old_name</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="n">subfamily</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+            <span class="n">map_from</span><span class="p">(</span><span class="n">legacy_by_cf</span><span class="p">,</span> <span class="n">old_name</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="n">subfamily</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
 
         <span class="n">extended_map</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">(</span><span class="s1">'cost_control_total_eur'</span><span class="p">,</span> <span class="s1">'cost'</span><span class="p">,</span> <span class="s1">'total'</span><span class="p">,</span> <span class="s1">'control'</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'eur'</span><span class="p">),</span>
@@ -2620,30 +2644,28 @@
             <span class="n">metric</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">'_'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">extended_map</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s1">'ev_departure_audit_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'ev'</span><span class="p">,</span> <span class="s1">'departure_audit'</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">old_name</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="n">subfamily</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">unit</span> <span class="ow">in</span> <span class="n">extended_map</span><span class="p">:</span>
-            <span class="n">map_from</span><span class="p">(</span><span class="n">extended_df</span><span class="p">,</span> <span class="n">old_name</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="n">subfamily</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+            <span class="n">map_from</span><span class="p">(</span><span class="n">extended_by_cf</span><span class="p">,</span> <span class="n">old_name</span><span class="p">,</span> <span class="n">family</span><span class="p">,</span> <span class="n">subfamily</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
 
         <span class="c1"># Phase peaks have dynamic suffixes (L1/L2/L3) and are conditionally present.</span>
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">extended_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-            <span class="n">old_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">])</span>
-            <span class="n">level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'level'</span><span class="p">])</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'name'</span><span class="p">])</span>
-
+        <span class="k">for</span> <span class="n">old_name</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">extended_by_cf</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">old_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'phase_import_peak_kw_'</span><span class="p">):</span>
                 <span class="n">phase</span> <span class="o">=</span> <span class="n">old_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'phase_import_peak_kw_'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-                <span class="n">put</span><span class="p">(</span>
-                    <span class="n">level</span><span class="p">,</span>
-                    <span class="n">name</span><span class="p">,</span>
-                    <span class="n">v2</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s1">'electrical_service_phase'</span><span class="p">,</span> <span class="s1">'phase_peaks'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'import_peak_</span><span class="si">{</span><span class="n">phase</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'kw'</span><span class="p">),</span>
-                    <span class="n">row</span><span class="p">[</span><span class="s1">'value'</span><span class="p">],</span>
-                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">level</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+                    <span class="n">put</span><span class="p">(</span>
+                        <span class="n">level</span><span class="p">,</span>
+                        <span class="n">name</span><span class="p">,</span>
+                        <span class="n">v2</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s1">'electrical_service_phase'</span><span class="p">,</span> <span class="s1">'phase_peaks'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'import_peak_</span><span class="si">{</span><span class="n">phase</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'kw'</span><span class="p">),</span>
+                        <span class="n">val</span><span class="p">,</span>
+                    <span class="p">)</span>
             <span class="k">elif</span> <span class="n">old_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'phase_export_peak_kw_'</span><span class="p">):</span>
                 <span class="n">phase</span> <span class="o">=</span> <span class="n">old_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'phase_export_peak_kw_'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-                <span class="n">put</span><span class="p">(</span>
-                    <span class="n">level</span><span class="p">,</span>
-                    <span class="n">name</span><span class="p">,</span>
-                    <span class="n">v2</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s1">'electrical_service_phase'</span><span class="p">,</span> <span class="s1">'phase_peaks'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'export_peak_</span><span class="si">{</span><span class="n">phase</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'kw'</span><span class="p">),</span>
-                    <span class="n">row</span><span class="p">[</span><span class="s1">'value'</span><span class="p">],</span>
-                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">level</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+                    <span class="n">put</span><span class="p">(</span>
+                        <span class="n">level</span><span class="p">,</span>
+                        <span class="n">name</span><span class="p">,</span>
+                        <span class="n">v2</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s1">'electrical_service_phase'</span><span class="p">,</span> <span class="s1">'phase_peaks'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'export_peak_</span><span class="si">{</span><span class="n">phase</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'kw'</span><span class="p">),</span>
+                        <span class="n">val</span><span class="p">,</span>
+                    <span class="p">)</span>
 
         <span class="n">kpi_buildings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_kpi_buildings</span><span class="p">()</span>
         <span class="n">building_windows</span> <span class="o">=</span> <span class="p">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_building_active_window</span><span class="p">(</span><span class="n">building</span><span class="p">)</span> <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">kpi_buildings</span><span class="p">}</span>
@@ -2652,35 +2674,35 @@
 
         <span class="c1"># Optional community KPIs are district-only.</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-            <span class="n">district_rows</span> <span class="o">=</span> <span class="n">extended_df</span><span class="p">[(</span><span class="n">extended_df</span><span class="p">[</span><span class="s1">'level'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'district'</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">extended_df</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'District'</span><span class="p">)]</span>
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_kpi_local_traded_enabled'</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
-                <span class="n">local_total</span> <span class="o">=</span> <span class="n">district_rows</span><span class="p">[</span><span class="n">district_rows</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'community_local_import_total_kwh'</span><span class="p">][</span><span class="s1">'value'</span><span class="p">]</span>
-                <span class="n">local_daily</span> <span class="o">=</span> <span class="n">district_rows</span><span class="p">[</span><span class="n">district_rows</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'community_local_import_daily_average_kwh'</span><span class="p">][</span><span class="s1">'value'</span><span class="p">]</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_total</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">'community_local_import_total_kwh'</span> <span class="ow">in</span> <span class="n">district_extended_values</span><span class="p">:</span>
                     <span class="n">put</span><span class="p">(</span>
                         <span class="s1">'district'</span><span class="p">,</span>
                         <span class="s1">'District'</span><span class="p">,</span>
                         <span class="n">v2</span><span class="p">(</span><span class="s1">'district'</span><span class="p">,</span> <span class="s1">'energy_grid'</span><span class="p">,</span> <span class="s1">'community_market'</span><span class="p">,</span> <span class="s1">'local_traded'</span><span class="p">,</span> <span class="s1">'total'</span><span class="p">,</span> <span class="s1">'kwh'</span><span class="p">),</span>
-                        <span class="n">local_total</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="n">district_extended_values</span><span class="p">[</span><span class="s1">'community_local_import_total_kwh'</span><span class="p">],</span>
                     <span class="p">)</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_daily</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">'community_local_import_daily_average_kwh'</span> <span class="ow">in</span> <span class="n">district_extended_values</span><span class="p">:</span>
                     <span class="n">put</span><span class="p">(</span>
                         <span class="s1">'district'</span><span class="p">,</span>
                         <span class="s1">'District'</span><span class="p">,</span>
                         <span class="n">v2</span><span class="p">(</span><span class="s1">'district'</span><span class="p">,</span> <span class="s1">'energy_grid'</span><span class="p">,</span> <span class="s1">'community_market'</span><span class="p">,</span> <span class="s1">'local_traded'</span><span class="p">,</span> <span class="s1">'daily_average'</span><span class="p">,</span> <span class="s1">'kwh'</span><span class="p">),</span>
-                        <span class="n">local_daily</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="n">district_extended_values</span><span class="p">[</span><span class="s1">'community_local_import_daily_average_kwh'</span><span class="p">],</span>
                     <span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_kpi_self_consumption_enabled'</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
-                <span class="n">local_total</span> <span class="o">=</span> <span class="n">district_rows</span><span class="p">[</span><span class="n">district_rows</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'community_local_import_total_kwh'</span><span class="p">][</span><span class="s1">'value'</span><span class="p">]</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_total</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">local_total_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">local_total</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
-                    <span class="n">grid_import_after_local</span> <span class="o">=</span> <span class="n">district_rows</span><span class="p">[</span>
-                        <span class="n">district_rows</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'community_grid_import_after_local_total_kwh'</span>
-                    <span class="p">][</span><span class="s1">'value'</span><span class="p">]</span>
+                <span class="k">if</span> <span class="s1">'community_local_import_total_kwh'</span> <span class="ow">in</span> <span class="n">district_extended_values</span><span class="p">:</span>
+                    <span class="n">local_total_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span>
+                        <span class="n">district_extended_values</span><span class="p">[</span><span class="s1">'community_local_import_total_kwh'</span><span class="p">],</span>
+                        <span class="mf">0.0</span><span class="p">,</span>
+                    <span class="p">)</span>
                     <span class="n">grid_import_after_local_value</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">grid_import_after_local</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">grid_import_after_local</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span>
+                            <span class="n">district_extended_values</span><span class="p">[</span><span class="s1">'community_grid_import_after_local_total_kwh'</span><span class="p">],</span>
+                            <span class="mf">0.0</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="s1">'community_grid_import_after_local_total_kwh'</span> <span class="ow">in</span> <span class="n">district_extended_values</span>
+                        <span class="k">else</span> <span class="mf">0.0</span>
                     <span class="p">)</span>
                     <span class="n">total_member_demand</span> <span class="o">=</span> <span class="n">local_total_value</span> <span class="o">+</span> <span class="n">grid_import_after_local_value</span>
                     <span class="n">share</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">total_member_demand</span> <span class="o">&lt;=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span> <span class="k">else</span> <span class="n">local_total_value</span> <span class="o">/</span> <span class="n">total_member_demand</span>

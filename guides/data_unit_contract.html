@@ -68,7 +68,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#main-time-series">Main Time Series</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#equipment">Equipment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#real-data-conversion">Real Data Conversion</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#formats-and-loading">Formats and Loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#formats-and-loading">Formats and Loading</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#robustness-noise">Robustness noise</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#deferrable-appliances">Deferrable Appliances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#ev-flexibility-features">EV Flexibility Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pv">PV</a></li>
@@ -349,6 +352,29 @@ load_kwh_step = 55.0 * 15 / 3600 = 0.2291667
 <p>The loader reads only the window declared by <code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code> and <code class="docutils literal notranslate"><span class="pre">simulation_end_time_step</span></code>, while preserving the original offset so rolling or non-zero episodes stay aligned with global dataset indices.</p>
 <p>For large datasets, especially full-year 15s data, Parquet is usually better than CSV because it preserves types, compresses better and avoids text parsing. Parquet support requires <code class="docutils literal notranslate"><span class="pre">pyarrow</span></code>; without it, use CSV.</p>
 <p>When several buildings point to the same <code class="docutils literal notranslate"><span class="pre">weather</span></code>, <code class="docutils literal notranslate"><span class="pre">pricing</span></code> or <code class="docutils literal notranslate"><span class="pre">carbon_intensity</span></code> file and <code class="docutils literal notranslate"><span class="pre">noise_std</span> <span class="pre">=</span> <span class="pre">0</span></code>, the simulator shares the same in-memory time series. <code class="docutils literal notranslate"><span class="pre">energy_simulation</span></code> remains building-specific.</p>
+<section id="robustness-noise">
+<h3>Robustness noise<a class="headerlink" href="#robustness-noise" title="Link to this heading"></a></h3>
+<p>A building’s <code class="docutils literal notranslate"><span class="pre">noise_std</span></code> adds zero-mean Gaussian noise to its indoor and outdoor temperature, outdoor relative humidity, diffuse and direct solar irradiance and their forecasts, solar generation, electricity price and carbon intensity. The standard deviation is in the unit of each series; the noise is not scaled by the series. One rule keeps the perturbed values physical:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Series</p></th>
+<th class="head"><p>Bound</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solar_generation</span></code>, <code class="docutils literal notranslate"><span class="pre">diffuse_solar_irradiance</span></code>, <code class="docutils literal notranslate"><span class="pre">direct_solar_irradiance</span></code> and their forecasts</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code>; no noise where the noise-free value is zero (night)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">outdoor_relative_humidity</span></code> and its forecasts</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">100]</span></code> %</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">carbon_intensity</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">0</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Only noise that leaves the range is clipped: a dataset value that is already outside it keeps its noise. Outdoor temperature and electricity prices, which can be negative, are not bounded; indoor temperature keeps its clip to [-90, 57] C. With <code class="docutils literal notranslate"><span class="pre">noise_std</span> <span class="pre">=</span> <span class="pre">0</span></code> every series is unchanged.</p>
+</section>
 </section>
 <section id="deferrable-appliances">
 <h2>Deferrable Appliances<a class="headerlink" href="#deferrable-appliances" title="Link to this heading"></a></h2>
