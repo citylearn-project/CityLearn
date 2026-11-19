@@ -553,6 +553,11 @@ class RulePolicyBase:
 
         if scope == "building":
             limit = service_info.total_export_kw if export else service_info.total_import_kw
+            if not export:
+                # A time-varying grid availability observation is the import limit in force now.
+                available = self._get_value(obs, obs_map, "available_grid_power", default=float("nan"))
+                if math.isfinite(available):
+                    limit = min(limit, available) if math.isfinite(limit) else available
             if not math.isfinite(limit):
                 return float("nan")
             return max(0.0, limit + base_total_kw if export else limit - base_total_kw)

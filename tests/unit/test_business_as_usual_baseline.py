@@ -262,6 +262,112 @@ def test_baselines_take_the_same_actions_under_flat_and_entity_interfaces(agent_
     np.testing.assert_allclose(np.asarray(trajectories[0]), np.asarray(trajectories[1]))
 
 
+def _robust_minute_schema(tmp_path: Path, enabled: bool = True) -> str:
+    dataset_dir = tmp_path / f"minute_ev_demo_robust_{enabled}"
+    shutil.copytree(SOURCE_DATASET, dataset_dir)
+    # Events valid under both interfaces target building features, here ones
+    # the baselines read: the settled net import, the load and the battery SOC.
+    event = dict(module="observation", target_type="building", target_id="Building_1", std=None, value=None)
+    events = [
+        dict(event, event_id="net_noise", target_feature="net_electricity_consumption", start_time_step=0,
+             end_time_step=7, mode="noise", std=2.0),
+        dict(event, event_id="load_bias", target_feature="non_shiftable_load", start_time_step=2, end_time_step=5,
+             mode="bias", value=2.0),
+        dict(event, event_id="soc_stuck", target_feature="electrical_storage_soc", start_time_step=1,
+             end_time_step=7, mode="stuck"),
+    ]
+    pd.DataFrame(events).to_csv(dataset_dir / "robustness_events.csv", index=False)
+    schema_path = dataset_dir / "schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema["root_directory"] = str(dataset_dir)
+    schema["robustness"] = {"enabled": enabled, "events_file": "robustness_events.csv", "random_seed": 7}
+    schema_path.write_text(json.dumps(schema), encoding="utf-8")
+    return str(schema_path)
+
+
+def _baseline_actions(schema: str, interface: str, agent_class) -> np.ndarray:
+    env = CityLearnEnv(schema, central_agent=False, episode_time_steps=8, random_seed=0, interface=interface)
+    try:
+        observations, _ = env.reset(seed=0)
+        agent = agent_class(env)
+        actions = []
+        while not env.terminated:
+            action = agent.predict(observations)
+            actions.append(action)
+            observations, *_ = env.step(action)
+        return np.asarray(actions, dtype="float64")
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize(
+    "agent_class",
+    [BusinessAsUsualAgent, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy],
+)
+def test_baselines_read_the_same_corrupted_observations_under_flat_and_entity_interfaces(tmp_path, agent_class):
+    # Issue #192: under the flat interface the env corrupts only the flat
+    # vectors, which the baselines do not read.
+    schema = _robust_minute_schema(tmp_path)
+    flat = _baseline_actions(schema, "flat", agent_class)
+    np.testing.assert_array_equal(flat, _baseline_actions(schema, "entity", agent_class))
+    clean = _baseline_actions(_robust_minute_schema(tmp_path, enabled=False), "flat", agent_class)
+    assert not np.array_equal(flat, clean)
+
+
+def test_flat_baseline_robustness_view_leaves_the_env_and_its_random_streams_unchanged(tmp_path):
+    schema = _robust_minute_schema(tmp_path)
+
+    def run(actions=None):
+        env = CityLearnEnv(schema, central_agent=False, episode_time_steps=8, random_seed=0, interface="flat")
+        try:
+            observations, _ = env.reset(seed=0)
+            agent = BusinessAsUsualAgent(env) if actions is None else None
+            taken, seen = [], []
+            while not env.terminated:
+                seen.append(np.asarray(observations, dtype="float64"))
+                action = agent.predict(observations) if agent else actions[len(taken)]
+                taken.append(action)
+                observations, *_ = env.step(action)
+            service = env._robustness_service
+            return dict(
+                actions=taken, observations=seen, history=service.history, stuck=dict(service._stuck_values),
+                net=np.asarray(env.net_electricity_consumption, dtype="float64"),
+                np_random=env.np_random.bit_generator.state,
+                ev_drift=env._ev_drift_random_state.get_state(),
+            )
+        finally:
+            env.close()
+
+    # The baseline reads its corrupted entity payload; the replay reads nothing.
+    with_view = run()
+    replay = run(actions=with_view["actions"])
+    np.testing.assert_array_equal(np.asarray(with_view["observations"]), np.asarray(replay["observations"]))
+    np.testing.assert_array_equal(with_view["net"], replay["net"])
+    assert with_view["history"] == replay["history"]
+    assert with_view["stuck"] == replay["stuck"]
+    assert with_view["np_random"] == replay["np_random"]
+    left, right = with_view["ev_drift"], replay["ev_drift"]
+    np.testing.assert_array_equal(left[1], right[1])
+    assert (left[0],) + tuple(left[2:]) == (right[0],) + tuple(right[2:])
+
+
+def test_native_bau_reference_input_stays_uncorrupted_under_flat_robustness(tmp_path):
+    actions = []
+    for enabled in (True, False):
+        env = CityLearnEnv(
+            _robust_minute_schema(tmp_path, enabled), central_agent=False, episode_time_steps=8, random_seed=0,
+            interface="flat",
+        )
+        try:
+            env.reset(seed=0)
+            agent = BusinessAsUsualAgent(env)
+            env.step(agent.predict([]))
+            actions.append(agent.predict([]))
+        finally:
+            env.close()
+    np.testing.assert_array_equal(np.asarray(actions[0]), np.asarray(actions[1]))
+
+
 def test_baseline_comparison_identity_records_definition_and_parameters():
     env = _ev_env()
     try:
@@ -465,7 +571,7 @@ def test_baselines_request_zero_for_actions_they_do_not_control(tmp_path: Path, 
         agent = agent_class(env)
         # Pretend the storage action is not controlled: it must be zero, the EV still served.
         agent._is_controlled_action = lambda name: name.startswith("electric_vehicle_storage")
-        agent._build_engine()
+        agent._attach(None)
         action = agent.predict([])[0]
         names = env.action_names[0]
         assert action[names.index("electrical_storage")] == 0.0
@@ -618,3 +724,114 @@ def test_bau_reference_cache_follows_the_selected_target():
         assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v1"
     finally:
         env.close()
+
+
+def _multi_episode_actions(env: CityLearnEnv, make_agent, episodes: int, fresh_agent_per_episode: bool):
+    actions, agent = [], None
+    for _ in range(episodes):
+        observations, _ = env.reset()
+        if agent is None or fresh_agent_per_episode:
+            agent = make_agent(env)
+        while not env.terminated:
+            action = agent.predict(observations)
+            actions.append([np.asarray(a, dtype="float64") for a in action])
+            observations, *_ = env.step(action)
+    return actions
+
+
+def _assert_same_actions(left, right):
+    assert len(left) == len(right)
+    for step_left, step_right in zip(left, right):
+        assert len(step_left) == len(step_right)
+        for a, b in zip(step_left, step_right):
+            np.testing.assert_array_equal(a, b)
+
+
+@pytest.mark.parametrize(
+    "agent_class",
+    [BusinessAsUsualAgent, RBCBasicPolicy, RBCSmartPolicy, RBCCommunityPolicy],
+)
+@pytest.mark.parametrize("interface", ["flat", "entity"])
+def test_baselines_parse_the_dataset_once_and_keep_their_actions_across_episodes(agent_class, interface):
+    from unittest import mock
+
+    from citylearn.agents._rule_engine import RulePolicyBase
+    from citylearn.agents.baseline import _RuleBaselineAgent
+
+    def make_env():
+        return CityLearnEnv(
+            str(SOURCE_DATASET / "schema.json"), central_agent=False, episode_time_steps=4,
+            rolling_episode_split=True, random_seed=0, interface=interface,
+        )
+
+    env = make_env()
+    try:
+        with mock.patch.object(
+            RulePolicyBase, "_load_dataset_info", autospec=True, side_effect=RulePolicyBase._load_dataset_info,
+        ) as parse, mock.patch.object(
+            _RuleBaselineAgent, "_attach", autospec=True, side_effect=_RuleBaselineAgent._attach,
+        ) as attach:
+            reused = _multi_episode_actions(env, agent_class, episodes=3, fresh_agent_per_episode=False)
+        # One agent, three episodes: the schema and EV files are parsed once and,
+        # with a static topology, the engine is attached once.
+        assert parse.call_count == 1
+        assert attach.call_count == 1
+    finally:
+        env.close()
+
+    env = make_env()
+    try:
+        # A new agent per episode builds and attaches a new engine, as every reset did before.
+        rebuilt = _multi_episode_actions(env, agent_class, episodes=3, fresh_agent_per_episode=True)
+    finally:
+        env.close()
+    _assert_same_actions(reused, rebuilt)
+
+
+def test_baseline_attaches_again_when_the_topology_changes():
+    from unittest import mock
+
+    from citylearn.agents._rule_engine import RulePolicyBase
+    from citylearn.agents.baseline import _RuleBaselineAgent
+
+    def make_env():
+        # Building_18 joins at global step 1000. Rolling episodes start at steps 995 and 996.
+        return CityLearnEnv(
+            "citylearn_three_phase_dynamic_topology_demo", central_agent=False,
+            simulation_start_time_step=995, simulation_end_time_step=1014, episode_time_steps=10,
+            rolling_episode_split=True, random_seed=0,
+        )
+
+    env = make_env()
+    try:
+        versions = []
+        with mock.patch.object(
+            RulePolicyBase, "_load_dataset_info", autospec=True, side_effect=RulePolicyBase._load_dataset_info,
+        ) as parse, mock.patch.object(
+            _RuleBaselineAgent, "_attach", autospec=True, side_effect=_RuleBaselineAgent._attach,
+        ) as attach:
+            agent = None
+            reused = []
+            for _ in range(2):
+                observations, _ = env.reset()
+                if agent is None:
+                    agent = BusinessAsUsualAgent(env)
+                while not env.terminated:
+                    versions.append(env.topology_version)
+                    action = agent.predict(observations)
+                    reused.append([np.asarray(a, dtype="float64") for a in action])
+                    observations, *_ = env.step(action)
+        assert versions == [0] * 5 + [1] * 4 + [0] * 4 + [1] * 5
+        assert parse.call_count == 1
+        # Construction, the reset that restored the initial members, and the
+        # member added at step 1000 in each episode.
+        assert attach.call_count == 4
+    finally:
+        env.close()
+
+    env = make_env()
+    try:
+        rebuilt = _multi_episode_actions(env, BusinessAsUsualAgent, episodes=2, fresh_agent_per_episode=True)
+    finally:
+        env.close()
+    _assert_same_actions(reused, rebuilt)
