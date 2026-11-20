@@ -254,7 +254,7 @@
 <a class="viewcode-back" href="../../../api/citylearn.internal.demand_response.html#citylearn.internal.demand_response.CityLearnDemandResponseService.get_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">"definition_version"</span><span class="p">:</span> <span class="s2">"demand-response-audit-v1"</span><span class="p">,</span>
+            <span class="s2">"definition_version"</span><span class="p">:</span> <span class="s2">"demand-response-audit-v2"</span><span class="p">,</span>
             <span class="s2">"enabled"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">),</span>
             <span class="s2">"requests_file"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">requests_file</span><span class="p">,</span>
             <span class="s2">"baseline_method"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_method</span><span class="p">,</span>
@@ -265,7 +265,7 @@
             <span class="s2">"effective_baseline_seconds"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_window_steps</span><span class="p">()</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_step_hours</span><span class="p">()</span><span class="o">*</span><span class="mf">3600.</span><span class="p">,</span>
             <span class="s2">"population_rule"</span><span class="p">:</span> <span class="s2">"stable_topology_from_preparation_through_settled_interval"</span><span class="p">,</span>
             <span class="s2">"purpose_rule"</span><span class="p">:</span> <span class="s2">"explicit_service_stress_or_unspecified; never_inferred_from_shortfall"</span><span class="p">,</span>
-            <span class="s2">"aggregation"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"signed_delivery_and_cash"</span><span class="p">:</span> <span class="s2">"additive"</span><span class="p">,</span> <span class="s2">"member_credit"</span><span class="p">:</span> <span class="s2">"uncapped_positive_contribution"</span><span class="p">,</span> <span class="s2">"member_shortfall"</span><span class="p">:</span> <span class="s2">"equal_share_without_district_tolerance; not_additive"</span><span class="p">},</span>
+            <span class="s2">"aggregation"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"signed_delivery_and_cash"</span><span class="p">:</span> <span class="s2">"additive"</span><span class="p">,</span> <span class="s2">"member_requested"</span><span class="p">:</span> <span class="s2">"equal_share"</span><span class="p">,</span> <span class="s2">"member_credit"</span><span class="p">:</span> <span class="s2">"district_credit_by_revenue_weight; additive"</span><span class="p">,</span> <span class="s2">"member_shortfall"</span><span class="p">:</span> <span class="s2">"district_shortfall_by_penalty_weight; additive"</span><span class="p">,</span> <span class="s2">"member_uncapped_contribution"</span><span class="p">:</span> <span class="s2">"positive_contribution; diagnostic; not_additive"</span><span class="p">},</span>
         <span class="p">}</span></div>
 
 
@@ -343,7 +343,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building_names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
         <span class="n">building_names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">building_names</span><span class="p">]</span>
         <span class="n">by_building</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_summary</span><span class="p">()</span>
+            <span class="n">name</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_empty_summary</span><span class="p">(),</span> <span class="n">demand_response_uncapped_contribution_total_kwh</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">building_names</span>
         <span class="p">}</span>
         <span class="n">district</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_summary</span><span class="p">()</span>
@@ -606,6 +606,8 @@
             <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
             <span class="n">baseline</span><span class="o">=</span><span class="n">baseline</span><span class="p">,</span>
             <span class="n">requested_kwh</span><span class="o">=</span><span class="n">requested_kwh</span><span class="p">,</span>
+            <span class="n">credited_kwh</span><span class="o">=</span><span class="n">credited_kwh</span><span class="p">,</span>
+            <span class="n">shortfall_kwh</span><span class="o">=</span><span class="n">shortfall_kwh</span><span class="p">,</span>
             <span class="n">revenue_eur</span><span class="o">=</span><span class="n">revenue</span><span class="p">,</span>
             <span class="n">penalty_eur</span><span class="o">=</span><span class="n">penalty</span><span class="p">,</span>
             <span class="n">time_step</span><span class="o">=</span><span class="n">t</span><span class="p">,</span>
@@ -641,10 +643,20 @@
         <span class="n">request</span><span class="p">:</span> <span class="n">DemandResponseRequest</span><span class="p">,</span>
         <span class="n">baseline</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
         <span class="n">requested_kwh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">credited_kwh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">shortfall_kwh</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">revenue_eur</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">penalty_eur</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Split one district settlement row over the active members.</span>
+
+<span class="sd">        Credited energy and revenue follow the revenue weights, and shortfall and</span>
+<span class="sd">        penalty follow the penalty weights, so the member values add up to the</span>
+<span class="sd">        district values and keep its tolerance and its cap at the target. The</span>
+<span class="sd">        request is split equally. `uncapped_contribution_kwh` is the member's own</span>
+<span class="sd">        positive contribution, a diagnostic that does not add up to the district.</span>
+<span class="sd">        """</span>
         <span class="n">step_hours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_hours</span><span class="p">()</span>
         <span class="n">baselines</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"building_baseline_power_kw"</span><span class="p">,</span> <span class="p">{})</span> <span class="ow">or</span> <span class="p">{})</span>
         <span class="n">active_buildings</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">)</span>
@@ -693,8 +705,9 @@
                     <span class="s2">"requested_kwh"</span><span class="p">:</span> <span class="n">requested_kwh</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span>
                     <span class="s2">"valid_requested_kwh"</span><span class="p">:</span> <span class="n">requested_kwh</span> <span class="o">/</span> <span class="n">count</span><span class="p">,</span>
                     <span class="s2">"delivered_kwh"</span><span class="p">:</span> <span class="n">contribution_kwh</span><span class="p">,</span>
-                    <span class="s2">"credited_kwh"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">contribution_kwh</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-                    <span class="s2">"shortfall_kwh"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">requested_kwh</span> <span class="o">/</span> <span class="n">count</span> <span class="o">-</span> <span class="n">contribution_kwh</span><span class="p">),</span>
+                    <span class="s2">"credited_kwh"</span><span class="p">:</span> <span class="n">credited_kwh</span> <span class="o">*</span> <span class="n">revenue_weight</span><span class="p">,</span>
+                    <span class="s2">"shortfall_kwh"</span><span class="p">:</span> <span class="n">shortfall_kwh</span> <span class="o">*</span> <span class="n">penalty_weight</span><span class="p">,</span>
+                    <span class="s2">"uncapped_contribution_kwh"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">contribution_kwh</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
                     <span class="s2">"revenue_eur"</span><span class="p">:</span> <span class="n">building_revenue</span><span class="p">,</span>
                     <span class="s2">"penalty_eur"</span><span class="p">:</span> <span class="n">building_penalty</span><span class="p">,</span>
                     <span class="s2">"net_revenue_eur"</span><span class="p">:</span> <span class="n">building_revenue</span> <span class="o">-</span> <span class="n">building_penalty</span><span class="p">,</span>
@@ -718,6 +731,7 @@
                     <span class="s2">"delivered_kwh"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
                     <span class="s2">"credited_kwh"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
                     <span class="s2">"shortfall_kwh"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+                    <span class="s2">"uncapped_contribution_kwh"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
                     <span class="s2">"revenue_eur"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
                     <span class="s2">"penalty_eur"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
                     <span class="s2">"net_revenue_eur"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
@@ -835,6 +849,8 @@
         <span class="n">target</span><span class="p">[</span><span class="s2">"demand_response_revenue_total_eur"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">CityLearnDemandResponseService</span><span class="o">.</span><span class="n">_to_float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"revenue_eur"</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="n">target</span><span class="p">[</span><span class="s2">"demand_response_penalty_total_eur"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">CityLearnDemandResponseService</span><span class="o">.</span><span class="n">_to_float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"penalty_eur"</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="n">target</span><span class="p">[</span><span class="s2">"demand_response_net_revenue_total_eur"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">CityLearnDemandResponseService</span><span class="o">.</span><span class="n">_to_float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"net_revenue_eur"</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"demand_response_uncapped_contribution_total_kwh"</span> <span class="ow">in</span> <span class="n">target</span><span class="p">:</span>
+            <span class="n">target</span><span class="p">[</span><span class="s2">"demand_response_uncapped_contribution_total_kwh"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">CityLearnDemandResponseService</span><span class="o">.</span><span class="n">_to_float</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"uncapped_contribution_kwh"</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="n">invalid</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"invalid_baseline"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">invalid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">invalid</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"baseline_valid"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span> <span class="k">else</span> <span class="mf">1.0</span>

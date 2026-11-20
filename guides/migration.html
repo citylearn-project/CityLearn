@@ -66,6 +66,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-joining-members-storage-and-district-series">Dynamic topology: joining members, storage and district series</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#control-step-different-from-the-dataset-step">Control step different from the dataset step</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#per-building-reward-functions-and-reward-versions">Per-building reward functions and reward versions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kpi-definitions">KPI definitions</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-5-0-to-3-6-0">Upgrade from 3.5.0 to 3.6.0</a><ul>
@@ -301,6 +302,50 @@ and follows the HVAC mode in the comfort term, as the reward function overview
 of the documentation describes. Set <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;:</span> <span class="pre">2</span></code> in the
 reward attributes for new training runs, and compare policies only within one
 version. The reward evidence in the environment metadata records the version.</p>
+</section>
+<section id="kpi-definitions">
+<h3>KPI definitions<a class="headerlink" href="#kpi-definitions" title="Link to this heading"></a></h3>
+<p>Several <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> KPIs change definition, and the KPI definition version
+(<code class="docutils literal notranslate"><span class="pre">kpi_definition_version</span></code>) becomes <code class="docutils literal notranslate"><span class="pre">2.0.0</span></code>. Simulations are unchanged; rerun
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> on saved environments, or rerun the episodes, before comparing
+with 3.6.0 tables. The <a class="reference internal" href="kpis_reference.html#definitions-changed-after-3-6-0"><span class="std std-ref">KPI reference</span></a>
+lists every changed row and the name that keeps its 3.6.0 value.</p>
+<ul class="simple">
+<li><p><strong>District ratios to the baseline</strong> of import, net exchange and emissions are
+ratios of the district totals instead of means of the building ratios
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/237">#237</a>). The
+3.6.0 values are published as <code class="docutils literal notranslate"><span class="pre">*_building_mean_ratio</span></code>, and the legacy
+<code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> district rows still hold them.</p></li>
+<li><p><strong>District emissions</strong> are those of the netted district import, so local
+sharing between members lowers them, consistent with district import and
+cost (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/238">#238</a>).
+The sum over members is published as <code class="docutils literal notranslate"><span class="pre">district_emissions_total_*_member_sum_kgco2</span></code>.
+Building emissions are unchanged.</p></li>
+<li><p><strong>Building demand-response settlement</strong> allocates the district credited energy
+and shortfall to buildings with the revenue and penalty weights, so building
+shortfall and compliance follow the district tolerance and cap
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/240">#240</a>). District
+KPIs and all cash flows are unchanged. The demand-response definition version
+becomes <code class="docutils literal notranslate"><span class="pre">demand-response-audit-v2</span></code>.</p></li>
+<li><p><strong>Load-factor penalties</strong> in <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> use import power, and windows
+without import are undefined instead of a perfect 0
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/241">#241</a>). The
+signed-net values are published as <code class="docutils literal notranslate"><span class="pre">*_signed_net_*</span></code>; the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code>
+rows keep the signed-net series.</p></li>
+<li><p><strong>Undefined values stay undefined</strong>: a ratio with a missing control or
+reference, the deferrable start delay without completed cycles, and the
+deferrable service ratios to the BAU when no cycle was due are now missing
+instead of 0 or 1 (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/243">#243</a>).
+Code that reads these cells must handle <code class="docutils literal notranslate"><span class="pre">None</span></code>/NaN.</p></li>
+<li><p><strong>Portfolio rates</strong> of <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> (EV departure rates and means,
+service levels, start delay, self-consumption) are pooled from their additive
+denominators instead of weighted by community
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/244">#244</a>).</p></li>
+<li><p><strong>BAU ramping average</strong> is the mean upward ramp per step instead of the sum
+over the episode; the sum is published as <code class="docutils literal notranslate"><span class="pre">*_ramping_total_*_kw</span></code>
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/245">#245</a>). The ratio
+to the BAU is unchanged.</p></li>
+</ul>
 </section>
 </section>
 <section id="upgrade-from-3-5-0-to-3-6-0">

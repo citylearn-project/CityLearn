@@ -157,7 +157,10 @@ calculations and return records without changing simulator state.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="citylearn.internal.kpi_energy.district_records">
 <span class="sig-prename descclassname"><span class="pre">citylearn.internal.kpi_energy.</span></span><span class="sig-name descname"><span class="pre">district_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kpi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.internal.kpi.html#citylearn.internal.kpi.CityLearnKPIService" title="citylearn.internal.kpi.CityLearnKPIService"><span class="pre">CityLearnKPIService</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">legacy_building</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline_condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluation_condition_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulated_days</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/kpi_energy.html#district_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.kpi_energy.district_records" title="Link to this definition"></a></dt>
-<dd><p>Preserve district condition selection and legacy mean aggregation.</p>
+<dd><p>Return legacy district rows and the extended district totals.</p>
+<p>The legacy district rows keep their mean-of-buildings aggregation and the
+signed-net load factor; <cite>evaluate_v2()</cite> derives its district ratios from the
+district totals instead.</p>
 </dd></dl>
 
 </section>

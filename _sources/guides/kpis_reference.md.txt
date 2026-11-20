@@ -84,8 +84,29 @@ ratio_to_business_as_usual_x = control_x / business_as_usual_x
 self_consumption = (solar_generation_total - export_total) / solar_generation_total
 ```
 
-For a denominator within the numerical zero tolerance, safe division returns
-`1.0` if the numerator is also effectively zero, and `None` otherwise.
+District ratios divide district totals: `district_..._ratio_to_baseline_x` is
+the district control total over the district baseline total, like every
+`ratio_to_business_as_usual` ratio. A mean of building ratios is not a district
+ratio; the legacy `evaluate()` API keeps that mean as its district row, and
+`evaluate_v2()` publishes it under the `building_mean` variant (see
+[Definitions changed after 3.6.0](#definitions-changed-after-360)).
+
+District emissions are the emissions of the district grid import,
+`max(sum_members(net_t), 0)` at each step, so energy that one member exports and
+another imports in the same step carries no grid carbon. Each imported kWh is
+charged at the carbon intensity of the member that imports it; when importing
+members have different intensities, the locally covered share of each import
+follows the weighted allocation of the energy provenance ledger, and the
+control total equals `district_energy_provenance_external_purchase_emissions_kgco2`.
+Building emissions are each member's own import times its carbon intensity, so
+they do not add up to the district total when members share energy.
+
+Safe division returns `None` (undefined) when the control or the reference is
+missing or not finite; an undefined value is never read as zero. For a reference
+within the numerical zero tolerance it returns `1.0` ("no change") if the
+control is also effectively zero, and `None` otherwise. The
+deferrable-appliance service ratios to the BAU are the exception: when no cycle
+was due in either run (both totals zero) they are undefined.
 
 Ratios stay lower-is-better when the reference total is negative. Net exchange
 (legacy `zero_net_energy`) and cost totals can be negative, for a net exporter
@@ -99,6 +120,18 @@ ratio_x = 1 + (control_x - reference_x) / |reference_x|  if reference_x < 0
 so 1 still means no change and a higher control total gives a higher ratio.
 For a positive reference this is the plain ratio. Import, export and emission
 totals are never negative and use the plain ratio.
+
+Grid-shape KPIs work on power, `net_t / step_hours`:
+
+```text
+load_factor_penalty = mean over windows of (1 - mean(import_w) / max(import_w))
+ramping_average     = sum_t max(net_t - net_(t-1), 0) / transitions
+```
+
+with `import = max(net, 0)` and daily (24 h) or monthly (730 h) windows. A
+window whose peak import is zero has no load factor and is left out of the mean;
+the KPI is undefined when no window is defined. `ramping_average` is a mean per
+step transition, so it does not grow with the episode length.
 
 The conventional `baseline` counterfactual follows the grid outage of the
 controlled run: at power-outage time steps the `*_without_storage*` net series,
@@ -176,7 +209,11 @@ EV departure tolerance semantics:
 | service level | ratio | `completed / (completed + missed)`. |
 | served energy | kWh | Energy of completed cycles. |
 | unserved energy | kWh | Energy of missed cycles. |
-| average start delay | hours | Mean `start - earliest_start`. |
+| average start delay | hours | Mean `start - earliest_start` over completed cycles; undefined when no cycle completed. |
+
+Service level and average start delay are undefined, not 0 or 1, in windows
+where no cycle was due or none completed; so are their deltas and ratios to the
+BAU. Preserve the missing values when exporting or comparing.
 
 ## Demand Response KPIs
 
@@ -194,8 +231,20 @@ Available when `demand_response.enabled=true`.
 | `demand_response_penalty_total_eur` | building/district | eur | Shortfall penalty. |
 | `demand_response_net_revenue_total_eur` | building/district | eur | Revenue minus penalty. |
 | `demand_response_invalid_baseline_time_step_count` | building/district | count | Active steps excluded from economics because the pre-event baseline was invalid. |
+| `demand_response_uncapped_contribution_total_kwh` | building | kWh | Diagnostic: the member's own positive contribution, without the district tolerance and cap. Does not add up to the district. |
 
 Names are prefixed with `district_` or `building_`, for example `district_demand_response_net_revenue_total_eur`.
+
+Building rows split the district settlement of each step. The request is split
+equally over the active members. The district credited energy and revenue are
+allocated by the revenue weights (each member's share of the positive
+contributions), and the district shortfall and penalty by the penalty weights
+(each member's share of the negative contributions, otherwise of the pre-event
+baseline). Building credited energy, shortfall, delivery, revenue and penalty
+therefore add up to the district values and respect the district tolerance and
+the cap at the target. A building's compliance is its credited energy over its
+equal share of the request, capped at 1, so the mean of the building compliance
+ratios never exceeds the district ratio.
 
 ## Robustness KPIs
 
@@ -236,6 +285,33 @@ Available when `community_market.enabled=true`.
 | settled cost | building/district | eur | Cost after local settlement. |
 | counterfactual cost | building/district | eur | Cost without local market settlement. |
 | market savings | building/district | eur | Counterfactual minus settled cost. |
+
+## Definitions changed after 3.6.0
+
+The KPI definition version (`kpi_definition_version` in the
+`energy_accounting` metadata of `evaluate_v2()`) is `2.0.0`. These rows of
+`evaluate_v2()` changed definition. Where a 3.6.0 value may have been used in
+published comparisons, it is kept under a distinct name, and the legacy
+`evaluate()` rows keep their own 3.6.0 definitions.
+
+| KPI | New definition | 3.6.0 value kept as |
+|---|---|---|
+| `district_energy_grid_ratio_to_baseline_import_total_ratio` | District import total over district baseline total. | `district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio`; legacy `electricity_consumption_total` |
+| `district_energy_grid_ratio_to_baseline_net_exchange_total_ratio` | Signed ratio of the district net-exchange totals. | `district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio`; legacy `zero_net_energy` |
+| `district_emissions_ratio_to_baseline_total_ratio` | District emissions total over district baseline total. | `district_emissions_ratio_to_baseline_total_building_mean_ratio`; legacy `carbon_emissions_total` |
+| `district_emissions_total_{control,baseline,business_as_usual}_kgco2` and their deltas, daily averages and ratios | Emissions of the netted district import. | `district_emissions_total_{control,baseline,business_as_usual}_member_sum_kgco2` |
+| `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_to_baseline_ratio` | Load factor of import power; windows without import are undefined. | `..._to_baseline_signed_net_ratio`; legacy `daily_one_minus_load_factor_average`, `monthly_one_minus_load_factor_average` |
+| `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_{business_as_usual,delta_to_business_as_usual}_ratio`, `..._to_business_as_usual_ratio` | As above. | `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_signed_net_*` |
+| `district_energy_grid_shape_quality_ramping_average_{business_as_usual,delta_to_business_as_usual}_kw` | Mean upward ramp per step transition. The ratio to the BAU is unchanged. | `district_energy_grid_shape_quality_ramping_total_{business_as_usual,delta_to_business_as_usual}_kw` |
+| `*_deferrable_appliance_service_average_start_delay_hours` | Undefined when no cycle completed (was 0). | none |
+| Ratios with an undefined control or reference | Undefined (were read as 0, or 1 when both were undefined). | none |
+| `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio` with both totals zero | Undefined (was 1). | none |
+| `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Allocated from the district settlement. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostic) |
+| Portfolio EV departure rates and means, deferrable and escalator service levels, start delay and solar self-consumption (`MultiCommunityEnv`) | Pooled from their additive denominators. | none |
+
+In the legacy rows, a load-factor window whose signed peak is not positive is
+now undefined; it used to give an infinite or negative penalty, which safe
+division reported as a perfect 0.
 
 ## Export
 

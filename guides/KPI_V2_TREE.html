@@ -227,6 +227,7 @@ configured run. The <code class="docutils literal notranslate"><span class="pre"
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_daily_average_import_baseline_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_daily_average_import_delta_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_ratio_to_baseline_import_total_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio</span></code> (3.6.0 definition: mean of the building ratios)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_total_export_control_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_total_export_baseline_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_total_export_delta_kwh</span></code></p></li>
@@ -241,12 +242,15 @@ configured run. The <code class="docutils literal notranslate"><span class="pre"
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_daily_average_net_exchange_baseline_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_daily_average_net_exchange_delta_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_ratio_to_baseline_net_exchange_total_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio</span></code> (3.6.0 definition)</p></li>
 </ul>
 <p>Shape/quality:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_ramping_average_to_baseline_ratio</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio</span></code> (3.6.0 definition, on the signed net series)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio</span></code> (3.6.0 definition)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio</span></code></p></li>
 </ul>
@@ -266,6 +270,9 @@ configured run. The <code class="docutils literal notranslate"><span class="pre"
 <li><p><code class="docutils literal notranslate"><span class="pre">district_emissions_daily_average_baseline_kgco2</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_emissions_daily_average_delta_kgco2</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_emissions_ratio_to_baseline_total_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_emissions_total_control_member_sum_kgco2</span></code> (3.6.0 definition: sum of the members’ emissions)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_emissions_total_baseline_member_sum_kgco2</span></code> (3.6.0 definition)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_emissions_ratio_to_baseline_total_building_mean_ratio</span></code> (3.6.0 definition)</p></li>
 </ul>
 </section>
 <section id="solar-self-consumption">
@@ -435,6 +442,10 @@ values, control-minus-BAU differences and ratios. Examples:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_battery_total_throughput_business_as_usual_kwh</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_solar_self_consumption_ratio_self_consumption_business_as_usual_ratio</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_peak_daily_average_to_business_as_usual_ratio</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_ramping_average_business_as_usual_kw</span></code> (mean upward ramp per step)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_ramping_total_business_as_usual_kw</span></code> (3.6.0 value of <code class="docutils literal notranslate"><span class="pre">ramping_average</span></code>: sum over the episode)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_load_factor_penalty_daily_average_signed_net_business_as_usual_ratio</span></code> (3.6.0 definition)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">district_emissions_total_business_as_usual_member_sum_kgco2</span></code> (3.6.0 definition)</p></li>
 </ul>
 <p>Building rows use the same reference convention for their supported metrics.
 The <a class="reference internal" href="scorecard.html#two-different-baselines"><span class="std std-ref">scorecard</span></a> explains how this differs
@@ -460,6 +471,7 @@ from <code class="docutils literal notranslate"><span class="pre">baseline</span
 <li><p><code class="docutils literal notranslate"><span class="pre">building_ev_events_departure_target_infeasible_count</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">building_ev_performance_departure_min_acceptable_feasible_ratio</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">building_demand_response_net_revenue_total_eur</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">building_demand_response_uncapped_contribution_total_kwh</span></code> (diagnostic; not additive)</p></li>
 </ul>
 </section>
 <hr class="docutils" />

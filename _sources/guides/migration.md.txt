@@ -140,6 +140,49 @@ of the documentation describes. Set `"version": 2` in the
 reward attributes for new training runs, and compare policies only within one
 version. The reward evidence in the environment metadata records the version.
 
+### KPI definitions
+
+Several `evaluate_v2()` KPIs change definition, and the KPI definition version
+(`kpi_definition_version`) becomes `2.0.0`. Simulations are unchanged; rerun
+`evaluate_v2()` on saved environments, or rerun the episodes, before comparing
+with 3.6.0 tables. The [KPI reference](kpis_reference.md#definitions-changed-after-360)
+lists every changed row and the name that keeps its 3.6.0 value.
+
+- **District ratios to the baseline** of import, net exchange and emissions are
+  ratios of the district totals instead of means of the building ratios
+  ([#237](https://github.com/citylearn-project/CityLearn/issues/237)). The
+  3.6.0 values are published as `*_building_mean_ratio`, and the legacy
+  `evaluate()` district rows still hold them.
+- **District emissions** are those of the netted district import, so local
+  sharing between members lowers them, consistent with district import and
+  cost ([#238](https://github.com/citylearn-project/CityLearn/issues/238)).
+  The sum over members is published as `district_emissions_total_*_member_sum_kgco2`.
+  Building emissions are unchanged.
+- **Building demand-response settlement** allocates the district credited energy
+  and shortfall to buildings with the revenue and penalty weights, so building
+  shortfall and compliance follow the district tolerance and cap
+  ([#240](https://github.com/citylearn-project/CityLearn/issues/240)). District
+  KPIs and all cash flows are unchanged. The demand-response definition version
+  becomes `demand-response-audit-v2`.
+- **Load-factor penalties** in `evaluate_v2()` use import power, and windows
+  without import are undefined instead of a perfect 0
+  ([#241](https://github.com/citylearn-project/CityLearn/issues/241)). The
+  signed-net values are published as `*_signed_net_*`; the legacy `evaluate()`
+  rows keep the signed-net series.
+- **Undefined values stay undefined**: a ratio with a missing control or
+  reference, the deferrable start delay without completed cycles, and the
+  deferrable service ratios to the BAU when no cycle was due are now missing
+  instead of 0 or 1 ([#243](https://github.com/citylearn-project/CityLearn/issues/243)).
+  Code that reads these cells must handle `None`/NaN.
+- **Portfolio rates** of `MultiCommunityEnv` (EV departure rates and means,
+  service levels, start delay, self-consumption) are pooled from their additive
+  denominators instead of weighted by community
+  ([#244](https://github.com/citylearn-project/CityLearn/issues/244)).
+- **BAU ramping average** is the mean upward ramp per step instead of the sum
+  over the episode; the sum is published as `*_ramping_total_*_kw`
+  ([#245](https://github.com/citylearn-project/CityLearn/issues/245)). The ratio
+  to the BAU is unchanged.
+
 ## Upgrade from 3.5.0 to 3.6.0
 
 ### Battery discharge features during outages
