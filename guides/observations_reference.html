@@ -1112,7 +1112,7 @@
 </section>
 <section id="pv">
 <h3><code class="docutils literal notranslate"><span class="pre">pv</span></code><a class="headerlink" href="#pv" title="Link to this heading"></a></h3>
-<p>Only present when <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> is enabled.</p>
+<p>Only present when <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> is enabled. Like the other core-bundle electrical features, these are endogenous values of the last settled interval, not exogenous inputs of the coming one.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Feature</p></th>
@@ -1123,11 +1123,11 @@
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">generation_power_kw</span></code></p></td>
 <td class="text-right"><p>kW</p></td>
-<td><p>PV generation as power.</p></td>
+<td><p>PV generation as power, in the last settled interval (row t).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">generation_energy_kwh_step</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
-<td><p>PV generation in current step.</p></td>
+<td><p>PV generation in the last settled interval (row t when the observation is for t+1); <code class="docutils literal notranslate"><span class="pre">building.solar_generation</span></code> is the upcoming interval (row t+1).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">installed_power_kw</span></code></p></td>
 <td class="text-right"><p>kW</p></td>

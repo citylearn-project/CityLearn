@@ -497,8 +497,8 @@ from <code class="docutils literal notranslate"><span class="pre">baseline</span
 <span id="2-community-market-import-share"></span><h3>2) Community market import share<a class="headerlink" href="#community-market-import-share" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>KPI: <code class="docutils literal notranslate"><span class="pre">district_solar_self_consumption_community_market_import_share_ratio</span></code></p></li>
-<li><p>Formula: <code class="docutils literal notranslate"><span class="pre">community_local_traded_total</span> <span class="pre">/</span> <span class="pre">district_energy_grid_total_import_control</span></code></p></li>
-<li><p>Meaning: fraction of district import demand covered by local community trading (market-centric KPI)</p></li>
+<li><p>Formula: <code class="docutils literal notranslate"><span class="pre">community_local_import_total</span> <span class="pre">/</span> <span class="pre">(community_local_import_total</span> <span class="pre">+</span> <span class="pre">community_grid_import_after_local_total)</span></code></p></li>
+<li><p>Meaning: fraction of the members’ import demand covered by local community trading (market-centric KPI). The denominator is the members’ total import before netting, not the netted district import.</p></li>
 <li><p>Availability: district-only, only when:</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">community_market.enabled</span> <span class="pre">=</span> <span class="pre">true</span></code></p></li>

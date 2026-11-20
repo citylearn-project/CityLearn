@@ -172,6 +172,24 @@ A tag push by itself does not publish the package.</p>
 uses the existing <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> PyPI project and the GitHub <code class="docutils literal notranslate"><span class="pre">pypi</span></code> environment’s
 configured credentials. Confirm both jobs succeeded for the intended commit and
 verify the pinned package from PyPI in a clean environment.</p>
+<p>The publish job supports two credential modes:</p>
+<ul class="simple">
+<li><p><strong>API credentials (current default):</strong> the <code class="docutils literal notranslate"><span class="pre">PYPI_USERNAME</span></code> and <code class="docutils literal notranslate"><span class="pre">PYPI_PASSWORD</span></code>
+secrets, uploaded with <code class="docutils literal notranslate"><span class="pre">twine</span></code>.</p></li>
+<li><p><strong>Trusted publishing (prepared, off):</strong> PyPI issues a short-lived token to this
+workflow through OpenID Connect, so no long-lived PyPI secret is stored in GitHub.
+To switch:</p>
+<ol class="arabic simple">
+<li><p>On PyPI, add a trusted publisher for the <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> project with the owner
+<code class="docutils literal notranslate"><span class="pre">citylearn-project</span></code>, the repository <code class="docutils literal notranslate"><span class="pre">CityLearn</span></code>, the workflow <code class="docutils literal notranslate"><span class="pre">pypi_deploy.yml</span></code>
+and the environment <code class="docutils literal notranslate"><span class="pre">pypi</span></code>.</p></li>
+<li><p>Set the repository variable <code class="docutils literal notranslate"><span class="pre">PYPI_TRUSTED_PUBLISHING</span></code> to <code class="docutils literal notranslate"><span class="pre">true</span></code>
+(Settings → Secrets and variables → Actions → Variables).</p></li>
+<li><p>After one successful release, delete the <code class="docutils literal notranslate"><span class="pre">PYPI_USERNAME</span></code> and <code class="docutils literal notranslate"><span class="pre">PYPI_PASSWORD</span></code>
+secrets.</p></li>
+</ol>
+</li>
+</ul>
 </section>
 <section id="version-policy">
 <h2>Version policy<a class="headerlink" href="#version-policy" title="Link to this heading"></a></h2>

@@ -41,6 +41,21 @@ uses the existing `citylearn` PyPI project and the GitHub `pypi` environment's
 configured credentials. Confirm both jobs succeeded for the intended commit and
 verify the pinned package from PyPI in a clean environment.
 
+The publish job supports two credential modes:
+
+- **API credentials (current default):** the `PYPI_USERNAME` and `PYPI_PASSWORD`
+  secrets, uploaded with `twine`.
+- **Trusted publishing (prepared, off):** PyPI issues a short-lived token to this
+  workflow through OpenID Connect, so no long-lived PyPI secret is stored in GitHub.
+  To switch:
+  1. On PyPI, add a trusted publisher for the `citylearn` project with the owner
+     `citylearn-project`, the repository `CityLearn`, the workflow `pypi_deploy.yml`
+     and the environment `pypi`.
+  2. Set the repository variable `PYPI_TRUSTED_PUBLISHING` to `true`
+     (Settings → Secrets and variables → Actions → Variables).
+  3. After one successful release, delete the `PYPI_USERNAME` and `PYPI_PASSWORD`
+     secrets.
+
 ## Version policy
 
 | Type | Use when |

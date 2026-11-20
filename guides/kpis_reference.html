@@ -302,7 +302,7 @@ delta_x = control_x - baseline_x
 ratio_to_baseline_x = control_x / baseline_x
 delta_to_business_as_usual_x = control_x - business_as_usual_x
 ratio_to_business_as_usual_x = control_x / business_as_usual_x
-self_consumption = (solar_generation_total - export_total) / solar_generation_total
+self_consumption = (solar_generation_total - export_total - curtailment_total) / solar_generation_total
 </pre></div>
 </div>
 <p>District ratios divide district totals: <code class="docutils literal notranslate"><span class="pre">district_..._ratio_to_baseline_x</span></code> is

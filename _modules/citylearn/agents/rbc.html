@@ -554,9 +554,14 @@
 <div class="viewcode-block" id="BasicElectricVehicleRBC_ReferenceController">
 <a class="viewcode-back" href="../../../api/citylearn.agents.rbc.html#citylearn.agents.rbc.BasicElectricVehicleRBC_ReferenceController">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BasicElectricVehicleRBC_ReferenceController</span><span class="p">(</span><span class="n">BasicRBC</span><span class="p">):</span> <span class="c1">#change the name</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""A rule-based controller that charges EVs to the maximum of the chargers and to the maximum of the battery upon connection.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""An hour-of-day rule-based reference controller with an EV, battery, HVAC and DHW schedule.</span>
 
-<span class="sd">    The EV battery is charged at the maximum available charging power whenever it is connected.</span>
+<span class="sd">    It does not charge EVs at full power whenever they are connected. The EV action follows a fixed daily</span>
+<span class="sd">    schedule: 0.4 before 07:00, 1.0 from 07:00, -1.0 (full discharge) from 10:00, -0.6 from 15:00 and 0.8</span>
+<span class="sd">    from 20:00. The battery discharges at -0.08 from 09:00 to 21:00 and charges at 0.091 otherwise; DHW</span>
+<span class="sd">    storage and deferrable appliance actions are always 1. Actions it does not know raise ``ValueError``.</span>
+<span class="sd">    For EV charging that follows the users' departure targets, use the rule baselines in</span>
+<span class="sd">    :py:mod:`citylearn.agents.baseline`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

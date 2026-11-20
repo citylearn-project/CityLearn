@@ -163,9 +163,9 @@
 <span class="sd">    replay_buffer_capacity : int, default: 1e5</span>
 <span class="sd">        Replay buffer capacity.</span>
 <span class="sd">    standardize_start_time_step : int, optional</span>
-<span class="sd">        Time step to calculate mean and standard deviation, and begin standardization of observations and rewards in replay buffer. Defaults to :py:attr:`citylearn.citylearn.CityLearnEnv.time_steps` - 2.</span>
+<span class="sd">        Time step to calculate mean and standard deviation, and begin standardization of observations and rewards in replay buffer. Defaults to the agent's ``episode_time_steps`` - 1.</span>
 <span class="sd">    end_exploration_time_step : int, optional</span>
-<span class="sd">        Time step to stop random or RBC-guided exploration. Defaults to :py:attr:`citylearn.citylearn.CityLearnEnv.time_steps` - 1.</span>
+<span class="sd">        Time step to stop random or RBC-guided exploration. Defaults to the agent's ``episode_time_steps``.</span>
 <span class="sd">    action_scaling_coefficient : float, default: 0.5</span>
 <span class="sd">        Action scaling coefficient.</span>
 <span class="sd">    reward_scaling : float, default: 5.0</span>

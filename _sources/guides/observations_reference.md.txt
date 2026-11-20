@@ -262,12 +262,12 @@ Demand-response `request_id` and baseline validity are exposed in `observations[
 
 ### `pv`
 
-Only present when `entity_core_electrical` is enabled.
+Only present when `entity_core_electrical` is enabled. Like the other core-bundle electrical features, these are endogenous values of the last settled interval, not exogenous inputs of the coming one.
 
 | Feature | Unit | Meaning |
 |---|---:|---|
-| `generation_power_kw` | kW | PV generation as power. |
-| `generation_energy_kwh_step` | kWh/step | PV generation in current step. |
+| `generation_power_kw` | kW | PV generation as power, in the last settled interval (row t). |
+| `generation_energy_kwh_step` | kWh/step | PV generation in the last settled interval (row t when the observation is for t+1); `building.solar_generation` is the upcoming interval (row t+1). |
 | `installed_power_kw` | kW | Installed PV power. |
 | `generation_capacity_factor_ratio` | ratio | `generation_power_kw / installed_power_kw`. |
 
