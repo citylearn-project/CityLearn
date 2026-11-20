@@ -37,6 +37,8 @@ def _new_env(args: argparse.Namespace, *, render_directory: Path | None = None) 
         "central_agent": True,
         "episode_time_steps": args.episode_steps,
         "seconds_per_time_step": args.seconds,
+        # --seconds may differ from the dataset step: keep the compressed time of CityLearn 3.6.0.
+        "time_step_ratio_mode": "compress",
         "random_seed": args.seed,
         "render_mode": "none",
         "debug_timing": False,

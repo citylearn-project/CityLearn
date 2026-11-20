@@ -25,7 +25,7 @@ def make_env(tmp_path, *, earliest=0, latest=3, start=0, steps=8, events=None, s
         schema['buildings']['Building_2'] = deepcopy(schema['buildings']['Building_1'])
         schema['buildings']['Building_2']['deferrable_appliances'] = {}
     return CityLearnEnv(schema, random_seed=0, offline=True, render_directory=tmp_path/'exports',
-                        export_kpis_on_episode_end=False)
+                        export_kpis_on_episode_end=False, time_step_ratio_mode='compress')
 
 
 def action(env, start=False):

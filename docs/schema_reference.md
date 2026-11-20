@@ -436,7 +436,7 @@ Escalator support is currently exposed through the flat interface.
 
 Removing a deferrable appliance cancels pending/running cycles and clears future consumption. Removing PV creates a zero PV. Removing storage creates a zero BESS.
 
-A member's time-series files (energy simulation, chargers, escalators) are either full-horizon, with one row per dataset time step, or member-window files, shorter than the dataset, whose first row is the time step of the member's `add_member` event. A member-window file must cover the member's active steps in the simulation window, and a member that joins again after leaving needs full-horizon files. A member that joins mid-episode starts its battery and thermal storage at `initial_soc`.
+A member's time-series files (energy simulation, chargers, escalators) are either full-horizon, with one row per dataset time step, or member-window files, shorter than the dataset, whose first row is the time step of the member's `add_member` event. A member-window file should cover the member's active steps in the simulation window (otherwise its last row is repeated, with a warning), and a member that joins again after leaving needs full-horizon files. A member that joins mid-episode starts its battery and thermal storage at `initial_soc`.
 
 ## Demand Response
 

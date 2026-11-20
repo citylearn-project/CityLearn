@@ -364,7 +364,7 @@ O standby loss das baterias EV fica isolado dos defaults de storage estacionario
 
 Remover `deferrable_appliance` cancela ciclos pendentes/running e limpa consumo futuro. Remover PV cria PV zero. Remover storage cria BESS zero.
 
-Os ficheiros de series temporais de um membro (energy simulation, chargers, escalators) sao full-horizon, com uma linha por timestep do dataset, ou ficheiros de janela do membro, mais curtos que o dataset, cuja primeira linha e o timestep do evento `add_member`. Um ficheiro de janela tem de cobrir os steps ativos do membro na janela de simulacao, e um membro que volta a entrar depois de sair precisa de ficheiros full-horizon. Um membro que entra a meio do episodio comeca a bateria e o armazenamento termico em `initial_soc`.
+Os ficheiros de series temporais de um membro (energy simulation, chargers, escalators) sao full-horizon, com uma linha por timestep do dataset, ou ficheiros de janela do membro, mais curtos que o dataset, cuja primeira linha e o timestep do evento `add_member`. Um ficheiro de janela deve cobrir os steps ativos do membro na janela de simulacao (caso contrario a ultima linha e repetida, com um aviso), e um membro que volta a entrar depois de sair precisa de ficheiros full-horizon. Um membro que entra a meio do episodio comeca a bateria e o armazenamento termico em `initial_soc`.
 
 ## Demand Response
 

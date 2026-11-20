@@ -37,6 +37,7 @@ def test_scenario_smoke_ev_battery_pv_none_mode(seconds_per_time_step: int):
         seconds_per_time_step=seconds_per_time_step,
         render_mode="none",
         random_seed=0,
+        time_step_ratio_mode='compress',
     )
 
     try:
@@ -88,6 +89,7 @@ def test_scenario_smoke_ev_battery_pv_end_mode_exports(tmp_path):
         render_directory=tmp_path,
         render_session_name="scenario_smoke_end",
         random_seed=0,
+        time_step_ratio_mode='compress',
     )
 
     class _Model:

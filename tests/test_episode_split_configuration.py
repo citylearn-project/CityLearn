@@ -35,6 +35,8 @@ def test_random_episode_split_constructor_precedence(
         random_episode_split=override,
         rolling_episode_split=False,
         episode_time_steps=2,
+        # Four non-overlapping windows; the boundary rule itself is tested in test_topology_data_alignment.
+        episode_split_boundary="disjoint",
         random_seed=7,
         interface=interface,
         render_mode="none",

@@ -50,6 +50,7 @@ def _run_episode(schema: Path, seconds_per_time_step: int, episode_steps: int = 
         episode_time_steps=episode_steps,
         seconds_per_time_step=seconds_per_time_step,
         random_seed=0,
+        time_step_ratio_mode='compress',
     )
     env.reset()
 

@@ -107,6 +107,7 @@ def test_histories_and_kpi_consistency_with_subhour_steps(seconds_per_time_step:
         episode_time_steps=6,
         seconds_per_time_step=seconds_per_time_step,
         random_seed=0,
+        time_step_ratio_mode='compress',
     )
 
     try:

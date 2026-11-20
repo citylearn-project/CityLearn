@@ -94,6 +94,8 @@ def run_profile(args: argparse.Namespace) -> Dict[str, Any]:
         "central_agent": True,
         "episode_time_steps": args.episode_steps,
         "seconds_per_time_step": args.seconds,
+        # --seconds may differ from the dataset step: keep the compressed time of CityLearn 3.6.0.
+        "time_step_ratio_mode": "compress",
         "random_seed": args.seed,
         "render_mode": args.render_mode,
         "interface": args.interface,

@@ -122,7 +122,8 @@ def _check_entity(env, mismatches):
 @pytest.mark.parametrize('case', CASES)
 def test_single_time_step_readers_match_full_series(case):
     dataset, kwargs = CASES[case]
-    env = CityLearnEnv(_schema(dataset), central_agent=True, episode_time_steps=STEPS, random_seed=0, **kwargs)
+    env = CityLearnEnv(_schema(dataset), central_agent=True, episode_time_steps=STEPS, random_seed=0,
+                       time_step_ratio_mode='compress', **kwargs)
     mismatches = []
     try:
         env.reset(seed=0)
@@ -148,6 +149,7 @@ def test_archived_storage_consumption_overlay_matches_full_series():
     env = CityLearnEnv(
         _schema('citylearn_challenge_2022_phase_all_plus_evs'), central_agent=True, buildings=[0],
         episode_time_steps=STEPS, seconds_per_time_step=60, random_seed=0,
+        time_step_ratio_mode='compress',
     )
     try:
         env.reset(seed=0)

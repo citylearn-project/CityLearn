@@ -98,7 +98,8 @@ def test_business_as_usual_reference_keeps_equipment_autosized_over_the_loaded_d
     agent = BusinessAsUsualAgent(env)
     observations, _ = env.reset(seed=0, options={'episode_index': 2})
     start, end = env.episode_tracker.episode_start_time_step, env.episode_tracker.episode_end_time_step
-    assert (start, end) == (48, 71)
+    # Consecutive 24-row episodes share their boundary row, so the third one is rows 46 to 69.
+    assert (start, end) == (46, 69)
 
     # Sizing over the episode alone picks other equipment, as the reference used to.
     episode_only = CityLearnEnv(schema, simulation_start_time_step=start, simulation_end_time_step=end, **kwargs)
@@ -217,8 +218,8 @@ def test_business_as_usual_reference_loads_only_the_episode_without_autosizing()
     tracker = sidecar.episode_tracker
 
     # Equipment does not depend on the data here, so the cheaper episode-only load is kept.
-    assert (tracker.simulation_start_time_step, tracker.simulation_end_time_step) == (48, 71)
-    assert (tracker.episode_start_time_step, tracker.episode_end_time_step) == (48, 71)
+    assert (tracker.simulation_start_time_step, tracker.simulation_end_time_step) == (46, 69)
+    assert (tracker.episode_start_time_step, tracker.episode_end_time_step) == (46, 69)
 
 
 @pytest.mark.parametrize('solar_generation', [False, [False, False, False]])
@@ -238,8 +239,8 @@ def test_business_as_usual_reference_loads_only_the_episode_when_disabled_pv_is_
     tracker = sidecar.episode_tracker
 
     # Disabled PV is not loaded and sizes nothing; the reference used to load the source's window, 0 to 719.
-    assert (tracker.simulation_start_time_step, tracker.simulation_end_time_step) == (48, 71)
-    assert (tracker.episode_start_time_step, tracker.episode_end_time_step) == (48, 71)
+    assert (tracker.simulation_start_time_step, tracker.simulation_end_time_step) == (46, 69)
+    assert (tracker.episode_start_time_step, tracker.episode_end_time_step) == (46, 69)
 
 
 def test_autosizing_check_follows_each_buildings_solar_generation_setting():

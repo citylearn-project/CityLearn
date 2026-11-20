@@ -77,7 +77,7 @@ def test_thermal_storage_charging_respects_device_nominal_power_at_900_s():
         building[storage]['attributes']['capacity'] = 2000.0
 
     env = CityLearnEnv(schema, central_agent=True, seconds_per_time_step=900, episode_time_steps=6,
-                       simulation_start_time_step=4000, random_seed=0)
+                       simulation_start_time_step=4000, random_seed=0, time_step_ratio_mode='compress')
     try:
         env.reset(seed=0)
         building = env.buildings[0]
@@ -116,7 +116,7 @@ def test_islanded_supply_limits_loads_in_control_step_energy(tmp_path, load):
                                                  'target_cooling_temperature': 8.0}}
     schema.pop('dataset_seconds_per_time_step', None)
 
-    env = CityLearnEnv(_write(dataset, schema, frame), central_agent=True, episode_time_steps=4, random_seed=0)
+    env = CityLearnEnv(_write(dataset, schema, frame), central_agent=True, episode_time_steps=4, random_seed=0, time_step_ratio_mode='compress')
     try:
         env.reset(seed=0)
         building = env.buildings[0]
@@ -137,7 +137,7 @@ def test_demand_observation_converts_storage_discharge_to_dataset_resolution():
     dhw_storage['autosize'] = False
     dhw_storage['attributes'].update(capacity=1.0, initial_soc=1.0)
     env = CityLearnEnv(schema, central_agent=True, seconds_per_time_step=900, episode_time_steps=6,
-                       simulation_start_time_step=4000, random_seed=0)
+                       simulation_start_time_step=4000, random_seed=0, time_step_ratio_mode='compress')
     try:
         env.reset(seed=0)
         building = env.buildings[0]

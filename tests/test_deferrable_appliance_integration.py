@@ -371,6 +371,7 @@ def test_flat_deferrable_power_bounds_scale_to_subhour_steps(tmp_path: Path):
         episode_time_steps=4,
         seconds_per_time_step=15,
         random_seed=0,
+        time_step_ratio_mode='compress',
     )
 
     try:

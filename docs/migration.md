@@ -78,9 +78,10 @@ These changes only affect `topology_mode='dynamic'`:
   `add_member` time step. It was misaligned when `simulation_start_time_step`
   was not 0, which also affected the native BAU reference of every dynamic
   episode that does not start at row 0 (the BAU sidecar loads the episode
-  window). Such a file must cover the member's active steps in the simulation
-  window; a member that joins again after leaving needs a full-horizon file.
-  Both cases now raise a `ValueError` instead of reusing frozen rows.
+  window). A member that joins again after leaving needs a full-horizon file and
+  now raises a `ValueError` otherwise, instead of reusing frozen rows. A file that
+  ends before the member leaves still repeats its last row for the remaining
+  steps, but now with a `UserWarning`.
 - A member that joins (or rejoins) mid-episode starts its cooling, heating and
   DHW storage at `initial_soc`, as its battery already did, instead of empty.
 - `env.non_shiftable_load`, `env.solar_generation`, `env.power_outage` and the

@@ -359,7 +359,8 @@ def _ev_lifecycle_env(tmp_path, seconds, *, first_activation=False, second_charg
          "target_asset_id": "charger_1_1"} for event in events
     ]
     return CityLearnEnv(schema, interface="entity", topology_mode="dynamic", random_seed=19,
-                        physics_invariant_checks=True, export_kpis_on_episode_end=False, **env_options)
+                        physics_invariant_checks=True, export_kpis_on_episode_end=False,
+                        time_step_ratio_mode='compress', **env_options)
 
 
 def _assert_lifecycle_ev_observation(env, ev, expected):

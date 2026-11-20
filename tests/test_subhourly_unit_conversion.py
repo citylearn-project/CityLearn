@@ -27,6 +27,7 @@ def _hourly_2021(seconds):
     return CityLearnEnv(
         HOURLY_2021, central_agent=True, episode_time_steps=12, seconds_per_time_step=seconds,
         random_seed=0, simulation_start_time_step=4000,
+        time_step_ratio_mode='compress',
     )
 
 
@@ -64,6 +65,7 @@ def test_partial_load_baseline_top_up_is_control_step_energy():
     env = CityLearnEnv(
         'data/datasets/citylearn_challenge_2023_phase_1/schema.json', central_agent=True,
         seconds_per_time_step=900, simulation_start_time_step=200, episode_time_steps=24, random_seed=0,
+        time_step_ratio_mode='compress',
     )
     env.reset()
     names = env.action_names[0]
@@ -110,7 +112,7 @@ def test_thermal_storage_discharge_is_limited_by_control_step_demand():
         building['dhw_storage']['attributes']['initial_soc'] = 0.5
         building['include'] = name == names[0]
 
-    env = CityLearnEnv(schema, central_agent=False)
+    env = CityLearnEnv(schema, central_agent=False, time_step_ratio_mode='compress')
     env.reset()
     building = env.buildings[0]
     index = env.action_names[0].index('dhw_storage')

@@ -159,13 +159,20 @@ def _copy_dataset(tmp_path: Path, root: Path) -> Path:
     return target
 
 
-def test_short_member_file_must_cover_the_active_window(tmp_path):
+def test_short_member_file_that_ends_early_warns(tmp_path):
     root = _copy_dataset(tmp_path, TOPOLOGY_DEMO)
     frame = pd.read_csv(root / "Building_18.csv")
     frame.iloc[:100].to_csv(root / "Building_18.csv", index=False)
 
-    with pytest.raises(ValueError, match="must then cover"):
-        CityLearnEnv(_schema(root), simulation_start_time_step=950, simulation_end_time_step=1200, random_seed=0)
+    with pytest.warns(UserWarning, match="ends before the member's active steps"):
+        env = CityLearnEnv(_schema(root), simulation_start_time_step=950, simulation_end_time_step=1200, random_seed=0)
+
+    building = env._topology_service.member_pool["Building_18"]
+    np.testing.assert_allclose(
+        building.energy_simulation.non_shiftable_load[50:150], frame["non_shiftable_load"].iloc[:100], rtol=1.0e-6,
+    )
+    # The 3.6.0 carry-forward of the last row is kept for the steps the file does not cover.
+    assert building.energy_simulation.non_shiftable_load[200] == pytest.approx(frame["non_shiftable_load"].iloc[99])
 
 
 def test_rejoining_member_requires_a_full_horizon_file():

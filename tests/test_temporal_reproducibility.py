@@ -421,7 +421,7 @@ def test_terminal_padding_is_explicit_and_clock_extends_only_at_terminal(tmp_pat
 
 def test_unresampled_clock_mismatch_is_visible_in_manifest(tmp_path):
     schema, _ = schema_at(tmp_path)
-    env = CityLearnEnv(schema, seconds_per_time_step=60, random_seed=0, offline=True)
+    env = CityLearnEnv(schema, seconds_per_time_step=60, random_seed=0, offline=True, time_step_ratio_mode='compress')
     try:
         m = experiment_manifest(env)["temporal_reproducibility"]
         assert m["clock_consistent"] is False

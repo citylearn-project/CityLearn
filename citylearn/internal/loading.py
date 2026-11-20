@@ -5,6 +5,7 @@ import hashlib
 import importlib
 import logging
 import os
+import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Mapping, NamedTuple, Optional, Set, Tuple, Union
 
 import numpy as np
@@ -1332,12 +1333,22 @@ class CityLearnLoadingService:
             csv_dtypes=csv_dtypes,
         )
 
-        if len(dataframe) < rows:
+        if len(dataframe) == 0:
             raise ValueError(
                 f'{source_label} has {self._timeseries_row_count(filepath)} rows. It is shorter than the '
-                f'dataset, so its first row is the add_member time step ({join}), and it must then cover '
-                f'the member\'s active steps {first} to {last - 1} of this simulation window. Provide the '
-                'missing rows or a full-horizon file.'
+                f'dataset, so its first row is the add_member time step ({join}), but it has no row for the '
+                f'first active step {first} of this simulation window. Provide a full-horizon file.'
+            )
+
+        if len(dataframe) < rows:
+            # As in CityLearn 3.6.0 the last row is carried forward, but no longer silently.
+            warnings.warn(
+                f'{source_label} has {self._timeseries_row_count(filepath)} rows. It is shorter than the '
+                f'dataset, so its first row is the add_member time step ({join}), and it ends before the '
+                f'member\'s active steps {first} to {last - 1} of this simulation window: its last row is '
+                'repeated for the remaining steps. Provide the missing rows or a full-horizon file.',
+                UserWarning,
+                stacklevel=2,
             )
 
         return self._place_member_rows(

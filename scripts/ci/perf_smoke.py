@@ -35,6 +35,8 @@ def run_case(render_mode: str, episode_steps: int, seconds_per_time_step: int, s
         "central_agent": True,
         "episode_time_steps": episode_steps,
         "seconds_per_time_step": seconds_per_time_step,
+        # The timing step may differ from the dataset step: keep the compressed time of CityLearn 3.6.0.
+        "time_step_ratio_mode": "compress",
         "random_seed": seed,
         "debug_timing": True,
         "interface": interface,
