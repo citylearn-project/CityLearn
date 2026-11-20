@@ -487,10 +487,19 @@ Metadata fica em `observations["meta"]["robustness"]`.
 | `enabled` | `false` | Ativa settlement local. |
 | `local_price_ratio_to_grid_import` | `0.8` | Preco local relativo ao preco de import grid. |
 | `intra_community_sell_ratio` | alias | Nome legacy para o mesmo ratio. |
-| Remuneração da exportação residual | fixa em `0.0` | O runtime usa zero; `grid_export_price` não configura uma tarifa. |
+| `settlement_version` | `1` | `2` ativa o `grid_export_price`; com `1`, a exportação residual não é remunerada. |
+| `grid_export_price` | `0.0` | EUR/kWh pagos pela exportação residual quando `settlement_version` é `2`. Tem de ser finito. |
+| `tariff_files` | `{}` | Tarifas CSV por membro, `{"<edifício>": "<ficheiro no dataset>"}`, com uma linha por passo global e as colunas `grid_export_price`, `community_buy_price` e `community_sell_price` (EUR/kWh), cobrindo o episódio. Substituem o rácio e o `grid_export_price` para esse membro. |
+| `local_trading_enabled` | `true` | `false` mantém a liquidação e os KPIs do mercado mas não troca energia localmente. Aceita booleanos ou `"true"`/`"false"`. |
 | `import_member_weights` | `{}` | Pesos para repartir energia local entre importadores. |
 | `kpis.community_local_traded_enabled` | `true` | Ativa KPI v2 de energia local transacionada. |
 | `kpis.community_self_consumption_enabled` | `true` | Ativa KPI v2 de import share local. |
+
+Cada lado de uma troca local usa a tarifa do seu membro. Com tarifas diferentes entre
+membros, os importadores podem pagar um valor diferente do que os exportadores
+recebem pela mesma energia; a diferença aparece em
+`community_operator_balance_total_eur` (positiva quando o mercado retém dinheiro) e é
+zero com uma tarifa única.
 
 ## Combinacoes Importantes
 

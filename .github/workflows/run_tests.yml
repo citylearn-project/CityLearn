@@ -60,7 +60,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-py${{ matrix.python-version }}-numpy${{ matrix.numpy }}-pip-${{ hashFiles('requirements.txt', 'test_requirements.txt', 'setup.py') }}
+          key: ${{ runner.os }}-py${{ matrix.python-version }}-numpy${{ matrix.numpy }}-pip-${{ hashFiles('requirements.txt', 'test_requirements.txt', 'pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-py${{ matrix.python-version }}-numpy${{ matrix.numpy }}-pip-
 

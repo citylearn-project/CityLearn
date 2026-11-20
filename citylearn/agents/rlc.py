@@ -34,9 +34,9 @@ class RLC(Agent):
     replay_buffer_capacity : int, default: 1e5
         Replay buffer capacity.
     standardize_start_time_step : int, optional
-        Time step to calculate mean and standard deviation, and begin standardization of observations and rewards in replay buffer. Defaults to :py:attr:`citylearn.citylearn.CityLearnEnv.time_steps` - 2.
+        Time step to calculate mean and standard deviation, and begin standardization of observations and rewards in replay buffer. Defaults to the agent's ``episode_time_steps`` - 1.
     end_exploration_time_step : int, optional
-        Time step to stop random or RBC-guided exploration. Defaults to :py:attr:`citylearn.citylearn.CityLearnEnv.time_steps` - 1.
+        Time step to stop random or RBC-guided exploration. Defaults to the agent's ``episode_time_steps``.
     action_scaling_coefficient : float, default: 0.5
         Action scaling coefficient.
     reward_scaling : float, default: 5.0

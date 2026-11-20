@@ -41,6 +41,14 @@ passaram para o commit pretendido. Instalar depois a versão exata do PyPI num
 ambiente limpo e verificar o pacote. As credenciais configuradas no ambiente
 `pypi` não devem ser copiadas para a documentação.
 
+O job de publicação aceita dois modos de credenciais: os segredos `PYPI_USERNAME` e
+`PYPI_PASSWORD` com `twine` (modo atual) ou a publicação confiável (OIDC), preparada
+mas desligada. Para a ligar, configurar no PyPI um publicador confiável para o
+projeto `citylearn` (dono `citylearn-project`, repositório `CityLearn`, workflow
+`pypi_deploy.yml`, ambiente `pypi`) e definir a variável do repositório
+`PYPI_TRUSTED_PUBLISHING=true`; depois de uma versão publicada com sucesso, apagar os
+dois segredos.
+
 ## Política de versões
 
 | Tipo | Utilização |

@@ -3,6 +3,11 @@
 Guias de utilização, configuração e desenvolvimento. A versão inglesa encontra-se
 em `docs/*.md`; os identificadores de campos, classes e KPIs mantêm o nome da API.
 
+A versão inglesa é a referência. Alguns guias portugueses são resumos (por exemplo,
+as funcionalidades) e alguns guias só existem em inglês: as baselines, o scorecard, o
+guia de migração, a validação e a árvore de KPIs. Em caso de diferença, prevalece a
+versão inglesa.
+
 | Guia | Conteúdo |
 |---|---|
 | [Executar simulações](running_simulations.md) | Instalação, exemplos, parâmetros, CLI e exportação. |

@@ -299,8 +299,8 @@ These are different KPIs and should not be merged.
 
 ### 2) Community market import share
 - KPI: `district_solar_self_consumption_community_market_import_share_ratio`
-- Formula: `community_local_traded_total / district_energy_grid_total_import_control`
-- Meaning: fraction of district import demand covered by local community trading (market-centric KPI)
+- Formula: `community_local_import_total / (community_local_import_total + community_grid_import_after_local_total)`
+- Meaning: fraction of the members' import demand covered by local community trading (market-centric KPI). The denominator is the members' total import before netting, not the netted district import.
 - Availability: district-only, only when:
   - `community_market.enabled = true`
   - `community_market.kpis.community_self_consumption_enabled = true`

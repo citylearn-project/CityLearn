@@ -559,7 +559,10 @@ Metadata is exposed under `observations["meta"]["robustness"]`.
 | `enabled` | `false` | Enables local settlement. |
 | `local_price_ratio_to_grid_import` | `0.8` | Local price relative to grid import price. |
 | `intra_community_sell_ratio` | alias | Legacy name for the same ratio. |
-| Residual grid-export remuneration | fixed `0.0` | Runtime settlement currently uses zero; `grid_export_price` is not a configurable tariff. |
+| `settlement_version` | `1` | `2` enables `grid_export_price`; with `1`, residual grid exports earn nothing. |
+| `grid_export_price` | `0.0` | EUR/kWh paid for residual grid exports when `settlement_version` is `2`. Must be finite. |
+| `tariff_files` | `{}` | Per-member CSV tariffs, `{"<building>": "<file inside the dataset>"}`. Each file has one row per global time step with `grid_export_price`, `community_buy_price` and `community_sell_price` (EUR/kWh) and must cover the episode. A member with a file uses these prices instead of the ratio and `grid_export_price`. |
+| `local_trading_enabled` | `true` | `false` keeps the market's settlement and KPIs but trades no energy locally. Booleans or `"true"`/`"false"`. |
 | `import_member_weights` | `{}` | Weights for allocating local energy among importers. |
 | `kpis.community_local_traded_enabled` | `true` | Enables local traded energy KPI. |
 | `kpis.community_self_consumption_enabled` | `true` | Enables local import-share KPI. |
@@ -570,6 +573,12 @@ The local price ratio is clipped to `[0, 1]`. The legacy
 `intra_community_sell_ratio` key is an alias. Local settlement values
 same-timestep member imports and exports; it does not change the physical
 device dispatch.
+
+Each side of a local trade is priced with its own member's tariff. When members
+have different grid tariffs or `tariff_files`, importers can pay a different amount
+from what exporters receive for the same energy. The difference is reported as
+`community_operator_balance_total_eur` (positive when the market keeps money);
+it is zero with a single shared tariff.
 
 | Case | Configuration |
 |---|---|

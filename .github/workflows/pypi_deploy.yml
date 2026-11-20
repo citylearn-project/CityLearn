@@ -48,6 +48,12 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/project/citylearn/
+    # Trusted publishing (OIDC) needs an ID token. It stays off until the repository variable
+    # PYPI_TRUSTED_PUBLISHING is set to 'true' after the publisher is configured on PyPI; until then
+    # the twine upload with the existing secrets below is used.
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Set up Python
@@ -66,7 +72,15 @@ jobs:
           name: python-dist
           path: dist/
 
-      - name: Publish to PyPI
+      - name: Publish to PyPI (trusted publishing)
+        if: ${{ vars.PYPI_TRUSTED_PUBLISHING == 'true' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          verbose: true
+
+      - name: Publish to PyPI (API credentials)
+        if: ${{ vars.PYPI_TRUSTED_PUBLISHING != 'true' }}
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}

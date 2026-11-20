@@ -65,6 +65,9 @@ def market_records(kpi: "CityLearnKPIService", kpi_buildings, building_windows, 
         kpi._metric('community_settled_cost_daily_average_eur', kpi._daily_average(market_district['community_settled_cost_total_eur'], simulated_days), 'District', 'district'),
         kpi._metric('community_counterfactual_cost_daily_average_eur', kpi._daily_average(market_district['community_counterfactual_cost_total_eur'], simulated_days), 'District', 'district'),
         kpi._metric('community_market_savings_daily_average_eur', kpi._daily_average(market_district['community_market_savings_total_eur'], simulated_days), 'District', 'district'),
+        # With per-member tariffs importers and exporters can be priced differently; the residual is reported
+        # here instead of disappearing (zero with a single tariff, #239).
+        kpi._metric('community_operator_balance_total_eur', market_district['community_operator_balance_total_eur'], 'District', 'district'),
         kpi._metric(
             'community_local_share_of_demand',
             None if (district_local_import + district_grid_import) <= 0.0 else district_local_import / (district_local_import + district_grid_import),

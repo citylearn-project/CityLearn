@@ -5,8 +5,9 @@ Quick checklist to publish a new version from this repo.
 ## 1) Pre-flight
 
 1. Ensure your changes are committed and pushed to `master`.
-2. Confirm GitHub secret exists:
-   - `PYPI_API_TOKEN` in `Settings -> Secrets and variables -> Actions`.
+2. Confirm the publishing credentials (see `docs/publishing.md`):
+   - API credentials: the `PYPI_USERNAME` and `PYPI_PASSWORD` secrets in `Settings -> Secrets and variables -> Actions`; or
+   - trusted publishing: the repository variable `PYPI_TRUSTED_PUBLISHING=true` and a trusted publisher configured on PyPI.
 3. Bump package version in:
    - `citylearn/__init__.py` (e.g., `0.1.1`).
 
@@ -55,6 +56,6 @@ python -c "from citylearn.citylearn import CityLearnEnv; print('ok')"
 
 ## 6) If token was exposed
 
-1. Revoke token in PyPI immediately.
+1. Revoke the token in PyPI immediately.
 2. Create a new token.
-3. Update GitHub `PYPI_API_TOKEN` secret.
+3. Update the GitHub `PYPI_PASSWORD` secret (or switch to trusted publishing, which stores no PyPI secret).
