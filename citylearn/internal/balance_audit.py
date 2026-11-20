@@ -454,13 +454,6 @@ class IndependentBalanceAudit:
                 for e in self._pending(s)
                 if e["kind"] == "transfer" and e["bus"] < 0.0
             )
-            charge = sum(
-                e["bus"]
-                for s in self.stocks.values()
-                if s["owner"] == name
-                for e in self._pending(s)
-                if e["kind"] == "transfer" and e["bus"] >= 0.0
-            )
             supply = row["pv"] - row["curtailed"] + discharge + imports[i]
             buses[name] = graph.node(supply, inputs)
             graph.sink(buses[name], (name, "load"), row["load"])

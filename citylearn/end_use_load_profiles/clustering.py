@@ -99,7 +99,7 @@ class Clustering:
             np.array(sum_of_squares_error, dtype=float)[:-1] 
             - np.array(sum_of_squares_error, dtype=float)[1:]
         )*100/np.array(sum_of_squares_error, dtype=float)[:-1]
-        sse_candidates = np.array(clusters[:-1], dtype=int)[
+        sse_candidates = np.array(clusters[:-1], dtype=int)[  # noqa: F841 (used by the disabled criterion below)
             sum_of_squares_error_change < self.sum_of_squares_error_minimum_percent_change
         ]
         optimal_clusters = np.nanmean([

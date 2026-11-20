@@ -57,4 +57,4 @@ include = ["citylearn*"]
 
 [tool.ruff.lint]
 # Rule selection shared by local runs and CI: `ruff check citylearn tests scripts/manual scripts/ci`.
-select = ["E9", "F401", "F821", "NPY201"]
+select = ["E9", "F401", "F821", "F841", "NPY201"]

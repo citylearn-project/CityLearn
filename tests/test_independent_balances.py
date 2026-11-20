@@ -154,7 +154,6 @@ def test_joint_equipment_sharing_losses_and_carbon(tmp_path, seconds, fast):
     try:
         env.reset()
         with IndependentBalanceAudit(env) as audit:
-            original = deepcopy(env.observations)
             step = env._runtime_service.step_without_feedback if fast else env.step
             while not env.terminated:
                 t = env.time_step

@@ -38,7 +38,7 @@ def test_minute_level_export(tmp_path):
         assert community_export.exists()
 
         with community_export.open() as f:
-            header = next(f)
+            next(f)  # header
             first_row = next(f).strip()
             second_row = next(f).strip()
 
