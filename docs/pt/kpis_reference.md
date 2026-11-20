@@ -274,7 +274,7 @@ penalização  L = média sobre as janelas w de (1 − média_{t∈w} x_t / max_
 Dois conjuntos de linhas usam séries diferentes:
 
 - **Rácios ao contrafactual** (`*_to_baseline_ratio`, `*_to_baseline_signed_net_ratio`) comparam as séries do distrito das condições `control_condition` e `baseline_condition` da avaliação. `ramping_average_to_baseline_ratio` é `R_total(controlo) / R_total(contrafactual)`, a definição da versão 3.6.0; só é igual ao rácio das médias quando as duas séries têm o mesmo número de transições finitas.
-- **Linhas BAU** comparam a potência do distrito na execução controlada (a série de controlo por omissão, seja qual for `control_condition`) com a da execução BAU nativa. Cada métrica publica `_control` (o valor do controlo), `_business_as_usual` (o valor BAU), `_delta_to_business_as_usual` (controlo − BAU) e `*_to_business_as_usual_ratio`; estas linhas existem quando `evaluate_v2()` inclui a comparação com o BAU. `ramping_total` não tem linha de rácio.
+- **Linhas BAU** comparam a potência do distrito na execução controlada (a série de controlo por omissão, seja qual for `control_condition`; [#331](https://github.com/citylearn-project/CityLearn/issues/331)) com a da execução BAU nativa. Cada métrica publica `_control` (o valor do controlo), `_business_as_usual` (o valor BAU), `_delta_to_business_as_usual` (controlo − BAU) e `*_to_business_as_usual_ratio`; estas linhas existem quando `evaluate_v2()` inclui a comparação com o BAU. `ramping_total` não tem linha de rácio.
 
 Note a ordem das palavras nos nomes com sinal: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, mas `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
 
@@ -456,7 +456,7 @@ perda_distrito = Σ_b max(capacidade_b − capacidade_deg_b, 0) / Σ_b capacidad
 **Que KPI usar.** Use a energia movimentada para a atividade da bateria e os ciclos completos equivalentes, ao nível do edifício ou do distrito, para o desgaste por unidade de capacidade. Num portefólio, calcule os ciclos a partir da energia movimentada e das capacidades somadas, em vez de ler a linha `_count` somada. Apresente a atividade da bateria com o custo e o serviço: mais ou menos atividade não é, por si só, melhor.
 
 **Limitações conhecidas.**
-- O EFC do portefólio é uma soma de valores das comunidades.
+- O EFC do portefólio é uma soma de valores das comunidades ([#330](https://github.com/citylearn-project/CityLearn/issues/330)).
 - A capacidade degradada é lida no momento da avaliação, e não no fim da janela ativa do membro.
 
 ## Serviço elétrico e fases

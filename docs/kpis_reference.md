@@ -270,7 +270,7 @@ penalty   L = mean over windows w of (1 − mean_{t∈w} x_t / max_{t∈w} x_t)
 Two sets of rows use different series:
 
 - **Ratios to the baseline** (`*_to_baseline_ratio`, `*_to_baseline_signed_net_ratio`) compare the district series of the evaluation's `control_condition` and `baseline_condition`. `ramping_average_to_baseline_ratio` is `R_total(control) / R_total(baseline)`, the 3.6.0 definition; it equals the ratio of the averages only when both series have the same number of finite transitions.
-- **BAU rows** compare the district power of the controlled run (the default control series, whatever `control_condition` is) with that of the native BAU run. Each metric publishes `_control` (the control value), `_business_as_usual` (the BAU value), `_delta_to_business_as_usual` (control − BAU) and `*_to_business_as_usual_ratio`; these rows exist when `evaluate_v2()` includes the BAU comparison. `ramping_total` has no ratio row.
+- **BAU rows** compare the district power of the controlled run (the default control series, whatever `control_condition` is; [#331](https://github.com/citylearn-project/CityLearn/issues/331)) with that of the native BAU run. Each metric publishes `_control` (the control value), `_business_as_usual` (the BAU value), `_delta_to_business_as_usual` (control − BAU) and `*_to_business_as_usual_ratio`; these rows exist when `evaluate_v2()` includes the BAU comparison. `ramping_total` has no ratio row.
 
 Note the word order of the signed-net names: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, but `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
 
@@ -452,7 +452,7 @@ fade_district = Σ_b max(capacity_b − capacity_deg_b, 0) / Σ_b capacity_b
 **Which KPI.** Use throughput for battery activity and equivalent full cycles at building or district level for wear per unit of capacity. For a portfolio, compute cycles from the summed throughput and capacities rather than reading the summed `_count` row. Report battery activity with cost and service: neither more nor less activity is better in itself.
 
 **Known limits.**
-- The portfolio EFC is a sum of community values.
+- The portfolio EFC is a sum of community values ([#330](https://github.com/citylearn-project/CityLearn/issues/330)).
 - The degraded capacity is read at evaluation time, not at the end of a member's active window.
 
 ## Electrical service and phases
