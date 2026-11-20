@@ -172,6 +172,18 @@ Pacote de trabalho 4 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-
   descarga altera ligeiramente os datasets dos challenges (por exemplo, menos
   0,05% de importação do BAU em quatro semanas de
   `citylearn_challenge_2022_phase_all_plus_evs`).
+- **Referências congeladas para as duas versões da física.** A auditoria de
+  paridade do refactor (`scripts/audit/audit_refactor_parity.py`) e o teste de
+  versões do NumPy (`tests/test_numpy_version_independence.py`) só comparavam
+  execuções com referências gravadas na versão 1 da física, pelo que uma
+  alteração da física por omissão passava nas duas verificações. Cada
+  verificação corre agora nas duas versões e compara cada execução com a
+  referência da sua versão: `scripts/audit/snapshots/refactor_parity_physics_v2.json`
+  e `tests/data/numpy_version_reference_physics_v2.json` guardam a versão 2, com
+  os fluxos aleatórios `v2` por omissão no teste do NumPy, e as referências da
+  versão 1 não mudam. Os jobs de CI com NumPy 1.x e 2.x têm de reproduzir as duas
+  referências
+  ([#292](https://github.com/citylearn-project/CityLearn/issues/292)).
 
 ### Fluxos aleatórios e sementes
 
