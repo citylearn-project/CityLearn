@@ -7,7 +7,11 @@ from urllib.parse import unquote, urlsplit
 
 # Pages rendered from the notebooks in examples/ (docs/source/usage/*.nblink).
 NOTEBOOK_PAGES = [
-    "usage/agents.html", "usage/load_environment.html", "usage/cli.html", "usage/rl_training.html",
+    "usage/agents.html",
+    "usage/load_environment.html",
+    "usage/cli.html",
+    "usage/rl_training.html",
+    "usage/rllib_training.html",
 ]
 
 

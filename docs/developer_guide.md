@@ -31,7 +31,7 @@ Optional dependencies:
 | PV autosizing | `.venv/bin/pip install -e ".[pysam]"` |
 | Parallel tests | `.venv/bin/pip install pytest-xdist` |
 | Notebook checks | `.venv/bin/pip install nbclient nbformat ipykernel` |
-| RLlib wrappers | `.venv/bin/pip install "ray[rllib]"` (a release with wheels for your Python) |
+| RLlib wrappers | `.venv/bin/pip install "ray[rllib]"` (tested with Ray 2.60.0; `tests/test_rllib_wrappers.py` skips without it) |
 | Build checks | `.venv/bin/pip install build twine` |
 
 ## Portable experiment evidence

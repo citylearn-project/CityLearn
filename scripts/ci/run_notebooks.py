@@ -27,6 +27,7 @@ NOTEBOOKS = [
     'examples/controller_examples.ipynb',
     'examples/cli.ipynb',
     'examples/rl_training.ipynb',
+    'examples/rllib_training.ipynb',
 ]
 SKIP_TAG = 'skip-execution'
 INSTALL_PREFIXES = ('%pip', '!pip', '%conda', '!conda')
@@ -65,7 +66,7 @@ def with_skipped_cells(source: nbformat.NotebookNode, executed: nbformat.Noteboo
 def run(path: Path, timeout: int, output_dir: Path | None = None) -> float:
     start = time.perf_counter()
 
-    with tempfile.TemporaryDirectory(prefix='citylearn-notebook-') as directory:
+    with tempfile.TemporaryDirectory(prefix='citylearn-notebook-', ignore_cleanup_errors=True) as directory:
         executed = executable_copy(path)
         client = NotebookClient(
             executed, timeout=timeout, kernel_name='python3', resources={'metadata': {'path': directory}},
