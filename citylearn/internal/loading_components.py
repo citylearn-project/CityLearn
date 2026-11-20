@@ -257,7 +257,12 @@ def configure_devices(building, building_name, building_type, building_schema, s
                 **attributes,
                 'random_seed': attributes['random_seed'] if attributes.get('random_seed', None) is not None else device_random_seed,
                 'random_stream_version': attributes.get('random_stream_version', schema['random_stream_version']),
-                'random_stream_key': attributes.get('random_stream_key', ('building', building_name, device_name)),
+                # An explicit seed is the device's own stream, as for a device built on its own; the
+                # environment seed is keyed by building and device so devices draw independently.
+                'random_stream_key': attributes.get(
+                    'random_stream_key',
+                    () if attributes.get('random_seed', None) is not None else ('building', building_name, device_name),
+                ),
             }
             device = constructor(**attributes)
             autosize = parse_bool(

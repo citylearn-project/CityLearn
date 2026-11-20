@@ -42,7 +42,8 @@ def _signals_before_partial_day_fix(time_steps, seconds_per_time_step, saifi, ca
 
 @pytest.mark.parametrize(('time_steps', 'seconds'), [(24*30, 3600.0), (96*7, 900.0), (24*365, 3600.0)])
 def test_whole_day_signals_unchanged_by_partial_day_fix(time_steps, seconds):
-    model = ReliabilityMetricsPowerOutage(saifi=200.0, caidi=120.0, random_seed=3)
+    # The 3.6.0 derivation; 'v2' also draws day 0 and rounds durations (tests/test_random_streams.py).
+    model = ReliabilityMetricsPowerOutage(saifi=200.0, caidi=120.0, random_seed=3, random_stream_version='v1')
     np.testing.assert_array_equal(
         model.get_signals(time_steps, seconds),
         _signals_before_partial_day_fix(time_steps, seconds, 200.0, 120.0, 3),
@@ -112,8 +113,20 @@ def test_unseeded_outages_are_reproducible_and_match_native_bau(model_name):
 
 
 def test_explicit_outage_seed_takes_precedence_over_episode_seed():
-    model = ReliabilityMetricsPowerOutage(saifi=200.0, caidi=120.0, random_seed=3)
+    model = ReliabilityMetricsPowerOutage(saifi=200.0, caidi=120.0, random_seed=3, random_stream_version='v1')
     expected = model.get_signals(720, 3600.0)
-    model._set_episode_seed(23, 'Building_1', 720, 1439)
+    model._set_episode_seed(23, 'Building_1', 720, 1439, random_stream_version='v1')
     assert model.random_seed == 3
     np.testing.assert_array_equal(model.get_signals(720, 3600.0), expected)
+
+
+def test_v2_explicit_outage_seed_is_the_root_of_each_building_and_episode_stream():
+    model = ReliabilityMetricsPowerOutage(saifi=200.0, caidi=120.0, random_seed=3)
+    model._set_episode_seed(23, 'Building_1', 720, 1439, random_stream_version='v2', random_stream_episode=0)
+    first = model.get_signals(720, 3600.0)
+    other_root = ReliabilityMetricsPowerOutage(saifi=200.0, caidi=120.0, random_seed=4)
+    other_root._set_episode_seed(23, 'Building_1', 720, 1439, random_stream_version='v2', random_stream_episode=0)
+    assert not np.array_equal(other_root.get_signals(720, 3600.0), first)
+    # The environment seed (23) does not enter a seeded model's stream.
+    model._set_episode_seed(99, 'Building_1', 720, 1439, random_stream_version='v2', random_stream_episode=0)
+    np.testing.assert_array_equal(model.get_signals(720, 3600.0), first)

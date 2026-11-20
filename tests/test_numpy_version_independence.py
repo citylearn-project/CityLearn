@@ -40,9 +40,12 @@ def _action(t: int, j: int, low: float, high: float) -> float:
 
 
 def _rollout(name: str) -> dict:
-    # The NumPy 1 reference was recorded with the physics of CityLearn 3.6.0, which physics version 1 keeps.
+    # The NumPy 1 reference was recorded with the physics and random streams of CityLearn 3.6.0, which physics
+    # version 1 and random_stream_version 'v1' keep. The 'v2' streams use SeedSequence and PCG64, whose output
+    # NumPy keeps identical across versions.
     env = CityLearnEnv(str(ROOT/'data'/'datasets'/name/'schema.json'), central_agent=True,
-                       episode_time_steps=STEPS + 1, random_seed=0, physics_version=1)
+                       episode_time_steps=STEPS + 1, random_seed=0, physics_version=1,
+                       random_stream_version='v1')
     env.reset(seed=0)
     rewards = []
     t = 0

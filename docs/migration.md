@@ -296,7 +296,10 @@ key, and keeps one generator per stream:
 
 - each device draws its parameters as successive values of its own stream,
   keyed by building and device name; in 3.6.0 every draw was the first value of
-  a new `RandomState`, so all parameters of a device sat at the same quantile;
+  a new `RandomState`, so all parameters of a device sat at the same quantile.
+  A `random_seed` given in a device's or an EV battery's attributes is that
+  object's own stream, so devices given the same seed draw the same parameters,
+  as a device built on its own does;
 - each electric vehicle has its own away-from-charger drift stream per episode;
   in 3.6.0 one stream seeded with `random_seed + episode` was shared by every
   EV, so seed `s` in episode 1 repeated seed `s + 1` in episode 0;

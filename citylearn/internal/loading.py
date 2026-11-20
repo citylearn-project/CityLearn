@@ -703,7 +703,7 @@ class CityLearnLoadingService:
             'time_step_ratio': time_step_ratio,
             'random_seed': battery_random_seed,
             'random_stream_version': schema['random_stream_version'],
-            'random_stream_key': ('electric_vehicle', electric_vehicle_name, 'battery'),
+            'random_stream_key': () if attrs.get('random_seed') is not None else ('electric_vehicle', electric_vehicle_name, 'battery'),
             'episode_tracker': episode_tracker,
             'depth_of_discharge': depth_of_discharge,
         }

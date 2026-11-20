@@ -388,10 +388,9 @@ class TestBattery(unittest.TestCase):
         # Verify returned values
         self.assertGreater(capacity, 0)
         self.assertGreater(nominal_power, 0)
-        self.assertGreaterEqual(dod, 0)
-        self.assertLessEqual(dod, 1)
-        self.assertGreater(efficiency, 0)
-        self.assertLessEqual(efficiency, 1)
+        # A NaN datasheet value is returned as NaN; the setters then use the default or draw it.
+        self.assertTrue(math.isnan(dod) or 0 <= dod <= 1)
+        self.assertTrue(math.isnan(efficiency) or 0 < efficiency <= 1)
         
         # Check autosize_config was created
         self.assertIsNotNone(self.battery._autosize_config)

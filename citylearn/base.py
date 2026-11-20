@@ -332,9 +332,9 @@ class Environment:
     def random_stream_version(self, value: Union[str, int]):
         value = random_streams.parse_random_stream_version(value)
 
-        if value != getattr(self, '_Environment__random_stream_version', None):
+        if value != self.random_stream_version or not hasattr(self, '_Environment__random_stream_version'):
             self.__random_stream_version = value
-            self._random_generators = {}
+            self.__dict__.pop('_random_generators', None)
 
     @property
     def random_stream_key(self) -> Tuple[Any, ...]:
@@ -346,9 +346,9 @@ class Environment:
     def random_stream_key(self, value: Union[Tuple[Any, ...], List[Any], str, None]):
         value = () if value is None else ((value,) if isinstance(value, str) else tuple(value))
 
-        if value != getattr(self, '_Environment__random_stream_key', None):
+        if value != self.random_stream_key or not hasattr(self, '_Environment__random_stream_key'):
             self.__random_stream_key = value
-            self._random_generators = {}
+            self.__dict__.pop('_random_generators', None)
 
     def random_generator(self, purpose: str, *parts: Any) -> np.random.Generator:
         """Persistent generator for `purpose` and `parts` of this object (``random_stream_version='v2'``).
@@ -372,13 +372,14 @@ class Environment:
     def _set_random_stream(self, random_stream_version: Union[str, int] = None, random_stream_key: Tuple[Any, ...] = None):
         """Set the stream version and key; None keeps the current value (or the default).
 
-        Storage devices draw parameters before :py:meth:`__init__` runs, so they call this first.
+        Storage devices draw parameters before :py:meth:`__init__` runs, so they call this first. Defaults
+        are not stored, so objects pickled before these attributes existed load with the same state.
         """
 
-        if random_stream_version is not None or not hasattr(self, '_Environment__random_stream_version'):
+        if random_stream_version is not None:
             self.random_stream_version = random_stream_version
 
-        if random_stream_key is not None or not hasattr(self, '_Environment__random_stream_key'):
+        if random_stream_key is not None:
             self.random_stream_key = random_stream_key
 
     @random_seed.setter
@@ -386,7 +387,7 @@ class Environment:
         random_seed = random.randint(*self.DEFAULT_RANDOM_SEED_RANGE) if random_seed is None else random_seed
 
         if random_seed != getattr(self, '_Environment__random_seed', None):
-            self._random_generators = {}
+            self.__dict__.pop('_random_generators', None)
 
         self.__random_seed = random_seed
 
