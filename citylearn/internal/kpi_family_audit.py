@@ -30,6 +30,7 @@ def reward_metadata(env):
     for name in set(configured) | {
         "exponent",
         "charging_constraint_penalty_coefficient",
+        "version",
     }:
         value = getattr(reward, name, None)
         if isinstance(value, (str, bool, int, float)):
