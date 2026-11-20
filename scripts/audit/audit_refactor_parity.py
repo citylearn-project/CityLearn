@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Check bounded fixed-command references before/after internal refactoring.
 
+Each physics version is compared with its own frozen reference (REFERENCES).
+
 Requires the checkout's test fixtures/dependencies. No policy, training, annual
 campaign or BAU sidecar is run. References are never updated by verification.
 """
@@ -20,7 +22,12 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 DEFINITION = "refactor-parity-v2-compounded-standby"
-DEFAULT_REFERENCE = ROOT / "scripts/audit/snapshots/refactor_parity.json"
+# One frozen reference per physics version: version 1 is the physics of CityLearn 3.6.0, version 2 the default.
+REFERENCES = {
+    1: ROOT / "scripts/audit/snapshots/refactor_parity.json",
+    2: ROOT / "scripts/audit/snapshots/refactor_parity_physics_v2.json",
+}
+DEFAULT_REFERENCE = REFERENCES[1]
 CASES = {
     "flat_900s": dict(seconds=900, interface="flat"),
     "entity_60s": dict(seconds=60, interface="entity"),
@@ -152,7 +159,7 @@ def _commands(env):
     return payload
 
 
-def run_case(name, directory):
+def run_case(name, directory, physics_version=1):
     import pandas as pd
     from citylearn.citylearn import CityLearnEnv
     from citylearn.internal.balance_audit import IndependentBalanceAudit
@@ -188,10 +195,11 @@ def run_case(name, directory):
               for p in sorted(directory.rglob("*.csv"))}
     fingerprint = hashlib.sha256(json.dumps(canonical(dict(schema=schema, inputs=inputs), directory),
                                             sort_keys=True, allow_nan=False).encode()).hexdigest()
-    # The frozen reference is the physics of CityLearn 3.6.0, which physics version 1 must keep reproducing.
+    # The physics version is an argument, not a schema key, so both versions share the input fingerprint.
     env = CityLearnEnv(schema, random_seed=7, offline=True, central_agent=True,
                        render_mode="none", render_directory=directory / "exports", render_session_name="parity",
-                       physics_invariant_checks=True, export_kpis_on_episode_end=False, physics_version=1)
+                       physics_invariant_checks=True, export_kpis_on_episode_end=False,
+                       physics_version=physics_version)
     try:
         observation, _ = env.reset(seed=7)
         result = dict(input_fingerprint=fingerprint, configuration=config,
@@ -256,46 +264,65 @@ def run_case(name, directory):
         env.close()
 
 
-def capture(directory):
+def capture(directory, physics_version=1):
     cases, proofs = {}, {}
     for name in CASES:
-        cases[name], proofs[name] = run_case(name, directory / name)
+        cases[name], proofs[name] = run_case(name, directory / name, physics_version)
     return dict(definition_version=DEFINITION, tolerances=TOLERANCES, cases=cases), proofs
+
+
+def _verify_version(version, reference, capture_reference, directory):
+    expected = None if capture_reference else json.loads(reference.read_text())
+    actual, proofs = capture(directory, version)
+    if capture_reference:
+        capture_reference.parent.mkdir(parents=True, exist_ok=True)
+        capture_reference.write_text(json.dumps(actual, indent=2, sort_keys=True, allow_nan=False) + "\n")
+        return dict(status="reference_proposal", verification_passed=False,
+                    reference=str(capture_reference.resolve()), proofs=proofs)
+    comparison = compare(expected, actual)
+    return dict(status="pass" if comparison["matches"] else "fail", verification_passed=comparison["matches"],
+                reference=str(reference.resolve()), comparison=comparison, proofs=proofs)
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--reference", type=Path, default=DEFAULT_REFERENCE)
+    mode.add_argument("--reference", type=Path, help="Reference to verify against; needs one --physics-version.")
     mode.add_argument("--capture-reference", type=Path, help="Write a NEW reference proposal; never overwrite an existing reference.")
+    parser.add_argument("--physics-version", type=int, choices=sorted(REFERENCES), action="append",
+                        help="Physics version to check (repeatable). Default: every version, each against its own reference.")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
-    protected = {DEFAULT_REFERENCE.resolve(), args.reference.expanduser().resolve()}
-    if args.capture_reference:
-        protected.add(args.capture_reference.expanduser().resolve())
+    versions = sorted(set(args.physics_version or REFERENCES))
+    if (args.reference or args.capture_reference) and len(versions) != 1:
+        parser.error("--reference and --capture-reference need exactly one --physics-version.")
+    protected = {path.resolve() for path in REFERENCES.values()}
+    for path in (args.reference, args.capture_reference):
+        if path is not None:
+            protected.add(path.expanduser().resolve())
     if args.output.expanduser().resolve() in protected:
         parser.error("The output report must differ from all reference/proposal files.")
     if args.capture_reference and args.capture_reference.exists():
         parser.error("Reference proposal already exists; verification never updates references.")
+    reports = {}
     try:
-        expected = None if args.capture_reference else json.loads(args.reference.read_text())
-        with tempfile.TemporaryDirectory(prefix="simulator-parity-") as temporary:
-            actual, proofs = capture(Path(temporary))
+        for version in versions:
+            reference = args.reference or REFERENCES[version]
+            with tempfile.TemporaryDirectory(prefix="simulator-parity-") as temporary:
+                reports[str(version)] = _verify_version(version, reference, args.capture_reference, Path(temporary))
         if args.capture_reference:
-            args.capture_reference.parent.mkdir(parents=True, exist_ok=True)
-            args.capture_reference.write_text(json.dumps(actual, indent=2, sort_keys=True, allow_nan=False) + "\n")
-            report = dict(status="reference_proposal", verification_passed=False, reference=str(args.capture_reference.resolve()), proofs=proofs)
+            report = dict(status="reference_proposal", verification_passed=False, versions=reports)
         else:
-            comparison = compare(expected, actual)
-            report = dict(status="pass" if comparison["matches"] else "fail", verification_passed=comparison["matches"],
-                          reference=str(args.reference.resolve()), comparison=comparison, proofs=proofs)
+            passed = all(row["verification_passed"] for row in reports.values())
+            report = dict(status="pass" if passed else "fail", verification_passed=passed, versions=reports)
         code = 0 if args.capture_reference or report["verification_passed"] else 1
     except ModuleNotFoundError as error:
-        report = dict(status="missing_dependencies", verification_passed=False, error=str(error))
+        report = dict(status="missing_dependencies", verification_passed=False, error=str(error), versions=reports)
         code = 2
     except Exception as error:
         # CLI boundary: preserve failures as diagnostics, never as a passing run.
-        report = dict(status="fail", verification_passed=False, error_type=type(error).__name__, error=str(error))
+        report = dict(status="fail", verification_passed=False, error_type=type(error).__name__, error=str(error),
+                      versions=reports)
         code = 1
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
