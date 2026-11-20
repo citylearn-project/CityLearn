@@ -226,6 +226,13 @@ def test_lstm_dynamics_still_resolve_from_the_schema_path():
     constructor = getattr(importlib.import_module('citylearn.dynamics'), 'LSTMDynamics')
     assert issubclass(constructor, torch.nn.Module)
 
+    # Names citylearn.building used to import eagerly still resolve from it.
+    import citylearn.building as building_module
+    from citylearn.building import Dynamics, LSTMDynamics
+
+    assert LSTMDynamics is constructor and issubclass(LSTMDynamics, Dynamics)
+    assert building_module.torch is torch
+
 
 def _wrapped_env(central_agent):
     from citylearn.citylearn import CityLearnEnv

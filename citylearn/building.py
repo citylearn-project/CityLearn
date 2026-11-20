@@ -32,6 +32,24 @@ from citylearn.utilities import parse_bool
 
 LOGGER = logging.getLogger(__name__)
 
+
+def __getattr__(name: str):
+    # Names this module imported eagerly before torch became lazy, for code that still reads them from here.
+    if name in ('Dynamics', 'LSTMDynamics'):
+        from citylearn import dynamics
+
+        return getattr(dynamics, name)
+
+    if name == 'torch':
+        try:
+            import torch
+        except ImportError:  # pragma: no cover - optional dependency for LSTM dynamics only
+            return None
+
+        return torch
+
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
+
 class Building(Environment):
     r"""Base class for building.
 
