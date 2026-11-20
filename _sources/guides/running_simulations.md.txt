@@ -7,8 +7,10 @@ This page is the operational reference for installing the simulator, creating en
 | Case | Command | Notes |
 |---|---|---|
 | Standard install | `pip install citylearn` | The Python import path is `citylearn`. |
+| LSTM thermal dynamics | `pip install "citylearn[dynamics]"` | Adds PyTorch; required by the 2023 challenge, Quebec, `baeda_3dem` and EULP neighbourhood datasets. |
+| SAC and MARLISA | `pip install "citylearn[rl]"` | Adds PyTorch and scikit-learn. For a CPU-only PyTorch, first run `pip install torch --index-url https://download.pytorch.org/whl/cpu`. |
 | Parquet datasets | `pip install "citylearn[parquet]"` | Required when schemas or exports use Parquet. |
-| CLI and Stable Baselines3 | `pip install "stable-baselines3==2.3.2"` | The current CLI imports this library; use Python 3.11+ for CLI train/evaluate. |
+| Stable Baselines3 | `pip install "stable-baselines3>=2.4"` | Required only for Stable Baselines3 agents, in Python or in the CLI. |
 | PV autosizing | `pip install "citylearn[pysam]"` | Required only for EPW/PySAM autosizing. |
 | Local development | `.venv/bin/pip install -e .` | Use the repo `.venv` when available. |
 
@@ -178,9 +180,11 @@ When `return_substeps=True`, `info` also includes `substep_rewards`, `substep_in
 
 ## CLI
 
-The current CLI requires Stable Baselines3 even for its listing commands:
-install `stable-baselines3==2.3.2` alongside CityLearn. The Python simulation
-loop above works without Stable Baselines3.
+The CLI needs only CityLearn for its listing commands and for the default
+agent, the business-as-usual `BusinessAsUsualAgent`. Training or evaluating a
+Stable Baselines3 agent also needs `stable-baselines3>=2.4`, and the bundled
+`SAC` and `MARLISA` agents need the `rl` extra. Every command works on Python
+3.10 or newer.
 
 ```bash
 citylearn --version
@@ -189,6 +193,41 @@ citylearn list_default_time_series_variables
 citylearn simulate data/datasets/my_dataset/schema.json train -e 3
 citylearn simulate data/datasets/my_dataset/schema.json evaluate
 ```
+
+`simulate` writes a training summary (`<simulation_id>-train.json`), an
+evaluation (`<simulation_id>-evaluation.json`) and, with `--save_agent`, the
+agent to the output directory, and prints the path of each file it writes.
+
+### Stable Baselines3 agent
+
+A Stable Baselines3 agent needs its policy in the agent arguments and the
+environment wrapped into one flat observation and action vector, which requires
+a central agent. This command trains SAC for five daily episodes on the first
+week and evaluates it on the first training episode:
+
+```bash
+citylearn simulate citylearn_challenge_2022_phase_all_plus_evs \
+  -a stable_baselines3.SAC -ka '{"policy": "MlpPolicy"}' \
+  -w citylearn.wrappers.NormalizedObservationWrapper citylearn.wrappers.StableBaselines3Wrapper \
+  -ke '{"central_agent": true, "episode_time_steps": 24, "simulation_end_time_step": 167}' \
+  -rs 0 -d outputs/sb3_sac -sid sb3_sac train -e 5 --evaluate --save_agent
+```
+
+Without `"policy"`, the CLI raises a `TypeError` that shows the argument to add.
+Use `-te start end` to evaluate on other windows, such as unseen days.
+
+### Evaluation window
+
+`evaluate` runs one episode of the environment's episode windows, or the
+windows that `-te` gives. `train --evaluate` evaluates on the first training
+episode window: with `-ke '{"episode_time_steps": 24}'` it evaluates 24 time
+steps, not the whole dataset. Without `episode_time_steps`, the episode, and so
+the evaluation, covers the whole simulation window.
+
+### Host information
+
+The training summary records the machine host name and the user name only with
+`--record_host`, so results can be shared without them.
 
 | Option | Example | Purpose |
 |---|---|---|
@@ -205,9 +244,10 @@ citylearn simulate data/datasets/my_dataset/schema.json evaluate
 | `-p`, `--append` | flag | Do not overwrite existing output. |
 | `-rs`, `--random_seed` | `42` | Seed. |
 | `--offline` | flag | Require local files. |
+| `--record_host` | flag | Record the host and user names in the training summary. |
 | `train -e` | `train -e 10` | Number of training episodes. |
 | `train --save_agent` | flag | Save agent at the end. |
-| `train --evaluate` | flag | Evaluate after training. |
+| `train --evaluate` | flag | Evaluate after training, on the first training episode window unless `-te` is given. |
 | `evaluate` | subcommand | Deterministic evaluation. |
 
 ## Render and Export

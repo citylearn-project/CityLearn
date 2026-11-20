@@ -54,10 +54,13 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#optional-dependencies">Optional dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#version-compatibility">Version compatibility</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#troubleshooting-installation">Troubleshooting installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#datasets">Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#datasets-cache-and-offline-use">Datasets, cache and offline use</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#existing-projects-and-development">Existing projects and development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reproducibility-and-older-releases">Reproducibility and older releases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#version-compatibility">Version compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#troubleshooting-installation">Troubleshooting installation</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Your first simulation</a></li>
@@ -146,14 +149,9 @@
   <section id="installation">
 <span id="installation-page"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
 <p>CityLearn v3 is distributed as <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> on PyPI and requires Python 3.10 or
-newer; CityLearn 3.5.0 and older also install on Python 3.9. It supports NumPy 1.x and 2.x: observations, rewards and simulated time
-series are bit-identical on both. KPIs can differ in the last binary digits
-(relative differences of order 1e-15), for two reasons. NumPy 2.3 and later add
-up more than 8,192 values in a different order, which affects totals over
-episodes longer than 8,192 time steps, such as a full year of hourly steps, and
-the district Gini ratio of more than 90 members. The equity audit’s Gini ratio
-uses a BLAS dot product, whose last digit depends on the BLAS build and the
-CPU, and NumPy 1 and 2 wheels ship different OpenBLAS releases.</p>
+newer. The core installation runs every simulation that needs neither LSTM
+thermal dynamics nor the bundled reinforcement learning controllers, and takes
+about 200 MB with its dependencies.</p>
 <p>Use a virtual environment to keep its dependencies separate.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m venv .venv</span>
 </pre></div>
@@ -176,22 +174,122 @@ CPU, and NumPy 1 and 2 wheels ship different OpenBLAS releases.</p>
 <code class="docutils literal notranslate"><span class="pre">citylearn</span></code>.</p>
 <section id="optional-dependencies">
 <h2>Optional dependencies<a class="headerlink" href="#optional-dependencies" title="Link to this heading"></a></h2>
-<p>For Parquet datasets or exports:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install "citylearn[parquet]"</span>
+<p>Extras add the dependencies of features that not every study needs. Install
+several at once by separating them with commas, for example
+<code class="docutils literal notranslate"><span class="pre">&quot;citylearn[rl,parquet]&quot;</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Extra</p></th>
+<th class="head"><p>Adds</p></th>
+<th class="head"><p>Needed for</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dynamics</span></code></p></td>
+<td><p>PyTorch</p></td>
+<td><p>LSTM thermal dynamics, used by the 2023 challenge, Quebec, <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> and
+EULP neighbourhood datasets</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rl</span></code></p></td>
+<td><p>PyTorch and scikit-learn</p></td>
+<td><p>the bundled <code class="docutils literal notranslate"><span class="pre">SAC</span></code> and <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> controllers, and LSTM thermal dynamics</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">parquet</span></code></p></td>
+<td><p>pyarrow</p></td>
+<td><p>Parquet datasets (for example <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> and the 15 s demos) and Parquet exports</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pysam</span></code></p></td>
+<td><p>NREL-PySAM</p></td>
+<td><p>PV autosizing from EPW weather</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">end_use_load_profiles</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">doe_xstock</span></code>, OpenStudio, eppy, PyTorch and scikit-learn</p></td>
+<td><p>building new datasets with <code class="docutils literal notranslate"><span class="pre">citylearn.end_use_load_profiles</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install "citylearn[rl]"</span>
 </pre></div>
 </div>
-<p>For PV autosizing from EPW weather using PySAM:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install "citylearn[pysam]"</span>
+<p>The default PyTorch wheels for Linux include the CUDA libraries, about 5 GB in
+all. Without a GPU, install the CPU-only PyTorch first, then the extra, which
+then keeps that PyTorch:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install torch --index-url https://download.pytorch.org/whl/cpu</span>
+<span class="go">python -m pip install "citylearn[rl]"</span>
 </pre></div>
 </div>
-<p>For building new datasets from End-Use Load Profiles with
-<code class="docutils literal notranslate"><span class="pre">citylearn.end_use_load_profiles</span></code> (installs <code class="docutils literal notranslate"><span class="pre">doe_xstock</span></code> and OpenStudio):</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install "citylearn[end_use_load_profiles]"</span>
-</pre></div>
-</div>
+<p>A dataset or controller that needs a missing extra raises an <code class="docutils literal notranslate"><span class="pre">ImportError</span></code>
+that names the command to install it. Stable Baselines3 and RLlib are not
+extras: install Stable Baselines3 2.4 or newer to use
+<code class="docutils literal notranslate"><span class="pre">StableBaselines3Wrapper</span></code> (see <a class="reference internal" href="usage/rl_training.html"><span class="doc">Train and evaluate a reinforcement learning controller</span></a>), and a Ray release
+that supports your Python version to use the RLlib wrappers.</p>
 </section>
+<section id="datasets-cache-and-offline-use">
+<h2>Datasets, cache and offline use<a class="headerlink" href="#datasets-cache-and-offline-use" title="Link to this heading"></a></h2>
+<p>Public datasets are downloaded from the official repository on first use and
+cached locally, so the first download needs internet access. List the available
+names in Python, or with <code class="docutils literal notranslate"><span class="pre">citylearn</span> <span class="pre">list_datasets</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataSet</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">DataSet</span><span class="p">()</span><span class="o">.</span><span class="n">get_dataset_names</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The cache is a <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> folder in the user cache directory, with one
+subfolder per dataset release, for example <code class="docutils literal notranslate"><span class="pre">~/.cache/citylearn/v3.6.0</span></code> on
+Linux; <code class="docutils literal notranslate"><span class="pre">DataSet().cache_directory</span></code> returns it and <code class="docutils literal notranslate"><span class="pre">DataSet().clear_cache()</span></code>
+empties it. For your own data, pass a local <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> path instead of a
+dataset name. See <a class="reference internal" href="guides/dataset_reference.html"><span class="doc">Dataset Reference</span></a> for files and units.</p>
+<p>These environment variables change where CityLearn looks for data:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> makes offline mode the default: nothing is downloaded, and data
+must be in the cache or in a local root.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CITYLEARN_LOCAL_DATASETS_PATH</span></code></p></td>
+<td><p>Folders (separated by <code class="docutils literal notranslate"><span class="pre">:</span></code>, or <code class="docutils literal notranslate"><span class="pre">;</span></code> on Windows) searched for dataset
+folders before downloading; each dataset folder holds its
+<code class="docutils literal notranslate"><span class="pre">schema.json</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CITYLEARN_LOCAL_MISC_PATH</span></code></p></td>
+<td><p>Folders searched for the shared files (such as sizing data) before
+downloading.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CITYLEARN_DATASET_GITHUB_ACCOUNT</span></code>, <code class="docutils literal notranslate"><span class="pre">CITYLEARN_DATASET_REPOSITORY</span></code>, <code class="docutils literal notranslate"><span class="pre">CITYLEARN_DATASET_TAG</span></code></p></td>
+<td><p>Repository and tag that datasets are downloaded from; the tag also names
+the cache subfolder.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CITYLEARN_GITHUB_TOKEN</span></code> (or <code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code>)</p></td>
+<td><p>GitHub token that raises the anonymous limit of 60 API requests per hour.</p></td>
+</tr>
+</tbody>
+</table>
+<p>To work offline, run once online so that the cache holds the datasets you need,
+or point <code class="docutils literal notranslate"><span class="pre">CITYLEARN_LOCAL_DATASETS_PATH</span></code> at a folder of dataset folders, then
+set <code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE=1</span></code> or pass <code class="docutils literal notranslate"><span class="pre">offline=True</span></code> to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>.</p>
+</section>
+<section id="existing-projects-and-development">
+<h2>Existing projects and development<a class="headerlink" href="#existing-projects-and-development" title="Link to this heading"></a></h2>
+<p>Record the installed version with the command above and pin that version
+in your project dependencies. Read <a class="reference internal" href="guides/migration.html"><span class="doc">Moving an existing project to CityLearn v3</span></a> when updating a project.
+To work on CityLearn itself, follow <a class="reference internal" href="guides/developer_guide.html"><span class="doc">Developer Guide</span></a>.</p>
+</section>
+<section id="reproducibility-and-older-releases">
+<h2>Reproducibility and older releases<a class="headerlink" href="#reproducibility-and-older-releases" title="Link to this heading"></a></h2>
+<p>CityLearn supports NumPy 1.x and 2.x: observations, rewards and simulated time
+series are bit-identical on both. KPIs can differ in the last binary digits
+(relative differences of order 1e-15), for two reasons. NumPy 2.3 and later add
+up more than 8,192 values in a different order, which affects totals over
+episodes longer than 8,192 time steps, such as a full year of hourly steps, and
+the district Gini ratio of more than 90 members. The equity audit’s Gini ratio
+uses a BLAS dot product, whose last digit depends on the BLAS build and the
+CPU, and NumPy 1 and 2 wheels ship different OpenBLAS releases.</p>
 <section id="version-compatibility">
-<h2>Version compatibility<a class="headerlink" href="#version-compatibility" title="Link to this heading"></a></h2>
+<h3>Version compatibility<a class="headerlink" href="#version-compatibility" title="Link to this heading"></a></h3>
 <p>The base requirements of each release, from its <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> and
 <code class="docutils literal notranslate"><span class="pre">python_requires</span></code>; “any” means the release does not constrain the version.
 The first row is the latest release; changes on <code class="docutils literal notranslate"><span class="pre">master</span></code> since then are listed
@@ -303,7 +401,7 @@ in October 2026; CityLearn keeps it as the minimum while downstream users still
 run it.</p>
 </section>
 <section id="troubleshooting-installation">
-<h2>Troubleshooting installation<a class="headerlink" href="#troubleshooting-installation" title="Link to this heading"></a></h2>
+<h3>Troubleshooting installation<a class="headerlink" href="#troubleshooting-installation" title="Link to this heading"></a></h3>
 <dl>
 <dt><code class="docutils literal notranslate"><span class="pre">No</span> <span class="pre">matching</span> <span class="pre">distribution</span> <span class="pre">found</span> <span class="pre">for</span> <span class="pre">openstudio&lt;=3.3.0</span></code></dt><dd><p>CityLearn 2.2.0 to 2.5.0 required OpenStudio 3.3.0 or older, which PyPI does
 not provide for recent Python versions (reported for 3.10 and 3.11). Install
@@ -317,6 +415,9 @@ CityLearn 3.3.0 or newer, or use Python 3.11 or older for those releases.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">TypeError:</span> <span class="pre">'staticmethod'</span> <span class="pre">object</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">callable</span></code> when importing CityLearn</dt><dd><p>Reported for CityLearn 2.3.0 on Python 3.9. Install a current release.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">ImportError</span></code> naming <code class="docutils literal notranslate"><span class="pre">citylearn[dynamics]</span></code> or <code class="docutils literal notranslate"><span class="pre">citylearn[rl]</span></code></dt><dd><p>Since the release after 3.6.0, PyTorch and scikit-learn are optional. Install
+the extra that the message names; see <a class="reference internal" href="#optional-dependencies">Optional dependencies</a>.</p>
+</dd>
 <dt>An old release is required to reproduce earlier results</dt><dd><p>Install it without dependencies and then the dependencies that the table
 above lists for it, with versions available for your Python:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install --no-deps citylearn==2.3.1</span>
@@ -325,22 +426,6 @@ above lists for it, with versions available for your Python:</p>
 </dd>
 </dl>
 </section>
-<section id="datasets">
-<h2>Datasets<a class="headerlink" href="#datasets" title="Link to this heading"></a></h2>
-<p>Public datasets are downloaded from the official repository and cached locally.
-The first download needs internet access. List the available names in Python:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataSet</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">DataSet</span><span class="p">()</span><span class="o">.</span><span class="n">get_dataset_names</span><span class="p">())</span>
-</pre></div>
-</div>
-<p>For your own data, pass a local <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> path instead of a dataset name.
-See <a class="reference internal" href="guides/dataset_reference.html"><span class="doc">Dataset Reference</span></a> for files, units and offline use.</p>
-</section>
-<section id="existing-projects-and-development">
-<h2>Existing projects and development<a class="headerlink" href="#existing-projects-and-development" title="Link to this heading"></a></h2>
-<p>Record the installed version with the command above and pin that version
-in your project dependencies. Read <a class="reference internal" href="guides/migration.html"><span class="doc">Moving an existing project to CityLearn v3</span></a> when updating a project.
-To work on CityLearn itself, follow <a class="reference internal" href="guides/developer_guide.html"><span class="doc">Developer Guide</span></a>.</p>
 </section>
 </section>
 

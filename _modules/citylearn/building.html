@@ -4006,7 +4006,8 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
         <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional dependency for LSTM dynamics only</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">'torch is required to use LSTMDynamicsBuilding.'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.optional_dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">missing_dependency</span>
+            <span class="k">raise</span> <span class="n">missing_dependency</span><span class="p">(</span><span class="s1">'LSTMDynamicsBuilding'</span><span class="p">,</span> <span class="s1">'PyTorch'</span><span class="p">,</span> <span class="s1">'dynamics'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
         <span class="c1"># predict</span>
         <span class="n">model_input_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_dynamics_input</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>

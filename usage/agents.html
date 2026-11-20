@@ -30,7 +30,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Command-line examples" href="cli.html" />
+    <link rel="next" title="Train and evaluate a reinforcement learning controller" href="rl_training.html" />
     <link rel="prev" title="Custom agents and rewards" href="custom_controller.html" /> 
 </head>
 
@@ -106,6 +106,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#Neighborhood-Dataset-Generation">Neighborhood Dataset Generation</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="rl_training.html">Train and evaluate a reinforcement learning controller</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 </ul>
@@ -167,12 +168,21 @@
 <section id="Controller-examples">
 <h1>Controller examples<a class="headerlink" href="#Controller-examples" title="Link to this heading"></a></h1>
 <p>For a first complete v3 simulation and operational BAU, start with the <a class="reference external" href="../quickstart.html">quickstart</a>. This notebook retains the flat-interface controller, RL-wrapper and dataset-generation examples. Training runs need more time and dependencies than the first simulation.</p>
-<p>Install CityLearn in the notebook environment:</p>
+<p>The examples below use <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_2_local_evaluation</span></code>, whose buildings use LSTM thermal dynamics, and the bundled SAC and MARLISA controllers. Both need PyTorch, which the <code class="docutils literal notranslate"><span class="pre">rl</span></code> extra installs. Install CityLearn with it in the notebook environment:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install citylearn
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "citylearn[rl]"
+</pre></div>
+</div>
+</div>
+<p>Every example simulates the first week of the dataset (168 hourly time steps), so that the notebook runs in a few minutes. Remove <code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code> and <code class="docutils literal notranslate"><span class="pre">simulation_end_time_step</span></code> to simulate the whole dataset, and train for many more episodes for meaningful results.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">WEEK</span> <span class="o">=</span> <span class="mi">24</span><span class="o">*</span><span class="mi">7</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># last time step of the first week</span>
 </pre></div>
 </div>
 </div>
@@ -182,6 +192,7 @@
 <h3>Passive no-control agent<a class="headerlink" href="#Passive-no-control-agent" title="Link to this heading"></a></h3>
 <p>This passive agent disables active actions; it is not the operational <a class="reference external" href="../guides/baselines.html">BusinessAsUsualAgent</a>. Construct a fresh environment before changing controller type.</p>
 <p>Run the following to simulate an environment where the storage systems and heat pumps are not controlled (baseline). The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. <code class="docutils literal notranslate"><span class="pre">None</span></code>, causing it to deliver the ideal load in the building time series files:</p>
+<p>Because this agent disables the active actions, its environment no longer matches the configuration from which <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> rebuilds the native BAU reference, so the KPIs are evaluated without that reference (<code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code>).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -190,7 +201,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
 <span class="c1"># initialize</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">WEEK</span><span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
 <span class="c1"># step through environment and apply agent actions</span>
@@ -201,7 +212,7 @@
     <span class="n">observations</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
 
 <span class="c1"># test</span>
-<span class="n">kpis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
@@ -220,7 +231,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
 <span class="c1"># initialize</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">WEEK</span><span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
 <span class="c1"># step through environment and apply agent actions</span>
@@ -250,7 +261,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
 <span class="c1"># initialize</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">WEEK</span><span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
 <span class="c1"># train</span>
@@ -276,7 +287,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
 <span class="c1"># initialize</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">WEEK</span><span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 
 <span class="c1"># train</span>
@@ -296,12 +307,12 @@
 <h2>Other Standard Reinforcement Learning Libraries<a class="headerlink" href="#Other-Standard-Reinforcement-Learning-Libraries" title="Link to this heading"></a></h2>
 <section id="Stable-Baselines3-Reinforcement-Learning-Algorithms">
 <h3>Stable Baselines3 Reinforcement Learning Algorithms<a class="headerlink" href="#Stable-Baselines3-Reinforcement-Learning-Algorithms" title="Link to this heading"></a></h3>
-<p>Install the Stable Baselines3 version used by the current CityLearn wrapper examples:</p>
+<p>Install Stable Baselines3 2.4 or newer, which supports gymnasium 1.x:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "stable-baselines3==2.3.2"
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "stable-baselines3&gt;=2.4"
 </pre></div>
 </div>
 </div>
@@ -319,7 +330,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">NormalizedObservationWrapper</span><span class="p">,</span> <span class="n">StableBaselines3Wrapper</span>
 
 <span class="c1"># initialize</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">WEEK</span><span class="p">)</span>
 <span class="n">env</span> <span class="o">=</span> <span class="n">NormalizedObservationWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 <span class="n">env</span> <span class="o">=</span> <span class="n">StableBaselines3Wrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="s1">'MlpPolicy'</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
@@ -345,129 +356,16 @@
 </section>
 <section id="RLlib">
 <h3>RLlib<a class="headerlink" href="#RLlib" title="Link to this heading"></a></h3>
-<p>Install the RLlib version used by these wrapper examples:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "ray[rllib]==2.10.0" "pyarrow&lt;21"
-</pre></div>
-</div>
-</div>
-<p>We advise that you include the <code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code> (see <a class="reference external" href="../api/citylearn.wrappers.html#citylearn.wrappers.ClippedObservationWrapper">docs</a>) wrapper when working with RLlib so that observations are always clipped within the observation space before sending to the agent if not, out-of-bound observations will raise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> and terminate the training.</p>
-<p>We also wrap the environment with <code class="docutils literal notranslate"><span class="pre">NormalizedObservationWrapper</span></code> (see <a class="reference external" href="../api/citylearn.wrappers.html#citylearn.wrappers.NormalizedObservationWrapper">docs</a>) to ensure that observations served to the agent are min-max normalized between [0, 1] and cyclical observations e.g. hour, are encoded using the cosine transformation.</p>
-<p>RLlib supports both <a class="reference external" href="https://docs.ray.io/en/latest/rllib/rllib-algorithms.html">single-agent and multi-agent algorithms</a>. See below for an example for either case.</p>
-<section id="Single-Agent">
-<h4>Single Agent<a class="headerlink" href="#Single-Agent" title="Link to this heading"></a></h4>
-<p>The single-agent interface for RLlib is the <code class="docutils literal notranslate"><span class="pre">RLlibSingleAgentWrapper</span></code> wrapper.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClippedObservationWrapper</span><span class="p">,</span> <span class="n">NormalizedObservationWrapper</span><span class="p">,</span> <span class="n">RLlibSingleAgentWrapper</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.algorithms.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SACConfig</span> <span class="k">as</span> <span class="n">Config</span>
-
-<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">'ignore'</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
-
-<span class="c1"># initialize</span>
-<span class="n">env_config</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">'env_kwargs'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">'schema'</span><span class="p">:</span> <span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s1">'wrappers'</span><span class="p">:</span> <span class="p">[</span>
-        <span class="n">NormalizedObservationWrapper</span><span class="p">,</span>
-        <span class="n">ClippedObservationWrapper</span>
-    <span class="p">]</span>
-<span class="p">}</span>
-<span class="n">config</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">Config</span><span class="p">()</span>
-    <span class="o">.</span><span class="n">environment</span><span class="p">(</span><span class="n">RLlibSingleAgentWrapper</span><span class="p">,</span> <span class="n">env_config</span><span class="o">=</span><span class="n">env_config</span><span class="p">)</span>
-<span class="p">)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-
-<span class="c1"># train</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
-    <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
-
-<span class="c1"># test</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">RLlibSingleAgentWrapper</span><span class="p">(</span><span class="n">env_config</span><span class="p">)</span>
-<span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-
-<span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
-    <span class="n">actions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">compute_single_action</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="n">explore</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">observations</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
-
-<span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
-<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</section>
-<section id="Multi-agent">
-<h4>Multi-agent<a class="headerlink" href="#Multi-agent" title="Link to this heading"></a></h4>
-<p>The multi-agent interface for RLlib is the <code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> wrapper.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClippedObservationWrapper</span><span class="p">,</span> <span class="n">NormalizedObservationWrapper</span><span class="p">,</span> <span class="n">RLlibMultiAgentEnv</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.algorithms.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SACConfig</span> <span class="k">as</span> <span class="n">Config</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.policy.policy</span><span class="w"> </span><span class="kn">import</span> <span class="n">PolicySpec</span>
-
-<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">'ignore'</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
-
-<span class="c1"># initialize</span>
-<span class="n">env_config</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">'env_kwargs'</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">'schema'</span><span class="p">:</span> <span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s1">'wrappers'</span><span class="p">:</span> <span class="p">[</span>
-        <span class="n">NormalizedObservationWrapper</span><span class="p">,</span>
-        <span class="n">ClippedObservationWrapper</span>
-    <span class="p">]</span>
-<span class="p">}</span>
-<span class="n">config</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">Config</span><span class="p">()</span>
-    <span class="o">.</span><span class="n">environment</span><span class="p">(</span><span class="n">RLlibMultiAgentEnv</span><span class="p">,</span> <span class="n">env_config</span><span class="o">=</span><span class="n">env_config</span><span class="p">)</span>
-    <span class="o">.</span><span class="n">multi_agent</span><span class="p">(</span>
-        <span class="n">policies</span><span class="o">=</span><span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">PolicySpec</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">RLlibMultiAgentEnv</span><span class="p">(</span><span class="n">env_config</span><span class="p">)</span><span class="o">.</span><span class="n">_agent_ids</span><span class="p">},</span>
-        <span class="n">policy_mapping_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">agent_id</span><span class="p">,</span> <span class="n">episode</span><span class="p">,</span> <span class="n">worker</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">agent_id</span><span class="p">,</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
-
-<span class="c1"># train</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
-    <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
-
-<span class="c1"># test</span>
-<span class="n">env</span> <span class="o">=</span> <span class="n">RLlibMultiAgentEnv</span><span class="p">(</span><span class="n">env_config</span><span class="p">)</span>
-<span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-
-<span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
-    <span class="n">actions</span> <span class="o">=</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">compute_single_action</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">policy_id</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">explore</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">observations</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-    <span class="n">observations</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
-
-<span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
-<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</section>
+<p>CityLearn also provides <code class="docutils literal notranslate"><span class="pre">RLlibSingleAgentWrapper</span></code> and <code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> (see the <a class="reference external" href="../api/citylearn.wrappers.html">wrappers API</a>). Recent Ray releases pin their own gymnasium version and publish wheels only for some Python versions, and these wrappers are not tested against a current Ray release, so this notebook no longer runs an RLlib example. Install a Ray release that supports your Python version (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;ray[rllib]&quot;</span></code>) and wrap the environment with
+<code class="docutils literal notranslate"><span class="pre">NormalizedObservationWrapper</span></code> and <code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code> before the RLlib wrapper.</p>
 </section>
 </section>
 <section id="Neighborhood-Dataset-Generation">
 <h2>Neighborhood Dataset Generation<a class="headerlink" href="#Neighborhood-Dataset-Generation" title="Link to this heading"></a></h2>
-<p>Aside the provided datasets that come with the CityLearn installation, custom single-family residential datasets can be generated in CityLearn by taking advantage of the <a class="reference external" href="https://www.nrel.gov/buildings/end-use-load-profiles.html">End-Use Load Profiles for the U.S. Building Stock dataset</a>. The <a class="reference external" href="../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood">citylearn.end_use_load_profiles.neighborhood.Neighborhood</a>
-class makes this possible.</p>
+<p>Aside the provided datasets that come with the CityLearn installation, custom single-family residential datasets can be generated in CityLearn by taking advantage of the <a class="reference external" href="https://data.openei.org/submissions/4520">End-Use Load Profiles for the U.S. Building Stock dataset</a>. The <a class="reference external" href="../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood">citylearn.end_use_load_profiles.neighborhood.Neighborhood</a> class makes this
+possible.</p>
 <p>To learn more about the methodology used in this feature, refer to the <a class="reference external" href="https://doi.org/10.1080/19401493.2024.2418813">CityLearn v2 paper</a>.</p>
-<p>Note that to make use of this feature, <a class="reference external" href="https://github.com/NREL/EnergyPlus/releases/tag/v9.6.0">EnergyPlus 9.6.0</a> must be installed. Other EnergyPlus versions are not yet supported.</p>
+<p>Note that to make use of this feature, install <code class="docutils literal notranslate"><span class="pre">citylearn[end_use_load_profiles]</span></code> and <a class="reference external" href="https://github.com/NREL/EnergyPlus/releases/tag/v9.6.0">EnergyPlus 9.6.0</a> must be installed. Other EnergyPlus versions are not yet supported.</p>
 <p>An example of a generating a dataset and using it in simulation is:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
@@ -523,7 +421,7 @@ class makes this possible.</p>
 
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="custom_controller.html" class="btn btn-neutral float-left" title="Custom agents and rewards" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="cli.html" class="btn btn-neutral float-right" title="Command-line examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rl_training.html" class="btn btn-neutral float-right" title="Train and evaluate a reinforcement learning controller" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

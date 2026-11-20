@@ -1235,9 +1235,11 @@
     
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_config</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="k">if</span> <span class="n">MultiAgentEnv</span> <span class="o">==</span> <span class="n">Env</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">'This functionality requires you to install RLlib.'</span>\
-                <span class="s1">'You can install RLlib from pip: pip install "ray[rllib]", '</span>\
-                    <span class="s1">'or for more detailed instructions please visit https://docs.ray.io/en/latest/rllib/index.html.'</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s1">'RLlibMultiAgentEnv needs Ray RLlib, which CityLearn does not install. Install a Ray release that '</span>
+                <span class="s1">'supports your Python and gymnasium versions, for example: pip install "ray[rllib]". See '</span>
+                <span class="s1">'https://docs.ray.io/en/latest/rllib/index.html.'</span>
+            <span class="p">)</span>
         
         <span class="k">else</span><span class="p">:</span>
             <span class="k">pass</span>

@@ -69,7 +69,12 @@
 <li class="toctree-l2"><a class="reference internal" href="#extra-kwargs">Extra <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reward-observation-payloads">Reward Observation Payloads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#macro-steps-action-repeat">Macro-Steps / Action Repeat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stable-baselines3-agent">Stable Baselines3 agent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#evaluation-window">Evaluation window</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#host-information">Host information</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#render-and-export">Render and Export</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#smoke-test-a-large-dataset">Smoke-Test a Large Dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#validation-from-a-source-checkout">Validation from a Source Checkout</a></li>
@@ -168,13 +173,21 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">citylearn</span></code></p></td>
 <td><p>The Python import path is <code class="docutils literal notranslate"><span class="pre">citylearn</span></code>.</p></td>
 </tr>
+<tr class="row-odd"><td><p>LSTM thermal dynamics</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[dynamics]&quot;</span></code></p></td>
+<td><p>Adds PyTorch; required by the 2023 challenge, Quebec, <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> and EULP neighbourhood datasets.</p></td>
+</tr>
+<tr class="row-even"><td><p>SAC and MARLISA</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[rl]&quot;</span></code></p></td>
+<td><p>Adds PyTorch and scikit-learn. For a CPU-only PyTorch, first run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torch</span> <span class="pre">--index-url</span> <span class="pre">https://download.pytorch.org/whl/cpu</span></code>.</p></td>
+</tr>
 <tr class="row-odd"><td><p>Parquet datasets</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[parquet]&quot;</span></code></p></td>
 <td><p>Required when schemas or exports use Parquet.</p></td>
 </tr>
-<tr class="row-even"><td><p>CLI and Stable Baselines3</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;stable-baselines3==2.3.2&quot;</span></code></p></td>
-<td><p>The current CLI imports this library; use Python 3.11+ for CLI train/evaluate.</p></td>
+<tr class="row-even"><td><p>Stable Baselines3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;stable-baselines3&gt;=2.4&quot;</span></code></p></td>
+<td><p>Required only for Stable Baselines3 agents, in Python or in the CLI.</p></td>
 </tr>
 <tr class="row-odd"><td><p>PV autosizing</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[pysam]&quot;</span></code></p></td>
@@ -545,9 +558,11 @@ follows each device’s action contract.</p>
 </section>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading"></a></h2>
-<p>The current CLI requires Stable Baselines3 even for its listing commands:
-install <code class="docutils literal notranslate"><span class="pre">stable-baselines3==2.3.2</span></code> alongside CityLearn. The Python simulation
-loop above works without Stable Baselines3.</p>
+<p>The CLI needs only CityLearn for its listing commands and for the default
+agent, the business-as-usual <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>. Training or evaluating a
+Stable Baselines3 agent also needs <code class="docutils literal notranslate"><span class="pre">stable-baselines3&gt;=2.4</span></code>, and the bundled
+<code class="docutils literal notranslate"><span class="pre">SAC</span></code> and <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> agents need the <code class="docutils literal notranslate"><span class="pre">rl</span></code> extra. Every command works on Python
+3.10 or newer.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>citylearn<span class="w"> </span>--version
 citylearn<span class="w"> </span>list_datasets
 citylearn<span class="w"> </span>list_default_time_series_variables
@@ -555,6 +570,37 @@ citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/m
 citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/my_dataset/schema.json<span class="w"> </span>evaluate
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">simulate</span></code> writes a training summary (<code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-train.json</span></code>), an
+evaluation (<code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-evaluation.json</span></code>) and, with <code class="docutils literal notranslate"><span class="pre">--save_agent</span></code>, the
+agent to the output directory, and prints the path of each file it writes.</p>
+<section id="stable-baselines3-agent">
+<h3>Stable Baselines3 agent<a class="headerlink" href="#stable-baselines3-agent" title="Link to this heading"></a></h3>
+<p>A Stable Baselines3 agent needs its policy in the agent arguments and the
+environment wrapped into one flat observation and action vector, which requires
+a central agent. This command trains SAC for five daily episodes on the first
+week and evaluates it on the first training episode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>citylearn<span class="w"> </span>simulate<span class="w"> </span>citylearn_challenge_2022_phase_all_plus_evs<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-a<span class="w"> </span>stable_baselines3.SAC<span class="w"> </span>-ka<span class="w"> </span><span class="s1">'{"policy": "MlpPolicy"}'</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-w<span class="w"> </span>citylearn.wrappers.NormalizedObservationWrapper<span class="w"> </span>citylearn.wrappers.StableBaselines3Wrapper<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-ke<span class="w"> </span><span class="s1">'{"central_agent": true, "episode_time_steps": 24, "simulation_end_time_step": 167}'</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-rs<span class="w"> </span><span class="m">0</span><span class="w"> </span>-d<span class="w"> </span>outputs/sb3_sac<span class="w"> </span>-sid<span class="w"> </span>sb3_sac<span class="w"> </span>train<span class="w"> </span>-e<span class="w"> </span><span class="m">5</span><span class="w"> </span>--evaluate<span class="w"> </span>--save_agent
+</pre></div>
+</div>
+<p>Without <code class="docutils literal notranslate"><span class="pre">&quot;policy&quot;</span></code>, the CLI raises a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> that shows the argument to add.
+Use <code class="docutils literal notranslate"><span class="pre">-te</span> <span class="pre">start</span> <span class="pre">end</span></code> to evaluate on other windows, such as unseen days.</p>
+</section>
+<section id="evaluation-window">
+<h3>Evaluation window<a class="headerlink" href="#evaluation-window" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code> runs one episode of the environment’s episode windows, or the
+windows that <code class="docutils literal notranslate"><span class="pre">-te</span></code> gives. <code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code> evaluates on the first training
+episode window: with <code class="docutils literal notranslate"><span class="pre">-ke</span> <span class="pre">'{&quot;episode_time_steps&quot;:</span> <span class="pre">24}'</span></code> it evaluates 24 time
+steps, not the whole dataset. Without <code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code>, the episode, and so
+the evaluation, covers the whole simulation window.</p>
+</section>
+<section id="host-information">
+<h3>Host information<a class="headerlink" href="#host-information" title="Link to this heading"></a></h3>
+<p>The training summary records the machine host name and the user name only with
+<code class="docutils literal notranslate"><span class="pre">--record_host</span></code>, so results can be shared without them.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Option</p></th>
@@ -615,24 +661,29 @@ citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/m
 <td><p>flag</p></td>
 <td><p>Require local files.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--record_host</span></code></p></td>
+<td><p>flag</p></td>
+<td><p>Record the host and user names in the training summary.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span> <span class="pre">10</span></code></p></td>
 <td><p>Number of training episodes.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--save_agent</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--save_agent</span></code></p></td>
 <td><p>flag</p></td>
 <td><p>Save agent at the end.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code></p></td>
 <td><p>flag</p></td>
-<td><p>Evaluate after training.</p></td>
+<td><p>Evaluate after training, on the first training episode window unless <code class="docutils literal notranslate"><span class="pre">-te</span></code> is given.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code></p></td>
 <td><p>subcommand</p></td>
 <td><p>Deterministic evaluation.</p></td>
 </tr>
 </tbody>
 </table>
+</section>
 </section>
 <section id="render-and-export">
 <h2>Render and Export<a class="headerlink" href="#render-and-export" title="Link to this heading"></a></h2>

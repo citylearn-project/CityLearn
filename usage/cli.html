@@ -31,7 +31,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Tutorials" href="tutorials.html" />
-    <link rel="prev" title="Controller examples" href="agents.html" /> 
+    <link rel="prev" title="Train and evaluate a reinforcement learning controller" href="rl_training.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -91,6 +91,7 @@
 <li class="toctree-l2"><a class="reference internal" href="simulate.html">How to set up a simulation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="custom_controller.html">Custom agents and rewards</a></li>
 <li class="toctree-l2"><a class="reference internal" href="agents.html">Controller examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rl_training.html">Train and evaluate a reinforcement learning controller</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Command-line examples</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#Running-a-Simulation-using-the-CLI">Running a Simulation using the CLI</a></li>
 </ul>
@@ -154,12 +155,12 @@
   <p><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></p>
 <section id="Command-line-examples">
 <h1>Command-line examples<a class="headerlink" href="#Command-line-examples" title="Link to this heading"></a></h1>
-<p>Use Python 3.11 or newer for CLI training/evaluation. The current CLI also imports Stable Baselines3. Install both packages in the notebook environment:</p>
+<p>The listing commands and the BAU evaluation of the CLI need only CityLearn. Training or evaluating a Stable Baselines3 agent also needs Stable Baselines3, and the bundled SAC and MARLISA controllers need the <code class="docutils literal notranslate"><span class="pre">rl</span></code> extra. Install them in the notebook environment:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install citylearn "stable-baselines3==2.3.2"
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "citylearn[rl]" "stable-baselines3&gt;=2.4"
 </pre></div>
 </div>
 </div>
@@ -193,7 +194,7 @@
           </div>
 
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="agents.html" class="btn btn-neutral float-left" title="Controller examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rl_training.html" class="btn btn-neutral float-left" title="Train and evaluate a reinforcement learning controller" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="tutorials.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -551,16 +551,18 @@
                         <span class="sa">f</span><span class="s2">"Offline mode is enabled and no complete copy of dataset '</span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s2">' was found locally. "</span>
                         <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cached_message</span><span class="si">}{</span><span class="n">incomplete_message</span><span class="si">}</span><span class="s2"> Checked local dataset roots: </span><span class="si">{</span><span class="n">local_directories_message</span><span class="si">}</span><span class="s2">. "</span>
                         <span class="s2">"Pass a local schema.json file path, place the complete dataset under one of the local roots "</span>
-                        <span class="s2">"or disable offline mode to download it."</span>
+                        <span class="s2">"(CITYLEARN_LOCAL_DATASETS_PATH adds one) or disable offline mode (CITYLEARN_OFFLINE=0 or "</span>
+                        <span class="s2">"offline=False) to download it."</span>
                     <span class="p">)</span>
 
                 <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s1">'The </span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s1"> dataset DNE or is incomplete in cache/local roots. Will download from '</span>
+                    <span class="sa">f</span><span class="s1">'The </span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s1"> dataset does not exist or is incomplete in the cache and local roots. Will download from '</span>
                     <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">github_account</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">repository</span><span class="si">}</span><span class="s1">/tree/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="si">}</span><span class="s1"> GitHub repository and write to </span><span class="si">{</span><span class="n">datasets_directory</span><span class="si">}</span><span class="s1">. '</span>
                     <span class="sa">f</span><span class="s1">'Next time DataSet.get_dataset(</span><span class="se">\'</span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="se">\'</span><span class="s1">) is called, it will read '</span>
                     <span class="s1">'from cache unless DataSet.clear_cache is run first.'</span>
                 <span class="p">)</span>
                 <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_github_dataset_files</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_require_parquet_engine</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">,</span> <span class="p">[</span><span class="n">relative_path</span> <span class="k">for</span> <span class="n">relative_path</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">files</span><span class="p">])</span>
                 <span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_requests_session</span><span class="p">()</span>
 
                 <span class="k">def</span><span class="w"> </span><span class="nf">download</span><span class="p">(</span><span class="n">staging</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -779,6 +781,21 @@
 
             <span class="k">raise</span>
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_require_parquet_engine</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">relative_paths</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">"""Fail before a download when the dataset has Parquet files and no Parquet engine is installed."""</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s1">'.parquet'</span><span class="p">,</span> <span class="s1">'.pq'</span><span class="p">,</span> <span class="s1">'.parq'</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">relative_paths</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span>  <span class="c1"># noqa: F401</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Dataset '</span><span class="si">{</span><span class="n">dataset_name</span><span class="si">}</span><span class="s2">' stores its time series as Parquet files, which need pyarrow, an optional "</span>
+                <span class="s1">'dependency of CityLearn. Install it with: pip install "citylearn[parquet]"'</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+
 <div class="viewcode-block" id="DataSet.get_dataset_names">
 <a class="viewcode-back" href="../../api/citylearn.data.html#citylearn.data.DataSet.get_dataset_names">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -797,7 +814,10 @@
             <span class="n">local_directories_message</span> <span class="o">=</span> <span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">local_directories</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_directories</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">'(none)'</span>
             <span class="k">raise</span> <span class="n">OfflineDataError</span><span class="p">(</span>
                 <span class="s1">'Offline mode is enabled and dataset names are not cached and no local datasets were found. '</span>
-                <span class="sa">f</span><span class="s1">'Checked dataset roots: </span><span class="si">{</span><span class="n">local_directories_message</span><span class="si">}</span><span class="s1">.'</span>
+                <span class="sa">f</span><span class="s1">'Checked the cache at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_directory</span><span class="si">}</span><span class="s1"> and the local dataset roots: </span><span class="si">{</span><span class="n">local_directories_message</span><span class="si">}</span><span class="s1">. '</span>
+                <span class="s1">'To use offline mode, run once online to fill the cache, set CITYLEARN_LOCAL_DATASETS_PATH to a '</span>
+                <span class="s1">'folder that holds dataset folders, or pass a local schema.json path. Set CITYLEARN_OFFLINE=0 or '</span>
+                <span class="s1">'offline=False to download.'</span>
             <span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -807,7 +827,7 @@
                     <span class="n">contents</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
 
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'The dataset names DNE in cache. Will download from '</span>
+                    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'The dataset names do not exist in the cache. Will download from '</span>
                         <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">github_account</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">repository</span><span class="si">}</span><span class="s1">/tree/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="si">}</span><span class="s1"> GitHub repository and write to </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s1">. '</span>
                             <span class="s1">'Next time DataSet.get_dataset_names is called, it will read '</span>
                                 <span class="s1">'from cache unless DataSet.clear_cache is run first.'</span><span class="p">)</span>
@@ -857,7 +877,7 @@
                     <span class="sa">f</span><span class="s2">"Checked cache file '</span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">' and local misc roots: </span><span class="si">{</span><span class="n">local_directories_message</span><span class="si">}</span><span class="s2">."</span>
                 <span class="p">)</span>
 
-            <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'The </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1"> data DNE in cache. Will download from '</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'The </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1"> data does not exist in the cache. Will download from '</span>
                 <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">github_account</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">repository</span><span class="si">}</span><span class="s1">/tree/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="si">}</span><span class="s1"> GitHub repository and write to </span><span class="si">{</span><span class="n">misc_directory</span><span class="si">}</span><span class="s1">. '</span>
                     <span class="s1">'Next time it is requested, it will read from cache unless DataSet.clear_cache is run first.'</span><span class="p">)</span>
             <span class="n">path</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_path</span><span class="p">)</span>

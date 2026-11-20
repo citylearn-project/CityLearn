@@ -202,7 +202,10 @@
             <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">torch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">'torch is required to use LSTMDynamics.'</span><span class="p">)</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.optional_dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">missing_dependency</span>
+            <span class="k">raise</span> <span class="n">missing_dependency</span><span class="p">(</span>
+                <span class="s1">'LSTM thermal dynamics (the LSTMDynamics building model of this dataset)'</span><span class="p">,</span> <span class="s1">'PyTorch'</span><span class="p">,</span> <span class="s1">'dynamics'</span>
+            <span class="p">)</span>
 
         <span class="n">Dynamics</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>

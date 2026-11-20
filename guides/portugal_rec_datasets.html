@@ -161,7 +161,8 @@ be tested on whether they keep delivering the requested services, on identical
 and reproducible inputs.</p>
 <p>The datasets are edition v3.4 of <em>Synthetic electricity demand and flexibility
 datasets for Portuguese energy communities</em> (Fonseca et al.), distributed with
-CityLearn from 3.5.0.</p>
+CityLearn from 3.5.0. Their time series are Parquet files, so install CityLearn
+with the <code class="docutils literal notranslate"><span class="pre">parquet</span></code> extra, <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[parquet]&quot;</span></code>, which adds pyarrow.</p>
 <section id="datasets">
 <h2>Datasets<a class="headerlink" href="#datasets" title="Link to this heading"></a></h2>
 <p>REC-4 and REC-15 are residential. REC-30 and REC-100 add commercial members,

@@ -145,13 +145,15 @@
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.decomposition</span><span class="w"> </span><span class="kn">import</span> <span class="n">PCA</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearRegression</span>
-<span class="k">except</span> <span class="p">(</span><span class="ne">ModuleNotFoundError</span><span class="p">,</span> <span class="ne">ImportError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">"This functionality requires you to install scikit-learn. You can install scikit-learn by : pip scikit-learn, or for more detailed instructions please visit https://scikit-learn.org/stable/install.html."</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.optional_dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">missing_dependency</span>
+    <span class="k">raise</span> <span class="n">missing_dependency</span><span class="p">(</span><span class="s1">'MARLISA'</span><span class="p">,</span> <span class="s1">'scikit-learn'</span><span class="p">,</span> <span class="s1">'rl'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="k">except</span> <span class="p">(</span><span class="ne">ModuleNotFoundError</span><span class="p">,</span> <span class="ne">ImportError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">"This functionality requires you to install torch. You can install torch by : pip install torch torchvision, or for more detailed instructions please visit https://pytorch.org."</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.optional_dependencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">missing_dependency</span>
+    <span class="k">raise</span> <span class="n">missing_dependency</span><span class="p">(</span><span class="s1">'MARLISA'</span><span class="p">,</span> <span class="s1">'PyTorch'</span><span class="p">,</span> <span class="s1">'rl'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAC</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Encoder</span><span class="p">,</span> <span class="n">NoNormalization</span><span class="p">,</span> <span class="n">PeriodicNormalization</span><span class="p">,</span> <span class="n">RemoveFeature</span>

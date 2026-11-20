@@ -168,6 +168,11 @@ For simulation-level checks and published measurements, start with
 <span class="go">python -m pip install -e .</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">test_requirements.txt</span></code> installs PyTorch and scikit-learn, which the tests of
+LSTM thermal dynamics and of the SAC and MARLISA controllers need. Without a
+GPU, run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torch</span> <span class="pre">--index-url</span> <span class="pre">https://download.pytorch.org/whl/cpu</span></code>
+first to avoid several GB of CUDA libraries. Ray RLlib is not a test
+dependency: the RLlib wrappers import it only when it is installed.</p>
 <p>Optional dependencies:</p>
 <table class="docutils align-default">
 <thead>
@@ -177,12 +182,21 @@ For simulation-level checks and published measurements, start with
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Parquet datasets</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">pyarrow</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;.[parquet]&quot;</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>PV autosizing</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">&quot;.[pysam]&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;.[pysam]&quot;</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>Build checks</p></td>
+<tr class="row-even"><td><p>Parallel tests</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">pytest-xdist</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Notebook checks</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">nbclient</span> <span class="pre">nbformat</span> <span class="pre">ipykernel</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>RLlib wrappers</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">&quot;ray[rllib]&quot;</span></code> (a release with wheels for your Python)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Build checks</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">build</span> <span class="pre">twine</span></code></p></td>
 </tr>
 </tbody>
@@ -229,8 +243,14 @@ the comparison reports <code class="docutils literal notranslate"><span class="p
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Full test suite</p></td>
+<tr class="row-even"><td><p>Fast subset (about one minute)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pytest</span> <span class="pre">-q</span> <span class="pre">tests/unit</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Full test suite (several minutes; <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">4</span></code> with pytest-xdist)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pytest</span> <span class="pre">-q</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Example notebooks</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">scripts/ci/run_notebooks.py</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Critical lint</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">-m</span> <span class="pre">ruff</span> <span class="pre">check</span> <span class="pre">citylearn</span> <span class="pre">tests</span> <span class="pre">scripts/manual</span> <span class="pre">scripts/ci</span> <span class="pre">--select</span> <span class="pre">E9,F821</span></code></p></td>

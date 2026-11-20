@@ -106,6 +106,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#kpi-definitions">KPI definitions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#physics-version">Physics version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#random-streams">Random streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optional-pytorch-and-scikit-learn">Optional PyTorch and scikit-learn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cli-evaluation-window-and-host-information">CLI evaluation window and host information</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-5-0-to-3-6-0">Upgrade from 3.5.0 to 3.6.0</a><ul>
@@ -518,6 +520,38 @@ temperature and comfort KPIs of these runs are unchanged.</p></li>
 </ul>
 <p>Rerun stochastic experiments, and retrain policies whose results you compare
 across seeds, with <code class="docutils literal notranslate"><span class="pre">v2</span></code>; keep <code class="docutils literal notranslate"><span class="pre">v1</span></code> only to reproduce published 3.6.0 numbers.</p>
+</section>
+<section id="optional-pytorch-and-scikit-learn">
+<h3>Optional PyTorch and scikit-learn<a class="headerlink" href="#optional-pytorch-and-scikit-learn" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">citylearn</span></code> no longer installs PyTorch or scikit-learn. Install the
+extra that your study needs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[dynamics]&quot;</span></code> for datasets with LSTM thermal dynamics:
+the 2023 challenge datasets, both Quebec neighbourhoods, <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> and the
+EULP neighbourhood datasets (<code class="docutils literal notranslate"><span class="pre">ca_alameda_county_neighborhood</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tx_travis_county_neighborhood</span></code>, <code class="docutils literal notranslate"><span class="pre">vt_chittenden_county_neighborhood</span></code>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[rl]&quot;</span></code> for the bundled <code class="docutils literal notranslate"><span class="pre">SAC</span></code>, <code class="docutils literal notranslate"><span class="pre">SACRBC</span></code>, <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> and
+<code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code> controllers (it also covers LSTM thermal dynamics);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[end_use_load_profiles]&quot;</span></code>, which now includes both, to
+build datasets from End-Use Load Profiles.</p></li>
+</ul>
+<p>Without the extra, constructing such an environment or importing these
+controllers raises an <code class="docutils literal notranslate"><span class="pre">ImportError</span></code> that names it; it used to raise a plain
+<code class="docutils literal notranslate"><span class="pre">Exception</span></code> for the controllers. Environments that already have PyTorch and
+scikit-learn installed keep working unchanged. To avoid the CUDA libraries,
+install the CPU-only PyTorch first with
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torch</span> <span class="pre">--index-url</span> <span class="pre">https://download.pytorch.org/whl/cpu</span></code>. Stable
+Baselines3 is not an extra: install <code class="docutils literal notranslate"><span class="pre">stable-baselines3&gt;=2.4</span></code>, which supports
+gymnasium 1.x.</p>
+</section>
+<section id="cli-evaluation-window-and-host-information">
+<h3>CLI evaluation window and host information<a class="headerlink" href="#cli-evaluation-window-and-host-information" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">citylearn</span> <span class="pre">simulate</span> <span class="pre">...</span> <span class="pre">train</span> <span class="pre">--evaluate</span></code> evaluates on the first training
+episode window when <code class="docutils literal notranslate"><span class="pre">-te</span></code> is not given; it used to evaluate on the whole
+simulation window. Runs without <code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code> evaluate the same window
+as before. Pass <code class="docutils literal notranslate"><span class="pre">-te</span> <span class="pre">start</span> <span class="pre">end</span></code> to evaluate on a chosen window. The training
+summary JSON records <code class="docutils literal notranslate"><span class="pre">hostname</span></code> and <code class="docutils literal notranslate"><span class="pre">username</span></code> only with <code class="docutils literal notranslate"><span class="pre">--record_host</span></code>;
+scripts that read these keys need the flag.</p>
 </section>
 </section>
 <section id="upgrade-from-3-5-0-to-3-6-0">
