@@ -137,15 +137,18 @@ def test_dr_up_cash_is_consistent_with_hand_example():
     assert row["penalty_eur"] == 1.25 and row["net_revenue_eur"] == -0.75
 
 
-def test_dr_member_credit_shortfall_are_not_additive_but_cash_is():
+def test_dr_member_credit_shortfall_and_cash_add_up_to_the_district():
     _, s = dr_env()
     row = s.settle_current_time_step()
     a = row["building_allocations"]
     assert row["delivered_kwh"] == pytest.approx(-0.25)
     assert row["credited_kwh"] == 0
     assert row["shortfall_kwh"] == pytest.approx(0.75)
-    assert sum(r["credited_kwh"] for r in a) == pytest.approx(0.5)
-    assert sum(r["shortfall_kwh"] for r in a) == pytest.approx(1.0)
+    # Members share the district settlement (#240); their own positive
+    # contribution is kept as a non-additive diagnostic.
+    assert sum(r["credited_kwh"] for r in a) == pytest.approx(row["credited_kwh"])
+    assert sum(r["shortfall_kwh"] for r in a) == pytest.approx(row["shortfall_kwh"])
+    assert sum(r["uncapped_contribution_kwh"] for r in a) == pytest.approx(0.5)
     assert sum(r["delivered_kwh"] for r in a) == pytest.approx(row["delivered_kwh"])
     assert sum(r["net_revenue_eur"] for r in a) == pytest.approx(row["net_revenue_eur"])
 

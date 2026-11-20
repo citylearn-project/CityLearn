@@ -542,16 +542,17 @@ def test_daily_and_monthly_kpis_use_time_aware_windows(seconds_per_time_step: in
         daily_steps = max(1, int(round((24 * 3600) / seconds_per_time_step)))
         monthly_steps = max(1, int(round((730 * 3600) / seconds_per_time_step)))
 
-        dlf_daily_c = CostFunction.one_minus_load_factor(env.net_electricity_consumption, window=daily_steps)[-1]
-        dlf_daily_b = CostFunction.one_minus_load_factor(
-            getattr(env, f"net_electricity_consumption{baseline.value}"),
-            window=daily_steps,
-        )[-1]
-        dlf_monthly_c = CostFunction.one_minus_load_factor(env.net_electricity_consumption, window=monthly_steps)[-1]
-        dlf_monthly_b = CostFunction.one_minus_load_factor(
-            getattr(env, f"net_electricity_consumption{baseline.value}"),
-            window=monthly_steps,
-        )[-1]
+        net_c = np.asarray(env.net_electricity_consumption, dtype="float64")
+        net_b = np.asarray(getattr(env, f"net_electricity_consumption{baseline.value}"), dtype="float64")
+
+        def load_factor(series, window, signed_net=False):
+            # v2 uses import power; the signed-net values keep the 3.6.0 definition.
+            return CostFunction.one_minus_load_factor(series if signed_net else np.clip(series, 0.0, None), window=window)[-1]
+
+        dlf_daily_c = load_factor(net_c, daily_steps)
+        dlf_daily_b = load_factor(net_b, daily_steps)
+        dlf_monthly_c = load_factor(net_c, monthly_steps)
+        dlf_monthly_b = load_factor(net_b, monthly_steps)
         peak_daily_c = CostFunction.peak(env.net_electricity_consumption, window=daily_steps)[-1]
         peak_daily_b = CostFunction.peak(
             getattr(env, f"net_electricity_consumption{baseline.value}"),
@@ -570,6 +571,9 @@ def test_daily_and_monthly_kpis_use_time_aware_windows(seconds_per_time_step: in
         district = df[df["name"] == "District"].set_index("cost_function")["value"]
         assert float(district["district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio"]) == pytest.approx(expected_daily)
         assert float(district["district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio"]) == pytest.approx(expected_monthly)
+        for window_name, window in (("daily", daily_steps), ("monthly", monthly_steps)):
+            expected_signed = safe_div(float(load_factor(net_c, window, signed_net=True)), float(load_factor(net_b, window, signed_net=True)))
+            assert float(district[f"district_energy_grid_shape_quality_load_factor_penalty_{window_name}_average_to_baseline_signed_net_ratio"]) == pytest.approx(expected_signed)
         assert float(district["district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio"]) == pytest.approx(expected_peak_daily)
     finally:
         env.close()

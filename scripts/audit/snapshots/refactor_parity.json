@@ -62,7 +62,7 @@
           "ev_feasibility": "individual_conditioned_on_service_headroom_physical_replay_v2",
           "export_carbon_credit": false,
           "initial_inventory": "unknown_external",
-          "kpi_definition_version": "1.9.0",
+          "kpi_definition_version": "2.0.0",
           "mixing": "proportional_storage_and_interval_member_ac_bus",
           "pv_generation": "available_including_reported_curtailment",
           "reported_energy_intervals": "executed_active_intervals_v1",
@@ -1425,6 +1425,27 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -1518,7 +1539,9 @@
           0.0,
           0.0,
           0.0,
-          0.0,
+          {
+            "nonfinite": "nan"
+          },
           0.0,
           0.0,
           0.0,
@@ -1814,6 +1837,27 @@
           0.0,
           0.0,
           0.0,
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -3834,13 +3878,16 @@
           6.0,
           0.0,
           0.0,
-          4.765714712440968,
-          18.602045212473183,
-          13.83633050003222,
+          2.674286090305884,
+          13.405899469233946,
+          10.731613378928062,
           3.694258366986788,
+          5.012889053953305,
+          0.7800001096725495,
           1.3900001244619489,
+          3.910054011859901,
           5.42559652030468,
-          4.035596395842731,
+          3.130053902187352,
           6.129168237958635,
           1.787674069404602,
           26.83051013946533,
@@ -3862,8 +3909,12 @@
           33.38705635070801,
           0.3575347968323327,
           4.2893791989342525,
+          6.01966485321854,
           3.4928773700960525,
+          3.63186251625032,
+          0.7753884054604646,
           0.5269705226425878,
+          0.7753884054604646,
           0.5269705226425878,
           2.564102264315933,
           2.564102264315933,
@@ -4512,9 +4563,12 @@
           "district_emissions_daily_average_baseline_kgco2",
           "district_emissions_daily_average_control_kgco2",
           "district_emissions_daily_average_delta_kgco2",
+          "district_emissions_ratio_to_baseline_total_building_mean_ratio",
           "district_emissions_ratio_to_baseline_total_ratio",
           "district_emissions_total_baseline_kgco2",
+          "district_emissions_total_baseline_member_sum_kgco2",
           "district_emissions_total_control_kgco2",
+          "district_emissions_total_control_member_sum_kgco2",
           "district_emissions_total_delta_kgco2",
           "district_energy_grid_community_market_grid_export_after_local_daily_average_kwh",
           "district_energy_grid_community_market_grid_export_after_local_total_kwh",
@@ -4536,10 +4590,14 @@
           "district_energy_grid_daily_average_net_exchange_control_kwh",
           "district_energy_grid_daily_average_net_exchange_delta_kwh",
           "district_energy_grid_ratio_to_baseline_export_total_ratio",
+          "district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_import_total_ratio",
+          "district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_net_exchange_total_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_ramping_average_to_baseline_ratio",
@@ -5815,7 +5873,7 @@
         "building/Building_2/building_deferrable_appliance_audit_running_count": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_served_energy_kwh": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_service_balance_residual_kwh": 0.0,
-        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": 0.0,
+        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": null,
         "building/Building_2/building_deferrable_appliance_service_completed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_missed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_served_energy_total_kwh": 0.0,
@@ -6138,13 +6196,16 @@
         "district/District/district_electrical_service_phase_requested_pressure_event_count": 6.0,
         "district/District/district_electrical_service_phase_violations_energy_total_kwh": 0.0,
         "district/District/district_electrical_service_phase_violations_event_count": 0.0,
-        "district/District/district_emissions_daily_average_baseline_kgco2": 4.765714712440968,
-        "district/District/district_emissions_daily_average_control_kgco2": 18.602045212473186,
-        "district/District/district_emissions_daily_average_delta_kgco2": 13.83633050003222,
-        "district/District/district_emissions_ratio_to_baseline_total_ratio": 3.694258366986788,
-        "district/District/district_emissions_total_baseline_kgco2": 1.3900001244619489,
-        "district/District/district_emissions_total_control_kgco2": 5.42559652030468,
-        "district/District/district_emissions_total_delta_kgco2": 4.035596395842731,
+        "district/District/district_emissions_daily_average_baseline_kgco2": 2.674286090305884,
+        "district/District/district_emissions_daily_average_control_kgco2": 13.405899469233946,
+        "district/District/district_emissions_daily_average_delta_kgco2": 10.731613378928062,
+        "district/District/district_emissions_ratio_to_baseline_total_building_mean_ratio": 3.694258366986788,
+        "district/District/district_emissions_ratio_to_baseline_total_ratio": 5.012889053953305,
+        "district/District/district_emissions_total_baseline_kgco2": 0.7800001096725495,
+        "district/District/district_emissions_total_baseline_member_sum_kgco2": 1.3900001244619489,
+        "district/District/district_emissions_total_control_kgco2": 3.910054011859901,
+        "district/District/district_emissions_total_control_member_sum_kgco2": 5.42559652030468,
+        "district/District/district_emissions_total_delta_kgco2": 3.1300539021873517,
         "district/District/district_energy_grid_community_market_grid_export_after_local_daily_average_kwh": 6.129168237958635,
         "district/District/district_energy_grid_community_market_grid_export_after_local_total_kwh": 1.787674069404602,
         "district/District/district_energy_grid_community_market_grid_import_after_local_daily_average_kwh": 26.830510139465332,
@@ -6165,10 +6226,14 @@
         "district/District/district_energy_grid_daily_average_net_exchange_control_kwh": 20.701341901506694,
         "district/District/district_energy_grid_daily_average_net_exchange_delta_kwh": 33.38705635070801,
         "district/District/district_energy_grid_ratio_to_baseline_export_total_ratio": 0.35753479683233275,
-        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 4.2893791989342525,
-        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 3.4928773700960525,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 0.5269705226425878,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 0.5269705226425878,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio": 4.2893791989342525,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 6.01966485321854,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio": 3.4928773700960525,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 3.63186251625032,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 0.7753884054604646,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio": 0.5269705226425878,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 0.7753884054604646,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio": 0.5269705226425878,
         "district/District/district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio": 2.5641022643159332,
         "district/District/district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio": 2.5641022643159332,
         "district/District/district_energy_grid_shape_quality_ramping_average_to_baseline_ratio": 1.7827612643113873,
@@ -12965,7 +13030,7 @@
           "ev_feasibility": "individual_conditioned_on_service_headroom_physical_replay_v2",
           "export_carbon_credit": false,
           "initial_inventory": "unknown_external",
-          "kpi_definition_version": "1.9.0",
+          "kpi_definition_version": "2.0.0",
           "mixing": "proportional_storage_and_interval_member_ac_bus",
           "pv_generation": "available_including_reported_curtailment",
           "reported_energy_intervals": "executed_active_intervals_v1",
@@ -13062,7 +13127,9 @@
           0.0,
           0.0,
           0.0,
-          0.0,
+          {
+            "nonfinite": "nan"
+          },
           0.0,
           1.0,
           0.0,
@@ -14328,6 +14395,27 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -14421,7 +14509,9 @@
           0.0,
           0.0,
           0.0,
-          0.0,
+          {
+            "nonfinite": "nan"
+          },
           0.0,
           0.0,
           0.0,
@@ -14717,6 +14807,27 @@
           0.0,
           0.0,
           0.0,
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -16720,7 +16831,9 @@
           0.0,
           0.0,
           0.0,
-          0.0,
+          {
+            "nonfinite": "nan"
+          },
           0.0,
           1.0,
           0.0,
@@ -16737,13 +16850,16 @@
           13.0,
           10.506666747728982,
           13.0,
-          261.25715253608564,
-          256.45715404834067,
-          -4.799998487745013,
+          135.77143139157965,
+          131.65714575903746,
+          -4.114285632542192,
           0.954919187703586,
+          0.9696969709284706,
+          0.6600000137090678,
           1.2700000470504165,
+          0.6400000141064321,
           1.2466667210683229,
-          -0.0233333259820938,
+          -0.0199999996026356,
           1030.148513828005,
           5.007666386663914,
           219.42856754575456,
@@ -16765,8 +16881,12 @@
           12.137153659548078,
           0.9818954055084406,
           0.9813762674640728,
+          0.969696931520442,
           0.9963739868085828,
+          1.014750013897196,
+          1.0,
           1.005483448680412,
+          1.0,
           1.005483448680412,
           0.969696931520442,
           0.969696931520442,
@@ -17407,9 +17527,12 @@
           "district_emissions_daily_average_baseline_kgco2",
           "district_emissions_daily_average_control_kgco2",
           "district_emissions_daily_average_delta_kgco2",
+          "district_emissions_ratio_to_baseline_total_building_mean_ratio",
           "district_emissions_ratio_to_baseline_total_ratio",
           "district_emissions_total_baseline_kgco2",
+          "district_emissions_total_baseline_member_sum_kgco2",
           "district_emissions_total_control_kgco2",
+          "district_emissions_total_control_member_sum_kgco2",
           "district_emissions_total_delta_kgco2",
           "district_energy_grid_community_market_grid_export_after_local_daily_average_kwh",
           "district_energy_grid_community_market_grid_export_after_local_total_kwh",
@@ -17431,10 +17554,14 @@
           "district_energy_grid_daily_average_net_exchange_control_kwh",
           "district_energy_grid_daily_average_net_exchange_delta_kwh",
           "district_energy_grid_ratio_to_baseline_export_total_ratio",
+          "district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_import_total_ratio",
+          "district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_net_exchange_total_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_ramping_average_to_baseline_ratio",
@@ -18404,7 +18531,7 @@
         "building/Building_1/building_deferrable_appliance_audit_running_count": 0.0,
         "building/Building_1/building_deferrable_appliance_audit_served_energy_kwh": 0.0,
         "building/Building_1/building_deferrable_appliance_audit_service_balance_residual_kwh": 0.0,
-        "building/Building_1/building_deferrable_appliance_service_average_start_delay_hours": 0.0,
+        "building/Building_1/building_deferrable_appliance_service_average_start_delay_hours": null,
         "building/Building_1/building_deferrable_appliance_service_completed_cycles_count": 0.0,
         "building/Building_1/building_deferrable_appliance_service_missed_cycles_count": 1.0,
         "building/Building_1/building_deferrable_appliance_service_served_energy_total_kwh": 0.0,
@@ -18710,7 +18837,7 @@
         "building/Building_2/building_deferrable_appliance_audit_running_count": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_served_energy_kwh": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_service_balance_residual_kwh": 0.0,
-        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": 0.0,
+        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": null,
         "building/Building_2/building_deferrable_appliance_service_completed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_missed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_served_energy_total_kwh": 0.0,
@@ -19016,7 +19143,7 @@
         "district/District/district_deferrable_appliance_audit_running_count": 0.0,
         "district/District/district_deferrable_appliance_audit_served_energy_kwh": 0.0,
         "district/District/district_deferrable_appliance_audit_service_balance_residual_kwh": 0.0,
-        "district/District/district_deferrable_appliance_service_average_start_delay_hours": 0.0,
+        "district/District/district_deferrable_appliance_service_average_start_delay_hours": null,
         "district/District/district_deferrable_appliance_service_completed_cycles_count": 0.0,
         "district/District/district_deferrable_appliance_service_missed_cycles_count": 1.0,
         "district/District/district_deferrable_appliance_service_served_energy_total_kwh": 0.0,
@@ -19033,13 +19160,16 @@
         "district/District/district_electrical_service_phase_requested_pressure_event_count": 13.0,
         "district/District/district_electrical_service_phase_violations_energy_total_kwh": 10.506666747728982,
         "district/District/district_electrical_service_phase_violations_event_count": 13.0,
-        "district/District/district_emissions_daily_average_baseline_kgco2": 261.25715253608564,
-        "district/District/district_emissions_daily_average_control_kgco2": 256.45715404834067,
-        "district/District/district_emissions_daily_average_delta_kgco2": -4.799998487745013,
-        "district/District/district_emissions_ratio_to_baseline_total_ratio": 0.9549191877035859,
-        "district/District/district_emissions_total_baseline_kgco2": 1.2700000470504165,
-        "district/District/district_emissions_total_control_kgco2": 1.2466667210683227,
-        "district/District/district_emissions_total_delta_kgco2": -0.02333332598209381,
+        "district/District/district_emissions_daily_average_baseline_kgco2": 135.77143139157965,
+        "district/District/district_emissions_daily_average_control_kgco2": 131.65714575903746,
+        "district/District/district_emissions_daily_average_delta_kgco2": -4.114285632542192,
+        "district/District/district_emissions_ratio_to_baseline_total_building_mean_ratio": 0.9549191877035859,
+        "district/District/district_emissions_ratio_to_baseline_total_ratio": 0.9696969709284706,
+        "district/District/district_emissions_total_baseline_kgco2": 0.6600000137090678,
+        "district/District/district_emissions_total_baseline_member_sum_kgco2": 1.2700000470504165,
+        "district/District/district_emissions_total_control_kgco2": 0.6400000141064321,
+        "district/District/district_emissions_total_control_member_sum_kgco2": 1.2466667210683227,
+        "district/District/district_emissions_total_delta_kgco2": -0.019999999602635654,
         "district/District/district_energy_grid_community_market_grid_export_after_local_daily_average_kwh": 1030.148513828005,
         "district/District/district_energy_grid_community_market_grid_export_after_local_total_kwh": 5.007666386663914,
         "district/District/district_energy_grid_community_market_grid_import_after_local_daily_average_kwh": 219.42856754575456,
@@ -19060,10 +19190,14 @@
         "district/District/district_energy_grid_daily_average_net_exchange_control_kwh": -810.7199462822505,
         "district/District/district_energy_grid_daily_average_net_exchange_delta_kwh": 12.137153659548078,
         "district/District/district_energy_grid_ratio_to_baseline_export_total_ratio": 0.9818954055084406,
-        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 0.9813762674640729,
-        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 0.9963739868085827,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 1.005483448680412,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 1.005483448680412,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio": 0.9813762674640729,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 0.9696969315204419,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio": 0.9963739868085827,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 1.014750013897196,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 0.9999999999999999,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio": 1.005483448680412,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 0.9999999999999999,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio": 1.005483448680412,
         "district/District/district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio": 0.9696969315204419,
         "district/District/district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio": 0.9696969315204419,
         "district/District/district_energy_grid_shape_quality_ramping_average_to_baseline_ratio": 0.9525555244617974,
@@ -25880,7 +26014,7 @@
           "ev_feasibility": "individual_conditioned_on_service_headroom_physical_replay_v2",
           "export_carbon_credit": false,
           "initial_inventory": "unknown_external",
-          "kpi_definition_version": "1.9.0",
+          "kpi_definition_version": "2.0.0",
           "mixing": "proportional_storage_and_interval_member_ac_bus",
           "pv_generation": "available_including_reported_curtailment",
           "reported_energy_intervals": "executed_active_intervals_v1",
@@ -27243,6 +27377,27 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -27336,7 +27491,9 @@
           0.0,
           0.0,
           0.0,
-          0.0,
+          {
+            "nonfinite": "nan"
+          },
           0.0,
           0.0,
           0.0,
@@ -27632,6 +27789,27 @@
           0.0,
           0.0,
           0.0,
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -29652,13 +29830,16 @@
           6.0,
           0.0,
           0.0,
-          19.062857623611176,
-          27.204692193440028,
-          8.14183456982885,
+          10.697143135070794,
+          11.876572072369717,
+          1.1794289372989206,
           1.3173385342993833,
+          1.1102564415944047,
+          0.7800000202655788,
           1.3900000350549817,
+          0.8660000469436251,
           1.9836754724383356,
-          0.5936754373833537,
+          0.0860000266780462,
           51.06281294141497,
           3.723330110311508,
           23.497143745422363,
@@ -29680,8 +29861,12 @@
           23.17718860081264,
           0.7446660220623016,
           1.4482384548841138,
+          1.317948816114162,
           1.339484737570641,
+          1.4567576523502757,
+          0.9484076357239898,
           0.8669682828368412,
+          0.9484076357239898,
           0.8669682828368412,
           1.0064102963818145,
           1.0064102963818145,
@@ -30330,9 +30515,12 @@
           "district_emissions_daily_average_baseline_kgco2",
           "district_emissions_daily_average_control_kgco2",
           "district_emissions_daily_average_delta_kgco2",
+          "district_emissions_ratio_to_baseline_total_building_mean_ratio",
           "district_emissions_ratio_to_baseline_total_ratio",
           "district_emissions_total_baseline_kgco2",
+          "district_emissions_total_baseline_member_sum_kgco2",
           "district_emissions_total_control_kgco2",
+          "district_emissions_total_control_member_sum_kgco2",
           "district_emissions_total_delta_kgco2",
           "district_energy_grid_community_market_grid_export_after_local_daily_average_kwh",
           "district_energy_grid_community_market_grid_export_after_local_total_kwh",
@@ -30354,10 +30542,14 @@
           "district_energy_grid_daily_average_net_exchange_control_kwh",
           "district_energy_grid_daily_average_net_exchange_delta_kwh",
           "district_energy_grid_ratio_to_baseline_export_total_ratio",
+          "district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_import_total_ratio",
+          "district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_net_exchange_total_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_ramping_average_to_baseline_ratio",
@@ -31633,7 +31825,7 @@
         "building/Building_2/building_deferrable_appliance_audit_running_count": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_served_energy_kwh": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_service_balance_residual_kwh": 0.0,
-        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": 0.0,
+        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": null,
         "building/Building_2/building_deferrable_appliance_service_completed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_missed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_served_energy_total_kwh": 0.0,
@@ -31956,13 +32148,16 @@
         "district/District/district_electrical_service_phase_requested_pressure_event_count": 6.0,
         "district/District/district_electrical_service_phase_violations_energy_total_kwh": 0.0,
         "district/District/district_electrical_service_phase_violations_event_count": 0.0,
-        "district/District/district_emissions_daily_average_baseline_kgco2": 19.062857623611176,
-        "district/District/district_emissions_daily_average_control_kgco2": 27.204692193440028,
-        "district/District/district_emissions_daily_average_delta_kgco2": 8.14183456982885,
-        "district/District/district_emissions_ratio_to_baseline_total_ratio": 1.3173385342993833,
-        "district/District/district_emissions_total_baseline_kgco2": 1.3900000350549817,
-        "district/District/district_emissions_total_control_kgco2": 1.9836754724383354,
-        "district/District/district_emissions_total_delta_kgco2": 0.5936754373833537,
+        "district/District/district_emissions_daily_average_baseline_kgco2": 10.697143135070794,
+        "district/District/district_emissions_daily_average_control_kgco2": 11.876572072369715,
+        "district/District/district_emissions_daily_average_delta_kgco2": 1.1794289372989206,
+        "district/District/district_emissions_ratio_to_baseline_total_building_mean_ratio": 1.3173385342993833,
+        "district/District/district_emissions_ratio_to_baseline_total_ratio": 1.1102564415944047,
+        "district/District/district_emissions_total_baseline_kgco2": 0.7800000202655788,
+        "district/District/district_emissions_total_baseline_member_sum_kgco2": 1.3900000350549817,
+        "district/District/district_emissions_total_control_kgco2": 0.8660000469436251,
+        "district/District/district_emissions_total_control_member_sum_kgco2": 1.9836754724383354,
+        "district/District/district_emissions_total_delta_kgco2": 0.08600002667804629,
         "district/District/district_energy_grid_community_market_grid_export_after_local_daily_average_kwh": 51.06281294141497,
         "district/District/district_energy_grid_community_market_grid_export_after_local_total_kwh": 3.723330110311508,
         "district/District/district_energy_grid_community_market_grid_import_after_local_daily_average_kwh": 23.497143745422363,
@@ -31983,10 +32178,14 @@
         "district/District/district_energy_grid_daily_average_net_exchange_control_kwh": -27.565669195992605,
         "district/District/district_energy_grid_daily_average_net_exchange_delta_kwh": 23.177188600812638,
         "district/District/district_energy_grid_ratio_to_baseline_export_total_ratio": 0.7446660220623016,
-        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 1.4482384548841138,
-        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 1.3394847375706407,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 0.8669682828368412,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 0.8669682828368412,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio": 1.4482384548841138,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 1.3179488161141621,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio": 1.3394847375706407,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 1.4567576523502757,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 0.9484076357239898,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio": 0.8669682828368412,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 0.9484076357239898,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio": 0.8669682828368412,
         "district/District/district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio": 1.0064102963818145,
         "district/District/district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio": 1.0064102963818145,
         "district/District/district_energy_grid_shape_quality_ramping_average_to_baseline_ratio": 0.6702858736965593,
@@ -38779,7 +38978,7 @@
           "ev_feasibility": "individual_conditioned_on_service_headroom_physical_replay_v2",
           "export_carbon_credit": false,
           "initial_inventory": "unknown_external",
-          "kpi_definition_version": "1.9.0",
+          "kpi_definition_version": "2.0.0",
           "mixing": "proportional_storage_and_interval_member_ac_bus",
           "pv_generation": "available_including_reported_curtailment",
           "reported_energy_intervals": "executed_active_intervals_v1",
@@ -40172,6 +40371,27 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -40265,7 +40485,9 @@
           0.0,
           0.0,
           0.0,
-          0.0,
+          {
+            "nonfinite": "nan"
+          },
           0.0,
           0.0,
           0.0,
@@ -40571,6 +40793,27 @@
           0.0,
           0.0,
           0.0,
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -42639,13 +42882,16 @@
           4.0,
           0.0,
           0.0,
-          6.719999785934175,
-          14.559965985161917,
-          7.839966199227741,
+          4.114285632542192,
+          6.4734905635426845,
+          2.3592049310004928,
           2.566663261884378,
+          1.573417876566522,
+          0.2999999940395348,
           0.4899999843910336,
+          0.4720253535916541,
           1.0616641864180565,
-          0.5716642020270228,
+          0.1720253595521192,
           40.02667318071637,
           2.9186115860939026,
           16.756602696010045,
@@ -42667,8 +42913,12 @@
           31.587071555001398,
           0.6080440940270743,
           2.6031631508408823,
+          1.527294607597268,
           1.4112900206089454,
+          1.5758060004682242,
+          1.0191681111117303,
           0.5673132943139444,
+          1.0191681111117303,
           0.5673132943139444,
           1.6041667225460243,
           1.6041667225460243,
@@ -43333,9 +43583,12 @@
           "district_emissions_daily_average_baseline_kgco2",
           "district_emissions_daily_average_control_kgco2",
           "district_emissions_daily_average_delta_kgco2",
+          "district_emissions_ratio_to_baseline_total_building_mean_ratio",
           "district_emissions_ratio_to_baseline_total_ratio",
           "district_emissions_total_baseline_kgco2",
+          "district_emissions_total_baseline_member_sum_kgco2",
           "district_emissions_total_control_kgco2",
+          "district_emissions_total_control_member_sum_kgco2",
           "district_emissions_total_delta_kgco2",
           "district_energy_grid_community_market_grid_export_after_local_daily_average_kwh",
           "district_energy_grid_community_market_grid_export_after_local_total_kwh",
@@ -43357,10 +43610,14 @@
           "district_energy_grid_daily_average_net_exchange_control_kwh",
           "district_energy_grid_daily_average_net_exchange_delta_kwh",
           "district_energy_grid_ratio_to_baseline_export_total_ratio",
+          "district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_import_total_ratio",
+          "district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_net_exchange_total_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_ramping_average_to_baseline_ratio",
@@ -44768,7 +45025,7 @@
         "building/Building_2/building_deferrable_appliance_audit_running_count": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_served_energy_kwh": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_service_balance_residual_kwh": 0.0,
-        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": 0.0,
+        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": null,
         "building/Building_2/building_deferrable_appliance_service_completed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_missed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_served_energy_total_kwh": 0.0,
@@ -45099,13 +45356,16 @@
         "district/District/district_electrical_service_phase_requested_pressure_event_count": 4.0,
         "district/District/district_electrical_service_phase_violations_energy_total_kwh": 0.0,
         "district/District/district_electrical_service_phase_violations_event_count": 0.0,
-        "district/District/district_emissions_daily_average_baseline_kgco2": 6.719999785934175,
-        "district/District/district_emissions_daily_average_control_kgco2": 14.559965985161917,
-        "district/District/district_emissions_daily_average_delta_kgco2": 7.839966199227741,
-        "district/District/district_emissions_ratio_to_baseline_total_ratio": 2.566663261884378,
-        "district/District/district_emissions_total_baseline_kgco2": 0.48999998439103365,
-        "district/District/district_emissions_total_control_kgco2": 1.0616641864180565,
-        "district/District/district_emissions_total_delta_kgco2": 0.5716642020270228,
+        "district/District/district_emissions_daily_average_baseline_kgco2": 4.114285632542192,
+        "district/District/district_emissions_daily_average_control_kgco2": 6.4734905635426845,
+        "district/District/district_emissions_daily_average_delta_kgco2": 2.3592049310004928,
+        "district/District/district_emissions_ratio_to_baseline_total_building_mean_ratio": 2.566663261884378,
+        "district/District/district_emissions_ratio_to_baseline_total_ratio": 1.5734178765665219,
+        "district/District/district_emissions_total_baseline_kgco2": 0.2999999940395348,
+        "district/District/district_emissions_total_baseline_member_sum_kgco2": 0.48999998439103365,
+        "district/District/district_emissions_total_control_kgco2": 0.4720253535916541,
+        "district/District/district_emissions_total_control_member_sum_kgco2": 1.0616641864180565,
+        "district/District/district_emissions_total_delta_kgco2": 0.17202535955211928,
         "district/District/district_energy_grid_community_market_grid_export_after_local_daily_average_kwh": 40.02667318071637,
         "district/District/district_energy_grid_community_market_grid_export_after_local_total_kwh": 2.9186115860939026,
         "district/District/district_energy_grid_community_market_grid_import_after_local_daily_average_kwh": 16.756602696010045,
@@ -45126,10 +45386,14 @@
         "district/District/district_energy_grid_daily_average_net_exchange_control_kwh": -23.27007048470633,
         "district/District/district_energy_grid_daily_average_net_exchange_delta_kwh": 31.587071555001394,
         "district/District/district_energy_grid_ratio_to_baseline_export_total_ratio": 0.6080440940270743,
-        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 2.6031631508408823,
-        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 1.4112900206089454,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 0.5673132943139444,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 0.5673132943139444,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio": 2.6031631508408823,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 1.527294607597268,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio": 1.4112900206089454,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 1.5758060004682242,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 1.0191681111117303,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio": 0.5673132943139444,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 1.0191681111117303,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio": 0.5673132943139444,
         "district/District/district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio": 1.6041667225460245,
         "district/District/district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio": 1.6041667225460245,
         "district/District/district_energy_grid_shape_quality_ramping_average_to_baseline_ratio": 0.6697420308101688,
@@ -57078,7 +57342,7 @@
           "ev_feasibility": "individual_conditioned_on_service_headroom_physical_replay_v2",
           "export_carbon_credit": false,
           "initial_inventory": "unknown_external",
-          "kpi_definition_version": "1.9.0",
+          "kpi_definition_version": "2.0.0",
           "mixing": "proportional_storage_and_interval_member_ac_bus",
           "pv_generation": "available_including_reported_curtailment",
           "reported_energy_intervals": "executed_active_intervals_v1",
@@ -57175,7 +57439,9 @@
           0.0,
           0.0,
           0.0,
-          0.0,
+          {
+            "nonfinite": "nan"
+          },
           0.0,
           1.0,
           0.0,
@@ -58439,6 +58705,27 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -58532,7 +58819,9 @@
           0.0,
           0.0,
           0.0,
-          0.0,
+          {
+            "nonfinite": "nan"
+          },
           0.0,
           0.0,
           0.0,
@@ -58826,6 +59115,27 @@
           0.0,
           0.2000000029802322,
           0.0645161288771991,
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -60829,7 +61139,9 @@
           0.0,
           0.0,
           0.0,
-          0.0,
+          {
+            "nonfinite": "nan"
+          },
           0.0,
           1.0,
           0.0,
@@ -60846,13 +61158,16 @@
           8.0,
           2.2000001172224684,
           4.0,
-          44.845716080495286,
-          43.13831481763295,
-          -1.7074012628623416,
+          27.154286646161754,
+          25.851428977421328,
+          -1.3028576687404276,
           0.9253915942228368,
+          0.952020184300272,
+          0.6600000226497649,
           1.0900000436231494,
+          0.6283333432012128,
           1.048500707373023,
-          -0.0414993362501263,
+          -0.031666679448552,
           120.54829829079765,
           2.929993361234665,
           43.08571325029646,
@@ -60874,8 +61189,12 @@
           0.7088400976998466,
           0.976664473149468,
           0.9921764398123664,
+          0.9520201585071704,
           0.4535968506428267,
+          1.009067764805959,
+          1.0,
           1.0080894800776483,
+          1.0,
           1.0080894800776483,
           0.9520201585071704,
           0.9520201585071704,
@@ -61514,9 +61833,12 @@
           "district_emissions_daily_average_baseline_kgco2",
           "district_emissions_daily_average_control_kgco2",
           "district_emissions_daily_average_delta_kgco2",
+          "district_emissions_ratio_to_baseline_total_building_mean_ratio",
           "district_emissions_ratio_to_baseline_total_ratio",
           "district_emissions_total_baseline_kgco2",
+          "district_emissions_total_baseline_member_sum_kgco2",
           "district_emissions_total_control_kgco2",
+          "district_emissions_total_control_member_sum_kgco2",
           "district_emissions_total_delta_kgco2",
           "district_energy_grid_community_market_grid_export_after_local_daily_average_kwh",
           "district_energy_grid_community_market_grid_export_after_local_total_kwh",
@@ -61538,10 +61860,14 @@
           "district_energy_grid_daily_average_net_exchange_control_kwh",
           "district_energy_grid_daily_average_net_exchange_delta_kwh",
           "district_energy_grid_ratio_to_baseline_export_total_ratio",
+          "district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_import_total_ratio",
+          "district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_net_exchange_total_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_ramping_average_to_baseline_ratio",
@@ -62511,7 +62837,7 @@
         "building/Building_1/building_deferrable_appliance_audit_running_count": 0.0,
         "building/Building_1/building_deferrable_appliance_audit_served_energy_kwh": 0.0,
         "building/Building_1/building_deferrable_appliance_audit_service_balance_residual_kwh": 0.0,
-        "building/Building_1/building_deferrable_appliance_service_average_start_delay_hours": 0.0,
+        "building/Building_1/building_deferrable_appliance_service_average_start_delay_hours": null,
         "building/Building_1/building_deferrable_appliance_service_completed_cycles_count": 0.0,
         "building/Building_1/building_deferrable_appliance_service_missed_cycles_count": 1.0,
         "building/Building_1/building_deferrable_appliance_service_served_energy_total_kwh": 0.0,
@@ -62817,7 +63143,7 @@
         "building/Building_2/building_deferrable_appliance_audit_running_count": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_served_energy_kwh": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_service_balance_residual_kwh": 0.0,
-        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": 0.0,
+        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": null,
         "building/Building_2/building_deferrable_appliance_service_completed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_missed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_served_energy_total_kwh": 0.0,
@@ -63123,7 +63449,7 @@
         "district/District/district_deferrable_appliance_audit_running_count": 0.0,
         "district/District/district_deferrable_appliance_audit_served_energy_kwh": 0.0,
         "district/District/district_deferrable_appliance_audit_service_balance_residual_kwh": 0.0,
-        "district/District/district_deferrable_appliance_service_average_start_delay_hours": 0.0,
+        "district/District/district_deferrable_appliance_service_average_start_delay_hours": null,
         "district/District/district_deferrable_appliance_service_completed_cycles_count": 0.0,
         "district/District/district_deferrable_appliance_service_missed_cycles_count": 1.0,
         "district/District/district_deferrable_appliance_service_served_energy_total_kwh": 0.0,
@@ -63140,13 +63466,16 @@
         "district/District/district_electrical_service_phase_requested_pressure_event_count": 8.0,
         "district/District/district_electrical_service_phase_violations_energy_total_kwh": 2.2000001172224684,
         "district/District/district_electrical_service_phase_violations_event_count": 4.0,
-        "district/District/district_emissions_daily_average_baseline_kgco2": 44.845716080495286,
-        "district/District/district_emissions_daily_average_control_kgco2": 43.138314817632946,
-        "district/District/district_emissions_daily_average_delta_kgco2": -1.7074012628623416,
-        "district/District/district_emissions_ratio_to_baseline_total_ratio": 0.9253915942228368,
-        "district/District/district_emissions_total_baseline_kgco2": 1.0900000436231494,
-        "district/District/district_emissions_total_control_kgco2": 1.048500707373023,
-        "district/District/district_emissions_total_delta_kgco2": -0.04149933625012636,
+        "district/District/district_emissions_daily_average_baseline_kgco2": 27.154286646161754,
+        "district/District/district_emissions_daily_average_control_kgco2": 25.851428977421328,
+        "district/District/district_emissions_daily_average_delta_kgco2": -1.3028576687404276,
+        "district/District/district_emissions_ratio_to_baseline_total_building_mean_ratio": 0.9253915942228368,
+        "district/District/district_emissions_ratio_to_baseline_total_ratio": 0.9520201843002719,
+        "district/District/district_emissions_total_baseline_kgco2": 0.6600000226497649,
+        "district/District/district_emissions_total_baseline_member_sum_kgco2": 1.0900000436231494,
+        "district/District/district_emissions_total_control_kgco2": 0.6283333432012128,
+        "district/District/district_emissions_total_control_member_sum_kgco2": 1.048500707373023,
+        "district/District/district_emissions_total_delta_kgco2": -0.03166667944855206,
         "district/District/district_energy_grid_community_market_grid_export_after_local_daily_average_kwh": 120.54829829079765,
         "district/District/district_energy_grid_community_market_grid_export_after_local_total_kwh": 2.929993361234665,
         "district/District/district_energy_grid_community_market_grid_import_after_local_daily_average_kwh": 43.08571325029646,
@@ -63167,10 +63496,14 @@
         "district/District/district_energy_grid_daily_average_net_exchange_control_kwh": -77.46258504050118,
         "district/District/district_energy_grid_daily_average_net_exchange_delta_kwh": 0.7088400976998466,
         "district/District/district_energy_grid_ratio_to_baseline_export_total_ratio": 0.9766644731494679,
-        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 0.9921764398123665,
-        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 0.45359685064282673,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 1.0080894800776483,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 1.0080894800776483,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio": 0.9921764398123665,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 0.9520201585071703,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio": 0.45359685064282673,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 1.009067764805959,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 1.0,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio": 1.0080894800776483,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 1.0,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio": 1.0080894800776483,
         "district/District/district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio": 0.9520201585071703,
         "district/District/district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio": 0.9520201585071703,
         "district/District/district_energy_grid_shape_quality_ramping_average_to_baseline_ratio": 0.8898490181388041,
@@ -69975,7 +70308,7 @@
           "ev_feasibility": "individual_conditioned_on_service_headroom_physical_replay_v2",
           "export_carbon_credit": false,
           "initial_inventory": "unknown_external",
-          "kpi_definition_version": "1.9.0",
+          "kpi_definition_version": "2.0.0",
           "mixing": "proportional_storage_and_interval_member_ac_bus",
           "pv_generation": "available_including_reported_curtailment",
           "reported_energy_intervals": "executed_active_intervals_v1",
@@ -71338,6 +71671,27 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -71431,7 +71785,9 @@
           0.0,
           0.0,
           0.0,
-          0.0,
+          {
+            "nonfinite": "nan"
+          },
           0.0,
           0.0,
           0.0,
@@ -71727,6 +72083,27 @@
           0.0,
           0.0,
           0.0,
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -73747,13 +74124,16 @@
           6.0,
           0.0,
           0.0,
-          19.062857623611176,
-          27.204692193440028,
-          8.14183456982885,
+          10.697143135070794,
+          11.876572072369717,
+          1.1794289372989206,
           1.3173385342993833,
+          1.1102564415944047,
+          0.7800000202655788,
           1.3900000350549817,
+          0.8660000469436251,
           1.9836754724383356,
-          0.5936754373833537,
+          0.0860000266780462,
           51.06281294141497,
           3.723330110311508,
           23.497143745422363,
@@ -73775,8 +74155,12 @@
           23.17718860081264,
           0.7446660220623016,
           1.4482384548841138,
+          1.317948816114162,
           1.339484737570641,
+          1.4567576523502757,
+          0.9484076357239898,
           0.8669682828368412,
+          0.9484076357239898,
           0.8669682828368412,
           1.0064102963818145,
           1.0064102963818145,
@@ -74425,9 +74809,12 @@
           "district_emissions_daily_average_baseline_kgco2",
           "district_emissions_daily_average_control_kgco2",
           "district_emissions_daily_average_delta_kgco2",
+          "district_emissions_ratio_to_baseline_total_building_mean_ratio",
           "district_emissions_ratio_to_baseline_total_ratio",
           "district_emissions_total_baseline_kgco2",
+          "district_emissions_total_baseline_member_sum_kgco2",
           "district_emissions_total_control_kgco2",
+          "district_emissions_total_control_member_sum_kgco2",
           "district_emissions_total_delta_kgco2",
           "district_energy_grid_community_market_grid_export_after_local_daily_average_kwh",
           "district_energy_grid_community_market_grid_export_after_local_total_kwh",
@@ -74449,10 +74836,14 @@
           "district_energy_grid_daily_average_net_exchange_control_kwh",
           "district_energy_grid_daily_average_net_exchange_delta_kwh",
           "district_energy_grid_ratio_to_baseline_export_total_ratio",
+          "district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_import_total_ratio",
+          "district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio",
           "district_energy_grid_ratio_to_baseline_net_exchange_total_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio",
+          "district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio",
           "district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio",
           "district_energy_grid_shape_quality_ramping_average_to_baseline_ratio",
@@ -75339,7 +75730,7 @@
         "building/Building_2/building_deferrable_appliance_audit_running_count": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_served_energy_kwh": 0.0,
         "building/Building_2/building_deferrable_appliance_audit_service_balance_residual_kwh": 0.0,
-        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": 0.0,
+        "building/Building_2/building_deferrable_appliance_service_average_start_delay_hours": null,
         "building/Building_2/building_deferrable_appliance_service_completed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_missed_cycles_count": 0.0,
         "building/Building_2/building_deferrable_appliance_service_served_energy_total_kwh": 0.0,
@@ -75662,13 +76053,16 @@
         "district/District/district_electrical_service_phase_requested_pressure_event_count": 6.0,
         "district/District/district_electrical_service_phase_violations_energy_total_kwh": 0.0,
         "district/District/district_electrical_service_phase_violations_event_count": 0.0,
-        "district/District/district_emissions_daily_average_baseline_kgco2": 19.062857623611176,
-        "district/District/district_emissions_daily_average_control_kgco2": 27.204692193440028,
-        "district/District/district_emissions_daily_average_delta_kgco2": 8.14183456982885,
-        "district/District/district_emissions_ratio_to_baseline_total_ratio": 1.3173385342993833,
-        "district/District/district_emissions_total_baseline_kgco2": 1.3900000350549817,
-        "district/District/district_emissions_total_control_kgco2": 1.9836754724383354,
-        "district/District/district_emissions_total_delta_kgco2": 0.5936754373833537,
+        "district/District/district_emissions_daily_average_baseline_kgco2": 10.697143135070794,
+        "district/District/district_emissions_daily_average_control_kgco2": 11.876572072369715,
+        "district/District/district_emissions_daily_average_delta_kgco2": 1.1794289372989206,
+        "district/District/district_emissions_ratio_to_baseline_total_building_mean_ratio": 1.3173385342993833,
+        "district/District/district_emissions_ratio_to_baseline_total_ratio": 1.1102564415944047,
+        "district/District/district_emissions_total_baseline_kgco2": 0.7800000202655788,
+        "district/District/district_emissions_total_baseline_member_sum_kgco2": 1.3900000350549817,
+        "district/District/district_emissions_total_control_kgco2": 0.8660000469436251,
+        "district/District/district_emissions_total_control_member_sum_kgco2": 1.9836754724383354,
+        "district/District/district_emissions_total_delta_kgco2": 0.08600002667804629,
         "district/District/district_energy_grid_community_market_grid_export_after_local_daily_average_kwh": 51.06281294141497,
         "district/District/district_energy_grid_community_market_grid_export_after_local_total_kwh": 3.723330110311508,
         "district/District/district_energy_grid_community_market_grid_import_after_local_daily_average_kwh": 23.497143745422363,
@@ -75689,10 +76083,14 @@
         "district/District/district_energy_grid_daily_average_net_exchange_control_kwh": -27.565669195992605,
         "district/District/district_energy_grid_daily_average_net_exchange_delta_kwh": 23.177188600812638,
         "district/District/district_energy_grid_ratio_to_baseline_export_total_ratio": 0.7446660220623016,
-        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 1.4482384548841138,
-        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 1.3394847375706407,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 0.8669682828368412,
-        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 0.8669682828368412,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio": 1.4482384548841138,
+        "district/District/district_energy_grid_ratio_to_baseline_import_total_ratio": 1.3179488161141621,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio": 1.3394847375706407,
+        "district/District/district_energy_grid_ratio_to_baseline_net_exchange_total_ratio": 1.4567576523502757,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio": 0.9484076357239898,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio": 0.8669682828368412,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio": 0.9484076357239898,
+        "district/District/district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio": 0.8669682828368412,
         "district/District/district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio": 1.0064102963818145,
         "district/District/district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio": 1.0064102963818145,
         "district/District/district_energy_grid_shape_quality_ramping_average_to_baseline_ratio": 0.6702858736965593,
