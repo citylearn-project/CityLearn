@@ -341,6 +341,28 @@ class Agent(Environment):
 
         pass
 
+    def _get_seed(self, *key: int) -> int:
+        """Seed of one of the agent's random streams, derived from :attr:`random_seed` and `key`.
+
+        Keys in use: ``(0, i)`` for action space ``i`` (see :meth:`_seed_action_spaces`), ``(1, i)`` for the SAC
+        replay buffer of action space ``i``, ``(2,)`` for the SAC policy noise and ``(3, i)`` for the MARLISA PCA of
+        action space ``i``.
+        """
+
+        return int(np.random.SeedSequence(int(self.random_seed), spawn_key=key).generate_state(1)[0])
+
+    def _seed_action_spaces(self):
+        """Seed the action spaces that exploration samples from, unless they are already seeded.
+
+        An unseeded gymnasium space seeds itself from OS entropy on first use, so its samples would differ between
+        runs with the same :attr:`random_seed`. Space ``i`` is seeded with :meth:`_get_seed` ``(0, i)``. Spaces the
+        caller has seeded keep their stream.
+        """
+
+        for i, space in enumerate(self.action_space):
+            if getattr(space, '_np_random', None) is None:
+                space.seed(self._get_seed(0, i))
+
     def episode_random_generator(self, purpose: str) -> np.random.Generator:
         """Generator of `purpose` for the current episode (``random_stream_version='v2'``).
 

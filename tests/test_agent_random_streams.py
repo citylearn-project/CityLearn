@@ -3,11 +3,18 @@
 TabularQLearning and MARLISA used ``RandomState(random_seed + time_step)``, and the neighborhood generator seeded
 partial-load simulation ``i`` of building ``b`` with ``b + i``, so streams overlapped across seeds, time steps and
 buildings. With ``random_stream_version='v2'`` they come from ``SeedSequence``; ``'v1'`` keeps the 3.6.0 streams.
+
+TabularQLearning also sampled its exploration actions from action spaces that nothing seeded; it now seeds them
+from the agent seed, as SAC does, under both versions.
 """
 
+import copy
 import json
+import random
 from pathlib import Path
 
+import gymnasium
+from gymnasium import spaces
 import numpy as np
 import pytest
 
@@ -33,15 +40,21 @@ def _schema(observations=None, actions=None):
     return schema
 
 
-def _q_learning_agent(random_seed, random_stream_version):
-    from citylearn.agents.q_learning import TabularQLearning
+def _q_learning_env(random_seed, random_stream_version):
     from citylearn.wrappers import TabularQLearningWrapper
 
     env = CityLearnEnv(
         _schema(observations=['hour'], actions=['electrical_storage']), central_agent=True, episode_time_steps=24,
         buildings=[0], random_seed=random_seed, random_stream_version=random_stream_version,
     )
-    env = TabularQLearningWrapper(env, observation_bin_sizes=[{'hour': 24}], action_bin_sizes=[{'electrical_storage': 3}])
+
+    return TabularQLearningWrapper(env, observation_bin_sizes=[{'hour': 24}], action_bin_sizes=[{'electrical_storage': 3}])
+
+
+def _q_learning_agent(random_seed, random_stream_version, env=None):
+    from citylearn.agents.q_learning import TabularQLearning
+
+    env = _q_learning_env(random_seed, random_stream_version) if env is None else env
     env.reset()
 
     return TabularQLearning(env)
@@ -133,6 +146,55 @@ def test_q_learning_v2_deterministic_predictions_do_not_consume_exploration_draw
     assert agent._TabularQLearning__exploration_draw() == pytest.approx(
         random_streams.generator(0, random_streams.AGENT_EXPLORATION, episode).random()
     )
+
+
+# --- TabularQLearning action spaces ------------------------------------------------------------------------------
+
+def _deterministic_fallback_actions(agent, count=STEPS):
+    """Actions of deterministic predictions while every Q-value is NaN, which sample the action space."""
+
+    observations, _ = agent.env.reset()
+
+    return [agent.predict(observations, deterministic=True)[0][0] for _ in range(count)]
+
+
+@pytest.mark.parametrize('version', ['v1', 'v2'])
+def test_q_learning_runs_with_identically_seeded_envs_act_and_learn_identically(version):
+    agents = [_q_learning_agent(7, version) for _ in range(2)]
+
+    agents[0].learn(episodes=2)
+    # Global generators are consumed between the runs; a seeded agent must not depend on them.
+    random.random(), np.random.random()
+    agents[1].learn(episodes=2)
+
+    actions = [[a for a in history if len(a)] for history in agents[0].actions]
+    # Exploration dominates (epsilon starts at 1.0), so most actions are samples of the action space.
+    assert agents[0].q_exploration[0].sum() > 0
+    assert len({a[0] for a in actions[0]}) > 1
+    assert actions == [[a for a in history if len(a)] for history in agents[1].actions]
+
+    for name in ('q', 'q_exploration', 'q_exploitation'):
+        for a, b in zip(getattr(agents[0], name), getattr(agents[1], name)):
+            np.testing.assert_array_equal(a, b)
+
+
+def test_q_learning_action_spaces_are_seeded_from_the_agent_seed():
+    agent = _q_learning_agent(7, 'v2')
+    reference = spaces.Discrete(agent.action_space[0].n, seed=agent._get_seed(0, 0))
+
+    assert _deterministic_fallback_actions(agent) == [reference.sample() for _ in range(STEPS)]
+
+
+def test_q_learning_keeps_the_stream_of_an_action_space_the_caller_seeded():
+    # TabularQLearningWrapper builds new spaces on every access; pin them so that the caller can seed them.
+    env = gymnasium.Wrapper(_q_learning_env(7, 'v2'))
+    env.action_space = env.env.action_space
+    env.action_space[0].seed(123)
+    reference = copy.deepcopy(env.action_space[0])
+    agent = _q_learning_agent(7, 'v2', env=env)
+
+    assert agent.action_space[0] is env.action_space[0]
+    assert _deterministic_fallback_actions(agent) == [reference.sample() for _ in range(STEPS)]
 
 
 # --- MARLISA coordination order ----------------------------------------------------------------------------------

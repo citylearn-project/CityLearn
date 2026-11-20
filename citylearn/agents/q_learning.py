@@ -31,6 +31,12 @@ class TabularQLearning(Agent):
     ----------------
     **kwargs: Any
         Other keyword arguments used to initialize :py:class:`citylearn.agents.base.Agent` super class.
+
+    Notes
+    -----
+    Random exploration actions, and the fallback action for observations whose Q-values are all still NaN, are
+    sampled from the action spaces. Spaces that are not already seeded are seeded from :attr:`random_seed`, the
+    environment's seed, so runs with the same seed are repeatable.
     """
     
     def __init__(
@@ -46,6 +52,7 @@ class TabularQLearning(Agent):
         self.learning_rate = 0.05 if learning_rate is None else learning_rate
         self.discount_factor = 0.90 if discount_factor is None else discount_factor
         self.q_init_value = np.nan if q_init_value is None else q_init_value
+        self._seed_action_spaces()
         self.q, self.q_exploration, self.q_exploitation = self.__initialize_q()
         self.__explored = False
 
