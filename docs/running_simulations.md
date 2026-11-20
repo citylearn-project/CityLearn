@@ -100,8 +100,10 @@ All communities must share `seconds_per_time_step`, effective episode length, `i
 | `episode_time_steps` | int/list | schema | Episode size or explicit windows. | Can be used with rolling/random splits. |
 | `rolling_episode_split` | bool | schema | Sequential window episodes. | Useful for training. |
 | `random_episode_split` | bool | schema | Random window episodes. | Uses `random_seed`. |
+| `episode_split_boundary` | str | `shared` | How consecutive (non-rolling) splits meet. | `shared` shares the boundary row so every interval is simulated; `disjoint` restores the 3.6.0 splits. |
 | `seconds_per_time_step` | float | schema | Physical duration of each step. | Examples: 15, 60, 300, 900, 3600. |
-| `time_step_ratio` | int/float | inferred | Ratio between control step and dataset spacing. | Normally dataset and schema should match. |
+| `time_step_ratio` | int/float | inferred | Ratio between control step and dataset spacing. | Inferred from the data; a value passed here must match it. |
+| `time_step_ratio_mode` | str | `reject` | What to do when the control step differs from the dataset step. | `reject` raises an error; `compress` keeps the 3.6.0 behaviour (one data row per step, energies scaled). |
 | `reward_function` | class/path | schema | Reward used by `step`. | Supports `reward_function_kwargs`. |
 | `reward_function_kwargs` | dict | `{}` | Constructor kwargs for the reward. | Pass-through. |
 | `central_agent` | bool | schema | Single controller for all buildings. | `False` returns one vector per building. |

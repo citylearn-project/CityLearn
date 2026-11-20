@@ -669,6 +669,9 @@ def _run_scenario(CityLearnEnv, scenario: Scenario) -> Dict[str, Any]:
             "interface": scenario.interface,
             "topology_mode": scenario.topology_mode,
             "seconds_per_time_step": scenario.seconds_per_time_step,
+            # The audit runs hourly datasets at sub-hourly control steps on purpose, to check the
+            # unit conversions of the runtime energy scaling, so it opts in to the compressed mode.
+            "time_step_ratio_mode": "compress",
             "random_seed": scenario.seed,
             "central_agent": scenario.central_agent,
             "simulation_start_time_step": scenario.simulation_start_time_step,

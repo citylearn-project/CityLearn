@@ -15,7 +15,11 @@ SCHEMA = Path(__file__).resolve().parents[1] / "data/datasets/citylearn_challeng
 
 
 def test_agent_learn_handles_single_timestep_episode_without_calling_step(monkeypatch):
-    env = CityLearnEnv(str(SCHEMA), central_agent=True, episode_time_steps=1, render_mode="none", random_seed=7)
+    # One-row consecutive episodes are only accepted with the 3.6.0 disjoint splits.
+    env = CityLearnEnv(
+        str(SCHEMA), central_agent=True, episode_time_steps=1, episode_split_boundary="disjoint",
+        render_mode="none", random_seed=7,
+    )
     agent = Agent(env)
 
     step_called = False

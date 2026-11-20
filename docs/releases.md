@@ -28,6 +28,15 @@ For package publication, version policy and the release checklist, see the
 
 Simulation results and KPIs of valid runs are unchanged: the BAU and `RBCSmartPolicy` give bit-identical actions and `evaluate_v2()` tables to 3.6.0 over a week of `citylearn_challenge_2022_phase_all_plus_evs` and of `pt_rec_30`. See the [migration guide](migration.md#unreleased).
 
+### Dynamic topology and data alignment
+
+Work package 3 of the 3.6.0 audit ([#226](https://github.com/citylearn-project/CityLearn/issues/226)), in [#274](https://github.com/citylearn-project/CityLearn/pull/274). Results change for dynamic-topology runs with member-window files and for consecutive episode splits; the [migration guide](migration.md#unreleased) lists the options that restore the 3.6.0 behaviour.
+
+- **Consecutive episode splits share their boundary row.** Consecutive splits used to advance by `episode_time_steps` rows, so the interval between two episodes was never simulated. They now advance by `episode_time_steps - 1` rows, and every interval up to the last complete split is simulated once; `episode_split_boundary='disjoint'` keeps the 3.6.0 splits. ([#247](https://github.com/citylearn-project/CityLearn/issues/247))
+- **Dynamic-topology members are aligned with the simulation window.** A member file shorter than the dataset is read as starting at the member's `add_member` time step for any `simulation_start_time_step` and window length, which also corrects the native BAU inputs of dynamic episodes that do not start at row 0. A member that rejoins needs a full-horizon file, members that join mid-episode start their thermal storage at `initial_soc`, and the public district series keep departed members and count joining members only from their activation. ([#246](https://github.com/citylearn-project/CityLearn/issues/246))
+- **A topology event at the terminal step** no longer adds an unexecuted interval to the building series.
+- **A control step different from the dataset step is rejected.** CityLearn reads one data row per control step and does not resample, so such a run advanced the calendar, prices and EV schedules at the wrong rate. It now raises a `ValueError`; `time_step_ratio_mode='compress'` keeps the 3.6.0 behaviour. The dataset step is inferred from every row instead of the first two, and the `time_step_ratio` argument must match it. Bundled datasets are not affected. ([#234](https://github.com/citylearn-project/CityLearn/issues/234))
+
 ## v3.6.0 - 2026-11-19
 
 ### What's new

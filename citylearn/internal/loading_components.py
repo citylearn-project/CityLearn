@@ -127,15 +127,14 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
 
             charger_simulation_filepath = os.path.join(schema['root_directory'], charger_config['charger_simulation'])
             # CSV has no column types. Preserve textual IDs such as "01" and "1" before inference.
-            charger_simulation_file = loader._read_simulation_dataframe(
-                schema, charger_simulation_filepath, csv_dtypes={'electric_vehicle_session_id': object},
-            )
             charger_window = loader._dynamic_charger_windows.get((building_name, charger_name))
-            charger_simulation_file = loader._align_dynamic_timeseries_dataframe(
-                charger_simulation_file,
+            charger_simulation_file = loader._read_member_timeseries(
+                schema,
+                charger_simulation_filepath,
                 expected_rows=expected_rows,
                 window=charger_window,
                 source_label=f'buildings.{building_name}.chargers.{charger_name}.charger_simulation',
+                csv_dtypes={'electric_vehicle_session_id': object},
             )
 
             # Keep the constructor contract stable when charger datasets add

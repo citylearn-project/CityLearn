@@ -968,6 +968,63 @@ class EnergySimulation(TimeSeriesData):
 
     DEFUALT_COMFORT_BAND = 2.0
 
+    #: Share of row intervals that must agree with the inferred dataset step.
+    TIME_STEP_INFERENCE_MIN_AGREEMENT = 0.9
+
+    @classmethod
+    def infer_time_step_seconds(
+        cls, hour: np.ndarray, minutes: np.ndarray = None, seconds: np.ndarray = None, *, seconds_per_time_step: float = None,
+    ) -> Union[float, None]:
+        """Infer the dataset step, in seconds, from the calendar columns of every row.
+
+        The step is the median interval between consecutive rows, wrapped at midnight, so that an isolated
+        irregular row (a typo, or a daylight-saving jump in local-time data) does not change it. Repeated
+        stamps (zero intervals) are left out: they are the padding of a member that is active for part of
+        a dynamic-topology window. When fewer than `TIME_STEP_INFERENCE_MIN_AGREEMENT` of the other intervals
+        equal that step the rows mix cadences, and a `ValueError` is raised. Rows finer than the resolution
+        of their calendar columns (e.g. 15-second rows without a `seconds` column) repeat their stamps and
+        cannot be timed from them, so the step is then `seconds_per_time_step`. Returns `None` for fewer
+        than two rows.
+        """
+
+        hour = np.asarray(hour)
+
+        if len(hour) < 2:
+            return None
+
+        if seconds is not None and minutes is not None and len(seconds) > 1 and len(minutes) > 1:
+            clock = hour.astype('int64')*3600 + np.asarray(minutes, dtype='int64')*60 + np.asarray(seconds, dtype='int64')
+            resolution = 1
+
+        elif minutes is not None and len(minutes) > 1:
+            clock = hour.astype('int64')*3600 + np.asarray(minutes, dtype='int64')*60
+            resolution = 60
+
+        else:
+            clock = hour.astype('int64')*3600
+            resolution = 3600
+
+        intervals = np.mod(np.diff(clock), 24*3600)
+        changed = intervals[intervals != 0]
+        fallback = None if seconds_per_time_step is None else float(seconds_per_time_step)
+
+        if len(changed) == 0 or (len(changed) < len(intervals) and fallback is not None and fallback < resolution):
+            return fallback
+
+        step = float(np.median(changed))
+        agreement = float(np.mean(changed == step))
+
+        if agreement < cls.TIME_STEP_INFERENCE_MIN_AGREEMENT:
+            irregular = np.flatnonzero((intervals != step) & (intervals != 0))[:5]
+            raise ValueError(
+                f'Cannot infer the dataset time step: only {agreement:.1%} of the row intervals equal the median '
+                f'interval of {step:g} s. The rows mix cadences or have irregular timestamps; the first irregular '
+                f'intervals end at rows {(irregular + 1).tolist()}. Fix the calendar columns, or declare the step '
+                'with the schema key dataset_seconds_per_time_step.'
+            )
+
+        return step
+
     def __init__(
         self, month: Iterable[int], hour: Iterable[int], day_type: Iterable[int],
          indoor_dry_bulb_temperature: Iterable[float], 
@@ -1005,33 +1062,10 @@ class EnergySimulation(TimeSeriesData):
         # optional
         self.minutes = np.array(minutes, dtype='int32') if minutes is not None else None
         self.seconds = np.array(seconds, dtype='int32') if seconds is not None else None
-        time_delta_seconds = None
-
-        if len(self.hour) > 1:
-            if self.minutes is not None and self.seconds is not None and len(self.minutes) > 1 and len(self.seconds) > 1:
-                t0 = self.hour[0] * 3600 + self.minutes[0] * 60 + self.seconds[0]
-                t1 = self.hour[1] * 3600 + self.minutes[1] * 60 + self.seconds[1]
-                time_delta_seconds = t1 - t0
-
-            elif self.minutes is not None and len(self.minutes) > 1:
-                t0 = self.hour[0] * 60 + self.minutes[0]
-                t1 = self.hour[1] * 60 + self.minutes[1]
-                time_delta_minutes = t1 - t0
-
-                if time_delta_minutes == 0 and seconds_per_time_step is not None and float(seconds_per_time_step) < 60.0:
-                    time_delta_seconds = float(seconds_per_time_step)
-                else:
-                    time_delta_seconds = time_delta_minutes * 60
-
-            else:
-                time_delta_hours = self.hour[1] - self.hour[0]
-                time_delta_seconds = time_delta_hours * 3600
-
-        if time_delta_seconds is not None and time_delta_seconds < 0:
-            time_delta_seconds += 24 * 3600
-
-        if time_delta_seconds == 0 and seconds_per_time_step is not None:
-            time_delta_seconds = float(seconds_per_time_step)
+        # A declared dataset step (schema key or canonical calendar) replaces the inference below.
+        time_delta_seconds = None if dataset_seconds_per_time_step is not None else self.infer_time_step_seconds(
+            self.hour, self.minutes, self.seconds, seconds_per_time_step=seconds_per_time_step,
+        )
 
         base_step_seconds = None
 

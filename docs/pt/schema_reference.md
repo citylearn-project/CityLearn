@@ -28,6 +28,8 @@ Esta pagina documenta o contrato do `schema.json`. O schema e a fonte oficial pa
 | `episode_time_steps` | int/list/null | nao | Tamanho ou janelas de episodio. |
 | `rolling_episode_split` | bool/null | nao | Episodios sequenciais. |
 | `random_episode_split` | bool/null | nao | Episodios aleatorios. |
+| `time_step_ratio_mode` | `reject`/`compress`/null | nao | `reject` (por omissao) recusa um `seconds_per_time_step` diferente do step do dataset; `compress` mantem o comportamento da 3.6.0 (uma linha de dados por step de controlo, energias escaladas). |
+| `episode_split_boundary` | `shared`/`disjoint`/null | nao | Como se ligam splits consecutivos. `shared` (por omissao) comeca cada split na linha terminal do anterior, pelo que todos os intervalos sao simulados; `disjoint` mantem os splits da 3.6.0, que saltam o intervalo entre dois episodios. |
 | `reward_function` | object/string | sim | Classe do reward e kwargs. |
 | `observations` | object | sim | Catalogo flat de observacoes e flags. |
 | `actions` | object | sim | Catalogo flat de acoes e flags. |
@@ -361,6 +363,8 @@ O standby loss das baterias EV fica isolado dos defaults de storage estacionario
 | `overrides` | object | Atributos a aplicar depois do clone. |
 
 Remover `deferrable_appliance` cancela ciclos pendentes/running e limpa consumo futuro. Remover PV cria PV zero. Remover storage cria BESS zero.
+
+Os ficheiros de series temporais de um membro (energy simulation, chargers, escalators) sao full-horizon, com uma linha por timestep do dataset, ou ficheiros de janela do membro, mais curtos que o dataset, cuja primeira linha e o timestep do evento `add_member`. Um ficheiro de janela deve cobrir os steps ativos do membro na janela de simulacao (caso contrario a ultima linha e repetida, com um aviso), e um membro que volta a entrar depois de sair precisa de ficheiros full-horizon. Um membro que entra a meio do episodio comeca a bateria e o armazenamento termico em `initial_soc`.
 
 ## Demand Response
 

@@ -167,7 +167,7 @@ def _arrival_env(tmp_path, inventory, interface, seconds):
     frame.loc[0, 'electric_vehicle_current_soc'] = .1
     frame.to_csv(csv, index=False)
     env = CityLearnEnv(schema, central_agent=True, interface=interface,
-                       physics_invariant_checks=True, random_seed=0)
+                       physics_invariant_checks=True, random_seed=0, time_step_ratio_mode='compress')
     env.reset()
     return env
 

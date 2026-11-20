@@ -30,6 +30,8 @@ Portuguese version: [pt/schema_reference.md](pt/schema_reference.md).
 | `episode_time_steps` | int/list/null | no | Episode length or explicit episode windows. |
 | `rolling_episode_split` | bool/null | no | Sequential episode windows. |
 | `random_episode_split` | bool/null | no | Random episode windows. |
+| `time_step_ratio_mode` | `reject`/`compress`/null | no | `reject` (default) refuses a `seconds_per_time_step` that differs from the dataset step; `compress` keeps the 3.6.0 behaviour of reading one data row per control step and scaling energies. |
+| `episode_split_boundary` | `shared`/`disjoint`/null | no | How consecutive episode splits meet. `shared` (default) starts each split on the terminal row of the previous one, so every interval is simulated; `disjoint` keeps the 3.6.0 splits, which skip the interval between two episodes. |
 | `reward_function` | object/string | yes | Reward class and kwargs. |
 | `observations` | object | yes | Flat observation catalog and flags. |
 | `actions` | object | yes | Flat action catalog and flags. |
@@ -433,6 +435,8 @@ Escalator support is currently exposed through the flat interface.
 | `overrides` | object | Attributes applied after cloning. |
 
 Removing a deferrable appliance cancels pending/running cycles and clears future consumption. Removing PV creates a zero PV. Removing storage creates a zero BESS.
+
+A member's time-series files (energy simulation, chargers, escalators) are either full-horizon, with one row per dataset time step, or member-window files, shorter than the dataset, whose first row is the time step of the member's `add_member` event. A member-window file should cover the member's active steps in the simulation window (otherwise its last row is repeated, with a warning), and a member that joins again after leaving needs full-horizon files. A member that joins mid-episode starts its battery and thermal storage at `initial_soc`.
 
 ## Demand Response
 

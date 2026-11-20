@@ -262,6 +262,7 @@ def test_service_energy_uses_control_interval_kwh_at_each_resolution(tmp_path, s
         random_seed=0,
         offline=True,
         seconds_per_time_step=seconds,
+        time_step_ratio_mode='compress',
     )
     try:
         env.reset()

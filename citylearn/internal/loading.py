@@ -5,7 +5,8 @@ import hashlib
 import importlib
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Set, Tuple, Union
+import warnings
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, NamedTuple, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -30,6 +31,18 @@ if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
 
 
+class MemberWindow(NamedTuple):
+    """Active window of a dynamic-topology member source, in global dataset time steps.
+
+    `start` is the first activation and `end` (exclusive) the end of that activation, clipped to the
+    simulation end. `rejoins` is true when the member is activated again after leaving.
+    """
+
+    start: int
+    end: int
+    rejoins: bool = False
+
+
 @dataclass
 class LoadContext:
     """Lightweight holder for loading inputs."""
@@ -45,8 +58,11 @@ class CityLearnLoadingService:
         self.env = env
         self._dynamic_mode: bool = False
         self._dynamic_expected_rows: int = 0
-        self._dynamic_member_windows: Dict[str, Tuple[int, int]] = {}
-        self._dynamic_charger_windows: Dict[Tuple[str, str], Tuple[int, int]] = {}
+        self._dynamic_member_windows: Dict[str, MemberWindow] = {}
+        self._dynamic_charger_windows: Dict[Tuple[str, str], MemberWindow] = {}
+        self._dynamic_rejoining_members: set = set()
+        self._dynamic_dataset_rows: Optional[int] = None
+        self._timeseries_row_counts: Dict[str, int] = {}
         self._shared_timeseries_cache: Dict[Tuple[Any, ...], Any] = {}
 
     @staticmethod
@@ -198,6 +214,8 @@ class CityLearnLoadingService:
         self._dynamic_expected_rows = int(episode_tracker.simulation_time_steps)
         self._dynamic_member_windows = {}
         self._dynamic_charger_windows = {}
+        self._dynamic_rejoining_members = set()
+        self._dynamic_dataset_rows = None
         self._shared_timeseries_cache = {}
 
         if dynamic_mode:
@@ -764,7 +782,7 @@ class CityLearnLoadingService:
         episode_tracker: EpisodeTracker,
         *,
         expected_rows: int,
-        window: Optional[Tuple[int, int]],
+        window: Optional[MemberWindow],
         time_step_ratio: float,
     ) -> Escalator:
         """Load one aggregate escalator demand series and operating specification."""
@@ -773,9 +791,9 @@ class CityLearnLoadingService:
         if not simulation_file:
             raise ValueError(f'buildings.{building_name}.escalators.{escalator_name}.simulation is required.')
         filepath = os.path.join(schema['root_directory'], simulation_file)
-        dataframe = self._read_simulation_dataframe(schema, filepath)
-        dataframe = self._align_dynamic_timeseries_dataframe(
-            dataframe,
+        dataframe = self._read_member_timeseries(
+            schema,
+            filepath,
             expected_rows=expected_rows,
             window=window,
             source_label=f'buildings.{building_name}.escalators.{escalator_name}.simulation',
@@ -1005,7 +1023,7 @@ class CityLearnLoadingService:
         schema: Mapping[str, Any],
         filepath: Union[str, os.PathLike],
         expected_rows: int,
-        window: Optional[Tuple[int, int]],
+        window: Optional[MemberWindow],
         source_label: str,
         noise_std: float,
     ) -> Any:
@@ -1026,10 +1044,15 @@ class CityLearnLoadingService:
             if window_cache_key in self._shared_timeseries_cache:
                 return self._shared_timeseries_cache[window_cache_key]
 
-        dataframe = self._read_simulation_dataframe(schema, filepath)
-        full_horizon_source = len(dataframe) >= int(expected_rows)
-        dataframe = self._align_dynamic_timeseries_dataframe(
-            dataframe,
+        # A file that covers the whole simulation window is the same for every member window.
+        full_horizon_source = window is None or (
+            not self._is_member_window_file(schema, filepath, window)
+            and self._timeseries_row_count(filepath)
+            >= int(schema['simulation_start_time_step']) + int(expected_rows)
+        )
+        dataframe = self._read_member_timeseries(
+            schema,
+            filepath,
             expected_rows=expected_rows,
             window=window,
             source_label=source_label,
@@ -1128,10 +1151,21 @@ class CityLearnLoadingService:
         self,
         schema: Mapping[str, Any],
         expected_rows: int,
-    ) -> Dict[str, Tuple[int, int]]:
-        windows: Dict[str, Tuple[int, int]] = {}
+    ) -> Dict[str, MemberWindow]:
+        """Active window of each member, in global dataset time steps.
+
+        A window `(start, end)` holds the global time step of the member's first activation, from the
+        `include` flag (0) or its first `add_member` event, and the end of that activation clipped to the
+        simulation end, from its first later `remove_member` event. Topology-event time steps are global
+        dataset rows, so the windows are global as well; `_read_member_timeseries` places them in the
+        simulation window. Members that join again after leaving are recorded in
+        `_dynamic_rejoining_members`.
+        """
+
+        windows: Dict[str, MemberWindow] = {}
         events = self._collect_topology_events(schema)
         buildings = schema.get('buildings', {}) if isinstance(schema, Mapping) else {}
+        simulation_end = int(schema['simulation_start_time_step']) + int(expected_rows)
 
         for member_id, member_schema in buildings.items():
             include = parse_bool(
@@ -1139,46 +1173,44 @@ class CityLearnLoadingService:
                 default=True,
                 path=f'buildings.{member_id}.include',
             )
-            start = 0 if include else None
-            end = int(expected_rows)
-
-            if start is None:
-                for event in events:
-                    if str(event.get('operation', '')).strip().lower() != 'add_member':
-                        continue
-                    if event.get('target_member_id') != member_id:
-                        continue
-                    start = int(event.get('time_step', 0))
-                    break
-
-            if start is None:
-                continue
+            active = bool(include)
+            activations = [0] if active else []
+            first_end = None
 
             for event in events:
-                if str(event.get('operation', '')).strip().lower() != 'remove_member':
-                    continue
                 if event.get('target_member_id') != member_id:
                     continue
-                candidate = int(event.get('time_step', 0))
-                if candidate >= start:
-                    end = min(end, candidate)
-                    break
+                operation = str(event.get('operation', '')).strip().lower()
+                time_step = int(event.get('time_step', 0))
 
-            start = max(0, min(int(start), int(expected_rows)))
-            end = max(start, min(int(end), int(expected_rows)))
+                if operation == 'add_member' and not active:
+                    active = True
+                    activations.append(time_step)
+                elif operation == 'remove_member' and active:
+                    active = False
+                    if first_end is None:
+                        first_end = time_step
 
-            if end > start:
-                windows[str(member_id)] = (start, end)
+            if len(activations) == 0:
+                continue
+
+            rejoins = len(activations) > 1
+            if rejoins:
+                self._dynamic_rejoining_members.add(str(member_id))
+
+            start = max(0, int(activations[0]))
+            end = simulation_end if first_end is None else min(int(first_end), simulation_end)
+            windows[str(member_id)] = MemberWindow(start, max(start, end), rejoins)
 
         return windows
 
     def _build_dynamic_charger_windows(
         self,
         schema: Mapping[str, Any],
-        member_windows: Mapping[str, Tuple[int, int]],
+        member_windows: Mapping[str, MemberWindow],
         expected_rows: int,
-    ) -> Dict[Tuple[str, str], Tuple[int, int]]:
-        windows: Dict[Tuple[str, str], Tuple[int, int]] = {}
+    ) -> Dict[Tuple[str, str], MemberWindow]:
+        windows: Dict[Tuple[str, str], MemberWindow] = {}
         events = self._collect_topology_events(schema)
         buildings = schema.get('buildings', {}) if isinstance(schema, Mapping) else {}
 
@@ -1187,7 +1219,7 @@ class CityLearnLoadingService:
             if member_window is None:
                 continue
 
-            base_start, base_end = member_window
+            base_start, base_end, rejoins = member_window
             chargers = (member_schema or {}).get('chargers', {}) or {}
 
             for charger_id in chargers.keys():
@@ -1207,67 +1239,194 @@ class CityLearnLoadingService:
                         end = min(end, candidate)
                         break
 
-                start = max(0, min(start, int(expected_rows)))
-                end = max(start, min(end, int(expected_rows)))
-                if end > start:
-                    windows[(str(member_id), str(charger_id))] = (start, end)
+                windows[(str(member_id), str(charger_id))] = MemberWindow(start, max(start, end), rejoins)
 
         return windows
 
-    def _align_dynamic_timeseries_dataframe(
+    def _read_member_timeseries(
         self,
-        dataframe: pd.DataFrame,
+        schema: Mapping[str, Any],
+        filepath: Union[str, os.PathLike],
         *,
         expected_rows: int,
-        window: Optional[Tuple[int, int]],
+        window: Optional[MemberWindow],
         source_label: str,
+        csv_dtypes: Optional[Mapping[str, Any]] = None,
     ) -> pd.DataFrame:
+        """Read a member time series and align it with the simulation window.
+
+        Outside dynamic topology, or for a source without a member window, this is the plain
+        simulation-window read. In dynamic topology a member source is either:
+
+        - a full-horizon file, with one row per dataset time step (as many rows as the dataset); or
+        - a member-window file, shorter than the dataset, whose first row is the member's first
+          activation, the time step of its `add_member` event.
+
+        A full-horizon file is sliced to the simulation window like any other file. A member-window
+        file is read from the row that corresponds to the later of the activation and the simulation
+        start, and placed at that offset of the simulation window; its values are carried backwards
+        before the activation and forwards after the member leaves, where the member is inactive. A
+        member that joins again after leaving needs a full-horizon file, because a member-window file
+        only covers its first activation.
+        """
+
         if not self._dynamic_mode or window is None:
-            return dataframe
+            return self._read_simulation_dataframe(schema, filepath, csv_dtypes=csv_dtypes)
 
         expected_rows = int(expected_rows)
-        if expected_rows <= 0:
-            return dataframe
+        simulation_start = int(schema['simulation_start_time_step'])
+        join, end, rejoins = window
+        join, end = int(join), int(end)
 
-        row_count = len(dataframe)
+        if not self._is_member_window_file(schema, filepath, window):
+            dataframe = self._read_simulation_dataframe(schema, filepath, csv_dtypes=csv_dtypes)
 
-        if row_count == expected_rows:
-            index = dataframe.index
-            if (
-                isinstance(index, pd.RangeIndex)
-                and int(index.start) == 0
-                and int(index.stop) == expected_rows
-                and int(index.step) == 1
-            ):
+            if len(dataframe) >= expected_rows:
+                dataframe = dataframe.iloc[:expected_rows]
+                index = dataframe.index
+                if not (
+                    isinstance(index, pd.RangeIndex)
+                    and int(index.start) == 0
+                    and int(index.step) == 1
+                ):
+                    dataframe = dataframe.reset_index(drop=True)
+
                 return dataframe
 
-            return dataframe.reset_index(drop=True)
+            if len(dataframe) == 0:
+                raise ValueError(
+                    f'{source_label} has no rows in the simulation window in dynamic mode. '
+                    f'Provide a full-horizon file or one that starts at the member\'s add_member time step.'
+                )
 
-        df = dataframe.iloc[:expected_rows].copy() if row_count > expected_rows else dataframe.copy()
+            # A file that starts at row 0 but ends early, such as one for a member that leaves.
+            return self._place_member_rows(dataframe, expected_rows=expected_rows, local_start=0)
 
-        start, end = window
-        start = max(0, min(int(start), expected_rows))
-        end = max(start, min(int(end), expected_rows))
-        active_rows = end - start
-
-        row_count = len(df)
-
-        if active_rows <= 0:
+        if rejoins:
             raise ValueError(
-                f'{source_label} has no active window in dynamic mode. '
-                f'Provide full-horizon data ({expected_rows} rows) for this source.'
+                f'{source_label} is shorter than the dataset, so it is read as starting at the member\'s '
+                f'add_member time step ({join}), but the member joins again after leaving. Provide a '
+                'full-horizon file, with one row per dataset time step, for a member that rejoins.'
             )
 
-        if row_count <= 0:
+        first = max(join, simulation_start)
+        last = min(end, simulation_start + expected_rows)
+
+        if last <= first:
+            # The member is never active in this simulation window. Its values are only read for
+            # sizing and space estimation, so the nearest row of its file stands in for every step.
+            row = 0 if first == join else max(0, self._timeseries_row_count(filepath) - 1)
+            dataframe = self._read_timeseries_dataframe(
+                filepath, start_time_step=row, end_time_step=row, csv_dtypes=csv_dtypes,
+            )
+            if len(dataframe) == 0:
+                raise ValueError(f'{source_label} has 0 rows in dynamic mode.')
+
+            return self._place_member_rows(dataframe, expected_rows=expected_rows, local_start=0)
+
+        file_start = first - join
+        rows = last - first
+        dataframe = self._read_timeseries_dataframe(
+            filepath,
+            start_time_step=file_start,
+            end_time_step=file_start + rows - 1,
+            csv_dtypes=csv_dtypes,
+        )
+
+        if len(dataframe) == 0:
             raise ValueError(
-                f'{source_label} has 0 rows in dynamic mode. '
-                f'Provide at least 1 row or a full-horizon file ({expected_rows} rows).'
+                f'{source_label} has {self._timeseries_row_count(filepath)} rows. It is shorter than the '
+                f'dataset, so its first row is the add_member time step ({join}), but it has no row for the '
+                f'first active step {first} of this simulation window. Provide a full-horizon file.'
             )
 
-        aligned = pd.DataFrame(index=np.arange(expected_rows), columns=df.columns)
-        window_rows = min(active_rows, row_count)
-        aligned.iloc[start:start + window_rows, :] = df.iloc[:window_rows].to_numpy()
+        if len(dataframe) < rows:
+            # As in CityLearn 3.6.0 the last row is carried forward, but no longer silently.
+            warnings.warn(
+                f'{source_label} has {self._timeseries_row_count(filepath)} rows. It is shorter than the '
+                f'dataset, so its first row is the add_member time step ({join}), and it ends before the '
+                f'member\'s active steps {first} to {last - 1} of this simulation window: its last row is '
+                'repeated for the remaining steps. Provide the missing rows or a full-horizon file.',
+                UserWarning,
+                stacklevel=2,
+            )
+
+        return self._place_member_rows(
+            dataframe, expected_rows=expected_rows, local_start=first - simulation_start,
+        )
+
+    def _is_member_window_file(
+        self,
+        schema: Mapping[str, Any],
+        filepath: Union[str, os.PathLike],
+        window: Optional[MemberWindow],
+    ) -> bool:
+        """True if a dynamic member source starts at the member's activation instead of dataset row 0."""
+
+        return (
+            self._dynamic_mode
+            and window is not None
+            and int(window[0]) > 0
+            and self._timeseries_row_count(filepath) < self._dataset_row_count(schema)
+        )
+
+    @staticmethod
+    def _place_member_rows(dataframe: pd.DataFrame, *, expected_rows: int, local_start: int) -> pd.DataFrame:
+        """Place `dataframe` at `local_start` of a frame of `expected_rows`, carrying values to the edges."""
+
+        local_start = max(0, min(int(local_start), int(expected_rows)))
+        rows = min(len(dataframe), int(expected_rows) - local_start)
+        aligned = pd.DataFrame(index=np.arange(expected_rows), columns=dataframe.columns)
+        aligned.iloc[local_start:local_start + rows, :] = dataframe.iloc[:rows].to_numpy()
         for column in aligned.columns:
             with pd.option_context('future.no_silent_downcasting', True):
                 aligned[column] = aligned[column].ffill().bfill()
         return aligned.reset_index(drop=True)
+
+    def _timeseries_row_count(self, filepath: Union[str, os.PathLike]) -> int:
+        """Number of data rows in a CSV or Parquet time series file, cached by path."""
+
+        key = os.path.abspath(str(filepath))
+
+        if key not in self._timeseries_row_counts:
+            if self._file_format(filepath) == 'parquet':
+                import pyarrow.parquet as pq
+
+                count = int(pq.ParquetFile(filepath).metadata.num_rows)
+
+            else:
+                count = 0
+                last = b''
+
+                with open(filepath, 'rb') as f:
+                    for chunk in iter(lambda: f.read(1 << 20), b''):
+                        count += chunk.count(b'\n')
+                        last = chunk
+
+                # Count a last line without a trailing newline, then drop the header.
+                if last and not last.endswith(b'\n'):
+                    count += 1
+
+                count = max(0, count - 1)
+
+            self._timeseries_row_counts[key] = count
+
+        return self._timeseries_row_counts[key]
+
+    def _dataset_row_count(self, schema: Mapping[str, Any]) -> int:
+        """Number of dataset time steps: the longest building energy simulation file of the schema."""
+
+        if self._dynamic_dataset_rows is None:
+            counts = []
+
+            for member_schema in (schema.get('buildings', {}) or {}).values():
+                filename = (member_schema or {}).get('energy_simulation')
+                if not filename:
+                    continue
+                filepath = os.path.join(schema['root_directory'], filename)
+                if os.path.isfile(filepath):
+                    counts.append(self._timeseries_row_count(filepath))
+
+            self._dynamic_dataset_rows = max(counts) if counts else int(schema['simulation_end_time_step']) + 1
+
+        return self._dynamic_dataset_rows

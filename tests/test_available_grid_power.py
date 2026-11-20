@@ -176,11 +176,11 @@ def test_deferrable_feasibility_checks_the_limit_at_each_future_step(tmp_path):
 
 
 def test_series_follows_the_episode_window(tmp_path):
-    env = make_env(make_schema(tmp_path), episode_time_steps=4)
+    env = make_env(make_schema(tmp_path), episode_time_steps=4, episode_split_boundary='disjoint')
 
     try:
         env.reset(seed=0)
-        env.reset(seed=0)  # second split: file rows 4-7
+        env.reset(seed=0)  # second disjoint split: file rows 4-7
         building = env.buildings[0]
         assert building.episode_tracker.episode_start_time_step == 4
         assert [building.electrical_service_import_limit_kw(t) for t in range(4)] == pytest.approx([2.0]*4)

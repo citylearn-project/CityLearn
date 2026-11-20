@@ -69,6 +69,7 @@ def test_hvac_action_delivers_requested_fraction_of_nominal_power(tmp_path, kind
     env = CityLearnEnv(
         schema, central_agent=True, seconds_per_time_step=seconds, episode_time_steps=MEASURED_STEP + 2,
         simulation_start_time_step=200, solar_generation=False, random_seed=0,
+        time_step_ratio_mode='compress',
     )
     env.reset()
     building = env.buildings[0]

@@ -546,6 +546,7 @@ def test_env_supports_subhour_seconds_per_time_step():
         central_agent=True,
         episode_time_steps=2,
         seconds_per_time_step=900,
+        time_step_ratio_mode='compress',
     )
 
     obs, _ = env.reset()
@@ -582,6 +583,7 @@ def test_ev_charger_schedule_aligns_with_nonzero_episode_start():
         episode_time_steps=4,
         rolling_episode_split=False,
         random_episode_split=False,
+        episode_split_boundary='disjoint',
         random_seed=0,
     )
 
@@ -609,6 +611,7 @@ def test_ev_charger_schedule_alignment_respects_simulation_start_offset():
         episode_time_steps=3,
         rolling_episode_split=False,
         random_episode_split=False,
+        episode_split_boundary='disjoint',
         random_seed=0,
     )
 
@@ -778,6 +781,7 @@ def test_env_prints_explicit_notice_when_dataset_resolution_is_converted(capsys)
         episode_time_steps=2,
         seconds_per_time_step=900,
         random_seed=0,
+        time_step_ratio_mode='compress',
     )
 
     try:
@@ -793,8 +797,10 @@ def test_env_prints_explicit_notice_when_dataset_resolution_is_converted(capsys)
 
 def test_subhour_env_scales_initial_and_step_energy_histories():
     schema = EV_SCHEMA
-    hourly = CityLearnEnv(schema, central_agent=True, episode_time_steps=24, seconds_per_time_step=3600, random_seed=0)
-    quarter_hour = CityLearnEnv(schema, central_agent=True, episode_time_steps=24, seconds_per_time_step=900, random_seed=0)
+    hourly = CityLearnEnv(schema, central_agent=True, episode_time_steps=24, seconds_per_time_step=3600, random_seed=0,
+                          time_step_ratio_mode='compress')
+    quarter_hour = CityLearnEnv(schema, central_agent=True, episode_time_steps=24, seconds_per_time_step=900, random_seed=0,
+                                time_step_ratio_mode='compress')
 
     try:
         hourly.reset()

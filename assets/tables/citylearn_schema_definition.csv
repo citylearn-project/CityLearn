@@ -5,6 +5,7 @@ Key,Definition
 :code:`simulation_end_time_step`,"Time step in the data files to end the simulation at."
 :code:`episode_time_steps`,"Either the number of time steps in an episode or list of episode start and end time steps between :code:`simulation_start_time_step` and :code:`simulation_end_time_step`"
 :code:`rolling_episode_split`,"True if episode sequences are split such that each time step is a candidate for `episode_start_time_step` otherwise, False to split episodes in steps of `episode_time_steps`"
+:code:`episode_split_boundary`,"How consecutive (non-rolling) splits of an integer :code:`episode_time_steps` meet. :code:`shared` (default) starts each split on the terminal row of the previous one, so every interval is simulated. :code:`disjoint` advances splits by :code:`episode_time_steps` rows, as CityLearn 3.6.0 did, so the interval between two consecutive episodes is never simulated."
 :code:`random_episode_split`,"True if episode splits are to be selected at random during training otherwise, False to select sequentially."
 :code:`seconds_per_time_step`,"Used to define the time resolution of the data files."
 :code:`observations`,"Used to define the observation space."

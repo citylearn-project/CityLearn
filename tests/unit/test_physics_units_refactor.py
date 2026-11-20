@@ -70,6 +70,7 @@ def test_cooling_storage_actions_scale_with_subhour_control_step(monkeypatch):
         episode_time_steps=4,
         seconds_per_time_step=900,
         random_seed=0,
+        time_step_ratio_mode='compress',
     )
 
     try:

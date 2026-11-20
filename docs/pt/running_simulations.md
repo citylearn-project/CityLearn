@@ -98,8 +98,10 @@ Todas as comunidades tem de partilhar `seconds_per_time_step`, episode length ef
 | `episode_time_steps` | `int` ou lista | schema | Tamanho do episodio ou janelas explicitas. | Pode ser combinado com split rolling/random. |
 | `rolling_episode_split` | `bool` | schema | Cria episodios em janelas sequenciais. | Usado para treino em janelas. |
 | `random_episode_split` | `bool` | schema | Escolhe episodios aleatorios dentro da janela. | Usa `random_seed`. |
+| `episode_split_boundary` | `str` | `shared` | Como se ligam splits consecutivos (nao rolling). | `shared` partilha a linha de fronteira e simula todos os intervalos; `disjoint` repoe os splits da 3.6.0. |
 | `seconds_per_time_step` | `float` | schema | Duracao fisica de cada step. | Ex.: 15, 60, 300, 900, 3600. |
-| `time_step_ratio` | `int`, `float` | inferido | Razao entre step do agente e resolucao do dataset. | Normalmente dataset e schema devem ter a mesma resolucao. |
+| `time_step_ratio` | `int`, `float` | inferido | Razao entre step do agente e resolucao do dataset. | Inferido dos dados; um valor passado aqui tem de coincidir. |
+| `time_step_ratio_mode` | `str` | `reject` | O que fazer quando o step de controlo difere do step do dataset. | `reject` gera um erro; `compress` mantem o comportamento da 3.6.0 (uma linha de dados por step, energias escaladas). |
 | `reward_function` | classe ou path | schema | Reward usado no `step`. | Pode receber `reward_function_kwargs`. |
 | `reward_function_kwargs` | `dict` | `{}` | Parametros do reward. | Pass-through para o construtor. |
 | `central_agent` | `bool` | schema | Um agente controla todos os buildings. | `False` retorna uma action/obs por building. |

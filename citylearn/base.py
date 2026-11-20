@@ -81,7 +81,25 @@ class EpisodeTracker:
 
         return self.__episode_end_time_step
 
-    def next_episode(self, episode_time_steps: Union[int, List[Tuple[int, int]]], rolling_episode_split: bool, random_episode_split: bool, random_seed: int):
+    EPISODE_SPLIT_BOUNDARIES = ('shared', 'disjoint')
+
+    @classmethod
+    def validate_episode_split_boundary(cls, episode_split_boundary: str = None) -> str:
+        """Return the normalised episode split boundary mode, `'shared'` when `None`."""
+
+        if episode_split_boundary is None:
+            return 'shared'
+
+        value = str(episode_split_boundary).strip().lower()
+
+        if value not in cls.EPISODE_SPLIT_BOUNDARIES:
+            raise ValueError(
+                f'episode_split_boundary must be one of {cls.EPISODE_SPLIT_BOUNDARIES}, got {episode_split_boundary!r}.'
+            )
+
+        return value
+
+    def next_episode(self, episode_time_steps: Union[int, List[Tuple[int, int]]], rolling_episode_split: bool, random_episode_split: bool, random_seed: int, episode_split_boundary: str = 'shared'):
         """Advance to next episode and set `episode_start_time_step` and `episode_end_time_step` for reading data files.
         
         Parameters
@@ -95,6 +113,14 @@ class EpisodeTracker:
             in steps of `episode_time_steps`.
         random_episode_split: bool, default: False
             True if episode splits are to be selected at random during training otherwise, False to select sequentially.
+        episode_split_boundary: str, default: 'shared'
+            How consecutive (non-rolling) splits of an integer `episode_time_steps` meet. An episode of N data rows
+            executes N - 1 control steps, because its last row is only the terminal observation. With `'shared'`,
+            consecutive episodes advance by N - 1 rows, so the terminal row of one episode is the first row of the next
+            and every interval between them is simulated; N must then be at least 2. With `'disjoint'`, consecutive
+            episodes advance by N rows and do not overlap, so the interval between the last row of one episode and the
+            first row of the next is never simulated (the CityLearn 3.6.0 behaviour). Rolling and explicit list splits
+            are not affected.
         """
 
         self.__episode += 1
@@ -103,10 +129,11 @@ class EpisodeTracker:
             rolling_episode_split,
             random_episode_split,
             random_seed,
+            self.validate_episode_split_boundary(episode_split_boundary),
         )
         self.__episode_random_seed = random_seed
         
-    def __next_episode_time_steps(self, episode_time_steps: Union[int, List[Tuple[int, int]]], rolling_episode_split: bool, random_episode_split: bool, random_seed: int):
+    def __next_episode_time_steps(self, episode_time_steps: Union[int, List[Tuple[int, int]]], rolling_episode_split: bool, random_episode_split: bool, random_seed: int, episode_split_boundary: str = 'shared'):
         """Sets `episode_start_time_step` and `episode_end_time_step` for reading data files."""
 
         splits = None
@@ -141,6 +168,18 @@ class EpisodeTracker:
             
             if rolling_episode_split:
                 start_time_steps = range(earliest_start_time_step, latest_start_time_step + 1)
+            elif episode_split_boundary == 'shared':
+                if episode_time_steps < 2 and latest_start_time_step > earliest_start_time_step:
+                    raise ValueError(
+                        f'episode_time_steps must be >= 2 for consecutive episode splits, got {episode_time_steps}: '
+                        'an episode of one data row has no interval to simulate. Use '
+                        "episode_split_boundary='disjoint' to keep the CityLearn 3.6.0 splits."
+                    )
+
+                # Consecutive episodes share their boundary row, so no interval falls between two episodes.
+                start_time_steps = range(
+                    earliest_start_time_step, latest_start_time_step + 1, max(episode_time_steps - 1, 1)
+                )
             else:
                 start_time_steps = range(earliest_start_time_step, latest_start_time_step + 1, episode_time_steps)
 

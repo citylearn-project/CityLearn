@@ -528,6 +528,7 @@ def test_render_timestamp_advances_with_seconds_per_time_step():
         central_agent=True,
         episode_time_steps=4,
         seconds_per_time_step=60,
+        time_step_ratio_mode='compress',
     )
 
     try:

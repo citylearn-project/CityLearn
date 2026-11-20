@@ -131,7 +131,7 @@ def _bau_step_with_nearly_full_ev(tmp_path: Path, seconds: int, core_bundle: boo
         schema["observation_bundles"] = {"entity_core_electrical": True}
     schema_path.write_text(json.dumps(schema), encoding="utf-8")
     env = CityLearnEnv(
-        str(schema_path), central_agent=True, seconds_per_time_step=seconds, episode_time_steps=4, random_seed=0
+        str(schema_path), central_agent=True, seconds_per_time_step=seconds, episode_time_steps=4, random_seed=0, time_step_ratio_mode='compress'
     )
     try:
         env.reset(seed=0)
@@ -436,6 +436,7 @@ def test_business_as_usual_storage_action_uses_power_not_timestep_energy(seconds
         episode_time_steps=4,
         seconds_per_time_step=seconds_per_time_step,
         random_seed=0,
+        time_step_ratio_mode='compress',
     )
 
     try:

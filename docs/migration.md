@@ -48,7 +48,9 @@ development-line history.
 
 ## Unreleased
 
-No dataset, schema or KPI migration is required. Valid runs give the same results; a few silent mistakes now raise.
+### Numeric and configuration hygiene
+
+These changes require no dataset, schema or KPI migration. Valid runs give the same results; a few silent mistakes now raise.
 
 - **Non-finite actions raise.** `env.step()` raises `ValueError` for NaN or infinite actions. A training loop that used to continue with a diverged policy now stops at the first bad action; check the policy output or replace non-finite values before stepping.
 - **Unknown constructor arguments raise.** `CityLearnEnv(..., **kwargs)` raises `TypeError` for an unknown keyword argument, with the closest valid name. Remove or correct arguments that were silently ignored before.
@@ -56,6 +58,68 @@ No dataset, schema or KPI migration is required. Valid runs give the same result
 - **Logging.** CityLearn no longer configures the root logger. Warnings still print; to see INFO messages, configure logging in your script, for example `logging.basicConfig(level=logging.INFO)`. `learn(logging_level=...)` and `DataSet(logging_level=...)` set the level of the `citylearn` logger only when passed.
 - **Export location.** Exports go to `./render_logs` in the working directory by default, and relative `render_directory` values resolve against the working directory. Pass an absolute `render_directory` to keep the previous location.
 - **Physics invariants** raise `PhysicsInvariantError`, which is an `AssertionError`, so existing handlers keep working.
+
+### Consecutive episode splits share their boundary row
+
+An episode of N data rows executes N - 1 control steps: its last row is only
+the terminal observation. Consecutive (non-rolling) splits of an integer
+`episode_time_steps` used to advance by N rows, so the interval between the
+last row of one episode and the first row of the next was never simulated in
+any episode; daily episodes on hourly data never simulated 23:00-24:00.
+
+Consecutive splits now advance by N - 1 rows (`episode_split_boundary='shared'`,
+the default): each episode starts on the terminal row of the previous one, and
+every interval up to the last complete split is simulated once. Episodes keep
+N rows and N - 1 steps. The first episode is unchanged; later episodes start
+earlier, so their results change. Rolling splits, explicit
+`[(start, end), ...]` splits and whole-window episodes are unchanged.
+
+- To keep day-aligned episodes that cover every hour of hourly data, use
+  `episode_time_steps=25`: each episode then runs from 00:00 to the next 00:00.
+- `episode_time_steps=1` with more than one split now raises a `ValueError`; an
+  episode of one row has no interval to simulate.
+- `episode_split_boundary='disjoint'` (constructor argument or schema key)
+  restores the 3.6.0 splits.
+
+### Dynamic topology: joining members, storage and district series
+
+These changes only affect `topology_mode='dynamic'`:
+
+- A member file shorter than the dataset is read as starting at the member's
+  `add_member` time step. It was misaligned when `simulation_start_time_step`
+  was not 0, which also affected the native BAU reference of every dynamic
+  episode that does not start at row 0 (the BAU sidecar loads the episode
+  window). A member that joins again after leaving needs a full-horizon file and
+  now raises a `ValueError` otherwise, instead of reusing frozen rows. A file that
+  ends before the member leaves still repeats its last row for the remaining
+  steps, but now with a `UserWarning`.
+- A member that joins (or rejoins) mid-episode starts its cooling, heating and
+  DHW storage at `initial_soc`, as its battery already did, instead of empty.
+- `env.non_shiftable_load`, `env.solar_generation`, `env.power_outage` and the
+  other district sums of building series keep a departed member's past values
+  and count a member only from the step it joins, like
+  `net_electricity_consumption`. KPIs are unchanged by this item.
+- An event at the terminal step no longer moves the buildings onto the
+  unexecuted terminal row, so their series hold executed intervals only.
+
+### Control step different from the dataset step
+
+CityLearn reads one data row per control step and does not resample. A
+`seconds_per_time_step` that differs from the dataset step therefore ran the
+calendar, prices and EV schedules at the wrong rate while scaling energies by
+`time_step_ratio`. Such a configuration now raises a `ValueError`. Set
+`seconds_per_time_step` to the dataset step or resample the dataset; pass
+`time_step_ratio_mode='compress'` (constructor argument or schema key) to keep
+the 3.6.0 behaviour.
+
+The dataset step is now inferred from every row (the median interval) rather
+than from the first two rows, so one irregular row no longer rescales every
+energy. Rows that mix cadences, where fewer than 90 % of the intervals match
+that median, raise a `ValueError`; declare the step with
+`dataset_seconds_per_time_step` if the calendar columns cannot be fixed. The
+`time_step_ratio` constructor argument, previously ignored, must match the
+inferred ratio. The bundled datasets all use their native step and are not
+affected.
 
 ## Upgrade from 3.5.0 to 3.6.0
 
