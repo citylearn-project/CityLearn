@@ -116,6 +116,30 @@ def test_operator_balance_kpi_reports_the_money_kept_by_the_market(tmp_path):
     assert not [n for n in names if n.startswith("building_")]
 
 
+def test_operator_balance_reports_the_residual_of_different_member_pricing_files(tmp_path):
+    # The #239 reproduction: no tariff_files, but Building_B has its own pricing file at twice the price.
+    path = _build_two_building_market_schema(tmp_path)
+    schema = json.loads(path.read_text())
+    schema["buildings"]["Building_B"]["pricing"] = "pricing_b.csv"
+    path.write_text(json.dumps(schema))
+    pricing = pd.read_csv(path.parent / "pricing.csv")
+    (pricing * 2).to_csv(path.parent / "pricing_b.csv", index=False)
+
+    env = CityLearnEnv(str(path), episode_time_steps=2)
+    env.reset()
+    env.step([np.zeros(len(env.action_names[0]))])
+    rows = {r["building"]: r for r in env._community_market_settlement_history[-1]}
+    traded = rows["Building_A"]["local_import_kwh"]
+    assert traded > 0 and rows["Building_B"]["local_export_kwh"] == pytest.approx(traded)
+
+    # The importer pays 0.8 x 0.5 and the exporter receives 0.8 x 1.0 for the same energy.
+    expected = traded * 0.8 * (0.5 - 1.0)
+    kpis = env.evaluate_v2(include_business_as_usual=False)
+    name = next(n for n in kpis["cost_function"].unique() if n.startswith("district_") and "operator_balance" in n)
+    assert _kpi(kpis, name)["District"] == pytest.approx(expected)
+    assert expected < 0
+
+
 def test_operator_balance_is_zero_with_a_single_tariff(tmp_path):
     env = _market_env(tmp_path, None)
     kpis = env.evaluate_v2(include_business_as_usual=False)
