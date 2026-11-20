@@ -65,6 +65,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#consecutive-episode-splits-share-their-boundary-row">Consecutive episode splits share their boundary row</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-joining-members-storage-and-district-series">Dynamic topology: joining members, storage and district series</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#control-step-different-from-the-dataset-step">Control step different from the dataset step</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#per-building-reward-functions-and-reward-versions">Per-building reward functions and reward versions</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-5-0-to-3-6-0">Upgrade from 3.5.0 to 3.6.0</a><ul>
@@ -282,6 +283,24 @@ that median, raise a <code class="docutils literal notranslate"><span class="pre
 <code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code> constructor argument, previously ignored, must match the
 inferred ratio. The bundled datasets all use their native step and are not
 affected.</p>
+</section>
+<section id="per-building-reward-functions-and-reward-versions">
+<h3>Per-building reward functions and reward versions<a class="headerlink" href="#per-building-reward-functions-and-reward-versions" title="Link to this heading"></a></h3>
+<p>When the schema’s <code class="docutils literal notranslate"><span class="pre">reward_function.type</span></code> maps buildings to reward functions,
+each function now reads its own building’s metadata and is paired with its
+building by name. Per-building functions that read building metadata, such as
+<code class="docutils literal notranslate"><span class="pre">SolarPenaltyReward</span></code>, used the first building’s storage capacities for every
+building, so their rewards change; functions that read only observations, such
+as <code class="docutils literal notranslate"><span class="pre">RewardFunction</span></code>, give the same rewards. Retrain policies trained with such a
+schema. No bundled dataset uses per-building reward functions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Electric_Vehicles_Reward_Function</span></code>, <code class="docutils literal notranslate"><span class="pre">ComfortReward</span></code> and
+<code class="docutils literal notranslate"><span class="pre">SolarPenaltyAndComfortReward</span></code> accept a <code class="docutils literal notranslate"><span class="pre">version</span></code> attribute. Version 1, the
+default, is the reward of 3.6.0, so existing schemas and trained policies keep
+their reward. Version 2 corrects the EV departure penalty, adds the base reward
+and follows the HVAC mode in the comfort term, as the reward function overview
+of the documentation describes. Set <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;:</span> <span class="pre">2</span></code> in the
+reward attributes for new training runs, and compare policies only within one
+version. The reward evidence in the environment metadata records the version.</p>
 </section>
 </section>
 <section id="upgrade-from-3-5-0-to-3-6-0">

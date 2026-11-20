@@ -162,10 +162,11 @@
     <span class="n">reward</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s2">"reward_function"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="n">configured</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">env</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reward_function"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attributes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})</span>
     <span class="n">effective</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">configured</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">configured</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span>
         <span class="s2">"exponent"</span><span class="p">,</span>
         <span class="s2">"charging_constraint_penalty_coefficient"</span><span class="p">,</span>
-    <span class="p">}:</span>
+        <span class="s2">"version"</span><span class="p">,</span>
+    <span class="p">}):</span>
         <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">reward</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
             <span class="n">effective</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
