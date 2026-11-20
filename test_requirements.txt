@@ -2,6 +2,8 @@
 torch
 scikit-learn
 stable-baselines3>=2.4
+# Parquet datasets and exports; ray[rllib] used to bring it in.
+pyarrow
 # NREL-PySAM has no Python 3.14 wheels yet; the PV autosizing tests skip without it.
 nrel-pysam; python_version < "3.14"
 pytest
