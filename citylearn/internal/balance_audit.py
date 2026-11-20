@@ -6,7 +6,6 @@ terminals and stored energy. This is model-consistency evidence, not calibration
 """
 
 from collections import defaultdict
-from copy import deepcopy
 import csv
 from pathlib import Path
 

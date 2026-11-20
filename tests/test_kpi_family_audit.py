@@ -1,5 +1,3 @@
-import json
-from copy import deepcopy
 from types import SimpleNamespace
 
 import numpy as np
@@ -14,7 +12,6 @@ from citylearn.citylearn import CityLearnEnv
 from test_demand_response import (
     _copy_minute_schema,
     _clean_schema,
-    _write_requests,
     _request,
     _zero_entity_actions,
 )
