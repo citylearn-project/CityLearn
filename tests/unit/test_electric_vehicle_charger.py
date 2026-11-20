@@ -125,7 +125,7 @@ def charger(
 def _expected_soc_after_charge(ev: ElectricVehicle, energy_to_battery: float) -> float:
     capacity = ev.battery.capacity
     energy_init = ev.battery.initial_soc * capacity
-    return (energy_init + energy_to_battery * ev.battery.round_trip_efficiency) / capacity
+    return (energy_init + energy_to_battery * ev.battery.one_way_efficiency) / capacity
 
 
 def test_charger_charging_updates_ev_soc_and_grid_accounting(charger: Charger, electric_vehicle: ElectricVehicle):

@@ -126,6 +126,8 @@ class CityLearnLoadingService:
         """Return env objects as defined by schema."""
 
         schema['root_directory'] = kwargs['root_directory'] if kwargs.get('root_directory') is not None else schema['root_directory']
+        # The environment resolved the physics version from its argument and the schema.
+        schema['physics_version'] = getattr(self.env, 'physics_version', schema.get('physics_version'))
         schema['random_seed'] = schema.get('random_seed', None) if kwargs.get('random_seed', None) is None else kwargs['random_seed']
         if schema['random_seed'] is None:
             schema['random_seed'] = self.env.random_seed
@@ -479,6 +481,8 @@ class CityLearnLoadingService:
             episode_tracker=episode_tracker, **outage, **options,
         )
         building._declared_inactive_actions = set(inactive_actions)
+        # Before the devices are configured: autosizing depends on the physics version.
+        building.physics_version = getattr(self.env, 'physics_version', schema.get('physics_version'))
         loading_components.configure_devices(
             building, building_name, building_type, building_schema, schema, index, kwargs,
             pv_sizing_data, battery_sizing_data,

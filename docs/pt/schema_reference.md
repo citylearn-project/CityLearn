@@ -53,6 +53,7 @@ Esta pagina documenta o contrato do `schema.json`. O schema e a fonte oficial pa
 | `debug_timing` | bool | nao | Logs de tempo runtime. |
 | `check_observation_limits` | bool | nao | Valida bounds de observacoes. |
 | `physics_invariant_checks` | bool | nao | Checks de invariantes fisicos. |
+| `physics_version` | int | nao | Versao da fisica, `1` ou `2` (predefinida). `1` reproduz a fisica do CityLearn 3.6.0; ver o [guia de migracao](../migration.md#physics-version). O argumento `physics_version` do `CityLearnEnv` tem precedencia. |
 | `metrics_log_interval` | int | nao | Periodicidade de logs. |
 
 ## `observations`

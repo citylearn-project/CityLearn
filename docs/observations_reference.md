@@ -249,7 +249,8 @@ Demand-response `request_id` and baseline validity are exposed in `observations[
 |---|---|---:|---|
 | `soc`, `capacity_kwh`, `nominal_power_kw`, `electricity_consumption_kwh` | legacy | mixed | BESS state and settled consumption. |
 | `min_charge_power_kw`, `min_discharge_power_kw` | `entity_base` | kW | Technical minimum powers. |
-| `efficiency_ratio`, `round_trip_efficiency_ratio` | `entity_base` | ratio | Base and round-trip efficiency. |
+| `efficiency_ratio` | `entity_base` | ratio | Rated round-trip efficiency. |
+| `round_trip_efficiency_ratio` | `entity_base` | ratio | One-way efficiency at the last operation, the square root of the current round-trip efficiency. The name is kept for existing observation layouts. |
 | `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Storage phase connection. |
 | `electrical_storage_soc_ratio` | `entity_core_electrical` | ratio | Canonical BESS SOC. |
 | `max_charge_power_kw`, `max_discharge_power_kw` | `entity_core_electrical` | kW | Current max powers. |

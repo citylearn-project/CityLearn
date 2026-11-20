@@ -183,6 +183,46 @@ lists every changed row and the name that keeps its 3.6.0 value.
   ([#245](https://github.com/citylearn-project/CityLearn/issues/245)). The ratio
   to the BAU is unchanged.
 
+### Physics version
+
+Corrections to the simulated physics are grouped into versioned physics
+definitions, selected with the `physics_version` schema key or the
+`CityLearnEnv(physics_version=...)` argument, which takes precedence. Version
+`1` is the physics of CityLearn 3.6.0 and earlier; version `2`, the default,
+contains the corrections below. The native BAU reference of `evaluate_v2()`
+uses the version of the evaluated environment, and exports record it in the
+run metadata. To reproduce a 3.6.0 result, set `physics_version` to `1`; to
+compare controllers, run them under the same version.
+
+Version 2 changes no result on bundled datasets as shipped. It changes runs
+that use the following:
+
+- **EVs with a standby loss.** An EV away from its charger now keeps the
+  standby loss of each step; version 1 discarded it, so a non-zero battery
+  `loss_coefficient` had no effect while the EV was away
+  ([#236](https://github.com/citylearn-project/CityLearn/issues/236)).
+- **Steps longer than one hour.** The cooling and heating demand caps compared
+  an energy per step with a power, which limited HVAC output to one hour of
+  nominal power per step
+  ([#235](https://github.com/citylearn-project/CityLearn/issues/235)).
+- **Autosizing at sub-hourly resolution.** Storage tanks are sized to hold one
+  hour of peak demand power (the `duration` autosize attribute, in hours,
+  changes it) instead of the largest demand per step, so hourly data are sized
+  as before and 15-minute data get the same tanks as hourly data. PV autosizing
+  groups years by the dataset resolution and repeats the hourly PVWatts output
+  at sub-hourly steps; at sub-hourly resolution it used to fail or to size the
+  PV for a quarter of the demand
+  ([#233](https://github.com/citylearn-project/CityLearn/issues/233)).
+
+`StorageDevice.round_trip_efficiency` returned the one-way efficiency, the
+square root of `efficiency`. Use `one_way_efficiency` for that value, or
+`efficiency` for the round-trip efficiency; `round_trip_efficiency` keeps its
+value, warns with `DeprecationWarning` and will be removed. Device metadata adds
+`one_way_efficiency` and keeps `round_trip_efficiency` with the same value. The
+entity feature `round_trip_efficiency_ratio` keeps its name and value, which is
+the one-way efficiency. `Battery.efficiency_history` now gains one entry per
+charge or discharge instead of two. No simulated value changes.
+
 ## Upgrade from 3.5.0 to 3.6.0
 
 ### Battery discharge features during outages

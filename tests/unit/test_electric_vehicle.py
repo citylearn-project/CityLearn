@@ -23,7 +23,7 @@ def mock_battery():
     battery.soc = np.array([0.5] * 24)
     battery.energy_balance = np.zeros(24)
     battery.efficiency = 0.9
-    battery.round_trip_efficiency = 0.9**0.5
+    battery.one_way_efficiency = 0.9**0.5
     battery.loss_coefficient = 0.0
     battery.time_step = 0
     def force_set_soc_side_effect(new_soc):
