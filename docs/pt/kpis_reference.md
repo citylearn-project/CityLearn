@@ -289,8 +289,12 @@ Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo 
 O `exported_kpis.csv` e o ficheiro Parquet exportados são largos: `KPI` seguido de
 uma coluna por building e `District`, sem `unit` e `description`, porque a UI do
 CityLearn lê todas as colunas depois de `KPI` como entidades. A unidade e a
-descrição de cada KPI exportado estão na entrada `kpi_catalogue` de
-`exported_kpis.manifest.json`. O `MultiCommunityEnv.export_final_kpis()` escreve a
+descrição de cada KPI exportado estão em `exported_kpis.catalogue.json`, uma lista
+de registos com `cost_function`, `unit` e `description` pela ordem da primeira
+ocorrência, junto ao export; a chave `kpi_catalogue_file` de
+`exported_kpis.manifest.json` indica o nome. É JSON porque a UI importa todos os
+ficheiros CSV ou Parquet como tabelas, e um ficheiro com `kpi` no nome como tabela
+de KPIs. O `MultiCommunityEnv.export_final_kpis()` escreve a
 tabela longa do `evaluate_v2()`, com `unit` e `description`, em
 `exported_kpis_multi_community.csv`.
 

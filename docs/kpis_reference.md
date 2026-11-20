@@ -356,7 +356,11 @@ division reported as a perfect 0.
 The exported `exported_kpis.csv` and Parquet file are wide: `KPI` followed by one
 column per building and `District`, without `unit` and `description`, because the
 CityLearn UI reads every column after `KPI` as an entity. The unit and description
-of each exported KPI are in the `kpi_catalogue` entry of the `exported_kpis.manifest.json`.
+of each exported KPI are in `exported_kpis.catalogue.json`, a list of records with
+`cost_function`, `unit` and `description` in order of first appearance, next to the
+export; the `kpi_catalogue_file` key of `exported_kpis.manifest.json` names it. It is
+JSON because the UI imports every CSV or Parquet file as a table, and a file named
+`*kpi*` as a KPI table.
 `MultiCommunityEnv.export_final_kpis()` writes the long table of `evaluate_v2()`,
 including `unit` and `description`, to `exported_kpis_multi_community.csv`.
 

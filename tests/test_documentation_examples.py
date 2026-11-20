@@ -156,7 +156,7 @@ def test_kpi_only_ui_export(tmp_path):
         env.export_final_kpis(export_business_as_usual_timeseries=False)
         output = Path(env.new_folder_path)
         assert {path.name for path in output.iterdir()} == {
-            "exported_kpis.csv", "exported_kpis.deferrable_service.json",
+            "exported_kpis.catalogue.json", "exported_kpis.csv", "exported_kpis.deferrable_service.json",
             "exported_kpis.manifest.json",
         }
         assert not list(output.glob("exported_data_*"))

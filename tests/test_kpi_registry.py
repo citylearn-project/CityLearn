@@ -179,11 +179,15 @@ def test_wide_export_keeps_its_columns_and_the_manifest_lists_units_and_descript
         # The CityLearn UI reads every column after `KPI` as an entity, so no text columns are added.
         assert next(iter(wide.columns)) == "KPI"
         assert not {"unit", "description"} & set(wide.columns)
-        catalogue = json.loads((output / "exported_kpis.manifest.json").read_text(encoding="utf-8"))["kpi_catalogue"]
-        assert set(catalogue) == set(wide["KPI"])
-        assert catalogue["district_cost_total_control_eur"] == {
-            "unit": "eur", "description": "Total electricity cost (control run)."}
-        assert all(entry["unit"] and entry["description"] for entry in catalogue.values())
+        manifest = json.loads((output / "exported_kpis.manifest.json").read_text(encoding="utf-8"))
+        assert manifest["kpi_catalogue_file"] == "exported_kpis.catalogue.json"
+        assert "kpi_catalogue" not in manifest
+        catalogue = json.loads((output / manifest["kpi_catalogue_file"]).read_text(encoding="utf-8"))
+        assert [entry["cost_function"] for entry in catalogue] == list(env.evaluate_v2()["cost_function"].unique())
+        assert {entry["cost_function"] for entry in catalogue} == set(wide["KPI"])
+        assert {"cost_function": "district_cost_total_control_eur", "unit": "eur",
+                "description": "Total electricity cost (control run)."} in catalogue
+        assert all(entry["unit"] and entry["description"] for entry in catalogue)
     finally:
         env.close()
 

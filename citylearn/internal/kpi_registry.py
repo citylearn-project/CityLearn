@@ -435,7 +435,7 @@ def add_columns(frame: pd.DataFrame) -> pd.DataFrame:
     return frame
 
 
-def catalogue(names) -> Dict[str, Dict[str, Optional[str]]]:
-    """Unit and description of each KPI name, for the experiment manifest."""
+def catalogue(names) -> List[Dict[str, Optional[str]]]:
+    """Records ``cost_function``, ``unit`` and ``description`` of each KPI name, in order of first appearance."""
 
-    return {name: dict(zip(('unit', 'description'), describe(name))) for name in sorted(set(names))}
+    return [dict(zip(('cost_function', 'unit', 'description'), (name, *describe(name)))) for name in dict.fromkeys(names)]
