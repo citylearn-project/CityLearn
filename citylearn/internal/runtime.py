@@ -970,6 +970,12 @@ class CityLearnRuntimeService:
         if debug_timing:
             timings['topology_time'] = time.perf_counter() - timer_start
 
+        # Carry external charger rows into the new interval and let the mobility provider update
+        # them now: the energy of the finished interval is final and nothing is associated yet.
+        mobility = getattr(env, '_mobility_service', None)
+        if mobility is not None and mobility.active:
+            mobility.advance(int(env.time_step), call_provider=not reached_terminal_transition)
+
         if not reached_terminal_transition:
             timer_start = time.perf_counter() if debug_timing else 0.0
             continuing_evs = None
@@ -1003,6 +1009,9 @@ class CityLearnRuntimeService:
         r"""Associate charger to its corresponding EV based on charger simulation state."""
 
         env = self.env
+        mobility = getattr(env, '_mobility_service', None)
+        if mobility is not None and mobility.active:
+            mobility.before_association()
         ev_by_name = {ev.name: ev for ev in env.electric_vehicles}
 
         def _resolve_arrival_soc(
@@ -1168,6 +1177,8 @@ class CityLearnRuntimeService:
                         previous_runtime_ev is not ev or session_changed
                     )
                     if is_new_connection:
+                        # Session boundary for the charger's session dynamics (start-up delay).
+                        charger._session_started_at = env.time_step
                         continuing_schedule = prev_state == 1 and prev_ev_id == ev_id and not session_changed
                         topology_connection = env._topology_service.enabled and (
                             getattr(charger, '_topology_added_time_step', None) == env.time_step
@@ -1267,11 +1278,16 @@ class CityLearnRuntimeService:
                 charger_event_by_ev_id.setdefault(next_id, ('connecting', soc))
 
         legacy_drift = physics_version_of(env) < 2
+        mobility = getattr(env, '_mobility_service', None)
+        managed_evs = mobility.managed_vehicle_names() if mobility is not None and mobility.active else ()
 
         for ev in env.electric_vehicles:
             if continuing_evs is not None and ev not in continuing_evs:
                 continue
             ev_id = ev.name
+            if ev_id in managed_evs:
+                # The mobility provider reports this vehicle's SOC.
+                continue
             event = charger_event_by_ev_id.get(ev_id)
             if event is not None:
                 event_type, soc = event

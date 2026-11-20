@@ -287,7 +287,7 @@ limite do proximo intervalo; o headroom descreve o ultimo intervalo executado.
 
 | Campo | Unidade | O que faz |
 |---|---:|---|
-| `charger_simulation` | path | Schedule temporal do charger. |
+| `charger_simulation` | path ou `{"source": "external"}` | Schedule temporal do charger, ou `{"source": "external"}` para um schedule escrito em runtime por um [fornecedor de mobilidade](mobility_provider.md). |
 | `max_charging_power` | kW | Limite superior de carga. |
 | `min_charging_power` | kW | Minimo tecnico de carga. |
 | `max_discharging_power` | kW | Limite V2G. |
@@ -296,6 +296,18 @@ limite do proximo intervalo; o headroom descreve o ultimo intervalo executado.
 | `charge_efficiency_curve` | ratio vs potencia normalizada | Curva opcional de eficiencia de carga. |
 | `discharge_efficiency_curve` | ratio vs potencia normalizada | Curva opcional de eficiencia de descarga. |
 | `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Fase eletrica do charger. |
+| `start_delay_seconds` | s | Opcional. Tempo após a ligação do veículo antes de a energia fluir. |
+| `setpoint_delay_seconds` | s | Opcional. Atraso até o comando de um passo ter efeito. |
+| `ramp_up_kw_per_second` | kW/s | Opcional. Taxa máxima de subida do valor absoluto da potência. |
+| `ramp_down_kw_per_second` | kW/s | Opcional. Taxa máxima de descida do valor absoluto da potência. |
+| `stop_delay_seconds` | s | Opcional. A transferência termina este tempo antes de uma partida conhecida. |
+
+Os últimos cinco atributos modelam a [dinâmica das sessões de carga](charger_session_dynamics.md); omitidos,
+a potência comandada aplica-se durante todo o tempo de ligação.
+
+O schedule de um charger externo começa ausente durante todo o episódio; o fornecedor liga, anuncia e
+liberta veículos enquanto o episódio corre. Chargers externos não são suportados com `topology_mode="dynamic"`.
+Ver [fornecedores externos de mobilidade](mobility_provider.md).
 
 ## EV Definitions
 
@@ -320,6 +332,7 @@ limite do proximo intervalo; o headroom descreve o ultimo intervalo executado.
 |---|---|
 | `type` | Classe EV. |
 | `include` | Inclui EV no pool inicial. |
+| `external` | `true` quando um [fornecedor de mobilidade](mobility_provider.md) comunica o SOC do EV: sem deriva aleatória de SOC enquanto está ausente. Default `false`. |
 | `battery.attributes` | Kwargs de `Battery`. |
 
 O standby loss das baterias EV fica isolado dos defaults de storage estacionario:
