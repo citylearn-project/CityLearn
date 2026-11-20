@@ -294,9 +294,14 @@ class RBCCommunityPolicy(_RuleBaselineAgent):
 
 
 class ZeroActionBaselineAgent(Agent):
-    """Baseline that requests zero for every action dimension."""
+    """Baseline that requests zero for every action dimension.
+
+    Under the entity interface it returns flat-like zero vectors in
+    ``env.action_names`` order, which the entity interface accepts.
+    """
 
     def predict(self, observations: List[List[float]], deterministic: bool = None) -> List[List[float]]:
+        self._follow_entity_topology()
         actions = [np.zeros(space.shape, dtype='float32').tolist() for space in self.action_space]
         self.actions = actions
         self.next_time_step()

@@ -8,6 +8,13 @@ Portuguese version: [pt/releases.md](pt/releases.md).
 For package publication, version policy and the release checklist, see the
 [publishing guide](publishing.md).
 
+## Unreleased
+
+### Fixed
+
+- **Generic agents on the entity interface.** Under the entity interface the action and observation spaces are dictionaries of entity tables, so `Agent` and `ZeroActionBaselineAgent` failed with `AttributeError` at the first `predict()`. They now keep the flat spaces and return flat-like action vectors, which the entity interface accepts, also under a dynamic topology. `SAC`, `SACRBC`, `MARLISA`, `MARLISARBC` and `TabularQLearning` read flat observation vectors and now raise a `ValueError` that names the flat interface on the entity interface. Flat runs are unchanged ([#250](https://github.com/citylearn-project/CityLearn/issues/250)).
+- **Rule baselines as SACRBC and MARLISARBC exploration controllers.** `rbc` accepts any agent instance, agent class or import path, including `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` and `BusinessAsUsualAgent`, which raised `TypeError` as instances and `ValueError` for the SAC hyperparameters as classes. A controller built from a class or a path no longer receives the learner's hyperparameters (`lr`, `batch_size`, `hidden_dimension`, ...); the other keyword arguments still reach it. The bundled `RBC` classes ignored those hyperparameters, so their runs are unchanged ([#250](https://github.com/citylearn-project/CityLearn/issues/250)).
+
 ## v3.6.0 - 2026-11-19
 
 ### What's new

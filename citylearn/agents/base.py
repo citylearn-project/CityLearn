@@ -18,8 +18,34 @@ def get_env_attr(env, name: str):
     return getter(name) if callable(getter) else getattr(env, name)
 
 
+def is_entity_interface(env) -> bool:
+    """Whether ``env`` (or the environment it wraps) uses the entity interface."""
+
+    return str(getattr(env.unwrapped, 'interface', 'flat')).lower() == 'entity'
+
+
+def require_flat_interface(env, agent_name: str):
+    """Raise a clear error for agents that read flat observation vectors."""
+
+    if is_entity_interface(env):
+        raise ValueError(
+            f"{agent_name} requires interface='flat': it reads flat observation vectors, while the entity "
+            "interface returns entity tables. Use interface='flat', or a controller from "
+            "citylearn.agents.baseline, which works with both interfaces."
+        )
+
+
 class Agent(Environment):
     r"""Base agent class.
+
+    Under the entity interface, the environment's ``action_space`` and
+    ``observation_space`` are ``spaces.Dict`` objects keyed by entity table. The
+    agent then keeps the flat spaces (``flat_action_space`` and
+    ``flat_observation_space``) in :attr:`action_space` and
+    :attr:`observation_space` and returns flat-like action vectors in
+    ``env.action_names`` order, which the entity interface also accepts. Agents
+    that read flat observation vectors, such as the reinforcement learning
+    controllers, require the flat interface.
 
     Parameters
     ----------
@@ -31,13 +57,19 @@ class Agent(Environment):
     **kwargs : dict
         Other keyword arguments used to initialize super class.
     """
-    
+
     def __init__(self, env: CityLearnEnv, **kwargs: Any):
         self.env = env
         self.observation_names = get_env_attr(self.env, 'observation_names')
         self.action_names = self.env.unwrapped.action_names
-        self.observation_space = self.env.observation_space
-        self.action_space = self.env.action_space
+
+        if is_entity_interface(self.env):
+            self.observation_space = self.env.unwrapped.flat_observation_space
+            self.action_space = self.env.unwrapped.flat_action_space
+        else:
+            self.observation_space = self.env.observation_space
+            self.action_space = self.env.action_space
+
         self.episode_time_steps = self.env.unwrapped.time_steps
         self.building_metadata = self.env.unwrapped.get_metadata()['buildings']
         super().__init__(
@@ -269,11 +301,20 @@ class Agent(Environment):
             Action values
         """
         
+        self._follow_entity_topology()
         actions = [list(s.sample()) for s in self.action_space]
         self.actions = actions
         self.next_time_step()
         return actions
     
+    def _follow_entity_topology(self):
+        """Refresh the flat action layout after dynamic topology changes under the entity interface."""
+
+        env = self.env.unwrapped
+        if is_entity_interface(env) and getattr(env, 'topology_mode', 'static') == 'dynamic':
+            self.action_space = env.flat_action_space
+            self.action_names = env.action_names
+
     def __set_logger(self, logging_level: int = None):
         """Set logging level."""
 
