@@ -156,10 +156,14 @@ As taxas e medias agregadas sao ponderadas pelos seus denominadores aditivos, po
 | Average start delay dos deferrable appliances (control e BAU) | Ciclos completed |
 | Service level das escadas rolantes | Passageiros pedidos |
 | Self-consumption solar (control e BAU) | Geracao solar |
+| Share local da procura do mercado comunitario (`*_local_share_of_demand_ratio`, `*_import_share_ratio`) | Import local mais import da rede depois das trocas locais |
+| Share local do export do mercado comunitario | Export local mais export para a rede depois das trocas locais |
+| Compliance de demand response | `demand_response_valid_requested_total_kwh` |
+| Compliance, cobertura da energia pedida e cobertura da baseline das auditorias de demand response, por objetivo | Energia pedida valida, energia pedida e intervalos ativos da auditoria |
 
 Os deltas e ratios ao BAU do service level, do start delay e da self-consumption agregados sao calculados entre os valores control e BAU agregados. As comunidades cujo valor e indefinido nao tem peso.
 
-Os ratios sem totais aditivos continuam medias ponderadas: ratios de forma da rede (picos, ramping e penalidades de load factor), proporcoes de conforto e resiliencia, shares, equity, ratios de auditoria e cobertura, compliance de demand response, capacity fade da bateria, e os ratios `ratio_to_business_as_usual` de capacity fade e ciclos equivalentes da bateria.
+Os ratios sem totais aditivos continuam medias ponderadas: ratios de forma da rede (picos, ramping e penalidades de load factor), proporcoes de conforto e resiliencia, equity, os ratios das auditorias de servico termico, de partidas EV e outras, capacity fade da bateria, e os ratios `ratio_to_business_as_usual` de capacity fade e ciclos equivalentes da bateria.
 
 Os nomes de portfolio substituem o prefixo `district_` por `portfolio_`, por exemplo `district_demand_response_revenue_total_eur` vira `portfolio_demand_response_revenue_total_eur`.
 

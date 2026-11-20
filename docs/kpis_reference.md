@@ -228,6 +228,8 @@ Available when `demand_response.enabled=true`.
 | `demand_response_requested_total_kwh` | building/district | kWh | Requested energy from `target_power_kw` over active steps. |
 | `demand_response_delivered_total_kwh` | building/district | kWh | Signed delivery, positive when the controller moves in the requested direction. |
 | `demand_response_shortfall_total_kwh` | building/district | kWh | Non-delivered requested energy after tolerance. |
+| `demand_response_valid_requested_total_kwh` | district | kWh | Requested energy of the active steps with a valid pre-event baseline: the denominator of the compliance ratio. |
+| `demand_response_credited_total_kwh` | district | kWh | Delivered energy credited against the requests, after the tolerance and the cap at the target: the numerator of the compliance ratio. |
 | `demand_response_compliance_ratio` | building/district | ratio | Credited delivery divided by valid requested energy. |
 | `demand_response_revenue_total_eur` | building/district | eur | Credited delivery revenue. |
 | `demand_response_penalty_total_eur` | building/district | eur | Shortfall penalty. |

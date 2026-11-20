@@ -112,6 +112,16 @@ lista cada linha alterada e o nome que guarda o seu valor da 3.6.0.
   autoconsumo do portfolio a partir dos seus denominadores aditivos, em vez de
   os ponderar por comunidade.
   ([#244](https://github.com/citylearn-project/CityLearn/issues/244))
+- **Shares do mercado comunitário e compliance de demand response no
+  portfolio.** As shares locais da procura e do export do mercado comunitário
+  no portfolio eram médias ponderadas pelo `weight` das comunidades. Passam a
+  ser agregadas a partir da energia local e da rede. O compliance e os ratios
+  de cobertura das auditorias de demand response passam a ser agregados a
+  partir da energia pedida. As novas linhas de distrito
+  `district_demand_response_valid_requested_total_kwh` e
+  `district_demand_response_credited_total_kwh` exportam as componentes do
+  compliance ratio; os valores de distrito e de edifício não mudam.
+  ([#285](https://github.com/citylearn-project/CityLearn/issues/285))
 - **Média de ramping do BAU.**
   `district_energy_grid_shape_quality_ramping_average_business_as_usual_kw` era
   a soma das rampas ascendentes no episódio. Passa a ser a média por transição
