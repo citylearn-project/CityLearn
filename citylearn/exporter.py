@@ -11,6 +11,8 @@ from typing import Any, Dict, List, Mapping, Optional, TYPE_CHECKING, Union
 import numpy as np
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from citylearn.agents.base import Agent
     from citylearn.citylearn import CityLearnEnv
     from citylearn.electric_vehicle import ElectricVehicle
@@ -160,15 +162,26 @@ class EpisodeExporter:
         include_business_as_usual: bool = True,
         export_business_as_usual_timeseries: bool = True,
         kpi_round_decimals: Optional[int] = None,
+        *,
+        evaluated_kpis: Optional[pd.DataFrame] = None,
     ):
-        """Export episode KPIs to csv."""
+        """Export episode KPIs to csv.
+
+        `evaluated_kpis` is this env's `evaluate_v2(include_business_as_usual=include_business_as_usual)`
+        table when the caller already has it, so it is not evaluated twice.
+        """
 
         env = self.env
         self.ensure_output_dir()
         filepath = self._export_filename(filepath)
         file_path = os.path.join(env.new_folder_path, filepath)
 
-        if model is not None and getattr(model, 'env', None) is not None:
+        if evaluated_kpis is not None:
+            if model is not None:
+                raise ValueError('evaluated_kpis cannot be combined with a model override.')
+            kpis = evaluated_kpis
+            export_env = env
+        elif model is not None and getattr(model, 'env', None) is not None:
             kpis = model.env.evaluate_v2(include_business_as_usual=include_business_as_usual)
             export_env = model.env.unwrapped
             identity = getattr(model, 'comparison_identity', None)

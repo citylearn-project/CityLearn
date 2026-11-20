@@ -1637,6 +1637,16 @@ class CityLearnKPIService:
             self._settled_cost_series(condition_by_building=baseline_condition_by_building),
         )
 
+    @classmethod
+    def _finite_step_values(cls, values, steps: int) -> np.ndarray:
+        """`_to_scalar(values[t], 0.0)` for t < `steps`: non-finite values and steps past the end read 0.0."""
+
+        result = np.zeros(steps, dtype='float64')
+        available = np.asarray(values, dtype='float64')[:steps]
+        result[:len(available)] = available
+        result[~np.isfinite(result)] = 0.0
+        return result
+
     def _settled_cost_series(
         self,
         *,
@@ -1693,71 +1703,91 @@ class CityLearnKPIService:
                 dtype='float64',
             )
 
-        for t in range(min(final_t + 1, int(env.time_step))):
-            net_values = []
-            active_buildings_t = []
-            active_weights_t = []
-            for building in buildings:
-                t_start, t_end = windows.get(building.name, (0, -1))
-                if not (t_start <= t <= t_end):
-                    continue
-                if getattr(env, 'topology_mode', 'static') == 'dynamic':
-                    population = current_population(self)
-                    active = (building.name in env._topology_service.active_member_ids_at(t)
-                              if population is None else population.mask(building.name, final_t)[t])
-                    if not active:
-                        continue
+        # Array form of a loop over every (step, member): per-step totals and the weighted allocation use the same
+        # NumPy calls on the same active-member vectors, and the per-member prices and costs the same float64
+        # operations in the same order, so every cost is bit-identical to that loop.
+        steps = min(final_t + 1, int(env.time_step))
+        members = [building for building in buildings if building.name in net_series_by_name]
+        if steps <= 0 or len(members) == 0:
+            if cache is not None:
+                cache[cache_key] = series
+            return series
 
-                net_series = net_series_by_name.get(building.name)
-                if net_series is None:
-                    continue
+        dynamic = getattr(env, 'topology_mode', 'static') == 'dynamic'
+        population = current_population(self) if dynamic else None
+        active_ids = (
+            [env._topology_service.active_member_ids_at(t) for t in range(steps)]
+            if dynamic and population is None else None
+        )
+        active = np.zeros((steps, len(members)), dtype=bool)
+        net = np.zeros((steps, len(members)), dtype='float64')
+        grid_import_price = np.zeros((steps, len(members)), dtype='float64')
 
-                net_values.append(self._to_scalar(net_series[t] if t < len(net_series) else np.nan, 0.0))
-                active_buildings_t.append(building)
-                active_weights_t.append(weight_by_name.get(building.name, 1.0))
-
-            if len(active_buildings_t) == 0:
+        for j, building in enumerate(members):
+            t_start, t_end = windows.get(building.name, (0, -1))
+            start, end = max(int(t_start), 0), min(int(t_end), steps - 1)
+            if end < start:
                 continue
 
-            net_values = np.array(net_values, dtype='float64')
-            imports = np.clip(net_values, 0.0, None)
-            exports = np.clip(-net_values, 0.0, None)
-            total_import = float(imports.sum())
-            total_export = float(exports.sum())
-            traded_kwh = min(total_import, total_export) if getattr(env, 'community_market_local_enabled', True) else 0.0
+            active[start:end + 1, j] = True
+            if population is not None:
+                active[:, j] &= population.mask(building.name, final_t)[:steps]
+            elif active_ids is not None:
+                active[:, j] &= np.array([building.name in ids for ids in active_ids], dtype=bool)
+
+            net[:, j] = self._finite_step_values(net_series_by_name[building.name], steps)
+            grid_import_price[:, j] = self._finite_step_values(price_series_by_name[building.name], steps)
+
+        imports = np.clip(net, 0.0, None)
+        exports = np.clip(-net, 0.0, None)
+        local_import = np.zeros_like(net)
+        local_export = np.zeros_like(net)
+        member_weights = np.array([weight_by_name.get(b.name, 1.0) for b in members], dtype='float64')
+        local_enabled = getattr(env, 'community_market_local_enabled', True)
+        columns_by_pattern = {}
+
+        for t in np.flatnonzero(active.any(axis=1)):
+            pattern = active[t].tobytes()
+            columns = columns_by_pattern.get(pattern)
+            if columns is None:
+                columns = columns_by_pattern[pattern] = np.flatnonzero(active[t])
+
+            imports_t = imports[t, columns]
+            exports_t = exports[t, columns]
+            total_import = float(imports_t.sum())
+            total_export = float(exports_t.sum())
+            traded_kwh = min(total_import, total_export) if local_enabled else 0.0
 
             if total_import > 0.0 and traded_kwh > 0.0:
-                local_import = self._allocate_weighted_share_import(
-                    imports,
-                    traded_kwh,
-                    np.array(active_weights_t, dtype='float64'),
+                local_import[t, columns] = self._allocate_weighted_share_import(
+                    imports_t, traded_kwh, member_weights[columns],
                 )
-            else:
-                local_import = np.zeros_like(imports, dtype='float64')
 
             if total_export > 0.0 and traded_kwh > 0.0:
-                local_export = exports * (traded_kwh / total_export)
-            else:
-                local_export = np.zeros_like(exports, dtype='float64')
+                local_export[t, columns] = exports_t * (traded_kwh / total_export)
 
-            for idx, building in enumerate(active_buildings_t):
-                price_series = price_series_by_name.get(building.name)
-                grid_import_price = self._to_scalar(
-                    price_series[t] if price_series is not None and t < len(price_series) else np.nan,
-                    0.0,
-                )
-                from citylearn.community_dataset import settlement_prices
-                grid_export_price, local_buy_price, local_sell_price = settlement_prices(env, building.name, t, grid_import_price)
-                grid_export_remaining = max(exports[idx] - local_export[idx], 0.0)
-                grid_import_remaining = max(imports[idx] - local_import[idx], 0.0)
+        from citylearn.community_dataset import settlement_price_arrays
+        # max(x, 0.0) as Python evaluates it, signed zeros included.
+        grid_export_remaining = exports - local_export
+        grid_export_remaining = np.where(0.0 > grid_export_remaining, 0.0, grid_export_remaining)
+        grid_import_remaining = imports - local_import
+        grid_import_remaining = np.where(0.0 > grid_import_remaining, 0.0, grid_import_remaining)
 
-                cost = (
-                    grid_import_remaining * grid_import_price
-                    + local_import[idx] * local_buy_price
-                    - local_export[idx] * local_sell_price
-                    - grid_export_remaining * grid_export_price
-                )
-                series[building.name][t] = float(cost)
+        for j, building in enumerate(members):
+            time_steps = np.flatnonzero(active[:, j])
+            if time_steps.size == 0:
+                continue
+
+            grid_export_price, local_buy_price, local_sell_price = settlement_price_arrays(
+                env, building.name, time_steps, grid_import_price[time_steps, j],
+            )
+            cost = (
+                grid_import_remaining[time_steps, j] * grid_import_price[time_steps, j]
+                + local_import[time_steps, j] * local_buy_price
+                - local_export[time_steps, j] * local_sell_price
+                - grid_export_remaining[time_steps, j] * grid_export_price
+            )
+            series[building.name][time_steps] = cost
 
         if cache is not None:
             cache[cache_key] = series

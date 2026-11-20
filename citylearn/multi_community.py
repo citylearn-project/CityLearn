@@ -235,15 +235,21 @@ class MultiCommunityEnv(Env):
     ) -> pd.DataFrame:
         """Return local child KPIs plus portfolio rows aggregated from district KPIs."""
 
-        frames: List[pd.DataFrame] = []
-
-        for community_id, env in self.envs.items():
-            frame = env.evaluate_v2(
+        return self._combine_community_kpis({
+            community_id: env.evaluate_v2(
                 control_condition=control_condition,
                 baseline_condition=baseline_condition,
                 comfort_band=comfort_band,
                 include_business_as_usual=include_business_as_usual,
-            ).copy()
+            )
+            for community_id, env in self.envs.items()
+        })
+
+    def _combine_community_kpis(self, community_kpis: Mapping[str, pd.DataFrame]) -> pd.DataFrame:
+        frames: List[pd.DataFrame] = []
+
+        for community_id, community_frame in community_kpis.items():
+            frame = community_frame.copy()
             frame["community_id"] = community_id
             frames.append(frame)
 
@@ -270,17 +276,24 @@ class MultiCommunityEnv(Env):
         if model is not None:
             raise NotImplementedError("MultiCommunityEnv.export_final_kpis does not support model overrides in v1.")
 
+        # Evaluate each community once: its own export and the portfolio rows use the same table.
+        community_kpis = {
+            community_id: env.evaluate_v2(include_business_as_usual=include_business_as_usual)
+            for community_id, env in self.envs.items()
+        }
+
         if export_community_kpis:
-            for env in self.envs.values():
-                env.export_final_kpis(
+            for community_id, env in self.envs.items():
+                env._episode_exporter.export_final_kpis(
                     filepath=community_filepath,
                     include_business_as_usual=include_business_as_usual,
                     export_business_as_usual_timeseries=export_business_as_usual_timeseries,
                     kpi_round_decimals=kpi_round_decimals,
+                    evaluated_kpis=community_kpis[community_id],
                 )
 
         self._ensure_output_dir()
-        kpis = self.evaluate_v2(include_business_as_usual=include_business_as_usual)
+        kpis = self._combine_community_kpis(community_kpis)
 
         if kpi_round_decimals is not None:
             kpis = kpis.copy()

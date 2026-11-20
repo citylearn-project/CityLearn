@@ -114,6 +114,25 @@ def compute_pv_metrics(kpi, building, *, t_start: int = 0, t_final: Optional[int
     }
 
 
+def _window_values(values, start: int, end: int, *, finite: bool) -> np.ndarray:
+    """`values[start:end + 1]` as float64, with 0.0 past the end of `values` and, if `finite`, for non-finite values."""
+
+    window = np.zeros(end - start + 1, dtype='float64')
+    available = np.asarray(values, dtype='float64')[start:end + 1]
+    window[:len(available)] = available
+
+    if finite:
+        window[~np.isfinite(window)] = 0.0
+
+    return window
+
+
+def _sequential_sum(values: np.ndarray) -> float:
+    """Left-to-right float64 sum from 0.0, as `total += value` gives (NumPy's `sum` adds pairwise)."""
+
+    return float(np.cumsum(np.concatenate(([0.0], values)))[-1])
+
+
 def compute_district_pv_metrics(
     kpi,
     buildings: Sequence,
@@ -138,28 +157,26 @@ def compute_district_pv_metrics(
             )
         )
 
-    pv_generation_total = 0.0
-    pv_export_total = 0.0
+    # Per-step district totals, accumulated building by building in the same order and with the same float64
+    # operations as a loop over (step, building), so the totals are bit-identical to that loop.
+    steps = int(max(final_t, 0)) + 1
+    generation = np.zeros(steps, dtype='float64')
+    district_net = np.zeros(steps, dtype='float64')
+    curtailment = np.zeros(steps, dtype='float64')
 
-    pv_curtailment_total = 0.0
-    for t in range(int(max(final_t, 0)) + 1):
-        generation_t = 0.0
-        district_net_t = 0.0
+    for _, t_start, t_end, solar, net, curtailed in series_by_building:
+        start, end = max(t_start, 0), min(t_end, steps - 1)
+        if end < start:
+            continue
 
-        curtailment_t = 0.0
-        for _, t_start, t_end, solar, net, curtailed in series_by_building:
-            if not (t_start <= t <= t_end):
-                continue
+        generation[start:end + 1] += np.maximum(-_window_values(solar, start, end, finite=True), 0.0)
+        district_net[start:end + 1] += _window_values(net, start, end, finite=True)
+        curtailment[start:end + 1] += _window_values(curtailed, start, end, finite=False)
 
-            solar_value = kpi._to_scalar(solar[t] if t < len(solar) else np.nan, 0.0)
-            net_value = kpi._to_scalar(net[t] if t < len(net) else np.nan, 0.0)
-            curtailment_t += float(curtailed[t]) if t < len(curtailed) else 0.0
-            generation_t += max(-solar_value, 0.0)
-            district_net_t += net_value
-
-        pv_generation_total += generation_t
-        pv_curtailment_total += curtailment_t
-        pv_export_total += min(max(generation_t-curtailment_t,0.0), max(-district_net_t, 0.0))
+    export = np.minimum(np.maximum(generation - curtailment, 0.0), np.maximum(-district_net, 0.0))
+    pv_generation_total = _sequential_sum(generation)
+    pv_curtailment_total = _sequential_sum(curtailment)
+    pv_export_total = _sequential_sum(export)
 
     self_consumption_ratio = None if pv_generation_total <= 0.0 else (pv_generation_total - pv_export_total - pv_curtailment_total) / pv_generation_total
 
