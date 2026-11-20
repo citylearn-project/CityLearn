@@ -636,9 +636,17 @@
         <span class="n">env</span><span class="o">.</span><span class="n">buildings</span> <span class="o">=</span> <span class="n">active_buildings</span>
 
         <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">time_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'time_steps'</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="c1"># After the terminal transition the environment points at the terminal observation row, which</span>
+        <span class="c1"># is never executed. Buildings stay on the last executed interval, as the runtime leaves them,</span>
+        <span class="c1"># so an event at the terminal step does not add an unexecuted interval to their series.</span>
+        <span class="n">terminal</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">t</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="n">time_steps</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">building_t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">time_steps</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">terminal</span> <span class="k">else</span> <span class="n">t</span>
         <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">active_buildings</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_bind_building_runtime_context</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_set_building_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_building_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">building_t</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">terminal</span><span class="p">:</span>
+                <span class="n">building</span><span class="o">.</span><span class="n">_terminal_observation_time_step</span> <span class="o">=</span> <span class="n">t</span>
 
         <span class="n">active_ev_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_active_ev_ids</span><span class="p">(</span><span class="n">active_buildings</span><span class="p">)</span>
         <span class="n">previous_ev_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_active_ev_ids</span><span class="p">)</span>
@@ -691,18 +699,34 @@
             <span class="n">appliance</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">time_step</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_storage_at_activation</span><span class="p">(</span><span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Apply the declared initial SoC at a mid-episode activation boundary."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_storage_at_activation</span><span class="p">(</span><span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">,</span> <span class="n">thermal_storage</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Apply the declared initial SoC at a mid-episode activation boundary.</span>
+
+<span class="sd">        The electrical storage is always initialised. `thermal_storage` also initialises the cooling,</span>
+<span class="sd">        heating and DHW tanks, for a member that joins (or rejoins): `Building.reset` sets the initial</span>
+<span class="sd">        SoC at episode step 0 only, so its tanks would otherwise open with the empty SoC of the step</span>
+<span class="sd">        before its activation. An electrical storage added to an active member leaves its tanks as they are.</span>
+<span class="sd">        """</span>
 
         <span class="n">storage</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'electrical_storage'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">storage</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'force_set_soc'</span><span class="p">):</span>
-            <span class="k">return</span>
-        <span class="n">capacity</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'capacity'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="n">nominal_power</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'nominal_power'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">capacity</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">nominal_power</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="k">return</span>
-        <span class="n">initial_soc</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'initial_soc'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="n">storage</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="n">initial_soc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">storage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'force_set_soc'</span><span class="p">):</span>
+            <span class="n">capacity</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'capacity'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">nominal_power</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'nominal_power'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">capacity</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">nominal_power</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">initial_soc</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'initial_soc'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">storage</span><span class="o">.</span><span class="n">force_set_soc</span><span class="p">(</span><span class="n">initial_soc</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">attr_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'cooling_storage'</span><span class="p">,</span> <span class="s1">'heating_storage'</span><span class="p">,</span> <span class="s1">'dhw_storage'</span><span class="p">)</span> <span class="k">if</span> <span class="n">thermal_storage</span> <span class="k">else</span> <span class="p">():</span>
+            <span class="n">tank</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="c1"># At step 0 the reset state already holds the initial SoC.</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">tank</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tank</span><span class="p">,</span> <span class="s1">'initialize_at_activation'</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">tank</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+                <span class="ow">or</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">tank</span><span class="p">,</span> <span class="s1">'capacity'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">0.0</span>
+            <span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">tank</span><span class="o">.</span><span class="n">initialize_at_activation</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_bind_ev_runtime_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">:</span> <span class="n">ElectricVehicle</span><span class="p">):</span>
         <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
@@ -821,7 +845,7 @@
             <span class="n">building</span><span class="o">.</span><span class="n">_charging_phase_power_history_kw</span><span class="p">[</span><span class="n">phase_name</span><span class="p">][:</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)]</span> <span class="o">=</span> <span class="n">values</span>
         <span class="n">building</span><span class="o">.</span><span class="n">_archived_storage_electricity</span> <span class="o">=</span> <span class="n">storage_prefix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_building_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_storage_at_activation</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_storage_at_activation</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">thermal_storage</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_skip_expired_deferrable_requests</span><span class="p">(</span>
             <span class="n">building</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_global_time_step</span><span class="p">(</span><span class="n">time_step</span><span class="p">),</span>

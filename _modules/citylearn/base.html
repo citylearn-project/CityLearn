@@ -210,9 +210,30 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode_end_time_step</span>
 
+    <span class="n">EPISODE_SPLIT_BOUNDARIES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'shared'</span><span class="p">,</span> <span class="s1">'disjoint'</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EpisodeTracker.validate_episode_split_boundary">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.EpisodeTracker.validate_episode_split_boundary">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_episode_split_boundary</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">episode_split_boundary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the normalised episode split boundary mode, `'shared'` when `None`."""</span>
+
+        <span class="k">if</span> <span class="n">episode_split_boundary</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">'shared'</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">episode_split_boundary</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">EPISODE_SPLIT_BOUNDARIES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">'episode_split_boundary must be one of </span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="n">EPISODE_SPLIT_BOUNDARIES</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">episode_split_boundary</span><span class="si">!r}</span><span class="s1">.'</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">value</span></div>
+
+
 <div class="viewcode-block" id="EpisodeTracker.next_episode">
 <a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.EpisodeTracker.next_episode">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">next_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span> <span class="n">rolling_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">next_episode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span> <span class="n">rolling_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">episode_split_boundary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'shared'</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Advance to next episode and set `episode_start_time_step` and `episode_end_time_step` for reading data files.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -226,6 +247,14 @@
 <span class="sd">            in steps of `episode_time_steps`.</span>
 <span class="sd">        random_episode_split: bool, default: False</span>
 <span class="sd">            True if episode splits are to be selected at random during training otherwise, False to select sequentially.</span>
+<span class="sd">        episode_split_boundary: str, default: 'shared'</span>
+<span class="sd">            How consecutive (non-rolling) splits of an integer `episode_time_steps` meet. An episode of N data rows</span>
+<span class="sd">            executes N - 1 control steps, because its last row is only the terminal observation. With `'shared'`,</span>
+<span class="sd">            consecutive episodes advance by N - 1 rows, so the terminal row of one episode is the first row of the next</span>
+<span class="sd">            and every interval between them is simulated; N must then be at least 2. With `'disjoint'`, consecutive</span>
+<span class="sd">            episodes advance by N rows and do not overlap, so the interval between the last row of one episode and the</span>
+<span class="sd">            first row of the next is never simulated (the CityLearn 3.6.0 behaviour). Rolling and explicit list splits</span>
+<span class="sd">            are not affected.</span>
 <span class="sd">        """</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">__episode</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -234,11 +263,12 @@
             <span class="n">rolling_episode_split</span><span class="p">,</span>
             <span class="n">random_episode_split</span><span class="p">,</span>
             <span class="n">random_seed</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_episode_split_boundary</span><span class="p">(</span><span class="n">episode_split_boundary</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__episode_random_seed</span> <span class="o">=</span> <span class="n">random_seed</span></div>
 
         
-    <span class="k">def</span><span class="w"> </span><span class="nf">__next_episode_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span> <span class="n">rolling_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__next_episode_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span> <span class="n">rolling_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">episode_split_boundary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'shared'</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Sets `episode_start_time_step` and `episode_end_time_step` for reading data files."""</span>
 
         <span class="n">splits</span> <span class="o">=</span> <span class="kc">None</span>
@@ -273,6 +303,18 @@
             
             <span class="k">if</span> <span class="n">rolling_episode_split</span><span class="p">:</span>
                 <span class="n">start_time_steps</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">earliest_start_time_step</span><span class="p">,</span> <span class="n">latest_start_time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">episode_split_boundary</span> <span class="o">==</span> <span class="s1">'shared'</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">episode_time_steps</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">latest_start_time_step</span> <span class="o">&gt;</span> <span class="n">earliest_start_time_step</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s1">'episode_time_steps must be &gt;= 2 for consecutive episode splits, got </span><span class="si">{</span><span class="n">episode_time_steps</span><span class="si">}</span><span class="s1">: '</span>
+                        <span class="s1">'an episode of one data row has no interval to simulate. Use '</span>
+                        <span class="s2">"episode_split_boundary='disjoint' to keep the CityLearn 3.6.0 splits."</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Consecutive episodes share their boundary row, so no interval falls between two episodes.</span>
+                <span class="n">start_time_steps</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span>
+                    <span class="n">earliest_start_time_step</span><span class="p">,</span> <span class="n">latest_start_time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">episode_time_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">start_time_steps</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">earliest_start_time_step</span><span class="p">,</span> <span class="n">latest_start_time_step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">)</span>
 

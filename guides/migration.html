@@ -60,7 +60,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#consecutive-episode-splits-share-their-boundary-row">Consecutive episode splits share their boundary row</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-joining-members-storage-and-district-series">Dynamic topology: joining members, storage and district series</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#control-step-different-from-the-dataset-step">Control step different from the dataset step</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-5-0-to-3-6-0">Upgrade from 3.5.0 to 3.6.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#battery-discharge-features-during-outages">Battery discharge features during outages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#baselines-without-the-entity-core-electrical-bundle">Baselines without the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle</a></li>
@@ -203,7 +209,9 @@ development-line history.</p>
 </section>
 <section id="unreleased">
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
-<p>No dataset, schema or KPI migration is required. Valid runs give the same results; a few silent mistakes now raise.</p>
+<section id="numeric-and-configuration-hygiene">
+<h3>Numeric and configuration hygiene<a class="headerlink" href="#numeric-and-configuration-hygiene" title="Link to this heading"></a></h3>
+<p>These changes require no dataset, schema or KPI migration. Valid runs give the same results; a few silent mistakes now raise.</p>
 <ul class="simple">
 <li><p><strong>Non-finite actions raise.</strong> <code class="docutils literal notranslate"><span class="pre">env.step()</span></code> raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> for NaN or infinite actions. A training loop that used to continue with a diverged policy now stops at the first bad action; check the policy output or replace non-finite values before stepping.</p></li>
 <li><p><strong>Unknown constructor arguments raise.</strong> <code class="docutils literal notranslate"><span class="pre">CityLearnEnv(...,</span> <span class="pre">**kwargs)</span></code> raises <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> for an unknown keyword argument, with the closest valid name. Remove or correct arguments that were silently ignored before.</p></li>
@@ -212,6 +220,69 @@ development-line history.</p>
 <li><p><strong>Export location.</strong> Exports go to <code class="docutils literal notranslate"><span class="pre">./render_logs</span></code> in the working directory by default, and relative <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> values resolve against the working directory. Pass an absolute <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> to keep the previous location.</p></li>
 <li><p><strong>Physics invariants</strong> raise <code class="docutils literal notranslate"><span class="pre">PhysicsInvariantError</span></code>, which is an <code class="docutils literal notranslate"><span class="pre">AssertionError</span></code>, so existing handlers keep working.</p></li>
 </ul>
+</section>
+<section id="consecutive-episode-splits-share-their-boundary-row">
+<h3>Consecutive episode splits share their boundary row<a class="headerlink" href="#consecutive-episode-splits-share-their-boundary-row" title="Link to this heading"></a></h3>
+<p>An episode of N data rows executes N - 1 control steps: its last row is only
+the terminal observation. Consecutive (non-rolling) splits of an integer
+<code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code> used to advance by N rows, so the interval between the
+last row of one episode and the first row of the next was never simulated in
+any episode; daily episodes on hourly data never simulated 23:00-24:00.</p>
+<p>Consecutive splits now advance by N - 1 rows (<code class="docutils literal notranslate"><span class="pre">episode_split_boundary='shared'</span></code>,
+the default): each episode starts on the terminal row of the previous one, and
+every interval up to the last complete split is simulated once. Episodes keep
+N rows and N - 1 steps. The first episode is unchanged; later episodes start
+earlier, so their results change. Rolling splits, explicit
+<code class="docutils literal notranslate"><span class="pre">[(start,</span> <span class="pre">end),</span> <span class="pre">...]</span></code> splits and whole-window episodes are unchanged.</p>
+<ul class="simple">
+<li><p>To keep day-aligned episodes that cover every hour of hourly data, use
+<code class="docutils literal notranslate"><span class="pre">episode_time_steps=25</span></code>: each episode then runs from 00:00 to the next 00:00.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">episode_time_steps=1</span></code> with more than one split now raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>; an
+episode of one row has no interval to simulate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">episode_split_boundary='disjoint'</span></code> (constructor argument or schema key)
+restores the 3.6.0 splits.</p></li>
+</ul>
+</section>
+<section id="dynamic-topology-joining-members-storage-and-district-series">
+<h3>Dynamic topology: joining members, storage and district series<a class="headerlink" href="#dynamic-topology-joining-members-storage-and-district-series" title="Link to this heading"></a></h3>
+<p>These changes only affect <code class="docutils literal notranslate"><span class="pre">topology_mode='dynamic'</span></code>:</p>
+<ul class="simple">
+<li><p>A member file shorter than the dataset is read as starting at the member’s
+<code class="docutils literal notranslate"><span class="pre">add_member</span></code> time step. It was misaligned when <code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code>
+was not 0, which also affected the native BAU reference of every dynamic
+episode that does not start at row 0 (the BAU sidecar loads the episode
+window). A member that joins again after leaving needs a full-horizon file and
+now raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> otherwise, instead of reusing frozen rows. A file that
+ends before the member leaves still repeats its last row for the remaining
+steps, but now with a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code>.</p></li>
+<li><p>A member that joins (or rejoins) mid-episode starts its cooling, heating and
+DHW storage at <code class="docutils literal notranslate"><span class="pre">initial_soc</span></code>, as its battery already did, instead of empty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.non_shiftable_load</span></code>, <code class="docutils literal notranslate"><span class="pre">env.solar_generation</span></code>, <code class="docutils literal notranslate"><span class="pre">env.power_outage</span></code> and the
+other district sums of building series keep a departed member’s past values
+and count a member only from the step it joins, like
+<code class="docutils literal notranslate"><span class="pre">net_electricity_consumption</span></code>. KPIs are unchanged by this item.</p></li>
+<li><p>An event at the terminal step no longer moves the buildings onto the
+unexecuted terminal row, so their series hold executed intervals only.</p></li>
+</ul>
+</section>
+<section id="control-step-different-from-the-dataset-step">
+<h3>Control step different from the dataset step<a class="headerlink" href="#control-step-different-from-the-dataset-step" title="Link to this heading"></a></h3>
+<p>CityLearn reads one data row per control step and does not resample. A
+<code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> that differs from the dataset step therefore ran the
+calendar, prices and EV schedules at the wrong rate while scaling energies by
+<code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code>. Such a configuration now raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. Set
+<code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> to the dataset step or resample the dataset; pass
+<code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode='compress'</span></code> (constructor argument or schema key) to keep
+the 3.6.0 behaviour.</p>
+<p>The dataset step is now inferred from every row (the median interval) rather
+than from the first two rows, so one irregular row no longer rescales every
+energy. Rows that mix cadences, where fewer than 90 % of the intervals match
+that median, raise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>; declare the step with
+<code class="docutils literal notranslate"><span class="pre">dataset_seconds_per_time_step</span></code> if the calendar columns cannot be fixed. The
+<code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code> constructor argument, previously ignored, must match the
+inferred ratio. The bundled datasets all use their native step and are not
+affected.</p>
+</section>
 </section>
 <section id="upgrade-from-3-5-0-to-3-6-0">
 <span id="upgrade-from-350-to-360"></span><h2>Upgrade from 3.5.0 to 3.6.0<a class="headerlink" href="#upgrade-from-3-5-0-to-3-6-0" title="Link to this heading"></a></h2>

@@ -152,6 +152,35 @@
 
 
 
+<div class="viewcode-block" id="check_time_step_ratio">
+<a class="viewcode-back" href="../../../api/citylearn.internal.loading_inputs.html#citylearn.internal.loading_inputs.check_time_step_ratio">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_time_step_ratio</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">time_step_ratio</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">dataset_seconds_per_time_step</span><span class="p">,</span> <span class="n">seconds_per_time_step</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Refuse a control step that differs from the dataset step unless `mode` is `'compress'`.</span>
+
+<span class="sd">    CityLearn reads one data row per control step and does not resample, so a ratio other than 1 would</span>
+<span class="sd">    run the calendar, prices and schedules at the wrong rate.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">'compress'</span> <span class="ow">or</span> <span class="n">time_step_ratio</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">time_step_ratio</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ratio</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.0e-9</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">dataset_seconds</span> <span class="o">=</span> <span class="s1">'unknown'</span> <span class="k">if</span> <span class="n">dataset_seconds_per_time_step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">dataset_seconds_per_time_step</span><span class="p">)</span><span class="si">:</span><span class="s1">g</span><span class="si">}</span><span class="s1">'</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">'seconds_per_time_step=</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">seconds_per_time_step</span><span class="p">)</span><span class="si">:</span><span class="s1">g</span><span class="si">}</span><span class="s1"> differs from the dataset step of '</span>
+        <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">dataset_seconds</span><span class="si">}</span><span class="s1"> s inferred for </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s1"> (time_step_ratio=</span><span class="si">{</span><span class="n">ratio</span><span class="si">:</span><span class="s1">g</span><span class="si">}</span><span class="s1">). '</span>
+        <span class="s1">'CityLearn reads one data row per control step and does not resample, so this run would advance the '</span>
+        <span class="s1">'calendar, prices and EV schedules one row per control step while scaling energies by the ratio. Set '</span>
+        <span class="s1">'seconds_per_time_step to the dataset step, resample the dataset, or pass time_step_ratio_mode='</span>
+        <span class="s2">"'compress' to keep the CityLearn 3.6.0 behaviour."</span>
+    <span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="load_building_inputs">
 <a class="viewcode-back" href="../../../api/citylearn.internal.loading_inputs.html#citylearn.internal.loading_inputs.load_building_inputs">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">load_building_inputs</span><span class="p">(</span><span class="n">loader</span><span class="p">:</span> <span class="s2">"CityLearnLoadingService"</span><span class="p">,</span> <span class="n">building_name</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span>
@@ -160,9 +189,9 @@
     <span class="n">seconds_per_time_step</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="s1">'seconds_per_time_step'</span><span class="p">]</span>
     <span class="n">noise_std</span> <span class="o">=</span> <span class="n">building_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'noise_std'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
     <span class="n">energy_simulation_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema</span><span class="p">[</span><span class="s1">'root_directory'</span><span class="p">],</span> <span class="n">building_schema</span><span class="p">[</span><span class="s1">'energy_simulation'</span><span class="p">])</span>
-    <span class="n">energy_simulation</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">_read_simulation_dataframe</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">energy_simulation_filepath</span><span class="p">)</span>
-    <span class="n">energy_simulation</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">_align_dynamic_timeseries_dataframe</span><span class="p">(</span>
-        <span class="n">energy_simulation</span><span class="p">,</span>
+    <span class="n">energy_simulation</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">_read_member_timeseries</span><span class="p">(</span>
+        <span class="n">schema</span><span class="p">,</span>
+        <span class="n">energy_simulation_filepath</span><span class="p">,</span>
         <span class="n">expected_rows</span><span class="o">=</span><span class="n">expected_rows</span><span class="p">,</span>
         <span class="n">window</span><span class="o">=</span><span class="n">member_window</span><span class="p">,</span>
         <span class="n">source_label</span><span class="o">=</span><span class="sa">f</span><span class="s1">'buildings.</span><span class="si">{</span><span class="n">building_name</span><span class="si">}</span><span class="s1">.energy_simulation'</span><span class="p">,</span>
@@ -178,6 +207,13 @@
     <span class="n">loader</span><span class="o">.</span><span class="n">_set_time_step_offset</span><span class="p">(</span><span class="n">energy_simulation</span><span class="p">,</span> <span class="n">schema</span><span class="p">[</span><span class="s1">'simulation_start_time_step'</span><span class="p">])</span>
     <span class="n">ratios</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">energy_simulation</span><span class="p">,</span> <span class="s1">'time_step_ratios'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
     <span class="n">time_step_ratio</span> <span class="o">=</span> <span class="n">ratios</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ratios</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
+    <span class="n">check_time_step_ratio</span><span class="p">(</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">loader</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s1">'time_step_ratio_mode'</span><span class="p">,</span> <span class="s1">'reject'</span><span class="p">),</span>
+        <span class="n">time_step_ratio</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">energy_simulation_filepath</span><span class="p">,</span>
+        <span class="n">dataset_seconds_per_time_step</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">energy_simulation</span><span class="p">,</span> <span class="s1">'dataset_seconds_per_time_step'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="n">seconds_per_time_step</span><span class="o">=</span><span class="n">seconds_per_time_step</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">loader</span><span class="o">.</span><span class="n">_print_time_step_conversion_notice</span><span class="p">(</span>
         <span class="n">building_name</span><span class="o">=</span><span class="n">building_name</span><span class="p">,</span>
         <span class="n">source</span><span class="o">=</span><span class="n">energy_simulation_filepath</span><span class="p">,</span>

@@ -180,6 +180,17 @@ it is a list of episode start and end time steps between <cite>simulation_start_
 Defaults to (<cite>simulation_end_time_step</cite> - <cite>simulation_start_time_step</cite>) + 1. Will ignore <cite>rolling_episode_split</cite> if <cite>episode_splits</cite> is of type <cite>List[Tuple[int, int]]]</cite>.</p></li>
 <li><p><strong>rolling_episode_split</strong> (<em>bool</em><em>, </em><em>default: False</em>) – True if episode sequences are split such that each time step is a candidate for <cite>episode_start_time_step</cite> otherwise, False to split episodes in steps of <cite>episode_time_steps</cite>.</p></li>
 <li><p><strong>random_episode_split</strong> (<em>bool</em><em>, </em><em>default: False</em>) – True if episode splits are to be selected at random during training otherwise, False to select sequentially.</p></li>
+<li><p><strong>time_step_ratio_mode</strong> (<em>str</em><em>, </em><em>default: 'reject'</em>) – What to do when <cite>seconds_per_time_step</cite> differs from the dataset step, i.e. <cite>time_step_ratio</cite> != 1. CityLearn
+does not resample the data: each control step reads one data row. <cite>‘reject’</cite> raises a <cite>ValueError</cite>, so
+that a run never simulates distorted time. <cite>‘compress’</cite> keeps the CityLearn 3.6.0 behaviour: each control
+step still reads one row, so the calendar, prices and EV schedules advance one row per step, while
+energies are scaled by the ratio. Can also be set with the schema key of the same name.</p></li>
+<li><p><strong>episode_split_boundary</strong> (<em>str</em><em>, </em><em>default: 'shared'</em>) – How consecutive (non-rolling) splits of an integer <cite>episode_time_steps</cite> meet. An episode of N data rows executes
+N - 1 control steps, because its last row is only the terminal observation. <cite>‘shared’</cite> advances consecutive episodes
+by N - 1 rows, so the terminal row of one episode is the first row of the next and every interval is simulated
+(N must be at least 2). <cite>‘disjoint’</cite> advances them by N rows, as CityLearn 3.6.0 and earlier did, so the interval
+between two consecutive episodes is never simulated. Can also be set with the schema key of the same name. Rolling
+and explicit list splits are not affected.</p></li>
 <li><p><strong>seconds_per_time_step</strong> (<em>float</em>) – Number of seconds in 1 <cite>time_step</cite> and must be set to &gt;= 1.</p></li>
 <li><p><strong>reward_function</strong> (<em>Union</em><em>[</em><a class="reference internal" href="citylearn.reward_function.html#citylearn.reward_function.RewardFunction" title="citylearn.reward_function.RewardFunction"><em>RewardFunction</em></a><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Reward function class instance or path to function class e.g. ‘citylearn.reward_function.IndependentSACReward’.
 If provided, will override <code class="code docutils literal notranslate"><span class="pre">reward_function</span></code> definition in schema.</p></li>
@@ -228,6 +239,11 @@ makes <code class="docutils literal notranslate"><span class="pre">step()</span>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.DEFAULT_RENDER_START_DATE">
 <span class="sig-name descname"><span class="pre">DEFAULT_RENDER_START_DATE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.date(2024,</span> <span class="pre">1,</span> <span class="pre">1)</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.DEFAULT_RENDER_START_DATE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.TIME_STEP_RATIO_MODES">
+<span class="sig-name descname"><span class="pre">TIME_STEP_RATIO_MODES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('reject',</span> <span class="pre">'compress')</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.TIME_STEP_RATIO_MODES" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -433,6 +449,18 @@ and electricity pricing at the current time step.</p>
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.episode_rewards">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode_rewards</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.episode_rewards" title="Link to this definition"></a></dt>
 <dd><p>Reward summary statistics for elapsed episodes.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.episode_split_boundary">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode_split_boundary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.episode_split_boundary" title="Link to this definition"></a></dt>
+<dd><p><cite>‘shared’</cite> (boundary row shared, every interval simulated) or
+<cite>‘disjoint’</cite> (CityLearn 3.6.0 splits, which never simulate the interval between two episodes).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>How consecutive episode splits meet</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -883,6 +911,13 @@ False to split episodes in steps of <cite>episode_time_steps</cite>.</p>
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.time_step_ratio" title="Link to this definition"></a></dt>
 <dd><p><a class="reference internal" href="citylearn.base.html#citylearn.base.EpisodeTracker" title="citylearn.base.EpisodeTracker"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.base.EpisodeTracker</span></code></a> object used to keep track of
 current episode time steps for reading observations from data files.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.time_step_ratio_mode">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step_ratio_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.time_step_ratio_mode" title="Link to this definition"></a></dt>
+<dd><p><cite>‘reject’</cite> (default) refuses a control step that differs from the dataset step; <cite>‘compress’</cite> keeps
+the CityLearn 3.6.0 behaviour of reading one data row per control step and scaling energies.</p>
 </dd></dl>
 
 <dl class="py property">

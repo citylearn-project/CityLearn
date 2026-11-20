@@ -314,17 +314,29 @@
 <td><p>Random window episodes.</p></td>
 <td><p>Uses <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">episode_split_boundary</span></code></p></td>
+<td class="text-right"><p>str</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">shared</span></code></p></td>
+<td><p>How consecutive (non-rolling) splits meet.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">shared</span></code> shares the boundary row so every interval is simulated; <code class="docutils literal notranslate"><span class="pre">disjoint</span></code> restores the 3.6.0 splits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code></p></td>
 <td class="text-right"><p>float</p></td>
 <td class="text-right"><p>schema</p></td>
 <td><p>Physical duration of each step.</p></td>
 <td><p>Examples: 15, 60, 300, 900, 3600.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code></p></td>
 <td class="text-right"><p>int/float</p></td>
 <td class="text-right"><p>inferred</p></td>
 <td><p>Ratio between control step and dataset spacing.</p></td>
-<td><p>Normally dataset and schema should match.</p></td>
+<td><p>Inferred from the data; a value passed here must match it.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode</span></code></p></td>
+<td class="text-right"><p>str</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">reject</span></code></p></td>
+<td><p>What to do when the control step differs from the dataset step.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">reject</span></code> raises an error; <code class="docutils literal notranslate"><span class="pre">compress</span></code> keeps the 3.6.0 behaviour (one data row per step, energies scaled).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function</span></code></p></td>
 <td class="text-right"><p>class/path</p></td>

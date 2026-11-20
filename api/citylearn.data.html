@@ -558,6 +558,26 @@ to and subtracted from the set point to set the upper and lower bounds of comfor
 <span class="sig-name descname"><span class="pre">DEFUALT_COMFORT_BAND</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2.0</span></em><a class="headerlink" href="#citylearn.data.EnergySimulation.DEFUALT_COMFORT_BAND" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.data.EnergySimulation.TIME_STEP_INFERENCE_MIN_AGREEMENT">
+<span class="sig-name descname"><span class="pre">TIME_STEP_INFERENCE_MIN_AGREEMENT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.9</span></em><a class="headerlink" href="#citylearn.data.EnergySimulation.TIME_STEP_INFERENCE_MIN_AGREEMENT" title="Link to this definition"></a></dt>
+<dd><p>Share of row intervals that must agree with the inferred dataset step.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.data.EnergySimulation.infer_time_step_seconds">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">infer_time_step_seconds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minutes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds_per_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citylearn/data.html#EnergySimulation.infer_time_step_seconds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.data.EnergySimulation.infer_time_step_seconds" title="Link to this definition"></a></dt>
+<dd><p>Infer the dataset step, in seconds, from the calendar columns of every row.</p>
+<p>The step is the median interval between consecutive rows, wrapped at midnight, so that an isolated
+irregular row (a typo, or a daylight-saving jump in local-time data) does not change it. Repeated
+stamps (zero intervals) are left out: they are the padding of a member that is active for part of
+a dynamic-topology window. When fewer than <cite>TIME_STEP_INFERENCE_MIN_AGREEMENT</cite> of the other intervals
+equal that step the rows mix cadences, and a <cite>ValueError</cite> is raised. Rows finer than the resolution
+of their calendar columns (e.g. 15-second rows without a <cite>seconds</cite> column) repeat their stamps and
+cannot be timed from them, so the step is then <cite>seconds_per_time_step</cite>. Returns <cite>None</cite> for fewer
+than two rows.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">

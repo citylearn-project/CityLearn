@@ -227,6 +227,19 @@
 <span class="sd">        True if episode sequences are split such that each time step is a candidate for `episode_start_time_step` otherwise, False to split episodes in steps of `episode_time_steps`.</span>
 <span class="sd">    random_episode_split: bool, default: False</span>
 <span class="sd">        True if episode splits are to be selected at random during training otherwise, False to select sequentially.</span>
+<span class="sd">    time_step_ratio_mode: str, default: 'reject'</span>
+<span class="sd">        What to do when `seconds_per_time_step` differs from the dataset step, i.e. `time_step_ratio` != 1. CityLearn</span>
+<span class="sd">        does not resample the data: each control step reads one data row. `'reject'` raises a `ValueError`, so</span>
+<span class="sd">        that a run never simulates distorted time. `'compress'` keeps the CityLearn 3.6.0 behaviour: each control</span>
+<span class="sd">        step still reads one row, so the calendar, prices and EV schedules advance one row per step, while</span>
+<span class="sd">        energies are scaled by the ratio. Can also be set with the schema key of the same name.</span>
+<span class="sd">    episode_split_boundary: str, default: 'shared'</span>
+<span class="sd">        How consecutive (non-rolling) splits of an integer `episode_time_steps` meet. An episode of N data rows executes</span>
+<span class="sd">        N - 1 control steps, because its last row is only the terminal observation. `'shared'` advances consecutive episodes</span>
+<span class="sd">        by N - 1 rows, so the terminal row of one episode is the first row of the next and every interval is simulated</span>
+<span class="sd">        (N must be at least 2). `'disjoint'` advances them by N rows, as CityLearn 3.6.0 and earlier did, so the interval</span>
+<span class="sd">        between two consecutive episodes is never simulated. Can also be set with the schema key of the same name. Rolling</span>
+<span class="sd">        and explicit list splits are not affected.</span>
 <span class="sd">    seconds_per_time_step: float</span>
 <span class="sd">        Number of seconds in 1 `time_step` and must be set to &gt;= 1.</span>
 <span class="sd">    reward_function: Union[RewardFunction, str], optional</span>
@@ -301,6 +314,7 @@
 <span class="sd">    """</span>
 
     <span class="n">DEFAULT_RENDER_START_DATE</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">TIME_STEP_RATIO_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'reject'</span><span class="p">,</span> <span class="s1">'compress'</span><span class="p">)</span>
     <span class="c1"># Options accepted through **kwargs in addition to the named parameters (used for suggestions).</span>
     <span class="n">_KNOWN_CONSTRUCTOR_OPTIONS</span> <span class="o">=</span> <span class="p">(</span>
         <span class="s1">'render_directory'</span><span class="p">,</span> <span class="s1">'render_directory_name'</span><span class="p">,</span> <span class="s1">'render'</span><span class="p">,</span> <span class="s1">'render_file_format'</span><span class="p">,</span> <span class="s1">'render_chunk_size'</span><span class="p">,</span>
@@ -312,6 +326,7 @@
         <span class="s1">'reward_function'</span><span class="p">,</span> <span class="s1">'reward_function_kwargs'</span><span class="p">,</span> <span class="s1">'central_agent'</span><span class="p">,</span> <span class="s1">'shared_observations'</span><span class="p">,</span> <span class="s1">'active_observations'</span><span class="p">,</span>
         <span class="s1">'inactive_observations'</span><span class="p">,</span> <span class="s1">'active_actions'</span><span class="p">,</span> <span class="s1">'inactive_actions'</span><span class="p">,</span> <span class="s1">'simulate_power_outage'</span><span class="p">,</span> <span class="s1">'solar_generation'</span><span class="p">,</span>
         <span class="s1">'random_seed'</span><span class="p">,</span> <span class="s1">'offline'</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="s1">'interface'</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'start_date'</span><span class="p">,</span>
+        <span class="s1">'episode_split_boundary'</span><span class="p">,</span> <span class="s1">'time_step_ratio_mode'</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -327,6 +342,8 @@
         <span class="n">start_date</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">render_session_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">render_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'none'</span><span class="p">,</span>
         <span class="n">export_kpis_on_episode_end</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">):</span>
+        <span class="n">episode_split_boundary</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'episode_split_boundary'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">time_step_ratio_mode</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'time_step_ratio_mode'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">render_directory</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render_directory'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">render_directory_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render_directory_name'</span><span class="p">,</span> <span class="s1">'render_logs'</span><span class="p">)</span>
         <span class="n">render_flag</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -360,6 +377,10 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"CityLearnEnv got unexpected keyword argument(s): </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">details</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">offline</span> <span class="o">=</span> <span class="n">offline</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio_mode</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'time_step_ratio_mode'</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">time_step_ratio_mode</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">time_step_ratio_mode</span>
+        <span class="p">)</span>
         <span class="n">schema_interface</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'interface'</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">=</span> <span class="n">interface</span> <span class="k">if</span> <span class="n">interface</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">schema_interface</span>
         <span class="n">schema_topology_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'topology_mode'</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
@@ -527,6 +548,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_robustness_service</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
         <span class="n">reference_buildings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildings</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buildings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_buildings</span>
         <span class="n">get_time_step_ratio</span> <span class="o">=</span> <span class="n">reference_buildings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reference_buildings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
+
+        <span class="c1"># The ratio is inferred from the data and the control step; the argument can only confirm it.</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">time_step_ratio</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">get_time_step_ratio</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">time_step_ratio</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">get_time_step_ratio</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.0e-9</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1.0e-12</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">'time_step_ratio=</span><span class="si">{</span><span class="n">time_step_ratio</span><span class="si">!r}</span><span class="s1"> does not match the ratio of the control step to the dataset step, '</span>
+                <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">get_time_step_ratio</span><span class="p">)</span><span class="si">:</span><span class="s1">g</span><span class="si">}</span><span class="s1">. The ratio is inferred from seconds_per_time_step and the dataset '</span>
+                <span class="s1">'timestamps (or dataset_seconds_per_time_step); change those instead.'</span>
+            <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="o">=</span> <span class="n">get_time_step_ratio</span>
 
         <span class="c1"># now call super class initialization and set episode tracker now that buildings are set</span>
@@ -536,6 +569,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_time_steps</span> <span class="o">=</span> <span class="n">episode_time_steps</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rolling_episode_split</span> <span class="o">=</span> <span class="n">rolling_episode_split</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">random_episode_split</span> <span class="o">=</span> <span class="n">random_episode_split</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode_split_boundary</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'episode_split_boundary'</span><span class="p">)</span> <span class="k">if</span> <span class="n">episode_split_boundary</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">episode_split_boundary</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span> <span class="o">=</span> <span class="n">central_agent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shared_observations</span> <span class="o">=</span> <span class="n">shared_observations</span>
 
@@ -685,6 +721,31 @@
 <span class="sd">        False to split episodes in steps of `episode_time_steps`."""</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__rolling_episode_split</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time_step_ratio_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""`'reject'` (default) refuses a control step that differs from the dataset step; `'compress'` keeps</span>
+<span class="sd">        the CityLearn 3.6.0 behaviour of reading one data row per control step and scaling energies."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__time_step_ratio_mode</span>
+
+    <span class="nd">@time_step_ratio_mode</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time_step_ratio_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step_ratio_mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="s1">'reject'</span> <span class="k">if</span> <span class="n">time_step_ratio_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">time_step_ratio_mode</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">TIME_STEP_RATIO_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">'time_step_ratio_mode must be one of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">TIME_STEP_RATIO_MODES</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">time_step_ratio_mode</span><span class="si">!r}</span><span class="s1">.'</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__time_step_ratio_mode</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">episode_split_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""How consecutive episode splits meet: `'shared'` (boundary row shared, every interval simulated) or</span>
+<span class="sd">        `'disjoint'` (CityLearn 3.6.0 splits, which never simulate the interval between two episodes)."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__episode_split_boundary</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">random_episode_split</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -1141,10 +1202,36 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_sum_building_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buildings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Sum a building series over the members of the district at each step.</span>
+
+<span class="sd">        In dynamic topology every member that has been active contributes, masked to the steps at which</span>
+<span class="sd">        it belonged to the district, as in `net_electricity_consumption` and `_sum_counterfactual_series`:</span>
+<span class="sd">        a member that leaves keeps its past contribution, and a member that joins adds nothing before it</span>
+<span class="sd">        joined, so it adds zero at the steps where it was not a member. A step is NaN only if no member</span>
+<span class="sd">        has a value there.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_mode</span> <span class="o">==</span> <span class="s1">'dynamic'</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_topology_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">population</span> <span class="o">=</span> <span class="n">ActivePopulation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">series</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kpi_service</span><span class="o">.</span><span class="n">_get_kpi_buildings</span><span class="p">():</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="s1">'fc'</span><span class="p">:</span>
+                    <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float64'</span><span class="p">)</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">values</span><span class="p">[</span><span class="o">~</span><span class="n">population</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">energy</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">series</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buildings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
 
-        <span class="n">series</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildings</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">series</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildings</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+
         <span class="n">length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">series</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
         <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
@@ -1443,6 +1530,10 @@
     <span class="nd">@rolling_episode_split</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rolling_episode_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rolling_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__rolling_episode_split</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">rolling_episode_split</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">rolling_episode_split</span>
+
+    <span class="nd">@episode_split_boundary</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">episode_split_boundary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_split_boundary</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__episode_split_boundary</span> <span class="o">=</span> <span class="n">EpisodeTracker</span><span class="o">.</span><span class="n">validate_episode_split_boundary</span><span class="p">(</span><span class="n">episode_split_boundary</span><span class="p">)</span>
 
     <span class="nd">@random_episode_split</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">random_episode_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
@@ -1910,6 +2001,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">rolling_episode_split</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">random_episode_split</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode_split_boundary</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_mode</span> <span class="o">==</span> <span class="s1">'dynamic'</span><span class="p">:</span>
