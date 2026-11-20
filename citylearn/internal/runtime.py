@@ -5,6 +5,8 @@ import time
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Union
 
+import math
+
 import numpy as np
 
 from citylearn.internal.scalars import numpy1_scalar
@@ -765,26 +767,25 @@ class CityLearnRuntimeService:
         returns ``x``), so a NaN storage action became the largest possible discharge.
         """
 
-        names = [str(getattr(b, 'name', i)) for i, b in enumerate(self.env.buildings)]
-
-        def check(mapping, building, prefix=''):
-            for key, value in (mapping or {}).items():
-                label = f'{prefix}{key}'
+        def check(mapping, index, prefix=''):
+            for key, value in mapping.items():
                 if isinstance(value, Mapping):
-                    check(value, building, f'{label}.')
+                    check(value, index, f'{prefix}{key}.')
                     continue
                 try:
-                    finite = bool(np.isfinite(float(value)))
-                except (TypeError, ValueError):
+                    finite = math.isfinite(value)
+                except TypeError:
                     continue
                 if not finite:
+                    buildings = self.env.buildings
+                    building = buildings[index].name if index < len(buildings) else index
                     raise ValueError(
-                        f"Action '{label}' of building '{building}' is {value!r}; actions must be finite numbers."
+                        f"Action '{prefix}{key}' of building '{building}' is {value!r}; actions must be finite numbers."
                     )
 
-        for i, mapping in enumerate(parsed_actions or []):
+        for index, mapping in enumerate(parsed_actions or []):
             if isinstance(mapping, Mapping):
-                check(mapping, names[i] if i < len(names) else i)
+                check(mapping, index)
 
     def parse_actions(self, actions) -> List[Mapping[str, float]]:
         """Return mapping of action name to action value for each building."""
