@@ -2016,8 +2016,9 @@ class CityLearnKPIService:
     def ratio_zero_over_zero(ratio_name: str) -> Optional[float]:
         """Value of a ratio KPI when its control and reference totals are both zero.
 
-        Deferrable-appliance service ratios are undefined (None) when no cycle
-        was due in either run; every other ratio reads 1.0, "no change".
+        Deferrable-appliance ratios are undefined (None) when their own two totals
+        are zero, even if cycles were due (for example the missed-cycle ratio when
+        neither run missed a cycle); every other ratio reads 1.0, "no change".
         """
         return None if '_deferrable_appliance_' in f'_{ratio_name}' else 1.0
 
@@ -2483,6 +2484,8 @@ class CityLearnKPIService:
         for metric, control_value, bau_value, unit, with_ratio in metrics:
             control_defined = self._defined_scalar(control_value)
             bau_defined = self._defined_scalar(bau_value)
+            # The control value behind the delta and the ratio, on the same district series (#326).
+            put(v2('district', 'energy_grid', 'shape_quality', metric, 'control', unit), control_defined)
             put(v2('district', 'energy_grid', 'shape_quality', metric, 'business_as_usual', unit), bau_defined)
             put(
                 v2('district', 'energy_grid', 'shape_quality', metric, 'delta_to_business_as_usual', unit),

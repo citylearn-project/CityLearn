@@ -249,11 +249,11 @@ class CostFunction:
         discomfort_hot: List[float]
             Rolling proportion of occupied timesteps where the condition indoor_dry_bulb_temperature > (dry_bulb_temperature_cooling_set_point + band) is met.
         discomfort_cold_delta_minimum: List[float]
-            Rolling minimum of indoor_dry_bulb_temperature - dry_bulb_temperature_heating_set_point where the condition indoor_dry_bulb_temperature < (dry_bulb_temperature_heating_set_point - band) is met.
+            Rolling minimum of dry_bulb_temperature_heating_set_point - indoor_dry_bulb_temperature (a positive distance) where the condition indoor_dry_bulb_temperature < (dry_bulb_temperature_heating_set_point - band) is met.
         discomfort_cold_delta_maximum: List[float]
-            Rolling maximum of indoor_dry_bulb_temperature - dry_bulb_temperature_heating_set_point where the condition indoor_dry_bulb_temperature < (dry_bulb_temperature_heating_set_point - band) is met.
+            Rolling maximum of dry_bulb_temperature_heating_set_point - indoor_dry_bulb_temperature (a positive distance) where the condition indoor_dry_bulb_temperature < (dry_bulb_temperature_heating_set_point - band) is met.
         discomfort_cold_delta_average: List[float]
-            Rolling average of indoor_dry_bulb_temperature - dry_bulb_temperature_heating_set_point where the condition indoor_dry_bulb_temperature < (dry_bulb_temperature_heating_set_point - band) is met.
+            Rolling average of dry_bulb_temperature_heating_set_point - indoor_dry_bulb_temperature (a positive distance) where the condition indoor_dry_bulb_temperature < (dry_bulb_temperature_heating_set_point - band) is met.
         discomfort_hot_delta_minimum: List[float]
             Rolling minimum of indoor_dry_bulb_temperature - dry_bulb_temperature_cooling_set_point where the condition indoor_dry_bulb_temperature > (dry_bulb_temperature_cooling_set_point + band) is met.
         discomfort_hot_delta_maximum: List[float]

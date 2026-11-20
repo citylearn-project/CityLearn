@@ -62,7 +62,7 @@ def check_site(root):
         "_images/ev-service-window.svg", "_images/v3-timeseries.png",
         "_images/v3-scorecard.png",
         "overview/index.html", "_images/dr.jpg",
-        "glossary.html", "guides/dataset_catalogue.html", "python_api.html",
+        "glossary.html", "guides/dataset_catalogue.html", "python_api.html", "guides/KPI_V2_TREE.html",
     ]
     for name in required:
         if not (root / name).is_file():

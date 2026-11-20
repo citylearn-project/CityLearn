@@ -5,6 +5,22 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Catálogo de KPIs e referência de KPIs completa.** O
+  [catálogo de KPIs](KPI_V2_TREE.md) lista todos os nomes que `evaluate_v2()`
+  emite, agrupados em 21 famílias, com o seu significado em inglês e português.
+  É gerado a partir de `docs/kpi_catalogue.yml`, e um teste falha quando falta
+  nele um nome emitido. A [referência de KPIs](kpis_reference.md) passa a
+  explicar todas as famílias, incluindo as auditorias, a proveniência da energia,
+  o mercado comunitário, o conforto e a equidade. Dá as suas equações, a
+  agregação ao distrito e ao portefólio e os valores indefinidos, e indica os
+  KPIs canónicos de desconforto, de Gini e de share local. Os valores não mudam.
+  ([#326](https://github.com/citylearn-project/CityLearn/issues/326))
+- **Valores do controlo dos KPIs de forma da carga.** Com a comparação BAU,
+  `evaluate_v2()` emite também o valor do controlo por trás de cada diferença de
+  forma: `district_energy_grid_shape_quality_{peak_daily_average,peak_all_time_average,ramping_average,ramping_total}_control_kw`
+  e `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average{,_signed_net}_control_ratio`.
+  As linhas existentes não mudam.
+  ([#326](https://github.com/citylearn-project/CityLearn/issues/326))
 - **Agentes genéricos na interface de entidades.** Na interface de entidades os
   espaços de ações e de observações são dicionários de tabelas de entidades, pelo
   que `Agent` e `ZeroActionBaselineAgent` falhavam com `AttributeError` no
@@ -122,9 +138,11 @@ lista cada linha alterada e o nome que guarda o seu valor da 3.6.0.
   `evaluate()` mantêm a série com sinal.
   ([#241](https://github.com/citylearn-project/CityLearn/issues/241))
 - **KPIs de serviço indefinidos.** O atraso de arranque dos equipamentos
-  diferíveis sem ciclos completados, os ratios com um operando em falta e os
-  ratios de serviço dos equipamentos diferíveis ao BAU quando nenhum ciclo era
-  devido passam a ficar em falta, em vez de 0 ou 1.
+  diferíveis sem ciclos completados, os ratios com um operando em falta e cada
+  ratio dos equipamentos diferíveis ao BAU cujos dois totais são zero (por
+  exemplo, o ratio de ciclos falhados quando nenhuma das execuções falhou um
+  ciclo, mesmo que tenha havido ciclos devidos) passam a ficar em falta, em vez
+  de 0 ou 1.
   ([#243](https://github.com/citylearn-project/CityLearn/issues/243))
 - **Taxas do portfolio.** `MultiCommunityEnv` agrega as taxas e médias de
   partida dos VE, os níveis de serviço, o atraso de arranque e o

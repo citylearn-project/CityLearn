@@ -34,6 +34,11 @@ jobs:
         python -m pip install -e ".[end_use_load_profiles]"
     - name: Test documentation examples
       run: python -m pytest -q tests/test_documentation_examples.py
+    - name: Check the KPI catalogue
+      # The catalogue pages are generated from docs/kpi_catalogue.yml, and every emitted KPI must be in it.
+      run: |
+        python scripts/docs/kpi_catalogue.py --check
+        python -m pytest -q tests/test_kpi_catalogue.py
     - name: Build and check HTML
       run: |
         # citylearn.internal is private; docs/source/python_api.rst lists the public modules.
