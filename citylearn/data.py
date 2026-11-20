@@ -193,8 +193,9 @@ class DataSet:
     @logging_level.setter
     def logging_level(self, value: int):
         self.__logging_level = 20 if value is None else value
-        # Level of the package logger only; the application configures handlers and the root logger.
-        logging.getLogger('citylearn').setLevel(self.logging_level)
+        # Only an explicit level changes the package logger; the application owns the default.
+        if value is not None:
+            logging.getLogger('citylearn').setLevel(value)
 
     @offline.setter
     def offline(self, value: bool):

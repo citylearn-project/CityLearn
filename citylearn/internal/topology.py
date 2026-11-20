@@ -1245,7 +1245,10 @@ class CityLearnTopologyService:
         the event fires.
         """
 
-        known = set(self._member_pool)
+        # Members declared in the schema count as known even when the caller loaded a subset (buildings=...):
+        # their events never fire in that run, and they used to be accepted.
+        schema_buildings = self.env.schema.get('buildings', {}) if isinstance(getattr(self.env, 'schema', None), Mapping) else {}
+        known = set(self._member_pool) | set(schema_buildings or {})
 
         def require_member(member_id, event, role):
             if member_id is None:
@@ -1276,7 +1279,10 @@ class CityLearnTopologyService:
                     if event.overrides and source_id in self._member_pool:
                         source = self._initial_override_target(self._member_pool[source_id], event)
                         if source is not None:
+                            # Apply to a copy now, so an invalid key or value fails at construction instead of
+                            # leaving the env half-changed when the event fires.
                             self._check_override_keys(source, event.overrides, event)
+                            self._apply_object_overrides(deepcopy(source), event.overrides, event)
 
     def _initial_override_target(self, source_building: Building, event: TopologyEvent):
         """The source asset an add_asset event copies, if it exists before any event fires."""

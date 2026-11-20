@@ -93,8 +93,10 @@ def configure_tariffs(env, config):
             raise ValueError('Community tariffs must be finite and nonempty')
         env.community_tariffs[name] = values
     # parse_bool, as for 'enabled': bool('false') is True.
-    env.community_market_local_enabled = parse_bool(
-        config.get('local_trading_enabled', True), default=True, path='community_market.local_trading_enabled'
+    local_trading = config.get('local_trading_enabled', True)
+    # An explicit null keeps its previous meaning (bool(None) is False).
+    env.community_market_local_enabled = False if local_trading is None else parse_bool(
+        local_trading, default=True, path='community_market.local_trading_enabled'
     )
 
 

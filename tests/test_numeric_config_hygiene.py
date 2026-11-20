@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import os
 import pickle
 import subprocess
@@ -174,6 +175,7 @@ def test_departure_now_with_missing_energy_still_reads_as_more_than_full_power()
             if row[features.index("hours_until_departure")] == 0.0 and row[features.index("energy_to_required_soc_kwh")] > 0.0:
                 assert row[features.index("min_required_action_normalized")] >= 1.0
                 assert row[features.index("departure_feasibility_ratio")] > 1.0
+                assert row[features.index("charging_slack_kw")] < 0.0
                 checked += 1
 
     assert checked > 0
@@ -191,11 +193,33 @@ def test_importing_citylearn_leaves_root_logging_and_numpy_errors_alone():
         from citylearn.data import DataSet
         DataSet(offline=True)
         after = (root.level, len(root.handlers), np.geterr())
-        print(json.dumps([before == after, logging.getLogger('citylearn').handlers[0].__class__.__name__]))
+        print(json.dumps([before == after, logging.getLogger('citylearn').level]))
     """
     result = _run_python(code)
     assert result.returncode == 0, result.stderr[-2000:]
-    assert json.loads(result.stdout.strip().splitlines()[-1]) == [True, "NullHandler"]
+    # Root logger and NumPy untouched, and DataSet() without logging_level leaves the citylearn level alone.
+    assert json.loads(result.stdout.strip().splitlines()[-1]) == [True, logging.NOTSET]
+
+
+def test_library_warnings_still_reach_stderr_without_logging_configuration():
+    result = _run_python("""
+        import citylearn.citylearn, logging
+        logging.getLogger('citylearn.citylearn').warning('visible warning')
+        logging.getLogger('citylearn.citylearn').info('hidden info')
+    """)
+    assert result.returncode == 0, result.stderr[-2000:]
+    assert 'visible warning' in result.stderr and 'hidden info' not in result.stderr
+
+
+def test_building_an_env_keeps_the_applications_citylearn_log_level():
+    logger = logging.getLogger("citylearn")
+    previous = logger.level
+    try:
+        logger.setLevel(logging.WARNING)
+        CityLearnEnv(str(MINUTE_EV_DEMO), episode_time_steps=4).reset()
+        assert logger.level == logging.WARNING
+    finally:
+        logger.setLevel(previous)
 
 
 # #252 CLI
@@ -271,6 +295,22 @@ def test_topology_event_with_unknown_member_fails_at_construction():
         CityLearnEnv(_dynamic_schema_with(change), interface="entity", topology_mode="dynamic", episode_time_steps=4)
 
 
+def test_topology_events_for_members_not_loaded_are_still_accepted():
+    schema = ROOT / "data" / "datasets" / "pt_rec_30" / "evaluation" / "rec_30_topology.json"
+    env = CityLearnEnv(str(schema), buildings=["Member_002", "Member_003"], simulation_end_time_step=95, episode_time_steps=96)
+    env.reset()
+    assert [b.name for b in env.buildings] == ["Member_002", "Member_003"]
+
+
+def test_invalid_topology_override_value_fails_at_construction():
+    def change(events):
+        event = next(e for e in events if e.get("operation") == "add_asset" and e.get("target_asset_type") == "electrical_storage")
+        event.setdefault("overrides", {})["capacity"] = -5.0
+
+    with pytest.raises(ValueError, match="Invalid override capacity"):
+        CityLearnEnv(_dynamic_schema_with(change), interface="entity", topology_mode="dynamic", episode_time_steps=4)
+
+
 def test_topology_override_with_unknown_key_fails_at_construction():
     def change(events):
         event = next(e for e in events if e.get("operation") == "add_asset" and e.get("target_asset_type") in {"pv", "electrical_storage"})
@@ -291,6 +331,38 @@ def test_invalid_override_value_raises_instead_of_being_ignored():
         CityLearnTopologyService._apply_object_overrides(battery, {"capacity": -5.0})
 
 
+def test_balance_audit_reads_the_parsed_local_trading_flag():
+    from citylearn.internal.balance_audit import IndependentBalanceAudit
+
+    schema = _schema(PLUS_EVS)
+    schema.setdefault("community_market", {})
+    schema["community_market"]["enabled"] = True
+    schema["community_market"]["local_trading_enabled"] = "false"
+    env = CityLearnEnv(schema, episode_time_steps=6, central_agent=False, random_seed=0)
+    env.reset()
+    with IndependentBalanceAudit(env) as audit:
+        while not env.terminated:
+            env.step([[0.5] * len(names) for names in env.action_names])
+        assert audit.finish()["status"] == "pass"
+
+
+def test_null_local_trading_flag_keeps_its_previous_meaning():
+    schema = _schema(PLUS_EVS)
+    schema.setdefault("community_market", {})
+    schema["community_market"]["enabled"] = True
+    schema["community_market"]["local_trading_enabled"] = None
+    assert CityLearnEnv(schema, episode_time_steps=4).community_market_local_enabled is False
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf")])
+def test_non_finite_entity_map_override_is_rejected(bad):
+    env = CityLearnEnv(str(MINUTE_EV_DEMO), interface="entity", central_agent=False, episode_time_steps=4, random_seed=0)
+    env.reset()
+
+    with pytest.raises(ValueError, match="must be finite"):
+        env.step({"map": {"building:Building_1": {"electrical_storage": bad}}})
+
+
 # #254 Render directory
 
 
@@ -301,6 +373,14 @@ def test_render_output_defaults_to_the_working_directory(tmp_path, monkeypatch):
 
     env = CityLearnEnv(str(MINUTE_EV_DEMO), episode_time_steps=4, render_directory="my_runs")
     assert Path(env.render_output_root) == (tmp_path / "my_runs").resolve()
+
+
+def test_multi_community_render_directory_resolves_against_the_working_directory(tmp_path, monkeypatch):
+    from citylearn.multi_community import MultiCommunityEnv
+
+    monkeypatch.chdir(tmp_path)
+    assert MultiCommunityEnv._resolve_render_directory(None) == (tmp_path / "render_logs").resolve()
+    assert MultiCommunityEnv._resolve_render_directory("runs") == (tmp_path / "runs").resolve()
 
 
 # #255 Checkpoint loading

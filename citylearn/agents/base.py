@@ -318,7 +318,8 @@ class Agent(Environment):
     def __set_logger(self, logging_level: int = None):
         """Set logging level."""
 
-        logging_level = 30 if logging_level is None else logging_level
+        if logging_level is None:
+            return
         assert logging_level >= 0, 'logging_level must be >= 0'
         # Level of the package logger only; configure handlers (e.g. logging.basicConfig) to see the messages.
         logging.getLogger('citylearn').setLevel(logging_level)

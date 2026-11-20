@@ -235,12 +235,15 @@ def fill_charger_rows(entity: "CityLearnEntityInterfaceService", context: Observ
             if core_bundle_enabled:
                 energy_to_required_soc = max((required_soc - current_soc) * max(battery_capacity, 0.0), 0.0)
                 required_average_power = energy_to_required_soc / max(hours_until_departure, 1.0e-6) if energy_to_required_soc > 0.0 else 0.0
-                # In the departure step (no hours left) the division above reached ~1e7 kW, far outside the
-                # observation bound. Saturate at the bound (the whole battery in one control step); the value
-                # still exceeds the charger's power, so it keeps meaning "not deliverable in time".
-                required_average_power = min(required_average_power, max(battery_capacity, 0.0) / max(step_hours, 1.0e-6))
                 avg_power_to_departure = required_average_power
                 charging_slack = max_charging_power - required_average_power
+                if hours_until_departure == 0.0 and energy_to_required_soc > 0.0:
+                    # Departing now with energy missing: the division above reached ~1e7 kW, far outside the
+                    # observation bound. Saturate within the bound and keep the meaning "not deliverable in time":
+                    # the required power is at least the charger's and the slack is negative.
+                    required_average_power = max(max(battery_capacity, 0.0) / max(step_hours, 1.0e-6), max_charging_power)
+                    avg_power_to_departure = required_average_power
+                    charging_slack = -required_average_power
                 if hours_until_departure < 0.0:
                     # Unknown deadline: no prescribed average rate or urgency.
                     required_average_power = avg_power_to_departure = 0.0

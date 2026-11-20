@@ -548,7 +548,7 @@ class CityLearnEntityInterfaceService:
                     if building_table is not None:
                         value = building_table[building_idx, col]
                     if isinstance(per_building_map, Mapping) and action_name in per_building_map:
-                        value = self._safe_scalar(per_building_map[action_name], float(value))
+                        value = self._action_scalar(per_building_map[action_name], float(value))
 
                 elif action_name.startswith("electric_vehicle_storage_"):
                     row = self._charger_row_by_ev_action_name.get((building_idx, action_name))
@@ -558,7 +558,7 @@ class CityLearnEntityInterfaceService:
                     if charger_ref is not None:
                         charger_payload = charger_overrides.get(charger_ref.global_id, {})
                         if isinstance(charger_payload, Mapping) and "electric_vehicle_storage" in charger_payload:
-                            value = self._safe_scalar(charger_payload["electric_vehicle_storage"], float(value))
+                            value = self._action_scalar(charger_payload["electric_vehicle_storage"], float(value))
 
                 elif action_name.startswith("deferrable_appliance_"):
                     row = self._deferrable_appliance_row_by_action_name.get((building_idx, action_name))
@@ -568,9 +568,9 @@ class CityLearnEntityInterfaceService:
                     if ref is not None:
                         payload = deferrable_appliance_overrides.get(ref.global_id, {})
                         if isinstance(payload, Mapping) and "start" in payload:
-                            value = self._safe_scalar(payload["start"], float(value))
+                            value = self._action_scalar(payload["start"], float(value))
                     if isinstance(per_building_map, Mapping) and action_name in per_building_map:
-                        value = self._safe_scalar(per_building_map[action_name], float(value))
+                        value = self._action_scalar(per_building_map[action_name], float(value))
 
                 if not np.isfinite(float(value)):
                     # Reject before clipping, as the flat interface does: np.clip maps inf to a bound and keeps NaN.
@@ -2977,6 +2977,15 @@ class CityLearnEntityInterfaceService:
         """Upper SOC limit: InventoryBattery declares `max_soc`; a Battery charges to 1."""
 
         return self._safe_scalar(getattr(battery, "max_soc", 1.0), 1.0)
+
+    @staticmethod
+    def _action_scalar(value: Any, default: float = 0.0) -> float:
+        """Read an action override; keep NaN and inf so the finiteness check rejects them."""
+
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return float(default)
 
     @staticmethod
     def _safe_scalar(value: Any, default: float = 0.0) -> float:

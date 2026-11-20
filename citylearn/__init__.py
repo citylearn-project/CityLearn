@@ -1,9 +1,7 @@
-import logging
-
 __version__ = '3.6.0'
 
-# Library logging: no output unless the application configures logging.
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+# CityLearn does not configure logging. Without application configuration, Python's last-resort handler
+# still prints WARNING and above to stderr; configure logging (e.g. logging.basicConfig) to see INFO.
 
 __all__ = ["MultiCommunityEnv", "__version__"]
 
