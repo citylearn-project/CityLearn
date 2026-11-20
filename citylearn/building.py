@@ -17,6 +17,7 @@ from citylearn.energy_model import (
 )
 from citylearn.internal import grid_availability
 from citylearn.internal.building_ops import BuildingOpsService
+from citylearn.internal.physics_version import physics_version_of
 from citylearn.internal.service_energy import SERVICE_ENERGY_COMPONENTS
 from citylearn.internal.units import (
     energy_kwh_to_power_kw,
@@ -116,6 +117,10 @@ class Building(Environment):
     **kwargs : Any
         Other keyword arguments used to initialize super class.
     """
+
+    #: Physics version of the building, see :py:mod:`citylearn.internal.physics_version`. Set by the
+    #: environment; ``None`` selects the default version.
+    physics_version: Optional[int] = None
 
     def __init__(
         self, energy_simulation: EnergySimulation, weather: Weather, observation_metadata: Mapping[str, bool],
@@ -1962,6 +1967,17 @@ class Building(Environment):
         ratio = getattr(storage, 'time_step_ratio', None)
         return to_dataset_resolution_energy(energy, ratio)
 
+    def _hvac_cap_step_hours(self) -> Mapping[str, float]:
+        """Keyword argument that makes an HVAC device compare an energy cap with its power over the dataset step.
+
+        `update_cooling_demand` and `update_heating_demand` pass an energy per dataset step as
+        `max_electric_power`. Physics version 1 compares it directly with the available power in [kW],
+        which caps the device at one hour of output for longer steps. Later versions pass the step
+        duration so the device converts its power to energy first.
+        """
+
+        return {} if physics_version_of(self) < 2 else {'step_hours': self._dataset_step_hours()}
+
     def _dataset_step_hours(self) -> float:
         """Duration of one dataset step in hours.
 
@@ -2861,7 +2877,7 @@ class Building(Environment):
             start_time_step=self.episode_tracker.simulation_start_time_step,
             end_time_step=self.episode_tracker.simulation_end_time_step
         )
-        self.cooling_storage.capacity = self.cooling_storage.autosize(demand, **kwargs)
+        self.cooling_storage.capacity = self.cooling_storage.autosize(demand, **self._tank_autosize_kwargs(kwargs))
 
     def autosize_heating_storage(self, **kwargs):
         """Autosize `heating_storage` `capacity` to minimum capacity needed to always meet `heating_demand`.
@@ -2877,7 +2893,7 @@ class Building(Environment):
             start_time_step=self.episode_tracker.simulation_start_time_step,
             end_time_step=self.episode_tracker.simulation_end_time_step
         )
-        self.heating_storage.capacity = self.heating_storage.autosize(demand, **kwargs)
+        self.heating_storage.capacity = self.heating_storage.autosize(demand, **self._tank_autosize_kwargs(kwargs))
 
     def autosize_dhw_storage(self, **kwargs):
         """Autosize `dhw_storage` `capacity` to minimum capacity needed to always meet `dhw_demand`.
@@ -2893,7 +2909,12 @@ class Building(Environment):
             start_time_step=self.episode_tracker.simulation_start_time_step,
             end_time_step=self.episode_tracker.simulation_end_time_step
         )
-        self.dhw_storage.capacity = self.dhw_storage.autosize(demand, **kwargs)
+        self.dhw_storage.capacity = self.dhw_storage.autosize(demand, **self._tank_autosize_kwargs(kwargs))
+
+    def _tank_autosize_kwargs(self, kwargs: Mapping[str, Any]) -> Mapping[str, Any]:
+        """Storage-tank autosize arguments with the building's physics version unless one is given."""
+
+        return {'physics_version': physics_version_of(self), **kwargs}
 
     def autosize_electrical_storage(self, **kwargs):
         """Autosize `electrical_storage` `capacity`, `nominal_power`, `depth_of_discharge`, `efficiency`, 
@@ -2937,13 +2958,55 @@ class Building(Environment):
             Other keyword arguments parsed to `electrical_storage` `autosize` function.
         """
 
+        legacy = physics_version_of(self) < 2
         demand = pd.DataFrame(self._estimate_baseline_electricity_consumption(), columns=['value'])
-        demand['year'] = (demand.index / (self.seconds_per_time_step * 24 * 365 / self.seconds_per_time_step)).astype(int)
+
+        if legacy:
+            # Physics version 1 assumes an hourly 8760-row year whatever the data resolution.
+            demand['year'] = (demand.index / (self.seconds_per_time_step * 24 * 365 / self.seconds_per_time_step)).astype(int)
+        else:
+            rows_per_year = max(int(round(365.0 * 24.0 / self._dataset_step_hours())), 1)
+            demand['year'] = demand.index // rows_per_year
+
         demand = demand.groupby('year')['value'].sum().mean()
         epw_filepath = kwargs.pop('epw_filepath')
         self.pv.nominal_power, solar_generation = self.pv.autosize(demand, epw_filepath, **kwargs)
         self.pv.generation_mode = 'per_kw'
+
+        if not legacy:
+            solar_generation = self._hourly_profile_to_dataset_resolution(
+                solar_generation, len(self.energy_simulation.solar_generation))
+
         self.energy_simulation.__setattr__('solar_generation', np.array(solar_generation, dtype='float32'))
+
+    def _hourly_profile_to_dataset_resolution(self, profile: Iterable[float], rows: int) -> np.ndarray:
+        """Resample an hourly power profile, such as the PVWatts output in [W/kW], to the dataset steps.
+
+        Each hourly value is an average power, so a sub-hourly step repeats it and a multi-hour step
+        averages the hours it spans. The result is repeated or truncated to `rows` values when the
+        dataset does not cover exactly the profile's period. An hourly profile on an hourly dataset of
+        the same length is returned unchanged.
+        """
+
+        profile = np.asarray(profile)
+        step_hours = self._dataset_step_hours()
+        steps_per_hour = 1.0 / step_hours
+
+        if abs(steps_per_hour - round(steps_per_hour)) < 1.0e-9 and round(steps_per_hour) > 1:
+            profile = np.repeat(profile, int(round(steps_per_hour)))
+        elif abs(step_hours - round(step_hours)) < 1.0e-9 and round(step_hours) > 1:
+            hours = int(round(step_hours))
+            usable = (len(profile) // hours) * hours
+            profile = profile[:usable].reshape(-1, hours).mean(axis=1)
+        elif abs(step_hours - 1.0) >= 1.0e-9:
+            # A step that neither divides nor is a multiple of an hour: sample the hour each step starts in.
+            hour_index = (np.arange(int(np.ceil(len(profile) / step_hours))) * step_hours).astype(int)
+            profile = profile[hour_index[hour_index < len(profile)]]
+
+        if rows > 0 and len(profile) != rows:
+            profile = np.resize(profile, rows)
+
+        return profile
 
     def _estimate_baseline_electricity_consumption(self) -> np.ndarray:
         """Returns estimated baseline electricity consumption time series for entire simulation period.
@@ -3764,7 +3827,8 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
                 demand = self.cooling_device.get_max_output_power(
                     self.weather.outdoor_dry_bulb_temperature[self.time_step],
                     heating=False,
-                    max_electric_power=electric_power
+                    max_electric_power=electric_power,
+                    **self._hvac_cap_step_hours(),
                 )
             else:
                 demand = 0.0
@@ -3801,8 +3865,12 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
                 demand = self.heating_device.get_max_output_power(
                     self.weather.outdoor_dry_bulb_temperature[self.time_step],
                     heating=True,
-                    max_electric_power=electric_power
-                ) if isinstance(self.heating_device, HeatPump) else self.heating_device.get_max_output_power(max_electric_power=electric_power)
+                    max_electric_power=electric_power,
+                    **self._hvac_cap_step_hours(),
+                ) if isinstance(self.heating_device, HeatPump) else self.heating_device.get_max_output_power(
+                    max_electric_power=electric_power,
+                    **self._hvac_cap_step_hours(),
+                )
             else:
                 demand = 0.0
 

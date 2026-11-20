@@ -308,8 +308,8 @@ O `request_id` e validade da baseline de demand response ficam em `observations[
 | `electricity_consumption_kwh` | legacy | kWh/step | Consumo BESS no step settled. |
 | `min_charge_power_kw` | `entity_base` | kW | Minimo tecnico de carga. |
 | `min_discharge_power_kw` | `entity_base` | kW | Minimo tecnico de descarga. |
-| `efficiency_ratio` | `entity_base` | ratio | Eficiencia base. |
-| `round_trip_efficiency_ratio` | `entity_base` | ratio | Eficiencia round-trip. |
+| `efficiency_ratio` | `entity_base` | ratio | Eficiencia round-trip nominal. |
+| `round_trip_efficiency_ratio` | `entity_base` | ratio | Eficiencia num sentido na ultima operacao, a raiz quadrada da eficiencia round-trip atual. O nome mantem-se para os layouts de observacao existentes. |
 | `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Ligacao de fase do storage. |
 | `electrical_storage_soc_ratio` | `entity_core_electrical` | ratio | SOC canonico. |
 | `max_charge_power_kw` | `entity_core_electrical` | kW | Potencia maxima de carga no estado atual. |

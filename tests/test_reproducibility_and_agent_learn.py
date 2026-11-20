@@ -155,7 +155,8 @@ def test_unconnected_ev_soc_drift_uses_time_aware_variance():
             self.seconds_per_time_step = seconds_per_time_step
             self.time_step = 1
             self.episode_tracker = _EpisodeTracker(episode_time_steps=8)
-            self.electric_vehicles = [_EV("EV1", _Battery([0.5, 0.0], target_index=1))]
+            # The battery has advanced to step 1, so its SOC there already holds the standby loss (none here).
+            self.electric_vehicles = [_EV("EV1", _Battery([0.5, 0.5], target_index=1))]
             self.buildings = []
             self.random_seed = 7
             self._ev_drift_random_state = _RandomState()

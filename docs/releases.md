@@ -54,6 +54,18 @@ These changes alter KPI values, not simulations. The KPI definition version beco
 - **Portfolio rates.** `MultiCommunityEnv` pools the portfolio EV departure rates and means, service levels, start delay and self-consumption from their additive denominators instead of weighting them by community. ([#244](https://github.com/citylearn-project/CityLearn/issues/244))
 - **BAU ramping average.** `district_energy_grid_shape_quality_ramping_average_business_as_usual_kw` was the sum of upward ramps over the episode. It is now the mean per step transition; the sum is kept as `*_ramping_total_*_kw`. ([#245](https://github.com/citylearn-project/CityLearn/issues/245))
 
+### Physics
+
+Work package 4 of the 3.6.0 audit ([#226](https://github.com/citylearn-project/CityLearn/issues/226)), in [#279](https://github.com/citylearn-project/CityLearn/pull/279).
+
+- **Versioned physics.** `physics_version` (schema key and `CityLearnEnv` argument) selects the physics of a run: `1` is the physics of 3.6.0 and earlier, and `2`, the default, holds the corrections of the physics work package of the 3.6.0 audit ([#226](https://github.com/citylearn-project/CityLearn/issues/226)). The BAU reference of `evaluate_v2()` uses the version of the evaluated environment, and the run metadata of the exports records it. See the [migration guide](migration.md#physics-version).
+- **Standby loss of EVs away from their charger.** The away-from-charger SOC drift started from the previous step and discarded that step's standby loss, so an EV with a non-zero battery `loss_coefficient` kept its charge while away. Under physics version 2 the drift starts from the SOC after the loss, as it already did for suspended EVs ([#236](https://github.com/citylearn-project/CityLearn/issues/236)).
+- **HVAC demand caps at steps longer than one hour.** The cooling and heating demand caps compared an energy per dataset step with the device's available power, which capped HVAC output at one hour of nominal power per step. Under physics version 2 the heat pump and the electric heater compare energy with energy ([#235](https://github.com/citylearn-project/CityLearn/issues/235)).
+- **Autosizing at sub-hourly resolution.** Under physics version 2 storage tanks hold one hour of peak demand power (the `duration` autosize attribute changes it), so 15-minute data get the same tanks as hourly data instead of a quarter of them, and PV autosizing groups years by the dataset resolution and repeats the hourly PVWatts output at sub-hourly steps, where it used to fail ([#233](https://github.com/citylearn-project/CityLearn/issues/233)).
+- **One-way storage efficiency.** `StorageDevice.round_trip_efficiency` returned the one-way efficiency, the square root of `efficiency`. `one_way_efficiency` now holds that value, and `round_trip_efficiency` keeps it with a `DeprecationWarning`; the metadata and the entity feature `round_trip_efficiency_ratio` keep their names and values. `Battery.efficiency_history` gains one entry per charge or discharge instead of two ([#226](https://github.com/citylearn-project/CityLearn/issues/226)).
+
+The physics corrections above change no result on the bundled datasets: the BAU and `RBCSmartPolicy` give bit-identical series and `evaluate_v2()` tables to 3.6.0 on `citylearn_challenge_2022_phase_all_plus_evs`, `citylearn_challenge_2023_phase_2_local_evaluation`, `pt_rec_4` and `pt_rec_30`.
+
 ## v3.6.0 - 2026-11-19
 
 ### What's new

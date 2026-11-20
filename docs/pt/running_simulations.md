@@ -131,6 +131,7 @@ Todas as comunidades tem de partilhar `seconds_per_time_step`, episode length ef
 | `debug_timing` | bool | schema/False | Mede tempos de partes do `step`. |
 | `check_observation_limits` | bool | schema/False | Valida observacoes contra os limites estimados. |
 | `physics_invariant_checks` | bool | schema/False | Ativa checks de invariantes fisicos por step. |
+| `physics_version` | int | schema/2 | Versao da fisica; `1` reproduz o CityLearn 3.6.0. |
 | `metrics_log_interval` | int | schema/0 | Frequencia de logs de metricas runtime. |
 
 ## Payload de Observacoes para Reward

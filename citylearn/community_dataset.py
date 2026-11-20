@@ -69,6 +69,14 @@ class InventoryBattery(Battery):
         self._charging = energy >= 0
         super().charge(energy)
 
+    def preview_charge(self, energy):
+        charging = self._charging
+        self._charging = energy >= 0
+        try:
+            return super().preview_charge(energy)
+        finally:
+            self._charging = charging
+
     def get_metadata(self):
         return {**super().get_metadata(), 'max_charge_kw': self.max_charge_kw,
                 'max_discharge_kw': self.max_discharge_kw, 'max_soc': self.max_soc,

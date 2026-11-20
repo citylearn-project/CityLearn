@@ -224,6 +224,7 @@ class CityLearnEnv(Environment, Env):
         debug_timing = kwargs.pop('debug_timing', None)
         check_observation_limits = kwargs.pop('check_observation_limits', None)
         physics_invariant_checks = kwargs.pop('physics_invariant_checks', None)
+        physics_version = kwargs.pop('physics_version', None)
         energy_provenance = kwargs.pop('energy_provenance', None)
         metrics_log_interval = kwargs.pop('metrics_log_interval', None)
         ev_departure_within_tolerance = kwargs.pop('ev_departure_within_tolerance', None)
@@ -311,6 +312,10 @@ class CityLearnEnv(Environment, Env):
             self.schema.get('physics_invariant_checks', False) if physics_invariant_checks is None else physics_invariant_checks,
             default=False,
             path='physics_invariant_checks',
+        )
+        from citylearn.internal.physics_version import resolve_physics_version
+        self.physics_version = resolve_physics_version(
+            self.schema.get('physics_version') if physics_version is None else physics_version,
         )
         self.energy_provenance = parse_bool(
             self.schema.get('energy_provenance', True) if energy_provenance is None else energy_provenance,
@@ -1488,6 +1493,7 @@ class CityLearnEnv(Environment, Env):
             'topology_version': self.topology_version,
             'topology_event_log': self.topology_event_log,
             'physics_invariant_checks': bool(getattr(self, 'physics_invariant_checks', False)),
+            'physics_version': self.physics_version,
             'energy_accounting': self._provenance_service.get_metadata(),
             'temporal_reproducibility': axis_metadata(self),
             'ev_departure_within_tolerance': self.ev_departure_within_tolerance,

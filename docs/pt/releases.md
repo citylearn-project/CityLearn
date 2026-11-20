@@ -115,6 +115,39 @@ lista cada linha alterada e o nome que guarda o seu valor da 3.6.0.
   de passo; a soma fica em `*_ramping_total_*_kw`.
   ([#245](https://github.com/citylearn-project/CityLearn/issues/245))
 
+### Física
+
+Pacote de trabalho 4 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-project/CityLearn/issues/226)), em [#279](https://github.com/citylearn-project/CityLearn/pull/279).
+
+- **Física versionada.** `physics_version` (chave do schema e argumento do
+  `CityLearnEnv`) escolhe a física de uma execução: `1` é a física da 3.6.0 e
+  anteriores, e `2`, a predefinida, contém as correções do pacote de trabalho de
+  física da auditoria da 3.6.0
+  ([#226](https://github.com/citylearn-project/CityLearn/issues/226)). A
+  referência BAU do `evaluate_v2()` usa a versão do ambiente avaliado, e os
+  metadados das exportações registam-na. Ver o
+  [guia de migração](../migration.md#physics-version).
+- **Perdas em standby de EVs fora do carregador.** Na versão 2 da física, a
+  deriva do SOC de um EV ausente parte do SOC depois da perda desse step, como
+  já acontecia com EVs suspensos
+  ([#236](https://github.com/citylearn-project/CityLearn/issues/236)).
+- **Limites de procura AVAC em steps superiores a uma hora.** Na versão 2 da
+  física, a bomba de calor e o aquecedor elétrico comparam energia com energia e
+  deixam de limitar a produção a uma hora de potência nominal por step
+  ([#235](https://github.com/citylearn-project/CityLearn/issues/235)).
+- **Autodimensionamento com resolução inferior a uma hora.** Na versão 2 da
+  física, os tanques guardam uma hora de potência de pico (o atributo `duration`
+  altera-o), e o autodimensionamento do PV agrupa os anos pela resolução dos
+  dados e repete o perfil horário do PVWatts
+  ([#233](https://github.com/citylearn-project/CityLearn/issues/233)).
+- **Eficiência num sentido.** `one_way_efficiency` passa a conter a raiz
+  quadrada de `efficiency`, que `round_trip_efficiency` devolvia;
+  `round_trip_efficiency` mantém o valor com um `DeprecationWarning`.
+  `Battery.efficiency_history` ganha uma entrada por operação em vez de duas
+  ([#226](https://github.com/citylearn-project/CityLearn/issues/226)). Os
+  datasets incluídos simulam de forma idêntica nas versões 1 e 2 com estas
+  correções.
+
 ## v3.6.0 - 2026-11-19
 
 A 3.6.0 reúne 26 pull requests: correções da física, dos KPIs, das baselines, dos

@@ -9,6 +9,7 @@ import math
 
 import numpy as np
 
+from citylearn.internal.physics_version import physics_version_of
 from citylearn.internal.scalars import numpy1_scalar
 
 from citylearn.base import Environment
@@ -1263,6 +1264,8 @@ class CityLearnRuntimeService:
                 soc = np.nan if soc_index is None else sim.electric_vehicle_estimated_soc_arrival[soc_index]
                 charger_event_by_ev_id.setdefault(next_id, ('connecting', soc))
 
+        legacy_drift = physics_version_of(env) < 2
+
         for ev in env.electric_vehicles:
             if continuing_evs is not None and ev not in continuing_evs:
                 continue
@@ -1279,7 +1282,9 @@ class CityLearnRuntimeService:
                 continue
 
             if t > 0:
-                last_soc = ev.battery.soc[t - 1]
+                # Physics version 1 drifts from the previous step and drops the standby loss already
+                # applied at t; later versions drift from the SOC after that loss, as suspended EVs do.
+                last_soc = ev.battery.soc[t - 1] if legacy_drift else ev.battery.soc[t]
                 drift_std = self._ev_unconnected_drift_std(env.seconds_per_time_step)
                 variability = np.clip(random_state.normal(1.0, drift_std), 0.6, 1.4)
                 # Exogenous away-from-home movement: driving can reduce SOC, offsite charging can raise it.

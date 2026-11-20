@@ -409,7 +409,7 @@ class CityLearnKPIService:
         multiplier = 1.0 if multiplier is None or not np.isfinite(multiplier) else max(float(multiplier), 0.0)
         return min(charger_power_kw, nominal_power_kw * multiplier)
 
-    def _ev_battery_charge_round_trip_efficiency(self, battery, power_kw: float) -> float:
+    def _ev_battery_charge_one_way_efficiency(self, battery, power_kw: float) -> float:
         nominal_power_kw = self._to_scalar(getattr(battery, 'nominal_power', np.nan), np.nan)
         normalized_power = (
             float(power_kw) / nominal_power_kw
@@ -426,8 +426,8 @@ class CityLearnKPIService:
             efficiency = self._to_scalar(getattr(battery, 'efficiency', np.nan), np.nan)
 
         if efficiency is None or not np.isfinite(efficiency):
-            round_trip = self._to_scalar(getattr(battery, 'round_trip_efficiency', np.nan), np.nan)
-            return float(np.clip(round_trip, 0.0, 1.0)) if np.isfinite(round_trip) else 1.0
+            one_way = self._to_scalar(getattr(battery, 'one_way_efficiency', np.nan), np.nan)
+            return float(np.clip(one_way, 0.0, 1.0)) if np.isfinite(one_way) else 1.0
 
         return float(np.sqrt(np.clip(efficiency, 0.0, 1.0)))
 
@@ -773,7 +773,7 @@ class CityLearnKPIService:
                 battery_power = self._ev_battery_max_input_power_kw(
                     battery, power_kw * charger_efficiency, soc,
                 )
-                eta = self._ev_battery_charge_round_trip_efficiency(battery, battery_power)
+                eta = self._ev_battery_charge_one_way_efficiency(battery, battery_power)
                 soc = float(np.clip(soc + battery_power * step_hours * eta / capacity_kwh,
                                     0.0, getattr(battery, 'max_soc', 1.0)))
 

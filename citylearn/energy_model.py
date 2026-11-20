@@ -2,6 +2,7 @@ import ast
 from array import array
 import logging
 import math
+import warnings
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, Union
 import numpy as np
@@ -45,6 +46,15 @@ def _require_finite_energy(energy: float, device) -> None:
 
     if not finite:
         raise ValueError(f'{type(device).__name__}.charge() received non-finite energy {energy!r}.')
+
+
+def _available_over_step(available_nominal_power: float, step_hours: float = None) -> float:
+    """`available_nominal_power` in [kW], or the energy in [kWh] it delivers over `step_hours` when given."""
+
+    if step_hours is None or available_nominal_power is None:
+        return available_nominal_power
+
+    return available_nominal_power*float(step_hours)
 
 
 class Device(Environment):
@@ -368,7 +378,7 @@ class HeatPump(ElectricDevice):
         cop[cop > 20] = 20
         return cop
 
-    def get_max_output_power(self, outdoor_dry_bulb_temperature: Union[float, Iterable[float]], heating: bool, max_electric_power: Union[float, Iterable[float]] = None) -> Union[float, Iterable[float]]:
+    def get_max_output_power(self, outdoor_dry_bulb_temperature: Union[float, Iterable[float]], heating: bool, max_electric_power: Union[float, Iterable[float]] = None, step_hours: float = None) -> Union[float, Iterable[float]]:
         r"""Return maximum output power.
 
         Calculate maximum output power from heat pump given `cop`, `available_nominal_power` and `max_electric_power` limitations.
@@ -381,6 +391,10 @@ class HeatPump(ElectricDevice):
             If `True` use heating COP else use cooling COP.
         max_electric_power : Union[float, Iterable[float]], optional
             Maximum amount of electric power that the heat pump can consume from the power grid.
+        step_hours : float, optional
+            Duration in [h] over which `max_electric_power` is an energy in [kWh]. When given, the
+            available power is converted to energy over the same duration before the comparison,
+            and the result is an output energy in [kWh] rather than a power.
 
         Returns
         -------
@@ -393,7 +407,7 @@ class HeatPump(ElectricDevice):
         """
 
         cop = self.get_cop(outdoor_dry_bulb_temperature, heating)
-        available_nominal_power = self.available_nominal_power
+        available_nominal_power = _available_over_step(self.available_nominal_power, step_hours)
 
         if max_electric_power is None:
             return available_nominal_power*cop
@@ -498,7 +512,7 @@ class ElectricHeater(ElectricDevice):
         efficiency = self._get_property_value(efficiency, (0.9, 0.99))
         ElectricDevice.efficiency.fset(self, efficiency)
 
-    def get_max_output_power(self, max_electric_power: Union[float, Iterable[float]] = None) -> Union[float, Iterable[float]]:
+    def get_max_output_power(self, max_electric_power: Union[float, Iterable[float]] = None, step_hours: float = None) -> Union[float, Iterable[float]]:
         r"""Return maximum output power.
 
         Calculate maximum output power from heat pump given `max_electric_power` limitations.
@@ -507,6 +521,10 @@ class ElectricHeater(ElectricDevice):
         ----------
         max_electric_power : Union[float, Iterable[float]], optional
             Maximum amount of electric power that the heat pump can consume from the power grid.
+        step_hours : float, optional
+            Duration in [h] over which `max_electric_power` is an energy in [kWh]. When given, the
+            available power is converted to energy over the same duration before the comparison,
+            and the result is an output energy in [kWh] rather than a power.
 
         Returns
         -------
@@ -518,10 +536,12 @@ class ElectricHeater(ElectricDevice):
         max_output_power = min(max_electric_power, `available_nominal_power`)*`efficiency`
         """
 
+        available_nominal_power = _available_over_step(self.available_nominal_power, step_hours)
+
         if max_electric_power is None:
-            return self.available_nominal_power*self.efficiency
+            return available_nominal_power*self.efficiency
         else:
-            return np.min([max_electric_power, self.available_nominal_power], axis=0)*self.efficiency
+            return np.min([max_electric_power, available_nominal_power], axis=0)*self.efficiency
 
     def get_input_power(self, output_power: Union[float, Iterable[float]]) -> Union[float, Iterable[float]]:
         r"""Return input power.
@@ -886,10 +906,31 @@ class StorageDevice(Device):
         return self.__energy_balance
         
     @property
-    def round_trip_efficiency(self) -> float:
-        """Efficiency square root."""
+    def one_way_efficiency(self) -> float:
+        """Efficiency of a single charge or discharge, the square root of `efficiency`.
+
+        `efficiency` is the round-trip efficiency: energy charged and then discharged keeps `efficiency`
+        of its value, and each of the two conversions keeps `one_way_efficiency` of it.
+        """
 
         return self.efficiency**0.5
+
+    @property
+    def round_trip_efficiency(self) -> float:
+        """Deprecated alias of `one_way_efficiency`.
+
+        Despite its name, this property has always returned the one-way efficiency, the square root of
+        `efficiency`; the round-trip efficiency is `efficiency` itself. It is kept, with the same value,
+        for existing code and will be removed in a future release.
+        """
+
+        warnings.warn(
+            '`round_trip_efficiency` returns the one-way efficiency and is deprecated; use '
+            '`one_way_efficiency` for that value, or `efficiency` for the round-trip efficiency.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.one_way_efficiency
 
     @capacity.setter
     def capacity(self, capacity: float):
@@ -942,7 +983,9 @@ class StorageDevice(Device):
             'capacity': self.capacity,
             'loss_coefficient': self.loss_coefficient,
             'initial_soc': self.initial_soc,
-            'round_trip_efficiency': self.round_trip_efficiency
+            'one_way_efficiency': self.one_way_efficiency,
+            # Legacy key with the same one-way value, kept for existing readers of the metadata.
+            'round_trip_efficiency': self.one_way_efficiency,
         }
 
     def charge(self, energy: float):
@@ -951,7 +994,7 @@ class StorageDevice(Device):
         self._charge(energy)
 
     def _charge(self, energy: float, energy_init: float = None):
-        """Charges or discharges storage with respect to specified energy while considering `capacity` and `soc_init` limitations and, energy losses to the environment quantified by `round_trip_efficiency`.
+        """Charges or discharges storage with respect to specified energy while considering `capacity` and `soc_init` limitations and, energy losses to the environment quantified by `one_way_efficiency`.
 
         Parameters
         ----------
@@ -960,25 +1003,25 @@ class StorageDevice(Device):
 
         Notes
         -----
-        If charging, soc = min(`soc_init` + energy*`round_trip_efficiency`, `capacity`)
-        If discharging, soc = max(0, `soc_init` + energy/`round_trip_efficiency`)
+        If charging, soc = min(`soc_init` + energy*`one_way_efficiency`, `capacity`)
+        If discharging, soc = max(0, `soc_init` + energy/`one_way_efficiency`)
         """
         energy = float(energy) * self.time_step_ratio
         energy_init = self.energy_init if energy_init is None else float(energy_init)
-        round_trip_efficiency = self.round_trip_efficiency
+        one_way_efficiency = self.one_way_efficiency
         # A reserve limits discharge; it must never raise the measured stored energy.
-        energy_final = min(energy_init + energy*round_trip_efficiency, as_float(self.capacity)) if energy >= 0\
-            else max(min(self._minimum_energy(), energy_init), energy_init + energy/round_trip_efficiency)
+        energy_final = min(energy_init + energy*one_way_efficiency, as_float(self.capacity)) if energy >= 0\
+            else max(min(self._minimum_energy(), energy_init), energy_init + energy/one_way_efficiency)
 
         self.__soc[self.time_step] = energy_final/max(as_float(self.capacity), ZERO_DIVISION_PLACEHOLDER)
         self.__soc_initialized[self.time_step] = True
         delta_energy = energy_final - energy_init
         self.__energy_balance[self.time_step] = (
-            delta_energy / round_trip_efficiency if delta_energy >= 0 else delta_energy * round_trip_efficiency
+            delta_energy / one_way_efficiency if delta_energy >= 0 else delta_energy * one_way_efficiency
         )
         terminal_energy = float(self.__energy_balance[self.time_step])
-        stored_change = (terminal_energy * round_trip_efficiency if terminal_energy >= 0.0
-                         else terminal_energy / round_trip_efficiency)
+        stored_change = (terminal_energy * one_way_efficiency if terminal_energy >= 0.0
+                         else terminal_energy / one_way_efficiency)
         self.__stored_energy_transfer = self.stored_energy_transfer + stored_change
         self.__transfer_time_step = self.time_step
 
@@ -1014,16 +1057,16 @@ class StorageDevice(Device):
         energy: float
             Charged/discharged energy since last time step in [kWh]
 
-        The energy balance is a derived quantity and is the product or quotient of the difference between consecutive SOCs and `round_trip_efficiency`
+        The energy balance is a derived quantity and is the product or quotient of the difference between consecutive SOCs and `one_way_efficiency`
         for discharge or charge events respectively thus, thus accounts for energy losses to environment during charging and discharge. It is the
         actual energy charged/discharged irrespective of what is determined in the step function after taking into account storage design limits 
         e.g. maximum power input/output, capacity.
         """
         delta_energy = energy - energy_init
         if delta_energy >= 0:
-            return delta_energy / self.round_trip_efficiency
+            return delta_energy / self.one_way_efficiency
 
-        return delta_energy * self.round_trip_efficiency
+        return delta_energy * self.one_way_efficiency
 
     def _minimum_soc(self) -> float:
         return 0.0
@@ -1031,18 +1074,27 @@ class StorageDevice(Device):
     def _minimum_energy(self) -> float:
         return self._minimum_soc() * as_float(self.capacity)
 
-    def autosize(self, demand: Iterable[float], safety_factor: Union[float, Tuple[float, float]] = None) -> float:
+    def autosize(
+        self, demand: Iterable[float], safety_factor: Union[float, Tuple[float, float]] = None,
+        duration: Union[float, Tuple[float, float]] = None, physics_version: int = None,
+    ) -> float:
         r"""Autosize `capacity`.
 
-        Set `capacity` to the minimum capacity needed to always meet `demand`.
+        Set `capacity` to hold `duration` hours of the peak `demand` power.
 
         Parameters
         ----------
         demand : Union[float, Iterable[float]], optional
-            Thermal energy in [kWh] at dataset resolution. Capacity covers the
-            largest control-step demand, rather than a power in [kW].
+            Thermal energy in [kWh] at dataset resolution. It is converted to
+            average control-step power in [kW] before `duration` is applied.
         safety_factor : Union[float, Tuple[float, float]], default: (1.0, 2.0)
             The `capacity` is oversized by factor of `safety_factor`.
+        duration : Union[float, Tuple[float, float]], default: 1.0
+            Hours of peak demand power the tank holds. Ignored by physics version 1.
+        physics_version : int, optional
+            Physics version, see :py:mod:`citylearn.internal.physics_version`. Version 1 sizes the
+            tank to the largest control-step demand in [kWh], which equals one hour of peak power
+            only for hourly steps. Defaults to the latest version.
 
         Returns
         -------
@@ -1051,11 +1103,19 @@ class StorageDevice(Device):
 
         Notes
         -----
-        `capacity` = max(control-step demand)*safety_factor
+        `capacity` = max(demand power)*duration*safety_factor
         """
+        from citylearn.internal.physics_version import resolve_physics_version
+
         demand = np.asarray(demand) * float(self.time_step_ratio)
         safety_factor = self._get_property_value(safety_factor, (1.0, 2.0))
-        capacity = as_float(np.nanmax(demand))*safety_factor
+
+        if resolve_physics_version(physics_version) < 2:
+            return as_float(np.nanmax(demand))*safety_factor
+
+        duration = self._get_property_value(duration, 1.0)
+        power = demand / seconds_to_hours(self.seconds_per_time_step)
+        capacity = as_float(np.nanmax(power))*duration*safety_factor
 
         return capacity
 
@@ -1347,12 +1407,48 @@ class Battery(StorageDevice, ElectricDevice):
 
         if np.isnan(self.capacity_before_step[self.time_step]):
             self.capacity_before_step[self.time_step] = self.degraded_capacity
+        energy_init = self.energy_init
+        degraded_capacity = self.degraded_capacity
+        energy, efficiency = self._limit_charge_energy(energy, energy_init, degraded_capacity)
+        # One efficiency entry per operation: the efficiency at the power finally applied.
+        self.efficiency = efficiency
+        super()._charge(energy, energy_init=energy_init)
+        self._capacity_history.append(max(degraded_capacity - self.degrade(), 0.0))
+        ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
+        dataset_resolution_balance = self.energy_balance[self.time_step]/ratio
+        self.update_electricity_consumption(dataset_resolution_balance, enforce_polarity=False)
+
+    def preview_charge(self, energy: float) -> float:
+        """Energy that :py:meth:`charge` would apply for `energy`, without changing the battery.
+
+        Parameters
+        ----------
+        energy : float
+            Energy to charge if (+) or discharge if (-) in [kWh], in the units :py:meth:`charge` takes.
+
+        Returns
+        -------
+        energy : float
+            The requested energy limited by the power curves, the capacity and the depth of discharge,
+            in the same units.
+        """
+
+        energy, _ = self._limit_charge_energy(energy, self.energy_init, self.degraded_capacity)
+        return energy
+
+    def _limit_charge_energy(self, energy: float, energy_init: float, degraded_capacity: float) -> Tuple[float, float]:
+        """Limit a requested charge (+) or discharge (-) and return it with the efficiency at that power.
+
+        `energy` and the returned energy are dataset-resolution kWh, as :py:meth:`charge` takes them. The
+        efficiency is evaluated twice, at the requested and then at the limited power, as the battery
+        model always has; only the last value is returned.
+        """
+
         # Public control paths pass dataset-resolution kWh; physical limits are per control step.
         ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
         requested_energy = float(energy) * ratio
         step_hours = max(float(self.seconds_per_time_step) / 3600.0, 1.0e-12)
-        energy_init = self.energy_init
-        degraded_capacity = self.degraded_capacity
+        efficiency = self.efficiency
 
         if requested_energy >= 0:
             max_input_power = max(float(self.get_max_input_power(energy_init=energy_init)), 0.0)
@@ -1360,33 +1456,39 @@ class Battery(StorageDevice, ElectricDevice):
             limited_energy = min(requested_energy, max_input_energy)
 
             for _ in range(2):
-                self.efficiency = self.get_current_efficiency(abs(limited_energy) / step_hours)
+                efficiency = self._validated_efficiency(self.get_current_efficiency(abs(limited_energy) / step_hours))
                 energy_wrt_degrade = max(degraded_capacity - energy_init, 0.0)
-                capacity_limited_energy = energy_wrt_degrade / max(self.round_trip_efficiency, ZERO_DIVISION_PLACEHOLDER)
+                capacity_limited_energy = energy_wrt_degrade / max(efficiency**0.5, ZERO_DIVISION_PLACEHOLDER)
                 limited_energy = min(requested_energy, max_input_energy, capacity_limited_energy)
 
-            energy = limited_energy / ratio
+            return limited_energy / ratio, efficiency
 
-        else:
-            max_output_power = max(float(self.get_max_output_power(energy_init=energy_init)), 0.0)
-            max_output_energy = power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step)
-            requested_output = abs(requested_energy)
-            limited_output = min(requested_output, max_output_energy)
+        max_output_power = max(float(self.get_max_output_power(energy_init=energy_init)), 0.0)
+        max_output_energy = power_kw_to_energy_kwh(max_output_power, self.seconds_per_time_step)
+        requested_output = abs(requested_energy)
+        limited_output = min(requested_output, max_output_energy)
 
-            for _ in range(2):
-                self.efficiency = self.get_current_efficiency(limited_output / step_hours)
-                soc_limit_wrt_dod = 1.0 - self.depth_of_discharge
-                minimum_energy = soc_limit_wrt_dod * self.capacity
-                dod_limited_output = max(energy_init - minimum_energy, 0.0) * self.round_trip_efficiency
-                limited_output = min(requested_output, max_output_energy, dod_limited_output)
+        for _ in range(2):
+            efficiency = self._validated_efficiency(self.get_current_efficiency(limited_output / step_hours))
+            soc_limit_wrt_dod = 1.0 - self.depth_of_discharge
+            minimum_energy = soc_limit_wrt_dod * self.capacity
+            dod_limited_output = max(energy_init - minimum_energy, 0.0) * efficiency**0.5
+            limited_output = min(requested_output, max_output_energy, dod_limited_output)
 
-            energy = -limited_output / ratio
+        return -limited_output / ratio, efficiency
 
-        super()._charge(energy, energy_init=energy_init)
-        self._capacity_history.append(max(degraded_capacity - self.degrade(), 0.0))
-        ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
-        dataset_resolution_balance = self.energy_balance[self.time_step]/ratio
-        self.update_electricity_consumption(dataset_resolution_balance, enforce_polarity=False)
+    def _validated_efficiency(self, efficiency: float) -> float:
+        """`efficiency` as the `efficiency` setter would store it, without storing it."""
+
+        if efficiency is None or math.isnan(efficiency):
+            # The setter draws a random default for a missing value; keep the last value instead of
+            # consuming the random stream for an intermediate evaluation.
+            return self.efficiency
+
+        assert efficiency <= 1.0, 'efficiency must be <= 1.0 for storage devices.'
+        assert efficiency > 0, 'efficiency must be > 0.'
+        # The setter stores the history as C doubles, which `efficiency` reads back as a Python float.
+        return float(efficiency)
 
     def _minimum_soc(self) -> float:
         return clip_scalar(1.0 - self.depth_of_discharge, 0.0, 1.0)
