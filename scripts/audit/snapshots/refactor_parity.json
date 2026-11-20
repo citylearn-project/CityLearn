@@ -1446,6 +1446,9 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -1837,6 +1840,9 @@
           0.0,
           0.0,
           0.0,
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -3816,6 +3822,7 @@
           0.0,
           5.610967282738004,
           1.636532124131918,
+          0.0,
           2.73076417578022,
           0.7964728846025642,
           2.8802031069577843,
@@ -4498,6 +4505,7 @@
           "district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio",
           "district_cost_community_market_counterfactual_daily_average_eur",
           "district_cost_community_market_counterfactual_total_eur",
+          "district_cost_community_market_operator_balance_total_eur",
           "district_cost_community_market_savings_daily_average_eur",
           "district_cost_community_market_savings_total_eur",
           "district_cost_community_market_settled_daily_average_eur",
@@ -6134,6 +6142,7 @@
         "district/District/district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio": 0.0,
         "district/District/district_cost_community_market_counterfactual_daily_average_eur": 5.610967282738004,
         "district/District/district_cost_community_market_counterfactual_total_eur": 1.636532124131918,
+        "district/District/district_cost_community_market_operator_balance_total_eur": 0.0,
         "district/District/district_cost_community_market_savings_daily_average_eur": 2.73076417578022,
         "district/District/district_cost_community_market_savings_total_eur": 0.7964728846025642,
         "district/District/district_cost_community_market_settled_daily_average_eur": 2.8802031069577843,
@@ -14416,6 +14425,9 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -14807,6 +14819,9 @@
           0.0,
           0.0,
           0.0,
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -16786,6 +16801,7 @@
           0.0,
           77.34857222863606,
           0.376000003889203,
+          6.938893903907228e-18,
           55.40571514708656,
           0.2693333375205596,
           21.942857081549505,
@@ -17462,6 +17478,7 @@
           "district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio",
           "district_cost_community_market_counterfactual_daily_average_eur",
           "district_cost_community_market_counterfactual_total_eur",
+          "district_cost_community_market_operator_balance_total_eur",
           "district_cost_community_market_savings_daily_average_eur",
           "district_cost_community_market_savings_total_eur",
           "district_cost_community_market_settled_daily_average_eur",
@@ -19098,6 +19115,7 @@
         "district/District/district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio": 0.0,
         "district/District/district_cost_community_market_counterfactual_daily_average_eur": 77.34857222863606,
         "district/District/district_cost_community_market_counterfactual_total_eur": 0.37600000388920307,
+        "district/District/district_cost_community_market_operator_balance_total_eur": 6.938893903907228e-18,
         "district/District/district_cost_community_market_savings_daily_average_eur": 55.40571514708656,
         "district/District/district_cost_community_market_savings_total_eur": 0.26933333752055966,
         "district/District/district_cost_community_market_settled_daily_average_eur": 21.942857081549505,
@@ -27398,6 +27416,9 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -27789,6 +27810,9 @@
           0.0,
           0.0,
           0.0,
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -29768,6 +29792,7 @@
           0.0,
           8.06496558870588,
           0.5880704075098038,
+          0.0,
           5.715251179150171,
           0.4167370651463666,
           2.349714409555709,
@@ -30450,6 +30475,7 @@
           "district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio",
           "district_cost_community_market_counterfactual_daily_average_eur",
           "district_cost_community_market_counterfactual_total_eur",
+          "district_cost_community_market_operator_balance_total_eur",
           "district_cost_community_market_savings_daily_average_eur",
           "district_cost_community_market_savings_total_eur",
           "district_cost_community_market_settled_daily_average_eur",
@@ -32086,6 +32112,7 @@
         "district/District/district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio": 0.0,
         "district/District/district_cost_community_market_counterfactual_daily_average_eur": 8.06496558870588,
         "district/District/district_cost_community_market_counterfactual_total_eur": 0.5880704075098038,
+        "district/District/district_cost_community_market_operator_balance_total_eur": 0.0,
         "district/District/district_cost_community_market_savings_daily_average_eur": 5.715251179150171,
         "district/District/district_cost_community_market_savings_total_eur": 0.41673706514636666,
         "district/District/district_cost_community_market_settled_daily_average_eur": 2.349714409555709,
@@ -40392,6 +40419,9 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -40793,6 +40823,9 @@
           0.0,
           0.0,
           0.0,
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -42820,6 +42853,7 @@
           0.0,
           4.569481321743556,
           0.3331913463771343,
+          0.0,
           2.655122989549787,
           0.1936027179880053,
           1.914358332193769,
@@ -43518,6 +43552,7 @@
           "district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio",
           "district_cost_community_market_counterfactual_daily_average_eur",
           "district_cost_community_market_counterfactual_total_eur",
+          "district_cost_community_market_operator_balance_total_eur",
           "district_cost_community_market_savings_daily_average_eur",
           "district_cost_community_market_savings_total_eur",
           "district_cost_community_market_settled_daily_average_eur",
@@ -45294,6 +45329,7 @@
         "district/District/district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio": 0.0,
         "district/District/district_cost_community_market_counterfactual_daily_average_eur": 4.569481321743556,
         "district/District/district_cost_community_market_counterfactual_total_eur": 0.3331913463771343,
+        "district/District/district_cost_community_market_operator_balance_total_eur": 0.0,
         "district/District/district_cost_community_market_savings_daily_average_eur": 2.655122989549787,
         "district/District/district_cost_community_market_savings_total_eur": 0.19360271798800532,
         "district/District/district_cost_community_market_settled_daily_average_eur": 1.914358332193769,
@@ -58726,6 +58762,9 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -59115,6 +59154,9 @@
           0.0,
           0.2000000029802322,
           0.0645161288771991,
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -61094,6 +61136,7 @@
           0.4500000016763805,
           12.627001353672572,
           0.3069062829017639,
+          0.0,
           8.318429964440211,
           0.2021840616356995,
           4.308571389232362,
@@ -61768,6 +61811,7 @@
           "district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio",
           "district_cost_community_market_counterfactual_daily_average_eur",
           "district_cost_community_market_counterfactual_total_eur",
+          "district_cost_community_market_operator_balance_total_eur",
           "district_cost_community_market_savings_daily_average_eur",
           "district_cost_community_market_savings_total_eur",
           "district_cost_community_market_settled_daily_average_eur",
@@ -63404,6 +63448,7 @@
         "district/District/district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio": 0.45000000167638055,
         "district/District/district_cost_community_market_counterfactual_daily_average_eur": 12.627001353672572,
         "district/District/district_cost_community_market_counterfactual_total_eur": 0.3069062829017639,
+        "district/District/district_cost_community_market_operator_balance_total_eur": 0.0,
         "district/District/district_cost_community_market_savings_daily_average_eur": 8.318429964440211,
         "district/District/district_cost_community_market_savings_total_eur": 0.20218406163569957,
         "district/District/district_cost_community_market_settled_daily_average_eur": 4.308571389232362,
@@ -71692,6 +71737,9 @@
           },
           {
             "nonfinite": "nan"
+          },
+          {
+            "nonfinite": "nan"
           }
         ],
         "Building_2": [
@@ -72083,6 +72131,9 @@
           0.0,
           0.0,
           0.0,
+          {
+            "nonfinite": "nan"
+          },
           {
             "nonfinite": "nan"
           },
@@ -74062,6 +74113,7 @@
           0.0,
           8.06496558870588,
           0.5880704075098038,
+          0.0,
           5.715251179150171,
           0.4167370651463666,
           2.349714409555709,
@@ -74744,6 +74796,7 @@
           "district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio",
           "district_cost_community_market_counterfactual_daily_average_eur",
           "district_cost_community_market_counterfactual_total_eur",
+          "district_cost_community_market_operator_balance_total_eur",
           "district_cost_community_market_savings_daily_average_eur",
           "district_cost_community_market_savings_total_eur",
           "district_cost_community_market_settled_daily_average_eur",
@@ -75991,6 +76044,7 @@
         "district/District/district_comfort_resilience_resilience_unserved_energy_outage_normalized_ratio": 0.0,
         "district/District/district_cost_community_market_counterfactual_daily_average_eur": 8.06496558870588,
         "district/District/district_cost_community_market_counterfactual_total_eur": 0.5880704075098038,
+        "district/District/district_cost_community_market_operator_balance_total_eur": 0.0,
         "district/District/district_cost_community_market_savings_daily_average_eur": 5.715251179150171,
         "district/District/district_cost_community_market_savings_total_eur": 0.41673706514636666,
         "district/District/district_cost_community_market_settled_daily_average_eur": 2.349714409555709,
