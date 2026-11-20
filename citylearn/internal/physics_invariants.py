@@ -20,10 +20,18 @@ class PhysicsInvariantError(AssertionError):
 
 
 class CityLearnPhysicsInvariantService:
-    """Runtime physics/assertion checks evaluated per control step."""
+    """Runtime physics/assertion checks evaluated per control step.
+
+    The net balance rebuilds net consumption from the device series that produced it, so it cannot see a
+    wrong device series. The device identities compare each series with the model's own inputs and states
+    instead: thermal electricity with the heat output and the COP or efficiency, served energy with the
+    demand, and battery energy changes with the terminal energy, the efficiency and the discharge reserve.
+    """
 
     SOC_EPS = 1.0e-4
     ENERGY_EPS = 5.0e-4
+    # Device series are stored in float32, whose relative rounding is about 6e-8.
+    RELATIVE_EPS = 1.0e-5
 
     def __init__(self, env: "CityLearnEnv"):
         self.env = env
@@ -48,7 +56,8 @@ class CityLearnPhysicsInvariantService:
                 continue
             seen.add(id(battery))
             energy = float(battery.soc[time_step]) * float(battery.capacity)
-            snapshot.append((name, battery, energy, battery.stored_energy_transfer))
+            terminal = self._battery_terminal_energy(battery, time_step)
+            snapshot.append((name, battery, energy, battery.stored_energy_transfer, terminal))
         self._battery_energy_before_actions = (int(time_step), snapshot)
 
     def _assert_battery_energy_changes(self, time_step: int):
@@ -56,7 +65,7 @@ class CityLearnPhysicsInvariantService:
         self._battery_energy_before_actions = None
         if snapshot is None or snapshot[0] != time_step:
             return
-        for name, battery, energy_before, transfer_before in snapshot[1]:
+        for name, battery, energy_before, transfer_before, terminal_before in snapshot[1]:
             energy_after = float(battery.soc[time_step]) * float(battery.capacity)
             expected_change = battery.stored_energy_transfer - transfer_before
             self._require(abs(energy_after - energy_before - expected_change) <= self.ENERGY_EPS, (
@@ -64,6 +73,42 @@ class CityLearnPhysicsInvariantService:
                 f"before={energy_before:.6f} kWh, after={energy_after:.6f} kWh, "
                 f"expected_change={expected_change:.6f} kWh."
             ))
+            # The transfer journal above cannot see a wrong terminal energy, which is what the building nets.
+            # The terminal energy must be the sum of the step's charge and discharge operations, and the stored
+            # energy must follow each operation at its own efficiency (one history entry per operation).
+            terminal = self._battery_terminal_energy(battery, time_step) - terminal_before
+            operations = [float(event['terminal']) for event in getattr(battery, 'energy_provenance_events', None) or []
+                          if event.get('kind') == 'transfer']
+            operated = sum(operations)
+            self._require(abs(terminal - operated) <= self._energy_tolerance(terminal, operated), (
+                f"Battery terminal energy does not match its charge and discharge operations for '{name}' "
+                f"at t={time_step}: terminal={terminal:.6f} kWh, operations={operated:.6f} kWh."
+            ))
+            history = list(getattr(battery, 'efficiency_history', None) or [])
+            efficiencies = (history[-len(operations):] if operations and len(history) >= len(operations)
+                            else [battery.efficiency]*len(operations))
+            expected = 0.0
+            for energy, efficiency in zip(operations, efficiencies):
+                one_way = max(float(efficiency), 1.0e-12)**0.5
+                expected += energy*one_way if energy >= 0.0 else energy/one_way
+            change = energy_after - energy_before
+            self._require(abs(change - expected) <= self._energy_tolerance(change, expected), (
+                f"Battery energy change does not match its terminal energy for '{name}' at t={time_step}: "
+                f"stored change={change:.6f} kWh, terminal={terminal:.6f} kWh, expected stored change={expected:.6f} kWh."
+            ))
+            depth_of_discharge = getattr(battery, 'depth_of_discharge', None)
+            if any(energy < 0.0 for energy in operations) and depth_of_discharge is not None:
+                # A discharge stops at the reserve, or at the stored energy if standby losses already took it lower.
+                reserve = min(max(1.0 - float(depth_of_discharge), 0.0)*float(battery.capacity), energy_before)
+                self._require(energy_after >= reserve - self.ENERGY_EPS, (
+                    f"Battery discharged below its depth-of-discharge reserve for '{name}' at t={time_step}: "
+                    f"stored={energy_after:.6f} kWh, reserve={reserve:.6f} kWh."
+                ))
+
+    def _battery_terminal_energy(self, battery, time_step: int) -> float:
+        """Net energy at the battery terminals at ``time_step``, in control-step kWh (charge positive)."""
+
+        return self._state(battery.electricity_consumption, time_step, 'battery electricity')
 
     @staticmethod
     def _require(condition: bool, message: str):
@@ -128,6 +173,8 @@ class CityLearnPhysicsInvariantService:
         for building in buildings:
             for check in (
                 self._assert_building_energy_balance,
+                self._assert_thermal_device_conversion,
+                self._assert_served_energy_within_demand,
                 self._assert_outage_local_balance,
                 self._assert_soc_bounds,
                 self._assert_storage_power_bounds,
@@ -163,6 +210,87 @@ class CityLearnPhysicsInvariantService:
         self._require(abs(net - terms) <= self.ENERGY_EPS, (
             f"Net energy balance mismatch for '{building.name}' at t={t}: "
             f"net={net:.6f} kWh, terms={terms:.6f} kWh."
+        ))
+
+    def _energy_tolerance(self, *values: float) -> float:
+        return self.ENERGY_EPS + self.RELATIVE_EPS*max([abs(value) for value in values] + [0.0])
+
+    @staticmethod
+    def _step_ratio(owner) -> float:
+        ratio = getattr(owner, 'time_step_ratio', None)
+        return 1.0 if ratio in (None, 0) else float(ratio)
+
+    def _thermal_services(self, building, t: int):
+        """Thermal end uses at step ``t`` as (name, device, heating, output kWh, demand kWh, served kWh).
+
+        Output is the device's heat to the building plus its storage charge, in control-step kWh; demand and
+        served heat (device plus storage discharge) are in dataset-resolution kWh, the unit of the demand series.
+        """
+
+        ratio = self._step_ratio(building)
+        services = []
+        for name, heating in (('cooling', False), ('heating', True), ('dhw', True)):
+            device = getattr(building, f'{name}_device', None)
+            storage = getattr(building, f'{name}_storage', None)
+            if device is None:
+                continue
+            from_device = self._state(getattr(building, f'energy_from_{name}_device'), t, f'{name} device output')
+            balance = self._state(getattr(storage, 'energy_balance', []), t, f'{name} storage balance')
+            demand = self._state(getattr(building, f'{name}_demand'), t, f'{name} demand')
+            output = from_device*ratio + max(balance, 0.0)
+            served = from_device + max(-balance, 0.0)/ratio
+            services.append((name, device, heating, output, demand, served))
+        return services
+
+    def _assert_thermal_device_conversion(self, building, t: int):
+        """Electricity of each heat pump and electric heater times its COP or efficiency equals its heat output."""
+
+        from citylearn.energy_model import ElectricHeater, HeatPump
+
+        temperature = self._state(building.weather.outdoor_dry_bulb_temperature, t, 'outdoor dry bulb temperature')
+        # A device that serves several end uses (a heat pump for heating and DHW, say) draws their sum.
+        devices = {}
+        for name, device, heating, output, _, _ in self._thermal_services(building, t):
+            if isinstance(device, HeatPump):
+                factor = float(device.get_cop(temperature, heating))
+            elif isinstance(device, ElectricHeater):
+                factor = float(device.efficiency)
+            else:
+                continue
+            names, expected, _ = devices.get(id(device), ((), 0.0, device))
+            devices[id(device)] = (names + (name,), expected + output/max(factor, 1.0e-12), device)
+
+        # During an outage, the loads clipped to the islanded supply at the first step keep their heat output,
+        # so electricity may only fall short of the heat output there.
+        outage = bool(getattr(building, 'power_outage', False))
+        for names, expected, device in devices.values():
+            label = '/'.join(names)
+            electricity = self._state(device.electricity_consumption, t, f'{label} device electricity')
+            tolerance = self._energy_tolerance(electricity, expected)
+            consistent = (electricity <= expected + tolerance if outage
+                          else abs(electricity - expected) <= tolerance)
+            self._require(consistent, (
+                f"Thermal device conversion mismatch for '{building.name}' ({label}) at t={t}: "
+                f"electricity={electricity:.6f} kWh, heat output/COP={expected:.6f} kWh."
+            ))
+
+    def _assert_served_energy_within_demand(self, building, t: int):
+        """Served cooling, heating, DHW and non-shiftable load never exceed their demand."""
+
+        for name, _, _, _, demand, served in self._thermal_services(building, t):
+            self._require(served <= demand + self._energy_tolerance(served, demand), (
+                f"Served {name} energy exceeds demand for '{building.name}' at t={t}: "
+                f"served={served:.6f} kWh, demand={demand:.6f} kWh."
+            ))
+
+        device = getattr(building, 'non_shiftable_load_device', None)
+        if device is None:
+            return
+        served = self._state(device.electricity_consumption, t, 'non-shiftable load electricity')
+        demand = self._state(building.non_shiftable_load, t, 'non-shiftable load')*self._step_ratio(building)
+        self._require(served <= demand + self._energy_tolerance(served, demand), (
+            f"Served non-shiftable load exceeds demand for '{building.name}' at t={t}: "
+            f"served={served:.6f} kWh, demand={demand:.6f} kWh."
         ))
 
     def _assert_outage_local_balance(self, building, t: int):
