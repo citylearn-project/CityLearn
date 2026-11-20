@@ -243,7 +243,9 @@
   },
   "reward_function": {
     "type": "citylearn.reward_function.ComfortReward",
-    "attributes": null
+    "attributes": {
+      "version": 2
+    }
   },
   "buildings": {
     "Building_1": {

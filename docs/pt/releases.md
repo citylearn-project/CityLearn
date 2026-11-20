@@ -33,9 +33,16 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   por omissão. A versão 2 soma a recompensa base MARL em todos os edifícios e
   substitui o bónus por `min(2 * w, -(w ** 2))` (-25). No modo de arrefecimento
   ou de aquecimento, a recompensa de conforto da versão 1 escolhia o serviço pela
-  maior procura no passo; a versão 2 usa `hvac_mode`. A versão 1 continua a ser a
-  versão por omissão, pelo que os esquemas incluídos e as políticas treinadas
-  mantêm a recompensa, e a evidência da recompensa nos metadados do ambiente
+  maior procura no passo; a versão 2 usa `hvac_mode`. A versão 2 é a versão por
+  omissão, e todos os esquemas incluídos que usam estas recompensas definem
+  `"version": 2`, pelo que as recompensas dos datasets
+  `citylearn_challenge_2022_phase_all_plus_evs`, das demos trifásicas, do desafio
+  2023, de Quebec e `baeda_3dem` mudam; as simulações e os KPIs não mudam
+  ([#278](https://github.com/citylearn-project/CityLearn/issues/278)). A versão 1 fica obsoleta: existe apenas para reproduzir
+  corridas feitas com o CityLearn 3.6.0 ou anterior, selecioná-la levanta um
+  `DeprecationWarning`, e será removida numa versão futura. Uma única definição
+  atual evita comparar políticas treinadas com recompensas diferentes. A
+  evidência da recompensa nos metadados do ambiente e nos manifestos de exportação
   regista a versão.
 - **Funções de recompensa por edifício.** Com `reward_function.type` definido por
   edifício, a função de cada edifício lia os metadados do primeiro edifício e as

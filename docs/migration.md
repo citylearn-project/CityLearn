@@ -132,13 +132,23 @@ as `RewardFunction`, give the same rewards. Retrain policies trained with such a
 schema. No bundled dataset uses per-building reward functions.
 
 `Electric_Vehicles_Reward_Function`, `ComfortReward` and
-`SolarPenaltyAndComfortReward` accept a `version` attribute. Version 1, the
-default, is the reward of 3.6.0, so existing schemas and trained policies keep
-their reward. Version 2 corrects the EV departure penalty, adds the base reward
+`SolarPenaltyAndComfortReward` accept a `version` attribute, and version 2 is
+the default. Version 2 corrects the EV departure penalty, adds the base reward
 and follows the HVAC mode in the comfort term, as the reward function overview
-of the documentation describes. Set `"version": 2` in the
-reward attributes for new training runs, and compare policies only within one
-version. The reward evidence in the environment metadata records the version.
+of the documentation describes. Every bundled schema that uses these rewards
+sets `"version": 2`, so the rewards of `citylearn_challenge_2022_phase_all_plus_evs`,
+the three-phase demos, the 2023 challenge datasets, both Quebec neighbourhoods
+and `baeda_3dem` differ from 3.6.0; their simulations and KPIs do not. Retrain
+policies trained on these rewards before comparing them with new runs, and
+compare policies only within one version.
+
+Version 1, the reward of 3.6.0, is deprecated and exists only to reproduce runs
+made with CityLearn 3.6.0 or earlier. Select it with `"version": 1` in the
+reward attributes (or `reward_function_kwargs={"version": 1}`); it raises a
+`DeprecationWarning` and will be removed in a later release. Reward objects
+pickled by 3.6.0, for example inside a saved agent or environment, keep version
+1 without a warning. The reward evidence in the environment metadata and in
+export manifests records the version.
 
 ### KPI definitions
 

@@ -30,17 +30,22 @@ This is the reward section of a schema, not a complete dataset definition.
 Reward versions
 ***************
 
-Some supplied rewards have more than one definition. A ``version`` attribute
-selects it, so that runs trained with an earlier definition stay identifiable.
-The environment metadata records the version in
-``reward_evidence.effective_public_parameters``.
+The EV and comfort rewards have two definitions. Version 2, the default, follows
+the documented definitions. Version 1 is the reward of CityLearn 3.6.0 and
+earlier, which had the defects listed below. It is deprecated and exists only to
+reproduce runs made with those releases: selecting it raises a
+``DeprecationWarning``, and it will be removed in a later release. Keeping a single
+current definition avoids comparing policies that were trained on different
+rewards. The environment metadata, and the manifest of every export, record the
+version in ``reward_evidence.effective_public_parameters``, so the definition
+behind a run stays identifiable.
 
 .. list-table::
    :header-rows: 1
 
    * - Reward
-     - Version 1 (default)
-     - Version 2
+     - Version 1 (deprecated)
+     - Version 2 (default)
    * - :py:class:`citylearn.reward_function.Electric_Vehicles_Reward_Function`
      - The reward of CityLearn 3.6.0 and earlier. A building with chargers gets only its EV terms, and a
        building without chargers gets 0. Leaving 0.25 or more below the required departure SOC adds
@@ -58,15 +63,15 @@ The environment metadata records the version in
        21.5 C with a 20 C set point the reward is -1.5 whether the heater runs or not; version 1 gives 0
        while the heater is off.
 
-Version 1 stays the default so that bundled schemas and trained policies keep
-their reward. Select version 2 for new work:
+The bundled schemas that use these rewards set ``"version": 2``. To reproduce
+a run made with CityLearn 3.6.0 or earlier, select version 1 explicitly:
 
 .. code-block:: json
 
    {
      "reward_function": {
        "type": "citylearn.reward_function.Electric_Vehicles_Reward_Function",
-       "attributes": {"version": 2}
+       "attributes": {"version": 1}
      }
    }
 

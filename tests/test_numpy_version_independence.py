@@ -13,6 +13,7 @@ Regenerate the reference of version 2 (NumPy 1.x only, after a reviewed change o
 import json
 import math
 import sys
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -28,6 +29,9 @@ REFERENCES = {
 # Version 1 keeps the 3.6.0 random streams of its reference; version 2 uses the 'v2' streams (SeedSequence and
 # PCG64), whose output NumPy keeps identical across versions.
 RANDOM_STREAMS = {1: 'v1', 2: 'v2'}
+# The frozen 3.6.0 reference also records the 3.6.0 rewards, which reward version 1 keeps (#278). Both datasets use
+# Electric_Vehicles_Reward_Function, whose schema attributes hold only the version.
+REWARD_VERSIONS = {1: 1, 2: 2}
 STEPS = 48
 # Far above cross-platform rounding noise, far below the float32 drift NumPy 2 introduced.
 RTOL = 1.0e-9
@@ -47,9 +51,13 @@ def _action(t: int, j: int, low: float, high: float) -> float:
 
 
 def _rollout(name: str, physics_version: int) -> dict:
-    env = CityLearnEnv(str(ROOT/'data'/'datasets'/name/'schema.json'), central_agent=True,
-                       episode_time_steps=STEPS + 1, random_seed=0, physics_version=physics_version,
-                       random_stream_version=RANDOM_STREAMS[physics_version])
+    with warnings.catch_warnings():
+        # Reward version 1 is deprecated; the frozen reference still needs it.
+        warnings.simplefilter('ignore', DeprecationWarning)
+        env = CityLearnEnv(str(ROOT/'data'/'datasets'/name/'schema.json'), central_agent=True,
+                           episode_time_steps=STEPS + 1, random_seed=0, physics_version=physics_version,
+                           random_stream_version=RANDOM_STREAMS[physics_version],
+                           reward_function_kwargs={'version': REWARD_VERSIONS[physics_version]})
     env.reset(seed=0)
     rewards = []
     t = 0
