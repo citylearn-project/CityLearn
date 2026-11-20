@@ -49,7 +49,7 @@ def share_identical_series(
 
         if (
             not isinstance(array, np.ndarray) or array.ndim != 1 or array.dtype.kind not in 'biuf'
-            or not array.flags.c_contiguous or array.base is not None
+            or not array.flags.c_contiguous or (array.base is not None and array.flags.writeable)
         ):
             continue
 

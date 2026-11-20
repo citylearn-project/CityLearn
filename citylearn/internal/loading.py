@@ -66,6 +66,11 @@ class CityLearnLoadingService:
         self._dynamic_dataset_rows: Optional[int] = None
         self._timeseries_row_counts: Dict[str, int] = {}
         self._shared_timeseries_cache: Dict[Tuple[Any, ...], Any] = {}
+        self._parsed_data: Any = None
+        self._share_readonly_series: bool = False
+        self._last_read_window_spec: Any = None
+        self._last_sim_source_end: int = -1
+        self._last_sim_padded_step_seconds: Optional[float] = None
 
     @staticmethod
     def _dataframe_to_constructor_kwargs(dataframe: pd.DataFrame) -> Dict[str, np.ndarray]:
@@ -127,6 +132,20 @@ class CityLearnLoadingService:
     ]:
         """Return env objects as defined by schema."""
 
+        parsed_data = kwargs.pop('parsed_data', None)
+        share_readonly_series = kwargs.pop('share_readonly_series', None)
+        if parsed_data is not None:
+            self._parsed_data = parsed_data
+            self._share_readonly_series = bool(
+                parsed_data.frozen if share_readonly_series is None else share_readonly_series
+            )
+        elif getattr(self.env, '_parsed_data_source', None) is not None:
+            self._parsed_data = self.env._parsed_data_source
+            self._share_readonly_series = True if share_readonly_series is None else bool(share_readonly_series)
+        else:
+            self._parsed_data = getattr(self.env, '_parsed_data', None)
+            self._share_readonly_series = False if share_readonly_series is None else bool(share_readonly_series)
+
         schema['root_directory'] = kwargs['root_directory'] if kwargs.get('root_directory') is not None else schema['root_directory']
         # The environment resolved the physics version from its argument and the schema.
         schema['physics_version'] = getattr(self.env, 'physics_version', schema.get('physics_version'))
@@ -138,7 +157,7 @@ class CityLearnLoadingService:
         from citylearn.internal.temporal import TimeAxis, snapshot_inputs
         self.env._initialization_seed = schema['random_seed']
         self.env._input_snapshot = snapshot_inputs(schema)
-        self.env._time_axis = TimeAxis(schema)
+        self.env._time_axis = TimeAxis(schema, parsed_data=self._parsed_data)
 
         schema['central_agent'] = parse_bool(
             kwargs['central_agent'] if kwargs.get('central_agent') is not None else schema['central_agent'],
@@ -221,7 +240,11 @@ class CityLearnLoadingService:
         self._dynamic_member_windows = {}
         self._dynamic_charger_windows = {}
         self._dynamic_rejoining_members = set()
-        self._dynamic_dataset_rows = None
+        if self._parsed_data is not None:
+            self._timeseries_row_counts.update(self._parsed_data.timeseries_row_counts)
+            self._dynamic_dataset_rows = self._parsed_data.dynamic_dataset_rows
+        else:
+            self._dynamic_dataset_rows = None
         self._shared_timeseries_cache = {}
 
         if dynamic_mode:
@@ -460,7 +483,9 @@ class CityLearnLoadingService:
         building_type = ('citylearn.citylearn.Building' if building_schema.get('type') is None
                          else building_schema['type'])
         constructor = loading_components.component_constructor(building_type, f'buildings.{building_name}.type')
-        loading_components.add_model_options(options, building_name, building_schema, schema, episode_tracker, constructor)
+        loading_components.add_model_options(
+            options, building_name, building_schema, schema, episode_tracker, constructor, loader=self,
+        )
         outage = loading_components.outage_options(index, building_name, building_schema, kwargs)
         chargers = loading_components.load_chargers(
             self, building_name, building_schema, schema, episode_tracker, expected_rows, inputs.time_step_ratio)
@@ -760,19 +785,30 @@ class CityLearnLoadingService:
 
         profiles_file = os.path.join(schema['root_directory'], appliance_schema['cycle_profiles_file'])
         schedule_file = os.path.join(schema['root_directory'], appliance_schema['flexibility_schedule_file'])
-
-        profiles = self._read_dataframe(profiles_file)
-        schedule = self._read_dataframe(schedule_file)
         # Sparse requests use global calendar indexes. Keep the catalogue intact:
         # a local loading window can discard current requests in partial episodes
         # and future requests after member re-entry. Activation/audit owns eligibility.
-
         source_label = f'buildings.{building_name}.deferrable_appliances.{appliance_name}'
-        simulation = DeferrableApplianceSimulation.from_dataframes(
-            cycle_profiles=profiles,
-            flexibility_schedule=schedule,
-            source_label=source_label,
+        simulation = (
+            None
+            if self._parsed_data is None
+            else self._parsed_data.find_deferrable(
+                profiles_file,
+                schedule_file,
+                source_label,
+                share_readonly=self._share_readonly_series,
+            )
         )
+        if simulation is None:
+            profiles = self._read_dataframe(profiles_file)
+            schedule = self._read_dataframe(schedule_file)
+            simulation = DeferrableApplianceSimulation.from_dataframes(
+                cycle_profiles=profiles,
+                flexibility_schedule=schedule,
+                source_label=source_label,
+            )
+            if self._parsed_data is not None and not self._parsed_data.frozen:
+                self._parsed_data.store_deferrable(profiles_file, schedule_file, source_label, simulation)
 
         appliance_type = appliance_schema.get('type', 'citylearn.energy_model.DeferrableAppliance')
         appliance_module = '.'.join(appliance_type.split('.')[0:-1])
@@ -811,15 +847,34 @@ class CityLearnLoadingService:
         if not simulation_file:
             raise ValueError(f'buildings.{building_name}.escalators.{escalator_name}.simulation is required.')
         filepath = os.path.join(schema['root_directory'], simulation_file)
-        dataframe = self._read_member_timeseries(
-            schema,
-            filepath,
-            expected_rows=expected_rows,
-            window=window,
-            source_label=f'buildings.{building_name}.escalators.{escalator_name}.simulation',
-        )
         source_label = f'buildings.{building_name}.escalators.{escalator_name}'
-        simulation = EscalatorSimulation.from_dataframe(dataframe, source_label=source_label)
+        window_key = tuple(window) if (self._dynamic_mode and window is not None) else None
+        simulation = None
+        if self._parsed_data is not None:
+            hit = self._parsed_data.find_escalator(
+                filepath,
+                simulation_start=int(schema['simulation_start_time_step']),
+                simulation_end=int(schema['simulation_end_time_step']),
+                expected_rows=int(expected_rows),
+                window_key=window_key,
+                seconds_per_time_step=float(schema.get('seconds_per_time_step', 3600)),
+            )
+            if hit is not None:
+                entry, slc = hit
+                simulation = entry.build(slc, source_label=source_label, share_readonly=self._share_readonly_series)
+        if simulation is None:
+            dataframe = self._read_member_timeseries(
+                schema,
+                filepath,
+                expected_rows=expected_rows,
+                window=window,
+                source_label=f'buildings.{building_name}.escalators.{escalator_name}.simulation',
+            )
+            simulation = EscalatorSimulation.from_dataframe(dataframe, source_label=source_label)
+            if self._parsed_data is not None and not self._parsed_data.frozen and self._last_read_window_spec is not None:
+                self._parsed_data.store_escalator(
+                    filepath, simulation, list(dataframe.columns), spec=self._last_read_window_spec,
+                )
         self._set_time_step_offset(simulation, schema['simulation_start_time_step'])
 
         escalator_type = escalator_schema.get('type', 'citylearn.energy_model.Escalator')
@@ -868,12 +923,16 @@ class CityLearnLoadingService:
     ) -> pd.DataFrame:
         """Read only the configured simulation window from a CSV or Parquet time series file."""
 
+        sim_start = int(schema['simulation_start_time_step'])
+        sim_end = int(schema['simulation_end_time_step'])
         dataframe = self._read_timeseries_dataframe(
             filepath,
-            start_time_step=int(schema['simulation_start_time_step']),
-            end_time_step=int(schema['simulation_end_time_step']),
+            start_time_step=sim_start,
+            end_time_step=sim_end,
             csv_dtypes=csv_dtypes,
         )
+        self._last_sim_source_end = sim_start + len(dataframe) - 1
+        self._last_sim_padded_step_seconds = None
         if not parse_bool(
             schema.get('terminal_observation_padding', False),
             default=False,
@@ -881,11 +940,7 @@ class CityLearnLoadingService:
         ):
             return dataframe
 
-        expected_rows = (
-            int(schema['simulation_end_time_step'])
-            - int(schema['simulation_start_time_step'])
-            + 1
-        )
+        expected_rows = sim_end - sim_start + 1
         if len(dataframe) == expected_rows:
             return dataframe
         if len(dataframe) != expected_rows - 1 or dataframe.empty:
@@ -894,6 +949,8 @@ class CityLearnLoadingService:
                 f'after the available data; expected {expected_rows - 1} source rows '
                 f'but read {len(dataframe)} from {filepath}.'
             )
+
+        self._last_sim_padded_step_seconds = float(schema.get('seconds_per_time_step', 3600))
 
         terminal = dataframe.iloc[-1].copy()
         # The padded row is a terminal observation, not an additional physical
@@ -960,6 +1017,16 @@ class CityLearnLoadingService:
                 f'end_time_step ({end_time_step}) must be >= start_time_step ({start_time_step}) '
                 f'for source={filepath}.'
             )
+
+        if self._parsed_data is not None:
+            cached = self._parsed_data.find_raw_table(
+                filepath,
+                start_time_step=start_time_step,
+                end_time_step=end_time_step,
+                csv_dtypes=csv_dtypes,
+            )
+            if cached is not None:
+                return cached
 
         if self._file_format(filepath) == 'parquet':
             return self._read_parquet_timeseries_dataframe(
@@ -1066,11 +1133,43 @@ class CityLearnLoadingService:
             if window_cache_key in self._shared_timeseries_cache:
                 return self._shared_timeseries_cache[window_cache_key]
 
+        sim_start = int(schema['simulation_start_time_step'])
+        sim_end = int(schema['simulation_end_time_step'])
+        req_window_key = tuple(window) if (self._dynamic_mode and window is not None) else None
+        noise_seed = self._noise_seed(schema, source_label)
+
+        if self._parsed_data is not None:
+            hit = self._parsed_data.find_shared(
+                constructor.__name__,
+                filepath,
+                simulation_start=sim_start,
+                simulation_end=sim_end,
+                expected_rows=int(expected_rows),
+                window_key=req_window_key,
+                seconds_per_time_step=float(schema.get('seconds_per_time_step', 3600)),
+            )
+            if hit is not None:
+                entry, slc = hit
+                time_series = entry.build(
+                    constructor,
+                    slc,
+                    noise_std=noise_std,
+                    noise_seed=noise_seed,
+                    noise_start_index=sim_start,
+                    share_readonly=self._share_readonly_series,
+                )
+                self._set_time_step_offset(time_series, sim_start)
+                if cacheable:
+                    full_horizon_hit = window is None or entry.spec.sliceable
+                    cache_key = full_horizon_cache_key if full_horizon_hit else window_cache_key
+                    self._shared_timeseries_cache[cache_key] = time_series
+                return time_series
+
         # A file that covers the whole simulation window is the same for every member window.
         full_horizon_source = window is None or (
             not self._is_member_window_file(schema, filepath, window)
             and self._timeseries_row_count(filepath)
-            >= int(schema['simulation_start_time_step']) + int(expected_rows)
+            >= sim_start + int(expected_rows)
         )
         dataframe = self._read_member_timeseries(
             schema,
@@ -1079,9 +1178,22 @@ class CityLearnLoadingService:
             window=window,
             source_label=source_label,
         )
-        time_series = constructor(**self._dataframe_to_constructor_kwargs(dataframe), noise_std=noise_std,
-            noise_seed=self._noise_seed(schema, source_label), noise_start_index=schema['simulation_start_time_step'])
-        self._set_time_step_offset(time_series, schema['simulation_start_time_step'])
+        time_series = constructor(
+            **self._dataframe_to_constructor_kwargs(dataframe),
+            noise_std=noise_std,
+            noise_seed=noise_seed,
+            noise_start_index=sim_start,
+        )
+        self._set_time_step_offset(time_series, sim_start)
+        if self._parsed_data is not None and not self._parsed_data.frozen and self._last_read_window_spec is not None:
+            self._parsed_data.capture_shared(
+                constructor.__name__,
+                filepath,
+                dataframe,
+                time_series,
+                spec=self._last_read_window_spec,
+                noise_std=noise_std,
+            )
 
         if cacheable:
             cache_key = full_horizon_cache_key if full_horizon_source else window_cache_key
@@ -1292,11 +1404,27 @@ class CityLearnLoadingService:
         only covers its first activation.
         """
 
+        from citylearn.internal.parsed_data import WindowSpec, canonical_file_key
+
+        simulation_start = int(schema['simulation_start_time_step'])
+        simulation_end = int(schema['simulation_end_time_step'])
+        self._last_read_window_spec = None
+
         if not self._dynamic_mode or window is None:
-            return self._read_simulation_dataframe(schema, filepath, csv_dtypes=csv_dtypes)
+            dataframe = self._read_simulation_dataframe(schema, filepath, csv_dtypes=csv_dtypes)
+            self._last_read_window_spec = WindowSpec(
+                simulation_start=simulation_start,
+                simulation_end=simulation_end,
+                source_end=self._last_sim_source_end,
+                expected_rows=len(dataframe),
+                window_key=None,
+                sliceable=True,
+                padded_step_seconds=self._last_sim_padded_step_seconds,
+            )
+            return dataframe
 
         expected_rows = int(expected_rows)
-        simulation_start = int(schema['simulation_start_time_step'])
+        window_key = tuple(window)
         join, end, rejoins = window
         join, end = int(join), int(end)
 
@@ -1304,6 +1432,7 @@ class CityLearnLoadingService:
             dataframe = self._read_simulation_dataframe(schema, filepath, csv_dtypes=csv_dtypes)
 
             if len(dataframe) >= expected_rows:
+                was_truncated = len(dataframe) > expected_rows
                 dataframe = dataframe.iloc[:expected_rows]
                 index = dataframe.index
                 if not (
@@ -1313,6 +1442,16 @@ class CityLearnLoadingService:
                 ):
                     dataframe = dataframe.reset_index(drop=True)
 
+                effective_end = simulation_start + expected_rows - 1
+                self._last_read_window_spec = WindowSpec(
+                    simulation_start=simulation_start,
+                    simulation_end=effective_end,
+                    source_end=min(self._last_sim_source_end, effective_end),
+                    expected_rows=expected_rows,
+                    window_key=window_key,
+                    sliceable=True,
+                    padded_step_seconds=None if was_truncated else self._last_sim_padded_step_seconds,
+                )
                 return dataframe
 
             if len(dataframe) == 0:
@@ -1322,7 +1461,25 @@ class CityLearnLoadingService:
                 )
 
             # A file that starts at row 0 but ends early, such as one for a member that leaves.
-            return self._place_member_rows(dataframe, expected_rows=expected_rows, local_start=0)
+            if self._parsed_data is not None and not self._parsed_data.frozen:
+                self._parsed_data.store_raw_table(
+                    filepath,
+                    dataframe,
+                    start_row=simulation_start,
+                    requested_end_row=simulation_end,
+                    csv_dtypes=csv_dtypes,
+                )
+            placed = self._place_member_rows(dataframe, expected_rows=expected_rows, local_start=0)
+            self._last_read_window_spec = WindowSpec(
+                simulation_start=simulation_start,
+                simulation_end=simulation_end,
+                source_end=self._last_sim_source_end,
+                expected_rows=expected_rows,
+                window_key=window_key,
+                sliceable=False,
+                padded_step_seconds=None,
+            )
+            return placed
 
         if rejoins:
             raise ValueError(
@@ -1330,6 +1487,23 @@ class CityLearnLoadingService:
                 f'add_member time step ({join}), but the member joins again after leaving. Provide a '
                 'full-horizon file, with one row per dataset time step, for a member that rejoins.'
             )
+
+        if (
+            self._parsed_data is not None
+            and not self._parsed_data.frozen
+            and self._parsed_data.find_raw_table(
+                filepath, start_time_step=0, end_time_step=None, csv_dtypes=csv_dtypes,
+            ) is None
+        ):
+            full_member_df = self._read_timeseries_dataframe(
+                filepath, start_time_step=0, end_time_step=None, csv_dtypes=csv_dtypes,
+            )
+            self._parsed_data.store_raw_table(
+                filepath, full_member_df, start_row=0, requested_end_row=None, csv_dtypes=csv_dtypes,
+            )
+            row_key = canonical_file_key(filepath)
+            self._timeseries_row_counts[row_key] = len(full_member_df)
+            self._parsed_data.timeseries_row_counts[row_key] = len(full_member_df)
 
         first = max(join, simulation_start)
         last = min(end, simulation_start + expected_rows)
@@ -1344,7 +1518,17 @@ class CityLearnLoadingService:
             if len(dataframe) == 0:
                 raise ValueError(f'{source_label} has 0 rows in dynamic mode.')
 
-            return self._place_member_rows(dataframe, expected_rows=expected_rows, local_start=0)
+            placed = self._place_member_rows(dataframe, expected_rows=expected_rows, local_start=0)
+            self._last_read_window_spec = WindowSpec(
+                simulation_start=simulation_start,
+                simulation_end=simulation_end,
+                source_end=simulation_end,
+                expected_rows=expected_rows,
+                window_key=window_key,
+                sliceable=False,
+                padded_step_seconds=None,
+            )
+            return placed
 
         file_start = first - join
         rows = last - first
@@ -1373,9 +1557,19 @@ class CityLearnLoadingService:
                 stacklevel=2,
             )
 
-        return self._place_member_rows(
+        placed = self._place_member_rows(
             dataframe, expected_rows=expected_rows, local_start=first - simulation_start,
         )
+        self._last_read_window_spec = WindowSpec(
+            simulation_start=simulation_start,
+            simulation_end=simulation_end,
+            source_end=simulation_end,
+            expected_rows=expected_rows,
+            window_key=window_key,
+            sliceable=False,
+            padded_step_seconds=None,
+        )
+        return placed
 
     def _is_member_window_file(
         self,
@@ -1408,7 +1602,9 @@ class CityLearnLoadingService:
     def _timeseries_row_count(self, filepath: Union[str, os.PathLike]) -> int:
         """Number of data rows in a CSV or Parquet time series file, cached by path."""
 
-        key = os.path.abspath(str(filepath))
+        from citylearn.internal.parsed_data import canonical_file_key
+
+        key = canonical_file_key(filepath)
 
         if key not in self._timeseries_row_counts:
             if self._file_format(filepath) == 'parquet':
@@ -1432,6 +1628,8 @@ class CityLearnLoadingService:
                 count = max(0, count - 1)
 
             self._timeseries_row_counts[key] = count
+            if self._parsed_data is not None and not self._parsed_data.frozen:
+                self._parsed_data.timeseries_row_counts[key] = count
 
         return self._timeseries_row_counts[key]
 
@@ -1450,5 +1648,7 @@ class CityLearnLoadingService:
                     counts.append(self._timeseries_row_count(filepath))
 
             self._dynamic_dataset_rows = max(counts) if counts else int(schema['simulation_end_time_step']) + 1
+            if self._parsed_data is not None and not self._parsed_data.frozen:
+                self._parsed_data.dynamic_dataset_rows = self._dynamic_dataset_rows
 
         return self._dynamic_dataset_rows

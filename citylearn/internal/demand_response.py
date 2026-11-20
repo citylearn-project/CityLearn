@@ -94,15 +94,33 @@ class CityLearnDemandResponseService:
             raise FileNotFoundError(f"demand_response.requests_file does not exist: {path}")
 
         suffix = path.suffix.lower()
+        if suffix not in {".parquet", ".pq", ".csv", ".txt"}:
+            raise ValueError("demand_response.requests_file must be a CSV or Parquet file.")
+
+        from citylearn.internal.parsed_data import canonical_file_key
+
+        purposes = (self.env.schema.get('demand_response') or {}).get('request_purposes') or {}
+        cache_key = (
+            canonical_file_key(path),
+            tuple(sorted((str(k), str(v)) for k, v in purposes.items())),
+        )
+        source = getattr(self.env, '_parsed_data_source', None)
+        sink = getattr(self.env, '_parsed_data', None)
+        cached = None if source is None else source.demand_response_by_key.get(cache_key)
+        if cached is not None:
+            self._requests = list(cached)
+            self._validate_overlaps()
+            return
+
         if suffix in {".parquet", ".pq"}:
             frame = pd.read_parquet(path)
-        elif suffix in {".csv", ".txt"}:
-            frame = pd.read_csv(path)
         else:
-            raise ValueError("demand_response.requests_file must be a CSV or Parquet file.")
+            frame = pd.read_csv(path)
 
         self._requests = self._parse_requests(frame)
         self._validate_overlaps()
+        if sink is not None and not sink.frozen:
+            sink.demand_response_by_key[cache_key] = tuple(self._requests)
 
     def reset(self):
         """Reset episode-local state without reloading the dataset file."""

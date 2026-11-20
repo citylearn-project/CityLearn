@@ -163,12 +163,14 @@ class CityLearnBusinessAsUsualBaselineService:
         simulation_start, simulation_end = start, end
 
         solar_generation = (getattr(env, '_constructor_overrides', None) or {}).get('solar_generation')
-        if self._autosizes_equipment(schema, building_names, solar_generation):
+        autosizes = self._autosizes_equipment(schema, building_names, solar_generation)
+        if autosizes:
             # Autosizing (batteries, PV, heat pumps, storage) reads the whole loaded data window, so
             # loading only this episode sizes different equipment than the evaluated env. Load the
             # source's window instead; the one explicit split still restricts the run to the episode.
             simulation_start = int(getattr(tracker, 'simulation_start_time_step', start))
             simulation_end = int(getattr(tracker, 'simulation_end_time_step', end))
+        parsed_data = None if autosizes else getattr(env, '_parsed_data', None)
 
         # Follow the evaluated env's interface: robustness events can target entity tables
         # (EV, storage, PV) that the flat layout does not expose, so a flat reference would
@@ -208,6 +210,7 @@ class CityLearnBusinessAsUsualBaselineService:
             physics_version=getattr(env, 'physics_version', None),
             # The effective setting, which a constructor override may have changed from the schema's.
             energy_provenance=bool(getattr(env, 'energy_provenance', True)),
+            _parsed_data=parsed_data,
             **deepcopy(getattr(env, '_constructor_overrides', {})),
         )
         baseline_env._business_as_usual_sidecar = True

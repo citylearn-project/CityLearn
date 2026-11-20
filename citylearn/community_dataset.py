@@ -88,12 +88,21 @@ class InventoryBattery(Battery):
 
 def configure_tariffs(env, config):
     """Load portable per-building tariffs once; invalid explicit data fails closed."""
+    from citylearn.internal.parsed_data import canonical_file_key
+
     env.community_tariffs = {}
     root = Path(env.schema.get('root_directory') or '.').resolve()
+    source = getattr(env, '_parsed_data_source', None)
+    sink = getattr(env, '_parsed_data', None)
     for name, filename in (config.get('tariff_files') or {}).items():
         path = (root/filename).resolve()
         if root not in path.parents:
             raise ValueError('Community tariff files must be inside the dataset')
+        key = canonical_file_key(path)
+        cached = None if source is None else source.tariffs_by_file.get(key)
+        if cached is not None:
+            env.community_tariffs[name] = cached if getattr(env, '_business_as_usual_sidecar', False) else cached.copy()
+            continue
         frame = pd.read_csv(path)
         required = ['grid_export_price', 'community_buy_price', 'community_sell_price']
         if any(c not in frame for c in required):
@@ -102,6 +111,10 @@ def configure_tariffs(env, config):
         if not len(values) or not np.isfinite(values).all():
             raise ValueError('Community tariffs must be finite and nonempty')
         env.community_tariffs[name] = values
+        if sink is not None and not sink.frozen:
+            frozen = values.copy()
+            frozen.flags.writeable = False
+            sink.tariffs_by_file[key] = frozen
     # parse_bool, as for 'enabled': bool('false') is True.
     local_trading = config.get('local_trading_enabled', True)
     # An explicit null keeps its previous meaning (bool(None) is False).
