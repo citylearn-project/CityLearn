@@ -1927,6 +1927,36 @@ class DeferrableAppliance(ElectricDevice):
         if self._ElectricDevice__electricity_consumption is not None and local_step < len(self._ElectricDevice__electricity_consumption):
             self._ElectricDevice__electricity_consumption[local_step:] = 0.0
 
+    def interrupt_running_cycles(self) -> int:
+        """Stop the running cycles after the current step, e.g. when an outage cuts their supply.
+
+        The energy the cycles booked for later steps is removed and they become missed, so the service KPIs count
+        them as not delivered. Energy already consumed, including at the current step, is kept. Returns the number
+        of cycles interrupted.
+        """
+
+        current_global = self._current_global_time_step()
+        local_step = int(self.time_step)
+        ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
+        consumption = self._ElectricDevice__electricity_consumption
+        interrupted = 0
+
+        for cycle in list(self._get_cycle_index().running()):
+            cycle_id = cycle['cycle_id']
+            start = self.__cycle_start_time_steps.get(cycle_id)
+            if start is None:
+                continue
+            offset = current_global - int(start)
+            for later, energy_kwh in enumerate(cycle['load_profile'][offset + 1:], start=1):
+                step = local_step + later
+                if 0 <= step < len(consumption):
+                    consumption[step] = max(float(consumption[step]) - float(energy_kwh) / ratio, 0.0)
+            self._set_cycle_state(cycle_id, 'missed')
+            self.__cycle_missed_time_steps[cycle_id] = current_global
+            interrupted += 1
+
+        return interrupted
+
     def observations(self) -> Mapping[str, float]:
         self._update_cycle_states()
         cycle = self._current_or_next_cycle()

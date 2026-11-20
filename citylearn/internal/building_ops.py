@@ -502,6 +502,7 @@ class BuildingOpsService:
         building = self.building
         action_cache = self._get_apply_action_cache()
         active_action_set = action_cache['active_action_set']
+        suspended_deferrable_load = self._suspend_running_deferrable_load()
 
         if electric_vehicle_storage_actions is not None:
             electric_vehicle_storage_actions = dict(electric_vehicle_storage_actions)
@@ -539,28 +540,42 @@ class BuildingOpsService:
         if deferrable_appliance_actions is not None:
             deferrable_appliance_actions = self._apply_deferrable_profile_constraints(deferrable_appliance_actions)
 
-        if building._charging_constraints_enabled:
-            electric_vehicle_storage_actions, electrical_storage_action = self.apply_charging_constraints_to_actions(
-                electric_vehicle_storage_actions,
-                electrical_storage_action,
-                deferrable_appliance_actions,
-                requested_escalator_actions,
-            )
-        else:
-            building._charging_constraint_penalty_kwh = 0.0
-            building._charging_constraint_last_penalty_kwh = 0.0
+        # Physics version 2 allocates electrical-service headroom after the thermal and non-shiftable updates of
+        # the step, so thermal storage charging counts against the limit before EVs and the battery (#230).
+        defer_allocation = (
+            building._charging_constraints_enabled
+            and getattr(building, '_electrical_service_enabled', False)
+            and not building.power_outage
+            and physics_version_of(building) >= 2
+        )
 
-        if requested_electric_vehicle_storage_actions is not None:
-            charger_by_id = action_cache['charger_by_id']
-            for charger_id, requested_action in requested_electric_vehicle_storage_actions.items():
-                charger = charger_by_id.get(charger_id)
-                if charger is None:
-                    continue
-                limited_action = (electric_vehicle_storage_actions or {}).get(charger_id, 0.0)
-                self._record_charger_action_feedback(charger, requested_action, limited_action)
+        def allocate():
+            nonlocal electric_vehicle_storage_actions, electrical_storage_action
+            if building._charging_constraints_enabled:
+                electric_vehicle_storage_actions, electrical_storage_action = self.apply_charging_constraints_to_actions(
+                    electric_vehicle_storage_actions,
+                    electrical_storage_action,
+                    deferrable_appliance_actions,
+                    requested_escalator_actions,
+                )
+            else:
+                building._charging_constraint_penalty_kwh = 0.0
+                building._charging_constraint_last_penalty_kwh = 0.0
 
-        if requested_electrical_storage_action is not None:
-            self._record_storage_action_feedback(requested_electrical_storage_action, electrical_storage_action)
+            if requested_electric_vehicle_storage_actions is not None:
+                charger_by_id = action_cache['charger_by_id']
+                for charger_id, requested_action in requested_electric_vehicle_storage_actions.items():
+                    charger = charger_by_id.get(charger_id)
+                    if charger is None:
+                        continue
+                    limited_action = (electric_vehicle_storage_actions or {}).get(charger_id, 0.0)
+                    self._record_charger_action_feedback(charger, requested_action, limited_action)
+
+            if requested_electrical_storage_action is not None:
+                self._record_storage_action_feedback(requested_electrical_storage_action, electrical_storage_action)
+
+        if not defer_allocation:
+            allocate()
 
         if requested_deferrable_appliance_actions is not None:
             appliance_by_action = action_cache['deferrable_appliance_by_action']
@@ -646,7 +661,7 @@ class BuildingOpsService:
         elif limit_control_actions and building.outage_vehicle_to_building:
             priority_list = self._vehicle_to_building_order(priority_list, actions)
 
-        for key in priority_list:
+        def run(key):
             func, args = actions[key]
             if args and (limit_control_actions or key.startswith('deferrable_appliance_') or key.startswith('escalator_')):
                 original_args = args
@@ -673,6 +688,35 @@ class BuildingOpsService:
                     self._record_deferrable_post_apply_feedback(owner)
             except NotImplementedError:
                 pass
+
+        if not defer_allocation:
+            for key in priority_list:
+                run(key)
+            self._serve_suspended_deferrable_load(suspended_deferrable_load)
+            return
+
+        for key in priority_list:
+            if key in self._BASE_LOAD_ACTION_KEYS:
+                run(key)
+
+        allocate()
+        if 'electrical_storage' in actions:
+            actions['electrical_storage'] = (actions['electrical_storage'][0], (electrical_storage_action,))
+        for charger_id, action in (electric_vehicle_storage_actions or {}).items():
+            key = f'electric_vehicle_storage_{charger_id}'
+            if key in actions:
+                actions[key] = (actions[key][0], (action,))
+
+        for key in priority_list:
+            if key not in self._BASE_LOAD_ACTION_KEYS:
+                run(key)
+        self._serve_suspended_deferrable_load(suspended_deferrable_load)
+
+    # Updates that physics version 2 applies before allocating electrical-service headroom (#230).
+    _BASE_LOAD_ACTION_KEYS = frozenset((
+        'cooling_demand', 'heating_demand', 'cooling_device', 'cooling_storage', 'heating_device',
+        'heating_storage', 'dhw_device', 'dhw_storage', 'non_shiftable_load',
+    ))
 
     def _get_apply_action_cache(self) -> Mapping[str, object]:
         building = self.building
@@ -1038,6 +1082,52 @@ class BuildingOpsService:
         supplies = set(battery + vehicles)
         others = [key for key in priority_list if key not in supplies]
         return [key for key in others if key in lead] + battery + vehicles + [key for key in others if key not in lead]
+    def _suspend_running_deferrable_load(self) -> List[Tuple[object, float]]:
+        """Set aside the energy that running deferrable cycles booked for an outage step (physics version 2).
+
+        A cycle books its whole profile when it starts. Physics version 2 lets a cycle start on the current
+        step's information only (#232), so it can run into an outage. During the outage step the booked energy is
+        removed until the other islanded loads have drawn on the local supply, and is then served from what is
+        left by :py:meth:`_serve_suspended_deferrable_load`. Version 1 never starts a cycle that meets an outage.
+        """
+
+        building = self.building
+        self._outage_suspended_deferrable_kwh = 0.0
+        if not building.power_outage or physics_version_of(building) < 2:
+            return []
+
+        t = int(building.time_step)
+        suspended = []
+        for appliance in building.deferrable_appliances or []:
+            energy = self._safe_scalar(appliance.electricity_consumption_at(t), 0.0)
+            if energy > 0.0:
+                suspended.append((appliance, energy))
+                appliance.set_electricity_consumption(0.0, time_step=t)
+
+        self._outage_suspended_deferrable_kwh = float(sum(energy for _, energy in suspended))
+        return suspended
+
+    def _serve_suspended_deferrable_load(self, suspended: List[Tuple[object, float]]):
+        """Serve the set-aside deferrable energy from the local supply the other loads left.
+
+        A cycle the islanded supply cannot cover stops: the energy left uncovered at this step is not consumed,
+        its later steps are cancelled, and it is reported as missed with a profile energy shortfall.
+        """
+
+        self._outage_suspended_deferrable_kwh = 0.0
+        if not suspended:
+            return
+
+        building = self.building
+        t = int(building.time_step)
+        available = max(self._safe_scalar(building.downward_electrical_flexibility, 0.0), 0.0)
+        for appliance, energy in suspended:
+            served = min(energy, available)
+            appliance.set_electricity_consumption(served, time_step=t)
+            available = max(available - served, 0.0)
+            if served < energy - 1.0e-9:
+                # The outage cuts the cycle's supply: it stops and is reported as missed.
+                appliance.interrupt_running_cycles()
 
     def _outage_unserved_load_kw(self) -> float:
         """Islanded electric load at the current step that local supply does not cover yet, in [kW].
@@ -1072,6 +1162,8 @@ class BuildingOpsService:
             )
             load_kwh += max(self._safe_scalar(electricity_kwh, 0.0), 0.0)
 
+        # Running deferrable cycles set aside for this outage step (physics version 2); zero otherwise.
+        load_kwh += self._safe_scalar(getattr(self, '_outage_suspended_deferrable_kwh', 0.0), 0.0)
         supply_kwh = max(self._safe_scalar(building.downward_electrical_flexibility, 0.0), 0.0)
         return self._control_step_energy_to_power_kw(max(load_kwh - supply_kwh, 0.0))
 
@@ -1294,11 +1386,17 @@ class BuildingOpsService:
         reserved_energy_by_step = reserved_energy_by_step or {}
         current_step = int(self.building.time_step)
         episode_steps = int(getattr(self.building.episode_tracker, 'episode_time_steps', 0) or 0)
+        # Physics version 1 checks every step of the cycle with the realised future outage signal, load, PV and
+        # limits, which the controller cannot know (#232). Later versions decide on the current step only; an
+        # outage or a limit excess later in the cycle is handled when it happens.
+        current_step_only = physics_version_of(self.building) >= 2
 
         for offset, energy_kwh in enumerate(profile_kwh):
             step = current_step + offset
             if step >= episode_steps:
                 return False
+            if current_step_only and offset > 0:
+                continue
 
             total_extra_energy = float(energy_kwh) + float(reserved_energy_by_step.get(step, 0.0))
             total_extra_kw = self._control_step_energy_to_power_kw(total_extra_energy)
@@ -1341,7 +1439,8 @@ class BuildingOpsService:
             return []
 
         current_step = int(self.building.time_step)
-        for offset in range(len(profile)):
+        offsets = range(1) if physics_version_of(self.building) >= 2 else range(len(profile))
+        for offset in offsets:
             if self._power_outage_at_step(current_step + offset):
                 return ['outage']
         if getattr(self.building, '_electrical_service_enabled', False):
@@ -1443,6 +1542,70 @@ class BuildingOpsService:
             return -request if request >= min(min_power, max_power) else 0.0
         return 0.0
 
+    def _feasible_requests(self) -> bool:
+        """Whether headroom is allocated to the power devices can draw rather than to raw requests (#231)."""
+
+        return physics_version_of(self.building) >= 2
+
+    def _feasible_charger_power_kw(self, charger, action: float, requested_power_kw: float) -> float:
+        """`requested_power_kw` limited to what the charger can draw at this step: zero without an EV, and the
+        connected EV battery's energy to full or available energy otherwise."""
+
+        preview = getattr(charger, 'preview_power_kw', None)
+        if not callable(preview):
+            return requested_power_kw
+
+        return self._limit_request(requested_power_kw, self._safe_scalar(preview(action), 0.0))
+
+    def _feasible_storage_power_kw(self, requested_power_kw: float) -> float:
+        """`requested_power_kw` limited by the battery's power curves, capacity and depth of discharge."""
+
+        building = self.building
+        storage = building.electrical_storage
+        preview = getattr(storage, 'preview_charge', None)
+        if not callable(preview) or abs(requested_power_kw) <= 0.0:
+            return requested_power_kw
+
+        energy_kwh = power_kw_to_energy_kwh(requested_power_kw, building.seconds_per_time_step)
+        ratio = getattr(storage, 'time_step_ratio', None)
+        feasible_kwh = self._safe_scalar(preview(to_dataset_resolution_energy(energy_kwh, ratio)), 0.0)
+        feasible_kwh *= 1.0 if ratio in (None, 0) else float(ratio)
+        return self._limit_request(requested_power_kw, self._control_step_energy_to_power_kw(feasible_kwh))
+
+    @staticmethod
+    def _limit_request(requested_power_kw: float, feasible_power_kw: float) -> float:
+        """The request limited to the feasible power in the same direction.
+
+        A feasible power within a relative 1e-9 of the request is the request itself: the round trip through
+        the device's energy and efficiency conversions only rounds it.
+        """
+
+        if requested_power_kw >= 0.0:
+            feasible_power_kw = max(feasible_power_kw, 0.0)
+        else:
+            feasible_power_kw = min(feasible_power_kw, 0.0)
+
+        if abs(feasible_power_kw) >= abs(requested_power_kw) * (1.0 - 1.0e-9):
+            return requested_power_kw
+
+        return feasible_power_kw
+
+    @staticmethod
+    def _allocated_target_kw(requested_kw: float, feasible_kw: float, scale: float) -> float:
+        """Power to command after allocation when headroom went to `feasible_kw` instead of `requested_kw`.
+
+        A request the device can serve in full is scaled as before. A request the device limits is passed on
+        unchanged when the allocation does not curtail it, so the device applies its own limit and reports it,
+        and is otherwise commanded at the curtailed feasible power.
+        """
+
+        if feasible_kw == requested_kw:
+            return requested_kw * scale
+        if scale >= 1.0:
+            return requested_kw
+
+        return feasible_kw * scale
+
     def _charger_action_from_power_kw(self, charger, target_power_kw: float) -> float:
         target_power_kw = self._safe_scalar(target_power_kw, 0.0)
 
@@ -1501,7 +1664,9 @@ class BuildingOpsService:
             building._set_default_charging_headroom()
             return actions
 
+        feasible_requests = self._feasible_requests()
         positive_requests = {}
+        raw_requests = {}
         scales = {}
         for charger_id, action in actions.items():
             if action is None or action <= 0.0:
@@ -1510,6 +1675,10 @@ class BuildingOpsService:
             if charger is None:
                 continue
             requested_power = max(self._charger_requested_power_kw(charger, action), 0.0)
+            raw_requests[charger_id] = requested_power
+            if feasible_requests:
+                # Physics version 2: a request the charger cannot draw takes no share of the limit (#231).
+                requested_power = self._feasible_charger_power_kw(charger, action, requested_power)
             if requested_power <= 0.0:
                 continue
             positive_requests[charger_id] = requested_power
@@ -1562,7 +1731,13 @@ class BuildingOpsService:
                 if max_power <= 0.0:
                     actions[charger_id] = 0.0
                     continue
-                target_kw = scaled_positive_kw.get(charger_id, 0.0)
+                if feasible_requests:
+                    target_kw = self._allocated_target_kw(
+                        raw_requests.get(charger_id, 0.0), positive_requests.get(charger_id, 0.0),
+                        scales.get(charger_id, 1.0),
+                    )
+                else:
+                    target_kw = scaled_positive_kw.get(charger_id, 0.0)
                 actions[charger_id] = max(0.0, min(action, target_kw / max_power))
 
             if getattr(building, '_expose_charging_constraints', False):
@@ -1624,12 +1799,19 @@ class BuildingOpsService:
         controls = {}
         adjusted_actions = None if actions is None else dict(actions)
 
+        feasible_requests = self._feasible_requests()
+        raw_requests = {}
+
         for charger_id, action in (actions or {}).items():
             charger = building._charger_lookup.get(charger_id)
             if charger is None:
                 continue
 
             request_total_kw = self._charger_requested_power_kw(charger, action)
+            raw_requests[charger_id] = request_total_kw
+            if feasible_requests:
+                # Physics version 2: a request the device cannot draw takes no headroom (#231).
+                request_total_kw = self._feasible_charger_power_kw(charger, action, request_total_kw)
             if abs(request_total_kw) <= 1e-9:
                 continue
 
@@ -1642,6 +1824,9 @@ class BuildingOpsService:
 
         storage_control_id = '__electrical_storage__'
         request_storage_kw = self._storage_requested_power_kw(electrical_storage_action)
+        raw_requests[storage_control_id] = request_storage_kw
+        if feasible_requests:
+            request_storage_kw = self._feasible_storage_power_kw(request_storage_kw)
         if abs(request_storage_kw) > 1e-9:
             request_phase_kw = self._split_power_by_connection(request_storage_kw, building.electrical_storage_phase_connection)
             controls[storage_control_id] = {
@@ -1659,24 +1844,50 @@ class BuildingOpsService:
         scales = allocation.scales
         total_kw, phase_kw = allocation.total_kw, allocation.phase_kw
 
+        def target_kw(control_id: str) -> float:
+            control = controls.get(control_id)
+            feasible_kw = 0.0 if control is None else control['request_total_kw']
+            if not feasible_requests:
+                return feasible_kw * scales.get(control_id, 1.0)
+
+            requested_kw = raw_requests.get(control_id, 0.0)
+            if control is None and abs(requested_kw) <= 1e-9:
+                return 0.0
+
+            return self._allocated_target_kw(requested_kw, feasible_kw, scales.get(control_id, 1.0))
+
         if adjusted_actions is not None:
             for charger_id in adjusted_actions:
                 charger = building._charger_lookup.get(charger_id)
                 if charger is None:
                     continue
-                control = controls.get(charger_id)
-                target_kw = 0.0 if control is None else control['request_total_kw'] * scales.get(charger_id, 1.0)
-                adjusted_actions[charger_id] = self._charger_action_from_power_kw(charger, target_kw)
+                adjusted_actions[charger_id] = self._charger_action_from_power_kw(charger, target_kw(charger_id))
 
         adjusted_storage_action = electrical_storage_action
         if electrical_storage_action is not None:
-            storage_control = controls.get(storage_control_id)
-            target_kw = 0.0 if storage_control is None else storage_control['request_total_kw'] * scales.get(storage_control_id, 1.0)
-            adjusted_storage_action = self._storage_action_from_power_kw(target_kw)
+            adjusted_storage_action = self._storage_action_from_power_kw(target_kw(storage_control_id))
 
+        violation_kw = max(allocation.requested_violation_kw, allocation.residual_violation_kw)
+        # Kept with its step: the settled state of that step only (#230).
+        building._electrical_service_allocation = (int(getattr(building, 'time_step', 0)), float(allocation.requested_violation_kw))
+        self._set_electrical_service_state(total_kw, phase_kw, total_limits, per_phase_limits, violation_kw)
+
+        return adjusted_actions, adjusted_storage_action
+
+    def _set_electrical_service_state(
+        self,
+        total_kw: float,
+        phase_kw: Mapping[str, float],
+        total_limits: Mapping[str, float],
+        per_phase_limits: Mapping[str, Mapping[str, float]],
+        violation_kw: float,
+    ):
+        """Record the step's electrical-service power, headroom and violation penalty."""
+
+        building = self.building
+        phase_names = self._current_phase_names()
         import_limit = self._safe_scalar(total_limits.get('import_kw'), np.nan)
         export_limit = self._safe_scalar(total_limits.get('export_kw'), np.nan)
-        violation_kw = max(allocation.requested_violation_kw, allocation.residual_violation_kw)
 
         phase_headroom = {}
         phase_export_headroom = {}
@@ -1709,7 +1920,59 @@ class BuildingOpsService:
             phase_power_kw=phase_kw,
         )
 
-        return adjusted_actions, adjusted_storage_action
+    def record_settled_electrical_service_state(self):
+        """Record the electrical-service state from the step's settled import (physics version 2, #230).
+
+        The allocation estimates the step's import before the EVs, the battery, deferrable appliances and
+        escalators run. Once the step has settled, the total and per-phase power, the headroom and the
+        violation are recomputed from the building's actual net consumption, so an excess that the allocation
+        did not see, such as thermal storage charging, is recorded. The penalty keeps the violation the
+        requested powers would have caused when it is larger.
+        """
+
+        building = self.building
+        if (
+            physics_version_of(building) < 2
+            or not getattr(building, '_charging_constraints_enabled', False)
+            or not getattr(building, '_electrical_service_enabled', False)
+            or building.power_outage
+        ):
+            return
+
+        t = int(building.time_step)
+        allocation = getattr(building, '_electrical_service_allocation', None)
+        if allocation is None or allocation[0] != t:
+            # No allocation ran at this step, for example at reset: nothing settled to record.
+            return
+
+        phase_names = self._current_phase_names()
+        total_kw = self._control_step_energy_to_power_kw(self._safe_index(building.net_electricity_consumption, t, 0.0))
+        storage_kw = self._control_step_energy_to_power_kw(
+            self._safe_scalar(building.electrical_storage.electricity_consumption_at(t), 0.0))
+        phase_kw = {phase: 0.0 for phase in phase_names}
+        assigned_kw = storage_kw
+
+        for phase, value in self._split_power_by_connection(storage_kw, building.electrical_storage_phase_connection).items():
+            phase_kw[phase] = phase_kw.get(phase, 0.0) + value
+
+        for charger in building.electric_vehicle_chargers or []:
+            charger_kw = self._control_step_energy_to_power_kw(self._safe_index(charger.electricity_consumption, t, 0.0))
+            assigned_kw += charger_kw
+            connection = building._charger_phase_map.get(charger.charger_id)
+            for phase, value in self._split_power_by_connection(charger_kw, connection).items():
+                phase_kw[phase] = phase_kw.get(phase, 0.0) + value
+
+        for phase, value in self._split_unassigned_power(total_kw - assigned_kw).items():
+            phase_kw[phase] = phase_kw.get(phase, 0.0) + value
+
+        phase_kw = {phase: phase_kw.get(phase, 0.0) for phase in phase_names}
+        total_limits = grid_availability.total_limits_at(building, building._electrical_service_limits.get('total', {}), t)
+        per_phase_limits = building._electrical_service_limits.get('per_phase', {})
+        settled_violation_kw = electrical_service_violation_kw(
+            total_kw, phase_kw, total_limits, per_phase_limits, phase_names)
+        requested_violation_kw = self._safe_scalar(allocation[1], 0.0)
+        self._set_electrical_service_state(
+            total_kw, phase_kw, total_limits, per_phase_limits, max(requested_violation_kw, settled_violation_kw))
 
     def apply_charging_constraints_to_actions(
         self,

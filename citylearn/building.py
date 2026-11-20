@@ -3364,6 +3364,9 @@ class Building(Environment):
         # net electriciy consumption emission
         self.__net_electricity_consumption_emission[self.time_step] = max(0.0, net_electricity_consumption*self.carbon_intensity.carbon_intensity[self.time_step])
 
+        # Physics version 2 records the electrical-service state from the settled import (#230).
+        self._ops_service.record_settled_electrical_service_state()
+
     def set_net_electricity_consumption_cost(self, value: float, time_step: int = None):
         """Override net electricity consumption cost at a given time step."""
 

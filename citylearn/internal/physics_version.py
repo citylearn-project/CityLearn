@@ -21,7 +21,12 @@ Versions
     * battery discharge is limited by `Battery.discharge_power_curve`, flat at the nominal power by
       default, instead of the charging curve `capacity_power_curve` (#227);
     * during an outage the battery discharges after the step's thermal demand and thermal storage
-      discharges and only up to the islanded load that PV leaves (#229).
+      discharges and only up to the islanded load that PV leaves (#229);
+    * electrical-service headroom is shared among the powers devices can draw, not the raw requests
+      (#231), after the thermal and non-shiftable updates, and the recorded power, headroom and
+      violation come from the settled import (#230);
+    * a deferrable cycle starts on the current step's information only, and an outage that later
+      cuts its supply stops it (#232).
 """
 
 from typing import Any

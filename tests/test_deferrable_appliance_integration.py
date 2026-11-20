@@ -329,6 +329,7 @@ def test_initial_outage_load_is_clipped_instead_of_asserting(tmp_path: Path):
 
 
 def test_deferrable_start_is_blocked_when_cycle_crosses_future_outage_without_surplus(tmp_path: Path):
+    """Physics version 1 checks the realised future outage (#232); version 2 is covered in test_physics_version_service_deferrable."""
     schema_path = _schema_with_deferrable_appliance(tmp_path, earliest=0, latest=0)
     dataset_dir = schema_path.parent
     building_csv = dataset_dir / "Building_1.csv"
@@ -346,7 +347,7 @@ def test_deferrable_start_is_blocked_when_cycle_crosses_future_outage_without_su
     schema["buildings"]["Building_1"]["power_outage"] = {"simulate_power_outage": True}
     schema_path.write_text(json.dumps(schema, indent=2), encoding="utf-8")
 
-    env = CityLearnEnv(str(schema_path), central_agent=True, episode_time_steps=4, random_seed=0)
+    env = CityLearnEnv(str(schema_path), central_agent=True, episode_time_steps=4, random_seed=0, physics_version=1)
 
     try:
         env.reset(seed=0)

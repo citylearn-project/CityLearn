@@ -6,6 +6,7 @@ from citylearn.electric_vehicle import ElectricVehicle
 from citylearn.data import ChargerSimulation
 from citylearn.data import ZERO_DIVISION_PLACEHOLDER
 from citylearn.internal.units import (
+    energy_kwh_to_power_kw,
     normalized_power_action_to_energy_kwh,
     to_dataset_resolution_energy,
 )
@@ -349,6 +350,57 @@ class Charger(Environment):
 
         return 0.0, True
 
+    def _battery_command(self, signed_power_kw: float, charging: bool) -> Tuple[float, float, float]:
+        """Charger efficiency, commanded AC energy and battery-side energy, in control-step kWh, for a power request."""
+
+        if charging:
+            applied_power_kw = abs(signed_power_kw)
+            normalized_power = applied_power_kw / max(self.max_charging_power, ZERO_DIVISION_PLACEHOLDER)
+            efficiency = self.get_efficiency(normalized_power, charging)
+            commanded_energy_kwh = normalized_power_action_to_energy_kwh(
+                normalized_power,
+                self.max_charging_power,
+                self.seconds_per_time_step,
+            )
+            battery_energy_kwh = commanded_energy_kwh * efficiency
+        else:
+            applied_power_kw = abs(signed_power_kw)
+            normalized_power = applied_power_kw / max(self.max_discharging_power, ZERO_DIVISION_PLACEHOLDER)
+            efficiency = self.get_efficiency(normalized_power, charging)
+            commanded_energy_kwh = -normalized_power_action_to_energy_kwh(
+                normalized_power,
+                self.max_discharging_power,
+                self.seconds_per_time_step,
+            )
+            battery_energy_kwh = commanded_energy_kwh / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
+
+        return efficiency, commanded_energy_kwh, battery_energy_kwh
+
+    def preview_power_kw(self, action_value: float) -> float:
+        """Signed AC power in [kW] that :py:meth:`update_connected_electric_vehicle_soc` would draw, without applying it.
+
+        It is the requested power limited by what the connected EV battery can take or give at this step: zero
+        without a connected EV, and the energy to full or the energy available otherwise.
+        """
+
+        signed_power_kw, charging = self._signed_power_from_action(action_value)
+        electric_vehicle = self.connected_electric_vehicle
+        if signed_power_kw == 0.0 or electric_vehicle is None:
+            return 0.0
+
+        efficiency, _, battery_energy_kwh = self._battery_command(signed_power_kw, charging)
+        battery = electric_vehicle.battery
+        ratio = getattr(battery, 'time_step_ratio', None)
+        battery_command = to_dataset_resolution_energy(battery_energy_kwh, ratio)
+        battery_energy = battery.preview_charge(battery_command)
+        ratio = 1.0 if ratio in (None, 0) else float(ratio)
+        battery_energy *= ratio
+        ac_energy = (
+            battery_energy / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
+            if battery_energy >= 0 else battery_energy * efficiency
+        )
+        return energy_kwh_to_power_kw(ac_energy, self.seconds_per_time_step)
+
     def get_requested_power_kw(self, action_value: float) -> float:
         """Return the signed charger power request in kW after min-power deadband."""
 
@@ -374,27 +426,7 @@ class Charger(Environment):
             self.__past_charging_action_values_kwh[self.time_step] = 0
             return
 
-        if charging:
-            applied_power_kw = abs(signed_power_kw)
-            normalized_power = applied_power_kw / max(self.max_charging_power, ZERO_DIVISION_PLACEHOLDER)
-            efficiency = self.get_efficiency(normalized_power, charging)
-            commanded_energy_kwh = normalized_power_action_to_energy_kwh(
-                normalized_power,
-                self.max_charging_power,
-                self.seconds_per_time_step,
-            )
-            battery_energy_kwh = commanded_energy_kwh * efficiency
-        else:
-            applied_power_kw = abs(signed_power_kw)
-            normalized_power = applied_power_kw / max(self.max_discharging_power, ZERO_DIVISION_PLACEHOLDER)
-            efficiency = self.get_efficiency(normalized_power, charging)
-            commanded_energy_kwh = -normalized_power_action_to_energy_kwh(
-                normalized_power,
-                self.max_discharging_power,
-                self.seconds_per_time_step,
-            )
-            battery_energy_kwh = commanded_energy_kwh / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
-
+        efficiency, commanded_energy_kwh, battery_energy_kwh = self._battery_command(signed_power_kw, charging)
         self.__past_charging_action_values_kwh[self.time_step] = commanded_energy_kwh
 
         if self.connected_electric_vehicle:

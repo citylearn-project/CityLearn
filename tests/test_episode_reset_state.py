@@ -62,6 +62,8 @@ def test_charging_constraint_violation_observation_resets():
     for name, building in schema['buildings'].items():
         building['include'] = name == 'Building_15'
 
+    # A 1 kW import limit is exceeded by the building's own load, so every step records a violation.
+    schema['buildings']['Building_15']['electrical_service']['limits']['total']['import_kw'] = 1.0
     schema.update(simulation_start_time_step=0, simulation_end_time_step=23, episode_time_steps=None)
     env = CityLearnEnv(schema, central_agent=False)
     building = env.buildings[0]
