@@ -132,7 +132,7 @@ Demand response remains local to each community. If a child schema has `demand_r
 
 ## KPI Aggregation
 
-`evaluate_v2()` concatenates the child KPI tables and adds a `community_id` column. It also adds portfolio rows:
+`evaluate_v2()` concatenates the child KPI tables and adds a `community_id` column after `unit` and `description`. It also adds portfolio rows, which carry the unit and description of the KPI they aggregate:
 
 ```text
 level = "portfolio"

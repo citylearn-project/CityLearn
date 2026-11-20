@@ -39,7 +39,7 @@ What happens in this example?
 4. ``step`` returns observations, rewards, termination, truncation and information,
    in that order. The loop stops when either termination flag is true.
 5. ``evaluate_v2()`` returns the KPI table, with ``cost_function``, ``value``,
-   ``name`` and ``level`` columns. The example prints four district indicators:
+   ``name``, ``level``, ``unit`` and ``description`` columns. The example prints four district indicators:
    cost, imported energy, feasible EV minimum service and residual phase-limit
    violation energy.
 

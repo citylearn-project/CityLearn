@@ -41,10 +41,11 @@ After completing an episode:
    print(names.sort_values("cost_function").to_string(index=False))
    kpis.to_csv("kpis.csv", index=False)
 
-The table contains ``cost_function``, ``value``, ``name`` and ``level``.
-``name`` identifies the building or district; ``level`` identifies the scope.
-The last part of each KPI name is its unit (``kwh``, ``kw``, ``eur``, ``kgco2``,
-``ratio``...). Feature-specific rows follow the scenario configuration, and a
+The table contains ``cost_function``, ``value``, ``name``, ``level``, ``unit``
+and ``description``. ``name`` identifies the building or district; ``level``
+identifies the scope; ``unit`` (``kwh``, ``kw``, ``eur``, ``kgco2``, ``ratio``...)
+is also the last part of the KPI name, and ``description`` defines the KPI in one
+line. Feature-specific rows follow the scenario configuration, and a
 KPI that is undefined for the run, such as a service ratio without any event to
 serve, is missing (NaN) rather than 0 or 1.
 

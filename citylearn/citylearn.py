@@ -1715,8 +1715,11 @@ class CityLearnEnv(Environment, Env):
               ratio without any event to serve.
             * ``name`` (str): the building name for building rows, ``'District'`` for district rows.
             * ``level`` (str): ``'building'`` or ``'district'``.
+            * ``unit`` (str): the unit of the KPI, for example ``'kwh'`` or ``'ratio'``, from the KPI registry.
+            * ``description`` (str): a one-line definition of the KPI, from the KPI registry.
 
-            Which KPIs appear depends on the scenario's assets and services. :py:meth:`scorecard` selects the
+            A dynamic topology adds the columns
+            ``topology_born_at``, ``topology_removed_at`` and ``topology_active``. Which KPIs appear depends on the scenario's assets and services. :py:meth:`scorecard` selects the
             default subset, and the KPI reference guide defines every family.
         """
 

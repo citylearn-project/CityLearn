@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Mapping, Optional, TYPE_CHECKING, Union
 
 import numpy as np
 
+from citylearn.internal import kpi_registry
+
 if TYPE_CHECKING:
     import pandas as pd
 
@@ -191,6 +193,9 @@ class EpisodeExporter:
             kpis = env.evaluate_v2(include_business_as_usual=include_business_as_usual)
             export_env = env
 
+        # The wide file keeps one column per entity: the CityLearn UI reads every column after
+        # `KPI` as an entity, so the units and descriptions go to the manifest instead.
+        kpi_catalogue = kpi_registry.catalogue(kpis['cost_function'])
         kpis = kpis.pivot(index='cost_function', columns='name', values='value')
         if kpi_round_decimals is not None:
             kpis = kpis.round(kpi_round_decimals)
@@ -206,7 +211,8 @@ class EpisodeExporter:
             self.export_business_as_usual_timeseries(export_env)
         from citylearn.internal.experiment import experiment_manifest
         from citylearn.utils.file_handler import FileHandler
-        FileHandler.write_json(str(Path(file_path).with_suffix('.manifest.json')), experiment_manifest(export_env))
+        FileHandler.write_json(str(Path(file_path).with_suffix('.manifest.json')),
+                               dict(experiment_manifest(export_env), kpi_catalogue=kpi_catalogue))
         FileHandler.write_json(str(Path(file_path).with_suffix('.deferrable_service.json')),
                                export_env.get_deferrable_service_audit())
         if export_env._robustness_service.enabled:

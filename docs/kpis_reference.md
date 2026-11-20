@@ -38,7 +38,37 @@ is not a zero measurement; preserve it when exporting or comparing.
 | `percent` | Percentage. |
 | `count` | Event/cycle count. |
 | `hours` | Hours. |
+| `degree_hours` | Degree-hours: temperature deviation in Celsius times hours. |
 | `c` | Celsius. |
+| `none` | No unit: a placeholder row without a measured value. |
+
+A KPI per simulated day keeps the unit of its total: `daily_average` energy is
+in `kwh` per day and `daily_average` cost in `eur` per day.
+
+## Table Columns
+
+`evaluate_v2()` returns one row per KPI and scope with these columns, in this
+order. `topology_born_at`, `topology_removed_at` and `topology_active` follow
+them under a dynamic topology, and `MultiCommunityEnv.evaluate_v2()` adds
+`community_id` last.
+
+| Column | Meaning |
+|---|---|
+| `cost_function` | KPI name, `level_family_subfamily_metric_variant_unit`. |
+| `value` | KPI value; missing when the KPI is undefined for the run. |
+| `name` | Building name, `District`, or `Portfolio`. |
+| `level` | `building`, `district` or `portfolio`. |
+| `unit` | One of the tokens above. It is the unit suffix of the name, except for `none`. |
+| `description` | One line that defines the KPI and, for a reference variant, the run it refers to. |
+
+`unit` and `description` come from one registry,
+`citylearn/internal/kpi_registry.py`, which maps each KPI name without its level
+prefix to a unit and a description. The same text applies to the `building`,
+`district` and `portfolio` rows of a KPI. In a description, "control run" is the
+evaluated run, "baseline run" the conventional counterfactual and
+"business-as-usual run" the native BAU reference. `tests/test_kpi_registry.py`
+fails for a KPI name without a registry entry, and checks the Units table and the
+demand-response and robustness tables on this page against the registry.
 
 ## KPI v2 Naming Contract
 
@@ -323,4 +353,11 @@ division reported as a perfect 0.
 | End-of-episode export | `CityLearnEnv(..., export_kpis_on_episode_end=True)` |
 | With render | `render_mode="end"` or `render_mode="during"` |
 
-New production KPIs should be registered in [releases.md](releases.md) and, when part of the v2 naming contract, in [KPI_V2_TREE.md](KPI_V2_TREE.md).
+The exported `exported_kpis.csv` and Parquet file are wide: `KPI` followed by one
+column per building and `District`, without `unit` and `description`, because the
+CityLearn UI reads every column after `KPI` as an entity. The unit and description
+of each exported KPI are in the `kpi_catalogue` entry of the `exported_kpis.manifest.json`.
+`MultiCommunityEnv.export_final_kpis()` writes the long table of `evaluate_v2()`,
+including `unit` and `description`, to `exported_kpis_multi_community.csv`.
+
+New production KPIs need an entry in `kpi_registry.py`, should be registered in [releases.md](releases.md) and, when part of the v2 naming contract, in [KPI_V2_TREE.md](KPI_V2_TREE.md).

@@ -10,7 +10,7 @@ from array import array
 
 from citylearn.energy_model import Battery
 from citylearn.internal import ev_departure_audit, deferrable_service_audit, grid_availability
-from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
+from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_registry, kpi_service_metrics
 from citylearn.internal.service_energy import service_energy_components
 
 from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -3033,7 +3033,7 @@ class CityLearnKPIService:
         output.attrs['kpi_family_audit'] = family_metadata()
         output.attrs['kpi_family_audit']['equity_conditions'] = family_audit['equity_conditions']
         if output.empty:
-            return pd.DataFrame(columns=['cost_function', 'value', 'name', 'level'])
+            return pd.DataFrame(columns=['cost_function', 'value', 'name', 'level', 'unit', 'description'])
 
         if getattr(env, 'topology_mode', 'static') == 'dynamic':
             lifecycle = getattr(env, 'topology_member_lifecycle', {}) or {}
@@ -3064,4 +3064,4 @@ class CityLearnKPIService:
                 output.loc[mask, 'topology_active'] = 1.0 if state.get('active', False) else 0.0
 
         output = run(progress, 'formatting', lambda: output.sort_values(['level', 'name', 'cost_function']).reset_index(drop=True))
-        return output
+        return kpi_registry.add_columns(output)

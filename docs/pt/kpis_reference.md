@@ -21,7 +21,34 @@ Para a arvore completa de nomes v2, ver tambem [`KPI_V2_TREE.md`](../KPI_V2_TREE
 | `percent` | Percentagem. |
 | `count` | Contagem de eventos/ciclos. |
 | `hours` | Horas. |
+| `degree_hours` | Graus-hora: desvio de temperatura em Celsius vezes horas. |
 | `c` | Temperatura em Celsius. |
+| `none` | Sem unidade: linha de substituição sem valor medido. |
+
+Um KPI por dia simulado mantém a unidade do total: a energia `daily_average` está
+em `kwh` por dia e o custo `daily_average` em `eur` por dia.
+
+## Colunas da Tabela
+
+O `evaluate_v2()` devolve uma linha por KPI e âmbito, com estas colunas, por esta
+ordem. Com topologia dinâmica seguem-se `topology_born_at`, `topology_removed_at`
+e `topology_active`, e o `MultiCommunityEnv.evaluate_v2()` acrescenta
+`community_id` no fim.
+
+| Coluna | Significado |
+|---|---|
+| `cost_function` | Nome do KPI, `level_family_subfamily_metric_variant_unit`. |
+| `value` | Valor do KPI; em falta quando o KPI é indefinido na corrida. |
+| `name` | Nome do building, `District` ou `Portfolio`. |
+| `level` | `building`, `district` ou `portfolio`. |
+| `unit` | Uma das unidades acima. É o sufixo de unidade do nome, exceto `none`. |
+| `description` | Uma linha que define o KPI e, numa variante de referência, a corrida a que se refere. |
+
+`unit` e `description` vêm de um único registo, `citylearn/internal/kpi_registry.py`,
+que associa cada nome de KPI, sem o prefixo de nível, a uma unidade e a uma
+descrição. O mesmo texto vale para as linhas `building`, `district` e `portfolio`
+de um KPI. A descrição está em inglês, como os nomes. `tests/test_kpi_registry.py`
+falha para um nome de KPI sem entrada no registo.
 
 ## Convencao KPI v2
 
@@ -259,4 +286,12 @@ Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo 
 | Export no fim | `CityLearnEnv(..., export_kpis_on_episode_end=True)` |
 | Com render | `render_mode="end"` ou `render_mode="during"` |
 
-Para releases novas, qualquer KPI novo deve ser registado em [`releases.md`](releases.md) e, se fizer parte do contrato v2, tambem em [`KPI_V2_TREE.md`](../KPI_V2_TREE.md).
+O `exported_kpis.csv` e o ficheiro Parquet exportados são largos: `KPI` seguido de
+uma coluna por building e `District`, sem `unit` e `description`, porque a UI do
+CityLearn lê todas as colunas depois de `KPI` como entidades. A unidade e a
+descrição de cada KPI exportado estão na entrada `kpi_catalogue` de
+`exported_kpis.manifest.json`. O `MultiCommunityEnv.export_final_kpis()` escreve a
+tabela longa do `evaluate_v2()`, com `unit` e `description`, em
+`exported_kpis_multi_community.csv`.
+
+Para releases novas, qualquer KPI novo precisa de uma entrada em `kpi_registry.py`, deve ser registado em [`releases.md`](releases.md) e, se fizer parte do contrato v2, tambem em [`KPI_V2_TREE.md`](../KPI_V2_TREE.md).

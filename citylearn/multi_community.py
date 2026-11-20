@@ -13,6 +13,7 @@ import pandas as pd
 from gymnasium import Env
 
 from citylearn.citylearn import CityLearnEnv, EvaluationCondition
+from citylearn.internal import kpi_registry
 from citylearn.internal.kpi import CityLearnKPIService
 
 
@@ -628,6 +629,10 @@ class MultiCommunityEnv(Env):
             row["name"] = self.PORTFOLIO_NAME
             row["level"] = "portfolio"
             row["community_id"] = self.PORTFOLIO_COMMUNITY_ID
+
+            if "unit" in row:
+                row["unit"], row["description"] = kpi_registry.describe(row["cost_function"])
+
             rows.append(row)
 
         return pd.DataFrame(rows, columns=list(local.columns))

@@ -126,7 +126,7 @@ Demand response continua local a cada comunidade. Se o schema filho tiver `deman
 
 ## KPIs
 
-`evaluate_v2()` concatena as tabelas KPI dos filhos e adiciona a coluna `community_id`. Tambem cria linhas de portfolio:
+`evaluate_v2()` concatena as tabelas KPI dos filhos e adiciona a coluna `community_id` depois de `unit` e `description`. Tambem cria linhas de portfolio, com a unidade e a descricao do KPI que agregam:
 
 ```text
 level = "portfolio"
