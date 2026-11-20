@@ -12,7 +12,9 @@ prestar os serviços pedidos, com entradas idênticas e reprodutíveis.
 
 São a edição v3.4 de *Synthetic electricity demand and flexibility datasets for
 Portuguese energy communities* (Fonseca et al.), distribuída com o CityLearn a
-partir da 3.5.0.
+partir da 3.5.0. As séries temporais são ficheiros Parquet, pelo que o CityLearn
+deve ser instalado com o extra `parquet`, `pip install "citylearn[parquet]"`, que
+junta o pyarrow.
 
 Versão inglesa: [../portugal_rec_datasets.md](../portugal_rec_datasets.md).
 

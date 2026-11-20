@@ -352,6 +352,38 @@ below; `v2` changes:
 Rerun stochastic experiments, and retrain policies whose results you compare
 across seeds, with `v2`; keep `v1` only to reproduce published 3.6.0 numbers.
 
+### Optional PyTorch and scikit-learn
+
+`pip install citylearn` no longer installs PyTorch or scikit-learn. Install the
+extra that your study needs:
+
+- `pip install "citylearn[dynamics]"` for datasets with LSTM thermal dynamics:
+  the 2023 challenge datasets, both Quebec neighbourhoods, `baeda_3dem` and the
+  EULP neighbourhood datasets (`ca_alameda_county_neighborhood`,
+  `tx_travis_county_neighborhood`, `vt_chittenden_county_neighborhood`);
+- `pip install "citylearn[rl]"` for the bundled `SAC`, `SACRBC`, `MARLISA` and
+  `MARLISARBC` controllers (it also covers LSTM thermal dynamics);
+- `pip install "citylearn[end_use_load_profiles]"`, which now includes both, to
+  build datasets from End-Use Load Profiles.
+
+Without the extra, constructing such an environment or importing these
+controllers raises an `ImportError` that names it; it used to raise a plain
+`Exception` for the controllers. Environments that already have PyTorch and
+scikit-learn installed keep working unchanged. To avoid the CUDA libraries,
+install the CPU-only PyTorch first with
+`pip install torch --index-url https://download.pytorch.org/whl/cpu`. Stable
+Baselines3 is not an extra: install `stable-baselines3>=2.4`, which supports
+gymnasium 1.x.
+
+### CLI evaluation window and host information
+
+`citylearn simulate ... train --evaluate` evaluates on the first training
+episode window when `-te` is not given; it used to evaluate on the whole
+simulation window. Runs without `episode_time_steps` evaluate the same window
+as before. Pass `-te start end` to evaluate on a chosen window. The training
+summary JSON records `hostname` and `username` only with `--record_host`;
+scripts that read these keys need the flag.
+
 ## Upgrade from 3.5.0 to 3.6.0
 
 ### Battery discharge features during outages

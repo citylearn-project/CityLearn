@@ -3713,7 +3713,8 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
         try:
             import torch
         except ImportError as error:  # pragma: no cover - optional dependency for LSTM dynamics only
-            raise ImportError('torch is required to use LSTMDynamicsBuilding.') from error
+            from citylearn.internal.optional_dependencies import missing_dependency
+            raise missing_dependency('LSTMDynamicsBuilding', 'PyTorch', 'dynamics') from error
 
         # predict
         model_input_tensor = torch.tensor(self.get_dynamics_input().T)

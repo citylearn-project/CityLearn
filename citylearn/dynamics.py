@@ -58,7 +58,10 @@ class LSTMDynamics(Dynamics, (torch.nn if torch is not None else _TorchNNPlaceho
             dropout: float = None
     ):
         if torch is None:
-            raise ImportError('torch is required to use LSTMDynamics.')
+            from citylearn.internal.optional_dependencies import missing_dependency
+            raise missing_dependency(
+                'LSTM thermal dynamics (the LSTMDynamics building model of this dataset)', 'PyTorch', 'dynamics'
+            )
 
         Dynamics.__init__(self)
         torch.nn.Module.__init__(self)

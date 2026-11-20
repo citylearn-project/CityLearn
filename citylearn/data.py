@@ -402,16 +402,18 @@ class DataSet:
                         f"Offline mode is enabled and no complete copy of dataset '{dataset_name}' was found locally. "
                         f"{cached_message}{incomplete_message} Checked local dataset roots: {local_directories_message}. "
                         "Pass a local schema.json file path, place the complete dataset under one of the local roots "
-                        "or disable offline mode to download it."
+                        "(CITYLEARN_LOCAL_DATASETS_PATH adds one) or disable offline mode (CITYLEARN_OFFLINE=0 or "
+                        "offline=False) to download it."
                     )
 
                 LOGGER.info(
-                    f'The {dataset_name} dataset DNE or is incomplete in cache/local roots. Will download from '
+                    f'The {dataset_name} dataset does not exist or is incomplete in the cache and local roots. Will download from '
                     f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {datasets_directory}. '
                     f'Next time DataSet.get_dataset(\'{dataset_name}\') is called, it will read '
                     'from cache unless DataSet.clear_cache is run first.'
                 )
                 files = self._get_github_dataset_files(path)
+                self._require_parquet_engine(dataset_name, [relative_path for relative_path, _ in files])
                 session = self.get_requests_session()
 
                 def download(staging: str):
@@ -623,6 +625,21 @@ class DataSet:
 
             raise
 
+    @staticmethod
+    def _require_parquet_engine(dataset_name: str, relative_paths: Iterable[str]):
+        """Fail before a download when the dataset has Parquet files and no Parquet engine is installed."""
+
+        if not any(str(p).lower().endswith(('.parquet', '.pq', '.parq')) for p in relative_paths):
+            return
+
+        try:
+            import pyarrow  # noqa: F401
+        except ImportError as error:
+            raise ImportError(
+                f"Dataset '{dataset_name}' stores its time series as Parquet files, which need pyarrow, an optional "
+                'dependency of CityLearn. Install it with: pip install "citylearn[parquet]"'
+            ) from error
+
     def get_dataset_names(self) -> List[str]:
         filepath = os.path.join(self.cache_directory, 'dataset_names.json')
         local_dataset_names = self._get_local_dataset_names()
@@ -639,7 +656,10 @@ class DataSet:
             local_directories_message = ', '.join(local_directories) if len(local_directories) > 0 else '(none)'
             raise OfflineDataError(
                 'Offline mode is enabled and dataset names are not cached and no local datasets were found. '
-                f'Checked dataset roots: {local_directories_message}.'
+                f'Checked the cache at {self.cache_directory} and the local dataset roots: {local_directories_message}. '
+                'To use offline mode, run once online to fill the cache, set CITYLEARN_LOCAL_DATASETS_PATH to a '
+                'folder that holds dataset folders, or pass a local schema.json path. Set CITYLEARN_OFFLINE=0 or '
+                'offline=False to download.'
             )
 
         else:
@@ -649,7 +669,7 @@ class DataSet:
                     contents = FileHandler.read_json(filepath)
 
                 else:
-                    LOGGER.info(f'The dataset names DNE in cache. Will download from '
+                    LOGGER.info(f'The dataset names do not exist in the cache. Will download from '
                         f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {filepath}. '
                             'Next time DataSet.get_dataset_names is called, it will read '
                                 'from cache unless DataSet.clear_cache is run first.')
@@ -698,7 +718,7 @@ class DataSet:
                     f"Checked cache file '{filepath}' and local misc roots: {local_directories_message}."
                 )
 
-            LOGGER.info(f'The {label} data DNE in cache. Will download from '
+            LOGGER.info(f'The {label} data does not exist in the cache. Will download from '
                 f'{self.github_account}/{self.repository}/tree/{self.tag} GitHub repository and write to {misc_directory}. '
                     'Next time it is requested, it will read from cache unless DataSet.clear_cache is run first.')
             path = FileHandler.join_url(self.misc_path)

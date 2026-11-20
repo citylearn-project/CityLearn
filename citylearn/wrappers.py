@@ -989,9 +989,11 @@ class RLlibMultiAgentEnv(MultiAgentEnv):
     
     def __init__(self, env_config: Mapping[str, Any]):
         if MultiAgentEnv == Env:
-            raise Exception('This functionality requires you to install RLlib.'\
-                'You can install RLlib from pip: pip install "ray[rllib]", '\
-                    'or for more detailed instructions please visit https://docs.ray.io/en/latest/rllib/index.html.')
+            raise ImportError(
+                'RLlibMultiAgentEnv needs Ray RLlib, which CityLearn does not install. Install a Ray release that '
+                'supports your Python and gymnasium versions, for example: pip install "ray[rllib]". See '
+                'https://docs.ray.io/en/latest/rllib/index.html.'
+            )
         
         else:
             pass

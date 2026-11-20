@@ -12,7 +12,7 @@ CityLearn v3 brings together buildings and thermal systems, PV, batteries, EVs a
 python -m pip install citylearn
 ```
 
-Use Python 3.10 or newer in a virtual environment. See the [installation guide](https://www.citylearn.net/installation.html) for setup and optional dependencies, including Parquet support, the [dependency versions of each release](https://www.citylearn.net/installation.html#version-compatibility) and [installation troubleshooting](https://www.citylearn.net/installation.html#troubleshooting-installation).
+Use Python 3.10 or newer in a virtual environment. The core installation needs no PyTorch; datasets with LSTM thermal dynamics need `pip install "citylearn[dynamics]"`, the bundled SAC and MARLISA controllers `pip install "citylearn[rl]"`, and Parquet datasets `pip install "citylearn[parquet]"`. See the [installation guide](https://www.citylearn.net/installation.html) for setup and optional dependencies, including a CPU-only PyTorch, the [dependency versions of each release](https://www.citylearn.net/installation.html#version-compatibility) and [installation troubleshooting](https://www.citylearn.net/installation.html#troubleshooting-installation).
 
 ## Configure your community
 
@@ -72,4 +72,4 @@ The [first-simulation guide](https://www.citylearn.net/quickstart.html) explains
 
 ## Cite and contribute
 
-See [Publications and applications](https://www.citylearn.net/publications.html) and [Cite CityLearn](https://www.citylearn.net/#cite-citylearn) for studies and the published reference. CityLearn is distributed under the [MIT license](https://github.com/citylearn-project/CityLearn/blob/master/LICENSE); its development is supported by the [project contributors](https://github.com/citylearn-project/CityLearn/graphs/contributors).
+See [Publications and applications](https://www.citylearn.net/publications.html) and [Cite CityLearn](https://www.citylearn.net/#cite-citylearn) for studies and the published reference. CityLearn is distributed under the [MIT license](https://github.com/citylearn-project/CityLearn/blob/master/LICENSE); its development is supported by the [project contributors](https://github.com/citylearn-project/CityLearn/graphs/contributors). To report a problem, ask a question or contribute code, start with the [contributing guide](CONTRIBUTING.md).

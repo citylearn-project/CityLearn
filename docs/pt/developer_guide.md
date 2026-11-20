@@ -14,10 +14,18 @@ Usar o virtual environment do repositorio quando existir:
 
 Dependencias opcionais:
 
+O `test_requirements.txt` instala o PyTorch e o scikit-learn, de que precisam os
+testes da dinâmica térmica LSTM e dos controladores SAC e MARLISA. Sem GPU,
+correr antes `python -m pip install torch --index-url https://download.pytorch.org/whl/cpu`
+evita vários GB de bibliotecas CUDA. O Ray RLlib não é dependência dos testes:
+os wrappers RLlib só o importam quando está instalado.
+
 | Funcionalidade | Comando |
 |---|---|
-| Datasets Parquet | `.venv/bin/pip install pyarrow` |
-| PV autosizing | `.venv/bin/pip install ".[pysam]"` |
+| Datasets Parquet | `.venv/bin/pip install -e ".[parquet]"` |
+| PV autosizing | `.venv/bin/pip install -e ".[pysam]"` |
+| Testes em paralelo | `.venv/bin/pip install pytest-xdist` |
+| Notebooks de exemplo | `.venv/bin/pip install nbclient nbformat ipykernel` |
 | Checks de build | `.venv/bin/pip install build twine` |
 
 ## Evidência portátil de experiências
@@ -62,7 +70,9 @@ e não um par.
 
 | Check | Comando |
 |---|---|
-| Suite completa | `.venv/bin/pytest -q` |
+| Subconjunto rápido (cerca de um minuto) | `.venv/bin/pytest -q tests/unit` |
+| Suite completa (vários minutos; `-n 4` com pytest-xdist) | `.venv/bin/pytest -q` |
+| Notebooks de exemplo | `.venv/bin/python scripts/ci/run_notebooks.py` |
 | Lint critico | `.venv/bin/python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821` |
 | Auditoria entity contract | `.venv/bin/python scripts/audit/audit_entity_contract.py --strict` |
 | Auditoria fisica | `.venv/bin/python scripts/audit/audit_physics.py` |

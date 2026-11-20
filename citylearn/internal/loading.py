@@ -987,8 +987,8 @@ class CityLearnLoadingService:
             import pyarrow.parquet as pq
         except ImportError as exc:
             raise ImportError(
-                "Reading Parquet CityLearn datasets requires the optional 'pyarrow' dependency. "
-                "Install pyarrow or use CSV files in the schema."
+                "Reading Parquet CityLearn datasets requires pyarrow, an optional dependency of CityLearn. "
+                'Install it with: pip install "citylearn[parquet]", or use CSV files in the schema.'
             ) from exc
 
         start = 0 if start_time_step is None else max(0, int(start_time_step))

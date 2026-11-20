@@ -32,8 +32,12 @@ classifiers = [
 [project.optional-dependencies]
 parquet = ["pyarrow"]
 pysam = ["nrel-pysam"]
+# LSTM thermal dynamics (LSTMDynamics), used by the 2023 challenge, Quebec, baeda_3dem and EULP neighbourhood datasets.
+dynamics = ["torch"]
+# The bundled SAC and MARLISA controllers.
+rl = ["torch", "scikit-learn"]
 # Only citylearn.end_use_load_profiles (building new datasets from EULP/EnergyPlus) needs these.
-end_use_load_profiles = ["doe_xstock>=2.0.0", "openstudio<=3.10.0", "eppy"]
+end_use_load_profiles = ["doe_xstock>=2.0.0", "openstudio<=3.10.0", "eppy", "torch", "scikit-learn"]
 
 [project.urls]
 Homepage = "https://github.com/citylearn-project/CityLearn"
