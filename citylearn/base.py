@@ -3,6 +3,7 @@ import random
 from typing import Any, List, Mapping, Tuple, Union
 import uuid
 import numpy as np
+from citylearn import random_streams
 
 class EpisodeTracker:
     """Class for keeping track of current episode time steps for reading observations from data files.
@@ -29,6 +30,7 @@ class EpisodeTracker:
         self.__episode_start_time_step = None
         self.__episode_end_time_step = None
         self.__episode_random_seed = None
+        self.__random_stream_episode = None
         self.__simulation_start_time_step = simulation_start_time_step
         self.__simulation_end_time_step = simulation_end_time_step
         self.reset_episode_index()
@@ -44,6 +46,23 @@ class EpisodeTracker:
         """Environment seed captured when the current episode was selected."""
 
         return getattr(self, '_EpisodeTracker__episode_random_seed', None)
+
+    @property
+    def random_stream_episode(self) -> Union[int, None]:
+        """Episode key of the per-episode random streams (``random_stream_version='v2'``).
+
+        The environment sets it at reset: the episode index, or 0 after a reset with an explicit
+        seed, so that ``reset(seed=s)`` repeats the first episode of an environment seeded with `s`.
+        Unset, it is the episode index.
+        """
+
+        value = getattr(self, '_EpisodeTracker__random_stream_episode', None)
+
+        return self.episode if value is None else value
+
+    @random_stream_episode.setter
+    def random_stream_episode(self, value: Union[int, None]):
+        self.__random_stream_episode = None if value is None else int(value)
     
     @property
     def episode_time_steps(self):
@@ -222,6 +241,11 @@ class Environment:
         Number of seconds in 1 `time_step` and must be set to >= 1.
     random_seed : int, optional
         Pseudorandom number generator seed for repeatable results.
+    random_stream_version : str, optional
+        Derivation of the object's random streams, ``'v2'`` (default) or ``'v1'`` (CityLearn 3.6.0 and earlier).
+        See :py:mod:`citylearn.random_streams`.
+    random_stream_key : Tuple[Any, ...], optional
+        Identity of the object in its random streams, so objects that share a seed draw independent values.
     simulation_start_time_step: int, optional
         Time step to start reading from data files. Should be set at the :py:class:`citylearn.citylearn.CityLearnEnv` level so that it propagates to other descendant objects.
     simulation_end_time_step: int, optional
@@ -233,9 +257,13 @@ class Environment:
     DEFAULT_SECONDS_PER_TIME_STEP = 3600.0
     DEFAULT_RANDOM_SEED_RANGE = (0, 100_000_000)
     
-    def __init__(self, seconds_per_time_step: float = None, random_seed: int = None, episode_tracker: EpisodeTracker = None, time_step_ratio: int = None):
+    def __init__(
+        self, seconds_per_time_step: float = None, random_seed: int = None, episode_tracker: EpisodeTracker = None, time_step_ratio: int = None,
+        random_stream_version: Union[str, int] = None, random_stream_key: Tuple[Any, ...] = None,
+    ):
         self.seconds_per_time_step = seconds_per_time_step
         self.__uid = uuid.uuid4().hex
+        self._set_random_stream(random_stream_version, random_stream_key)
         self.random_seed = random_seed
         self.__time_step = None
         self.episode_tracker = episode_tracker
@@ -280,14 +308,86 @@ class Environment:
         return self.__seconds_per_time_step
     
     @property
-    def numpy_random_state(self) -> np.random.RandomState:
-        """Nupy random state object."""
+    def numpy_random_state(self) -> Union[np.random.RandomState, np.random.Generator]:
+        """Stream for randomly drawn parameters of this object.
 
-        return np.random.RandomState(self.random_seed)
-    
+        With ``random_stream_version='v1'`` it is a new ``RandomState(random_seed)`` on every
+        access, as in CityLearn 3.6.0, so every draw is the first value of that seed. With ``'v2'``
+        it is one persistent generator per object, derived from `random_seed` and
+        :py:attr:`random_stream_key`, so successive draws are independent.
+        """
+
+        if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
+            return np.random.RandomState(self.random_seed)
+
+        return self.random_generator(random_streams.DEVICE_PARAMETERS)
+
+    @property
+    def random_stream_version(self) -> str:
+        """Derivation of this object's random streams; see :py:mod:`citylearn.random_streams`."""
+
+        return getattr(self, '_Environment__random_stream_version', random_streams.DEFAULT_RANDOM_STREAM_VERSION)
+
+    @random_stream_version.setter
+    def random_stream_version(self, value: Union[str, int]):
+        value = random_streams.parse_random_stream_version(value)
+
+        if value != getattr(self, '_Environment__random_stream_version', None):
+            self.__random_stream_version = value
+            self._random_generators = {}
+
+    @property
+    def random_stream_key(self) -> Tuple[Any, ...]:
+        """Identity of this object in its random streams, e.g. ``('building', 'Building_1', 'pv')``."""
+
+        return getattr(self, '_Environment__random_stream_key', ())
+
+    @random_stream_key.setter
+    def random_stream_key(self, value: Union[Tuple[Any, ...], List[Any], str, None]):
+        value = () if value is None else ((value,) if isinstance(value, str) else tuple(value))
+
+        if value != getattr(self, '_Environment__random_stream_key', None):
+            self.__random_stream_key = value
+            self._random_generators = {}
+
+    def random_generator(self, purpose: str, *parts: Any) -> np.random.Generator:
+        """Persistent generator for `purpose` and `parts` of this object (``random_stream_version='v2'``).
+
+        The generator is derived from :py:attr:`random_seed`, `purpose`, :py:attr:`random_stream_key`
+        and `parts`, and is kept until the seed, version or key changes.
+        """
+
+        generators = getattr(self, '_random_generators', None)
+
+        if generators is None:
+            generators = self._random_generators = {}
+
+        key = (purpose, *parts)
+
+        if key not in generators:
+            generators[key] = random_streams.generator(self.random_seed, purpose, *self.random_stream_key, *parts)
+
+        return generators[key]
+
+    def _set_random_stream(self, random_stream_version: Union[str, int] = None, random_stream_key: Tuple[Any, ...] = None):
+        """Set the stream version and key; None keeps the current value (or the default).
+
+        Storage devices draw parameters before :py:meth:`__init__` runs, so they call this first.
+        """
+
+        if random_stream_version is not None or not hasattr(self, '_Environment__random_stream_version'):
+            self.random_stream_version = random_stream_version
+
+        if random_stream_key is not None or not hasattr(self, '_Environment__random_stream_key'):
+            self.random_stream_key = random_stream_key
+
     @random_seed.setter
     def random_seed(self, random_seed: int):
         random_seed = random.randint(*self.DEFAULT_RANDOM_SEED_RANGE) if random_seed is None else random_seed
+
+        if random_seed != getattr(self, '_Environment__random_seed', None):
+            self._random_generators = {}
+
         self.__random_seed = random_seed
 
     @seconds_per_time_step.setter

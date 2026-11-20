@@ -21,6 +21,7 @@ Esta pagina documenta o contrato do `schema.json`. O schema e a fonte oficial pa
 |---|---:|---:|---|
 | `root_directory` | string | sim | Pasta base dos ficheiros do dataset. |
 | `random_seed` | int/null | nao | Semente global. |
+| `random_stream_version` | string | nao | Como os fluxos aleatórios são derivados de `random_seed`: `v2` (predefinição, um fluxo `SeedSequence` independente por finalidade, objeto e episódio) ou `v1` (CityLearn 3.6.0 e anteriores). O argumento `random_stream_version` do construtor sobrepõe-se. |
 | `central_agent` | bool | sim | Controlador unico ou multi-agent por building. |
 | `seconds_per_time_step` | number | sim | Duracao fisica de cada step. |
 | `simulation_start_time_step` | int | sim | Primeiro timestep global. |

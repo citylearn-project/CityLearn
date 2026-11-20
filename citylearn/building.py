@@ -144,6 +144,8 @@ class Building(Environment):
         electrical_storage_phase_connection = kwargs.pop('electrical_storage_phase_connection', None)
         self._available_grid_power: Optional[grid_availability.AvailableGridPower] = kwargs.pop('available_grid_power', None)
         self.equity_group = kwargs.pop('equity_group', None)
+        # Placeholder devices are created below, before `Environment.__init__`, and follow this version.
+        self._set_random_stream(kwargs.pop('random_stream_version', None), kwargs.pop('random_stream_key', None))
         self.name = name
         self.dhw_storage = dhw_storage
         self.cooling_storage = cooling_storage
@@ -152,7 +154,10 @@ class Building(Environment):
         self.dhw_device = dhw_device
         self.cooling_device = cooling_device
         self.heating_device = heating_device
-        self.__non_shiftable_load_device = ElectricDevice(nominal_power=0.0, **kwargs)
+        self.__non_shiftable_load_device = ElectricDevice(
+            nominal_power=0.0, random_stream_version=self.random_stream_version,
+            random_stream_key=(*self.random_stream_key, 'non_shiftable_load_device'), **kwargs,
+        )
         self.pv = pv
         self.time_step_ratio=time_step_ratio
         super().__init__(
@@ -898,35 +903,35 @@ class Building(Environment):
 
     @dhw_storage.setter
     def dhw_storage(self, dhw_storage: StorageTank):
-        self.__dhw_storage = StorageTank(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if dhw_storage is None else dhw_storage
+        self.__dhw_storage = StorageTank(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED, random_stream_version=self.random_stream_version) if dhw_storage is None else dhw_storage
 
     @cooling_storage.setter
     def cooling_storage(self, cooling_storage: StorageTank):
-        self.__cooling_storage = StorageTank(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if cooling_storage is None else cooling_storage
+        self.__cooling_storage = StorageTank(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED, random_stream_version=self.random_stream_version) if cooling_storage is None else cooling_storage
 
     @heating_storage.setter
     def heating_storage(self, heating_storage: StorageTank):
-        self.__heating_storage = StorageTank(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if heating_storage is None else heating_storage
+        self.__heating_storage = StorageTank(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED, random_stream_version=self.random_stream_version) if heating_storage is None else heating_storage
 
     @electrical_storage.setter
     def electrical_storage(self, electrical_storage: Battery):
-        self.__electrical_storage = Battery(0.0, 0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if electrical_storage is None else electrical_storage
+        self.__electrical_storage = Battery(0.0, 0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED, random_stream_version=self.random_stream_version) if electrical_storage is None else electrical_storage
 
     @dhw_device.setter
     def dhw_device(self, dhw_device: Union[HeatPump, ElectricHeater]):
-        self.__dhw_device = ElectricHeater(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if dhw_device is None else dhw_device
+        self.__dhw_device = ElectricHeater(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED, random_stream_version=self.random_stream_version) if dhw_device is None else dhw_device
 
     @cooling_device.setter
     def cooling_device(self, cooling_device: HeatPump):
-        self.__cooling_device = HeatPump(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if cooling_device is None else cooling_device
+        self.__cooling_device = HeatPump(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED, random_stream_version=self.random_stream_version) if cooling_device is None else cooling_device
 
     @heating_device.setter
     def heating_device(self, heating_device: Union[HeatPump, ElectricHeater]):
-        self.__heating_device = HeatPump(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if heating_device is None else heating_device
+        self.__heating_device = HeatPump(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED, random_stream_version=self.random_stream_version) if heating_device is None else heating_device
 
     @pv.setter
     def pv(self, pv: PV):
-        self.__pv = PV(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED) if pv is None else pv
+        self.__pv = PV(0.0, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED, random_stream_version=self.random_stream_version) if pv is None else pv
 
     @electric_vehicle_chargers.setter
     def electric_vehicle_chargers(self, electric_vehicle_chargers: List[Charger]):
@@ -3196,6 +3201,8 @@ class Building(Environment):
                     model._set_episode_seed(
                         self.random_seed if seed is None else seed, self.name,
                         tracker.episode_start_time_step, tracker.episode_end_time_step,
+                        random_stream_version=self.random_stream_version,
+                        random_stream_episode=tracker.random_stream_episode,
                     )
 
                 power_outage_signal = model.get_signals(

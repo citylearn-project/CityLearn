@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import pandas as pd
 
+from citylearn import random_streams
+
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
 
@@ -74,13 +76,17 @@ class CityLearnBusinessAsUsualBaselineService:
             gc.collect()
         baseline_env = self._new_sidecar_env()
         baseline_env.random_seed = env.random_seed
+        # A freshly constructed sidecar has a different episode index: take the episode key of the
+        # evaluated episode, so its occupant, outage and away-EV streams are the same.
+        baseline_env._random_stream_episode_override = env.episode_tracker.random_stream_episode
         agent = BusinessAsUsualAgent(baseline_env, ev_charge_target=ev_charge_target)
         baseline_env.reset()
-        # Pair the away-EV stochastic stream with the source episode, including
-        # repeated resets; a freshly constructed sidecar has a different episode index.
-        import numpy as np
-        baseline_env._ev_drift_seed = env._ev_drift_seed
-        baseline_env._ev_drift_random_state = np.random.RandomState(env._ev_drift_seed)
+
+        if env.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
+            # Pair the away-EV stochastic stream with the source episode, including repeated resets.
+            import numpy as np
+            baseline_env._ev_drift_seed = env._ev_drift_seed
+            baseline_env._ev_drift_random_state = np.random.RandomState(env._ev_drift_seed)
         from citylearn import __version__
         from citylearn.internal.comparison import (
             configuration_differences, equipment, equipment_differences, inventory, reference_configuration,
@@ -187,6 +193,7 @@ class CityLearnBusinessAsUsualBaselineService:
             seconds_per_time_step=float(getattr(env, 'seconds_per_time_step', 3600.0)),
             central_agent=True,
             random_seed=getattr(env, '_initialization_seed', env.random_seed),
+            random_stream_version=env.random_stream_version,
             offline=getattr(env, 'offline', False),
             time_step_ratio=getattr(env, 'time_step_ratio', None),
             time_step_ratio_mode=getattr(env, 'time_step_ratio_mode', None),

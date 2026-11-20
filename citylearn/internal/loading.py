@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Mapping, NamedTuple, Optional
 import numpy as np
 import pandas as pd
 
+from citylearn import random_streams
 from citylearn.base import EpisodeTracker
 from citylearn.building import Building
 from citylearn.data import (
@@ -132,6 +133,8 @@ class CityLearnLoadingService:
         schema['random_seed'] = schema.get('random_seed', None) if kwargs.get('random_seed', None) is None else kwargs['random_seed']
         if schema['random_seed'] is None:
             schema['random_seed'] = self.env.random_seed
+        # Resolved by the environment from its constructor argument or the schema.
+        schema['random_stream_version'] = self.env.random_stream_version
         from citylearn.internal.temporal import TimeAxis, snapshot_inputs
         self.env._initialization_seed = schema['random_seed']
         self.env._input_snapshot = snapshot_inputs(schema)
@@ -479,6 +482,7 @@ class CityLearnLoadingService:
             observation_metadata=observation_metadata, action_metadata=action_metadata,
             carbon_intensity=inputs.carbon_intensity, pricing=inputs.pricing, name=building_name,
             seconds_per_time_step=schema['seconds_per_time_step'], random_seed=schema['random_seed'],
+            random_stream_version=schema['random_stream_version'], random_stream_key=('building', building_name),
             episode_tracker=episode_tracker, **outage, **options,
         )
         building._declared_inactive_actions = set(inactive_actions)
@@ -684,9 +688,12 @@ class CityLearnLoadingService:
         # Each EV draws its unspecified battery parameters (efficiency, curves, capacity fade) from
         # its own seed, as `initial_soc` above does; a shared seed gave every EV identical values.
         battery_random_seed = attrs.get('random_seed')
-        if battery_random_seed is None:
+        if battery_random_seed is None and schema['random_stream_version'] == random_streams.LEGACY_RANDOM_STREAM_VERSION:
             seed_source = f"{schema['random_seed']}:{electric_vehicle_name}:battery"
             battery_random_seed = int(hashlib.md5(seed_source.encode('utf-8')).hexdigest()[:8], 16)
+        elif battery_random_seed is None:
+            # The stream key below separates the EVs; the seed stays the environment seed.
+            battery_random_seed = schema['random_seed']
 
         battery_kwargs = {
             'capacity': capacity,
@@ -695,6 +702,8 @@ class CityLearnLoadingService:
             'seconds_per_time_step': schema['seconds_per_time_step'],
             'time_step_ratio': time_step_ratio,
             'random_seed': battery_random_seed,
+            'random_stream_version': schema['random_stream_version'],
+            'random_stream_key': ('electric_vehicle', electric_vehicle_name, 'battery'),
             'episode_tracker': episode_tracker,
             'depth_of_discharge': depth_of_discharge,
         }
@@ -770,6 +779,8 @@ class CityLearnLoadingService:
         appliance_class_name = appliance_type.split('.')[-1]
         appliance_class = getattr(importlib.import_module(appliance_module), appliance_class_name)
         attributes = dict(appliance_schema.get('attributes', {}) or {})
+        attributes.setdefault('random_stream_version', schema['random_stream_version'])
+        attributes.setdefault('random_stream_key', ('building', building_name, 'deferrable_appliance', appliance_name))
 
         appliance = appliance_class(
             deferrable_appliance_simulation=simulation,
@@ -816,6 +827,8 @@ class CityLearnLoadingService:
         class_name = escalator_type.split('.')[-1]
         constructor = getattr(importlib.import_module(module_name), class_name)
         attributes = dict(escalator_schema.get('attributes', {}) or {})
+        attributes.setdefault('random_stream_version', schema['random_stream_version'])
+        attributes.setdefault('random_stream_key', ('building', building_name, 'escalator', escalator_name))
         return constructor(
             escalator_simulation=simulation,
             episode_tracker=episode_tracker,

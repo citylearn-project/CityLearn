@@ -333,7 +333,7 @@ def test_flat_baseline_robustness_view_leaves_the_env_and_its_random_streams_unc
                 actions=taken, observations=seen, history=service.history, stuck=dict(service._stuck_values),
                 net=np.asarray(env.net_electricity_consumption, dtype="float64"),
                 np_random=env.np_random.bit_generator.state,
-                ev_drift=env._ev_drift_random_state.get_state(),
+                ev_drift={key: stream.bit_generator.state for key, stream in env._ev_drift_generators.items()},
             )
         finally:
             env.close()
@@ -346,9 +346,7 @@ def test_flat_baseline_robustness_view_leaves_the_env_and_its_random_streams_unc
     assert with_view["history"] == replay["history"]
     assert with_view["stuck"] == replay["stuck"]
     assert with_view["np_random"] == replay["np_random"]
-    left, right = with_view["ev_drift"], replay["ev_drift"]
-    np.testing.assert_array_equal(left[1], right[1])
-    assert (left[0],) + tuple(left[2:]) == (right[0],) + tuple(right[2:])
+    assert with_view["ev_drift"] == replay["ev_drift"]
 
 
 def test_native_bau_reference_input_stays_uncorrupted_under_flat_robustness(tmp_path):

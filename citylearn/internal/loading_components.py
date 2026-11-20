@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
+from citylearn import random_streams
 from citylearn.data import ChargerSimulation, LogisticRegressionOccupantParameters
 from citylearn.energy_model import PV, Battery
 from citylearn.internal.physics_version import physics_version_of
@@ -83,6 +84,8 @@ def add_model_options(building_kwargs, building_name, building_schema, schema, e
         attributes['parameters'] = LogisticRegressionOccupantParameters(**parameters.to_dict('list'))
         attributes['episode_tracker'] = episode_tracker
         attributes['random_seed'] = schema['random_seed']
+        attributes['random_stream_version'] = schema['random_stream_version']
+        attributes['random_stream_key'] = ('building', building_name, 'occupant')
 
         for key in ['increase', 'decrease']:
             attributes[f'setpoint_{key}_model_filepath'] = os.path.join(schema['root_directory'], attributes[f'setpoint_{key}_model_filename'])
@@ -235,19 +238,26 @@ def configure_devices(building, building_name, building_type, building_schema, s
                 attributes.pop('phase_connection', None)
             attributes['seconds_per_time_step'] = schema['seconds_per_time_step']
 
-            md5 = hashlib.md5()
-            device_random_seed = 0
+            if schema['random_stream_version'] == random_streams.LEGACY_RANDOM_STREAM_VERSION:
+                md5 = hashlib.md5()
+                device_random_seed = 0
 
-            for string in [building_name, building_type, device_name, device_type]:
-                md5.update(string.encode())
-                hash_to_integer_base = 16
-                device_random_seed += int(md5.hexdigest(), hash_to_integer_base)
+                for string in [building_name, building_type, device_name, device_type]:
+                    md5.update(string.encode())
+                    hash_to_integer_base = 16
+                    device_random_seed += int(md5.hexdigest(), hash_to_integer_base)
 
-            device_random_seed = int(str(device_random_seed * (schema['random_seed'] + 1))[:9])
+                device_random_seed = int(str(device_random_seed * (schema['random_seed'] + 1))[:9])
+
+            else:
+                # The stream key separates the devices; the seed stays the environment seed.
+                device_random_seed = schema['random_seed']
 
             attributes = {
                 **attributes,
                 'random_seed': attributes['random_seed'] if attributes.get('random_seed', None) is not None else device_random_seed,
+                'random_stream_version': attributes.get('random_stream_version', schema['random_stream_version']),
+                'random_stream_key': attributes.get('random_stream_key', ('building', building_name, device_name)),
             }
             device = constructor(**attributes)
             autosize = parse_bool(

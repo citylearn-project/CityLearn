@@ -879,7 +879,10 @@ class CityLearnTopologyService:
             return True
 
         if asset_type == 'pv':
-            building.pv = PV(0.0, seconds_per_time_step=building.seconds_per_time_step, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED)
+            building.pv = PV(
+                0.0, seconds_per_time_step=building.seconds_per_time_step, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED,
+                random_stream_version=building.random_stream_version,
+            )
             self._bind_building_runtime_context(building)
             building.pv.reset()
             self._set_building_time_step(building, time_step)
@@ -891,6 +894,7 @@ class CityLearnTopologyService:
         if asset_type == 'electrical_storage':
             building.electrical_storage = Battery(
                 0.0, 0.0, seconds_per_time_step=building.seconds_per_time_step, random_seed=PLACEHOLDER_DEVICE_RANDOM_SEED,
+                random_stream_version=building.random_stream_version,
             )
             self._bind_building_runtime_context(building)
             building.electrical_storage.reset()

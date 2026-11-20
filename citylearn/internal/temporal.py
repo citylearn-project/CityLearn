@@ -247,6 +247,8 @@ def axis_metadata(env):
         initialization_seed=getattr(env, "_initialization_seed", env.random_seed),
         environment_seed=env.random_seed,
         ev_drift_seed=getattr(env, "_ev_drift_seed", None),
+        random_stream_version=getattr(env, "random_stream_version", None),
+        random_stream_episode=getattr(tracker, "random_stream_episode", None),
         reset_seed_explicit=getattr(env, "_reset_seed_explicit", False),
         episode_index_explicit=bool(getattr(env, "_episode_index_explicit", False)),
         input_evidence_scope="schema_declared_files_plus_canonical_clock",
