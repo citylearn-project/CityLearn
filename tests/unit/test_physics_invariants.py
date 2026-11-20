@@ -123,6 +123,8 @@ def test_physics_invariants_use_historical_membership_after_topology_change():
 
     service._assert_building_energy_balance = lambda building, _time_step: checked.append(building.name)
     service._assert_outage_local_balance = lambda _building, _time_step: None
+    service._assert_thermal_device_conversion = lambda _building, _time_step: None
+    service._assert_served_energy_within_demand = lambda _building, _time_step: None
     service._assert_soc_bounds = lambda _building, _time_step: None
     service._assert_storage_power_bounds = lambda _building, _time_step: None
     service._assert_charger_power_bounds = lambda _building, _time_step: None
