@@ -194,8 +194,32 @@ uses the version of the evaluated environment, and exports record it in the
 run metadata. To reproduce a 3.6.0 result, set `physics_version` to `1`; to
 compare controllers, run them under the same version.
 
-Version 2 changes no result on bundled datasets as shipped. It changes runs
-that use the following:
+Version 2 changes the following on bundled datasets:
+
+- **Battery discharge power.** `capacity_power_curve` describes how charging
+  power tapers near full charge, but version 1 applied it to discharge too, so
+  a full battery could discharge at only a fraction of its nominal power
+  ([#227](https://github.com/citylearn-project/CityLearn/issues/227)). Version
+  2 limits discharge with a separate battery attribute,
+  `discharge_power_curve`, which defaults to a flat curve at `nominal_power`
+  and can derate at low state of charge. `InventoryBattery` keeps its
+  `max_discharge_kw`. This changes every battery and EV battery whose
+  `capacity_power_curve` tapers, which includes the default curve, whenever it
+  discharges above the taper point: the 2022 and 2023 challenge datasets, the
+  three-phase demos, the neighbourhood datasets and most `pt_rec_*` batteries.
+- **Battery discharge during outages.** Version 1 capped an islanded battery's
+  discharge with a pre-step estimate of the load that ignored the thermal
+  storage discharge and the device limits, so the battery could discharge more
+  than the building consumed and the surplus was reported as PV curtailment,
+  even without PV ([#229](https://github.com/citylearn-project/CityLearn/issues/229)).
+  Version 2 discharges the battery after the step's thermal demand and thermal
+  storage discharges are known and caps it at the islanded load that PV leaves.
+  With `physics_invariant_checks`, a discharge above that load raises
+  `PhysicsInvariantError`. This changes scenarios with outages and batteries, such as
+  the `citylearn_challenge_2023_*` datasets with stochastic outages and the
+  `pt_rec_*` robustness, combined and all-in scenarios.
+
+It also changes runs that use the following:
 
 - **EVs with a standby loss.** An EV away from its charger now keeps the
   standby loss of each step; version 1 discarded it, so a non-zero battery

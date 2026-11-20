@@ -210,7 +210,9 @@ limitations, losses to the environment quantified by <cite>efficiency</cite>, <c
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.community_dataset.InventoryBattery.get_max_output_power">
 <span class="sig-name descname"><span class="pre">get_max_output_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">energy_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/community_dataset.html#InventoryBattery.get_max_output_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.community_dataset.InventoryBattery.get_max_output_power" title="Link to this definition"></a></dt>
-<dd><p>Get maximum output power while considering <cite>capacity_power_curve</cite> limitations if defined otherwise, returns <cite>nominal_power</cite>.</p>
+<dd><p>Get maximum output power while considering <cite>discharge_power_curve</cite> limitations.</p>
+<p>With <cite>legacy_discharge_power_limit</cite> (physics version 1), discharge is limited by the charging
+curve, <cite>capacity_power_curve</cite>, as in CityLearn 3.6.0 and earlier.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>max_output_power</strong> – Maximum amount of power that the storage unit can output [kW].</p>

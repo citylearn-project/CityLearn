@@ -131,6 +131,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.physics_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">physics_version_of</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">power_kw_to_energy_kwh</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -331,6 +332,16 @@
             <span class="sa">f</span><span class="s2">"Outage local energy balance violated for '</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' at t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: "</span>
             <span class="sa">f</span><span class="s2">"loads=</span><span class="si">{</span><span class="n">local_loads</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, local_sources=</span><span class="si">{</span><span class="n">local_sources</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh."</span>
         <span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="n">building</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># Storage discharges only into the islanded load that PV leaves (#229); physics version 1</span>
+            <span class="c1"># can discharge more and books the surplus as PV curtailment.</span>
+            <span class="n">storage_discharge</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">storage_energy</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">charger_energy</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">uncovered_load</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">local_loads</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">solar_generation</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="n">storage_discharge</span> <span class="o">&lt;=</span> <span class="n">uncovered_load</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Outage storage discharge exceeds the load not covered by PV for '</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' at t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: "</span>
+                <span class="sa">f</span><span class="s2">"discharge=</span><span class="si">{</span><span class="n">storage_discharge</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, uncovered_load=</span><span class="si">{</span><span class="n">uncovered_load</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh."</span>
+            <span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_assert_soc_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">storages</span> <span class="o">=</span> <span class="p">[</span>

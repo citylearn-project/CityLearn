@@ -152,7 +152,7 @@ reproducible when a correction changes simulated values. A run selects a version
 same name; the argument takes precedence.</p>
 <section id="versions">
 <h2>Versions<a class="headerlink" href="#versions" title="Link to this heading"></a></h2>
-<dl>
+<dl class="simple">
 <dt>1</dt><dd><p>The physics of CityLearn 3.6.0 and earlier.</p>
 </dd>
 <dt>2</dt><dd><p>Corrected physics (tracking issue #226, theme 4):</p>
@@ -163,9 +163,11 @@ available power, which matters for steps longer than one hour (#235);</p></li>
 <li><p>storage-tank autosizing covers one hour of peak demand power, and PV autosizing groups years
 and resamples the PVWatts output at the dataset resolution, which matters for sub-hourly
 data (#233).</p></li>
+<li><p>battery discharge is limited by <cite>Battery.discharge_power_curve</cite>, flat at the nominal power by
+default, instead of the charging curve <cite>capacity_power_curve</cite> (#227);</p></li>
+<li><p>during an outage the battery discharges after the step’s thermal demand and thermal storage
+discharges and only up to the islanded load that PV leaves (#229).</p></li>
 </ul>
-<p>Datasets at a resolution of one hour or finer whose EVs have no standby loss and that do not
-autosize at sub-hourly resolution simulate identically under versions 1 and 2.</p>
 </dd>
 </dl>
 </section>

@@ -202,8 +202,10 @@
 <div class="viewcode-block" id="InventoryBattery.get_max_output_power">
 <a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBattery.get_max_output_power">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_max_output_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_init</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="c1"># Call Battery input directly: its output method delegates back to input.</span>
-        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_discharge_kw</span><span class="p">,</span> <span class="n">Battery</span><span class="o">.</span><span class="n">get_max_input_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">))</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legacy_discharge_power_limit</span><span class="p">:</span>
+            <span class="c1"># Physics version 1: the charging curve, without this class's charge power and headroom limits.</span>
+            <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_discharge_kw</span><span class="p">,</span> <span class="n">Battery</span><span class="o">.</span><span class="n">get_max_input_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_discharge_kw</span><span class="p">,</span> <span class="n">Battery</span><span class="o">.</span><span class="n">get_max_output_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy_init</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="InventoryBattery.get_current_efficiency">

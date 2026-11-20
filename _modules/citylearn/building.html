@@ -2150,10 +2150,19 @@
         <span class="c1"># Optionally clamp to flexibility range if needed</span>
         <span class="n">energy</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">downward_electrical_flexibility</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_outage</span> <span class="ow">and</span> <span class="n">energy</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">base_total_kw</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">_estimate_base_power_at_step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                <span class="n">base_total_kw</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">if</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="c1"># Physics version 1: a pre-step estimate from the dataset thermal demand, which ignores the</span>
+                <span class="c1"># thermal storage discharge and the device limits, so the battery can discharge more than the</span>
+                <span class="c1"># islanded load and the surplus is booked as PV curtailment (#229).</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">base_total_kw</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">_estimate_base_power_at_step</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="n">base_total_kw</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># The battery discharges after this step's demand and thermal storage discharges, so the</span>
+                <span class="c1"># islanded load left for the devices is known; PV covers it first.</span>
+                <span class="n">base_total_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">_outage_unserved_load_kw</span><span class="p">()</span>
+
             <span class="n">local_load_kwh</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">base_total_kw</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
             <span class="n">energy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="o">-</span><span class="n">local_load_kwh</span><span class="p">)</span>
 

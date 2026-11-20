@@ -143,6 +143,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChargerSimulation</span><span class="p">,</span> <span class="n">LogisticRegressionOccupantParameters</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">PV</span><span class="p">,</span> <span class="n">Battery</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.physics_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">physics_version_of</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_bool</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -404,6 +405,9 @@
                 <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s1">'buildings.</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">device_name</span><span class="si">}</span><span class="s1">.autosize'</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">Battery</span><span class="p">):</span>
+                <span class="c1"># Physics version 1 limits battery discharge with the charging curve (#227).</span>
+                <span class="n">device</span><span class="o">.</span><span class="n">legacy_discharge_power_limit</span> <span class="o">=</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="n">building</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span>
             <span class="n">building</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">device_name</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
             <span class="c1"># Schema-built devices do not know the dataset/control-step ratio yet, but the autosizers</span>
             <span class="c1"># convert dataset-resolution demand with it. Without this, hourly data run at 15-minute</span>

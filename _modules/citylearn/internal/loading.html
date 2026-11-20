@@ -151,6 +151,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.reward_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiBuildingRewardFunction</span><span class="p">,</span> <span class="n">RewardFunction</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_bool</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal</span><span class="w"> </span><span class="kn">import</span> <span class="n">grid_availability</span><span class="p">,</span> <span class="n">loading_inputs</span><span class="p">,</span> <span class="n">loading_components</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.physics_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_physics_version</span>
 
 <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -849,6 +850,7 @@
             <span class="s1">'capacity_loss_coefficient'</span><span class="p">,</span>
             <span class="s1">'power_efficiency_curve'</span><span class="p">,</span>
             <span class="s1">'capacity_power_curve'</span><span class="p">,</span>
+            <span class="s1">'discharge_power_curve'</span><span class="p">,</span>
             <span class="s1">'max_charge_kw'</span><span class="p">,</span>
             <span class="s1">'max_discharge_kw'</span><span class="p">,</span>
             <span class="s1">'min_soc'</span><span class="p">,</span>
@@ -864,6 +866,9 @@
             <span class="n">battery_kwargs</span><span class="p">[</span><span class="s1">'nominal_power'</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="s1">'nominal_power'</span><span class="p">]</span>
 
         <span class="n">battery</span> <span class="o">=</span> <span class="n">battery_constructor</span><span class="p">(</span><span class="o">**</span><span class="n">battery_kwargs</span><span class="p">)</span>
+        <span class="c1"># Physics version 1 limits battery discharge with the charging curve (#227).</span>
+        <span class="n">battery</span><span class="o">.</span><span class="n">legacy_discharge_power_limit</span> <span class="o">=</span> <span class="n">resolve_physics_version</span><span class="p">(</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s1">'physics_version'</span><span class="p">,</span> <span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'physics_version'</span><span class="p">)))</span> <span class="o">&lt;</span> <span class="mi">2</span>
 
         <span class="n">electric_vehicle_type</span> <span class="o">=</span> <span class="s1">'citylearn.citylearn.ElectricVehicle'</span> <span class="k">if</span> <span class="n">electric_vehicle_schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'type'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">electric_vehicle_schema</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span>
         <span class="n">electric_vehicle_type_module</span> <span class="o">=</span> <span class="s1">'.'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">electric_vehicle_type</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>

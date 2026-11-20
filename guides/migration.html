@@ -358,8 +358,32 @@ contains the corrections below. The native BAU reference of <code class="docutil
 uses the version of the evaluated environment, and exports record it in the
 run metadata. To reproduce a 3.6.0 result, set <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>; to
 compare controllers, run them under the same version.</p>
-<p>Version 2 changes no result on bundled datasets as shipped. It changes runs
-that use the following:</p>
+<p>Version 2 changes the following on bundled datasets:</p>
+<ul class="simple">
+<li><p><strong>Battery discharge power.</strong> <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> describes how charging
+power tapers near full charge, but version 1 applied it to discharge too, so
+a full battery could discharge at only a fraction of its nominal power
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/227">#227</a>). Version
+2 limits discharge with a separate battery attribute,
+<code class="docutils literal notranslate"><span class="pre">discharge_power_curve</span></code>, which defaults to a flat curve at <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code>
+and can derate at low state of charge. <code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code> keeps its
+<code class="docutils literal notranslate"><span class="pre">max_discharge_kw</span></code>. This changes every battery and EV battery whose
+<code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> tapers, which includes the default curve, whenever it
+discharges above the taper point: the 2022 and 2023 challenge datasets, the
+three-phase demos, the neighbourhood datasets and most <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> batteries.</p></li>
+<li><p><strong>Battery discharge during outages.</strong> Version 1 capped an islanded battery’s
+discharge with a pre-step estimate of the load that ignored the thermal
+storage discharge and the device limits, so the battery could discharge more
+than the building consumed and the surplus was reported as PV curtailment,
+even without PV (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/229">#229</a>).
+Version 2 discharges the battery after the step’s thermal demand and thermal
+storage discharges are known and caps it at the islanded load that PV leaves.
+With <code class="docutils literal notranslate"><span class="pre">physics_invariant_checks</span></code>, a discharge above that load raises
+<code class="docutils literal notranslate"><span class="pre">PhysicsInvariantError</span></code>. This changes scenarios with outages and batteries, such as
+the <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_*</span></code> datasets with stochastic outages and the
+<code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> robustness, combined and all-in scenarios.</p></li>
+</ul>
+<p>It also changes runs that use the following:</p>
 <ul class="simple">
 <li><p><strong>EVs with a standby loss.</strong> An EV away from its charger now keeps the
 standby loss of each step; version 1 discarded it, so a non-zero battery
