@@ -337,7 +337,7 @@ bit on every run below; `v2` changes:
   cost 1,092.7 → 1,095.7 EUR (+0.3%);
 - `citylearn_challenge_2022_phase_all_plus_evs` (two 168 h episodes, random
   battery curves and EV drift): net consumption −1.7% and −1.4%, control cost
-  −0.1% and +0.2%;
+  −0.1% and +0.3%;
 - `citylearn_challenge_2023_phase_2_local_evaluation` (720 h): with the
   bundled SAIFI the three buildings no longer share one 15-step outage, so the
   episode has none and the normalized outage unserved energy goes from 0.73 to
