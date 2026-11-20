@@ -150,6 +150,14 @@
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.agents.base.</span></span><span class="sig-name descname"><span class="pre">Agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/base.html#Agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.base.Agent" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="citylearn.base.html#citylearn.base.Environment" title="citylearn.base.Environment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Environment</span></code></a></p>
 <p>Base agent class.</p>
+<p>Under the entity interface, the environment’s <code class="docutils literal notranslate"><span class="pre">action_space</span></code> and
+<code class="docutils literal notranslate"><span class="pre">observation_space</span></code> are <code class="docutils literal notranslate"><span class="pre">spaces.Dict</span></code> objects keyed by entity table. The
+agent then keeps the flat spaces (<code class="docutils literal notranslate"><span class="pre">flat_action_space</span></code> and
+<code class="docutils literal notranslate"><span class="pre">flat_observation_space</span></code>) in <a class="reference internal" href="#citylearn.agents.base.Agent.action_space" title="citylearn.agents.base.Agent.action_space"><code class="xref py py-attr docutils literal notranslate"><span class="pre">action_space</span></code></a> and
+<a class="reference internal" href="#citylearn.agents.base.Agent.observation_space" title="citylearn.agents.base.Agent.observation_space"><code class="xref py py-attr docutils literal notranslate"><span class="pre">observation_space</span></code></a> and returns flat-like action vectors in
+<code class="docutils literal notranslate"><span class="pre">env.action_names</span></code> order, which the entity interface also accepts. Agents
+that read flat observation vectors, such as the reinforcement learning
+controllers, require the flat interface.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -339,6 +347,18 @@ business-as-usual baseline that charges EVs, starts deferrables, and controls BE
 <dd><p>Read an attribute from the outermost wrapper that defines it, else from the base environment.</p>
 <p>Gymnasium 1.x removed implicit attribute forwarding through wrappers; <code class="docutils literal notranslate"><span class="pre">get_wrapper_attr</span></code> replaces it
 (older gymnasium versions forward attributes through <code class="docutils literal notranslate"><span class="pre">Wrapper.__getattr__</span></code>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.agents.base.is_entity_interface">
+<span class="sig-prename descclassname"><span class="pre">citylearn.agents.base.</span></span><span class="sig-name descname"><span class="pre">is_entity_interface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/citylearn/agents/base.html#is_entity_interface"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.base.is_entity_interface" title="Link to this definition"></a></dt>
+<dd><p>Whether <code class="docutils literal notranslate"><span class="pre">env</span></code> (or the environment it wraps) uses the entity interface.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.agents.base.require_flat_interface">
+<span class="sig-prename descclassname"><span class="pre">citylearn.agents.base.</span></span><span class="sig-name descname"><span class="pre">require_flat_interface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/base.html#require_flat_interface"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.base.require_flat_interface" title="Link to this definition"></a></dt>
+<dd><p>Raise a clear error for agents that read flat observation vectors.</p>
 </dd></dl>
 
 </section>

@@ -438,11 +438,16 @@
 <div class="viewcode-block" id="ZeroActionBaselineAgent">
 <a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.ZeroActionBaselineAgent">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ZeroActionBaselineAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Baseline that requests zero for every action dimension."""</span>
+<span class="w">    </span><span class="sd">"""Baseline that requests zero for every action dimension.</span>
+
+<span class="sd">    Under the entity interface it returns flat-like zero vectors in</span>
+<span class="sd">    ``env.action_names`` order, which the entity interface accepts.</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="ZeroActionBaselineAgent.predict">
 <a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.ZeroActionBaselineAgent.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_follow_entity_topology</span><span class="p">()</span>
         <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actions</span> <span class="o">=</span> <span class="n">actions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>

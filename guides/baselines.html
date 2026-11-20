@@ -356,6 +356,23 @@ with the price forecast:</p>
 <code class="docutils literal notranslate"><span class="pre">725a72a</span></code>). With the same defaults and observations they request the same
 actions at every step. <code class="docutils literal notranslate"><span class="pre">agent.comparison_identity()</span></code> records the class, the
 definition version and the resolved parameters for experiment manifests.</p>
+<p>The rule baselines can also guide the exploration of <code class="docutils literal notranslate"><span class="pre">SACRBC</span></code> and
+<code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code>. Pass an instance built on the same environment, the class or its
+import path as <code class="docutils literal notranslate"><span class="pre">rbc</span></code>. With a class or an import path, the learner’s own
+hyperparameters stay with the learner, and the remaining keyword arguments go to
+the baseline:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">RBCBasicPolicy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SACRBC</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">SACRBC</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">rbc</span><span class="o">=</span><span class="n">RBCBasicPolicy</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">3e-4</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">basic_price_policy</span><span class="o">=</span><span class="s1">'forecast_relative'</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">SACRBC</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">rbc</span><span class="o">=</span><span class="n">RBCBasicPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">basic_price_policy</span><span class="o">=</span><span class="s1">'forecast_relative'</span><span class="p">),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">3e-4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The reinforcement learning controllers (<code class="docutils literal notranslate"><span class="pre">SAC</span></code>, <code class="docutils literal notranslate"><span class="pre">SACRBC</span></code>, <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code>,
+<code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code>, <code class="docutils literal notranslate"><span class="pre">TabularQLearning</span></code>) read flat observation vectors and require
+<code class="docutils literal notranslate"><span class="pre">interface='flat'</span></code>; on the entity interface they raise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. The rule
+baselines, <code class="docutils literal notranslate"><span class="pre">ZeroActionBaselineAgent</span></code> and the random <code class="docutils literal notranslate"><span class="pre">Agent</span></code> work with both
+interfaces.</p>
 <section id="automatic-bau-evaluation">
 <h3>Automatic BAU evaluation<a class="headerlink" href="#automatic-bau-evaluation" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">env.evaluate_v2()</span></code> runs or reuses a separate BAU simulation up to the current

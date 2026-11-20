@@ -126,9 +126,10 @@
              
   <h1>Source code for citylearn.agents.marlisa</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.rbc</span><span class="w"> </span><span class="kn">import</span> <span class="n">RBC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.rbc</span><span class="w"> </span><span class="kn">import</span> <span class="n">RBC</span>  <span class="c1"># noqa: F401  (kept for code importing RBC from this module)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SACRBC</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
@@ -739,22 +740,25 @@
 <div class="viewcode-block" id="MARLISARBC">
 <a class="viewcode-back" href="../../../api/citylearn.agents.marlisa.html#citylearn.agents.marlisa.MARLISARBC">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MARLISARBC</span><span class="p">(</span><span class="n">MARLISA</span><span class="p">,</span> <span class="n">SACRBC</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""Uses :py:class:`citylearn.agents.rbc.RBC` to select action during exploration before using :py:class:`citylearn.agents.marlisa.MARLISA`.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Uses a rule-based controller to select actions during exploration before using :py:class:`citylearn.agents.marlisa.MARLISA`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    env: CityLearnEnv</span>
 <span class="sd">        CityLearn environment.</span>
-<span class="sd">    rbc: RBC</span>
-<span class="sd">        :py:class:`citylearn.agents.rbc.RBC` or child class, used to select actions during exploration.</span>
+<span class="sd">    rbc: Union[Agent, type, str], optional</span>
+<span class="sd">        Controller used to select actions during exploration, as for :py:class:`citylearn.agents.sac.SACRBC`:</span>
+<span class="sd">        an agent instance built on the same `env`, an agent class or its import path, including the rule</span>
+<span class="sd">        baselines of :py:mod:`citylearn.agents.baseline`. Defaults to :py:class:`citylearn.agents.rbc.RBC`.</span>
 <span class="sd">    </span>
 <span class="sd">    Other Parameters</span>
 <span class="sd">    ----------------</span>
 <span class="sd">    **kwargs : Any</span>
-<span class="sd">        Other keyword arguments used to initialize super class.</span>
+<span class="sd">        Other keyword arguments used to initialize super class. Those the learner does not declare are also</span>
+<span class="sd">        passed to the `rbc` constructor, as for :py:class:`citylearn.agents.sac.SACRBC`.</span>
 <span class="sd">    """</span>
     
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">rbc</span><span class="p">:</span> <span class="n">RBC</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">rbc</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Agent</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
         <span class="c1"># MARLISA's exploration calls get_exploration_prediction, which resolves to SACRBC's in this MRO.</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">rbc</span><span class="o">=</span><span class="n">rbc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
