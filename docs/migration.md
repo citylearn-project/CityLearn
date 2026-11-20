@@ -121,6 +121,25 @@ that median, raise a `ValueError`; declare the step with
 inferred ratio. The bundled datasets all use their native step and are not
 affected.
 
+### Per-building reward functions and reward versions
+
+When the schema's `reward_function.type` maps buildings to reward functions,
+each function now reads its own building's metadata and is paired with its
+building by name. Per-building functions that read building metadata, such as
+`SolarPenaltyReward`, used the first building's storage capacities for every
+building, so their rewards change; functions that read only observations, such
+as `RewardFunction`, give the same rewards. Retrain policies trained with such a
+schema. No bundled dataset uses per-building reward functions.
+
+`Electric_Vehicles_Reward_Function`, `ComfortReward` and
+`SolarPenaltyAndComfortReward` accept a `version` attribute. Version 1, the
+default, is the reward of 3.6.0, so existing schemas and trained policies keep
+their reward. Version 2 corrects the EV departure penalty, adds the base reward
+and follows the HVAC mode in the comfort term, as the reward function overview
+of the documentation describes. Set `"version": 2` in the
+reward attributes for new training runs, and compare policies only within one
+version. The reward evidence in the environment metadata records the version.
+
 ## Upgrade from 3.5.0 to 3.6.0
 
 ### Battery discharge features during outages

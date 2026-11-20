@@ -27,10 +27,11 @@ def reward_metadata(env):
     reward = getattr(env, "reward_function", None)
     configured = dict((env.schema.get("reward_function") or {}).get("attributes") or {})
     effective = {}
-    for name in set(configured) | {
+    for name in sorted(set(configured) | {
         "exponent",
         "charging_constraint_penalty_coefficient",
-    }:
+        "version",
+    }):
         value = getattr(reward, name, None)
         if isinstance(value, (str, bool, int, float)):
             effective[name] = value

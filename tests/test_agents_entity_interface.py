@@ -1,5 +1,8 @@
 """Generic and SAC-based agents on the entity interface, and rule baselines as SACRBC/MARLISARBC exploration (#250)."""
 
+import json
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -14,9 +17,17 @@ SAC_HYPERPARAMETERS = dict(
 )
 
 
+def _schema():
+    # Read the schema in place: loading the dataset by name copies it into the shared cache, which races under xdist.
+    path = Path(__file__).resolve().parents[1] / 'data' / 'datasets' / DATASET / 'schema.json'
+    schema = json.loads(path.read_text(encoding='utf-8'))
+    schema['root_directory'] = str(path.parent)
+    return schema
+
+
 def _env(interface, central_agent=False, **kwargs):
     return CityLearnEnv(
-        DATASET, interface=interface, central_agent=central_agent, buildings=[0, 1],
+        _schema(), interface=interface, central_agent=central_agent, buildings=[0, 1],
         episode_time_steps=6, random_seed=0, **kwargs,
     )
 

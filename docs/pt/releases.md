@@ -23,6 +23,28 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   argumentos continuam a chegar-lhe. As classes `RBC` incluídas ignoravam esses
   hiperparâmetros, pelo que as suas execuções não mudam
   ([#250](https://github.com/citylearn-project/CityLearn/issues/250)).
+- **Versões de recompensas.** `Electric_Vehicles_Reward_Function`,
+  `ComfortReward` e `SolarPenaltyAndComfortReward` aceitam `version`, e a versão
+  2 segue a definição documentada
+  ([#249](https://github.com/citylearn-project/CityLearn/issues/249)). Na versão
+  1, um edifício com carregadores de VE recebia apenas os termos de VE, um
+  edifício sem carregadores recebia 0, e sair 0,25 ou mais abaixo do SOC de
+  partida pedido somava `weights['soc_under'] ** 2`, um bónus de +25 com os pesos
+  por omissão. A versão 2 soma a recompensa base MARL em todos os edifícios e
+  substitui o bónus por `min(2 * w, -(w ** 2))` (-25). No modo de arrefecimento
+  ou de aquecimento, a recompensa de conforto da versão 1 escolhia o serviço pela
+  maior procura no passo; a versão 2 usa `hvac_mode`. A versão 1 continua a ser a
+  versão por omissão, pelo que os esquemas incluídos e as políticas treinadas
+  mantêm a recompensa, e a evidência da recompensa nos metadados do ambiente
+  regista a versão.
+- **Funções de recompensa por edifício.** Com `reward_function.type` definido por
+  edifício, a função de cada edifício lia os metadados do primeiro edifício e as
+  funções eram associadas aos edifícios pela posição. Com `SolarPenaltyReward`, um
+  edifício com uma bateria de 10 kWh ao lado de um sem bateria recebia 0 em vez
+  de -7,5. Cada função passa a ler os metadados do seu edifício e a ser associada
+  pelo nome do edifício, também quando membros entram ou saem numa topologia
+  dinâmica. Nenhum conjunto de dados incluído usa funções de recompensa por
+  edifício.
 - **Ações não finitas.** Uma ação NaN passava por todos os limites `min`/`max`, pelo que uma ação NaN de armazenamento se tornava a maior descarga possível (a bateria do `minute_ev_demo` ia de 50% a 0% num passo de 15 minutos, o dobro do limite de potência). O `env.step()` passa a dar `ValueError` para ações NaN ou infinitas nas duas interfaces, e o `charge()` dos armazenamentos rejeita energia não finita ([#228](https://github.com/citylearn-project/CityLearn/issues/228)).
 - **Verificação de invariantes físicos.** Com `physics_invariant_checks=True`, um estado NaN ou infinito passa a ser uma violação em vez de ser lido como 0, e as verificações lançam `PhysicsInvariantError` (subclasse de `AssertionError`), pelo que o `python -O` deixa de as desligar ([#228](https://github.com/citylearn-project/CityLearn/issues/228)).
 - **Features de prazo dos VE.** No passo em que um VE parte com energia em falta, cinco features chegavam a cerca de 1e7, muito acima dos limites de observação. Passam a saturar nos limites, mantendo o significado; as baselines e os KPIs não mudam ([#242](https://github.com/citylearn-project/CityLearn/issues/242)).

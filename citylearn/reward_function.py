@@ -64,6 +64,15 @@ class RewardFunction:
 
         pass
 
+    @staticmethod
+    def _parse_version(version: Optional[int], supported: Tuple[int, ...], owner: str) -> int:
+        version = supported[0] if version is None else version
+
+        if isinstance(version, bool) or not isinstance(version, (int, np.integer)) or int(version) not in supported:
+            raise ValueError(f'{owner} version must be one of {list(supported)}, got {version!r}.')
+
+        return int(version)
+
     def get_required_observation_names(self) -> Optional[Iterable[str]]:
         """Declare inputs of the built-in calculation; custom rewards remain unrestricted."""
 
@@ -97,19 +106,68 @@ class RewardFunction:
         return reward
     
 class MultiBuildingRewardFunction(RewardFunction):
+    """Applies one reward function per building.
+
+    Used when the schema's ``reward_function.type`` maps building names to reward functions. Each function receives
+    one building's observations and returns that building's reward; the values are returned in building order, or
+    summed as ``[total]`` with a central agent.
+
+    Each function's ``env_metadata`` is the environment metadata with ``buildings`` reduced to its own building, so
+    functions that read building metadata, such as :py:class:`SolarPenaltyReward`, see that building's assets.
+    Functions are paired with the observations by building name, following ``env_metadata['buildings']``, which the
+    environment refreshes when members join or leave under a dynamic topology. Without building names in the
+    metadata, functions are paired with the observations by position.
+
+    Up to CityLearn 3.6.0 every function received the metadata of all buildings and read the first entry, i.e.
+    the first building's assets, and functions were always paired by position.
+
+    Parameters
+    ----------
+    env: Mapping[str, Any]
+        General static information about the environment (``None`` until the environment sets it).
+    reward_functions: dict[str, RewardFunction]
+        Reward function of each building, keyed by building name.
+    """
+
     def __init__(self, env, reward_functions: dict[str, RewardFunction]):
         self.env = env
         self.reward_functions = reward_functions
         super().__init__(env)
 
+    def _paired_reward_functions(self, count: int) -> List[Tuple[str, RewardFunction]]:
+        names = self._building_names()
+
+        if names is None:
+            names = list(self.reward_functions)[:count]
+
+        if len(names) != count:
+            raise ValueError(f'Got observations for {count} buildings but metadata for {len(names)} buildings.')
+
+        pairs = []
+
+        for name in names:
+            rf = self.reward_functions.get(name)
+
+            if rf is None:
+                raise ValueError(f"No reward function for building '{name}'")
+
+            pairs.append((name, rf))
+
+        return pairs
+
+    def _building_names(self) -> Optional[List[str]]:
+        buildings = self.env_metadata.get('buildings') if isinstance(self.env_metadata, Mapping) else None
+
+        if not isinstance(buildings, list) or not all(isinstance(b, Mapping) and 'name' in b for b in buildings):
+            return None
+
+        return [b['name'] for b in buildings]
+
     def calculate(self, observations: list[dict]) -> list[float]:
         # Each building's function sees only that building, so it yields one value; collect them flat
         # and aggregate for a central agent like every other reward function.
         rewards = []
-        for obs, (building_name, rf) in zip(observations, self.reward_functions.items()):
-            if rf is None:
-                raise ValueError(f"No reward function for building '{building_name}'")
-
+        for obs, (_, rf) in zip(observations, self._paired_reward_functions(len(observations))):
             rewards.extend(float(value) for value in np.asarray(rf.calculate([obs]), dtype=float).reshape(-1))
 
         return [sum(rewards)] if self.central_agent else rewards
@@ -136,8 +194,15 @@ class MultiBuildingRewardFunction(RewardFunction):
     @env_metadata.setter
     def env_metadata(self, env_metadata: Mapping[str, Any]):
         self._env_metadata = env_metadata
-        for rf in self.reward_functions.values():
-            rf.env_metadata = env_metadata
+        buildings = self._building_names()
+
+        for name, rf in self.reward_functions.items():
+            if buildings is None:
+                rf.env_metadata = env_metadata
+            else:
+                # Inactive members get no building entry; the environment refreshes the metadata when they join.
+                own = [b for b in env_metadata['buildings'] if b['name'] == name]
+                rf.env_metadata = {**env_metadata, 'buildings': own}
     
 
 class MARL(RewardFunction):
@@ -155,11 +220,18 @@ class MARL(RewardFunction):
     def get_required_observation_names(self) -> Optional[Iterable[str]]:
         return ('net_electricity_consumption',)
 
-    def calculate(self, observations: List[Mapping[str, Union[int, float]]]) -> List[float]:
+    @staticmethod
+    def _building_rewards(observations: List[Mapping[str, Union[int, float]]]) -> np.ndarray:
+        """Reward of each building, before aggregation for a central agent."""
+
         net_electricity_consumption = [o['net_electricity_consumption'] for o in observations]
         district_electricity_consumption = sum(net_electricity_consumption, numpy1_scalar(0))
         building_electricity_consumption = np.array(net_electricity_consumption, dtype=float)*-1
-        reward_list = np.sign(building_electricity_consumption)*0.01*building_electricity_consumption**2*np.nanmax([0, district_electricity_consumption])
+
+        return np.sign(building_electricity_consumption)*0.01*building_electricity_consumption**2*np.nanmax([0, district_electricity_consumption])
+
+    def calculate(self, observations: List[Mapping[str, Union[int, float]]]) -> List[float]:
+        reward_list = self._building_rewards(observations)
 
         if self.central_agent:
             reward = [reward_list.sum()]
@@ -272,13 +344,32 @@ class ComfortReward(RewardFunction):
     higher_exponent: float, default = 2.0
         Penalty exponent for when in cooling mode but temperature is below setpoint lower
         boundary or heating mode but temperature is above setpoint upper boundary.
+    version: int, default: 1
+        Reward definition version.
+
+        * ``1``: the reward of CityLearn 3.6.0 and earlier. In cooling (``hvac_mode`` 1) and heating
+          (``hvac_mode`` 2) mode, the side of the set point penalised within the comfort band, and the exponent
+          above the upper boundary, follow whether the heating demand exceeds the cooling demand at the time step,
+          not the mode. In heating mode at 21.5 C with a 20 C set point, the reward is 0 while the heater is off
+          and -1.5 while it runs; passive overheating within the band is not penalised.
+        * ``2``: follows the HVAC mode as described above. In heating mode at 21.5 C with a 20 C set point the
+          reward is -1.5 whether the heater runs or not.
+
+        In off (``hvac_mode`` 0) and automatic (``hvac_mode`` 3) mode, which do not identify a single service,
+        both versions use the demands to choose the exponent outside the band. Version 1 is the default so that
+        existing schemas and trained policies keep their reward; use version 2 for new work.
     """
+
+    VERSIONS: Tuple[int, ...] = (1, 2)
+    # Class default for instances pickled before the version attribute existed (CityLearn 3.6.0 and earlier).
+    version: int = 1
     
-    def __init__(self, env_metadata: Mapping[str, Any], band: float = None, lower_exponent: float = None, higher_exponent: float = None):
+    def __init__(self, env_metadata: Mapping[str, Any], band: float = None, lower_exponent: float = None, higher_exponent: float = None, version: int = None):
         super().__init__(env_metadata)
         self.band = band
         self.lower_exponent = lower_exponent
         self.higher_exponent = higher_exponent
+        self.version = self._parse_version(version, self.VERSIONS, type(self).__name__)
 
     @property
     def band(self) -> float:
@@ -312,6 +403,9 @@ class ComfortReward(RewardFunction):
             cooling_demand = o.get('cooling_demand', 0.0)
             heating = heating_demand > cooling_demand
             hvac_mode = o['hvac_mode']
+
+            if self.version >= 2 and hvac_mode in [1, 2]:
+                heating = hvac_mode == 2
             indoor_dry_bulb_temperature = o['indoor_dry_bulb_temperature']
 
             if hvac_mode in [1, 2]:
@@ -400,13 +494,16 @@ class SolarPenaltyAndComfortReward(RewardFunction):
         boundary or heating mode but temperature is above setpoint upper boundary.
     coefficients: Tuple, default = (1.0, 1.0)
         Coefficents for `citylearn.reward_function.SolarPenaltyReward` and :py:class:`citylearn.reward_function.ComfortReward` values respectively.
+    version: int, default: 1
+        Version of the :py:class:`citylearn.reward_function.ComfortReward` term; see its `version` parameter.
     """
     
-    def __init__(self, env_metadata: Mapping[str, Any], band: float = None, lower_exponent: float = None, higher_exponent: float = None, coefficients: Tuple = None):
-        self.__functions: List[RewardFunction] = [
-            SolarPenaltyReward(env_metadata),
-            ComfortReward(env_metadata, band=band, lower_exponent=lower_exponent, higher_exponent=higher_exponent)
-        ]
+    def __init__(self, env_metadata: Mapping[str, Any], band: float = None, lower_exponent: float = None, higher_exponent: float = None, coefficients: Tuple = None, version: int = None):
+        comfort = ComfortReward(
+            env_metadata, band=band, lower_exponent=lower_exponent, higher_exponent=higher_exponent, version=version
+        )
+        self.__functions: List[RewardFunction] = [SolarPenaltyReward(env_metadata), comfort]
+        self.version = comfort.version
         super().__init__(env_metadata)
         self.coefficients = coefficients
 
@@ -447,13 +544,44 @@ class SolarPenaltyAndComfortReward(RewardFunction):
 
 
 class Electric_Vehicles_Reward_Function(MARL):
-    """
-    Reward function for electric vehicle charging behavior in V2G settings.
-    Only affects EV-related behavior; other building logic comes from the superclass.
+    r"""Reward function for electric vehicle charging behavior in V2G settings.
+
+    The reward combines the :py:class:`MARL` reward of each building (the base reward), terms for the EV chargers
+    of the building, weighted by `weights`, and a penalty of `charging_constraint_penalty_coefficient` per kWh of
+    `charging_constraint_violation_kwh`. The EV terms of a building are scaled by :math:`1/(1 + |r|)`, where
+    :math:`r` is the base reward.
+
+    Parameters
+    ----------
+    env_metadata: Mapping[str, Any]
+        General static information about the environment.
+    weights: Mapping[str, float], optional
+        Signed weights of the EV terms: `no_car_charging`, `battery_limits`, `soc_impossible`, `soc_under`,
+        `close_soc`, `self_ev_consumption` and `extra_self_production`. Penalties are negative.
+    version: int, default: 1
+        Reward definition version.
+
+        * ``1``: the reward of CityLearn 3.6.0 and earlier. A building with chargers gets only its EV terms; the
+          base reward scales them but is not added. A building without chargers gets 0. With a central agent, the
+          scale uses the district total of the base reward. Leaving with a state of charge 0.25 or more below the
+          required departure SOC adds ``weights['soc_under'] ** 2`` (+25 with the default weights), which exceeds
+          the moderate deficit term ``2 * weights['soc_under']`` (-10): severe under-charging is rewarded.
+        * ``2``: every building gets its base reward plus its EV terms; a building without chargers gets its base
+          reward. The scale uses the building's own base reward, with or without a central agent. A deficit of
+          0.25 or more adds ``min(2 * w, -(w ** 2))`` with ``w = weights['soc_under']`` (-25 with the default
+          weights), never less than the moderate deficit term.
+
+        Version 1 is the default so that existing schemas and trained policies keep their reward; use version 2
+        for new work.
     """
 
-    def __init__(self, env_metadata: Mapping[str, Any], weights: Mapping[str, float] = None):
+    VERSIONS: Tuple[int, ...] = (1, 2)
+    # Class default for instances pickled before the version attribute existed (CityLearn 3.6.0 and earlier).
+    version: int = 1
+
+    def __init__(self, env_metadata: Mapping[str, Any], weights: Mapping[str, float] = None, version: int = None):
         super().__init__(env_metadata)
+        self.version = self._parse_version(version, self.VERSIONS, type(self).__name__)
 
         # Default tunable weights for EV-related reward components
         self.weights = weights or {
@@ -468,9 +596,41 @@ class Electric_Vehicles_Reward_Function(MARL):
         self._last_base_reward_total = 0.0
         self._last_penalty_total = 0.0
         self._last_base_rewards_per_building: List[float] = []
+        self._last_ev_terms_per_building: List[float] = []
         self._last_penalties_per_building: List[float] = []
 
+    def _charging_constraint_penalty(self, o: Mapping[str, Union[int, float, dict]]) -> float:
+        violation = float(o.get("charging_constraint_violation_kwh", 0.0) or 0.0)
+        return violation * self.charging_constraint_penalty_coefficient if violation > 0.0 else 0.0
+
     def calculate(self, observations: List[Mapping[str, Union[int, float, dict]]]) -> List[float]:
+        if self.version == 1:
+            return self._calculate_version_1(observations)
+
+        base_rewards = [float(v) for v in self._building_rewards(observations)]
+        ev_terms = []
+        penalty_values = []
+        reward_list = []
+
+        for o, base_reward in zip(observations, base_rewards):
+            ev_term = self.calculate_ev_penalty(o, base_reward) if o.get("electric_vehicles_chargers_dict", {}) else 0.0
+            penalty = self._charging_constraint_penalty(o)
+            ev_terms.append(ev_term)
+            penalty_values.append(penalty)
+            reward_list.append(base_reward + ev_term - penalty)
+
+        self._last_base_rewards_per_building = base_rewards
+        self._last_ev_terms_per_building = ev_terms
+        self._last_penalties_per_building = penalty_values
+        self._last_base_reward_total = sum(base_rewards) if self.central_agent else base_rewards
+        self._last_penalty_total = sum(penalty_values) if self.central_agent else penalty_values
+        total_reward = [sum(reward_list)] if self.central_agent else reward_list
+        LOGGER.debug(f"Calculated EV reward: {total_reward}")
+        return total_reward
+
+    def _calculate_version_1(self, observations: List[Mapping[str, Union[int, float, dict]]]) -> List[float]:
+        # In version 1 the "base rewards" diagnostics hold the EV terms, which are the whole reward before the
+        # charging constraint penalty.
         current_reward = super().calculate(observations)
         reward_list = []
         base_rewards = []
@@ -567,7 +727,10 @@ class Electric_Vehicles_Reward_Function(MARL):
                     if -0.25 < soc_diff <= -0.10:
                         contributions["soc_under"] += 2 * self.weights["soc_under"] * penalty_multiplier
                     elif soc_diff <= -0.25:
-                        contributions["soc_under"] += (self.weights["soc_under"] ** 2) * penalty_multiplier
+                        weight = self.weights["soc_under"]
+                        # Version 1 squares the signed weight, which turns the penalty into a bonus.
+                        severe = (weight ** 2) if self.version == 1 else min(2.0 * weight, -(weight ** 2))
+                        contributions["soc_under"] += severe * penalty_multiplier
                     elif -0.10 < soc_diff <= 0.10:
                         contributions["close_soc"] += self.weights["close_soc"] * penalty_multiplier
 
