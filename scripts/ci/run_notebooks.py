@@ -27,6 +27,7 @@ NOTEBOOKS = [
     'examples/controller_examples.ipynb',
     'examples/cli.ipynb',
     'examples/rl_training.ipynb',
+    'examples/rllib_training.ipynb',
 ]
 SKIP_TAG = 'skip-execution'
 INSTALL_PREFIXES = ('%pip', '!pip', '%conda', '!conda')

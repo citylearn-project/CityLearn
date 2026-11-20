@@ -930,7 +930,8 @@ class RLlibMultiAgentActionWrapper(ActionWrapper):
     def action(self, actions: Mapping[str, np.ndarray]) -> List[List[float]]:
         """Parses actions into data structure for :py:meth:`citylearn.citylearn.CityLearnEnv.step`."""
 
-        return [list(v) for v in actions.values()]
+        # Order by agent ID, not by the order of the dictionary, which RLlib does not guarantee.
+        return [list(actions[f'agent_{i}']) for i in range(len(actions))]
 
 class RLlibMultiAgentRewardWrapper(RewardWrapper):
     """Action wrapper for :code:`RLlib` multi-agent algorithms.
@@ -1015,8 +1016,13 @@ class RLlibMultiAgentEnv(MultiAgentEnv):
         env = RLlibMultiAgentRewardWrapper(env)
         self.env: CityLearnEnv = env
         self._agent_ids = [f'agent_{i}' for i in range(len(self.buildings))]
+        # RLlib's new API stack reads the agent IDs and the per-agent spaces from these attributes.
+        self.agents = list(self._agent_ids)
+        self.possible_agents = list(self._agent_ids)
         self.observation_space: spaces.Dict = self.env.observation_space
         self.action_space: spaces.Dict = self.env.action_space
+        self.observation_spaces = dict(self.observation_space.spaces)
+        self.action_spaces = dict(self.action_space.spaces)
 
     @property
     def time_step(self) -> int:

@@ -213,7 +213,7 @@ def test_load_environment_notebook(monkeypatch, tmp_path):
     assert scope["env"].central_agent is True
 
 
-@pytest.mark.parametrize("name", ["controller_examples", "load_environment", "cli", "rl_training"])
+@pytest.mark.parametrize("name", ["controller_examples", "load_environment", "cli", "rl_training", "rllib_training"])
 def test_tutorials_have_no_stale_outputs(name):
     notebook = json.loads((ROOT / "examples" / f"{name}.ipynb").read_text(encoding="utf-8"))
     for cell in notebook["cells"]:
