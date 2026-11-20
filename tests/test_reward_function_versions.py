@@ -56,11 +56,17 @@ def test_per_building_reward_pairs_functions_with_buildings_by_name():
     assert wrapper.reward_functions['B1'].env_metadata['buildings'] == []
 
 
-@pytest.mark.parametrize('central_agent', [False, True])
-def test_per_building_schema_matches_the_single_reward_function(central_agent):
+def _schema():
+    # Read the schema in place: loading the dataset by name copies it into the shared cache, which races under xdist.
     path = Path(__file__).resolve().parents[1] / 'data' / 'datasets' / DATASET / 'schema.json'
     schema = json.loads(path.read_text(encoding='utf-8'))
     schema['root_directory'] = str(path.parent)
+    return schema
+
+
+@pytest.mark.parametrize('central_agent', [False, True])
+def test_per_building_schema_matches_the_single_reward_function(central_agent):
+    schema = _schema()
     rewards = []
 
     for reward_type in ({'default': 'citylearn.reward_function.SolarPenaltyReward'},
@@ -179,7 +185,7 @@ def test_reward_versions_are_validated_and_recorded():
         del reward.__dict__['version']
         assert reward.version == 1
 
-    env = CityLearnEnv(DATASET, reward_function_kwargs={'version': 2}, episode_time_steps=4)
+    env = CityLearnEnv(_schema(), reward_function_kwargs={'version': 2}, episode_time_steps=4)
     evidence = env.get_metadata()['reward_evidence']
 
     assert type(env.reward_function) is ComfortReward and env.reward_function.version == 2
