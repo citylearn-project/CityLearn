@@ -195,7 +195,9 @@ Pacote de trabalho 4 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-
   menos 51 kWh do que descarregavam para EVs cheios, a importação dos membros
   desce 46 kWh e o custo 0,03%, e a importação do distrito sobe 0,03%, porque
   essa exportação deixa de compensar a importação de outros membros; os KPIs
-  de partida dos EVs não mudam. Os `pt_rec_*` e
+  de partida dos EVs não mudam. Num dia dos demos trifásicos de 15 segundos,
+  essa exportação desce de 3,10 kWh para menos de 0,01 kWh e o custo do BAU sobe
+  0,08 a 0,09%. Os `pt_rec_*` e
   `citylearn_three_phase_electrical_service_demo` não mudam.
 - **Referências congeladas para as duas versões da física.** A auditoria de
   paridade do refactor (`scripts/audit/audit_refactor_parity.py`) e o teste de
