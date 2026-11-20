@@ -315,6 +315,21 @@ In the legacy rows, a load-factor window whose signed peak is not positive is
 now undefined; it used to give an infinite or negative penalty, which safe
 division reported as a perfect 0.
 
+## Outage Event Resilience Audit
+
+For event-by-event inspection of grid interruptions on static-topology scenarios without changing `evaluate_v2()`, call `env.evaluate_outage_events()` (returns `(events_df, summary_df)`) or `env.get_outage_resilience_audit()` (returns a JSON-ready dictionary including community-wide `coincident_events`).
+
+An outage event is a maximal run of consecutive executed timesteps where `building.simulate_power_outage` is enabled and `building.power_outage_signal > 0`. Expected, served and unserved service energy are built from `citylearn/internal/service_energy.py` (`cooling`, `heating`, `dhw` and `non_shiftable` end uses capped individually so surpluses in one end use never offset shortfalls in another), matching the numerator and denominator of `..._resilience_unserved_energy_outage_normalized_ratio`.
+
+| Field | Scope | Unit | Meaning |
+|---|---|---:|---|
+| `start_time_step`, `end_time_step` | event | step | Inclusive 0-based episode step boundaries of the interruption. |
+| `duration_steps`, `duration_hours` | event | count / hours | Event length in steps and hours (`duration_steps * seconds_per_time_step / 3600`). |
+| `expected_energy_kwh`, `served_energy_kwh`, `unserved_energy_kwh` | event, building, district | kWh | Total service energy expected, served and left unserved during outages, plus `<end_use>_*_energy_kwh` splits. |
+| `peak_unserved_power_kw` | event, building, district | kW | Worst single-step unserved power (`max_step_unserved_kwh * 3600 / seconds_per_time_step`); at district level, coincident across simultaneously islanded buildings. |
+| `fully_served` / `fully_served_events_ratio` | event / summary | bool / ratio | Events with zero unserved energy (`<= 1e-9` kWh), and their share (`None` when `events_count == 0`). |
+| `events_count`, `outage_hours`, `worst_event_unserved_energy_kwh` | building, district | count / hours / kWh | Member outage event count, total outage hours and largest single-event unserved energy. |
+
 ## Export
 
 | Mode | How |

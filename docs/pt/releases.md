@@ -5,6 +5,21 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Métricas de resiliência por evento de falha de energia (opcional).**
+  `CityLearnEnv.evaluate_outage_events()` devolve `(events_df, summary_df)` e
+  `CityLearnEnv.get_outage_resilience_audit()` devolve o dicionário de auditoria
+  estruturado (incluindo `coincident_events` comunitários) para episódios com
+  topologia estática
+  ([#219](https://github.com/citylearn-project/CityLearn/issues/219)). Construído
+  sobre `citylearn/internal/service_energy.py`, cada sequência consecutiva de
+  `power_outage_signal > 0` indica steps de início e fim, duração em steps e
+  horas, energia esperada/servida/não servida em kWh com divisão por uso final
+  (`cooling`, `heating`, `dhw`, `non_shiftable`) e `peak_unserved_power_kw`
+  convertido com `seconds_per_time_step`, além dos resumos por edifício e para o
+  distrito (`events_count`, `outage_hours`, `worst_event_unserved_energy_kwh`,
+  `fully_served_events_ratio`). `evaluate_v2()` e as referências de KPIs não
+  mudam. Ver a
+  [referência de KPIs](kpis_reference.md#auditoria-de-resiliencia-por-evento-de-outage).
 - **Agentes genéricos na interface de entidades.** Na interface de entidades os
   espaços de ações e de observações são dicionários de tabelas de entidades, pelo
   que `Agent` e `ZeroActionBaselineAgent` falhavam com `AttributeError` no
