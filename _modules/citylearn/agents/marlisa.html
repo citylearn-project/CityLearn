@@ -137,6 +137,7 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_streams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.rbc</span><span class="w"> </span><span class="kn">import</span> <span class="n">RBC</span>  <span class="c1"># noqa: F401  (kept for code importing RBC from this module)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SACRBC</span>
@@ -533,8 +534,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_regression_time_step</span><span class="p">:</span>
             <span class="n">agent_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_dimension</span><span class="p">)</span>
             <span class="n">action_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">agent_count</span><span class="p">))</span>
-            <span class="n">nprs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">))</span>
-            <span class="n">nprs</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">action_order</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shuffle_coordination_order</span><span class="p">(</span><span class="n">action_order</span><span class="p">)</span>
             <span class="n">expected_demand</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">predict_demand</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="n">actions</span><span class="p">))]</span>
             <span class="n">coordination_variables</span> <span class="o">=</span> <span class="p">[[</span>
                 <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">expected_demand</span><span class="p">)</span> <span class="o">-</span> <span class="n">expected_demand</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">total_coefficient</span><span class="p">,</span>
@@ -545,6 +545,22 @@
             <span class="k">pass</span>
         
         <span class="k">return</span> <span class="n">actions</span><span class="p">,</span> <span class="n">coordination_variables</span></div>
+
+
+<div class="viewcode-block" id="MARLISA.shuffle_coordination_order">
+<a class="viewcode-back" href="../../../api/citylearn.agents.marlisa.html#citylearn.agents.marlisa.MARLISA.shuffle_coordination_order">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shuffle_coordination_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_order</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">"""Shuffle, in place, the order in which buildings act during exploration with information sharing.</span>
+
+<span class="sd">        With ``random_stream_version='v1'`` the order is shuffled by ``RandomState(random_seed + time_step)``, as in</span>
+<span class="sd">        CityLearn 3.6.0, so seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``. With ``'v2'``</span>
+<span class="sd">        it is shuffled by one generator per episode, derived from :py:attr:`random_seed` and the episode.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">))</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">action_order</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode_random_generator</span><span class="p">(</span><span class="n">random_streams</span><span class="o">.</span><span class="n">AGENT_COORDINATION_ORDER</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">action_order</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MARLISA.get_exploration_prediction_without_information_sharing">

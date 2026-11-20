@@ -520,6 +520,26 @@ temperature and comfort KPIs of these runs are unchanged.</p></li>
 </ul>
 <p>Rerun stochastic experiments, and retrain policies whose results you compare
 across seeds, with <code class="docutils literal notranslate"><span class="pre">v2</span></code>; keep <code class="docutils literal notranslate"><span class="pre">v1</span></code> only to reproduce published 3.6.0 numbers.</p>
+<p>Agents and generated neighborhoods follow the same setting
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/287">#287</a>).
+<code class="docutils literal notranslate"><span class="pre">TabularQLearning</span></code> decided between exploration and exploitation with
+<code class="docutils literal notranslate"><span class="pre">RandomState(random_seed</span> <span class="pre">+</span> <span class="pre">time_step)</span></code>, and MARLISA with information sharing
+shuffled the order in which its buildings act with the same seed, so seed <code class="docutils literal notranslate"><span class="pre">s</span></code>
+at time step <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">+</span> <span class="pre">1</span></code> repeated seed <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">+</span> <span class="pre">1</span></code> at time step <code class="docutils literal notranslate"><span class="pre">t</span></code>. With <code class="docutils literal notranslate"><span class="pre">v2</span></code>, an
+agent keeps one generator per purpose and episode, derived from its seed and
+the episode, and takes the version of its environment, so an environment built
+with <code class="docutils literal notranslate"><span class="pre">random_stream_version='v1'</span></code> gives its agents the 3.6.0 streams. The
+neighborhood generator (<code class="docutils literal notranslate"><span class="pre">citylearn.end_use_load_profiles.neighborhood.Neighborhood</span></code>)
+seeded partial-load simulation <code class="docutils literal notranslate"><span class="pre">i</span></code> of building <code class="docutils literal notranslate"><span class="pre">b</span></code> with <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">+</span> <span class="pre">i</span></code>, which ignored
+the neighborhood seed and repeated simulation <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">-</span> <span class="pre">1</span></code> of building <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">+</span> <span class="pre">1</span></code>. Its
+new <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> argument, <code class="docutils literal notranslate"><span class="pre">v2</span></code> by default, derives that seed from
+the neighborhood seed, the building and the simulation index:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Neighborhood</span><span class="p">(</span><span class="n">random_seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">random_stream_version</span><span class="o">=</span><span class="s1">'v1'</span><span class="p">)</span>  <span class="c1"># 3.6.0 partial-load seeds</span>
+</pre></div>
+</div>
+<p>These changes alter the exploration of these agents, and therefore the policies
+they learn, and newly generated datasets; simulations and the bundled datasets
+are unchanged.</p>
 </section>
 <section id="optional-pytorch-and-scikit-learn">
 <h3>Optional PyTorch and scikit-learn<a class="headerlink" href="#optional-pytorch-and-scikit-learn" title="Link to this heading"></a></h3>

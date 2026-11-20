@@ -151,6 +151,15 @@
 <span class="sd">    Each stream comes from :class:`numpy.random.SeedSequence` with the seed as entropy and the</span>
 <span class="sd">    purpose, entity and episode as its spawn key, so streams for different purposes, objects</span>
 <span class="sd">    and episodes are independent. Each object keeps one generator per stream.</span>
+
+<span class="sd">Agents follow the version of their environment. With ``'v1'``, :class:`~citylearn.agents.q_learning.TabularQLearning`</span>
+<span class="sd">draws its exploration decision from ``RandomState(seed + time_step)`` and</span>
+<span class="sd">:class:`~citylearn.agents.marlisa.MARLISA` shuffles its coordination order with the same seed, so</span>
+<span class="sd">seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``; with ``'v2'`` each agent</span>
+<span class="sd">keeps one generator per purpose and episode. :class:`~citylearn.end_use_load_profiles.neighborhood.Neighborhood`</span>
+<span class="sd">takes its own ``random_stream_version``: with ``'v1'`` partial-load simulation ``i`` of building</span>
+<span class="sd">``b`` is seeded with ``b + i``, which repeats simulation ``i - 1`` of building ``b + 1``; with ``'v2'``</span>
+<span class="sd">the seed is derived from the neighborhood seed, the building and the simulation index.</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
@@ -169,6 +178,9 @@
 <span class="n">EV_SUSPENDED_SOC_DRIFT</span> <span class="o">=</span> <span class="s1">'ev_suspended_soc_drift'</span>
 <span class="n">OCCUPANT_SETPOINT_INTERACTION</span> <span class="o">=</span> <span class="s1">'occupant_setpoint_interaction'</span>
 <span class="n">POWER_OUTAGE</span> <span class="o">=</span> <span class="s1">'power_outage'</span>
+<span class="n">AGENT_EXPLORATION</span> <span class="o">=</span> <span class="s1">'agent_exploration'</span>
+<span class="n">AGENT_COORDINATION_ORDER</span> <span class="o">=</span> <span class="s1">'agent_coordination_order'</span>
+<span class="n">PARTIAL_LOAD_SIMULATION</span> <span class="o">=</span> <span class="s1">'partial_load_simulation'</span>
 
 
 <div class="viewcode-block" id="parse_random_stream_version">
@@ -251,6 +263,38 @@
 <span class="w">    </span><span class="sd">"""A 32-bit identifier of the stream, for metadata and comparisons; not a seed to draw from."""</span>
 
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed_sequence</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">purpose</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">)</span><span class="o">.</span><span class="n">generate_state</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="derived_seed">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.derived_seed">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">derived_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""32-bit integer seed for a consumer that only accepts an integer, derived like :func:`generator`.</span>
+
+<span class="sd">    Use it where the stream is created by code that takes a plain seed, such as a simulator that builds</span>
+<span class="sd">    its own ``RandomState``; otherwise prefer :func:`generator`.</span>
+<span class="sd">    """</span>
+
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed_sequence</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">purpose</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">)</span><span class="o">.</span><span class="n">generate_state</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="partial_load_simulation_seed">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.partial_load_simulation_seed">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">partial_load_simulation_seed</span><span class="p">(</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">building_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">simulation_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">random_stream_version</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Seed of partial-load simulation `simulation_index` of building `building_id` in a generated neighborhood.</span>
+
+<span class="sd">    With ``random_stream_version='v1'`` it is ``int(building_id) + simulation_index``, as in CityLearn 3.6.0,</span>
+<span class="sd">    which ignores `seed` and repeats simulation ``i - 1`` of building ``b + 1`` in simulation ``i`` of building</span>
+<span class="sd">    ``b``. With ``'v2'`` it is derived from `seed`, the building and the simulation index.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">parse_random_stream_version</span><span class="p">(</span><span class="n">random_stream_version</span><span class="p">)</span> <span class="o">==</span> <span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">building_id</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">simulation_index</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">derived_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">PARTIAL_LOAD_SIMULATION</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">building_id</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">simulation_index</span><span class="p">))</span></div>
 
 </pre></div>
 

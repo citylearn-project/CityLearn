@@ -149,6 +149,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">mean_squared_error</span><span class="p">,</span> <span class="n">mean_absolute_percentage_error</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_streams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">BaselineAgent</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
@@ -240,7 +241,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">weather_data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">year_of_publication</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">release</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">energyplus_output_directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dataset_directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">max_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">max_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_stream_version</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__end_use_load_profiles</span> <span class="o">=</span> <span class="n">EndUseLoadProfiles</span><span class="p">(</span>
             <span class="n">dataset_type</span><span class="o">=</span><span class="n">VersionDatasetType</span><span class="o">.</span><span class="n">RESSTOCK</span><span class="p">,</span>
@@ -253,6 +254,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset_directory</span> <span class="o">=</span> <span class="n">dataset_directory</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_workers</span> <span class="o">=</span> <span class="n">max_workers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="n">random_seed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">=</span> <span class="n">random_stream_version</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">end_use_load_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EndUseLoadProfiles</span><span class="p">:</span>
@@ -286,9 +288,19 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">max_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__max_workers</span> <span class="o">=</span> <span class="n">value</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_stream_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Derivation of the partial-load simulation seeds; see :py:func:`citylearn.random_streams.partial_load_simulation_seed`."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__random_stream_version</span>
+
     <span class="nd">@random_seed</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__random_seed</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">*</span><span class="n">Environment</span><span class="o">.</span><span class="n">DEFAULT_RANDOM_SEED_RANGE</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+
+    <span class="nd">@random_stream_version</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_stream_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__random_stream_version</span> <span class="o">=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">parse_random_stream_version</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Neighborhood.build">
 <a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.build">[docs]</a>
@@ -936,7 +948,9 @@
                     <span class="n">multiplier_probability</span><span class="o">=</span><span class="n">multiplier_probability</span><span class="p">,</span>
                     <span class="n">simulation_id</span><span class="o">=</span><span class="n">_simulation_id</span><span class="p">,</span>
                     <span class="n">output_directory</span><span class="o">=</span><span class="n">_output_directory</span><span class="p">,</span>
-                    <span class="n">random_seed</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">bldg_id</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span>
+                    <span class="n">random_seed</span><span class="o">=</span><span class="n">random_streams</span><span class="o">.</span><span class="n">partial_load_simulation_seed</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span> <span class="n">bldg_id</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span>
+                    <span class="p">),</span>
                     <span class="o">**</span><span class="n">partial_loads_kwargs</span>
                 <span class="p">))</span>
             

@@ -137,6 +137,7 @@
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_streams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">require_flat_interface</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
@@ -210,11 +211,8 @@
         
         <span class="n">deterministic</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">deterministic</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">deterministic</span>
         <span class="n">actions</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span>
-        <span class="n">nprs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
-        
 
-        <span class="k">if</span> <span class="n">deterministic</span> <span class="ow">or</span> <span class="n">nprs</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">deterministic</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">__exploration_draw</span><span class="p">()</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">:</span>
             <span class="c1"># Use q-function to decide action</span>
             <span class="n">actions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__exploit</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__explored</span> <span class="o">=</span> <span class="kc">False</span>
@@ -232,6 +230,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">actions</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__exploration_draw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Uniform draw that decides between exploration and exploitation at this time step.</span>
+
+<span class="sd">        With ``random_stream_version='v1'`` it is the first value of ``RandomState(random_seed + time_step)``, as in</span>
+<span class="sd">        CityLearn 3.6.0, so seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``. With ``'v2'``</span>
+<span class="sd">        it is the next value of one generator per episode, derived from :py:attr:`random_seed` and the episode.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_random_generator</span><span class="p">(</span><span class="n">random_streams</span><span class="o">.</span><span class="n">AGENT_EXPLORATION</span><span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__exploit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">"""Select deterministic actions from Q-Table i.e. action with max Q-value for given observations."""</span>

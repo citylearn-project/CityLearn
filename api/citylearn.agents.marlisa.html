@@ -322,6 +322,15 @@ moves to the time step before standardization. Schedules that already meet it ar
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.agents.marlisa.MARLISA.shuffle_coordination_order">
+<span class="sig-name descname"><span class="pre">shuffle_coordination_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/marlisa.html#MARLISA.shuffle_coordination_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.marlisa.MARLISA.shuffle_coordination_order" title="Link to this definition"></a></dt>
+<dd><p>Shuffle, in place, the order in which buildings act during exploration with information sharing.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">random_stream_version='v1'</span></code> the order is shuffled by <code class="docutils literal notranslate"><span class="pre">RandomState(random_seed</span> <span class="pre">+</span> <span class="pre">time_step)</span></code>, as in
+CityLearn 3.6.0, so seed <code class="docutils literal notranslate"><span class="pre">s</span></code> at time step <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">+</span> <span class="pre">1</span></code> repeats seed <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">+</span> <span class="pre">1</span></code> at time step <code class="docutils literal notranslate"><span class="pre">t</span></code>. With <code class="docutils literal notranslate"><span class="pre">'v2'</span></code>
+it is shuffled by one generator per episode, derived from <code class="xref py py-attr docutils literal notranslate"><span class="pre">random_seed</span></code> and the episode.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.agents.marlisa.MARLISA.start_regression_time_step">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_regression_time_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.agents.marlisa.MARLISA.start_regression_time_step" title="Link to this definition"></a></dt>

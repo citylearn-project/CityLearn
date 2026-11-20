@@ -215,7 +215,8 @@ each building independently in a <code class="code docutils literal notranslate"
 state of charge, occupant set-point interactions and stochastic power outages are derived from
 <cite>random_seed</cite>: <code class="docutils literal notranslate"><span class="pre">'v2'</span></code> (default) derives one independent stream per purpose, object and episode
 with <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.SeedSequence</span></code>; <code class="docutils literal notranslate"><span class="pre">'v1'</span></code> reproduces CityLearn 3.6.0 and earlier. Overrides
-<code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> in the schema. See <a class="reference internal" href="citylearn.random_streams.html#module-citylearn.random_streams" title="citylearn.random_streams"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.random_streams</span></code></a>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> in the schema. Agents built on the environment use the same version for
+their own random streams. See <a class="reference internal" href="citylearn.random_streams.html#module-citylearn.random_streams" title="citylearn.random_streams"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.random_streams</span></code></a>.</p></li>
 <li><p><strong>offline</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
 error when required files are not available locally. Defaults to the <code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE</span></code> environment
 variable, read at initialization, or False when it is unset.</p></li>
