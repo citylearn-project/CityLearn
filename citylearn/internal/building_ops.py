@@ -13,6 +13,7 @@ from citylearn.energy_model import HeatPump
 from citylearn.preprocessing import Normalize, PeriodicNormalization
 from citylearn.internal.units import energy_kwh_to_power_kw, power_kw_to_energy_kwh, to_dataset_resolution_energy
 from citylearn.internal import grid_availability
+from citylearn.internal.physics_version import physics_version_of
 from citylearn.internal.electrical_limits import allocate_electrical_service, electrical_service_violation_kw
 
 if TYPE_CHECKING:
@@ -640,7 +641,9 @@ class BuildingOpsService:
                 priority_list[device_ix] = storage
 
         limit_control_actions = bool(building.power_outage)
-        if limit_control_actions and building.outage_vehicle_to_building:
+        if limit_control_actions and physics_version_of(building) >= 2:
+            priority_list = self._outage_supply_order(priority_list, actions)
+        elif limit_control_actions and building.outage_vehicle_to_building:
             priority_list = self._vehicle_to_building_order(priority_list, actions)
 
         for key in priority_list:
@@ -1008,6 +1011,33 @@ class BuildingOpsService:
         lead = {'cooling_demand', 'heating_demand', *(key for key in storages if key in actions and discharging(key))}
         others = [key for key in priority_list if key not in vehicles]
         return [key for key in others if key in lead] + vehicles + [key for key in others if key not in lead]
+
+    def _outage_supply_order(self, priority_list: List[str], actions: Mapping[str, Tuple]) -> List[str]:
+        """Apply outage discharges after the thermal demand they serve is known (physics version 2).
+
+        A discharging battery, and with `outage_vehicle_to_building` a discharging EV, follow the demand
+        updates and the thermal storage discharges, so their limit sees the electric load left for the
+        devices (#229). They precede the devices, the non-shiftable load and the other electric loads,
+        which draw on them through `downward_electrical_flexibility`. The battery discharges before the
+        vehicles. Physics version 1 discharges the battery first, before the demand is updated.
+        """
+
+        def discharging(key: str) -> bool:
+            return key in actions and self._safe_scalar(actions[key][1][0], 0.0) < 0.0
+
+        battery = ['electrical_storage'] if discharging('electrical_storage') else []
+        vehicles = [
+            key for key in priority_list
+            if key.startswith('electric_vehicle_storage_') and discharging(key)
+        ] if self.building.outage_vehicle_to_building else []
+        if not battery and not vehicles:
+            return priority_list
+
+        thermal_storages = ('cooling_storage', 'heating_storage', 'dhw_storage')
+        lead = {'cooling_demand', 'heating_demand', *(key for key in thermal_storages if discharging(key))}
+        supplies = set(battery + vehicles)
+        others = [key for key in priority_list if key not in supplies]
+        return [key for key in others if key in lead] + battery + vehicles + [key for key in others if key not in lead]
 
     def _outage_unserved_load_kw(self) -> float:
         """Islanded electric load at the current step that local supply does not cover yet, in [kW].

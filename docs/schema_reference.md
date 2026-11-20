@@ -214,7 +214,7 @@ Common classes:
 | `citylearn.energy_model.HeatPump` | `nominal_power`, `efficiency`, `target_heating_temperature`, `target_cooling_temperature`. |
 | `citylearn.energy_model.ElectricHeater` | `nominal_power`, `efficiency`. |
 | `citylearn.energy_model.StorageTank` | `capacity`, `efficiency`, `loss_coefficient`, `initial_soc`, `max_output_power`, `max_input_power`. |
-| `citylearn.energy_model.Battery` | `capacity`, `nominal_power`, `capacity_loss_coefficient`, `power_efficiency_curve`, `capacity_power_curve`, `depth_of_discharge`. |
+| `citylearn.energy_model.Battery` | `capacity`, `nominal_power`, `capacity_loss_coefficient`, `power_efficiency_curve`, `capacity_power_curve` (charging), `discharge_power_curve` (discharging, physics version 2), `depth_of_discharge`. |
 | `citylearn.energy_model.PV` | `nominal_power`, `generation_mode`. |
 
 ## PV

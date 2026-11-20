@@ -1220,9 +1220,19 @@ class Battery(StorageDevice, ElectricDevice):
     power_efficiency_curve: list, default: [[0, 0.83],[0.3, 0.83],[0.7, 0.9],[0.8, 0.9],[1, 0.85]]
         Charging/Discharging efficiency as a function of nominal power.
     capacity_power_curve: list, default: [[0.0, 1],[0.8, 1],[1.0, 0.2]]   
-        Maximum power of the battery as a function of its current state of charge.
+        Maximum charging power of the battery, as a fraction of `nominal_power`, as a function of its current state
+        of charge.
     depth_of_discharge: Union[float, Tuple[float, float]], default: 1.0
         Maximum fraction of the battery that can be discharged relative to the total battery capacity.
+    discharge_power_curve: list, default: [[0.0, 1.0], [1.0, 1.0]]
+        Maximum discharging power of the battery, as a fraction of `nominal_power`, as a function of its current
+        state of charge. The default discharges at `nominal_power` at any state of charge.
+
+    Attributes
+    ----------
+    legacy_discharge_power_limit : bool
+        Limit discharge with `capacity_power_curve` instead of `discharge_power_curve`, as CityLearn 3.6.0 and
+        earlier did. The environment sets it for physics version 1.
 
     Other Parameters
     ----------------
@@ -1230,7 +1240,9 @@ class Battery(StorageDevice, ElectricDevice):
         Other keyword arguments used to initialize super classes.
     """
     
-    def __init__(self, capacity: float = None, nominal_power: float = None, capacity_loss_coefficient: Union[float, Tuple[float, float]] = None, power_efficiency_curve: List[List[float]] = None, capacity_power_curve: List[List[float]] = None, depth_of_discharge: Union[float, Tuple[float, float]] = None, time_step_ratio: float = None, **kwargs: Any):
+    def __init__(self, capacity: float = None, nominal_power: float = None, capacity_loss_coefficient: Union[float, Tuple[float, float]] = None, power_efficiency_curve: List[List[float]] = None, capacity_power_curve: List[List[float]] = None, depth_of_discharge: Union[float, Tuple[float, float]] = None, time_step_ratio: float = None, discharge_power_curve: List[List[float]] = None, **kwargs: Any):
+        self.legacy_discharge_power_limit = False
+        self.discharge_power_curve = discharge_power_curve
         self._efficiency_history = array('d')
         self._capacity_history = array('d')
         self.random_seed = kwargs.get('random_seed', None)
@@ -1272,6 +1284,23 @@ class Battery(StorageDevice, ElectricDevice):
 
         return self.__capacity_power_curve
     
+    @property
+    def discharge_power_curve(self) -> np.ndarray:
+        """Maximum discharge power of the battery as a fraction of `nominal_power`, as a function of its state of charge.
+
+        Defaults to a flat curve at `nominal_power`. `capacity_power_curve` limits charging only, unless
+        `legacy_discharge_power_limit` is set.
+        """
+
+        return self.__discharge_power_curve
+
+    @discharge_power_curve.setter
+    def discharge_power_curve(self, discharge_power_curve: List[List[float]]):
+        if discharge_power_curve is None:
+            discharge_power_curve = [[0.0, 1.0], [1.0, 1.0]]
+
+        self.__discharge_power_curve = np.array(discharge_power_curve, dtype=float).T
+
     @property
     def time_step_ratio(self) -> float:
         """Maximum power of the battery as a function of its current state of charge."""
@@ -1392,6 +1421,9 @@ class Battery(StorageDevice, ElectricDevice):
             'capacity_loss_coefficient': self.capacity_loss_coefficient,
             'power_efficiency_curve': self.power_efficiency_curve,
             'capacity_power_curve': self.capacity_power_curve,
+            'discharge_power_curve': (
+                self.capacity_power_curve if self.legacy_discharge_power_limit else self.discharge_power_curve
+            ),
         }
 
     def charge(self, energy: float):
@@ -1499,7 +1531,10 @@ class Battery(StorageDevice, ElectricDevice):
             self.capacity_before_step[self.time_step] = self.degraded_capacity
 
     def get_max_output_power(self, energy_init: float = None) -> float:
-        r"""Get maximum output power while considering `capacity_power_curve` limitations if defined otherwise, returns `nominal_power`.
+        r"""Get maximum output power while considering `discharge_power_curve` limitations.
+
+        With `legacy_discharge_power_limit` (physics version 1), discharge is limited by the charging
+        curve, `capacity_power_curve`, as in CityLearn 3.6.0 and earlier.
 
         Returns
         -------
@@ -1507,7 +1542,11 @@ class Battery(StorageDevice, ElectricDevice):
             Maximum amount of power that the storage unit can output [kW].
         """
 
-        return self.get_max_input_power(energy_init=energy_init)
+        if self.legacy_discharge_power_limit:
+            return self.get_max_input_power(energy_init=energy_init)
+
+        energy_init = self.energy_init if energy_init is None else energy_init
+        return self._curve_power_kw(self.discharge_power_curve, energy_init)
 
     def get_max_input_power(self, energy_init: float = None) -> float:
         r"""Get maximum input power while considering `capacity_power_curve` limitations.
@@ -1520,21 +1559,25 @@ class Battery(StorageDevice, ElectricDevice):
 
         #The initial SOC is the previous SOC minus the energy losses
         energy_init = self.energy_init if energy_init is None else energy_init
+        return self._curve_power_kw(self.capacity_power_curve, energy_init)
+
+    def _curve_power_kw(self, curve: np.ndarray, energy_init: float) -> float:
+        """`nominal_power` times `curve` interpolated at the state of charge of `energy_init`, in [kW]."""
+
         soc = energy_init/max(self.capacity, ZERO_DIVISION_PLACEHOLDER)
-        curve_x = self.capacity_power_curve[0]
-        curve_y = self.capacity_power_curve[1]
+        curve_x = curve[0]
+        curve_y = curve[1]
         if not np.isfinite(soc):
             return np.nan
 
-        # Calculating the maximum power rate at which the battery can be charged or discharged
         idx = min(len(curve_x) - 2, max(0, int(np.searchsorted(curve_x, soc, side='left')) - 1))
-        max_output_power = self.nominal_power*(
+        max_power = self.nominal_power*(
             curve_y[idx]
             + (curve_y[idx+1] - curve_y[idx])*(soc - curve_x[idx])
             /(curve_x[idx+1] - curve_x[idx])
         )
-        
-        return max_output_power
+
+        return max_power
 
     def get_current_efficiency(self, power: float) -> float:
         r"""Get technical efficiency while considering `power_efficiency_curve` limitations.

@@ -40,8 +40,9 @@ def _action(t: int, j: int, low: float, high: float) -> float:
 
 
 def _rollout(name: str) -> dict:
+    # The NumPy 1 reference was recorded with the physics of CityLearn 3.6.0, which physics version 1 keeps.
     env = CityLearnEnv(str(ROOT/'data'/'datasets'/name/'schema.json'), central_agent=True,
-                       episode_time_steps=STEPS + 1, random_seed=0)
+                       episode_time_steps=STEPS + 1, random_seed=0, physics_version=1)
     env.reset(seed=0)
     rewards = []
     t = 0

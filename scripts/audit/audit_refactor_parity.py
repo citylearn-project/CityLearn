@@ -188,9 +188,10 @@ def run_case(name, directory):
               for p in sorted(directory.rglob("*.csv"))}
     fingerprint = hashlib.sha256(json.dumps(canonical(dict(schema=schema, inputs=inputs), directory),
                                             sort_keys=True, allow_nan=False).encode()).hexdigest()
+    # The frozen reference is the physics of CityLearn 3.6.0, which physics version 1 must keep reproducing.
     env = CityLearnEnv(schema, random_seed=7, offline=True, central_agent=True,
                        render_mode="none", render_directory=directory / "exports", render_session_name="parity",
-                       physics_invariant_checks=True, export_kpis_on_episode_end=False)
+                       physics_invariant_checks=True, export_kpis_on_episode_end=False, physics_version=1)
     try:
         observation, _ = env.reset(seed=7)
         result = dict(input_fingerprint=fingerprint, configuration=config,

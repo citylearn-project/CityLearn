@@ -1950,10 +1950,19 @@ class Building(Environment):
         # Optionally clamp to flexibility range if needed
         energy = min(energy, self.downward_electrical_flexibility)
         if self.power_outage and energy < 0.0:
-            try:
-                base_total_kw, _ = self._ops_service._estimate_base_power_at_step(self.time_step)
-            except Exception:
-                base_total_kw = 0.0
+            if physics_version_of(self) < 2:
+                # Physics version 1: a pre-step estimate from the dataset thermal demand, which ignores the
+                # thermal storage discharge and the device limits, so the battery can discharge more than the
+                # islanded load and the surplus is booked as PV curtailment (#229).
+                try:
+                    base_total_kw, _ = self._ops_service._estimate_base_power_at_step(self.time_step)
+                except Exception:
+                    base_total_kw = 0.0
+            else:
+                # The battery discharges after this step's demand and thermal storage discharges, so the
+                # islanded load left for the devices is known; PV covers it first.
+                base_total_kw = self._ops_service._outage_unserved_load_kw()
+
             local_load_kwh = power_kw_to_energy_kwh(max(float(base_total_kw), 0.0), self.seconds_per_time_step)
             energy = max(energy, -local_load_kwh)
 
