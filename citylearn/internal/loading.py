@@ -745,6 +745,13 @@ class CityLearnLoadingService:
             random_seed=schema['random_seed'],
             episode_tracker=episode_tracker,
         )
+        if 'external' in electric_vehicle_schema:
+            # A mobility provider reports this vehicle's SOC; CityLearn adds no random drift while it is away.
+            electric_vehicle.external = parse_bool(
+                electric_vehicle_schema['external'],
+                default=False,
+                path=f'electric_vehicles_def.{electric_vehicle_name}.external',
+            )
 
         return electric_vehicle
 

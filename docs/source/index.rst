@@ -91,6 +91,7 @@ for the bibliography.
    guides/actions_reference
    guides/multi_community_reference
    guides/robustness_reference
+   guides/mobility_provider
 
 .. toctree::
    :hidden:
