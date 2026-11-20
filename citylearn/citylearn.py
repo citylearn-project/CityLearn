@@ -279,6 +279,7 @@ class CityLearnEnv(Environment, Env):
         ev_departure_service_tolerance = kwargs.pop('ev_departure_service_tolerance', None)
         business_as_usual_ev_charge_target = kwargs.pop('business_as_usual_ev_charge_target', None)
         random_stream_version = kwargs.pop('random_stream_version', None)
+        _parsed_data = kwargs.pop('_parsed_data', None)
         kw_render_mode = kwargs.pop('render_mode', None)
         requested_render_mode = render_mode if kw_render_mode is None else kw_render_mode
         requested_render_mode = 'none' if requested_render_mode is None else str(requested_render_mode).lower()
@@ -295,6 +296,9 @@ class CityLearnEnv(Environment, Env):
             raise TypeError(f"CityLearnEnv got unexpected keyword argument(s): {', '.join(details)}.")
         self.offline = offline
         self.schema = schema
+        from citylearn.internal.parsed_data import ParsedDataSource
+        self._parsed_data_source = _parsed_data
+        self._parsed_data = ParsedDataSource() if _parsed_data is None else None
         self.time_step_ratio_mode = (
             self.schema.get('time_step_ratio_mode') if isinstance(self.schema, dict) and time_step_ratio_mode is None
             else time_step_ratio_mode
@@ -472,6 +476,9 @@ class CityLearnEnv(Environment, Env):
             self.electric_vehicles = electric_vehicles
         self._demand_response_service.initialize()
         self._robustness_service.initialize()
+        self._parsed_data_source = None
+        if self._parsed_data is not None:
+            self._parsed_data.freeze()
         reference_buildings = self.buildings if len(self.buildings) > 0 else self._all_buildings
         get_time_step_ratio = reference_buildings[0].time_step_ratio if len(reference_buildings) > 0 else 1.0
 
@@ -1413,6 +1420,7 @@ class CityLearnEnv(Environment, Env):
             raise UnknownSchemaError()
         
         self.__schema = schema
+        self._parsed_data = None
 
     @offline.setter
     def offline(self, value: bool):

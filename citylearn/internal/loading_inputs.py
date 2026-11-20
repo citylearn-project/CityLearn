@@ -55,22 +55,68 @@ def load_building_inputs(loader: "CityLearnLoadingService", building_name, schem
     seconds_per_time_step = schema['seconds_per_time_step']
     noise_std = building_schema.get('noise_std', 0.0)
     energy_simulation_filepath = os.path.join(schema['root_directory'], building_schema['energy_simulation'])
-    energy_simulation = loader._read_member_timeseries(
-        schema,
-        energy_simulation_filepath,
-        expected_rows=expected_rows,
-        window=member_window,
-        source_label=f'buildings.{building_name}.energy_simulation',
-    )
-    energy_simulation = EnergySimulation(
-        **loader._dataframe_to_constructor_kwargs(energy_simulation),
-        seconds_per_time_step=seconds_per_time_step,
-        noise_std=noise_std,
-        dataset_seconds_per_time_step=loader.env._time_axis.seconds,
-        noise_seed=loader._noise_seed(schema, 'energy:'+building_name),
-        noise_start_index=schema['simulation_start_time_step'],
-    )
-    loader._set_time_step_offset(energy_simulation, schema['simulation_start_time_step'])
+    sim_start = int(schema['simulation_start_time_step'])
+    sim_end = int(schema['simulation_end_time_step'])
+    window_key = tuple(member_window) if (loader._dynamic_mode and member_window is not None) else None
+    parsed_data = getattr(loader, '_parsed_data', None)
+    share_readonly = bool(getattr(loader, '_share_readonly_series', False))
+    energy_simulation = None
+
+    if parsed_data is not None:
+        hit = parsed_data.find_energy(
+            energy_simulation_filepath,
+            simulation_start=sim_start,
+            simulation_end=sim_end,
+            expected_rows=int(expected_rows),
+            window_key=window_key,
+            seconds_per_time_step=float(seconds_per_time_step),
+        )
+        if hit is not None:
+            entry, slc = hit
+            energy_simulation = entry.build(
+                slc,
+                seconds_per_time_step=seconds_per_time_step,
+                noise_std=noise_std,
+                dataset_seconds_per_time_step=loader.env._time_axis.seconds,
+                noise_seed=loader._noise_seed(schema, 'energy:'+building_name),
+                noise_start_index=sim_start,
+                share_readonly=share_readonly,
+            )
+
+    if energy_simulation is None:
+        energy_df = loader._read_member_timeseries(
+            schema,
+            energy_simulation_filepath,
+            expected_rows=expected_rows,
+            window=member_window,
+            source_label=f'buildings.{building_name}.energy_simulation',
+        )
+        stored = (
+            None
+            if parsed_data is None or parsed_data.frozen or loader._last_read_window_spec is None
+            else parsed_data.store_energy(energy_simulation_filepath, energy_df, spec=loader._last_read_window_spec)
+        )
+        if stored is not None:
+            energy_simulation = stored.build(
+                slice(0, len(energy_df)),
+                seconds_per_time_step=seconds_per_time_step,
+                noise_std=noise_std,
+                dataset_seconds_per_time_step=loader.env._time_axis.seconds,
+                noise_seed=loader._noise_seed(schema, 'energy:'+building_name),
+                noise_start_index=sim_start,
+                share_readonly=share_readonly,
+            )
+        else:
+            energy_simulation = EnergySimulation(
+                **loader._dataframe_to_constructor_kwargs(energy_df),
+                seconds_per_time_step=seconds_per_time_step,
+                noise_std=noise_std,
+                dataset_seconds_per_time_step=loader.env._time_axis.seconds,
+                noise_seed=loader._noise_seed(schema, 'energy:'+building_name),
+                noise_start_index=sim_start,
+            )
+
+    loader._set_time_step_offset(energy_simulation, sim_start)
     share_identical_series(loader._shared_timeseries_cache, energy_simulation)
     ratios = getattr(energy_simulation, 'time_step_ratios', None) or []
     time_step_ratio = ratios[-1] if len(ratios) > 0 else 1.0

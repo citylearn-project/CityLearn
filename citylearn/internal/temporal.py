@@ -134,7 +134,7 @@ def runtime_versions():
 
 
 class TimeAxis:
-    def __init__(self, schema):
+    def __init__(self, schema, parsed_data=None):
         self.schema = schema
         self.timezone = schema.get("timezone")
         if self.timezone:
@@ -149,39 +149,48 @@ class TimeAxis:
         if filename:
             path = Path(filename)
             path = path if path.is_absolute() else root / path
-            frame = (
-                pd.read_parquet(path)
-                if path.suffix in {".parquet", ".pq"}
-                else pd.read_csv(path)
-            )
-            if not {"time_step", "timestamp_utc"} <= set(frame):
-                raise ValueError(
-                    "Canonical calendar requires time_step and timestamp_utc"
+            from citylearn.internal.parsed_data import canonical_file_key
+
+            calendar_key = canonical_file_key(path)
+            cached = None if parsed_data is None else parsed_data.calendar_by_file.get(calendar_key)
+            if cached is not None:
+                self.utc, self.seconds = cached
+            else:
+                frame = (
+                    pd.read_parquet(path)
+                    if path.suffix in {".parquet", ".pq"}
+                    else pd.read_csv(path)
                 )
-            if not np.array_equal(frame.time_step.to_numpy(), np.arange(len(frame))):
-                raise ValueError("Calendar indexes must be contiguous from zero")
-            self.utc = pd.DatetimeIndex(
-                pd.to_datetime(frame.timestamp_utc, utc=True, errors="raise")
-            ).astype("datetime64[ns, UTC]")
-            if self.utc.hasnans:
-                raise ValueError("Calendar contains missing timestamps")
-            differences = np.diff(self.utc.asi8) / 1e9
-            if (
-                len(differences) == 0
-                or not np.isfinite(differences).all()
-                or np.any(differences <= 0)
-                or not np.all(differences == differences[0])
-            ):
-                raise ValueError(
-                    "Calendar UTC timestamps must be unique, increasing and regular"
-                )
-            self.seconds = float(differences[0])
-            if "timestamp_local" in frame and not np.array_equal(
-                pd.to_datetime(frame.timestamp_local, utc=True)
-                .astype("datetime64[ns, UTC]").astype("int64"),
-                self.utc.asi8,
-            ):
-                raise ValueError("Local and UTC calendar instants disagree")
+                if not {"time_step", "timestamp_utc"} <= set(frame):
+                    raise ValueError(
+                        "Canonical calendar requires time_step and timestamp_utc"
+                    )
+                if not np.array_equal(frame.time_step.to_numpy(), np.arange(len(frame))):
+                    raise ValueError("Calendar indexes must be contiguous from zero")
+                self.utc = pd.DatetimeIndex(
+                    pd.to_datetime(frame.timestamp_utc, utc=True, errors="raise")
+                ).astype("datetime64[ns, UTC]")
+                if self.utc.hasnans:
+                    raise ValueError("Calendar contains missing timestamps")
+                differences = np.diff(self.utc.asi8) / 1e9
+                if (
+                    len(differences) == 0
+                    or not np.isfinite(differences).all()
+                    or np.any(differences <= 0)
+                    or not np.all(differences == differences[0])
+                ):
+                    raise ValueError(
+                        "Calendar UTC timestamps must be unique, increasing and regular"
+                    )
+                self.seconds = float(differences[0])
+                if "timestamp_local" in frame and not np.array_equal(
+                    pd.to_datetime(frame.timestamp_local, utc=True)
+                    .astype("datetime64[ns, UTC]").astype("int64"),
+                    self.utc.asi8,
+                ):
+                    raise ValueError("Local and UTC calendar instants disagree")
+                if parsed_data is not None and not parsed_data.frozen:
+                    parsed_data.calendar_by_file[calendar_key] = (self.utc, self.seconds)
         declared = schema.get("dataset_seconds_per_time_step")
         if declared is not None:
             if not np.isfinite(declared) or declared <= 0:

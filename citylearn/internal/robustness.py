@@ -162,17 +162,31 @@ class CityLearnRobustnessService:
             raise FileNotFoundError(f"robustness.events_file does not exist: {path}")
 
         suffix = path.suffix.lower()
+        if suffix not in {".parquet", ".pq", ".csv", ".txt"}:
+            raise ValueError("robustness.events_file must be a CSV or Parquet file.")
+
+        from citylearn.internal.parsed_data import canonical_file_key
+
+        cache_key = canonical_file_key(path)
+        source = getattr(self.env, '_parsed_data_source', None)
+        sink = getattr(self.env, '_parsed_data', None)
+        cached = None if source is None else source.robustness_by_file.get(cache_key)
+        if cached is not None:
+            self._events = list(cached)
+            self._max_delay_steps = max((event.delay_steps for event in self._events), default=1)
+            return
+
         if suffix in {".parquet", ".pq"}:
             frame = pd.read_parquet(path)
-        elif suffix in {".csv", ".txt"}:
+        else:
             # Preserve explicit "nan"/"inf" parameters for validation; only
             # empty fields represent omitted CSV parameters.
             frame = pd.read_csv(path, keep_default_na=False)
-        else:
-            raise ValueError("robustness.events_file must be a CSV or Parquet file.")
 
         self._events = self._parse_events(frame)
         self._max_delay_steps = max((event.delay_steps for event in self._events), default=1)
+        if sink is not None and not sink.frozen:
+            sink.robustness_by_file[cache_key] = tuple(self._events)
 
     def reset(self):
         """Reset episode-local state without reloading event definitions."""

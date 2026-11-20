@@ -63,7 +63,7 @@ def accepts_keyword(constructor, name):
     )
 
 
-def add_model_options(building_kwargs, building_name, building_schema, schema, episode_tracker, constructor):
+def add_model_options(building_kwargs, building_name, building_schema, schema, episode_tracker, constructor, *, loader=None):
     if building_schema.get('dynamics', None) is not None:
         dynamics_type = building_schema['dynamics']['type']
         dynamics_constructor = component_constructor(dynamics_type, f'buildings.{building_name}.dynamics.type')
@@ -80,8 +80,22 @@ def add_model_options(building_kwargs, building_name, building_schema, schema, e
         occupant_constructor = component_constructor(occupant_type, f'buildings.{building_name}.occupant.type')
         attributes: dict = building_occupant.get('attributes', {})
         parameters_filepath = os.path.join(schema['root_directory'], building_occupant['parameters_filename'])
-        parameters = pd.read_csv(parameters_filepath)
-        attributes['parameters'] = LogisticRegressionOccupantParameters(**parameters.to_dict('list'))
+        parsed_data = getattr(loader, '_parsed_data', None)
+        share_readonly = bool(getattr(loader, '_share_readonly_series', False))
+        occupant_parameters = (
+            None
+            if parsed_data is None
+            else parsed_data.find_occupant_parameters(parameters_filepath, share_readonly=share_readonly)
+        )
+        if occupant_parameters is None:
+            parameters = pd.read_csv(parameters_filepath)
+            if parsed_data is not None and not parsed_data.frozen:
+                occupant_parameters = parsed_data.store_occupant_parameters(
+                    parameters_filepath, parameters,
+                ).build(share_readonly=share_readonly)
+            else:
+                occupant_parameters = LogisticRegressionOccupantParameters(**parameters.to_dict('list'))
+        attributes['parameters'] = occupant_parameters
         attributes['episode_tracker'] = episode_tracker
         attributes['random_seed'] = schema['random_seed']
         attributes['random_stream_version'] = schema['random_stream_version']
@@ -126,61 +140,109 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
                   schema, episode_tracker, expected_rows, time_step_ratio):
     chargers_list = []
     if building_schema.get('chargers', None) is not None:
+        parsed_data = getattr(loader, '_parsed_data', None)
+        share_readonly = bool(getattr(loader, '_share_readonly_series', False))
+        sim_start = int(schema['simulation_start_time_step'])
+        sim_end = int(schema['simulation_end_time_step'])
         for charger_name, charger_config in building_schema['chargers'].items():
             noise_std = charger_config.get('noise_std', 0.0)
 
             charger_simulation_filepath = os.path.join(schema['root_directory'], charger_config['charger_simulation'])
             # CSV has no column types. Preserve textual IDs such as "01" and "1" before inference.
             charger_window = loader._dynamic_charger_windows.get((building_name, charger_name))
-            charger_simulation_file = loader._read_member_timeseries(
-                schema,
-                charger_simulation_filepath,
-                expected_rows=expected_rows,
-                window=charger_window,
-                source_label=f'buildings.{building_name}.chargers.{charger_name}.charger_simulation',
-                csv_dtypes={'electric_vehicle_session_id': object},
-            )
+            window_key = tuple(charger_window) if (loader._dynamic_mode and charger_window is not None) else None
+            noise_seed = loader._noise_seed(schema, 'charger:'+building_name+':'+charger_name)
+            charger_simulation = None
 
-            # Keep the constructor contract stable when charger datasets add
-            # optional telemetry columns.  Passing the complete dataframe
-            # positionally would silently reinterpret a seventh column as
-            # ``start_time_step``.
-            charger_columns = (
-                'electric_vehicle_charger_state',
-                'electric_vehicle_id',
-                'electric_vehicle_departure_time',
-                'electric_vehicle_required_soc_departure',
-                'electric_vehicle_estimated_arrival_time',
-                'electric_vehicle_estimated_soc_arrival',
-            )
-            missing_charger_columns = [
-                column for column in charger_columns
-                if column not in charger_simulation_file.columns
-            ]
-            if missing_charger_columns:
-                raise ValueError(
-                    f"Charger simulation '{charger_simulation_filepath}' is missing "
-                    f"required columns: {missing_charger_columns}."
+            if parsed_data is not None:
+                hit = parsed_data.find_charger(
+                    charger_simulation_filepath,
+                    simulation_start=sim_start,
+                    simulation_end=sim_end,
+                    expected_rows=int(expected_rows),
+                    window_key=window_key,
+                    seconds_per_time_step=float(schema.get('seconds_per_time_step', 3600)),
                 )
-            charger_simulation = ChargerSimulation(
-                *(charger_simulation_file[column].to_numpy() for column in charger_columns),
-                electric_vehicle_session_id=(
-                    charger_simulation_file['electric_vehicle_session_id'].to_numpy()
-                    if 'electric_vehicle_session_id' in charger_simulation_file.columns
-                    else None
-                ),
-                noise_std=noise_std,
-                noise_seed=loader._noise_seed(schema, 'charger:'+building_name+':'+charger_name),
-                noise_start_index=schema['simulation_start_time_step'],
-            )
-            loader._set_time_step_offset(charger_simulation, schema['simulation_start_time_step'])
-            if 'electric_vehicle_current_soc' in charger_simulation_file.columns:
-                current_soc_raw = pd.to_numeric(charger_simulation_file['electric_vehicle_current_soc'], errors='coerce').to_numpy(dtype='float32')
-                charger_simulation.electric_vehicle_current_soc = ChargerSimulation.normalize_soc_series(
-                    current_soc_raw,
-                    default_soc_value=-0.1,
-                    noise_std=0.0,
+                if hit is not None:
+                    entry, slc = hit
+                    charger_simulation = entry.build(
+                        slc,
+                        noise_std=noise_std,
+                        noise_seed=noise_seed,
+                        noise_start_index=sim_start,
+                        time_step_offset=sim_start,
+                        share_readonly=share_readonly,
+                    )
+
+            if charger_simulation is None:
+                charger_simulation_file = loader._read_member_timeseries(
+                    schema,
+                    charger_simulation_filepath,
+                    expected_rows=expected_rows,
+                    window=charger_window,
+                    source_label=f'buildings.{building_name}.chargers.{charger_name}.charger_simulation',
+                    csv_dtypes={'electric_vehicle_session_id': object},
                 )
+
+                # Keep the constructor contract stable when charger datasets add
+                # optional telemetry columns.  Passing the complete dataframe
+                # positionally would silently reinterpret a seventh column as
+                # ``start_time_step``.
+                charger_columns = (
+                    'electric_vehicle_charger_state',
+                    'electric_vehicle_id',
+                    'electric_vehicle_departure_time',
+                    'electric_vehicle_required_soc_departure',
+                    'electric_vehicle_estimated_arrival_time',
+                    'electric_vehicle_estimated_soc_arrival',
+                )
+                missing_charger_columns = [
+                    column for column in charger_columns
+                    if column not in charger_simulation_file.columns
+                ]
+                if missing_charger_columns:
+                    raise ValueError(
+                        f"Charger simulation '{charger_simulation_filepath}' is missing "
+                        f"required columns: {missing_charger_columns}."
+                    )
+                stored = (
+                    None
+                    if parsed_data is None or parsed_data.frozen or loader._last_read_window_spec is None
+                    else parsed_data.store_charger(
+                        charger_simulation_filepath,
+                        charger_simulation_file,
+                        spec=loader._last_read_window_spec,
+                    )
+                )
+                if stored is not None:
+                    charger_simulation = stored.build(
+                        slice(0, len(charger_simulation_file)),
+                        noise_std=noise_std,
+                        noise_seed=noise_seed,
+                        noise_start_index=sim_start,
+                        time_step_offset=sim_start,
+                        share_readonly=share_readonly,
+                    )
+                else:
+                    charger_simulation = ChargerSimulation(
+                        *(charger_simulation_file[column].to_numpy() for column in charger_columns),
+                        electric_vehicle_session_id=(
+                            charger_simulation_file['electric_vehicle_session_id'].to_numpy()
+                            if 'electric_vehicle_session_id' in charger_simulation_file.columns
+                            else None
+                        ),
+                        noise_std=noise_std,
+                        noise_seed=noise_seed,
+                        noise_start_index=sim_start,
+                    )
+                    loader._set_time_step_offset(charger_simulation, sim_start)
+                    if 'electric_vehicle_current_soc' in charger_simulation_file.columns:
+                        current_soc_raw = pd.to_numeric(charger_simulation_file['electric_vehicle_current_soc'], errors='coerce').to_numpy(dtype='float32')
+                        charger_simulation.electric_vehicle_current_soc = ChargerSimulation.normalize_soc_series(
+                            current_soc_raw,
+                            default_soc_value=-0.1,
+                            noise_std=0.0,
+                        )
 
             charger_type = charger_config['type']
             charger_class = component_constructor(charger_type, f'buildings.{building_name}.chargers.{charger_name}.type')
