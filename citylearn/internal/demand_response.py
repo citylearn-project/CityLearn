@@ -595,7 +595,9 @@ class CityLearnDemandResponseService:
 
     def _current_district_power_kw(self, time_step: int) -> float:
         try:
-            energy = float(self.env.net_electricity_consumption[time_step])
+            # The history indexes the buffer; the public list would be rebuilt after every step.
+            series = getattr(self.env, '_net_electricity_consumption_history', None)
+            energy = float((self.env.net_electricity_consumption if series is None else series)[time_step])
         except Exception:
             energy = 0.0
         return energy / self._step_hours()
