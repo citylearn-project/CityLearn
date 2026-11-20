@@ -146,8 +146,9 @@ Only district-level child KPIs are aggregated:
 |---|---|
 | `_kwh`, `_eur`, `_kgco2`, `_count` | Sum across communities. |
 | `_ratio` of a control total to a reference total | Ratio of the summed totals, e.g. `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
+| Rates and means with additive denominators | Pooled: mean weighted by the denominator, e.g. `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
 | Other `_ratio`, `_percent` | Weighted mean using community `weight`. |
-| `_kw`, `_c`, `_hours` and other point metrics | Not aggregated in v1. |
+| `_kw`, `_c`, other `_hours` and other point metrics | Not aggregated in v1. |
 
 Ratios rebuilt from summed totals are the `ratio_to_baseline` and
 `ratio_to_business_as_usual` ratios of cost, emissions, grid import, export and
@@ -156,16 +157,30 @@ and export, EV charge and V2G export, battery charge, discharge and throughput,
 and deferrable-appliance cycle and energy counts. They use only communities that
 report both totals, ignore `weight` like the summed totals, and keep the
 lower-is-better rule of the [KPI reference](kpis_reference.md#core-equations)
-for negative net-exchange and cost totals. A district `ratio_to_baseline` of
-import, net exchange or emissions is the mean of its building ratios, so a
-one-community portfolio ratio can differ from it.
+for negative net-exchange and cost totals. A one-community portfolio ratio
+equals the district ratio.
+
+Pooled rates and means are weighted by their additive denominators, so they
+equal the ratio of the pooled numerator and denominator and ignore `weight`:
+
+| Rate or mean | Weight |
+|---|---|
+| EV departure success, minimum-acceptable and within-tolerance rates; SOC deficit, shortfall, surplus and absolute-error means | `ev_events_departure_count` |
+| EV `*_feasible` departure rates | The matching `ev_events_departure_*_feasible_count` |
+| Deferrable-appliance service level (control and BAU) | Completed plus missed cycles |
+| Deferrable-appliance average start delay (control and BAU) | Completed cycles |
+| Escalator service level | Requested passengers |
+| Solar self-consumption (control and BAU) | Solar generation |
+
+The BAU deltas and ratios of the pooled deferrable service level, start delay
+and self-consumption are taken between the pooled control and BAU values.
+Communities whose value is undefined carry no weight.
 
 Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
-ramping and load-factor penalties), comfort and resilience proportions, EV
-departure rates, service levels, shares, equity, audit and coverage ratios,
-battery capacity fade, and the `ratio_to_business_as_usual` ratios of battery
-capacity fade and equivalent full cycles, self-consumption, service level and
-start delay.
+ramping and load-factor penalties), comfort and resilience proportions, shares,
+equity, audit and coverage ratios, demand-response compliance, battery capacity
+fade, and the `ratio_to_business_as_usual` ratios of battery capacity fade and
+equivalent full cycles.
 
 Portfolio KPI names replace a leading `district_` prefix with `portfolio_`, for example `district_demand_response_revenue_total_eur` becomes `portfolio_demand_response_revenue_total_eur`.
 

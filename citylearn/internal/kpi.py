@@ -171,13 +171,28 @@ class CityLearnKPIService:
         return scalar
 
     @staticmethod
-    def _safe_div(control_value: float, baseline_value: float):
-        c = CityLearnKPIService._to_scalar(control_value, 0.0)
-        b = CityLearnKPIService._to_scalar(baseline_value, 0.0)
+    def _defined_scalar(value) -> Optional[float]:
+        """Return a finite float, or None when the value is missing or undefined."""
+        scalar = CityLearnKPIService._to_scalar(value, np.nan)
+        return scalar if np.isfinite(scalar) else None
+
+    @staticmethod
+    def _safe_div(control_value: float, baseline_value: float, zero_over_zero: Optional[float] = 1.0):
+        """Ratio of two totals; undefined (None) when either operand is undefined.
+
+        A missing or non-finite operand is never read as zero. For a reference
+        within the zero tolerance the ratio is `zero_over_zero` (1.0, "no
+        change", by default) if the control is also zero, and None otherwise.
+        """
+        c = CityLearnKPIService._defined_scalar(control_value)
+        b = CityLearnKPIService._defined_scalar(baseline_value)
+        if c is None or b is None:
+            return None
+
         eps = float(ZERO_DIVISION_PLACEHOLDER)
 
         if abs(b) <= eps:
-            return 1.0 if abs(c) <= eps else None
+            return zero_over_zero if abs(c) <= eps else None
 
         return c / b
 
@@ -826,6 +841,15 @@ class CityLearnKPIService:
         return cls._sum_finite(values)
 
     @classmethod
+    def _ramping_mean(cls, values) -> Optional[float]:
+        """Mean upward ramp per step transition: `_ramping_final` over the transitions."""
+        series = cls._as_float_array(values)
+        transitions = int(np.count_nonzero(np.isfinite(series[1:]) & np.isfinite(series[:-1]))) if series.size > 1 else 0
+        if transitions == 0:
+            return None
+        return cls._ramping_final(series) / transitions
+
+    @classmethod
     def _ramping_final(cls, values, down_ramp: bool = None, net_export: bool = None) -> float:
         series = cls._as_float_array(values)
         if series.size == 0:
@@ -863,12 +887,27 @@ class CityLearnKPIService:
         return float(np.mean(valid))
 
     @classmethod
-    def _one_minus_load_factor_final(cls, values, window: int = None) -> float:
+    def _one_minus_load_factor_final(cls, values, window: int = None, signed_net: bool = False) -> float:
+        """Mean over windows of `1 - mean / peak` of grid import power.
+
+        The load factor is computed on import (`max(net, 0)`). A window whose
+        peak import is within the zero tolerance has no load factor and is left
+        out of the mean; the result is NaN when no window is defined.
+
+        `signed_net=True` reproduces the definition of CityLearn 3.6.0 and
+        earlier, on the signed net series, kept for the legacy `evaluate()` rows
+        and the `*_signed_net_*` v2 rows. Its windows with a non-positive peak are
+        also undefined rather than infinite.
+        """
         series = cls._as_float_array(values)
         if series.size == 0:
             return 0.0
 
+        if not signed_net:
+            series = np.where(np.isfinite(series), np.clip(series, 0.0, None), series)
+
         window = 730 if window is None else window
+        eps = float(ZERO_DIVISION_PLACEHOLDER)
         penalties = []
         for group in cls._group_slices(series, window):
             finite = group[np.isfinite(group)]
@@ -876,9 +915,10 @@ class CityLearnKPIService:
                 penalties.append(np.nan)
                 continue
             peak = float(np.max(finite))
-            mean = float(np.mean(finite))
-            with np.errstate(divide='ignore', invalid='ignore'):
-                penalties.append(float(1.0 - np.divide(mean, peak)))
+            if peak <= eps:
+                penalties.append(np.nan)
+                continue
+            penalties.append(float(1.0 - float(np.mean(finite)) / peak))
 
         return cls._nan_mean_preserve_inf(np.array(penalties, dtype='float64'))
 
@@ -1418,6 +1458,57 @@ class CityLearnKPIService:
 
         return allocations
 
+    def _district_netted_emissions(self, condition, *, dynamics_building_cls) -> np.ndarray:
+        """Per-step emissions of the district grid import, after local sharing.
+
+        District import is `max(sum(net), 0)`, so energy that one member exports
+        and another imports in the same step carries no grid carbon. Imports are
+        charged at the carbon intensity of the importing members. When those
+        intensities differ, the locally covered share of each member's import
+        follows the weighted allocation of the provenance ledger
+        (`community_market_import_member_weights`), so the totals match its
+        `external_purchase_emissions`. A non-finite intensity counts as zero
+        carbon, as in the ledger. `condition` is a district evaluation
+        condition; buildings that are not `DynamicsBuilding` use it without the
+        partial-load suffix, as the district series do.
+        """
+        env = self.env
+        steps = max(int(getattr(env, 'time_step', 0)), 0)
+        buildings = self._get_kpi_buildings()
+        if steps == 0 or len(buildings) == 0:
+            return np.zeros(steps, dtype='float64')
+
+        nets = np.zeros((steps, len(buildings)), dtype='float64')
+        intensities = np.zeros((steps, len(buildings)), dtype='float64')
+        for column, building in enumerate(buildings):
+            suffix = condition.value
+            if not isinstance(building, dynamics_building_cls):
+                suffix = suffix.replace('_and_partial_load', '')
+            values = self._energy_values(building, getattr(building, f'net_electricity_consumption{suffix}'))[:steps]
+            nets[:values.size, column] = np.where(np.isfinite(values), values, 0.0)
+            carbon = np.asarray(building.carbon_intensity.carbon_intensity, dtype='float64')[:steps]
+            intensities[:carbon.size, column] = np.where(np.isfinite(carbon), carbon, 0.0)
+
+        imports = np.clip(nets, 0.0, None)
+        district_import = np.clip(nets.sum(axis=1), 0.0, None)
+        importing = imports > float(ZERO_DIVISION_PLACEHOLDER)
+        any_importing = importing.any(axis=1)
+        highest = np.where(importing, intensities, -np.inf).max(axis=1)
+        lowest = np.where(importing, intensities, np.inf).min(axis=1)
+        emissions = np.where(any_importing, district_import*np.where(any_importing, highest, 0.0), 0.0)
+
+        mixed = np.flatnonzero(any_importing & (highest - lowest > 1.0e-12))
+        if mixed.size > 0:
+            member_weights = getattr(env, 'community_market_import_member_weights', {}) or {}
+            weights = np.array([member_weights.get(b.name, 1.0) for b in buildings], dtype='float64')
+            exports = np.clip(-nets, 0.0, None)
+            for t in mixed:
+                traded = min(float(imports[t].sum()), float(exports[t].sum()))
+                local = self._allocate_weighted_share_import(imports[t], traded, weights)
+                emissions[t] = float(np.sum((imports[t] - local)*intensities[t]))
+
+        return emissions
+
     def _default_building_conditions(self, building, control_condition, baseline_condition, *, evaluation_condition_cls, dynamics_building_cls):
         if isinstance(building, dynamics_building_cls):
             building_control_condition = (
@@ -1918,6 +2009,69 @@ class CityLearnKPIService:
 
         return components
 
+    @staticmethod
+    def ratio_zero_over_zero(ratio_name: str) -> Optional[float]:
+        """Value of a ratio KPI when its control and reference totals are both zero.
+
+        Deferrable-appliance service ratios are undefined (None) when no cycle
+        was due in either run; every other ratio reads 1.0, "no change".
+        """
+        return None if '_deferrable_appliance_' in f'_{ratio_name}' else 1.0
+
+    @classmethod
+    def pooled_mean_components(cls, level: str) -> Dict[str, Tuple[str, ...]]:
+        """V2 rates and means that pool across members as weighted means.
+
+        Maps each rate or mean to the additive totals that weight it: the rate's
+        denominator, so the weighted mean of member values is the ratio of the
+        pooled numerator and denominator. Multiple weights are summed.
+        """
+        v2 = cls._v2_name
+        departures = (v2(level, 'ev', 'events', 'departure', None, 'count'),)
+        components: Dict[str, Tuple[str, ...]] = {}
+        for metric in ('departure_success', 'departure_min_acceptable', 'departure_within_tolerance',
+                       'departure_soc_deficit_mean', 'departure_shortfall_beyond_tolerance_mean',
+                       'departure_soc_surplus_mean', 'departure_soc_absolute_error_mean'):
+            components[v2(level, 'ev', 'performance', metric, None, 'ratio')] = departures
+        for metric, feasible in (('departure_success', 'departure_target_feasible'),
+                                 ('departure_min_acceptable', 'departure_min_acceptable_feasible'),
+                                 ('departure_within_tolerance', 'departure_within_tolerance_feasible')):
+            components[v2(level, 'ev', 'performance', metric, 'feasible', 'ratio')] = (
+                v2(level, 'ev', 'events', feasible, None, 'count'),
+            )
+        for variant in (None, 'business_as_usual'):
+            completed = v2(level, 'deferrable_appliance', 'service', 'completed_cycles', variant, 'count')
+            missed = v2(level, 'deferrable_appliance', 'service', 'missed_cycles', variant, 'count')
+            components[v2(level, 'deferrable_appliance', 'service', 'service_level', variant, 'ratio')] = (completed, missed)
+            components[v2(level, 'deferrable_appliance', 'service', 'average_start_delay', variant, 'hours')] = (completed,)
+            components[v2(level, 'solar_self_consumption', 'ratio', 'self_consumption', variant, 'ratio')] = (
+                v2(level, 'solar_self_consumption', 'total', 'generation', variant, 'kwh'),
+            )
+        components[v2(level, 'escalator', 'service', 'service_level', None, 'ratio')] = (
+            v2(level, 'escalator', 'service', 'requested_passengers_total', None, 'count'),
+        )
+        return components
+
+    @classmethod
+    def pooled_mean_business_as_usual_comparisons(cls, level: str) -> Dict[str, Tuple[str, str, str]]:
+        """BAU deltas and ratios of the pooled means.
+
+        Maps each name to `(control_name, business_as_usual_name, operation)`,
+        where operation is `delta` or `ratio`.
+        """
+        v2 = cls._v2_name
+        comparisons: Dict[str, Tuple[str, str, str]] = {}
+        for family, subfamily, metric, unit in (
+            ('deferrable_appliance', 'service', 'service_level', 'ratio'),
+            ('deferrable_appliance', 'service', 'average_start_delay', 'hours'),
+            ('solar_self_consumption', 'ratio', 'self_consumption', 'ratio'),
+        ):
+            control = v2(level, family, subfamily, metric, None, unit)
+            reference = v2(level, family, subfamily, metric, 'business_as_usual', unit)
+            comparisons[v2(level, family, subfamily, metric, 'delta_to_business_as_usual', unit)] = (control, reference, 'delta')
+            comparisons[v2(level, family, 'ratio_to_business_as_usual', metric, None, 'ratio')] = (control, reference, 'ratio')
+        return comparisons
+
     def evaluate_legacy(
         self,
         control_condition=None,
@@ -2053,6 +2207,7 @@ class CityLearnKPIService:
             unit: str,
             current_key: str,
             ratio_metric: str,
+            zero_over_zero: Optional[float] = 1.0,
         ):
             bau_value = bau(level, name, current_key)
             control_value = current(level, name, current_key)
@@ -2067,7 +2222,7 @@ class CityLearnKPIService:
                 level,
                 name,
                 v2(level, family, 'ratio_to_business_as_usual', ratio_metric, None, 'ratio'),
-                self._safe_div(control_value, bau_value),
+                self._safe_div(control_value, bau_value, zero_over_zero=zero_over_zero),
             )
 
         names_by_level = {}
@@ -2214,7 +2369,15 @@ class CityLearnKPIService:
                         unit=unit,
                         current_key=v2(level, 'deferrable_appliance', 'service', metric, None, unit),
                         ratio_metric=metric,
+                        # No cycle due in either run leaves the service comparison undefined.
+                        zero_over_zero=None,
                     )
+
+        # The 3.6.0 district emissions (sum over members) of the BAU reference.
+        member_sum_key = v2('district', 'emissions', 'total', 'control', 'member_sum', 'kgco2')
+        if ('district', 'District', member_sum_key) in records:
+            put('district', 'District', v2('district', 'emissions', 'total', 'business_as_usual', 'member_sum', 'kgco2'),
+                bau('district', 'District', member_sum_key))
 
         self._add_business_as_usual_shape_records(records, result.env, v2, simulated_days)
 
@@ -2234,53 +2397,81 @@ class CityLearnKPIService:
         current_net_power = current_net / step_hours
         bau_net_power = bau_net / step_hours
 
+        def load_factor(series, window, signed_net=False):
+            return self._one_minus_load_factor_final(series, window=window, signed_net=signed_net)
+
+        all_time_c = max(int(getattr(env, 'time_steps', 1)), 1)
+        all_time_b = max(int(getattr(bau_env, 'time_steps', 1)), 1)
+        # (metric, control, business-as-usual, unit, publish ratio). `ramping_total`
+        # and the `signed_net` load factors keep the 3.6.0 definitions.
         metrics = [
-            ('ramping_average', self._ramping_final(current_net_power), self._ramping_final(bau_net_power), 'kw'),
+            ('ramping_average', self._ramping_mean(current_net_power), self._ramping_mean(bau_net_power), 'kw', True),
+            ('ramping_total', self._ramping_final(current_net_power), self._ramping_final(bau_net_power), 'kw', False),
             (
                 'load_factor_penalty_daily_average',
-                self._one_minus_load_factor_final(current_net_power, window=daily_steps),
-                self._one_minus_load_factor_final(bau_net_power, window=daily_steps),
+                load_factor(current_net_power, daily_steps),
+                load_factor(bau_net_power, daily_steps),
                 'ratio',
+                True,
             ),
             (
                 'load_factor_penalty_monthly_average',
-                self._one_minus_load_factor_final(current_net_power, window=monthly_steps),
-                self._one_minus_load_factor_final(bau_net_power, window=monthly_steps),
+                load_factor(current_net_power, monthly_steps),
+                load_factor(bau_net_power, monthly_steps),
                 'ratio',
+                True,
+            ),
+            (
+                'load_factor_penalty_daily_average_signed_net',
+                load_factor(current_net_power, daily_steps, signed_net=True),
+                load_factor(bau_net_power, daily_steps, signed_net=True),
+                'ratio',
+                True,
+            ),
+            (
+                'load_factor_penalty_monthly_average_signed_net',
+                load_factor(current_net_power, monthly_steps, signed_net=True),
+                load_factor(bau_net_power, monthly_steps, signed_net=True),
+                'ratio',
+                True,
             ),
             (
                 'peak_daily_average',
                 self._peak_final(current_net_power, window=daily_steps),
                 self._peak_final(bau_net_power, window=daily_steps),
                 'kw',
+                True,
             ),
             (
                 'peak_all_time_average',
-                self._peak_final(current_net_power, window=max(int(getattr(env, 'time_steps', 1)), 1)),
-                self._peak_final(bau_net_power, window=max(int(getattr(bau_env, 'time_steps', 1)), 1)),
+                self._peak_final(current_net_power, window=all_time_c),
+                self._peak_final(bau_net_power, window=all_time_b),
                 'kw',
+                True,
             ),
         ]
 
-        for metric, control_value, bau_value, unit in metrics:
-            records[('district', 'District', v2('district', 'energy_grid', 'shape_quality', metric, 'business_as_usual', unit))] = {
-                'cost_function': v2('district', 'energy_grid', 'shape_quality', metric, 'business_as_usual', unit),
-                'value': bau_value,
+        def put(cost_function: str, value):
+            records[('district', 'District', cost_function)] = {
+                'cost_function': cost_function,
+                'value': value,
                 'name': 'District',
                 'level': 'district',
             }
-            records[('district', 'District', v2('district', 'energy_grid', 'shape_quality', metric, 'delta_to_business_as_usual', unit))] = {
-                'cost_function': v2('district', 'energy_grid', 'shape_quality', metric, 'delta_to_business_as_usual', unit),
-                'value': control_value - bau_value,
-                'name': 'District',
-                'level': 'district',
-            }
-            records[('district', 'District', v2('district', 'energy_grid', 'shape_quality', f'{metric}_to_business_as_usual', None, 'ratio'))] = {
-                'cost_function': v2('district', 'energy_grid', 'shape_quality', f'{metric}_to_business_as_usual', None, 'ratio'),
-                'value': self._safe_div(control_value, bau_value),
-                'name': 'District',
-                'level': 'district',
-            }
+
+        for metric, control_value, bau_value, unit, with_ratio in metrics:
+            control_defined = self._defined_scalar(control_value)
+            bau_defined = self._defined_scalar(bau_value)
+            put(v2('district', 'energy_grid', 'shape_quality', metric, 'business_as_usual', unit), bau_defined)
+            put(
+                v2('district', 'energy_grid', 'shape_quality', metric, 'delta_to_business_as_usual', unit),
+                None if control_defined is None or bau_defined is None else control_defined - bau_defined,
+            )
+            if with_ratio:
+                put(
+                    v2('district', 'energy_grid', 'shape_quality', f'{metric}_to_business_as_usual', None, 'ratio'),
+                    self._safe_div(control_value, bau_value),
+                )
 
     @population_scope
     @settled_cost_scope
@@ -2388,8 +2579,8 @@ class CityLearnKPIService:
             ('carbon_emissions_total', 'emissions', 'ratio_to_baseline', 'total', None, 'ratio'),
             ('cost_total', 'cost', 'ratio_to_baseline', 'total', None, 'ratio'),
             ('ramping_average', 'energy_grid', 'shape_quality', 'ramping_average_to_baseline', None, 'ratio'),
-            ('daily_one_minus_load_factor_average', 'energy_grid', 'shape_quality', 'load_factor_penalty_daily_average_to_baseline', None, 'ratio'),
-            ('monthly_one_minus_load_factor_average', 'energy_grid', 'shape_quality', 'load_factor_penalty_monthly_average_to_baseline', None, 'ratio'),
+            ('daily_one_minus_load_factor_average', 'energy_grid', 'shape_quality', 'load_factor_penalty_daily_average_to_baseline', 'signed_net', 'ratio'),
+            ('monthly_one_minus_load_factor_average', 'energy_grid', 'shape_quality', 'load_factor_penalty_monthly_average_to_baseline', 'signed_net', 'ratio'),
             ('daily_peak_average', 'energy_grid', 'shape_quality', 'peak_daily_average_to_baseline', None, 'ratio'),
             ('all_time_peak_average', 'energy_grid', 'shape_quality', 'peak_all_time_average_to_baseline', None, 'ratio'),
             ('discomfort_proportion', 'comfort_resilience', 'discomfort', 'overall', None, 'ratio'),
@@ -2439,6 +2630,10 @@ class CityLearnKPIService:
             ('carbon_emissions_control_daily_average_kgco2', 'emissions', 'daily_average', 'control', None, 'kgco2'),
             ('carbon_emissions_baseline_daily_average_kgco2', 'emissions', 'daily_average', 'baseline', None, 'kgco2'),
             ('carbon_emissions_delta_daily_average_kgco2', 'emissions', 'daily_average', 'delta', None, 'kgco2'),
+            ('carbon_emissions_control_member_sum_total_kgco2', 'emissions', 'total', 'control', 'member_sum', 'kgco2'),
+            ('carbon_emissions_baseline_member_sum_total_kgco2', 'emissions', 'total', 'baseline', 'member_sum', 'kgco2'),
+            ('load_factor_penalty_daily_average_to_baseline_ratio', 'energy_grid', 'shape_quality', 'load_factor_penalty_daily_average_to_baseline', None, 'ratio'),
+            ('load_factor_penalty_monthly_average_to_baseline_ratio', 'energy_grid', 'shape_quality', 'load_factor_penalty_monthly_average_to_baseline', None, 'ratio'),
             ('pv_curtailment_total_kwh', 'solar_self_consumption', 'total', 'curtailment', None, 'kwh'),
             ('pv_generation_total_kwh', 'solar_self_consumption', 'total', 'generation', None, 'kwh'),
             ('pv_export_total_kwh', 'solar_self_consumption', 'total', 'export', None, 'kwh'),
@@ -2627,7 +2822,7 @@ class CityLearnKPIService:
 
             for building_name in building_names:
                 totals = dr_by_building.get(building_name, {})
-                for suffix, key in dr_metrics:
+                for suffix, key in dr_metrics + [('uncapped_contribution_total_kwh', 'demand_response_uncapped_contribution_total_kwh')]:
                     put('building', building_name, dr_name('building', suffix), totals.get(key))
 
         robustness_service = getattr(env, '_robustness_service', None)
@@ -2692,6 +2887,28 @@ class CityLearnKPIService:
             v2('district', 'energy_grid', 'ratio_to_baseline', 'export_total', None, 'ratio'),
             self._safe_div(env_export_c, env_export_b),
         )
+
+        # District ratios to the baseline are ratios of the district totals. The
+        # legacy rows hold the mean of the building ratios (the v2 value up to
+        # 3.6.0), which is kept under the `building_mean` variant.
+        for family, metric, control_metric, baseline_metric, variant, unit, signed in (
+            ('energy_grid', 'import_total', 'import', 'import', 'control', 'kwh', False),
+            ('energy_grid', 'net_exchange_total', 'net_exchange', 'net_exchange', 'control', 'kwh', True),
+            ('emissions', 'total', 'control', 'baseline', None, 'kgco2', False),
+        ):
+            ratio_key = ('district', 'District', v2('district', family, 'ratio_to_baseline', metric, None, 'ratio'))
+            building_mean = records.pop(ratio_key, {}).get('value')
+            put('district', 'District', v2('district', family, 'ratio_to_baseline', metric, 'building_mean', 'ratio'), building_mean)
+            if family == 'emissions':
+                control_key = v2('district', family, 'total', control_metric, None, unit)
+                baseline_key = v2('district', family, 'total', baseline_metric, None, unit)
+            else:
+                control_key = v2('district', family, 'total', control_metric, variant, unit)
+                baseline_key = v2('district', family, 'total', baseline_metric, 'baseline', unit)
+            control_total = records.get(('district', 'District', control_key), {}).get('value')
+            baseline_total = records.get(('district', 'District', baseline_key), {}).get('value')
+            put('district', 'District', ratio_key[2],
+                (self._signed_ratio if signed else self._safe_div)(control_total, baseline_total))
 
         # Cost metrics: market-enabled scenarios settle both control and baseline with same rules.
         control_condition_by_building = {}

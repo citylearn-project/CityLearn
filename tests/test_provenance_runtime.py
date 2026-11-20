@@ -19,7 +19,7 @@ def test_market_and_bau_emissions_share_the_same_boundary(tmp_path):
     assert metrics[key] == pytest.approx(.2)
     assert metrics[key.replace('_kgco2', '_business_as_usual_kgco2')] == pytest.approx(.2)
     assert metrics[key.replace('_kgco2', '_delta_to_business_as_usual_kgco2')] == pytest.approx(0.)
-    assert frame.attrs['energy_accounting']['kpi_definition_version'] == '1.9.0'
+    assert frame.attrs['energy_accounting']['kpi_definition_version'] == '2.0.0'
     manifest = experiment_manifest(env)
     assert manifest['community_market']['grid_export_price'] == 0.
     assert manifest['community_market']['local_price_ratio_to_grid_import'] == .8

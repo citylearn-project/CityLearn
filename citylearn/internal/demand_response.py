@@ -114,7 +114,7 @@ class CityLearnDemandResponseService:
 
     def get_metadata(self) -> Mapping[str, Any]:
         return {
-            "definition_version": "demand-response-audit-v1",
+            "definition_version": "demand-response-audit-v2",
             "enabled": bool(self.enabled),
             "requests_file": self.requests_file,
             "baseline_method": self.baseline_method,
@@ -125,7 +125,7 @@ class CityLearnDemandResponseService:
             "effective_baseline_seconds": self._baseline_window_steps()*self._step_hours()*3600.,
             "population_rule": "stable_topology_from_preparation_through_settled_interval",
             "purpose_rule": "explicit_service_stress_or_unspecified; never_inferred_from_shortfall",
-            "aggregation": {"signed_delivery_and_cash": "additive", "member_credit": "uncapped_positive_contribution", "member_shortfall": "equal_share_without_district_tolerance; not_additive"},
+            "aggregation": {"signed_delivery_and_cash": "additive", "member_requested": "equal_share", "member_credit": "district_credit_by_revenue_weight; additive", "member_shortfall": "district_shortfall_by_penalty_weight; additive", "member_uncapped_contribution": "positive_contribution; diagnostic; not_additive"},
         }
 
     def observation_values(self) -> Mapping[str, float]:
@@ -191,7 +191,7 @@ class CityLearnDemandResponseService:
     def summarize(self, building_names: Sequence[str]) -> Tuple[Mapping[str, Mapping[str, float]], Mapping[str, float]]:
         building_names = [str(name) for name in building_names]
         by_building = {
-            name: self._empty_summary()
+            name: dict(self._empty_summary(), demand_response_uncapped_contribution_total_kwh=0.0)
             for name in building_names
         }
         district = self._empty_summary()
@@ -453,6 +453,8 @@ class CityLearnDemandResponseService:
             request=request,
             baseline=baseline,
             requested_kwh=requested_kwh,
+            credited_kwh=credited_kwh,
+            shortfall_kwh=shortfall_kwh,
             revenue_eur=revenue,
             penalty_eur=penalty,
             time_step=t,
@@ -488,10 +490,20 @@ class CityLearnDemandResponseService:
         request: DemandResponseRequest,
         baseline: Mapping[str, Any],
         requested_kwh: float,
+        credited_kwh: float,
+        shortfall_kwh: float,
         revenue_eur: float,
         penalty_eur: float,
         time_step: int,
     ) -> List[Mapping[str, Any]]:
+        """Split one district settlement row over the active members.
+
+        Credited energy and revenue follow the revenue weights, and shortfall and
+        penalty follow the penalty weights, so the member values add up to the
+        district values and keep its tolerance and its cap at the target. The
+        request is split equally. `uncapped_contribution_kwh` is the member's own
+        positive contribution, a diagnostic that does not add up to the district.
+        """
         step_hours = self._step_hours()
         baselines = dict(baseline.get("building_baseline_power_kw", {}) or {})
         active_buildings = list(self.env.buildings)
@@ -540,8 +552,9 @@ class CityLearnDemandResponseService:
                     "requested_kwh": requested_kwh / count,
                     "valid_requested_kwh": requested_kwh / count,
                     "delivered_kwh": contribution_kwh,
-                    "credited_kwh": max(contribution_kwh, 0.0),
-                    "shortfall_kwh": max(0.0, requested_kwh / count - contribution_kwh),
+                    "credited_kwh": credited_kwh * revenue_weight,
+                    "shortfall_kwh": shortfall_kwh * penalty_weight,
+                    "uncapped_contribution_kwh": max(contribution_kwh, 0.0),
                     "revenue_eur": building_revenue,
                     "penalty_eur": building_penalty,
                     "net_revenue_eur": building_revenue - building_penalty,
@@ -565,6 +578,7 @@ class CityLearnDemandResponseService:
                     "delivered_kwh": 0.0,
                     "credited_kwh": 0.0,
                     "shortfall_kwh": 0.0,
+                    "uncapped_contribution_kwh": 0.0,
                     "revenue_eur": 0.0,
                     "penalty_eur": 0.0,
                     "net_revenue_eur": 0.0,
@@ -679,6 +693,8 @@ class CityLearnDemandResponseService:
         target["demand_response_revenue_total_eur"] += CityLearnDemandResponseService._to_float(row.get("revenue_eur"), 0.0)
         target["demand_response_penalty_total_eur"] += CityLearnDemandResponseService._to_float(row.get("penalty_eur"), 0.0)
         target["demand_response_net_revenue_total_eur"] += CityLearnDemandResponseService._to_float(row.get("net_revenue_eur"), 0.0)
+        if "demand_response_uncapped_contribution_total_kwh" in target:
+            target["demand_response_uncapped_contribution_total_kwh"] += CityLearnDemandResponseService._to_float(row.get("uncapped_contribution_kwh"), 0.0)
         invalid = row.get("invalid_baseline")
         if invalid is None:
             invalid = 0.0 if bool(row.get("baseline_valid", False)) else 1.0

@@ -68,7 +68,11 @@ ratio_to_business_as_usual_x = control_x / business_as_usual_x
 self_consumption = (solar_generation_total - export_total) / solar_generation_total
 ```
 
-Safe division devolve `None`/placeholder quando o denominador nao e fisicamente valido.
+Os ratios district dividem totais district: `district_..._ratio_to_baseline_x` e o total control do distrito sobre o total baseline do distrito, como todos os ratios `ratio_to_business_as_usual`. Uma media dos ratios dos buildings nao e um ratio district; a API legacy `evaluate()` mantem essa media como linha district, e `evaluate_v2()` publica-a com a variante `building_mean` (ver [Definicoes alteradas depois da 3.6.0](#definicoes-alteradas-depois-da-360)).
+
+As emissoes district sao as emissoes do import da rede do distrito, `max(sum_membros(net_t), 0)` em cada step, por isso a energia que um membro exporta e outro importa no mesmo step nao tem carbono da rede. Cada kWh importado usa a intensidade carbonica do membro que o importa; quando os membros que importam tem intensidades diferentes, a parte de cada import coberta localmente segue a alocacao ponderada do ledger de proveniencia de energia, e o total control iguala `district_energy_provenance_external_purchase_emissions_kgco2`. As emissoes de um building sao o import do proprio membro vezes a sua intensidade carbonica, por isso nao somam ao total district quando os membros partilham energia.
+
+Safe division devolve `None` (indefinido) quando o control ou a referencia falta ou nao e finito; um valor indefinido nunca e lido como zero. Para uma referencia dentro da tolerancia numerica de zero devolve `1.0` ("sem alteracao") se o control tambem for praticamente zero, e `None` caso contrario. A excecao sao os ratios de servico dos deferrable appliances ao BAU: quando nenhum ciclo era devido em nenhum dos runs (os dois totais sao zero), sao indefinidos.
 
 Os ratios continuam lower-is-better quando o total de referencia e negativo. O net exchange (legacy `zero_net_energy`) e os totais de custo podem ser negativos, para um exportador liquido ou depois de receitas do community market. Os seus ratios ao baseline e ao BAU usam
 
@@ -78,6 +82,15 @@ ratio_x = 1 + (control_x - reference_x) / |reference_x|  se reference_x < 0
 ```
 
 Assim 1 continua a significar sem alteracao e um total control maior da um ratio maior. Para uma referencia positiva e o ratio simples. Import, export e emissoes nunca sao negativos e usam o ratio simples.
+
+Os KPIs de forma da rede usam potencia, `net_t / step_hours`:
+
+```text
+load_factor_penalty = media nas janelas de (1 - mean(import_w) / max(import_w))
+ramping_average     = sum_t max(net_t - net_(t-1), 0) / transicoes
+```
+
+com `import = max(net, 0)` e janelas diarias (24 h) ou mensais (730 h). Uma janela cujo pico de import e zero nao tem load factor e fica fora da media; o KPI e indefinido quando nenhuma janela esta definida. `ramping_average` e uma media por transicao de step, por isso nao cresce com o comprimento do episodio.
 
 O counterfactual `baseline` segue o outage da rede do run controlado: nos time steps de power outage as series net `*_without_storage*`, e as suas series de custo e emissoes, sao zero. Nenhum dos runs troca energia com a rede enquanto ela esta em baixo.
 
@@ -151,7 +164,9 @@ Semantica das tolerancias EV no departure:
 | service level | ratio | `completed / (completed + missed)`. |
 | served energy | kWh | Energia dos ciclos completados. |
 | unserved energy | kWh | Energia dos ciclos falhados. |
-| average start delay | hours | Media de `start - earliest_start`. |
+| average start delay | hours | Media de `start - earliest_start` nos ciclos completados; indefinido quando nenhum ciclo foi completado. |
+
+O service level e o average start delay sao indefinidos, e nao 0 ou 1, nas janelas em que nenhum ciclo era devido ou nenhum foi completado; os seus deltas e ratios ao BAU tambem. Preserve os valores em falta ao exportar ou comparar.
 
 ## KPIs Demand Response
 
@@ -169,8 +184,11 @@ Disponiveis quando `demand_response.enabled=true`.
 | `demand_response_penalty_total_eur` | building/district | eur | Penalizacao por shortfall. |
 | `demand_response_net_revenue_total_eur` | building/district | eur | Receita menos penalizacao. |
 | `demand_response_invalid_baseline_time_step_count` | building/district | count | Steps ativos excluidos da economia porque a baseline pre-evento era invalida. |
+| `demand_response_uncapped_contribution_total_kwh` | building | kWh | Diagnostico: a contribuicao positiva do proprio membro, sem a tolerancia e o limite do distrito. Nao soma ao distrito. |
 
 Os nomes levam prefixo `district_` ou `building_`, por exemplo `district_demand_response_net_revenue_total_eur`.
+
+As linhas building repartem o settlement district de cada step. O pedido e repartido em partes iguais pelos membros ativos. A energia creditada e a receita do distrito sao alocadas pelos pesos de receita (a parte de cada membro nas contribuicoes positivas), e o shortfall e a penalizacao do distrito pelos pesos de penalizacao (a parte de cada membro nas contribuicoes negativas ou, sem estas, na baseline pre-evento). A energia creditada, o shortfall, o delivery, a receita e a penalizacao dos buildings somam assim aos valores district e respeitam a tolerancia e o limite do distrito ao target. A compliance de um building e a sua energia creditada sobre a sua parte igual do pedido, limitada a 1, por isso a media das compliance dos buildings nunca excede o ratio district.
 
 ## KPIs Robustez
 
@@ -211,6 +229,27 @@ Condicionais a `community_market.enabled=true`.
 | settled cost | building/district | eur | Custo apos settlement local. |
 | counterfactual cost | building/district | eur | Custo sem mercado local. |
 | market savings | building/district | eur | Diferenca entre counterfactual e settled. |
+
+## Definicoes alteradas depois da 3.6.0
+
+A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_accounting` de `evaluate_v2()`) e `2.0.0`. Estas linhas de `evaluate_v2()` mudaram de definicao. Onde um valor da 3.6.0 pode ter sido usado em comparacoes publicadas, fica com um nome proprio, e as linhas legacy de `evaluate()` mantem as suas definicoes da 3.6.0.
+
+| KPI | Nova definicao | Valor da 3.6.0 mantido como |
+|---|---|---|
+| `district_energy_grid_ratio_to_baseline_import_total_ratio` | Total de import do distrito sobre o total baseline do distrito. | `district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio`; legacy `electricity_consumption_total` |
+| `district_energy_grid_ratio_to_baseline_net_exchange_total_ratio` | Ratio com sinal dos totais de net exchange do distrito. | `district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio`; legacy `zero_net_energy` |
+| `district_emissions_ratio_to_baseline_total_ratio` | Total de emissoes do distrito sobre o total baseline do distrito. | `district_emissions_ratio_to_baseline_total_building_mean_ratio`; legacy `carbon_emissions_total` |
+| `district_emissions_total_{control,baseline,business_as_usual}_kgco2` e os seus deltas, medias diarias e ratios | Emissoes do import liquido do distrito. | `district_emissions_total_{control,baseline,business_as_usual}_member_sum_kgco2` |
+| `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_to_baseline_ratio` | Load factor da potencia importada; janelas sem import sao indefinidas. | `..._to_baseline_signed_net_ratio`; legacy `daily_one_minus_load_factor_average`, `monthly_one_minus_load_factor_average` |
+| `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_{business_as_usual,delta_to_business_as_usual}_ratio`, `..._to_business_as_usual_ratio` | Como acima. | `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_signed_net_*` |
+| `district_energy_grid_shape_quality_ramping_average_{business_as_usual,delta_to_business_as_usual}_kw` | Rampa ascendente media por transicao de step. O ratio ao BAU nao muda. | `district_energy_grid_shape_quality_ramping_total_{business_as_usual,delta_to_business_as_usual}_kw` |
+| `*_deferrable_appliance_service_average_start_delay_hours` | Indefinido quando nenhum ciclo foi completado (era 0). | nenhum |
+| Ratios com control ou referencia indefinidos | Indefinidos (eram lidos como 0, ou 1 quando ambos eram indefinidos). | nenhum |
+| `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio` com os dois totais a zero | Indefinido (era 1). | nenhum |
+| `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Alocados a partir do settlement district. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostico) |
+| Taxas e medias EV de departure, service levels dos deferrable appliances e das escadas rolantes, start delay e self-consumption solar do portfolio (`MultiCommunityEnv`) | Agregadas a partir dos seus denominadores aditivos. | nenhum |
+
+Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo passa a ser indefinida; antes dava uma penalizacao infinita ou negativa, que a safe division reportava como um 0 perfeito.
 
 ## Export
 

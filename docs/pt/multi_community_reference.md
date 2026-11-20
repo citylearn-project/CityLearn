@@ -140,12 +140,26 @@ So KPIs district sao agregados:
 |---|---|
 | `_kwh`, `_eur`, `_kgco2`, `_count` | Soma entre comunidades. |
 | `_ratio` de um total control sobre um total de referencia | Ratio dos totais somados, por exemplo `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
+| Taxas e medias com denominadores aditivos | Agregadas (pooled): media ponderada pelo denominador, por exemplo `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
 | Outros `_ratio`, `_percent` | Media ponderada por `weight`. |
-| `_kw`, `_c`, `_hours` e outros point metrics | Nao agregados na v1. |
+| `_kw`, `_c`, outros `_hours` e outros point metrics | Nao agregados na v1. |
 
-Os ratios reconstruidos a partir dos totais somados sao os ratios `ratio_to_baseline` e `ratio_to_business_as_usual` de custo, emissoes, import, export e net exchange da rede, e os ratios `ratio_to_business_as_usual` de geracao e export solar, carga EV e export V2G, carga, descarga e throughput da bateria, e contagens de ciclos e energia dos deferrable appliances. Usam apenas comunidades que reportam os dois totais, ignoram `weight` como os totais somados, e mantem a regra lower-is-better da [referencia de KPIs](kpis_reference.md#equacoes-base) para totais negativos de net exchange e custo. Um `ratio_to_baseline` district de import, net exchange ou emissoes e a media dos ratios dos buildings, por isso o ratio de um portfolio com uma comunidade pode diferir dele.
+Os ratios reconstruidos a partir dos totais somados sao os ratios `ratio_to_baseline` e `ratio_to_business_as_usual` de custo, emissoes, import, export e net exchange da rede, e os ratios `ratio_to_business_as_usual` de geracao e export solar, carga EV e export V2G, carga, descarga e throughput da bateria, e contagens de ciclos e energia dos deferrable appliances. Usam apenas comunidades que reportam os dois totais, ignoram `weight` como os totais somados, e mantem a regra lower-is-better da [referencia de KPIs](kpis_reference.md#equacoes-base) para totais negativos de net exchange e custo. O ratio de um portfolio com uma comunidade e igual ao ratio district.
 
-Os ratios sem totais aditivos continuam medias ponderadas: ratios de forma da rede (picos, ramping e penalidades de load factor), proporcoes de conforto e resiliencia, taxas de departure EV, service levels, shares, equity, ratios de auditoria e cobertura, capacity fade da bateria, e os ratios `ratio_to_business_as_usual` de capacity fade e ciclos equivalentes da bateria, self-consumption, service level e start delay.
+As taxas e medias agregadas sao ponderadas pelos seus denominadores aditivos, por isso igualam o ratio entre o numerador e o denominador agregados e ignoram `weight`:
+
+| Taxa ou media | Peso |
+|---|---|
+| Taxas EV de departure success, minimum acceptable e within tolerance; medias de SOC deficit, shortfall, surplus e absolute error | `ev_events_departure_count` |
+| Taxas EV `*_feasible` | O `ev_events_departure_*_feasible_count` correspondente |
+| Service level dos deferrable appliances (control e BAU) | Ciclos completed mais missed |
+| Average start delay dos deferrable appliances (control e BAU) | Ciclos completed |
+| Service level das escadas rolantes | Passageiros pedidos |
+| Self-consumption solar (control e BAU) | Geracao solar |
+
+Os deltas e ratios ao BAU do service level, do start delay e da self-consumption agregados sao calculados entre os valores control e BAU agregados. As comunidades cujo valor e indefinido nao tem peso.
+
+Os ratios sem totais aditivos continuam medias ponderadas: ratios de forma da rede (picos, ramping e penalidades de load factor), proporcoes de conforto e resiliencia, shares, equity, ratios de auditoria e cobertura, compliance de demand response, capacity fade da bateria, e os ratios `ratio_to_business_as_usual` de capacity fade e ciclos equivalentes da bateria.
 
 Os nomes de portfolio substituem o prefixo `district_` por `portfolio_`, por exemplo `district_demand_response_revenue_total_eur` vira `portfolio_demand_response_revenue_total_eur`.
 

@@ -45,7 +45,8 @@ def deferrable_records(kpi: "CityLearnKPIService", kpi_buildings):
 
         requested = building_summary['completed_cycles'] + building_summary['missed_cycles']
         service_level = None if requested <= 0.0 else building_summary['completed_cycles'] / requested
-        avg_delay = 0.0 if building_delay_weight <= 0.0 else building_delay_weighted_sum / building_delay_weight
+        # Without a completed cycle the start delay is undefined, not zero.
+        avg_delay = None if building_delay_weight <= 0.0 else building_delay_weighted_sum / building_delay_weight
         extended_building_rows.extend([
             kpi._metric('deferrable_appliance_completed_cycles_count', building_summary['completed_cycles'], building.name, 'building'),
             kpi._metric('deferrable_appliance_missed_cycles_count', building_summary['missed_cycles'], building.name, 'building'),
@@ -62,7 +63,7 @@ def deferrable_records(kpi: "CityLearnKPIService", kpi_buildings):
 
     district_requested = district_deferrable['completed_cycles'] + district_deferrable['missed_cycles']
     district_service_level = None if district_requested <= 0.0 else district_deferrable['completed_cycles'] / district_requested
-    district_avg_delay = 0.0 if delay_weight <= 0.0 else delay_weighted_sum / delay_weight
+    district_avg_delay = None if delay_weight <= 0.0 else delay_weighted_sum / delay_weight
     extended_district_rows.extend([
         kpi._metric('deferrable_appliance_completed_cycles_count', district_deferrable['completed_cycles'], 'District', 'district'),
         kpi._metric('deferrable_appliance_missed_cycles_count', district_deferrable['missed_cycles'], 'District', 'district'),

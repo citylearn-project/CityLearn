@@ -64,6 +64,57 @@ Pacote de trabalho 3 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-
 - **Um evento de topologia no step terminal** deixa de acrescentar um intervalo não executado às séries dos edifícios.
 - **Um step de controlo diferente do step do dataset é recusado.** O CityLearn lê uma linha de dados por step de controlo e não reamostra, pelo que essa execução avançava o calendário, os preços e os horários dos VE ao ritmo errado. Passa a levantar um `ValueError`; `time_step_ratio_mode='compress'` mantém o comportamento da 3.6.0. O step do dataset é inferido de todas as linhas em vez das duas primeiras, e o argumento `time_step_ratio` tem de coincidir com ele. Os datasets incluídos não são afetados. ([#234](https://github.com/citylearn-project/CityLearn/issues/234))
 
+### Definições dos KPIs
+
+Estas alterações mudam valores de KPIs, não as simulações. A versão das definições
+de KPIs passa a `2.0.0`; o [guia de migração](../migration.md#kpi-definitions)
+indica o que repetir, e a [referência de KPIs](kpis_reference.md#definicoes-alteradas-depois-da-360)
+lista cada linha alterada e o nome que guarda o seu valor da 3.6.0.
+
+- **Ratios do distrito à baseline.** Os ratios de import, net exchange e
+  emissões do distrito à baseline eram a média simples dos ratios dos
+  edifícios, por isso dominados pelos edifícios pequenos com ratios extremos.
+  Passam a ser ratios dos totais do distrito, como os ratios de custo, export
+  e ao BAU. Os valores da 3.6.0 ficam em `*_building_mean_ratio`.
+  ([#237](https://github.com/citylearn-project/CityLearn/issues/237))
+- **Emissões do distrito.** As emissões do distrito somavam as emissões de
+  cada membro, enquanto o import do distrito é líquido, por isso a partilha
+  local nunca reduzia as emissões. Passam a ser as emissões do import líquido
+  do distrito e coincidem com `external_purchase_emissions` da proveniência. A
+  soma pelos membros fica em `district_emissions_total_*_member_sum_kgco2`.
+  ([#238](https://github.com/citylearn-project/CityLearn/issues/238))
+- **Settlement de demand response por edifício.** A energia creditada e o
+  shortfall de cada edifício eram uma contribuição sem limite e uma parte
+  igual do pedido sem tolerância, por isso não somavam ao distrito e um
+  edifício podia reportar compliance total quando o pedido falhava. Passam a
+  ser os valores do distrito alocados com os pesos de receita e de
+  penalização. Os KPIs do distrito e os fluxos monetários não mudam; a
+  contribuição sem limite fica como diagnóstico. A versão da definição passa a
+  `demand-response-audit-v2`.
+  ([#240](https://github.com/citylearn-project/CityLearn/issues/240))
+- **Penalizações de load factor.** Eram calculadas sobre a série net com
+  sinal, por isso uma janela cujo pico não era positivo dava uma penalização
+  infinita ou negativa, reportada como um 0 perfeito. `evaluate_v2()` usa
+  agora a potência importada e deixa indefinidas as janelas sem import; os
+  valores com sinal ficam em `*_signed_net_*`, e as linhas legacy de
+  `evaluate()` mantêm a série com sinal.
+  ([#241](https://github.com/citylearn-project/CityLearn/issues/241))
+- **KPIs de serviço indefinidos.** O atraso de arranque dos equipamentos
+  diferíveis sem ciclos completados, os ratios com um operando em falta e os
+  ratios de serviço dos equipamentos diferíveis ao BAU quando nenhum ciclo era
+  devido passam a ficar em falta, em vez de 0 ou 1.
+  ([#243](https://github.com/citylearn-project/CityLearn/issues/243))
+- **Taxas do portfolio.** `MultiCommunityEnv` agrega as taxas e médias de
+  partida dos VE, os níveis de serviço, o atraso de arranque e o
+  autoconsumo do portfolio a partir dos seus denominadores aditivos, em vez de
+  os ponderar por comunidade.
+  ([#244](https://github.com/citylearn-project/CityLearn/issues/244))
+- **Média de ramping do BAU.**
+  `district_energy_grid_shape_quality_ramping_average_business_as_usual_kw` era
+  a soma das rampas ascendentes no episódio. Passa a ser a média por transição
+  de passo; a soma fica em `*_ramping_total_*_kw`.
+  ([#245](https://github.com/citylearn-project/CityLearn/issues/245))
+
 ## v3.6.0 - 2026-11-19
 
 A 3.6.0 reúne 26 pull requests: correções da física, dos KPIs, das baselines, dos
