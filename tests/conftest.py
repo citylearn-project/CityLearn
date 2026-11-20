@@ -20,8 +20,19 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
+@pytest.fixture(scope="session")
+def _test_dataset_cache(tmp_path_factory) -> Path:
+    """A dataset cache private to this pytest process (one per xdist worker).
+
+    Tests used to copy datasets into the real user cache (``~/.cache/citylearn/<tag>``), which overwrote
+    downloaded datasets and raced when several workers or test runs copied the same folder (#256).
+    """
+
+    return tmp_path_factory.mktemp("citylearn_dataset_cache")
+
+
 @pytest.fixture(autouse=True)
-def _prefer_local_datasets(monkeypatch, request):
+def _prefer_local_datasets(monkeypatch, request, _test_dataset_cache):
     """Ensure tests use the repo's datasets without hitting the network."""
 
     if request.node.get_closest_marker("use_real_dataset_resolution") is not None:
@@ -51,7 +62,7 @@ def _prefer_local_datasets(monkeypatch, request):
                 _copy_dataset(src, dest)
                 return str(dest / "schema.json")
 
-            cache_dir = Path(self.cache_directory) / "datasets" / name
+            cache_dir = _test_dataset_cache / "datasets" / name
             _copy_dataset(src, cache_dir)
             return str(cache_dir / "schema.json")
 

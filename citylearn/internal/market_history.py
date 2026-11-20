@@ -20,6 +20,8 @@ TOTAL_FIELDS = {
     'community_settled_cost_total_eur': 'settled_cost_eur',
     'community_counterfactual_cost_total_eur': 'counterfactual_cost_eur',
     'community_market_savings_total_eur': 'market_savings_eur',
+    # Money the market keeps (+) or pays (-): importers' local payments minus exporters' local revenue.
+    'community_operator_balance_total_eur': 'operator_balance_eur',
 }
 
 

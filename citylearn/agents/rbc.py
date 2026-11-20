@@ -407,9 +407,14 @@ class BasicBatteryRBC(BasicRBC):
         HourRBC.action_map.fset(self, action_map)
 
 class BasicElectricVehicleRBC_ReferenceController(BasicRBC): #change the name
-    r"""A rule-based controller that charges EVs to the maximum of the chargers and to the maximum of the battery upon connection.
+    r"""An hour-of-day rule-based reference controller with an EV, battery, HVAC and DHW schedule.
 
-    The EV battery is charged at the maximum available charging power whenever it is connected.
+    It does not charge EVs at full power whenever they are connected. The EV action follows a fixed daily
+    schedule: 0.4 before 07:00, 1.0 from 07:00, -1.0 (full discharge) from 10:00, -0.6 from 15:00 and 0.8
+    from 20:00. The battery discharges at -0.08 from 09:00 to 21:00 and charges at 0.091 otherwise; DHW
+    storage and deferrable appliance actions are always 1. Actions it does not know raise ``ValueError``.
+    For EV charging that follows the users' departure targets, use the rule baselines in
+    :py:mod:`citylearn.agents.baseline`.
 
     Parameters
     ----------

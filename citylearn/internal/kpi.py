@@ -1381,6 +1381,7 @@ class CityLearnKPIService:
                 'community_settled_cost_total_eur': 0.0,
                 'community_counterfactual_cost_total_eur': 0.0,
                 'community_market_savings_total_eur': 0.0,
+                'community_operator_balance_total_eur': 0.0,
             }
             for name in building_names
         }
@@ -1399,6 +1400,7 @@ class CityLearnKPIService:
                 target['community_settled_cost_total_eur'] += self._to_scalar(row.get('settled_cost_eur', row.get('settled_cost')), 0.0)
                 target['community_counterfactual_cost_total_eur'] += self._to_scalar(row.get('counterfactual_cost_eur'), 0.0)
                 target['community_market_savings_total_eur'] += self._to_scalar(row.get('market_savings_eur'), 0.0)
+                target['community_operator_balance_total_eur'] += self._to_scalar(row.get('operator_balance_eur'), 0.0)
 
         district = {
             key: float(sum(values[key] for values in by_building.values()))
@@ -1410,6 +1412,7 @@ class CityLearnKPIService:
                 'community_settled_cost_total_eur',
                 'community_counterfactual_cost_total_eur',
                 'community_market_savings_total_eur',
+                'community_operator_balance_total_eur',
             ]
         }
 
@@ -2689,6 +2692,7 @@ class CityLearnKPIService:
             ('community_settled_cost_daily_average_eur', 'cost', 'community_market', 'settled', 'daily_average', 'eur'),
             ('community_counterfactual_cost_daily_average_eur', 'cost', 'community_market', 'counterfactual', 'daily_average', 'eur'),
             ('community_market_savings_daily_average_eur', 'cost', 'community_market', 'savings', 'daily_average', 'eur'),
+            ('community_operator_balance_total_eur', 'cost', 'community_market', 'operator_balance', 'total', 'eur'),
             ('community_local_share_of_demand', 'solar_self_consumption', 'community_market', 'local_share_of_demand', None, 'ratio'),
             ('community_local_share_of_export', 'solar_self_consumption', 'community_market', 'local_share_of_export', None, 'ratio'),
             ('equity_relative_benefit_percent', 'equity', 'benefit', 'relative', None, 'percent'),
