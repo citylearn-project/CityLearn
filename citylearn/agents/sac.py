@@ -1,5 +1,6 @@
+import inspect
 import random
-from typing import Any, List, Mapping, Union
+from typing import Any, Callable, Dict, List, Mapping, Set, Union
 import numpy as np
 import numpy.typing as npt
 
@@ -10,6 +11,7 @@ try:
 except (ModuleNotFoundError, ImportError) as e:
     raise Exception("This functionality requires you to install torch. You can install torch by : pip install torch torchvision, or for more detailed instructions please visit https://pytorch.org.")
 
+from citylearn.agents.base import Agent
 from citylearn.agents.rbc import RBC
 from citylearn.agents.rlc import RLC
 from citylearn.citylearn import CityLearnEnv
@@ -422,48 +424,87 @@ class SAC(RLC):
         return encoders
 
 class SACRBC(SAC):
-    r"""Uses :py:class:`citylearn.agents.rbc.RBC` to select actions during exploration before using :py:class:`citylearn.agents.sac.SAC`.
+    r"""Uses a rule-based controller to select actions during exploration before using :py:class:`citylearn.agents.sac.SAC`.
 
     Parameters
     ----------
     env: CityLearnEnv
         CityLearn environment.
-    rbc: RBC
-        :py:class:`citylearn.agents.rbc.RBC` or child class, used to select actions during exploration.
-    
+    rbc: Union[Agent, type, str], optional
+        Controller used to select actions during exploration: an :py:class:`citylearn.agents.base.Agent` instance
+        built on the same `env`, an agent class, or the import path of an agent class, e.g.
+        `'citylearn.agents.baseline.RBCBasicPolicy'`. Any agent qualifies, including
+        :py:class:`citylearn.agents.rbc.RBC` and its subclasses and the rule baselines of
+        :py:mod:`citylearn.agents.baseline`. Defaults to :py:class:`citylearn.agents.rbc.RBC`.
+
     Other Parameters
     ----------------
     **kwargs : Any
-        Other keyword arguments used to initialize super class.
+        Other keyword arguments used to initialize super class. When `rbc` is a class or an import path, the
+        keyword arguments that the learner's own constructors do not declare, such as `action_map` for
+        :py:class:`citylearn.agents.rbc.HourRBC` or the hyperparameters of a rule baseline, are also passed to
+        the `rbc` constructor. The learner's hyperparameters (e.g. `lr`, `batch_size`, `hidden_dimension`) are not.
     """
     
-    def __init__(self, env: CityLearnEnv, rbc: Union[RBC, str] = None, **kwargs: Any):
+    def __init__(self, env: CityLearnEnv, rbc: Union[Agent, type, str] = None, **kwargs: Any):
         super().__init__(env, **kwargs)
         self.__set_rbc(rbc, **kwargs)
 
     @property
-    def rbc(self) -> RBC:
-        """:py:class:`citylearn.agents.rbc.RBC` class child class or string path to an RBC 
-        class e.g. 'citylearn.agents.rbc.RBC', used to select actions during exploration."""
+    def rbc(self) -> Agent:
+        """Controller used to select actions during exploration."""
 
         return self.__rbc
-    
-    def __set_rbc(self, rbc: RBC, **kwargs):
+
+    @classmethod
+    def _learner_parameter_names(cls) -> Set[str]:
+        """Keyword arguments declared by the learner's constructors, which are not forwarded to the RBC."""
+
+        names = {'action_scaling_coefficienct'}  # deprecated spelling accepted by RLC
+
+        for klass in cls.__mro__:
+            if not (isinstance(klass, type) and issubclass(klass, Agent)) or '__init__' not in vars(klass):
+                continue
+
+            for name, parameter in inspect.signature(vars(klass)['__init__']).parameters.items():
+                if parameter.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
+                    names.add(name)
+
+        return names - {'self', 'env', 'rbc'}
+
+    def __set_rbc(self, rbc: Union[Agent, type, str, Callable[..., Agent]], **kwargs):
+        learner_parameters = self._learner_parameter_names()
+        rbc_kwargs: Dict[str, Any] = {k: v for k, v in kwargs.items() if k not in learner_parameters}
+
         if rbc is None:
-            rbc = RBC(self.env, **kwargs)
+            rbc = RBC(self.env, **rbc_kwargs)
         
-        elif isinstance(rbc, RBC):
-            pass
+        elif isinstance(rbc, Agent):
+            self.__validate_rbc_instance(rbc)
 
         elif isinstance(rbc, str):
-            rbc = self.env.unwrapped.load_agent(rbc, env=self.env, **kwargs)
+            rbc = self.env.unwrapped.load_agent(rbc, env=self.env, **rbc_kwargs)
+
+        elif callable(rbc):
+            rbc = rbc(self.env, **rbc_kwargs)
 
         else:
-            rbc = rbc(self.env, **kwargs)
+            raise TypeError(
+                'rbc must be an Agent instance, an Agent class or the import path of an Agent class, '
+                f'got {type(rbc).__name__}.'
+            )
         
         self.__rbc = rbc
 
+    def __validate_rbc_instance(self, rbc: Agent):
+        # The rule baselines read the entity observations of their own environment, not the observations passed
+        # to predict(), so one built on another environment would act on that environment's state.
+        from citylearn.agents.baseline import _RuleBaselineAgent
+
+        if isinstance(rbc, _RuleBaselineAgent) and rbc.env.unwrapped is not self.env.unwrapped:
+            raise ValueError(f'{type(rbc).__name__} passed as rbc must be built on the same environment as the agent.')
+
     def get_exploration_prediction(self, observations: List[float]) -> List[float]:
-        """Return actions using :class:`RBC`."""
+        """Return the actions of :attr:`rbc`."""
 
         return self.rbc.predict(observations)

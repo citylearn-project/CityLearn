@@ -3,6 +3,27 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## Por publicar
+
+- **Agentes genéricos na interface de entidades.** Na interface de entidades os
+  espaços de ações e de observações são dicionários de tabelas de entidades, pelo
+  que `Agent` e `ZeroActionBaselineAgent` falhavam com `AttributeError` no
+  primeiro `predict()`. Passam a usar os espaços planos e a devolver vetores de
+  ações no formato plano, que a interface de entidades aceita, também com
+  topologia dinâmica. `SAC`, `SACRBC`, `MARLISA`, `MARLISARBC` e
+  `TabularQLearning` leem vetores de observações planos e passam a levantar um
+  `ValueError` que indica a interface plana. As execuções na interface plana não
+  mudam ([#250](https://github.com/citylearn-project/CityLearn/issues/250)).
+- **Baselines de regras como controlador de exploração do SACRBC e do
+  MARLISARBC.** `rbc` aceita qualquer instância de agente, classe de agente ou
+  caminho de importação, incluindo `RBCBasicPolicy`, `RBCSmartPolicy`,
+  `RBCCommunityPolicy` e `BusinessAsUsualAgent`. Um controlador criado a partir
+  de uma classe ou de um caminho deixa de receber os hiperparâmetros do agente
+  de aprendizagem (`lr`, `batch_size`, `hidden_dimension`, ...); os restantes
+  argumentos continuam a chegar-lhe. As classes `RBC` incluídas ignoravam esses
+  hiperparâmetros, pelo que as suas execuções não mudam
+  ([#250](https://github.com/citylearn-project/CityLearn/issues/250)).
+
 ## v3.6.0 - 2026-11-19
 
 A 3.6.0 reúne 26 pull requests: correções da física, dos KPIs, das baselines, dos

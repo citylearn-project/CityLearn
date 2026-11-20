@@ -151,6 +151,26 @@ These policies are ported from the Soft-CPS Algorithms baselines (commit
 actions at every step. `agent.comparison_identity()` records the class, the
 definition version and the resolved parameters for experiment manifests.
 
+The rule baselines can also guide the exploration of `SACRBC` and
+`MARLISARBC`. Pass an instance built on the same environment, the class or its
+import path as `rbc`. With a class or an import path, the learner's own
+hyperparameters stay with the learner, and the remaining keyword arguments go to
+the baseline:
+
+```python
+from citylearn.agents.baseline import RBCBasicPolicy
+from citylearn.agents.sac import SACRBC
+
+agent = SACRBC(env, rbc=RBCBasicPolicy, lr=3e-4, batch_size=256, basic_price_policy='forecast_relative')
+agent = SACRBC(env, rbc=RBCBasicPolicy(env, basic_price_policy='forecast_relative'), lr=3e-4)
+```
+
+The reinforcement learning controllers (`SAC`, `SACRBC`, `MARLISA`,
+`MARLISARBC`, `TabularQLearning`) read flat observation vectors and require
+`interface='flat'`; on the entity interface they raise a `ValueError`. The rule
+baselines, `ZeroActionBaselineAgent` and the random `Agent` work with both
+interfaces.
+
 ### Automatic BAU evaluation
 
 `env.evaluate_v2()` runs or reuses a separate BAU simulation up to the current

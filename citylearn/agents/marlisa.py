@@ -1,7 +1,8 @@
 from copy import deepcopy
-from typing import Any, List, Mapping, Tuple
+from typing import Any, List, Mapping, Tuple, Union
 import numpy as np
-from citylearn.agents.rbc import RBC
+from citylearn.agents.base import Agent
+from citylearn.agents.rbc import RBC  # noqa: F401  (kept for code importing RBC from this module)
 from citylearn.agents.sac import SACRBC
 from citylearn.citylearn import CityLearnEnv
 
@@ -553,21 +554,24 @@ class MARLISA(SAC):
         self.__pending_transitions = [None for _ in self.action_dimension]
 
 class MARLISARBC(MARLISA, SACRBC):
-    r"""Uses :py:class:`citylearn.agents.rbc.RBC` to select action during exploration before using :py:class:`citylearn.agents.marlisa.MARLISA`.
+    r"""Uses a rule-based controller to select actions during exploration before using :py:class:`citylearn.agents.marlisa.MARLISA`.
 
     Parameters
     ----------
     env: CityLearnEnv
         CityLearn environment.
-    rbc: RBC
-        :py:class:`citylearn.agents.rbc.RBC` or child class, used to select actions during exploration.
+    rbc: Union[Agent, type, str], optional
+        Controller used to select actions during exploration, as for :py:class:`citylearn.agents.sac.SACRBC`:
+        an agent instance built on the same `env`, an agent class or its import path, including the rule
+        baselines of :py:mod:`citylearn.agents.baseline`. Defaults to :py:class:`citylearn.agents.rbc.RBC`.
     
     Other Parameters
     ----------------
     **kwargs : Any
-        Other keyword arguments used to initialize super class.
+        Other keyword arguments used to initialize super class. Those the learner does not declare are also
+        passed to the `rbc` constructor, as for :py:class:`citylearn.agents.sac.SACRBC`.
     """
     
-    def __init__(self, env: CityLearnEnv, rbc: RBC = None, **kwargs: Any):
+    def __init__(self, env: CityLearnEnv, rbc: Union[Agent, type, str] = None, **kwargs: Any):
         # MARLISA's exploration calls get_exploration_prediction, which resolves to SACRBC's in this MRO.
         super().__init__(env=env, rbc=rbc, **kwargs)
