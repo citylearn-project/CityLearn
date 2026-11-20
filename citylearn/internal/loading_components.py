@@ -16,6 +16,7 @@ import pandas as pd
 
 from citylearn.data import ChargerSimulation, LogisticRegressionOccupantParameters
 from citylearn.energy_model import PV, Battery
+from citylearn.internal.physics_version import physics_version_of
 from citylearn.utilities import parse_bool
 
 if TYPE_CHECKING:
@@ -254,6 +255,9 @@ def configure_devices(building, building_name, building_type, building_schema, s
                 default=False,
                 path=f'buildings.{building.name}.{device_name}.autosize',
             )
+            if isinstance(device, Battery):
+                # Physics version 1 limits battery discharge with the charging curve (#227).
+                device.legacy_discharge_power_limit = physics_version_of(building) < 2
             building.__setattr__(device_name, device)
             # Schema-built devices do not know the dataset/control-step ratio yet, but the autosizers
             # convert dataset-resolution demand with it. Without this, hourly data run at 15-minute

@@ -24,6 +24,7 @@ from citylearn.energy_model import Battery, DeferrableAppliance, Escalator
 from citylearn.reward_function import MultiBuildingRewardFunction, RewardFunction
 from citylearn.utilities import parse_bool
 from citylearn.internal import grid_availability, loading_inputs, loading_components
+from citylearn.internal.physics_version import resolve_physics_version
 
 LOGGER = logging.getLogger(__name__)
 
@@ -703,6 +704,7 @@ class CityLearnLoadingService:
             'capacity_loss_coefficient',
             'power_efficiency_curve',
             'capacity_power_curve',
+            'discharge_power_curve',
             'max_charge_kw',
             'max_discharge_kw',
             'min_soc',
@@ -718,6 +720,9 @@ class CityLearnLoadingService:
             battery_kwargs['nominal_power'] = attrs['nominal_power']
 
         battery = battery_constructor(**battery_kwargs)
+        # Physics version 1 limits battery discharge with the charging curve (#227).
+        battery.legacy_discharge_power_limit = resolve_physics_version(
+            getattr(self.env, 'physics_version', schema.get('physics_version'))) < 2
 
         electric_vehicle_type = 'citylearn.citylearn.ElectricVehicle' if electric_vehicle_schema.get('type', None) is None else electric_vehicle_schema['type']
         electric_vehicle_type_module = '.'.join(electric_vehicle_type.split('.')[0:-1])

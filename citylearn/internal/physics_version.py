@@ -18,9 +18,10 @@ Versions
     * storage-tank autosizing covers one hour of peak demand power, and PV autosizing groups years
       and resamples the PVWatts output at the dataset resolution, which matters for sub-hourly
       data (#233).
-
-    Datasets at a resolution of one hour or finer whose EVs have no standby loss and that do not
-    autosize at sub-hourly resolution simulate identically under versions 1 and 2.
+    * battery discharge is limited by `Battery.discharge_power_curve`, flat at the nominal power by
+      default, instead of the charging curve `capacity_power_curve` (#227);
+    * during an outage the battery discharges after the step's thermal demand and thermal storage
+      discharges and only up to the islanded load that PV leaves (#229).
 """
 
 from typing import Any

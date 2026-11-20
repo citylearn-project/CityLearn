@@ -140,13 +140,23 @@ Pacote de trabalho 4 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-
   altera-o), e o autodimensionamento do PV agrupa os anos pela resolução dos
   dados e repete o perfil horário do PVWatts
   ([#233](https://github.com/citylearn-project/CityLearn/issues/233)).
+- **Potência de descarga das baterias.** Na versão 2 da física, um novo
+  atributo da bateria, `discharge_power_curve`, limita a descarga (por omissão,
+  plana na potência nominal), e `capacity_power_curve` passa a limitar apenas a
+  carga ([#227](https://github.com/citylearn-project/CityLearn/issues/227)).
+- **Descarga das baterias durante falhas de energia.** Na versão 2 da física, a
+  bateria descarrega depois da procura térmica e das descargas do armazenamento
+  térmico do step, e apenas até à carga isolada que o PV não cobre
+  ([#229](https://github.com/citylearn-project/CityLearn/issues/229)).
 - **Eficiência num sentido.** `one_way_efficiency` passa a conter a raiz
   quadrada de `efficiency`, que `round_trip_efficiency` devolvia;
   `round_trip_efficiency` mantém o valor com um `DeprecationWarning`.
   `Battery.efficiency_history` ganha uma entrada por operação em vez de duas
-  ([#226](https://github.com/citylearn-project/CityLearn/issues/226)). Os
-  datasets incluídos simulam de forma idêntica nas versões 1 e 2 com estas
-  correções.
+  ([#226](https://github.com/citylearn-project/CityLearn/issues/226)). A
+  versão 1 da física reproduz a 3.6.0 bit a bit; na versão 2, a curva de
+  descarga altera ligeiramente os datasets dos challenges (por exemplo, menos
+  0,05% de importação do BAU em quatro semanas de
+  `citylearn_challenge_2022_phase_all_plus_evs`).
 
 ## v3.6.0 - 2026-11-19
 
