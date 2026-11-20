@@ -185,7 +185,7 @@ When you use the data, cite the dataset and its article:
 
 - Fonseca et al., *Synthetic electricity demand and flexibility datasets for
   Portuguese energy communities*, dataset edition v3.4. Zenodo, DOI
-  [10.5281/zenodo.24182353](https://doi.org/10.5281/zenodo.24182353) (reserved;
-  registered on publication).
+  10.5281/zenodo.24182353 (reserved; it resolves once the record is published,
+  so it is not linked yet).
 - Fonseca et al., "Synthetic electricity demand and flexibility datasets for
   Portuguese energy communities", *Scientific Data* (under review).

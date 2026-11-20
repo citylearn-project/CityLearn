@@ -239,3 +239,64 @@ def test_v3_citation_added_alongside_v2():
     assert "@article{doi:10.1080/19401493.2024.2418813," in index
     assert ":start-at: @misc{fonseca2026citylearnv3," in index
     assert "fonseca2026citylearnv3" in (ROOT / "docs/source/publications.rst").read_text(encoding="utf-8")
+
+
+def printed_values(text):
+    """KPI name -> value of a printed `cost_function`/`value` table."""
+    rows = [line.split() for line in text.strip().splitlines()[1:]]
+    return {name: float(value) for name, value in rows}
+
+
+@pytest.mark.parametrize("example", ["first_simulation", "compare_with_business_as_usual"])
+def test_quickstart_examples_print_the_documented_output(example, monkeypatch, tmp_path, capsys):
+    monkeypatch.chdir(tmp_path)
+    exec(compile((ROOT / "examples" / (example + ".py")).read_text(encoding="utf-8"), example + ".py", "exec"), {})
+    documented = printed_values((ROOT / "examples" / (example + ".out")).read_text(encoding="utf-8"))
+    printed = printed_values(capsys.readouterr().out)
+    assert printed.keys() == documented.keys()
+    for name, value in documented.items():
+        assert printed[name] == pytest.approx(value, rel=1.0e-5, abs=1.0e-6), name
+    quickstart = (ROOT / "docs/source/quickstart.rst").read_text(encoding="utf-8")
+    assert f"../../examples/{example}.py" in quickstart
+    assert f"../../examples/{example}.out" in quickstart
+
+
+def test_scorecard_selects_the_default_rows_in_order():
+    import pandas as pd
+    from citylearn.citylearn import CityLearnEnv
+
+    names = CityLearnEnv.SCORECARD_DEFAULT_KPIS
+    kpis = pd.DataFrame({
+        "cost_function": ["not_a_scorecard_kpi", names[1], names[0], names[0], "building_cost_total_control_eur"],
+        "value": [1.0, 2.0, 3.0, 4.0, 5.0],
+        "name": ["District", "District", "District", "District", "Building_1"],
+        "level": ["district", "district", "district", "district", "building"],
+    })
+    # scorecard() only reads its argument, so it can be called on the class with any env instance.
+    env = object.__new__(CityLearnEnv)
+    selected = CityLearnEnv.scorecard(env, kpis)
+    assert list(selected.columns) == list(kpis.columns)
+    assert list(selected["cost_function"][:3]) == [names[0], names[0], names[1]]
+    assert "not_a_scorecard_kpi" not in set(selected["cost_function"])
+    assert set(CityLearnEnv.scorecard(env, kpis, level="building")["level"]) == {"building"}
+    with pytest.raises(ValueError):
+        CityLearnEnv.scorecard(env, kpis, level="portfolio")
+    with pytest.raises(TypeError):
+        CityLearnEnv.scorecard(env, kpis, include_business_as_usual=False)
+
+
+def test_dataset_catalogue_lists_every_public_dataset():
+    spec = importlib.util.spec_from_file_location("citylearn_guides", ROOT / "docs/source/_ext/citylearn_guides.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    rows = {row["name"]: row for row in module.dataset_catalogue_rows(ROOT)}
+    assert set(rows) == {path.parent.name for path in (ROOT / "data/datasets").glob("*/schema.json")}
+    plus_evs = rows["citylearn_challenge_2022_phase_all_plus_evs"]
+    assert (plus_evs["buildings"], plus_evs["evs"], plus_evs["step"], plus_evs["format"]) == (17, 8, "1 h", "CSV")
+    assert {"EVs", "flexible appliances", "batteries"} <= set(plus_evs["features"])
+    assert rows["pt_rec_4"]["format"] == "Parquet (pyarrow)" and "community market" in rows["pt_rec_4"]["features"]
+    assert "dynamic topology" in rows["citylearn_three_phase_dynamic_topology_demo"]["features"]
+    assert "demand response" in rows["citylearn_challenge_2022_phase_all_demand_response"]["features"]
+    assert "power outages" in rows["citylearn_challenge_2023_phase_1"]["features"]
+    page = module.dataset_catalogue(ROOT)
+    assert all(f"| `{name}` |" in page for name in rows)

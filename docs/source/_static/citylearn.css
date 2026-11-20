@@ -5,3 +5,7 @@
 .wy-table-responsive { overflow-x: auto; }
 .rst-content code.literal { overflow-wrap: anywhere; }
 .rst-content img.citylearn-overview { max-width: 100%; height: auto; }
+.rst-content .citylearn-version-note { margin-bottom: 1.5em; }
+.rst-content .citylearn-version-note p { margin-bottom: 0; }
+/* Dataset catalogue: keep each dataset name on one line; the table scrolls horizontally. */
+.rst-content #all-public-datasets td:first-child code.literal { white-space: nowrap; overflow-wrap: normal; }

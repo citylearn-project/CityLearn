@@ -1,0 +1,12 @@
+{% extends "!layout.html" %}
+{#- The site is built from master, so every page says which code it describes (#270). -#}
+{% block document %}
+<div class="admonition note citylearn-version-note" role="note">
+  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
+  listed under <a href="{{ pathto('guides/releases') }}">Unreleased</a>, which the latest release,
+  CityLearn {{ release }}, does not have. To read the documentation of the version you installed
+  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
+  <a href="https://github.com/citylearn-project/CityLearn/tree/v{{ release }}/docs">v{{ release }}</a>.</p>
+</div>
+{{ super() }}
+{% endblock %}

@@ -11,7 +11,13 @@ Esta pagina e a referencia pratica para instalar, criar um ambiente, correr epis
 | PV autosizing | `pip install "citylearn[pysam]"` | Necessario apenas para autosizing via EPW/PySAM. |
 | Desenvolvimento local | `.venv/bin/pip install -e .` | Usar a `.venv` do repo quando existir. |
 
-## Quickstart Python
+## Ciclo de episodio sem controlador
+
+Para uma primeira execucao com o output esperado, e uma comparacao com o
+controlador business-as-usual, segue o
+[quickstart](https://www.citylearn.net/quickstart.html). O ciclo abaixo e o
+episodio mais pequeno possivel: envia zero em todas as acoes, cujo efeito
+segue o contrato de acao de cada equipamento.
 
 ```python
 import numpy as np
@@ -31,7 +37,7 @@ while not (terminated or truncated):
 kpis_v2 = env.evaluate_v2()
 ```
 
-## Quickstart Entity Interface
+## Exemplo da interface entity
 
 ```python
 from citylearn.citylearn import CityLearnEnv
@@ -56,7 +62,7 @@ action_payload = {
 obs, reward, terminated, truncated, info = env.step(action_payload)
 ```
 
-## Quickstart Multi-Comunidade
+## Exemplo multi-comunidade
 
 Usa `MultiCommunityEnv` quando um loop de treino deve avancar varias comunidades independentes em lockstep. Cada filho mantem a sua propria fisica, KPIs e ficheiros de demand response.
 
@@ -237,19 +243,12 @@ As series temporais normais do episodio sao controladas por `render_mode`/`rende
 
 Para escolher exatamente o output do episodio final, manter `export_kpis_on_episode_end=False` e chamar `export_final_kpis()` manualmente depois de o episodio terminar.
 
-## Comandos de validacao recomendados
+## Teste rapido de um dataset grande
+
+Para datasets de 15 segundos, corre primeiro uma janela curta, antes de treino anual:
 
 ```bash
-.venv/bin/pytest -q
-.venv/bin/python scripts/audit/audit_entity_contract.py --strict
-.venv/bin/python scripts/audit/audit_physics.py
-.venv/bin/python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821
-```
-
-Para datasets de 15 segundos, valida pelo menos um episodio pequeno antes de treino anual:
-
-```bash
-.venv/bin/python - <<'PY'
+python - <<'PY'
 import numpy as np
 from citylearn.citylearn import CityLearnEnv
 
@@ -275,6 +274,20 @@ for _ in range(100):
         break
 print(env.evaluate_v2().head())
 PY
+```
+
+## Validacao a partir do repositorio
+
+Os testes e os scripts de auditoria estao no repositorio, nao no pacote que
+`pip install citylearn` instala. Corre-os a partir de um clone, com os requisitos
+de teste instalados (ver o [guia de desenvolvimento](developer_guide.md) e o
+[guia de validacao](../validation.md)):
+
+```bash
+python -m pytest -q
+python scripts/audit/audit_entity_contract.py --strict
+python scripts/audit/audit_physics.py
+python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821
 ```
 
 Os exports apenas de KPIs incluem o manifesto e os metadados JSON de auditoria

@@ -70,7 +70,8 @@ Version compatibility
 
 The base requirements of each release, from its ``requirements.txt`` and
 ``python_requires``; "any" means the release does not constrain the version.
-The first row is the source on ``master``, which the next release will ship.
+The first row is the latest release; changes on ``master`` since then are listed
+under "Unreleased" in the release notes.
 The last column gives the Python versions for which the pinned requirements
 publish wheels on PyPI. It is derived from those pins, not tested, and names
 the pin that sets the limit. CityLearn 2.4.0 to 2.4.2 were withdrawn from PyPI.
