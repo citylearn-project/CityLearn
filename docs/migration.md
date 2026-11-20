@@ -384,6 +384,19 @@ as before. Pass `-te start end` to evaluate on a chosen window. The training
 summary JSON records `hostname` and `username` only with `--record_host`;
 scripts that read these keys need the flag.
 
+### Current-step passive net demand in the baselines
+
+When `non_shiftable_load` and `solar_generation` are observed, the BAU and the
+rule-based baselines estimate passive net demand from that step's non-shiftable
+load, running deferrable cycles and PV generation instead of the previous settled
+step's `net_power_kw` or `net_electricity_consumption`
+([#190](https://github.com/citylearn-project/CityLearn/issues/190)). This removes
+the one-step battery lag with and without `entity_core_electrical`. Their
+definition versions change to `immediate-full-charge-v4`,
+`immediate-user-target-v3`, `basic-v4`, `smart-local-v4` and `community-v4`, and
+the native BAU reference of `evaluate_v2()` changes with them. Rerun the
+controller and its reference before comparing with results of 3.6.0 or earlier.
+
 ## Upgrade from 3.5.0 to 3.6.0
 
 ### Battery discharge features during outages

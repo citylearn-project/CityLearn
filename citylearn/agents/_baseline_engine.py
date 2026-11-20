@@ -285,7 +285,9 @@ class _OperationalBaselinePolicy(RulePolicyBase):
 
         if self.uses_community_dispatch and observations:
             passive_nets = [
-                self._observed_passive_net_kw(np.asarray(obs, dtype=float), self._obs_index[idx])
+                self._observed_passive_net_kw(
+                    np.asarray(obs, dtype=float), self._obs_index[idx], agent_idx=idx
+                )
                 for idx, obs in enumerate(observations)
             ]
             if all(value is not None for value in passive_nets):
@@ -438,8 +440,12 @@ class _OperationalBaselinePolicy(RulePolicyBase):
         self, agent_idx: int, obs: np.ndarray, obs_map: Mapping[str, int]
     ) -> None:
         self._dispatch_budgets[agent_idx] = {
-            "local_surplus_kw": max(0.0, self._pv_surplus_kw(obs, obs_map)),
-            "local_import_kw": max(0.0, self._get_import_power(obs, obs_map)),
+            "local_surplus_kw": max(
+                0.0, self._pv_surplus_kw(obs, obs_map, agent_idx=agent_idx)
+            ),
+            "local_import_kw": max(
+                0.0, self._get_import_power(obs, obs_map, agent_idx=agent_idx)
+            ),
             "community_surplus_kw": max(0.0, self._community_surplus_kw(obs, obs_map)),
             "community_import_kw": max(0.0, self._get_community_import_power(obs, obs_map)),
         }
@@ -835,7 +841,51 @@ class _OperationalBaselinePolicy(RulePolicyBase):
             return observed_min, observed_max
         return min_soc, max_soc
 
+    def _current_pv_power_kw(self, obs: np.ndarray, obs_map: Mapping[str, int]) -> Optional[float]:
+        # EntityObservationFlattener aliases `solar_generation` to `pv_power_kw`
+        # (settled t-1 kW) only when the `solar_generation` building feature is absent.
+        solar_idx = obs_map.get("solar_generation")
+        if solar_idx is not None and solar_idx != obs_map.get("pv_power_kw"):
+            pv_energy = self._get_value(obs, obs_map, "solar_generation", default=float("nan"))
+            if math.isfinite(pv_energy):
+                return max(0.0, float(pv_energy) / max(float(self.step_hours), 1.0e-6))
+        if self._get_value(obs, obs_map, "active_pvs_count", default=float("nan")) == 0.0:
+            return 0.0
+        return None
+
+    def _current_passive_load_power_kw(
+        self,
+        obs: np.ndarray,
+        obs_map: Mapping[str, int],
+        agent_idx: Optional[int] = None,
+    ) -> Optional[float]:
+        load_energy = self._get_value(obs, obs_map, "non_shiftable_load", default=float("nan"))
+        if not math.isfinite(load_energy):
+            return None
+
+        step_hours = max(float(self.step_hours), 1.0e-6)
+        ratio = self._load_time_step_ratio(agent_idx)
+        load_kw = max(0.0, float(load_energy) * ratio / step_hours)
+
+        for _name, idx in self._cached_observation_matches(
+            obs_map,
+            prefix="deferrable_appliance::",
+            suffixes=("::current_step_power_kw",),
+        ):
+            if idx < len(obs) and math.isfinite(obs[idx]):
+                load_kw += max(0.0, float(obs[idx]))
+
+        # Only terms known for the coming step are used. Cooling, heating and DHW
+        # electricity of the coming step depend on its COP and thermal actions and are
+        # not observed before it; the observed values are the last settled step's.
+        # Adding them would make the battery discharge for HVAC load that has already
+        # dropped and export it (#190), so they are left out (see docs/baselines.md).
+        return load_kw
+
     def _get_pv_power(self, obs: np.ndarray, obs_map: Mapping[str, int]) -> float:
+        current = self._current_pv_power_kw(obs, obs_map)
+        if current is not None:
+            return current
         return max(
             0.0,
             self._get_first_value(
@@ -848,7 +898,16 @@ class _OperationalBaselinePolicy(RulePolicyBase):
             ),
         )
 
-    def _get_load_power(self, obs: np.ndarray, obs_map: Mapping[str, int]) -> float:
+    def _get_load_power(
+        self,
+        obs: np.ndarray,
+        obs_map: Mapping[str, int],
+        *,
+        agent_idx: Optional[int] = None,
+    ) -> float:
+        current = self._current_passive_load_power_kw(obs, obs_map, agent_idx=agent_idx)
+        if current is not None:
+            return current
         return max(
             0.0,
             self._get_first_value(
@@ -856,17 +915,33 @@ class _OperationalBaselinePolicy(RulePolicyBase):
                 obs_map,
                 ["load_power_kw"],
                 default=self._get_first_value(obs, obs_map, ["non_shiftable_load"], default=0.0)
+                * self._load_time_step_ratio(agent_idx)
                 / self.step_hours,
             ),
         )
 
-    def _observed_passive_net_kw(self, obs, obs_map):
-        """Remove previous EV/BESS commands before allocating their next commands.
+    def _observed_passive_net_kw(
+        self,
+        obs,
+        obs_map,
+        *,
+        agent_idx: Optional[int] = None,
+    ):
+        """Estimate passive net power (load minus PV) before allocating controllable commands.
 
-        Simulator entity electrical metrics are simultaneous settled measurements.
-        Net import already contains those controllable powers; adding the next
-        EV command to that measurement would count its energy twice.
+        Prefer current-step exogenous `non_shiftable_load` (plus any running
+        deferrable cycle's current-step power) minus current-step
+        `solar_generation` so the battery does not lag by one step (#190).
+        Thermal-device electricity of the coming step is not observable and is
+        left out.
+        When those current-step observations are unavailable, fall back to the
+        simultaneous settled entity measurements (`net - bess - ev`).
         """
+        current_load = self._current_passive_load_power_kw(obs, obs_map, agent_idx=agent_idx)
+        current_pv = self._current_pv_power_kw(obs, obs_map)
+        if current_load is not None and current_pv is not None:
+            return current_load - current_pv
+
         values = [
             self._get_first_value(obs, obs_map, [name], default=float("nan"))
             for name in ("net_power_kw", "bess_power_kw", "ev_charging_power_kw")
@@ -876,8 +951,14 @@ class _OperationalBaselinePolicy(RulePolicyBase):
             return net - bess - ev
         return None
 
-    def _get_import_power(self, obs: np.ndarray, obs_map: Mapping[str, int]) -> float:
-        passive_net = self._observed_passive_net_kw(obs, obs_map)
+    def _get_import_power(
+        self,
+        obs: np.ndarray,
+        obs_map: Mapping[str, int],
+        *,
+        agent_idx: Optional[int] = None,
+    ) -> float:
+        passive_net = self._observed_passive_net_kw(obs, obs_map, agent_idx=agent_idx)
         if passive_net is not None:
             return max(0.0, passive_net)
         import_power = self._get_first_value(
@@ -1025,12 +1106,20 @@ class _OperationalBaselinePolicy(RulePolicyBase):
             >= self.community_import_threshold_kw
         )
 
-    def _pv_surplus_kw(self, obs: np.ndarray, obs_map: Mapping[str, int]) -> float:
-        passive_net = self._observed_passive_net_kw(obs, obs_map)
+    def _pv_surplus_kw(
+        self,
+        obs: np.ndarray,
+        obs_map: Mapping[str, int],
+        *,
+        agent_idx: Optional[int] = None,
+    ) -> float:
+        passive_net = self._observed_passive_net_kw(obs, obs_map, agent_idx=agent_idx)
         if passive_net is not None:
             return min(self._get_pv_power(obs, obs_map), max(0.0, -passive_net))
         physical_surplus = max(
-            0.0, self._get_pv_power(obs, obs_map) - self._get_load_power(obs, obs_map)
+            0.0,
+            self._get_pv_power(obs, obs_map)
+            - self._get_load_power(obs, obs_map, agent_idx=agent_idx),
         )
         export_power = self._get_export_power(obs, obs_map)
         import_power = self._get_import_power(obs, obs_map)
