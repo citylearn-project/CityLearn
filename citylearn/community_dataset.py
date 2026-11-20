@@ -100,6 +100,29 @@ def configure_tariffs(env, config):
     )
 
 
+def settlement_price_arrays(env, name, time_steps, grid_import_prices):
+    """`settlement_prices` for many steps of one member: grid export, local buy and local sell price arrays."""
+    time_steps = np.asarray(time_steps, dtype='int64')
+    grid_import_prices = np.asarray(grid_import_prices, dtype='float64')
+    tariffs = getattr(env, 'community_tariffs', {}).get(name)
+    ratio = getattr(env, 'community_market_sell_ratio', None)
+    if tariffs is None and type(ratio) in (float, int, np.float64):
+        local = ratio*grid_import_prices
+        export = np.full(len(time_steps), float(getattr(env, 'community_market_grid_export_price', 0.0)), dtype='float64')
+        return export, local, local
+    if tariffs is not None:
+        offset = int(getattr(getattr(env, 'episode_tracker', None), 'episode_start_time_step', 0) or 0)
+        index = offset + time_steps
+        if len(index) and (index.min() < 0 or index.max() >= len(tariffs)):
+            raise ValueError('Community tariff series does not cover this episode')
+        values = np.asarray(tariffs, dtype='float64')[index] if len(index) else np.zeros((0, 3), dtype='float64')
+        return values[:, 0], values[:, 1], values[:, 2]
+    # Any other ratio type keeps the scalar arithmetic of settlement_prices.
+    prices = [settlement_prices(env, name, t, float(p)) for t, p in zip(time_steps.tolist(), grid_import_prices)]
+    columns = list(zip(*prices)) or [(), (), ()]
+    return tuple(np.array(c, dtype='float64') for c in columns)
+
+
 def settlement_prices(env, name, time_step, grid_import_price):
     tariffs = getattr(env, 'community_tariffs', {}).get(name)
     if tariffs is None:

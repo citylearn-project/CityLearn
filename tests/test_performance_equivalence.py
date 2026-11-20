@@ -301,3 +301,186 @@ def test_buildings_share_calendar_series_with_unchanged_values():
     assert second._non_shiftable_load is not first._non_shiftable_load
     assert second._cooling_demand is not first._cooling_demand
     assert second._cooling_demand.flags.writeable
+
+
+def _reference_settled_cost_series(self, *, condition_by_building):
+    """The (step x member) loop that CityLearnKPIService._settled_cost_series replaced, kept verbatim (no cache)."""
+    from citylearn.community_dataset import settlement_prices
+    from citylearn.internal.kpi_population import current_population
+
+    env = self.env
+    buildings = self._get_kpi_buildings()
+    building_names = [b.name for b in buildings]
+    windows = {b.name: self._building_active_window(b) for b in buildings}
+    step_count = max(int(getattr(env, 'time_step', 0)), 0)
+    series = {name: np.zeros(step_count, dtype='float64') for name in building_names}
+    if len(building_names) == 0:
+        return series
+
+    final_t = int(max(getattr(env, 'time_step', 0), 0))
+    weights_config = getattr(env, 'community_market_import_member_weights', {}) or {}
+    weights = np.array([self._to_scalar(weights_config.get(name, 1.0), 1.0) for name in building_names], dtype='float64')
+    weight_by_name = {name: float(weight) for name, weight in zip(building_names, weights)}
+    net_series_by_name, price_series_by_name = {}, {}
+
+    for building in buildings:
+        condition = condition_by_building.get(building.name)
+        if condition is None:
+            continue
+        net_series_by_name[building.name] = np.asarray(
+            self._energy_values(building, getattr(building, f'net_electricity_consumption{condition.value}')), dtype='float64')
+        price_series_by_name[building.name] = np.asarray(building.pricing.electricity_pricing, dtype='float64')
+
+    for t in range(min(final_t + 1, int(env.time_step))):
+        net_values, active_buildings_t, active_weights_t = [], [], []
+        for building in buildings:
+            t_start, t_end = windows.get(building.name, (0, -1))
+            if not (t_start <= t <= t_end):
+                continue
+            if getattr(env, 'topology_mode', 'static') == 'dynamic':
+                population = current_population(self)
+                active = (building.name in env._topology_service.active_member_ids_at(t)
+                          if population is None else population.mask(building.name, final_t)[t])
+                if not active:
+                    continue
+            net_series = net_series_by_name.get(building.name)
+            if net_series is None:
+                continue
+            net_values.append(self._to_scalar(net_series[t] if t < len(net_series) else np.nan, 0.0))
+            active_buildings_t.append(building)
+            active_weights_t.append(weight_by_name.get(building.name, 1.0))
+
+        if len(active_buildings_t) == 0:
+            continue
+
+        net_values = np.array(net_values, dtype='float64')
+        imports = np.clip(net_values, 0.0, None)
+        exports = np.clip(-net_values, 0.0, None)
+        total_import = float(imports.sum())
+        total_export = float(exports.sum())
+        traded_kwh = min(total_import, total_export) if getattr(env, 'community_market_local_enabled', True) else 0.0
+        if total_import > 0.0 and traded_kwh > 0.0:
+            local_import = self._allocate_weighted_share_import(imports, traded_kwh, np.array(active_weights_t, dtype='float64'))
+        else:
+            local_import = np.zeros_like(imports, dtype='float64')
+        if total_export > 0.0 and traded_kwh > 0.0:
+            local_export = exports * (traded_kwh / total_export)
+        else:
+            local_export = np.zeros_like(exports, dtype='float64')
+
+        for idx, building in enumerate(active_buildings_t):
+            price_series = price_series_by_name.get(building.name)
+            grid_import_price = self._to_scalar(
+                price_series[t] if price_series is not None and t < len(price_series) else np.nan, 0.0)
+            grid_export_price, local_buy_price, local_sell_price = settlement_prices(env, building.name, t, grid_import_price)
+            grid_export_remaining = max(exports[idx] - local_export[idx], 0.0)
+            grid_import_remaining = max(imports[idx] - local_import[idx], 0.0)
+            cost = (
+                grid_import_remaining * grid_import_price
+                + local_import[idx] * local_buy_price
+                - local_export[idx] * local_sell_price
+                - grid_export_remaining * grid_export_price
+            )
+            series[building.name][t] = float(cost)
+
+    return series
+
+
+def _run_market_env(schema, steps, seed):
+    from citylearn.citylearn import CityLearnEnv
+
+    env = CityLearnEnv(schema, episode_time_steps=steps, random_seed=0)
+    env.reset()
+    rng = np.random.default_rng(seed)
+    done = False
+    while not done:
+        space = env.action_space
+        if isinstance(space, list):
+            actions = [rng.uniform(-1.0, 1.0, s.shape).astype('float32') for s in space]
+        else:
+            actions = {'tables': {k: rng.uniform(-1.0, 1.0, v.shape).astype('float32') for k, v in space['tables'].items()}}
+        _, _, terminated, truncated, _ = env.step(actions)
+        done = terminated or truncated
+    return env
+
+
+def _assert_settled_costs_match(env, variants):
+    from citylearn.citylearn import EvaluationCondition
+
+    service = env._kpi_service
+    names = [b.name for b in service._get_kpi_buildings()]
+    conditions = [
+        {name: EvaluationCondition.WITH_STORAGE_AND_PV for name in names},
+        {name: EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV for name in names},
+        {name: EvaluationCondition.WITHOUT_STORAGE_AND_PV for i, name in enumerate(names) if i % 3},
+    ]
+    from citylearn.internal.kpi_population import ActivePopulation
+
+    populations = [None]
+    if getattr(env, 'topology_mode', 'static') == 'dynamic':
+        populations.append(ActivePopulation(env))
+
+    traded = 0
+    for variant in variants:
+        variant(env)
+        for population in populations:
+            service._evaluation_population = population
+            for condition_by_building in conditions:
+                service._settled_cost_cache = None
+                expected = _reference_settled_cost_series(service, condition_by_building=condition_by_building)
+                actual = service._settled_cost_series(condition_by_building=condition_by_building)
+                assert list(actual) == list(expected)
+                for name in expected:
+                    assert actual[name].dtype == expected[name].dtype
+                    assert actual[name].tobytes() == expected[name].tobytes(), name
+                traded += sum(int(np.count_nonzero(v)) for v in expected.values())
+    service._evaluation_population = None
+    assert traded > 0
+
+
+def _market_variants(names):
+    def default(env):
+        pass
+
+    def weighted(env):
+        env.community_market_import_member_weights = {name: (i % 4) * 0.37 for i, name in enumerate(names)}
+
+    def zero_weights(env):
+        env.community_market_import_member_weights = {name: 0.0 for name in names}
+
+    def export_price(env):
+        env.community_market_import_member_weights = {}
+        env.community_market_grid_export_price = 0.0371
+        env.community_market_sell_ratio = 0.63
+
+    def tariffs(env):
+        rng = np.random.default_rng(5)
+        length = env.episode_tracker.episode_start_time_step + env.time_step + 3
+        env.community_tariffs = {name: rng.uniform(0.0, 0.3, (length, 3)) for name in names[::2]}
+
+    def local_off(env):
+        env.community_tariffs = {}
+        env.community_market_local_enabled = False
+
+    return [default, weighted, zero_weights, export_price, tariffs, local_off]
+
+
+def test_settled_cost_series_match_the_step_loop_bit_for_bit_static():
+    root = ROOT / 'data' / 'datasets' / 'citylearn_three_phase_electrical_service_demo'
+    schema = json.loads((root / 'schema.json').read_text(encoding='utf-8'))
+    schema['root_directory'] = str(root)
+    env = _run_market_env(schema, 30, seed=11)
+    _assert_settled_costs_match(env, _market_variants([b.name for b in env.buildings]))
+
+
+def test_settled_cost_series_match_the_step_loop_bit_for_bit_dynamic_topology():
+    root = ROOT / 'data' / 'datasets' / 'citylearn_three_phase_dynamic_topology_demo'
+    schema = json.loads((root / 'schema.json').read_text(encoding='utf-8'))
+    schema['root_directory'] = str(root)
+    shift = {1000: 4, 1300: 9, 1500: 13, 1600: 17, 1800: 20, 1900: 23, 2100: 26, 3200: 28}
+    for event in schema['topology_events']:
+        event['time_step'] = shift.get(event['time_step'], event['time_step'] - 3000)
+    schema['topology_events'] = [e for e in schema['topology_events'] if 0 < e['time_step'] < 30]
+    env = _run_market_env(schema, 30, seed=12)
+    names = list(schema['buildings'])
+    _assert_settled_costs_match(env, _market_variants(names))
