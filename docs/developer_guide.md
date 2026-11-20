@@ -149,8 +149,15 @@ python -m pytest -q tests/test_documentation_examples.py
 
 Install Pandoc for the retained notebook tutorials. Use the `sphinx-build`
 executable: the current CLI reference detects that executable when returning
-its argument parser. Documentation examples are tested separately; the site
-build does not train learning agents.
+its argument parser. Documentation examples are tested separately.
+
+The notebooks in `examples/` are stored without outputs. The Sphinx workflow
+executes them before the build (`python scripts/ci/run_notebooks.py --output-dir examples`,
+which overwrites the sources in that checkout only) and runs
+`check_docs.py --require-notebook-outputs`, so the published notebook pages show
+the outputs of that run, including a short RL training run. To reproduce it
+locally, run these two commands and discard the changes in `examples/` afterwards
+(`git checkout examples`). Without the execution step the pages show the code only.
 
 ## Development rules
 
