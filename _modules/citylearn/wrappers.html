@@ -126,6 +126,7 @@
              
   <h1>Source code for citylearn.wrappers</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActionWrapper</span><span class="p">,</span> <span class="n">Env</span><span class="p">,</span> <span class="n">ObservationWrapper</span><span class="p">,</span> <span class="n">RewardWrapper</span><span class="p">,</span> <span class="n">spaces</span><span class="p">,</span> <span class="n">Wrapper</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -138,6 +139,115 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_observation_space_key</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""What the flat observation spaces derived by the wrappers depend on: the buildings and their active observations."""</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="nb">bool</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">central_agent</span><span class="p">),</span>
+        <span class="nb">tuple</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">shared_observations</span><span class="p">),</span>
+        <span class="nb">tuple</span><span class="p">((</span><span class="nb">id</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">active_observations</span><span class="p">))</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="DiscreteCombinations">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteCombinations">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DiscreteCombinations</span><span class="p">(</span><span class="n">Sequence</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""All combinations of discrete values, in `itertools.product` order, without materializing them.</span>
+
+<span class="sd">    Indexing and :py:meth:`index` map between a combination and its position with</span>
+<span class="sd">    :py:func:`numpy.unravel_index` and :py:func:`numpy.ravel_multi_index`, which follow the same order.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sizes: List[int]</span>
+<span class="sd">        Number of values of each discrete dimension.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="k">else</span> <span class="mi">1</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__length</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">position</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">position</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">position</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">position</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">'combination index out of range'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">()</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">combination</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">combination</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="DiscreteCombinations.index">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteCombinations.index">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">combination</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Position of `combination`, as `list.index` returns it."""</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">'DiscreteCombinations.index does not take start or stop arguments.'</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">combination</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">combination</span><span class="si">!r}</span><span class="s1"> is not in combinations'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+        <span class="n">positions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">values</span><span class="si">!r}</span><span class="s1"> is not in combinations'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+            <span class="c1"># Same membership as the list of tuples: equal values match, e.g. 2.0 matches 2.</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="n">v</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">values</span><span class="si">!r}</span><span class="s1"> is not in combinations'</span><span class="p">)</span>
+
+            <span class="n">positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">values</span><span class="si">!r}</span><span class="s1"> is not in combinations'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">positions</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="DiscreteCombinations.count">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteCombinations.count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">combination</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">combination</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DiscreteCombinations</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">sizes</span>
+
+        <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">'DiscreteCombinations(</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">)</span><span class="si">}</span><span class="s1">)'</span></div>
+
 
 <div class="viewcode-block" id="ClippedObservationWrapper">
 <a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.ClippedObservationWrapper">[docs]</a>
@@ -243,8 +353,23 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Returns observation space for normalized observations."""</span>
+<span class="w">        </span><span class="sd">"""Returns observation space for normalized observations.</span>
 
+<span class="sd">        The space is cached: estimating it reads every building's data window, which is too slow to repeat each</span>
+<span class="sd">        step. Normalized limits are always 0 and 1, so the space only changes with the building set and the active</span>
+<span class="sd">        observations, which form the cache key.</span>
+<span class="sd">        """</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="n">_observation_space_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="p">)</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'_normalized_observation_space_cache'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">key</span><span class="p">:</span>
+            <span class="n">cache</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_normalized_observation_space</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normalized_observation_space_cache</span> <span class="o">=</span> <span class="n">cache</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">cache</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_estimate_normalized_observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">]:</span>
         <span class="n">low_limit</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">high_limit</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -476,6 +601,40 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Returns observation space for discretized observations."""</span>
 
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_discrete_observation_space</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_discrete_observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">]:</span>
+        <span class="c1"># The discrete space depends only on the bin sizes and the agent layout.</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">))</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'_discrete_observation_space_cache'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">key</span><span class="p">:</span>
+            <span class="n">cache</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_observation_space</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_discrete_observation_space_cache</span> <span class="o">=</span> <span class="n">cache</span>
+
+        <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_bin_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]:</span>
+        <span class="c1"># Bin edges for every observation, rebuilt only when the wrapped limits or the bin sizes change.</span>
+        <span class="n">wrapped_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span>
+        <span class="n">discrete_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_discrete_observation_space</span><span class="p">()</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_discrete_observation_space_cache</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="nb">tuple</span><span class="p">((</span><span class="n">cs</span><span class="o">.</span><span class="n">low</span><span class="o">.</span><span class="n">tobytes</span><span class="p">(),</span> <span class="n">cs</span><span class="o">.</span><span class="n">high</span><span class="o">.</span><span class="n">tobytes</span><span class="p">())</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">wrapped_space</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'_bin_edges_cache'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cache</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">key</span><span class="p">:</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">n</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cs</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">cs</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">ds</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">cs</span><span class="p">,</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">wrapped_space</span><span class="p">,</span> <span class="n">discrete_space</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="n">cache</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bin_edges_cache</span> <span class="o">=</span> <span class="n">cache</span>
+
+        <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
             <span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">shared_observations</span> <span class="o">=</span> <span class="p">[]</span>
@@ -508,12 +667,12 @@
 
         <span class="n">transformed_observations</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">cs</span><span class="p">,</span> <span class="n">ds</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">building_bins</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bin_edges</span><span class="p">()):</span>
             <span class="n">transformed_observations_</span> <span class="o">=</span> <span class="p">[]</span>
 
-            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">cs</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">cs</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">ds</span><span class="p">)):</span>
-                <span class="c1"># Values above the space's high would get bin b.n, outside MultiDiscrete(b.n): use the top bin.</span>
-                <span class="n">o</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">digitize</span><span class="p">(</span><span class="n">observations</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">n</span><span class="p">),</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">building_bins</span><span class="p">):</span>
+                <span class="c1"># Values above the space's high would get bin n, outside MultiDiscrete(n): use the top bin.</span>
+                <span class="n">o</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">digitize</span><span class="p">(</span><span class="n">observations</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">edges</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
                 <span class="n">transformed_observations_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
 
             <span class="n">transformed_observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transformed_observations_</span><span class="p">)</span>
@@ -658,17 +817,13 @@
     
 <div class="viewcode-block" id="TabularQLearningObservationWrapper.set_combinations">
 <a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.TabularQLearningObservationWrapper.set_combinations">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""Returns all combinations of discrete observations."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="s1">'DiscreteCombinations'</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Returns all combinations of discrete observations.</span>
 
-        <span class="n">combs_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="sd">        Each item behaves like the list of `itertools.product` tuples it used to be, without materializing it.</span>
+<span class="sd">        """</span>
 
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">:</span>
-            <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
-            <span class="n">combs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">options</span><span class="p">))</span>
-            <span class="n">combs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">combs</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">combs_list</span></div>
+        <span class="k">return</span> <span class="p">[</span><span class="n">DiscreteCombinations</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">n</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">s</span><span class="p">])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">]</span></div>
 </div>
 
     
@@ -716,17 +871,13 @@
     
 <div class="viewcode-block" id="TabularQLearningActionWrapper.set_combinations">
 <a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.TabularQLearningActionWrapper.set_combinations">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""Returns all combinations of discrete actions."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="s1">'DiscreteCombinations'</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Returns all combinations of discrete actions.</span>
 
-        <span class="n">combs_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="sd">        Each item behaves like the list of `itertools.product` tuples it used to be, without materializing it.</span>
+<span class="sd">        """</span>
 
-        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">:</span>
-            <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
-            <span class="n">combs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">options</span><span class="p">))</span>
-            <span class="n">combs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">combs</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">combs_list</span></div>
+        <span class="k">return</span> <span class="p">[</span><span class="n">DiscreteCombinations</span><span class="p">([</span><span class="n">d</span><span class="o">.</span><span class="n">n</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">s</span><span class="p">])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">]</span></div>
 </div>
 
     

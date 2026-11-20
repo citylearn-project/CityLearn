@@ -209,6 +209,31 @@ would change what <cite>env.observations</cite> returns for the rest of the time
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="citylearn.wrappers.DiscreteCombinations">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.wrappers.</span></span><span class="sig-name descname"><span class="pre">DiscreteCombinations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sizes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/wrappers.html#DiscreteCombinations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.DiscreteCombinations" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></p>
+<p>All combinations of discrete values, in <cite>itertools.product</cite> order, without materializing them.</p>
+<p>Indexing and <a class="reference internal" href="#citylearn.wrappers.DiscreteCombinations.index" title="citylearn.wrappers.DiscreteCombinations.index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">index()</span></code></a> map between a combination and its position with
+<code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.unravel_index()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.ravel_multi_index()</span></code>, which follow the same order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sizes</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – Number of values of each discrete dimension.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.wrappers.DiscreteCombinations.count">
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">integer</span> <span class="pre">--</span> <span class="pre">return</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">occurrences</span> <span class="pre">of</span> <span class="pre">value</span></span></span><a class="reference internal" href="../_modules/citylearn/wrappers.html#DiscreteCombinations.count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.DiscreteCombinations.count" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.wrappers.DiscreteCombinations.index">
+<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">combination</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/citylearn/wrappers.html#DiscreteCombinations.index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.DiscreteCombinations.index" title="Link to this definition"></a></dt>
+<dd><p>Position of <cite>combination</cite>, as <cite>list.index</cite> returns it.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="citylearn.wrappers.DiscreteObservationWrapper">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.wrappers.</span></span><span class="sig-name descname"><span class="pre">DiscreteObservationWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_sizes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_bin_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/wrappers.html#DiscreteObservationWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.DiscreteObservationWrapper" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObservationWrapper</span></code></p>
@@ -315,6 +340,9 @@ is returned where each sublist is a list of 1 building’s observation names and
 <dt class="sig sig-object py" id="citylearn.wrappers.NormalizedObservationWrapper.observation_space">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">observation_space</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Box</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.wrappers.NormalizedObservationWrapper.observation_space" title="Link to this definition"></a></dt>
 <dd><p>Returns observation space for normalized observations.</p>
+<p>The space is cached: estimating it reads every building’s data window, which is too slow to repeat each
+step. Normalized limits are always 0 and 1, so the space only changes with the building set and the active
+observations, which form the cache key.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -633,8 +661,9 @@ Wraps rewards so that it is returned as float value.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.wrappers.TabularQLearningActionWrapper.set_combinations">
-<span class="sig-name descname"><span class="pre">set_combinations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/wrappers.html#TabularQLearningActionWrapper.set_combinations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.TabularQLearningActionWrapper.set_combinations" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_combinations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#citylearn.wrappers.DiscreteCombinations" title="citylearn.wrappers.DiscreteCombinations"><span class="pre">DiscreteCombinations</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/wrappers.html#TabularQLearningActionWrapper.set_combinations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.TabularQLearningActionWrapper.set_combinations" title="Link to this definition"></a></dt>
 <dd><p>Returns all combinations of discrete actions.</p>
+<p>Each item behaves like the list of <cite>itertools.product</cite> tuples it used to be, without materializing it.</p>
 </dd></dl>
 
 </dd></dl>
@@ -668,8 +697,9 @@ Wraps rewards so that it is returned as float value.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.wrappers.TabularQLearningObservationWrapper.set_combinations">
-<span class="sig-name descname"><span class="pre">set_combinations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/wrappers.html#TabularQLearningObservationWrapper.set_combinations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.TabularQLearningObservationWrapper.set_combinations" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_combinations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#citylearn.wrappers.DiscreteCombinations" title="citylearn.wrappers.DiscreteCombinations"><span class="pre">DiscreteCombinations</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/wrappers.html#TabularQLearningObservationWrapper.set_combinations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.wrappers.TabularQLearningObservationWrapper.set_combinations" title="Link to this definition"></a></dt>
 <dd><p>Returns all combinations of discrete observations.</p>
+<p>Each item behaves like the list of <cite>itertools.product</cite> tuples it used to be, without materializing it.</p>
 </dd></dl>
 
 </dd></dl>

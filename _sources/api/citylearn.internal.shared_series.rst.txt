@@ -1,0 +1,7 @@
+citylearn.internal.shared\_series module
+========================================
+
+.. automodule:: citylearn.internal.shared_series
+   :members:
+   :show-inheritance:
+   :undoc-members:

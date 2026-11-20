@@ -135,6 +135,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">CarbonIntensity</span><span class="p">,</span> <span class="n">EnergySimulation</span><span class="p">,</span> <span class="n">Pricing</span><span class="p">,</span> <span class="n">Weather</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.shared_series</span><span class="w"> </span><span class="kn">import</span> <span class="n">share_identical_series</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.loading</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnLoadingService</span>
@@ -205,6 +206,7 @@
         <span class="n">noise_start_index</span><span class="o">=</span><span class="n">schema</span><span class="p">[</span><span class="s1">'simulation_start_time_step'</span><span class="p">],</span>
     <span class="p">)</span>
     <span class="n">loader</span><span class="o">.</span><span class="n">_set_time_step_offset</span><span class="p">(</span><span class="n">energy_simulation</span><span class="p">,</span> <span class="n">schema</span><span class="p">[</span><span class="s1">'simulation_start_time_step'</span><span class="p">])</span>
+    <span class="n">share_identical_series</span><span class="p">(</span><span class="n">loader</span><span class="o">.</span><span class="n">_shared_timeseries_cache</span><span class="p">,</span> <span class="n">energy_simulation</span><span class="p">)</span>
     <span class="n">ratios</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">energy_simulation</span><span class="p">,</span> <span class="s1">'time_step_ratios'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
     <span class="n">time_step_ratio</span> <span class="o">=</span> <span class="n">ratios</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ratios</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
     <span class="n">check_time_step_ratio</span><span class="p">(</span>

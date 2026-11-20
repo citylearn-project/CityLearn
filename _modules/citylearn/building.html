@@ -127,18 +127,16 @@
   <h1>Source code for citylearn.building</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">spaces</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.scalars</span><span class="w"> </span><span class="kn">import</span> <span class="n">as_float</span><span class="p">,</span> <span class="n">clip_scalar</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional dependency for LSTM dynamics only</span>
-    <span class="n">torch</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">EpisodeTracker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">CarbonIntensity</span><span class="p">,</span> <span class="n">EnergySimulation</span><span class="p">,</span> <span class="n">Pricing</span><span class="p">,</span> <span class="n">TOLERANCE</span><span class="p">,</span> <span class="n">Weather</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.dynamics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dynamics</span><span class="p">,</span> <span class="n">LSTMDynamics</span>
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="c1"># citylearn.dynamics imports torch, which only the LSTM dynamics need: import it when a schema uses them.</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.dynamics</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dynamics</span><span class="p">,</span> <span class="n">LSTMDynamics</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.electric_vehicle_charger</span><span class="w"> </span><span class="kn">import</span> <span class="n">Charger</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Battery</span><span class="p">,</span> <span class="n">DeferrableAppliance</span><span class="p">,</span> <span class="n">ElectricDevice</span><span class="p">,</span> <span class="n">ElectricHeater</span><span class="p">,</span> <span class="n">Escalator</span><span class="p">,</span> <span class="n">HeatPump</span><span class="p">,</span> <span class="n">PLACEHOLDER_DEVICE_RANDOM_SEED</span><span class="p">,</span> <span class="n">PV</span><span class="p">,</span>
@@ -160,6 +158,24 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_bool</span>
 
 <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="c1"># Names this module imported eagerly before torch became lazy, for code that still reads them from here.</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'Dynamics'</span><span class="p">,</span> <span class="s1">'LSTMDynamics'</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">dynamics</span>
+
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dynamics</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'torch'</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional dependency for LSTM dynamics only</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">torch</span>
+
+    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'module </span><span class="si">{</span><span class="vm">__name__</span><span class="si">!r}</span><span class="s1"> has no attribute </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s1">'</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Building">
 <a class="viewcode-back" href="../../api/citylearn.building.html#citylearn.building.Building">[docs]</a>
@@ -3652,7 +3668,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    *args: Any</span>
 <span class="sd">        Positional arguments in :py:class:`citylearn.building.Building`.</span>
-<span class="sd">    dynamics: Dynamics</span>
+<span class="sd">    dynamics: 'Dynamics'</span>
 <span class="sd">        Indoor dry-bulb temperature dynamics model.</span>
 <span class="sd">    ignore_dynamics: bool, default: False</span>
 <span class="sd">        Wether to simulate temperature dynamics at any time step.</span>
@@ -3663,7 +3679,7 @@
 <span class="sd">        Other keyword arguments used to initialize :py:class:`citylearn.building.Building` super class.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">dynamics</span><span class="p">:</span> <span class="n">Dynamics</span><span class="p">,</span> <span class="n">ignore_dynamics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">dynamics</span><span class="p">:</span> <span class="s1">'Dynamics'</span><span class="p">,</span> <span class="n">ignore_dynamics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Intialize `DynamicsBuilding`"""</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span> <span class="o">=</span> <span class="n">dynamics</span>
@@ -3857,7 +3873,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    *args: Any</span>
 <span class="sd">        Positional arguments in :py:class:`citylearn.building.Building`.</span>
-<span class="sd">    dynamics: Dynamics</span>
+<span class="sd">    dynamics: 'Dynamics'</span>
 <span class="sd">        Indoor dry-bulb temperature dynamics model.</span>
 
 <span class="sd">    Other Parameters</span>
@@ -3866,9 +3882,9 @@
 <span class="sd">        Other keyword arguments used to initialize :py:class:`citylearn.building.Building` super class.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">dynamics</span><span class="p">:</span> <span class="n">LSTMDynamics</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">dynamics</span><span class="p">:</span> <span class="s1">'LSTMDynamics'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">dynamics</span><span class="o">=</span><span class="n">dynamics</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="p">:</span> <span class="n">LSTMDynamics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="p">:</span> <span class="s1">'LSTMDynamics'</span>
 
     <span class="nd">@DynamicsBuilding</span><span class="o">.</span><span class="n">simulate_dynamics</span><span class="o">.</span><span class="n">getter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">simulate_dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -3896,8 +3912,10 @@
 <span class="sd">        or heating demand at each `time_step`.</span>
 <span class="sd">        """</span>
 
-        <span class="k">if</span> <span class="n">torch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">'torch is required to use LSTMDynamicsBuilding.'</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional dependency for LSTM dynamics only</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">'torch is required to use LSTMDynamicsBuilding.'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
         <span class="c1"># predict</span>
         <span class="n">model_input_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_dynamics_input</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>

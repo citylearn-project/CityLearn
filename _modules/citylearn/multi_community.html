@@ -372,15 +372,22 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return local child KPIs plus portfolio rows aggregated from district KPIs."""</span>
 
-        <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">frame</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_community_kpis</span><span class="p">({</span>
+            <span class="n">community_id</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span>
                 <span class="n">control_condition</span><span class="o">=</span><span class="n">control_condition</span><span class="p">,</span>
                 <span class="n">baseline_condition</span><span class="o">=</span><span class="n">baseline_condition</span><span class="p">,</span>
                 <span class="n">comfort_band</span><span class="o">=</span><span class="n">comfort_band</span><span class="p">,</span>
                 <span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">,</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">})</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_combine_community_kpis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">community_kpis</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="n">frames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">community_frame</span> <span class="ow">in</span> <span class="n">community_kpis</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">community_frame</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">frame</span><span class="p">[</span><span class="s2">"community_id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">community_id</span>
             <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
 
@@ -390,8 +397,7 @@
         <span class="k">if</span> <span class="n">portfolio</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">local</span>
 
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">local</span><span class="p">,</span> <span class="n">portfolio</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
-
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">local</span><span class="p">,</span> <span class="n">portfolio</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MultiCommunityEnv.export_final_kpis">
 <a class="viewcode-back" href="../../api/citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.export_final_kpis">[docs]</a>
@@ -410,17 +416,24 @@
         <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"MultiCommunityEnv.export_final_kpis does not support model overrides in v1."</span><span class="p">)</span>
 
+        <span class="c1"># Evaluate each community once: its own export and the portfolio rows use the same table.</span>
+        <span class="n">community_kpis</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">community_id</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
         <span class="k">if</span> <span class="n">export_community_kpis</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-                <span class="n">env</span><span class="o">.</span><span class="n">export_final_kpis</span><span class="p">(</span>
+            <span class="k">for</span> <span class="n">community_id</span><span class="p">,</span> <span class="n">env</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">envs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">env</span><span class="o">.</span><span class="n">_episode_exporter</span><span class="o">.</span><span class="n">export_final_kpis</span><span class="p">(</span>
                     <span class="n">filepath</span><span class="o">=</span><span class="n">community_filepath</span><span class="p">,</span>
                     <span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">,</span>
                     <span class="n">export_business_as_usual_timeseries</span><span class="o">=</span><span class="n">export_business_as_usual_timeseries</span><span class="p">,</span>
                     <span class="n">kpi_round_decimals</span><span class="o">=</span><span class="n">kpi_round_decimals</span><span class="p">,</span>
+                    <span class="n">evaluated_kpis</span><span class="o">=</span><span class="n">community_kpis</span><span class="p">[</span><span class="n">community_id</span><span class="p">],</span>
                 <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_output_dir</span><span class="p">()</span>
-        <span class="n">kpis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">)</span>
+        <span class="n">kpis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_community_kpis</span><span class="p">(</span><span class="n">community_kpis</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">kpi_round_decimals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

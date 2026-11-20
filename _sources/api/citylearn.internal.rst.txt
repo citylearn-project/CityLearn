@@ -51,6 +51,7 @@ Submodules
    citylearn.internal.runtime
    citylearn.internal.scalars
    citylearn.internal.service_energy
+   citylearn.internal.shared_series
    citylearn.internal.temporal
    citylearn.internal.topology
    citylearn.internal.units
