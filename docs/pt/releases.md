@@ -191,6 +191,50 @@ Parte do pacote de trabalho 9 da auditoria da 3.6.0 ([#226](https://github.com/c
 - **Navegação.** Uma página de entrada dos KPIs leva às restantes páginas de KPIs, o guia de migração passa para "Project", as páginas do challenge para "History", e os comandos de validação que precisam do repositório dizem-no ([#271](https://github.com/citylearn-project/CityLearn/issues/271), [#272](https://github.com/citylearn-project/CityLearn/issues/272)).
 - **Ligações e versões.** As ligações mortas foram corrigidas, um job semanal verifica as ligações externas, e cada página indica que o site documenta o `master` e onde ler a documentação de uma versão publicada ([#270](https://github.com/citylearn-project/CityLearn/issues/270), [#271](https://github.com/citylearn-project/CityLearn/issues/271)).
 
+### Instalação, documentação e CLI
+
+Pacote de trabalho 9 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-project/CityLearn/issues/226)), parte B. As
+simulações e os KPIs não mudam.
+
+- **PyTorch e scikit-learn passam a opcionais.** Uma instalação por omissão
+  ocupava cerca de 5,7 GB, sobretudo o PyTorch com as bibliotecas CUDA, embora só
+  a dinâmica térmica LSTM e os controladores SAC e MARLISA o usem
+  ([#259](https://github.com/citylearn-project/CityLearn/issues/259)). O `pip install citylearn` passa a instalar cerca de 200 MB.
+  Os novos extras `citylearn[dynamics]` (PyTorch, para a dinâmica térmica LSTM
+  dos datasets do desafio 2023, Quebec, `baeda_3dem` e bairros EULP) e
+  `citylearn[rl]` (PyTorch e scikit-learn, para o SAC e o MARLISA) juntam-nos, e
+  o `end_use_load_profiles` inclui ambos. Sem eles, carregar um desses datasets
+  ou controladores levanta um `ImportError` que indica o extra e o comando do
+  PyTorch apenas CPU. A página de instalação começa pelos passos de instalação,
+  lista os extras e documenta a cache de datasets, o uso offline e todas as
+  variáveis `CITYLEARN_*`.
+- **Erros de dados acionáveis.** Um nome de dataset desconhecido sugere os nomes
+  mais próximos e indica `DataSet().get_dataset_names()`. Um dataset Parquet sem
+  pyarrow falha antes do download e indica `citylearn[parquet]`. Os erros offline
+  com a cache vazia indicam a pasta da cache, `CITYLEARN_LOCAL_DATASETS_PATH` e
+  como desativar o modo offline ([#268](https://github.com/citylearn-project/CityLearn/issues/268)).
+- **Os notebooks de exemplo correm no CI.** A célula do agente passivo do
+  notebook de controladores falhava; passa a avaliar sem a referência BAU
+  ([#265](https://github.com/citylearn-project/CityLearn/issues/265)). Os notebooks simulam uma semana, instalam `citylearn[rl]` e o
+  Stable Baselines3 2.4 ou mais recente em vez do pin 2.3.2, que baixava o
+  gymnasium para 0.29.1, e deixam de correr o RLlib 2.10, sem wheels para Python
+  3.12 ou mais recente ([#266](https://github.com/citylearn-project/CityLearn/issues/266)). Um novo job de CI executa todos os
+  notebooks publicados. Um novo tutorial treina um controlador SAC do Stable
+  Baselines3, avalia-o numa semana não vista e compara-o com o BAU; o notebook do
+  tutorial da versão 2.1.2 é removido ([#267](https://github.com/citylearn-project/CityLearn/issues/267)).
+- **CLI.** O `train --evaluate` avalia na janela do primeiro episódio de treino em
+  vez do dataset inteiro. O resumo do treino só regista o nome da máquina e do
+  utilizador com `--record_host`. O `simulate` mostra o caminho de cada ficheiro
+  que escreve, e um agente Stable Baselines3 sem política levanta um `TypeError`
+  que mostra `-ka '{"policy": "MlpPolicy"}'`. Avaliar um ambiente embrulhado
+  falhava com `AttributeError` no gymnasium 1.x e passa a funcionar
+  ([#269](https://github.com/citylearn-project/CityLearn/issues/269)).
+- **Contribuições.** O `CONTRIBUTING.md` cobre a instalação, um subconjunto
+  rápido de testes, a verificação da documentação e dos notebooks e a checklist
+  de pull requests; os templates de issues passam a ser atribuídos ao maintainer
+  atual, junta-se um template de perguntas, e o `ray[rllib]` deixa de ser
+  dependência dos testes ([#273](https://github.com/citylearn-project/CityLearn/issues/273)).
+
 ## v3.6.0 - 2026-11-19
 
 A 3.6.0 reúne 26 pull requests: correções da física, dos KPIs, das baselines, dos

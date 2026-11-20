@@ -7,8 +7,9 @@ from citylearn.preprocessing import Encoder, PeriodicNormalization, Normalize, O
 # conditional imports
 try:
     import torch
-except (ModuleNotFoundError, ImportError) as e:
-    raise Exception("This functionality requires you to install torch. You can install torch by : pip install torch torchvision, or for more detailed instructions please visit https://pytorch.org.")
+except ImportError as error:
+    from citylearn.internal.optional_dependencies import missing_dependency
+    raise missing_dependency('The reinforcement learning controllers', 'PyTorch', 'rl') from error
 
 from citylearn.agents.base import Agent, require_flat_interface
 

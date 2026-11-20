@@ -9,13 +9,15 @@ from citylearn.citylearn import CityLearnEnv
 try:
     from sklearn.decomposition import PCA
     from sklearn.linear_model import LinearRegression
-except (ModuleNotFoundError, ImportError) as e:
-    raise Exception("This functionality requires you to install scikit-learn. You can install scikit-learn by : pip scikit-learn, or for more detailed instructions please visit https://scikit-learn.org/stable/install.html.")
+except ImportError as error:
+    from citylearn.internal.optional_dependencies import missing_dependency
+    raise missing_dependency('MARLISA', 'scikit-learn', 'rl') from error
 
 try:
     import torch
-except (ModuleNotFoundError, ImportError) as e:
-    raise Exception("This functionality requires you to install torch. You can install torch by : pip install torch torchvision, or for more detailed instructions please visit https://pytorch.org.")
+except ImportError as error:
+    from citylearn.internal.optional_dependencies import missing_dependency
+    raise missing_dependency('MARLISA', 'PyTorch', 'rl') from error
 
 from citylearn.agents.sac import SAC
 from citylearn.preprocessing import Encoder, NoNormalization, PeriodicNormalization, RemoveFeature

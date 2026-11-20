@@ -7,8 +7,9 @@ try:
     from torch.distributions import Normal
     import torch.nn as nn
     import torch.nn.functional as F
-except ImportError:
-    raise Exception("This functionality requires you to install torch. You can install torch by : pip install torch torchvision, or for more detailed instructions please visit https://pytorch.org.")
+except ImportError as error:
+    from citylearn.internal.optional_dependencies import missing_dependency
+    raise missing_dependency('The SAC and MARLISA networks', 'PyTorch', 'rl') from error
 
 class PolicyNetwork(nn.Module):
     def __init__(self, 

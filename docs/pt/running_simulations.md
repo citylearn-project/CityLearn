@@ -7,7 +7,10 @@ Esta pagina e a referencia pratica para instalar, criar um ambiente, correr epis
 | Caso | Comando | Notas |
 |---|---|---|
 | Instalacao normal | `pip install citylearn` | O import Python e `citylearn`. |
-| Datasets Parquet | `pip install pyarrow` | Necessario apenas se o schema apontar para `.parquet`, `.pq` ou `.parq`. |
+| Dinamica termica LSTM | `pip install "citylearn[dynamics]"` | Junta o PyTorch; necessario para os datasets do desafio 2023, Quebec, `baeda_3dem` e bairros EULP. |
+| SAC e MARLISA | `pip install "citylearn[rl]"` | Junta o PyTorch e o scikit-learn. Para um PyTorch apenas CPU, correr antes `pip install torch --index-url https://download.pytorch.org/whl/cpu`. |
+| Datasets Parquet | `pip install "citylearn[parquet]"` | Necessario apenas se o schema apontar para `.parquet`, `.pq` ou `.parq`. |
+| Stable Baselines3 | `pip install "stable-baselines3>=2.4"` | Necessario apenas para agentes Stable Baselines3, em Python ou na CLI. |
 | PV autosizing | `pip install "citylearn[pysam]"` | Necessario apenas para autosizing via EPW/PySAM. |
 | Desenvolvimento local | `.venv/bin/pip install -e .` | Usar a `.venv` do repo quando existir. |
 
@@ -179,8 +182,11 @@ Quando `return_substeps=True`, o `info` tambem inclui `substep_rewards`, `subste
 
 ## CLI
 
-Na versão 3.0.2, a CLI requer `python -m pip install stable-baselines3==2.3.2`.
-A primeira simulação pela API Python não exige esta dependência.
+Os comandos de listagem e o agente por omissão da CLI, o `BusinessAsUsualAgent`,
+precisam apenas do CityLearn. Treinar ou avaliar um agente Stable Baselines3
+precisa também de `stable-baselines3>=2.4`, e os agentes `SAC` e `MARLISA`
+incluídos precisam do extra `rl`. Todos os comandos funcionam com Python 3.10
+ou mais recente.
 
 ```bash
 citylearn --version
@@ -189,6 +195,27 @@ citylearn list_default_time_series_variables
 citylearn simulate data/datasets/my_dataset/schema.json train -e 3
 citylearn simulate data/datasets/my_dataset/schema.json evaluate
 ```
+
+O `simulate` escreve na pasta de saída o resumo do treino
+(`<simulation_id>-train.json`), a avaliação (`<simulation_id>-evaluation.json`)
+e, com `--save_agent`, o agente, e mostra o caminho de cada ficheiro escrito.
+
+Um agente Stable Baselines3 precisa da política nos argumentos do agente e do
+ambiente embrulhado num único vetor plano de observações e de ações, o que
+exige um agente central. Este comando treina o SAC durante cinco episódios
+diários na primeira semana e avalia-o no primeiro episódio de treino:
+
+```bash
+citylearn simulate citylearn_challenge_2022_phase_all_plus_evs \
+  -a stable_baselines3.SAC -ka '{"policy": "MlpPolicy"}' \
+  -w citylearn.wrappers.NormalizedObservationWrapper citylearn.wrappers.StableBaselines3Wrapper \
+  -ke '{"central_agent": true, "episode_time_steps": 24, "simulation_end_time_step": 167}' \
+  -rs 0 -d outputs/sb3_sac -sid sb3_sac train -e 5 --evaluate --save_agent
+```
+
+O `train --evaluate` avalia na janela do primeiro episódio de treino, salvo se
+`-te` indicar outras janelas. O resumo do treino só regista o nome da máquina e
+o nome do utilizador com `--record_host`.
 
 | Opcao CLI | Exemplo | O que faz |
 |---|---|---|
@@ -205,6 +232,7 @@ citylearn simulate data/datasets/my_dataset/schema.json evaluate
 | `-p`, `--append` | flag | Nao apaga saida existente. |
 | `-rs`, `--random_seed` | `42` | Semente. |
 | `--offline` | flag | Obriga dados locais. |
+| `--record_host` | flag | Regista o nome da máquina e do utilizador no resumo do treino. |
 | `train -e` | `train -e 10` | Numero de episodios. |
 | `train --save_agent` | flag | Guarda o agente no fim. |
 | `train --evaluate` | flag | Avalia depois do treino. |

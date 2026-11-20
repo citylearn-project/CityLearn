@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://www.citylearn.net
+    about: Installation, optional dependencies, datasets, tutorials and the API reference.
+  - name: Contributing guide
+    url: https://github.com/citylearn-project/CityLearn/blob/master/CONTRIBUTING.md
+    about: Development setup, tests and the pull request checklist.

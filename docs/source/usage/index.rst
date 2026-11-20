@@ -11,5 +11,6 @@ Start with a complete episode, then adapt the parts needed for your study.
    simulate
    custom_controller
    agents
+   rl_training
    cli
    tutorials

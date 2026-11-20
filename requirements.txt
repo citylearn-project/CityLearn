@@ -5,6 +5,4 @@ pandas
 platformdirs
 pyyaml
 requests
-scikit-learn
 simplejson
-torch

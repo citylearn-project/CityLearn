@@ -1400,7 +1400,7 @@ class CityLearnEnv(Environment, Env):
                             "Provide a local schema.json file path or place the dataset under a local datasets root."
                         )
 
-                    raise UnknownSchemaError()
+                    raise UnknownSchemaError(_unknown_dataset_message(schema, dataset_names))
 
             else:
                 raise UnknownSchemaError(f'Schema file path does not exist: {schema_path}')
@@ -2229,6 +2229,21 @@ class CityLearnEnv(Environment, Env):
             "CO2-kg_co2": _safe_value(self.net_electricity_consumption_emission, idx),
             "Price-$": _safe_value(self.net_electricity_consumption_cost, idx),
         }
+def _unknown_dataset_message(name: str, dataset_names: List[str]) -> str:
+    """Name the closest dataset names for a schema string that is neither a dataset name nor a file."""
+
+    import difflib
+
+    matches = difflib.get_close_matches(name, dataset_names, n=3, cutoff=0.6)
+    suggestion = f" Did you mean {' or '.join(repr(m) for m in matches)}?" if matches else ''
+
+    return (
+        f"'{name}' is neither the name of a CityLearn dataset nor an existing schema file path.{suggestion} "
+        'Call citylearn.data.DataSet().get_dataset_names() for the list of dataset names, or pass the path of a '
+        'schema.json file or a schema dict.'
+    )
+
+
 class Error(Exception):
     """Base class for other exceptions."""
 
@@ -2236,7 +2251,7 @@ class UnknownSchemaError(Error):
     """Raised when a schema is not a data set name, dict nor filepath."""
     __MESSAGE = 'Unknown schema parsed into constructor. Schema must be name of CityLearn data set,'\
         ' a filepath to JSON representation or `dict` object of a CityLearn schema.'\
-        ' Call citylearn.data.DataSet.get_names() for list of available CityLearn data sets.'
+        ' Call citylearn.data.DataSet().get_dataset_names() for the list of available CityLearn data sets.'
 
     def __init__(self,message=None):
         super().__init__(self.__MESSAGE if message is None else message)

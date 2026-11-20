@@ -121,8 +121,10 @@ def _exit_code(result: Any) -> int:
 class Simulator:
     def __init__(self, schema: str, agent_name: str = None, env_kwargs: Mapping[str, Any] = None, agent_kwargs: Mapping[str, Any] = None, wrappers: List[str] = None,
      time_series_variables: List[str] = None, simulation_id: str = None, output_directory: Union[Path, str] = None, agent_filepath: Union[Path, str] = None,
-     random_seed: int = None, offline: bool = None, overwrite: bool = None
+     random_seed: int = None, offline: bool = None, overwrite: bool = None, record_host: bool = None
     ) -> None:
+        # The machine and user names are personal data in shared results, so they are recorded only on request.
+        self.record_host = False if record_host is None else bool(record_host)
         self.schema = schema
         self.agent_name = agent_name
         self.env_kwargs = env_kwargs
@@ -301,9 +303,10 @@ class Simulator:
         return pd.concat(data_list, ignore_index=True)
 
     def __get_training_summary(self):
+        host = {'hostname': socket.gethostname(), 'username': getpass.getuser()} if self.record_host else {}
+
         return {
-            'hostname': socket.gethostname(),
-            'username': getpass.getuser(),
+            **host,
             'simulation_id': self.simulation_id,
             'agent': self.agent.__class__.__name__,
             'agent_kwargs': self.agent_kwargs,
@@ -321,7 +324,8 @@ class Simulator:
         actions_list = []
         self.__evaluation_start_timestamp = datetime.datetime.now(datetime.timezone.utc)
         
-        while not self.env.terminated:
+        # Gymnasium 1.x wrappers no longer forward attributes, so read the episode state from the base environment.
+        while not self.env.unwrapped.terminated:
             if isinstance(self.agent, CityLearnAgent):
                 actions = self.agent.predict(observations, deterministic=True)
                 actions_list.append(self.env.unwrapped._parse_actions(actions))
@@ -369,14 +373,28 @@ class Simulator:
         else:
             filepath = os.path.join(self.output_directory, f'{self.simulation_id}-agent')
             self.agent.save(filepath)
+            filepath = f'{filepath}.zip'
+
+        return filepath
 
     def __set_agent(self) -> Union[CityLearnAgent, StableBaselines3Agent]:
         if self.agent_filepath is None:
-            agent = self.env.unwrapped.load_agent(
-                agent=self.agent_name, 
-                env=self.env,
-                **self.agent_kwargs,
-            )
+            try:
+                agent = self.env.unwrapped.load_agent(
+                    agent=self.agent_name,
+                    env=self.env,
+                    **self.agent_kwargs,
+                )
+
+            except TypeError as error:
+                if 'stable_baselines3' in str(self.agent_name) and "'policy'" in str(error):
+                    raise TypeError(
+                        f'{self.agent_name} needs a policy. Pass it with the agent arguments, for example '
+                        '-ka \'{"policy": "MlpPolicy"}\', and wrap the environment with '
+                        '-w citylearn.wrappers.NormalizedObservationWrapper citylearn.wrappers.StableBaselines3Wrapper.'
+                    ) from error
+
+                raise
 
         else:
             if str(self.agent_filepath).endswith('.pkl'):
@@ -423,6 +441,7 @@ class Simulator:
         simulator.__evaluate()
         filepath = os.path.join(simulator.output_directory, f'{simulator.simulation_id}-evaluation.json')
         FileHandler.write_json(filepath, simulator.__get_evaluation_summary())
+        print(f'Wrote the evaluation to {filepath}')
 
     @classmethod
     def train(cls, episodes: int = None, evaluate: bool = None, evaluation_episode_time_steps: Union[Tuple[int, int], List[Tuple[int, int]]] = None, save_agent: bool = None, **kwargs):
@@ -431,25 +450,45 @@ class Simulator:
         simulator.__train(episodes)
         filepath = os.path.join(simulator.output_directory, f'{simulator.simulation_id}-train.json')
         FileHandler.write_json(filepath, simulator.__get_training_summary())
+        print(f'Wrote the training summary to {filepath}')
 
         if save_agent:
-            simulator.__save_agent()
+            print(f'Wrote the agent to {simulator.__save_agent()}')
 
         else:
             pass
 
         if evaluate:
-            # Evaluate the agent trained above, not a new agent built from the same arguments.
-            simulator.env.unwrapped.episode_time_steps = [[
-                simulator.env.unwrapped.episode_tracker.simulation_start_time_step, 
-                simulator.env.unwrapped.episode_tracker.simulation_end_time_step
-            ]] if evaluation_episode_time_steps is None else cls.__episode_time_steps(evaluation_episode_time_steps)
+            # Evaluate the agent trained above, not a new agent built from the same arguments, on the first
+            # training episode window unless -te gives other windows.
+            simulator.env.unwrapped.episode_time_steps = (
+                [simulator.__training_window()] if evaluation_episode_time_steps is None
+                else cls.__episode_time_steps(evaluation_episode_time_steps)
+            )
             simulator.__evaluate()
             filepath = os.path.join(simulator.output_directory, f'{simulator.simulation_id}-evaluation.json')
             FileHandler.write_json(filepath, simulator.__get_evaluation_summary())
+            print(f'Wrote the evaluation to {filepath}')
 
         else:
             pass
+
+    def __training_window(self) -> List[int]:
+        """First episode window of the training configuration: the whole simulation window without episode splits."""
+
+        tracker = self.env.unwrapped.episode_tracker
+        start, end = int(tracker.simulation_start_time_step), int(tracker.simulation_end_time_step)
+        episode_time_steps = self.env.unwrapped.episode_time_steps
+
+        if episode_time_steps is None:
+            return [start, end]
+
+        if np.ndim(episode_time_steps) == 0:
+            return [start, min(start + int(episode_time_steps) - 1, end)]
+
+        first_start, first_end = episode_time_steps[0]
+
+        return [int(first_start), int(first_end)]
 
     @staticmethod
     def __episode_time_steps(evaluation_episode_time_steps) -> List[List[int]]:
@@ -538,13 +577,16 @@ def main():
     subparser_simulate.add_argument('-d', '--output_directory', dest='output_directory', type=str, help=(
         'Directory to save all simulation output to.'))
     subparser_simulate.add_argument('-te', '--evaluation_episode_time_steps', dest='evaluation_episode_time_steps', type=int, nargs=2,
-        action='append', help=('Start and end time steps in data set to evaluate on otherwise, the agent is evaluated on entire dataset.'))
+        action='append', help=('Start and end time steps in data set to evaluate on. Without it, `evaluate` uses the '
+        'environment episode windows and `train --evaluate` the first training episode window.'))
     subparser_simulate.add_argument('-p', '--append', dest='overwrite', action='store_false', help=(
         'Add to output for existing simulation with `simulation_id` i.e. do not overwrite.'))
     subparser_simulate.add_argument('-rs', '--random_seed', dest='random_seed', type=int, help=(
         'Random seed used during environment and agent initialization.'))
     subparser_simulate.add_argument('--offline', dest='offline', action='store_true', help=(
         'Disable network access and require datasets/misc files to be available locally.'))
+    subparser_simulate.add_argument('--record_host', dest='record_host', action='store_true', help=(
+        'Record the machine host name and the user name in the training summary JSON.'))
     simulation_subparsers = subparser_simulate.add_subparsers(title='simulate subcommands', required=True, dest='subcommands')
 
     # -> train an agent
@@ -556,7 +598,8 @@ def main():
     subparser_train.add_argument('-e', '--episodes', dest='episodes', type=int, help='Number of training episodes/epochs.')
     subparser_train.add_argument('--save_agent', dest='save_agent', action='store_true', help='Whether to save agent to disk at the end of training.')
     subparser_train.add_argument('--evaluate', dest='evaluate', action='store_true', help=(
-        'Whether to run deterministic evaluation for one episode at the end of training.'))
+        'Whether to run deterministic evaluation for one episode at the end of training, on the first training '
+        'episode window unless `-te` gives evaluation windows.'))
     subparser_train.set_defaults(func=Simulator.train)
 
     # -> evaluate a trained agent
