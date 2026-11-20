@@ -21,6 +21,7 @@ This page documents the `schema.json` contract. The schema is the source of trut
 |---|---:|---:|---|
 | `root_directory` | string | yes | Base folder for dataset files. |
 | `random_seed` | int/null | no | Global random seed. |
+| `random_stream_version` | string | no | How random streams are derived from `random_seed`: `v2` (default, one independent `SeedSequence` stream per purpose, object and episode) or `v1` (CityLearn 3.6.0 and earlier). The `random_stream_version` constructor argument overrides it. See the [migration guide](migration.md#random-streams). |
 | `central_agent` | bool | yes | Single controller or one agent per building. |
 | `seconds_per_time_step` | number | yes | Physical duration of each step. |
 | `simulation_start_time_step` | int | yes | First global timestep. |

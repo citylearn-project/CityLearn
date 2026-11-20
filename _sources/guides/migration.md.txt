@@ -280,6 +280,78 @@ entity feature `round_trip_efficiency_ratio` keeps its name and value, which is
 the one-way efficiency. `Battery.efficiency_history` now gains one entry per
 charge or discharge instead of two. No simulated value changes.
 
+### Random streams
+
+CityLearn draws random values for unspecified device parameters (for example a
+battery's `power_efficiency_curve`, `capacity_power_curve` or
+`capacity_loss_coefficient`, or a tuple range given for a parameter), the state
+of charge of electric vehicles away from their charger, occupant set-point
+interactions and stochastic power outages. The new top-level schema key and
+constructor argument `random_stream_version` selects how these streams are
+derived from `random_seed` ([#248](https://github.com/citylearn-project/CityLearn/issues/248)).
+
+`v2`, the new default, derives every stream with `numpy.random.SeedSequence`,
+with the seed as entropy and the purpose, the object and the episode as spawn
+key, and keeps one generator per stream:
+
+- each device draws its parameters as successive values of its own stream,
+  keyed by building and device name; in 3.6.0 every draw was the first value of
+  a new `RandomState`, so all parameters of a device sat at the same quantile.
+  A `random_seed` given in a device's or an EV battery's attributes is that
+  object's own stream, so devices given the same seed draw the same parameters,
+  as a device built on its own does;
+- each electric vehicle has its own away-from-charger drift stream per episode;
+  in 3.6.0 one stream seeded with `random_seed + episode` was shared by every
+  EV, so seed `s` in episode 1 repeated seed `s + 1` in episode 0;
+- each occupant has its own stream per episode; in 3.6.0 every occupant drew
+  `RandomState(max(random_seed, 1) + time_step)`, the same value in every
+  building and episode, and seeds 0 and 1 were identical;
+- each building's stochastic outages are drawn per episode, including day 0
+  and a partial last day, with durations rounded to the nearest step; 3.6.0
+  skipped day 0 and the partial last day, floored durations, and repeated the
+  same outages in every episode with the same window. A seed given to the
+  outage model is now the root of that building's stream instead of a stream
+  shared by every building that uses it.
+
+`reset(seed=s)` repeats the first episode of an environment built with
+`random_seed=s`, and `reset(options={'episode_index': k})` repeats episode `k`.
+The native BAU reference uses the streams of the episode it evaluates.
+
+Runs that use none of these random features are unchanged. To reproduce results
+obtained with 3.6.0 or earlier for the same seed, set `random_stream_version`
+to `v1`:
+
+```python
+env = CityLearnEnv(schema, random_seed=0, random_stream_version='v1')
+```
+
+or add `"random_stream_version": "v1"` to the schema. The version used is
+recorded in `get_metadata()['random_stream_version']`, in the
+`temporal_reproducibility` metadata and in the experiment manifest; comparisons
+between runs with different versions report a temporal mismatch.
+
+Measured with the same pseudo-random actions and the other settings at their
+defaults, `v1` reproduces the random streams of 3.6.0 bit for bit on every run
+below; `v2` changes:
+
+- `citylearn_challenge_2022_phase_all` (168 h, random battery curves): control
+  cost 1,171.0 → 1,171.1 EUR (+0.01%) and net consumption +0.1%;
+- `citylearn_challenge_2022_phase_all_plus_evs` (two 168 h episodes, random
+  battery curves and EV drift): net consumption −1.6% in both episodes,
+  control cost −0.2% and −0.1%;
+- `citylearn_challenge_2023_phase_2_local_evaluation` (720 h): with the
+  bundled SAIFI the three buildings no longer share one 15-step outage, so the
+  episode has none and the normalized outage unserved energy goes from 0.72 to
+  0; with SAIFI 36.5/year the outages per building change from 23/23/23 steps
+  in both episodes (identical in every building and episode) to 9/9/34 and
+  5/1/4;
+- `quebec_neighborhood_with_demand_response_set_points` (3 buildings, two
+  168 h episodes): occupant draws now differ by building and episode; energy,
+  temperature and comfort KPIs of these runs are unchanged.
+
+Rerun stochastic experiments, and retrain policies whose results you compare
+across seeds, with `v2`; keep `v1` only to reproduce published 3.6.0 numbers.
+
 ## Upgrade from 3.5.0 to 3.6.0
 
 ### Battery discharge features during outages

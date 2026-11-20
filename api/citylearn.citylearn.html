@@ -107,6 +107,7 @@
 <li class="toctree-l4"><a class="reference internal" href="citylearn.occupant.html">citylearn.occupant module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.power_outage.html">citylearn.power_outage module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.preprocessing.html">citylearn.preprocessing module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.random_streams.html">citylearn.random_streams module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.reward_function.html">citylearn.reward_function module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.rl.html">citylearn.rl module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.utilities.html">citylearn.utilities module</a></li>
@@ -210,6 +211,11 @@ each building independently in a <code class="code docutils literal notranslate"
 <li><p><strong>solar_generation</strong> (<em>Union</em><em>[</em><em>bool</em><em>, </em><em>List</em><em>[</em><em>bool</em><em>]</em><em>]</em>) – Wehther to allow solar generation. Can be specified for all buildings as single <code class="code docutils literal notranslate"><span class="pre">bool</span></code> or for
 each building independently in a <code class="code docutils literal notranslate"><span class="pre">List[bool]</span></code>. Will override <code class="code docutils literal notranslate"><span class="pre">pv</span></code> defined in the <code class="code docutils literal notranslate"><span class="pre">schema</span></code>.</p></li>
 <li><p><strong>random_seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Pseudorandom number generator seed for repeatable results.</p></li>
+<li><p><strong>random_stream_version</strong> (<em>str</em><em>, </em><em>optional</em>) – Keyword argument. How the random streams for unspecified device parameters, away-from-charger EV
+state of charge, occupant set-point interactions and stochastic power outages are derived from
+<cite>random_seed</cite>: <code class="docutils literal notranslate"><span class="pre">'v2'</span></code> (default) derives one independent stream per purpose, object and episode
+with <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.SeedSequence</span></code>; <code class="docutils literal notranslate"><span class="pre">'v1'</span></code> reproduces CityLearn 3.6.0 and earlier. Overrides
+<code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> in the schema. See <a class="reference internal" href="citylearn.random_streams.html#module-citylearn.random_streams" title="citylearn.random_streams"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.random_streams</span></code></a>.</p></li>
 <li><p><strong>offline</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
 error when required files are not available locally. Defaults to the <code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE</span></code> environment
 variable, read at initialization, or False when it is unset.</p></li>

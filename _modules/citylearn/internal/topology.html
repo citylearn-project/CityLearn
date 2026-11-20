@@ -1050,7 +1050,10 @@
             <span class="k">return</span> <span class="kc">True</span>
 
         <span class="k">if</span> <span class="n">asset_type</span> <span class="o">==</span> <span class="s1">'pv'</span><span class="p">:</span>
-            <span class="n">building</span><span class="o">.</span><span class="n">pv</span> <span class="o">=</span> <span class="n">PV</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">seconds_per_time_step</span><span class="o">=</span><span class="n">building</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="n">PLACEHOLDER_DEVICE_RANDOM_SEED</span><span class="p">)</span>
+            <span class="n">building</span><span class="o">.</span><span class="n">pv</span> <span class="o">=</span> <span class="n">PV</span><span class="p">(</span>
+                <span class="mf">0.0</span><span class="p">,</span> <span class="n">seconds_per_time_step</span><span class="o">=</span><span class="n">building</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="n">PLACEHOLDER_DEVICE_RANDOM_SEED</span><span class="p">,</span>
+                <span class="n">random_stream_version</span><span class="o">=</span><span class="n">building</span><span class="o">.</span><span class="n">random_stream_version</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_bind_building_runtime_context</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
             <span class="n">building</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_building_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
@@ -1062,6 +1065,7 @@
         <span class="k">if</span> <span class="n">asset_type</span> <span class="o">==</span> <span class="s1">'electrical_storage'</span><span class="p">:</span>
             <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage</span> <span class="o">=</span> <span class="n">Battery</span><span class="p">(</span>
                 <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">seconds_per_time_step</span><span class="o">=</span><span class="n">building</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="n">PLACEHOLDER_DEVICE_RANDOM_SEED</span><span class="p">,</span>
+                <span class="n">random_stream_version</span><span class="o">=</span><span class="n">building</span><span class="o">.</span><span class="n">random_stream_version</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_bind_building_runtime_context</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
             <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>

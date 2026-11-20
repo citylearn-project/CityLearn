@@ -140,6 +140,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_streams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">EpisodeTracker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span><span class="p">,</span> <span class="n">DynamicsBuilding</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.cost_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">CostFunction</span>
@@ -271,6 +272,12 @@
 <span class="sd">        each building independently in a :code:`List[bool]`. Will override :code:`pv` defined in the :code:`schema`.</span>
 <span class="sd">    random_seed: int, optional</span>
 <span class="sd">        Pseudorandom number generator seed for repeatable results.</span>
+<span class="sd">    random_stream_version: str, optional</span>
+<span class="sd">        Keyword argument. How the random streams for unspecified device parameters, away-from-charger EV</span>
+<span class="sd">        state of charge, occupant set-point interactions and stochastic power outages are derived from</span>
+<span class="sd">        `random_seed`: ``'v2'`` (default) derives one independent stream per purpose, object and episode</span>
+<span class="sd">        with :class:`numpy.random.SeedSequence`; ``'v1'`` reproduces CityLearn 3.6.0 and earlier. Overrides</span>
+<span class="sd">        ``random_stream_version`` in the schema. See :py:mod:`citylearn.random_streams`.</span>
 <span class="sd">    offline: bool, optional</span>
 <span class="sd">        If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear</span>
 <span class="sd">        error when required files are not available locally. Defaults to the ``CITYLEARN_OFFLINE`` environment</span>
@@ -326,7 +333,7 @@
         <span class="s1">'reward_function'</span><span class="p">,</span> <span class="s1">'reward_function_kwargs'</span><span class="p">,</span> <span class="s1">'central_agent'</span><span class="p">,</span> <span class="s1">'shared_observations'</span><span class="p">,</span> <span class="s1">'active_observations'</span><span class="p">,</span>
         <span class="s1">'inactive_observations'</span><span class="p">,</span> <span class="s1">'active_actions'</span><span class="p">,</span> <span class="s1">'inactive_actions'</span><span class="p">,</span> <span class="s1">'simulate_power_outage'</span><span class="p">,</span> <span class="s1">'solar_generation'</span><span class="p">,</span>
         <span class="s1">'random_seed'</span><span class="p">,</span> <span class="s1">'offline'</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="s1">'interface'</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'start_date'</span><span class="p">,</span>
-        <span class="s1">'episode_split_boundary'</span><span class="p">,</span> <span class="s1">'time_step_ratio_mode'</span><span class="p">,</span>
+        <span class="s1">'episode_split_boundary'</span><span class="p">,</span> <span class="s1">'time_step_ratio_mode'</span><span class="p">,</span> <span class="s1">'random_stream_version'</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -362,6 +369,7 @@
         <span class="n">ev_departure_within_tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ev_departure_within_tolerance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">ev_departure_service_tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ev_departure_service_tolerance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">business_as_usual_ev_charge_target</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'business_as_usual_ev_charge_target'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">random_stream_version</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'random_stream_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">kw_render_mode</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render_mode'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">requested_render_mode</span> <span class="o">=</span> <span class="n">render_mode</span> <span class="k">if</span> <span class="n">kw_render_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">kw_render_mode</span>
         <span class="n">requested_render_mode</span> <span class="o">=</span> <span class="s1">'none'</span> <span class="k">if</span> <span class="n">requested_render_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">requested_render_mode</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
@@ -483,6 +491,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_final_export_episode_index</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__rewards</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">buildings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Set before the seed and the buildings, which draw from streams of this version.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_random_stream</span><span class="p">(</span><span class="n">random_streams</span><span class="o">.</span><span class="n">parse_random_stream_version</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'random_stream_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">random_stream_version</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">random_stream_version</span><span class="p">,</span>
+        <span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'random_seed'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">random_seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">random_seed</span>
         <span class="n">schema_render_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'render_session_name'</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">render_session_name</span> <span class="o">=</span> <span class="n">render_session_name</span> <span class="k">if</span> <span class="n">render_session_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">schema_render_session</span>
@@ -1631,6 +1643,7 @@
             <span class="s1">'kpi_family_audit'</span><span class="p">:</span> <span class="n">family_metadata</span><span class="p">(),</span>
             <span class="s1">'reward_evidence'</span><span class="p">:</span> <span class="n">reward_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
             <span class="o">**</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(),</span>
+            <span class="s1">'random_stream_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span><span class="p">,</span>
             <span class="s1">'interface'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="p">,</span>
             <span class="s1">'topology_mode'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_mode</span><span class="p">,</span>
             <span class="s1">'topology_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_version</span><span class="p">,</span>
@@ -2009,6 +2022,12 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">episode_split_boundary</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="c1"># Episode key of the per-episode streams: an explicit seed repeats the first episode of an env</span>
+        <span class="c1"># built with that seed; the native BAU sidecar takes the key of the episode it evaluates.</span>
+        <span class="n">stream_episode</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_random_stream_episode_override'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">random_stream_episode</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">stream_episode</span> <span class="k">if</span> <span class="n">stream_episode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_mode</span> <span class="o">==</span> <span class="s1">'dynamic'</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_topology_service</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
@@ -2043,8 +2062,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_observations_cache_time_step</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="n">episode_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span> <span class="s1">'episode'</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_reset_seed_explicit</span> <span class="o">=</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span> <span class="o">+</span> <span class="n">episode_index</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_generators</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_stream_version</span> <span class="o">==</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span> <span class="o">+</span> <span class="n">episode_index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_random_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Each EV draws from its own stream (see `CityLearnRuntimeService.ev_drift_generator`);</span>
+            <span class="c1"># this identifies the episode's streams in metadata and comparisons.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_seed</span> <span class="o">=</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">stream_id</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span> <span class="n">random_streams</span><span class="o">.</span><span class="n">EV_AWAY_SOC_DRIFT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">random_stream_episode</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ev_drift_random_state</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_ev_suspended_drift_random_state</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_render_buffer</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_action_cache</span><span class="p">()</span>

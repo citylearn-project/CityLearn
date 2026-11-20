@@ -113,6 +113,7 @@
 <li class="toctree-l4"><a class="reference internal" href="citylearn.occupant.html">citylearn.occupant module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.power_outage.html">citylearn.power_outage module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.preprocessing.html">citylearn.preprocessing module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.random_streams.html">citylearn.random_streams module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.reward_function.html">citylearn.reward_function module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.rl.html">citylearn.rl module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="citylearn.utilities.html">citylearn.utilities module</a></li>
@@ -579,7 +580,10 @@
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.Environment.get_metadata"><code class="docutils literal notranslate"><span class="pre">Environment.get_metadata()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.Environment.next_time_step"><code class="docutils literal notranslate"><span class="pre">Environment.next_time_step()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.Environment.numpy_random_state"><code class="docutils literal notranslate"><span class="pre">Environment.numpy_random_state</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.Environment.random_generator"><code class="docutils literal notranslate"><span class="pre">Environment.random_generator()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.Environment.random_seed"><code class="docutils literal notranslate"><span class="pre">Environment.random_seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.Environment.random_stream_key"><code class="docutils literal notranslate"><span class="pre">Environment.random_stream_key</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.Environment.random_stream_version"><code class="docutils literal notranslate"><span class="pre">Environment.random_stream_version</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.Environment.reset"><code class="docutils literal notranslate"><span class="pre">Environment.reset()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.Environment.reset_time_step"><code class="docutils literal notranslate"><span class="pre">Environment.reset_time_step()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.Environment.seconds_per_time_step"><code class="docutils literal notranslate"><span class="pre">Environment.seconds_per_time_step</span></code></a></li>
@@ -596,6 +600,7 @@
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.EpisodeTracker.episode_start_time_step"><code class="docutils literal notranslate"><span class="pre">EpisodeTracker.episode_start_time_step</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.EpisodeTracker.episode_time_steps"><code class="docutils literal notranslate"><span class="pre">EpisodeTracker.episode_time_steps</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.EpisodeTracker.next_episode"><code class="docutils literal notranslate"><span class="pre">EpisodeTracker.next_episode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.EpisodeTracker.random_stream_episode"><code class="docutils literal notranslate"><span class="pre">EpisodeTracker.random_stream_episode</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.EpisodeTracker.reset_episode_index"><code class="docutils literal notranslate"><span class="pre">EpisodeTracker.reset_episode_index()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.EpisodeTracker.set_next_episode_index"><code class="docutils literal notranslate"><span class="pre">EpisodeTracker.set_next_episode_index()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.base.html#citylearn.base.EpisodeTracker.simulation_end_time_step"><code class="docutils literal notranslate"><span class="pre">EpisodeTracker.simulation_end_time_step</span></code></a></li>
@@ -1329,6 +1334,7 @@
 <li class="toctree-l2"><a class="reference internal" href="citylearn.power_outage.html#citylearn.power_outage.PowerOutage"><code class="docutils literal notranslate"><span class="pre">PowerOutage</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.power_outage.html#citylearn.power_outage.PowerOutage.get_signals"><code class="docutils literal notranslate"><span class="pre">PowerOutage.get_signals()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="citylearn.power_outage.html#citylearn.power_outage.PowerOutage.random_seed"><code class="docutils literal notranslate"><span class="pre">PowerOutage.random_seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="citylearn.power_outage.html#citylearn.power_outage.PowerOutage.random_stream_version"><code class="docutils literal notranslate"><span class="pre">PowerOutage.random_stream_version</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="citylearn.power_outage.html#citylearn.power_outage.ReliabilityMetricsPowerOutage"><code class="docutils literal notranslate"><span class="pre">ReliabilityMetricsPowerOutage</span></code></a><ul>
@@ -1347,6 +1353,14 @@
 <li class="toctree-l2"><a class="reference internal" href="citylearn.preprocessing.html#citylearn.preprocessing.OnehotEncoding"><code class="docutils literal notranslate"><span class="pre">OnehotEncoding</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="citylearn.preprocessing.html#citylearn.preprocessing.PeriodicNormalization"><code class="docutils literal notranslate"><span class="pre">PeriodicNormalization</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="citylearn.preprocessing.html#citylearn.preprocessing.RemoveFeature"><code class="docutils literal notranslate"><span class="pre">RemoveFeature</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="citylearn.random_streams.html">citylearn.random_streams module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.generator"><code class="docutils literal notranslate"><span class="pre">generator()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.parse_random_stream_version"><code class="docutils literal notranslate"><span class="pre">parse_random_stream_version()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.seed_sequence"><code class="docutils literal notranslate"><span class="pre">seed_sequence()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.spawn_key"><code class="docutils literal notranslate"><span class="pre">spawn_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="citylearn.random_streams.html#citylearn.random_streams.stream_id"><code class="docutils literal notranslate"><span class="pre">stream_id()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="citylearn.reward_function.html">citylearn.reward_function module</a><ul>
