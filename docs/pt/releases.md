@@ -3,16 +3,35 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
-## Unreleased
+## Por publicar
 
-### Topologia dinamica e alinhamento de dados
+- **Agentes genéricos na interface de entidades.** Na interface de entidades os
+  espaços de ações e de observações são dicionários de tabelas de entidades, pelo
+  que `Agent` e `ZeroActionBaselineAgent` falhavam com `AttributeError` no
+  primeiro `predict()`. Passam a usar os espaços planos e a devolver vetores de
+  ações no formato plano, que a interface de entidades aceita, também com
+  topologia dinâmica. `SAC`, `SACRBC`, `MARLISA`, `MARLISARBC` e
+  `TabularQLearning` leem vetores de observações planos e passam a levantar um
+  `ValueError` que indica a interface plana. As execuções na interface plana não
+  mudam ([#250](https://github.com/citylearn-project/CityLearn/issues/250)).
+- **Baselines de regras como controlador de exploração do SACRBC e do
+  MARLISARBC.** `rbc` aceita qualquer instância de agente, classe de agente ou
+  caminho de importação, incluindo `RBCBasicPolicy`, `RBCSmartPolicy`,
+  `RBCCommunityPolicy` e `BusinessAsUsualAgent`. Um controlador criado a partir
+  de uma classe ou de um caminho deixa de receber os hiperparâmetros do agente
+  de aprendizagem (`lr`, `batch_size`, `hidden_dimension`, ...); os restantes
+  argumentos continuam a chegar-lhe. As classes `RBC` incluídas ignoravam esses
+  hiperparâmetros, pelo que as suas execuções não mudam
+  ([#250](https://github.com/citylearn-project/CityLearn/issues/250)).
 
-Pacote de trabalho 3 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-project/CityLearn/issues/226)), em [#274](https://github.com/citylearn-project/CityLearn/pull/274). Os resultados mudam em corridas com topologia dinamica e ficheiros de janela de membro, e em splits consecutivos de episodios; o [guia de migracao](../migration.md#upgrade-from-360-to-the-next-release) indica as opcoes que repoem o comportamento da 3.6.0.
+### Topologia dinâmica e alinhamento de dados
 
-- **Splits consecutivos partilham a linha de fronteira.** Os splits consecutivos avancavam `episode_time_steps` linhas, pelo que o intervalo entre dois episodios nunca era simulado. Passam a avancar `episode_time_steps - 1` linhas e todos os intervalos ate ao ultimo split completo sao simulados uma vez; `episode_split_boundary='disjoint'` mantem os splits da 3.6.0. ([#247](https://github.com/citylearn-project/CityLearn/issues/247))
-- **Os membros da topologia dinamica ficam alinhados com a janela de simulacao.** Um ficheiro de membro mais curto que o dataset e lido como comecando no timestep do seu `add_member`, para qualquer `simulation_start_time_step` e comprimento de janela, o que tambem corrige as entradas do BAU nativo em episodios dinamicos que nao comecam na linha 0. Um membro que volta a entrar precisa de um ficheiro full-horizon, os membros que entram a meio do episodio comecam o armazenamento termico em `initial_soc`, e as series publicas do distrito mantem os membros que sairam e so contam os que entram a partir da sua ativacao. ([#246](https://github.com/citylearn-project/CityLearn/issues/246))
-- **Um evento de topologia no step terminal** deixa de acrescentar um intervalo nao executado as series dos edificios.
-- **Um step de controlo diferente do step do dataset e recusado.** O CityLearn le uma linha de dados por step de controlo e nao reamostra, pelo que essa corrida avancava o calendario, os precos e os horarios dos VE ao ritmo errado. Passa a gerar um `ValueError`; `time_step_ratio_mode='compress'` mantem o comportamento da 3.6.0. O step do dataset e inferido de todas as linhas em vez das duas primeiras, e o argumento `time_step_ratio` tem de coincidir com ele. Os datasets incluidos nao sao afetados. ([#234](https://github.com/citylearn-project/CityLearn/issues/234))
+Pacote de trabalho 3 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-project/CityLearn/issues/226)), em [#274](https://github.com/citylearn-project/CityLearn/pull/274). Os resultados mudam em execuções com topologia dinâmica e ficheiros de janela de membro, e em splits consecutivos de episódios; o [guia de migração](../migration.md#upgrade-from-360-to-the-next-release) indica as opções que repõem o comportamento da 3.6.0.
+
+- **Splits consecutivos partilham a linha de fronteira.** Os splits consecutivos avançavam `episode_time_steps` linhas, pelo que o intervalo entre dois episódios nunca era simulado. Passam a avançar `episode_time_steps - 1` linhas, e todos os intervalos até ao último split completo são simulados uma vez; `episode_split_boundary='disjoint'` mantém os splits da 3.6.0. ([#247](https://github.com/citylearn-project/CityLearn/issues/247))
+- **Os membros da topologia dinâmica ficam alinhados com a janela de simulação.** Um ficheiro de membro mais curto que o dataset é lido como começando no timestep do seu `add_member`, para qualquer `simulation_start_time_step` e comprimento de janela, o que também corrige as entradas do BAU nativo em episódios dinâmicos que não começam na linha 0. Um membro que volta a entrar precisa de um ficheiro full-horizon, os membros que entram a meio do episódio começam o armazenamento térmico em `initial_soc`, e as séries públicas do distrito mantêm os membros que saíram e só contam os que entram a partir da sua ativação. ([#246](https://github.com/citylearn-project/CityLearn/issues/246))
+- **Um evento de topologia no step terminal** deixa de acrescentar um intervalo não executado às séries dos edifícios.
+- **Um step de controlo diferente do step do dataset é recusado.** O CityLearn lê uma linha de dados por step de controlo e não reamostra, pelo que essa execução avançava o calendário, os preços e os horários dos VE ao ritmo errado. Passa a levantar um `ValueError`; `time_step_ratio_mode='compress'` mantém o comportamento da 3.6.0. O step do dataset é inferido de todas as linhas em vez das duas primeiras, e o argumento `time_step_ratio` tem de coincidir com ele. Os datasets incluídos não são afetados. ([#234](https://github.com/citylearn-project/CityLearn/issues/234))
 
 ## v3.6.0 - 2026-11-19
 

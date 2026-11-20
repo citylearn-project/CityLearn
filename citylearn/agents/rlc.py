@@ -10,7 +10,7 @@ try:
 except (ModuleNotFoundError, ImportError) as e:
     raise Exception("This functionality requires you to install torch. You can install torch by : pip install torch torchvision, or for more detailed instructions please visit https://pytorch.org.")
 
-from citylearn.agents.base import Agent
+from citylearn.agents.base import Agent, require_flat_interface
 
 class RLC(Agent):
     r"""Base reinforcement learning controller class.
@@ -72,6 +72,7 @@ class RLC(Agent):
                 )
             action_scaling_coefficient = misspelled
 
+        require_flat_interface(env, type(self).__name__)
         super().__init__(env, **kwargs)
         self.hidden_dimension = hidden_dimension
         self.discount = discount

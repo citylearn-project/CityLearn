@@ -1,7 +1,7 @@
 import math
 from typing import Any, List, Tuple
 import numpy as np
-from citylearn.agents.base import Agent
+from citylearn.agents.base import Agent, require_flat_interface
 from citylearn.citylearn import CityLearnEnv
 
 class TabularQLearning(Agent):
@@ -36,6 +36,7 @@ class TabularQLearning(Agent):
         self, env: CityLearnEnv, epsilon: float = None, minimum_epsilon: float = None, epsilon_decay: float = None, 
         learning_rate: float = None, discount_factor: float = None, q_init_value: float = None, **kwargs: Any,
     ):
+        require_flat_interface(env, type(self).__name__)
         super().__init__(env, **kwargs)
         self.epsilon = 1.0 if epsilon is None else epsilon
         self.epsilon_init = self.epsilon

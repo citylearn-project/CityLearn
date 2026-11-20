@@ -10,6 +10,11 @@ For package publication, version policy and the release checklist, see the
 
 ## Unreleased
 
+### Fixed
+
+- **Generic agents on the entity interface.** Under the entity interface the action and observation spaces are dictionaries of entity tables, so `Agent` and `ZeroActionBaselineAgent` failed with `AttributeError` at the first `predict()`. They now keep the flat spaces and return flat-like action vectors, which the entity interface accepts, also under a dynamic topology. `SAC`, `SACRBC`, `MARLISA`, `MARLISARBC` and `TabularQLearning` read flat observation vectors and now raise a `ValueError` that names the flat interface on the entity interface. Flat runs are unchanged ([#250](https://github.com/citylearn-project/CityLearn/issues/250)).
+- **Rule baselines as SACRBC and MARLISARBC exploration controllers.** `rbc` accepts any agent instance, agent class or import path, including `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` and `BusinessAsUsualAgent`, which raised `TypeError` as instances and `ValueError` for the SAC hyperparameters as classes. A controller built from a class or a path no longer receives the learner's hyperparameters (`lr`, `batch_size`, `hidden_dimension`, ...); the other keyword arguments still reach it. The bundled `RBC` classes ignored those hyperparameters, so their runs are unchanged ([#250](https://github.com/citylearn-project/CityLearn/issues/250)).
+
 ### Dynamic topology and data alignment
 
 Work package 3 of the 3.6.0 audit ([#226](https://github.com/citylearn-project/CityLearn/issues/226)), in [#274](https://github.com/citylearn-project/CityLearn/pull/274). Results change for dynamic-topology runs with member-window files and for consecutive episode splits; the [migration guide](migration.md#upgrade-from-360-to-the-next-release) lists the options that restore the 3.6.0 behaviour.
