@@ -286,6 +286,13 @@ simulações e os KPIs não mudam.
   notebooks publicados. Um novo tutorial treina um controlador SAC do Stable
   Baselines3, avalia-o numa semana não vista e compara-o com o BAU; o notebook do
   tutorial da versão 2.1.2 é removido ([#267](https://github.com/citylearn-project/CityLearn/issues/267)).
+- **Documentação por versão.** A raiz do site (`/` e `/stable/`) abre por omissão a última versão final,
+  preservando as ligações existentes para páginas individuais; cada tag `v*` é publicada em `/<versão>/` e o ramo
+  `master` em `/dev/`. Cada página inclui um seletor no topo e a secção **Other versions** na barra lateral
+  esquerda a partir de `/versions.json`, mantendo a página equivalente aberta ao mudar de versão ou abrindo a
+  página inicial dessa versão quando a página não existe nela
+  ([`docs/pt/publishing.md`](publishing.md),
+  [#296](https://github.com/citylearn-project/CityLearn/issues/296)).
 - **CLI.** O `train --evaluate` avalia na janela do primeiro episódio de treino em
   vez do dataset inteiro. O resumo do treino só regista o nome da máquina e do
   utilizador com `--record_host`. O `simulate` mostra o caminho de cada ficheiro

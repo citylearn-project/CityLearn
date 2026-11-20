@@ -1,12 +1,35 @@
 {% extends "!layout.html" %}
-{#- The site is built from master, so every page says which code it describes (#270). -#}
+{#- Version notice, top selector and left-sidebar "Other versions" navigation (#296).
+    docs_is_release is set (-A docs_is_release=true) when building a release tag (published at /<version>/, and at
+    /stable/ and the site root / when it is the latest final release); development builds from master are published
+    under /dev/. Inline styles keep older tags readable when the workflow copies this template into them. -#}
+{% block extrahead %}
+{{ super() }}
+<script src="{{ pathto('_static/version_switcher.js', 1) }}" defer></script>
+{% endblock %}
+{% block menu %}
+{{ super() }}
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+{% endblock %}
 {% block document %}
 <div class="admonition note citylearn-version-note" role="note">
-  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
-  listed under <a href="{{ pathto('guides/releases') }}">Unreleased</a>, which the latest release,
-  CityLearn {{ release }}, does not have. To read the documentation of the version you installed
-  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
-  <a href="https://github.com/citylearn-project/CityLearn/tree/v{{ release }}/docs">v{{ release }}</a>.</p>
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="{{ 'true' if docs_is_release else 'false' }}"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+{%- if docs_is_release %}
+  This is the documentation of CityLearn {{ release }}<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+{%- else %}
+  This documentation is built from the development branch, <code>master</code> (<code>/dev/</code>). It includes
+  changes listed under <a href="{{ pathto('guides/releases') }}">Unreleased</a> that are not yet in a PyPI release.
+  Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
+  release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v{{ release }}/docs">v{{ release }}</a>.</p>
+{%- endif %}
 </div>
 {{ super() }}
 {% endblock %}
