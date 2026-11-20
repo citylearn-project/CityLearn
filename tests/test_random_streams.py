@@ -143,6 +143,8 @@ def test_schema_random_stream_version_is_read_and_recorded():
 
     with pytest.raises(ValueError, match='random_stream_version'):
         CityLearnEnv(schema, central_agent=True, random_stream_version='v9', episode_time_steps=4, simulation_end_time_step=7)
+    with pytest.raises(TypeError, match="did you mean 'random_stream_version'"):
+        CityLearnEnv(schema, central_agent=True, random_streams_version='v1', episode_time_steps=4, simulation_end_time_step=7)
 
 
 # --- 2. additive seeds that overlap across episodes --------------------------------------------
