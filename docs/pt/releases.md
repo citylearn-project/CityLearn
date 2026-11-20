@@ -148,6 +148,19 @@ Pacote de trabalho 4 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-
   bateria descarrega depois da procura térmica e das descargas do armazenamento
   térmico do step, e apenas até à carga isolada que o PV não cobre
   ([#229](https://github.com/citylearn-project/CityLearn/issues/229)).
+- **Folga do limite de ligação.** Na versão 2 da física, cada pedido de
+  carregador ou de bateria é limitado à potência que o equipamento consegue
+  absorver antes de a folga ser repartida
+  ([#231](https://github.com/citylearn-project/CityLearn/issues/231)).
+- **Armazenamento térmico sob limite de ligação.** Na versão 2 da física, a
+  folga é repartida depois das atualizações térmicas e da carga não deslocável, e
+  a potência, a folga e a violação registadas vêm da importação liquidada do
+  step ([#230](https://github.com/citylearn-project/CityLearn/issues/230)).
+- **Arranque de equipamentos deslocáveis.** Na versão 2 da física, o arranque é
+  decidido com a informação do step atual; um ciclo que depois encontra uma
+  falha de energia é servido pela alimentação local que as outras cargas deixam
+  e, se esta não chegar, para e é contado como falhado
+  ([#232](https://github.com/citylearn-project/CityLearn/issues/232)).
 - **Eficiência num sentido.** `one_way_efficiency` passa a conter a raiz
   quadrada de `efficiency`, que `round_trip_efficiency` devolvia;
   `round_trip_efficiency` mantém o valor com um `DeprecationWarning`.
