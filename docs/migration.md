@@ -330,17 +330,18 @@ recorded in `get_metadata()['random_stream_version']`, in the
 `temporal_reproducibility` metadata and in the experiment manifest; comparisons
 between runs with different versions report a temporal mismatch.
 
-Measured with the same pseudo-random actions, `v1` reproduces 3.6.0 bit for
-bit on every run below; `v2` changes:
+Measured with the same pseudo-random actions and the other settings at their
+defaults, `v1` reproduces the random streams of 3.6.0 bit for bit on every run
+below; `v2` changes:
 
 - `citylearn_challenge_2022_phase_all` (168 h, random battery curves): control
-  cost 1,092.7 → 1,095.7 EUR (+0.3%);
+  cost 1,171.0 → 1,171.1 EUR (+0.01%) and net consumption +0.1%;
 - `citylearn_challenge_2022_phase_all_plus_evs` (two 168 h episodes, random
-  battery curves and EV drift): net consumption −1.7% and −1.4%, control cost
-  −0.1% and +0.3%;
+  battery curves and EV drift): net consumption −1.6% in both episodes,
+  control cost −0.2% and −0.1%;
 - `citylearn_challenge_2023_phase_2_local_evaluation` (720 h): with the
   bundled SAIFI the three buildings no longer share one 15-step outage, so the
-  episode has none and the normalized outage unserved energy goes from 0.73 to
+  episode has none and the normalized outage unserved energy goes from 0.72 to
   0; with SAIFI 36.5/year the outages per building change from 23/23/23 steps
   in both episodes (identical in every building and episode) to 9/9/34 and
   5/1/4;
