@@ -126,7 +126,22 @@ Parquet.
 
 Quando vários buildings apontam para o mesmo ficheiro de `weather`, `pricing` ou
 `carbon_intensity`, e `noise_std = 0`, o simulador partilha a mesma série em
-memória. `energy_simulation` continua separado por building.
+memória. `energy_simulation` continua separado por building, exceto nas colunas
+de calendário (`month`, `hour`, `minutes`, `seconds`, `day_type`,
+`daylight_savings_status`) e em `hvac_mode`, `power_outage`, `comfort_band`,
+`occupant_count` e `average_unmet_cooling_setpoint_difference`: os buildings cujos
+valores são idênticos bit a bit partilham um único array só de leitura, que o
+simulador nunca escreve. Escrever num destes arrays no próprio array levanta
+`ValueError`; atribuir um novo array ao atributo.
+
+A memória cresce com a janela de simulação, não com o episódio: todos os episódios
+da janela têm de estar disponíveis, e os limites do espaço de observações e o
+autosizing leem a janela inteira. Um ano a 15 s tem cerca de 2,1 milhões de linhas
+por building. Para um estudo curto, definir `simulation_start_time_step` e
+`simulation_end_time_step` para o período de interesse em vez de apenas
+`episode_time_steps`; os limites do espaço de observações e o equipamento
+dimensionado automaticamente passam a vir desse período, pelo que os resultados
+não são comparáveis com execuções sobre a janela completa.
 
 O `noise_std` de um building acrescenta ruído gaussiano de média zero às
 temperaturas interior e exterior, à humidade relativa exterior, às irradiâncias

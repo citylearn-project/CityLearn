@@ -100,7 +100,9 @@ The loader reads only the window declared by `simulation_start_time_step` and `s
 
 For large datasets, especially full-year 15s data, Parquet is usually better than CSV because it preserves types, compresses better and avoids text parsing. Parquet support requires `pyarrow`; without it, use CSV.
 
-When several buildings point to the same `weather`, `pricing` or `carbon_intensity` file and `noise_std = 0`, the simulator shares the same in-memory time series. `energy_simulation` remains building-specific.
+When several buildings point to the same `weather`, `pricing` or `carbon_intensity` file and `noise_std = 0`, the simulator shares the same in-memory time series. `energy_simulation` remains building-specific, except for its calendar columns (`month`, `hour`, `minutes`, `seconds`, `day_type`, `daylight_savings_status`) and for `hvac_mode`, `power_outage`, `comfort_band`, `occupant_count` and `average_unmet_cooling_setpoint_difference`: buildings whose values are bit-identical share one read-only array, which the simulator never writes. Writing into one of these arrays in place raises `ValueError`; assign a new array to the attribute instead.
+
+Memory grows with the simulation window, not with the episode: every episode of the window must be available, and observation-space limits and autosizing read the whole window. A full year at 15 s holds about 2.1 million rows per building. For a short study, set `simulation_start_time_step` and `simulation_end_time_step` to the period of interest instead of only `episode_time_steps`; observation-space limits and autosized equipment then come from that period, so results are not comparable with runs over the full window.
 
 ### Robustness noise
 

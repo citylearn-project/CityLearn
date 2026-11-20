@@ -254,3 +254,50 @@ def test_cached_wrapper_spaces_equal_fresh_estimates(central_agent):
     name = building.active_observations[-1]
     building.observation_metadata = {**building.observation_metadata, name: False}
     assert normalized.observation_space[0].shape == normalized._estimate_normalized_observation_space()[0].shape
+
+
+def test_identical_series_are_shared_read_only_and_different_bits_are_not():
+    from citylearn.data import TimeSeriesData
+    from citylearn.internal.shared_series import share_identical_series
+
+    def data(**series):
+        item = TimeSeriesData(start_time_step=2, end_time_step=5)
+        for name, values in series.items():
+            setattr(item, name, np.array(values))
+        return item
+
+    cache = {}
+    nan_payload = np.array([np.nan, 1.0], dtype='float32')
+    other_nan = nan_payload.copy()
+    other_nan.view('u4')[0] ^= 1
+    first = data(hour=np.arange(10, dtype='int32'), comfort_band=np.zeros(2, dtype='float32'), power_outage=nan_payload)
+    second = data(hour=np.arange(10, dtype='int32'), comfort_band=-np.zeros(2, dtype='float32'), power_outage=other_nan)
+    third = data(hour=np.arange(1, 11, dtype='int32'))
+
+    for item in (first, second, third):
+        share_identical_series(cache, item, names=('hour', 'comfort_band', 'power_outage'))
+
+    assert second._hour is first._hour and not first._hour.flags.writeable
+    np.testing.assert_array_equal(second.hour, np.arange(2, 6))
+    assert second._comfort_band is not first._comfort_band
+    assert second._power_outage is not first._power_outage
+    assert third._hour is not first._hour
+
+    with pytest.raises(ValueError):
+        second.hour[0] = 1
+
+
+def test_buildings_share_calendar_series_with_unchanged_values():
+    import pandas as pd
+    from citylearn.citylearn import CityLearnEnv
+
+    env = CityLearnEnv(str(DATASET / 'schema.json'), episode_time_steps=4, random_seed=0)
+    first, second = env.buildings[0].energy_simulation, env.buildings[1].energy_simulation
+    source = pd.read_csv(DATASET / env.schema['buildings'][env.buildings[1].name]['energy_simulation'])
+
+    assert second._hour is first._hour and second._month is first._month
+    np.testing.assert_array_equal(second._hour, source['hour'].to_numpy(dtype='int32'))
+    # Series a building owns, and the ones the simulator writes, are not shared.
+    assert second._non_shiftable_load is not first._non_shiftable_load
+    assert second._cooling_demand is not first._cooling_demand
+    assert second._cooling_demand.flags.writeable

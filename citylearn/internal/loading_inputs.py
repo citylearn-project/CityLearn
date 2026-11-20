@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from citylearn.data import CarbonIntensity, EnergySimulation, Pricing, Weather
+from citylearn.internal.shared_series import share_identical_series
 
 if TYPE_CHECKING:
     from citylearn.internal.loading import CityLearnLoadingService
@@ -70,6 +71,7 @@ def load_building_inputs(loader: "CityLearnLoadingService", building_name, schem
         noise_start_index=schema['simulation_start_time_step'],
     )
     loader._set_time_step_offset(energy_simulation, schema['simulation_start_time_step'])
+    share_identical_series(loader._shared_timeseries_cache, energy_simulation)
     ratios = getattr(energy_simulation, 'time_step_ratios', None) or []
     time_step_ratio = ratios[-1] if len(ratios) > 0 else 1.0
     check_time_step_ratio(
