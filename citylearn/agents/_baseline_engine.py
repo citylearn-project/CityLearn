@@ -1913,8 +1913,9 @@ class NormalPolicy(_OperationalBaselinePolicy):
             # entity_core_electrical bundle. Without it, estimate the power the
             # EV can accept from the observed SOC, battery capacity, charger
             # power and charger efficiency, as the Simulator computes that
-            # observation. The estimate omits the service import limit and the
-            # efficiency curve, which are not observable without the bundle.
+            # observation. The estimate omits the service import limit, the
+            # efficiency curve and capacity fade, which are not observable
+            # without the bundle; the observation stops at the degraded capacity.
             efficiency = self._get_ev_value(
                 obs,
                 obs_map,

@@ -115,10 +115,12 @@ def test_requested_target_bau_charges_at_once_up_to_user_target_and_never_discha
         env.close()
 
 
-def _bau_step_with_nearly_full_ev(tmp_path: Path, seconds: int, core_bundle: bool):
+def _bau_step_with_nearly_full_ev(
+    tmp_path: Path, seconds: int, core_bundle: bool, soc: float = 0.999, degraded_ratio: float = None
+):
     # The load is zero in the data, so the settled net observation at reset is
     # zero and the one-step lag of issue #190 plays no part.
-    dataset_dir = tmp_path / f"minute_ev_demo_{seconds}_{core_bundle}"
+    dataset_dir = tmp_path / f"minute_ev_demo_{seconds}_{core_bundle}_{soc}_{degraded_ratio}"
     shutil.copytree(SOURCE_DATASET, dataset_dir)
     load_path = dataset_dir / "Building_1.csv"
     load = pd.read_csv(load_path)
@@ -137,7 +139,9 @@ def _bau_step_with_nearly_full_ev(tmp_path: Path, seconds: int, core_bundle: boo
         env.reset(seed=0)
         building = env.buildings[0]
         ev = building.electric_vehicle_chargers[0].connected_electric_vehicle
-        ev.battery.soc[0] = 0.999
+        if degraded_ratio is not None:
+            ev.battery._capacity_history.append(degraded_ratio * ev.battery.capacity)
+        ev.battery.soc[0] = soc
         actions = BusinessAsUsualAgent(env).predict([])
         env.step(actions)
         return actions[0], float(ev.battery.soc[0]), float(building.net_electricity_consumption[0])
@@ -160,6 +164,17 @@ def test_bau_battery_covers_accepted_ev_energy_instead_of_exporting_nominal_requ
         assert net >= -1.0e-5
     # Without the bundle, the estimate leads to the decision the observation gives.
     np.testing.assert_allclose(results[False][0], results[True][0], rtol=0.0, atol=1.0e-6)
+
+
+@pytest.mark.parametrize("seconds", [900, 3600])
+def test_bau_battery_does_not_discharge_for_a_faded_full_ev(tmp_path: Path, seconds: int):
+    # The EV battery has faded to 99% of its capacity, so at SOC 0.995 it accepts
+    # nothing. The observation used to report the nominal 0.1 kWh gap as available
+    # charge power, which BAU reserved and the home battery discharged and exported.
+    actions, soc, net = _bau_step_with_nearly_full_ev(tmp_path, seconds, True, soc=0.995, degraded_ratio=0.99)
+    assert net >= -1.0e-5
+    assert soc == pytest.approx(0.995, abs=1e-6)
+    assert actions[-1] == 0.0
 
 
 def test_business_as_usual_stops_below_target_instead_of_overshooting_charger_minimum(tmp_path: Path):

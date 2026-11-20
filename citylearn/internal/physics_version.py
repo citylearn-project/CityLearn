@@ -26,7 +26,9 @@ Versions
       (#231), after the thermal and non-shiftable updates, and the recorded power, headroom and
       violation come from the settled import (#230);
     * a deferrable cycle starts on the current step's information only, and an outage that later
-      cuts its supply stops it (#232).
+      cuts its supply stops it (#232);
+    * the entity observations of a battery's energy to full and charge headroom stop at its degraded
+      capacity, where `Battery.charge` stops, instead of at its nominal capacity.
 """
 
 from typing import Any
