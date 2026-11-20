@@ -128,11 +128,12 @@ Quando vários buildings apontam para o mesmo ficheiro de `weather`, `pricing` o
 `carbon_intensity`, e `noise_std = 0`, o simulador partilha a mesma série em
 memória. `energy_simulation` continua separado por building, exceto nas colunas
 de calendário (`month`, `hour`, `minutes`, `seconds`, `day_type`,
-`daylight_savings_status`) e em `hvac_mode`, `power_outage`, `comfort_band`,
-`occupant_count` e `average_unmet_cooling_setpoint_difference`: os buildings cujos
-valores são idênticos bit a bit partilham um único array só de leitura, que o
-simulador nunca escreve. Escrever num destes arrays no próprio array levanta
-`ValueError`; atribuir um novo array ao atributo.
+`daylight_savings_status`): os buildings cujos valores de calendário são
+idênticos bit a bit partilham um único array só de leitura, que o simulador
+nunca escreve. Escrever diretamente num array de calendário levanta `ValueError`;
+atribuir um novo array ao atributo. As restantes séries, incluindo `hvac_mode`,
+`power_outage` e `comfort_band`, continuam separadas por building e podem ser
+alteradas diretamente.
 
 A memória cresce com a janela de simulação, não com o episódio: todos os episódios
 da janela têm de estar disponíveis, e os limites do espaço de observações e o

@@ -11,6 +11,8 @@ from typing import Any, Dict, List, Mapping, Optional, TYPE_CHECKING, Union
 import numpy as np
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from citylearn.agents.base import Agent
     from citylearn.citylearn import CityLearnEnv
     from citylearn.electric_vehicle import ElectricVehicle

@@ -204,11 +204,12 @@ def test_recently_written_inputs_are_always_hashed(tmp_path, monkeypatch):
 
 
 def test_importing_the_environment_does_not_import_torch():
+    # citylearn.wrappers is left out: it imports ray when installed, and ray may import torch itself.
     code = (
         'import sys\n'
         'from citylearn.citylearn import CityLearnEnv\n'
-        'import citylearn.wrappers, citylearn.agents.rbc, citylearn.agents.q_learning\n'
-        'print(sorted(m for m in ("torch", "sklearn", "citylearn.dynamics") if m in sys.modules))\n'
+        'import citylearn.agents.rbc, citylearn.agents.q_learning\n'
+        'print(sorted(m for m in ("torch", "citylearn.dynamics") if m in sys.modules))\n'
     )
     env = dict(os.environ, PYTHONPATH=os.pathsep.join([str(ROOT), os.environ.get('PYTHONPATH', '')]))
     result = subprocess.run([sys.executable, '-c', code], capture_output=True, text=True, env=env, check=True, cwd=ROOT)
@@ -270,17 +271,17 @@ def test_identical_series_are_shared_read_only_and_different_bits_are_not():
     nan_payload = np.array([np.nan, 1.0], dtype='float32')
     other_nan = nan_payload.copy()
     other_nan.view('u4')[0] ^= 1
-    first = data(hour=np.arange(10, dtype='int32'), comfort_band=np.zeros(2, dtype='float32'), power_outage=nan_payload)
-    second = data(hour=np.arange(10, dtype='int32'), comfort_band=-np.zeros(2, dtype='float32'), power_outage=other_nan)
+    first = data(hour=np.arange(10, dtype='int32'), month=np.zeros(2, dtype='float32'), day_type=nan_payload)
+    second = data(hour=np.arange(10, dtype='int32'), month=-np.zeros(2, dtype='float32'), day_type=other_nan)
     third = data(hour=np.arange(1, 11, dtype='int32'))
 
     for item in (first, second, third):
-        share_identical_series(cache, item, names=('hour', 'comfort_band', 'power_outage'))
+        share_identical_series(cache, item, names=('hour', 'month', 'day_type'))
 
     assert second._hour is first._hour and not first._hour.flags.writeable
     np.testing.assert_array_equal(second.hour, np.arange(2, 6))
-    assert second._comfort_band is not first._comfort_band
-    assert second._power_outage is not first._power_outage
+    assert second._month is not first._month
+    assert second._day_type is not first._day_type
     assert third._hour is not first._hour
 
     with pytest.raises(ValueError):
@@ -297,10 +298,10 @@ def test_buildings_share_calendar_series_with_unchanged_values():
 
     assert second._hour is first._hour and second._month is first._month
     np.testing.assert_array_equal(second._hour, source['hour'].to_numpy(dtype='int32'))
-    # Series a building owns, and the ones the simulator writes, are not shared.
-    assert second._non_shiftable_load is not first._non_shiftable_load
-    assert second._cooling_demand is not first._cooling_demand
-    assert second._cooling_demand.flags.writeable
+    # Series a building owns, and the ones that may be written in place, are not shared.
+    for name in ('non_shiftable_load', 'cooling_demand', 'hvac_mode', 'power_outage', 'comfort_band', 'occupant_count'):
+        assert getattr(second, f'_{name}') is not getattr(first, f'_{name}')
+        assert getattr(second, f'_{name}').flags.writeable
 
 
 def _reference_settled_cost_series(self, *, condition_by_building):

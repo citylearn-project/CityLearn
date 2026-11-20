@@ -1,10 +1,11 @@
-"""Share bit-identical calendar and default time series between the buildings of one environment.
+"""Share bit-identical calendar series between the buildings of one environment.
 
 Every building holds its own full copy of each energy-simulation series for the whole simulation window.
-The calendar columns, and the series a dataset leaves at their defaults, are usually the same in every
-building: with 17 buildings of a year at 15 s, they are about 1.4 GB of copies. Buildings loaded by the same
-loader therefore share one array per distinct series. A shared array is made read-only, so an in-place write
-raises instead of changing the other buildings; the simulator only ever reads these series.
+The calendar columns are usually the same in every building: with 17 buildings of a year at 15 s, the six of
+them are about 0.8 GB of copies. Buildings loaded by the same loader therefore share one array per distinct
+calendar series. A shared array is made read-only, so an in-place write raises instead of changing the other
+buildings; the simulator only reads the calendar. Series that users or the simulator may write in place, such
+as `hvac_mode` or `power_outage`, stay building-specific.
 """
 
 from typing import Any, Dict, Iterable, List, MutableMapping, Tuple
@@ -18,11 +19,6 @@ ENERGY_SIMULATION_SHARED_SERIES = (
     'seconds',
     'day_type',
     'daylight_savings_status',
-    'hvac_mode',
-    'power_outage',
-    'comfort_band',
-    'occupant_count',
-    'average_unmet_cooling_setpoint_difference',
 )
 
 # The pool lives in the loader's per-load time-series cache, so it is reset with it.
