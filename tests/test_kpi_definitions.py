@@ -311,3 +311,95 @@ def test_portfolio_self_consumption_and_service_levels_match_portfolio_totals():
         assert total("solar_self_consumption_ratio_to_business_as_usual_self_consumption_ratio") == pytest.approx(control/bau)
     finally:
         env.close()
+
+
+ELECTRICAL_SERVICE = ROOT / "data/datasets/citylearn_three_phase_electrical_service_demo/schema.json"
+
+
+def _entity_portfolio(schema, episode_time_steps, policies):
+    """Run a two-community portfolio on the entity interface; `policies` maps community -> (weight, action of t)."""
+    env = MultiCommunityEnv(communities=[
+        {
+            "community_id": community_id,
+            "schema": str(schema),
+            "weight": weight,
+            "env_kwargs": {"episode_time_steps": episode_time_steps, "render_mode": "none", "random_seed": 0},
+        }
+        for community_id, (weight, _) in policies.items()
+    ])
+    try:
+        env.reset(seed=0)
+        while not env.terminated:
+            env.step({
+                community_id: {"tables": {
+                    name: np.full(space.shape, policy(int(env.envs[community_id].time_step)), dtype="float32")
+                    for name, space in env.envs[community_id].action_space["tables"].items()
+                }}
+                for community_id, (_, policy) in policies.items()
+            })
+        kpis = env.evaluate_v2(include_business_as_usual=False)
+    finally:
+        env.close()
+    return kpis[kpis["level"] == "portfolio"], kpis[kpis["level"] == "district"]
+
+
+def test_portfolio_demand_response_compliance_is_pooled_from_energy():
+    """#285: portfolio DR compliance is credited over valid requested energy of the whole portfolio."""
+    portfolio, district = _entity_portfolio(DEMAND_RESPONSE, 30, {
+        "delivers": (1.0, lambda t: 1.0 if 18 <= t <= 22 else -1.0 if 24 <= t <= 26 else 0.0),
+        "idle": (3.0, lambda t: 0.0),
+    })
+
+    def total(name):
+        return _value(portfolio, f"portfolio_{name}", MultiCommunityEnv.PORTFOLIO_NAME)
+
+    for community_id in ("delivers", "idle"):
+        rows = district[district["community_id"] == community_id]
+        credited = _value(rows, "district_demand_response_credited_total_kwh")
+        valid = _value(rows, "district_demand_response_valid_requested_total_kwh")
+        assert valid > 0.0
+        assert _value(rows, "district_demand_response_compliance_ratio") == pytest.approx(credited/valid)
+
+    credited, valid = total("demand_response_credited_total_kwh"), total("demand_response_valid_requested_total_kwh")
+    compliance = total("demand_response_compliance_ratio")
+    assert compliance == pytest.approx(credited/valid)
+    community = {
+        cid: _value(district[district["community_id"] == cid], "district_demand_response_compliance_ratio")
+        for cid in ("delivers", "idle")
+    }
+    # The two communities differ, so the old community-weighted mean would give another value.
+    assert community["delivers"] != pytest.approx(community["idle"])
+    assert compliance != pytest.approx((community["delivers"] + 3.0*community["idle"])/4.0)
+    audit = "demand_response_audit_all"
+    assert total(f"{audit}_compliance_ratio") == pytest.approx(total(f"{audit}_credited_kwh")/total(f"{audit}_valid_requested_kwh"))
+    assert total(f"{audit}_requested_energy_coverage_ratio") == pytest.approx(
+        total(f"{audit}_valid_requested_kwh")/total(f"{audit}_requested_kwh"))
+    assert total(f"{audit}_baseline_coverage_ratio") == pytest.approx(
+        total(f"{audit}_valid_intervals_count")/total(f"{audit}_active_intervals_count"))
+
+
+def test_portfolio_community_market_shares_are_pooled_from_energy():
+    """#285: portfolio local shares are local over local plus grid energy of the whole portfolio."""
+    portfolio, district = _entity_portfolio(ELECTRICAL_SERVICE, 24, {
+        "idle": (1.0, lambda t: 0.0),
+        "charging": (3.0, lambda t: 1.0),
+    })
+
+    def total(name):
+        return _value(portfolio, f"portfolio_{name}", MultiCommunityEnv.PORTFOLIO_NAME)
+
+    market = "energy_grid_community_market"
+    local_import, grid_import = total(f"{market}_local_import_total_kwh"), total(f"{market}_grid_import_after_local_total_kwh")
+    local_export, grid_export = total(f"{market}_local_export_total_kwh"), total(f"{market}_grid_export_after_local_total_kwh")
+    assert local_import > 0.0
+    demand_share = local_import/(local_import + grid_import)
+    assert total("solar_self_consumption_community_market_local_share_of_demand_ratio") == pytest.approx(demand_share)
+    assert total("solar_self_consumption_community_market_import_share_ratio") == pytest.approx(demand_share)
+    assert total("solar_self_consumption_community_market_local_share_of_export_ratio") == pytest.approx(
+        local_export/(local_export + grid_export))
+    shares = [
+        _value(district[district["community_id"] == cid], "district_solar_self_consumption_community_market_local_share_of_demand_ratio")
+        for cid in ("idle", "charging")
+    ]
+    assert shares[0] != pytest.approx(shares[1])
+    assert demand_share != pytest.approx((shares[0] + 3.0*shares[1])/4.0)

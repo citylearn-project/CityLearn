@@ -2053,6 +2053,24 @@ class CityLearnKPIService:
         components[v2(level, 'escalator', 'service', 'service_level', None, 'ratio')] = (
             v2(level, 'escalator', 'service', 'requested_passengers_total', None, 'count'),
         )
+        # Community-market shares: local energy over local plus grid energy after local trading.
+        demand_share_weights = (
+            v2(level, 'energy_grid', 'community_market', 'local_import', 'total', 'kwh'),
+            v2(level, 'energy_grid', 'community_market', 'grid_import_after_local', 'total', 'kwh'),
+        )
+        components[v2(level, 'solar_self_consumption', 'community_market', 'local_share_of_demand', None, 'ratio')] = demand_share_weights
+        components[v2(level, 'solar_self_consumption', 'community_market', 'import_share', None, 'ratio')] = demand_share_weights
+        components[v2(level, 'solar_self_consumption', 'community_market', 'local_share_of_export', None, 'ratio')] = (
+            v2(level, 'energy_grid', 'community_market', 'local_export', 'total', 'kwh'),
+            v2(level, 'energy_grid', 'community_market', 'grid_export_after_local', 'total', 'kwh'),
+        )
+        # Demand response: credited over valid requested energy, and the audit coverage ratios.
+        components[f'{level}_demand_response_compliance_ratio'] = (f'{level}_demand_response_valid_requested_total_kwh',)
+        for purpose in ('all', 'service', 'stress', 'unspecified'):
+            audit = f'{level}_demand_response_audit_{purpose}'
+            components[f'{audit}_compliance_ratio'] = (f'{audit}_valid_requested_kwh',)
+            components[f'{audit}_requested_energy_coverage_ratio'] = (f'{audit}_requested_kwh',)
+            components[f'{audit}_baseline_coverage_ratio'] = (f'{audit}_active_intervals_count',)
         return components
 
     @classmethod
@@ -2822,6 +2840,13 @@ class CityLearnKPIService:
             ]
 
             for suffix, key in dr_metrics:
+                put('district', 'District', dr_name('district', suffix), dr_district.get(key))
+
+            # The additive components of the compliance ratio, so a portfolio can pool it (#285).
+            for suffix, key in (
+                ('valid_requested_total_kwh', 'demand_response_valid_requested_total_kwh'),
+                ('credited_total_kwh', 'demand_response_credited_total_kwh'),
+            ):
                 put('district', 'District', dr_name('district', suffix), dr_district.get(key))
 
             for building_name in building_names:
