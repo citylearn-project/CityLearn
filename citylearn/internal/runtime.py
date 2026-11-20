@@ -184,6 +184,7 @@ class CityLearnRuntimeService:
         env._observations_cache_time_step = -1
         timer_start = time.perf_counter() if debug_timing else 0.0
         actions = self.parse_actions(actions) if parsed_actions is None else parsed_actions
+        self._require_finite_actions(actions)
         capture_entity_execution = (
             bool(collect_info)
             and getattr(env, 'interface', 'flat') == 'entity'
@@ -756,6 +757,34 @@ class CityLearnRuntimeService:
 
         env._provenance_service.synchronize()
         return env.terminated, env.truncated
+
+    def _require_finite_actions(self, parsed_actions) -> None:
+        """Reject NaN and infinite actions before they reach the device models.
+
+        A non-finite value would otherwise pass ``min``/``max`` limits unchanged (``min(x, nan)``
+        returns ``x``), so a NaN storage action became the largest possible discharge.
+        """
+
+        names = [str(getattr(b, 'name', i)) for i, b in enumerate(self.env.buildings)]
+
+        def check(mapping, building, prefix=''):
+            for key, value in (mapping or {}).items():
+                label = f'{prefix}{key}'
+                if isinstance(value, Mapping):
+                    check(value, building, f'{label}.')
+                    continue
+                try:
+                    finite = bool(np.isfinite(float(value)))
+                except (TypeError, ValueError):
+                    continue
+                if not finite:
+                    raise ValueError(
+                        f"Action '{label}' of building '{building}' is {value!r}; actions must be finite numbers."
+                    )
+
+        for i, mapping in enumerate(parsed_actions or []):
+            if isinstance(mapping, Mapping):
+                check(mapping, names[i] if i < len(names) else i)
 
     def parse_actions(self, actions) -> List[Mapping[str, float]]:
         """Return mapping of action name to action value for each building."""

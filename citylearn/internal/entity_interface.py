@@ -88,6 +88,9 @@ class CityLearnEntityInterfaceService:
     DERIVED_FORECAST_BUILDING_SIGNALS = ("load", "pv", "net")
     DERIVED_FORECAST_DISTRICT_SIGNALS = ("load", "pv", "net")
 
+    # Upper bound of departure_feasibility_ratio (required / deliverable energy); larger values saturate.
+    DEPARTURE_FEASIBILITY_MAX = 1.0e6
+
     LEGACY_CHARGER_FEATURES = [
         "connected_state",
         "incoming_state",
@@ -569,6 +572,11 @@ class CityLearnEntityInterfaceService:
                     if isinstance(per_building_map, Mapping) and action_name in per_building_map:
                         value = self._safe_scalar(per_building_map[action_name], float(value))
 
+                if not np.isfinite(float(value)):
+                    # Reject before clipping, as the flat interface does: np.clip maps inf to a bound and keeps NaN.
+                    raise ValueError(
+                        f"Action '{action_name}' of building '{building.name}' is {value!r}; actions must be finite numbers."
+                    )
                 value = float(np.clip(value, low, high))
                 if action_name.startswith("electric_vehicle_storage_"):
                     charger_id = action_name.replace("electric_vehicle_storage_", "")
@@ -1345,7 +1353,7 @@ class CityLearnEntityInterfaceService:
         )
         departure_margin = max_deliverable - max(energy_to_required_soc, 0.0)
         departure_feasibility = (
-            max(energy_to_required_soc, 0.0) / max(max_deliverable, 1.0e-6)
+            min(max(energy_to_required_soc, 0.0) / max(max_deliverable, 1.0e-6), self.DEPARTURE_FEASIBILITY_MAX)
             if energy_to_required_soc > 0.0
             else 0.0
         )
@@ -1354,6 +1362,11 @@ class CityLearnEntityInterfaceService:
             if required_average_power > 0.0
             else 0.0
         )
+        if hours_until_departure == 0.0 and energy_to_required_soc > 0.0:
+            # Departure now with energy still missing: the saturated required power must still read as
+            # "more than full power" (the rule baselines cap this feature at 1).
+            min_required_action = max(min_required_action, 1.0)
+        min_required_action = min(min_required_action, self.DEPARTURE_FEASIBILITY_MAX)
         if hours_until_departure < 0.0:
             max_deliverable = departure_margin = min_required_action = 0.0
             departure_feasibility = -1.0
@@ -2701,7 +2714,7 @@ class CityLearnEntityInterfaceService:
             "available_discharge_action_normalized": (0.0, 1.0),
             "max_deliverable_energy_until_departure_kwh": (0.0, max(max_capacity, max_charge_kw * max_departure * step_hours, 1.0)),
             "departure_energy_margin_kwh": (-max(max_capacity, 1.0), max(max_capacity, max_charge_kw * max_departure * step_hours, 1.0)),
-            "departure_feasibility_ratio": (-1.0, 1.0e6),
+            "departure_feasibility_ratio": (-1.0, self.DEPARTURE_FEASIBILITY_MAX),
             "min_required_action_normalized": (0.0, 1.0e6),
             "charge_efficiency_at_max_ratio": (0.0, 1.0),
             "discharge_efficiency_at_max_ratio": (0.0, 1.0),

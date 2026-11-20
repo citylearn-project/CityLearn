@@ -10,6 +10,14 @@ if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
 
 
+class PhysicsInvariantError(AssertionError):
+    """A hard physics invariant was violated.
+
+    Subclasses ``AssertionError`` so existing handlers keep working, but is raised
+    explicitly, so ``python -O`` does not disable the checks.
+    """
+
+
 class CityLearnPhysicsInvariantService:
     """Runtime physics/assertion checks evaluated per control step."""
 
@@ -50,11 +58,35 @@ class CityLearnPhysicsInvariantService:
         for name, battery, energy_before, transfer_before in snapshot[1]:
             energy_after = float(battery.soc[time_step]) * float(battery.capacity)
             expected_change = battery.stored_energy_transfer - transfer_before
-            assert abs(energy_after - energy_before - expected_change) <= self.ENERGY_EPS, (
+            self._require(abs(energy_after - energy_before - expected_change) <= self.ENERGY_EPS, (
                 f"Stored battery energy mismatch for '{name}' at t={time_step}: "
                 f"before={energy_before:.6f} kWh, after={energy_after:.6f} kWh, "
                 f"expected_change={expected_change:.6f} kWh."
-            )
+            ))
+
+    @staticmethod
+    def _require(condition: bool, message: str):
+        if not condition:
+            raise PhysicsInvariantError(message)
+
+    @staticmethod
+    def _state(values, idx: int, name: str, default: float = 0.0) -> float:
+        """Read a simulated state value; a NaN or inf value is a violation, not zero."""
+
+        try:
+            value = values[idx]
+        except (IndexError, KeyError, TypeError):
+            return float(default)
+
+        try:
+            scalar = float(value)
+        except (TypeError, ValueError):
+            return float(default)
+
+        if not np.isfinite(scalar):
+            raise PhysicsInvariantError(f'Non-finite {name}: {scalar!r}.')
+
+        return scalar
 
     @staticmethod
     def _to_scalar(value, default: float = 0.0) -> float:
@@ -70,13 +102,12 @@ class CityLearnPhysicsInvariantService:
 
     @classmethod
     def _safe_index(cls, values, idx: int, default: float = 0.0) -> float:
-        try:
-            return cls._to_scalar(values[idx], default)
-        except Exception:
-            return float(default)
+        """Read a state value at ``idx``; missing values default, non-finite values are violations."""
+
+        return cls._state(values, idx, 'value', default)
 
     def assert_step_invariants(self, time_step: int):
-        """Raise ``AssertionError`` if hard physics invariants are violated."""
+        """Raise ``PhysicsInvariantError`` (an ``AssertionError``) if hard physics invariants are violated."""
 
         t = int(max(time_step, 0))
         buildings = list(self.env.buildings)
@@ -94,11 +125,21 @@ class CityLearnPhysicsInvariantService:
             ]
 
         for building in buildings:
-            self._assert_building_energy_balance(building, t)
-            self._assert_outage_local_balance(building, t)
-            self._assert_soc_bounds(building, t)
-            self._assert_storage_power_bounds(building, t)
-            self._assert_charger_power_bounds(building, t)
+            for check in (
+                self._assert_building_energy_balance,
+                self._assert_outage_local_balance,
+                self._assert_soc_bounds,
+                self._assert_storage_power_bounds,
+                self._assert_charger_power_bounds,
+            ):
+                try:
+                    check(building, t)
+                except PhysicsInvariantError as error:
+                    if str(error).startswith('Non-finite'):
+                        raise PhysicsInvariantError(
+                            f"{error} Found by {check.__name__.lstrip('_')} for '{building.name}' at t={t}."
+                        ) from None
+                    raise
         self._assert_battery_energy_changes(t)
 
     def _assert_building_energy_balance(self, building, t: int):
@@ -118,10 +159,10 @@ class CityLearnPhysicsInvariantService:
             + self._safe_index(getattr(building, 'escalators_electricity_consumption', []), t, 0.0)
         )
 
-        assert abs(net - terms) <= self.ENERGY_EPS, (
+        self._require(abs(net - terms) <= self.ENERGY_EPS, (
             f"Net energy balance mismatch for '{building.name}' at t={t}: "
             f"net={net:.6f} kWh, terms={terms:.6f} kWh."
-        )
+        ))
 
     def _assert_outage_local_balance(self, building, t: int):
         outage_signal = self._safe_index(getattr(building, "power_outage_signal", []), t, 0.0)
@@ -148,10 +189,10 @@ class CityLearnPhysicsInvariantService:
             + self._safe_index(getattr(building, 'escalators_electricity_consumption', []), t, 0.0)
         )
 
-        assert local_loads <= local_sources + self.ENERGY_EPS, (
+        self._require(local_loads <= local_sources + self.ENERGY_EPS, (
             f"Outage local energy balance violated for '{building.name}' at t={t}: "
             f"loads={local_loads:.6f} kWh, local_sources={local_sources:.6f} kWh."
-        )
+        ))
 
     def _assert_soc_bounds(self, building, t: int):
         storages = [
@@ -166,16 +207,16 @@ class CityLearnPhysicsInvariantService:
                 continue
 
             soc = self._safe_index(getattr(storage, "soc", []), t, 0.0)
-            assert -self.SOC_EPS <= soc <= 1.0 + self.SOC_EPS, (
+            self._require(-self.SOC_EPS <= soc <= 1.0 + self.SOC_EPS, (
                 f"{name} SOC out of bounds for '{building.name}' at t={t}: soc={soc:.6f}."
-            )
+            ))
 
         for charger in building.electric_vehicle_chargers or []:
             for ev in self._iter_charger_evs(charger):
                 soc = self._safe_index(ev.battery.soc, t, 0.0)
-                assert -self.SOC_EPS <= soc <= 1.0 + self.SOC_EPS, (
+                self._require(-self.SOC_EPS <= soc <= 1.0 + self.SOC_EPS, (
                     f"EV SOC out of bounds for '{ev.name}' at t={t}: soc={soc:.6f}."
-                )
+                ))
 
     def _assert_storage_power_bounds(self, building, t: int):
         step_seconds = max(self._to_scalar(building.seconds_per_time_step, 1.0), 1.0)
@@ -189,10 +230,10 @@ class CityLearnPhysicsInvariantService:
 
         energy_kwh = self._safe_index(building.electrical_storage_electricity_consumption, t, 0.0)
         max_abs_energy_kwh = power_kw_to_energy_kwh(nominal_power_kw, step_seconds)
-        assert abs(energy_kwh) <= max_abs_energy_kwh + self.ENERGY_EPS, (
+        self._require(abs(energy_kwh) <= max_abs_energy_kwh + self.ENERGY_EPS, (
             f"Battery power bound exceeded for '{building.name}' at t={t}: "
             f"energy={energy_kwh:.6f} kWh, limit={max_abs_energy_kwh:.6f} kWh/step."
-        )
+        ))
 
     def _assert_charger_power_bounds(self, building, t: int):
         step_seconds = max(self._to_scalar(building.seconds_per_time_step, 1.0), 1.0)
@@ -208,14 +249,14 @@ class CityLearnPhysicsInvariantService:
             commanded_energy_kwh = self._safe_index(charger.past_charging_action_values_kwh, t, 0.0)
             max_abs_energy_kwh = power_kw_to_energy_kwh(max_power_kw, step_seconds)
 
-            assert abs(applied_energy_kwh) <= max_abs_energy_kwh + self.ENERGY_EPS, (
+            self._require(abs(applied_energy_kwh) <= max_abs_energy_kwh + self.ENERGY_EPS, (
                 f"Charger power bound exceeded at '{building.name}:{charger.charger_id}' t={t}: "
                 f"applied={applied_energy_kwh:.6f} kWh, limit={max_abs_energy_kwh:.6f} kWh/step."
-            )
-            assert abs(commanded_energy_kwh) <= max_abs_energy_kwh + self.ENERGY_EPS, (
+            ))
+            self._require(abs(commanded_energy_kwh) <= max_abs_energy_kwh + self.ENERGY_EPS, (
                 f"Charger command bound exceeded at '{building.name}:{charger.charger_id}' t={t}: "
                 f"commanded={commanded_energy_kwh:.6f} kWh, limit={max_abs_energy_kwh:.6f} kWh/step."
-            )
+            ))
 
     @staticmethod
     def _iter_charger_evs(charger) -> Iterable:

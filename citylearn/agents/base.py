@@ -5,7 +5,7 @@ import numpy as np
 from citylearn.base import Environment
 from citylearn.citylearn import CityLearnEnv
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(__name__)
 
 def get_env_attr(env, name: str):
     """Read an attribute from the outermost wrapper that defines it, else from the base environment.
@@ -247,7 +247,7 @@ class Agent(Environment):
 
                     observations = next_observations
 
-                    logging.debug(
+                    LOGGER.debug(
                         f'Time step: {time_step + 1}/{self.episode_time_steps},'\
                             f' Episode: {episode + 1}/{episodes},'\
                                 f' Actions: {actions},'\
@@ -278,7 +278,7 @@ class Agent(Environment):
                         'sum': empty,
                         'mean': empty,
                     }
-                logging.info(f'Completed episode: {episode + 1}/{episodes}, Reward: {rewards_summary}')
+                LOGGER.info(f'Completed episode: {episode + 1}/{episodes}, Reward: {rewards_summary}')
         finally:
             if hasattr(env, 'plan_final_episode_exports'):
                 env._final_export_episode_index = previous_final_export_episode_index
@@ -320,7 +320,8 @@ class Agent(Environment):
 
         logging_level = 30 if logging_level is None else logging_level
         assert logging_level >= 0, 'logging_level must be >= 0'
-        LOGGER.setLevel(logging_level)
+        # Level of the package logger only; configure handlers (e.g. logging.basicConfig) to see the messages.
+        logging.getLogger('citylearn').setLevel(logging_level)
 
     def update(self, *args, **kwargs):
         """Update replay buffer and networks.
