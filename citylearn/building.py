@@ -32,8 +32,7 @@ from citylearn.power_outage import PowerOutage
 from citylearn.preprocessing import Normalize, PeriodicNormalization
 from citylearn.utilities import parse_bool
 
-LOGGER = logging.getLogger()
-logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
 
 class Building(Environment):
     r"""Base class for building.

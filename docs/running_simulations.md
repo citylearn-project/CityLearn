@@ -125,7 +125,7 @@ All communities must share `seconds_per_time_step`, effective episode length, `i
 
 | Parameter | Type | Default | Purpose |
 |---|---:|---:|---|
-| `render_directory` | path | internal output | Base export folder. |
+| `render_directory` | path | `./render_logs` | Base export folder; relative paths resolve against the working directory. |
 | `render_directory_name` | string | `render_logs` | Legacy export folder name. |
 | `render` | bool | derived | Legacy render switch. |
 | `debug_timing` | bool | schema/False | Runtime timing logs. |

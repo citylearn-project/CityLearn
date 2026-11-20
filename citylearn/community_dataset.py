@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from citylearn.energy_model import Battery
 from citylearn.building import Building
+from citylearn.utilities import parse_bool
 
 
 class InventoryBuilding(Building):
@@ -91,7 +92,12 @@ def configure_tariffs(env, config):
         if not len(values) or not np.isfinite(values).all():
             raise ValueError('Community tariffs must be finite and nonempty')
         env.community_tariffs[name] = values
-    env.community_market_local_enabled = bool(config.get('local_trading_enabled', True))
+    # parse_bool, as for 'enabled': bool('false') is True.
+    local_trading = config.get('local_trading_enabled', True)
+    # An explicit null keeps its previous meaning (bool(None) is False).
+    env.community_market_local_enabled = False if local_trading is None else parse_bool(
+        local_trading, default=True, path='community_market.local_trading_enabled'
+    )
 
 
 def settlement_prices(env, name, time_step, grid_import_price):

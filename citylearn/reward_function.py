@@ -6,7 +6,7 @@ from citylearn.data import ZERO_DIVISION_PLACEHOLDER
 from citylearn.internal.scalars import numpy1_scalar
 import logging
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(__name__)
 class RewardFunction:
     r"""Base and default reward function class.
 

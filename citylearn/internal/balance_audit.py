@@ -408,7 +408,7 @@ class IndependentBalanceAudit:
         config = env.schema.get("community_market") or {}
         financial = bool(env.community_market_enabled)
         physical_trading = not financial or bool(
-            config.get("local_trading_enabled", True)
+            getattr(env, "community_market_local_enabled", config.get("local_trading_enabled", True))
         )
         traded = (
             min(float(imports.sum()), float(exports.sum())) if physical_trading else 0.0

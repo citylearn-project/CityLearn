@@ -18,7 +18,7 @@ from citylearn.internal.electrical_limits import allocate_electrical_service, el
 if TYPE_CHECKING:
     from citylearn.building import Building
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(__name__)
 
 
 class BuildingOpsService:
