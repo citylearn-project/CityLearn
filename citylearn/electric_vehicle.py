@@ -7,7 +7,7 @@ from citylearn.energy_model import Battery
 from citylearn.preprocessing import Normalize, PeriodicNormalization
 
 ZERO_DIVISION_PLACEHOLDER = 0.000001
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(__name__)
 
 class ElectricVehicle(Environment):
 

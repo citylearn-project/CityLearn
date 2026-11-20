@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Mapping, Tuple, Union
 from gymnasium import Env, spaces
 import datetime
+import difflib
 import numpy as np
 import pandas as pd
 import random
@@ -41,7 +42,7 @@ from citylearn.utilities import FileHandler
 if TYPE_CHECKING:
     from citylearn.agents.base import Agent
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(__name__)
 logging.getLogger('matplotlib.font_manager').disabled = True
 logging.getLogger('matplotlib.pyplot').disabled = True
 
@@ -146,9 +147,9 @@ class CityLearnEnv(Environment, Env):
     Other Parameters
     ----------------
     render_directory: Union[str, Path], optional
-        Base directory where rendering and export artifacts are stored. Relative paths are resolved from the project root.
+        Base directory where rendering and export artifacts are stored. Relative paths are resolved from the current working directory.
     render_directory_name: str, optional
-        Folder name created inside the project root for rendering and export artifacts when ``render_directory`` is not provided.
+        Folder name created in the current working directory for rendering and export artifacts when ``render_directory`` is not provided.
         Defaults to ``render_logs``.
     render_session_name: str, optional
         Name of the subfolder created under ``render_directory``/``render_directory_name`` for export artifacts. When omitted,
@@ -182,6 +183,19 @@ class CityLearnEnv(Environment, Env):
 
     DEFAULT_RENDER_START_DATE = datetime.date(2024, 1, 1)
     TIME_STEP_RATIO_MODES = ('reject', 'compress')
+    # Options accepted through **kwargs in addition to the named parameters (used for suggestions).
+    _KNOWN_CONSTRUCTOR_OPTIONS = (
+        'render_directory', 'render_directory_name', 'render', 'render_file_format', 'render_chunk_size',
+        'export_only_final_episode', 'export_kpis_on_episode_end', 'debug_timing', 'check_observation_limits',
+        'physics_invariant_checks', 'energy_provenance', 'metrics_log_interval', 'ev_departure_within_tolerance',
+        'ev_departure_service_tolerance', 'business_as_usual_ev_charge_target', 'render_mode', 'render_session_name',
+        'root_directory', 'buildings', 'electric_vehicles', 'simulation_start_time_step', 'simulation_end_time_step',
+        'episode_time_steps', 'rolling_episode_split', 'random_episode_split', 'seconds_per_time_step',
+        'reward_function', 'reward_function_kwargs', 'central_agent', 'shared_observations', 'active_observations',
+        'inactive_observations', 'active_actions', 'inactive_actions', 'simulate_power_outage', 'solar_generation',
+        'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
+        'episode_split_boundary', 'time_step_ratio_mode',
+    )
 
     def __init__(self,
         schema: Union[str, Path, Mapping[str, Any]], root_directory: Union[str, Path] = None, buildings: Union[List[Building], List[str], List[int]] = None,
@@ -221,6 +235,14 @@ class CityLearnEnv(Environment, Env):
         kw_render_session_name = kwargs.pop('render_session_name', None)
         if kw_render_session_name is not None:
             render_session_name = kw_render_session_name if render_session_name is None else render_session_name
+        if kwargs:
+            # A misspelled option (e.g. physics_invariants_checks) used to be ignored silently.
+            known = self._KNOWN_CONSTRUCTOR_OPTIONS
+            details = []
+            for name in sorted(kwargs):
+                match = difflib.get_close_matches(name, known, n=1)
+                details.append(f"'{name}'" + (f" (did you mean '{match[0]}'?)" if match else ''))
+            raise TypeError(f"CityLearnEnv got unexpected keyword argument(s): {', '.join(details)}.")
         self.offline = offline
         self.schema = schema
         self.time_step_ratio_mode = (
@@ -470,15 +492,17 @@ class CityLearnEnv(Environment, Env):
         if self.root_directory is None:
             self.root_directory = os.path.dirname(os.path.abspath(__file__))
 
-        project_root = Path(__file__).resolve().parents[1]
+        # Relative paths and the default resolve against the working directory. They used to resolve
+        # against the package's parent folder, which is site-packages for an installed wheel.
+        output_base = Path.cwd()
         render_directory_name = render_directory_name or 'render_logs'
 
         if render_directory is not None:
             render_root = Path(render_directory).expanduser()
             if not render_root.is_absolute():
-                render_root = project_root / render_root
+                render_root = output_base / render_root
         else:
-            render_root = project_root / render_directory_name
+            render_root = output_base / render_directory_name
 
         self.render_output_root = render_root.expanduser().resolve()
         self._render_timestamp = None

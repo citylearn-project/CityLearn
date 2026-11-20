@@ -25,7 +25,7 @@ from citylearn.reward_function import MultiBuildingRewardFunction, RewardFunctio
 from citylearn.utilities import parse_bool
 from citylearn.internal import grid_availability, loading_inputs, loading_components
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv

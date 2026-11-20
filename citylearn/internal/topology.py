@@ -135,6 +135,7 @@ class CityLearnTopologyService:
         self._ev_pool = {ev.name: ev for ev in electric_vehicles}
         self._ev_order = [ev.name for ev in electric_vehicles]
         self._events = self._parse_events()
+        self._validate_events()
         self._initial_member_pool = dict(self._member_pool)
         self._initial_member_order = list(self._member_order)
         self._initial_building_structures = {
@@ -688,7 +689,7 @@ class CityLearnTopologyService:
         if lifecycle.get('born_at') is None:
             lifecycle['born_at'] = int(time_step)
 
-        self._apply_building_overrides(building, event.overrides)
+        self._apply_building_overrides(building, event.overrides, event)
         self._refresh_building_after_mutation(building)
         self._topology_version += 1
         return True
@@ -808,7 +809,7 @@ class CityLearnTopologyService:
         if asset_type == 'pv':
             source_building = self._resolve_source_building(event)
             building.pv = deepcopy(self._resolve_source_pv(source_building))
-            self._apply_object_overrides(building.pv, event.overrides)
+            self._apply_object_overrides(building.pv, event.overrides, event)
             self._bind_building_runtime_context(building)
             building.pv.reset()
             self._set_building_time_step(building, time_step)
@@ -820,7 +821,7 @@ class CityLearnTopologyService:
         if asset_type == 'electrical_storage':
             source_building = self._resolve_source_building(event)
             building.electrical_storage = deepcopy(self._resolve_source_storage(source_building))
-            self._apply_object_overrides(building.electrical_storage, event.overrides)
+            self._apply_object_overrides(building.electrical_storage, event.overrides, event)
             self._bind_building_runtime_context(building)
             building.electrical_storage.reset()
             self._set_building_time_step(building, time_step)
@@ -914,7 +915,7 @@ class CityLearnTopologyService:
         source_charger = self._resolve_source_charger(source_building, source_asset_id)
         cloned: Charger = deepcopy(source_charger)
         cloned.charger_id = target_asset_id
-        self._apply_object_overrides(cloned, event.overrides)
+        self._apply_object_overrides(cloned, event.overrides, event)
         cloned.episode_tracker = building.episode_tracker
         cloned.random_seed = building.random_seed
         cloned.time_step_ratio = building.time_step_ratio
@@ -954,7 +955,7 @@ class CityLearnTopologyService:
         source_appliance = self._resolve_source_deferrable_appliance(source_building, source_asset_id)
         cloned: DeferrableAppliance = deepcopy(source_appliance)
         cloned.name = target_asset_id
-        self._apply_object_overrides(cloned, event.overrides)
+        self._apply_object_overrides(cloned, event.overrides, event)
         cloned.episode_tracker = building.episode_tracker
         cloned.random_seed = building.random_seed
         cloned.time_step_ratio = building.time_step_ratio
@@ -1230,31 +1231,109 @@ class CityLearnTopologyService:
     def _is_action_inactive_for_building(self, building: Building, action_name: str) -> bool:
         return str(action_name) in self._declared_inactive_actions(building)
 
+    # Building override keys handled by the asset operations, not by setattr.
+    _STRUCTURAL_BUILDING_KEYS = frozenset({'name', 'chargers', 'deferrable_appliances', 'electrical_storage', 'pv'})
+
     @staticmethod
-    def _apply_object_overrides(obj: Any, overrides: Mapping[str, Any]):
+    def _apply_object_overrides(obj: Any, overrides: Mapping[str, Any], event: TopologyEvent = None):
         if not isinstance(overrides, Mapping):
             return
 
+        context = f" in topology event '{event.event_id}'" if event is not None else ''
         for key, value in overrides.items():
-            if hasattr(obj, key):
-                try:
-                    setattr(obj, key, value)
-                except Exception:
-                    continue
+            if not hasattr(obj, key):
+                raise ValueError(f"Unknown override '{key}' for {type(obj).__name__}{context}.")
+            try:
+                setattr(obj, key, value)
+            except Exception as error:
+                raise ValueError(
+                    f"Invalid override {key}={value!r} for {type(obj).__name__}{context}: {error}"
+                ) from error
 
-    @staticmethod
-    def _apply_building_overrides(building: Building, overrides: Mapping[str, Any]):
+    @classmethod
+    def _apply_building_overrides(cls, building: Building, overrides: Mapping[str, Any], event: TopologyEvent = None):
         if not isinstance(overrides, Mapping):
             return
 
-        for key, value in overrides.items():
-            if key in {'name', 'chargers', 'deferrable_appliances', 'electrical_storage', 'pv'}:
-                continue
-            if hasattr(building, key):
-                try:
-                    setattr(building, key, value)
-                except Exception:
-                    continue
+        cls._apply_object_overrides(
+            building,
+            {key: value for key, value in overrides.items() if key not in cls._STRUCTURAL_BUILDING_KEYS},
+            event,
+        )
+
+    def _validate_events(self):
+        """Check every scheduled event at construction instead of when it fires.
+
+        Member ids are checked in event order (``add_member`` with a source creates a member), and
+        override keys must exist on the object they target. Values are applied, and checked, when
+        the event fires.
+        """
+
+        # Members declared in the schema count as known even when the caller loaded a subset (buildings=...):
+        # their events never fire in that run, and they used to be accepted.
+        schema_buildings = self.env.schema.get('buildings', {}) if isinstance(getattr(self.env, 'schema', None), Mapping) else {}
+        known = set(self._member_pool) | set(schema_buildings or {})
+
+        def require_member(member_id, event, role):
+            if member_id is None:
+                raise ValueError(f"{event.operation} in topology event '{event.event_id}' requires {role}.")
+            if member_id not in known:
+                raise ValueError(f"Unknown {role} '{member_id}' in topology event '{event.event_id}'.")
+
+        for event in self._events:
+            if event.operation == 'add_member':
+                if event.target_member_id is None:
+                    raise ValueError(f"add_member in topology event '{event.event_id}' requires target_member_id.")
+                if event.target_member_id not in known:
+                    require_member(event.source_member_id, event, 'source_member_id')
+                    known.add(event.target_member_id)
+                if event.overrides and event.target_member_id in self._member_pool:
+                    self._check_override_keys(
+                        self._member_pool[event.target_member_id],
+                        {k: v for k, v in event.overrides.items() if k not in self._STRUCTURAL_BUILDING_KEYS},
+                        event,
+                    )
+            elif event.operation == 'remove_member':
+                require_member(event.target_member_id, event, 'target_member_id')
+            else:
+                require_member(event.target_member_id, event, 'target_member_id')
+                if event.operation == 'add_asset':
+                    source_id = event.source_member_id or event.target_member_id
+                    require_member(source_id, event, 'source_member_id')
+                    if event.overrides and source_id in self._member_pool:
+                        source = self._initial_override_target(self._member_pool[source_id], event)
+                        if source is not None:
+                            # Apply to a copy now, so an invalid key or value fails at construction instead of
+                            # leaving the env half-changed when the event fires.
+                            self._check_override_keys(source, event.overrides, event)
+                            self._apply_object_overrides(deepcopy(source), event.overrides, event)
+
+    def _initial_override_target(self, source_building: Building, event: TopologyEvent):
+        """The source asset an add_asset event copies, if it exists before any event fires."""
+
+        try:
+            if event.target_asset_type == 'pv':
+                return self._resolve_source_pv(source_building)
+            if event.target_asset_type == 'electrical_storage':
+                return self._resolve_source_storage(source_building)
+            if event.target_asset_type == 'charger':
+                return self._resolve_source_charger(source_building, event.source_asset_id)
+            if event.target_asset_type == 'deferrable_appliance':
+                return self._resolve_source_deferrable_appliance(source_building, event.source_asset_id)
+        except ValueError:
+            return None  # created by an earlier event; checked when this event fires
+
+        return None
+
+    @staticmethod
+    def _check_override_keys(obj: Any, overrides: Mapping[str, Any], event: TopologyEvent):
+        if not isinstance(overrides, Mapping):
+            raise ValueError(f"overrides in topology event '{event.event_id}' must be an object.")
+        unknown = sorted(key for key in overrides if not hasattr(obj, key))
+        if unknown:
+            raise ValueError(
+                f"Unknown override(s) {unknown} for {type(obj).__name__} in topology event '{event.event_id}'."
+            )
 
     def _parse_events(self) -> List[TopologyEvent]:
         raw_events = []

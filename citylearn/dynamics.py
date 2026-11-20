@@ -122,19 +122,31 @@ class LSTMDynamics(Dynamics, (torch.nn if torch is not None else _TorchNNPlaceho
         
         return hidden
 
+    @staticmethod
+    def _load_checkpoint_state_dict(filepath) -> dict:
+        """Read a model state dict from a checkpoint, saved either as a dict with 'model_state_dict' or as a state dict.
+
+        Loads tensors only (``weights_only=True``) on the CPU, so a checkpoint that ships with a dataset cannot run
+        code when it is unpickled, whatever torch's default is.
+        """
+
+        try:
+            checkpoint = torch.load(filepath, map_location=torch.device('cpu'), weights_only=True)
+        except TypeError:
+            # torch < 1.13 has no weights_only argument.
+            checkpoint = torch.load(filepath, map_location=torch.device('cpu'))
+
+        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+            return checkpoint['model_state_dict']
+
+        return checkpoint
+
     def reset(self):
         """Loads dynamic model state dict, and initializes hidden states and model input."""
 
         super().reset()
 
-        try:
-            self.load_state_dict(torch.load(self.filepath)['model_state_dict'])
-        
-        except RuntimeError:
-            self.load_state_dict(torch.load(self.filepath, map_location=torch.device('cpu'))['model_state_dict'])
-        
-        except:
-            self.load_state_dict(torch.load(self.filepath))
+        self.load_state_dict(self._load_checkpoint_state_dict(self.filepath))
 
         # Simulation is inference: without eval() the dropout layer stays active and every prediction
         # drops random units (unseeded), making the temperature dynamics noisy and non-reproducible.

@@ -397,14 +397,15 @@ class MultiCommunityEnv(Env):
 
     @staticmethod
     def _resolve_render_directory(render_directory: Union[str, Path]) -> Path:
-        project_root = Path(__file__).resolve().parents[1]
+        # Resolve against the working directory, as CityLearnEnv does (not the installed package folder).
+        output_base = Path.cwd()
 
         if render_directory is None:
-            return (project_root / "render_logs").resolve()
+            return (output_base / "render_logs").resolve()
 
         path = Path(render_directory).expanduser()
         if not path.is_absolute():
-            path = project_root / path
+            path = output_base / path
 
         return path.resolve()
 

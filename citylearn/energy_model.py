@@ -27,14 +27,25 @@ from citylearn.internal.units import (
     to_dataset_resolution_energy,
 )
 from citylearn.internal.deferrable_cycles import CycleIndex
-np.seterr(divide='ignore', invalid='ignore')
 
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger(__name__)
 
 # Zero-size devices stand in for absent equipment. Without a seed, each would draw one from Python's
 # global `random`, so its (unused) random parameters changed between constructions and building an
 # env advanced the caller's random stream.
 PLACEHOLDER_DEVICE_RANDOM_SEED = 0
+
+def _require_finite_energy(energy: float, device) -> None:
+    """Reject a NaN or infinite charge request: ``min``/``max`` limits would pass it through."""
+
+    try:
+        finite = bool(np.isfinite(float(energy)))
+    except (TypeError, ValueError):
+        return
+
+    if not finite:
+        raise ValueError(f'{type(device).__name__}.charge() received non-finite energy {energy!r}.')
+
 
 class Device(Environment):
     r"""Base device class.
@@ -345,11 +356,13 @@ class HeatPump(ElectricDevice):
         c_to_k = lambda x: x + 273.15
         outdoor_dry_bulb_temperature = np.array(outdoor_dry_bulb_temperature)
 
-        if heating:
-            cop = self.efficiency*c_to_k(self.target_heating_temperature)/(self.target_heating_temperature - outdoor_dry_bulb_temperature)
-        else:
-            cop = self.efficiency*c_to_k(self.target_cooling_temperature)/(outdoor_dry_bulb_temperature - self.target_cooling_temperature)
-        
+        # A zero temperature difference gives an infinite COP, capped at 20 below (was hidden by a global np.seterr).
+        with np.errstate(divide='ignore', invalid='ignore'):
+            if heating:
+                cop = self.efficiency*c_to_k(self.target_heating_temperature)/(self.target_heating_temperature - outdoor_dry_bulb_temperature)
+            else:
+                cop = self.efficiency*c_to_k(self.target_cooling_temperature)/(outdoor_dry_bulb_temperature - self.target_cooling_temperature)
+
         cop = np.array(cop)
         cop[cop < 0] = 20
         cop[cop > 20] = 20
@@ -933,6 +946,8 @@ class StorageDevice(Device):
         }
 
     def charge(self, energy: float):
+        _require_finite_energy(energy, self)
+
         self._charge(energy)
 
     def _charge(self, energy: float, energy_init: float = None):
@@ -1118,6 +1133,8 @@ class StorageTank(StorageDevice):
         If charging, soc = min(`soc_init` + energy*`efficiency`, `max_input_power`, `capacity`)
         If discharging, soc = max(0, `soc_init` + energy/`efficiency`, `max_output_power`)
         """
+        _require_finite_energy(energy, self)
+
         if energy >= 0:
             if self.max_input_power is not None:
                 max_input_energy = power_kw_to_energy_kwh(self.max_input_power, self.seconds_per_time_step)
@@ -1326,6 +1343,8 @@ class Battery(StorageDevice, ElectricDevice):
         energy : float
             Energy to charge if (+) or discharge if (-) in [kWh].
         """
+        _require_finite_energy(energy, self)
+
         if np.isnan(self.capacity_before_step[self.time_step]):
             self.capacity_before_step[self.time_step] = self.degraded_capacity
         # Public control paths pass dataset-resolution kWh; physical limits are per control step.

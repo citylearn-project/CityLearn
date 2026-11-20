@@ -18,8 +18,7 @@ from urllib3.util.retry import Retry
 from citylearn.__init__ import __version__
 from citylearn.utilities import FileHandler, NoiseUtils, parse_bool
 
-LOGGER = logging.getLogger()
-logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
 
 TOLERANCE = 0.0001
 ZERO_DIVISION_PLACEHOLDER = 0.000001
@@ -194,7 +193,9 @@ class DataSet:
     @logging_level.setter
     def logging_level(self, value: int):
         self.__logging_level = 20 if value is None else value
-        LOGGER.setLevel(self.logging_level)
+        # Only an explicit level changes the package logger; the application owns the default.
+        if value is not None:
+            logging.getLogger('citylearn').setLevel(value)
 
     @offline.setter
     def offline(self, value: bool):

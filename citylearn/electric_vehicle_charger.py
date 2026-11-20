@@ -9,7 +9,6 @@ from citylearn.internal.units import (
     normalized_power_action_to_energy_kwh,
     to_dataset_resolution_energy,
 )
-np.seterr(divide='ignore', invalid='ignore')
 
 class Charger(Environment):
     def __init__(

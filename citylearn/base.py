@@ -140,6 +140,17 @@ class EpisodeTracker:
 
         if isinstance(episode_time_steps, list):
             splits = episode_time_steps
+            for split in splits:
+                try:
+                    start, end = (int(split[0]), int(split[1]))
+                    if len(split) != 2:
+                        raise ValueError
+                except (TypeError, ValueError, IndexError):
+                    raise ValueError(f'Each episode window must be a (start, end) pair of integers, got {split!r}.') from None
+                # Schemas may define windows beyond a simulation window narrowed by the caller; those rows still
+                # exist in the data files, so only windows that can never be valid are rejected here.
+                if not (0 <= start <= end):
+                    raise ValueError(f'Episode window ({start}, {end}) must satisfy 0 <= start <= end.')
 
         else:
             if episode_time_steps <= 0:

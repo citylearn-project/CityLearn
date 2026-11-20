@@ -23,6 +23,8 @@ import numpy as np
 import pandas as pd
 import simplejson as json
 
+LOGGER = logging.getLogger(__name__)
+
 try:
     from stable_baselines3.common.base_class import BaseAlgorithm as StableBaselines3Agent
 
@@ -58,17 +60,63 @@ def run_work_order(work_order_filepath, max_workers=None, start_index=None, end_
     args = [f'{virtual_environment_command} && {a}' for a in args]
     max_workers = cpu_count() if max_workers is None else max_workers
     
+    failures = []
+
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
-        logging.debug(f'Will use {max_workers} workers for job.')
-        logging.debug(f'Pooling {len(args)} jobs to run in parallel...')
-        results = [executor.submit(subprocess.run,**{'args':a, 'shell':True}) for a in args]
-            
-        for future in concurrent.futures.as_completed(results):
+        LOGGER.debug(f'Will use {max_workers} workers for job.')
+        LOGGER.debug(f'Pooling {len(args)} jobs to run in parallel...')
+        futures = {executor.submit(subprocess.run, **{'args': a, 'shell': True}): a for a in args}
+
+        for future in concurrent.futures.as_completed(futures):
+            command = futures[future]
+
             try:
-                logging.debug(future.result())
-            
+                result = future.result()
+
             except Exception as e:
-                logging.debug(e)
+                LOGGER.error(f'Job failed to run: {command!r}: {e}')
+                failures.append(command)
+                continue
+
+            LOGGER.debug(result)
+            returncode = getattr(result, 'returncode', 0)
+
+            if returncode != 0:
+                LOGGER.error(f'Job exited with code {returncode}: {command!r}')
+                failures.append(command)
+
+    if failures:
+        LOGGER.error(f'{len(failures)} of {len(args)} jobs failed.')
+
+    # A failed job makes the whole work order fail, so batch runs and CI notice it.
+    return 1 if failures else 0
+
+def _list_dataset_names() -> List[str]:
+    # Resolved when the command runs, not while the parser is built, so other commands
+    # (and --help) neither read the dataset cache nor call the GitHub API.
+    return DataSet().get_dataset_names()
+
+
+def _exit_code(result: Any) -> int:
+    """Print list results to stdout, one item per line, and return the process exit code.
+
+    ``sys.exit(main())`` used to receive the list itself, which Python prints to stderr with exit status 1.
+    """
+
+    if isinstance(result, (list, tuple)):
+        for item in result:
+            print(item)
+
+        return 0
+
+    if isinstance(result, (bool, np.bool_)):
+        return 0
+
+    if isinstance(result, (int, np.integer)):
+        return int(result)
+
+    return 0
+
 
 class Simulator:
     def __init__(self, schema: str, agent_name: str = None, env_kwargs: Mapping[str, Any] = None, agent_kwargs: Mapping[str, Any] = None, wrappers: List[str] = None,
@@ -451,7 +499,7 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter, 
         help='Lists available dataset names that can be parsed as `schema` in `citylearn simulate schema`.'
     )
-    subparser_datasets.set_defaults(func=DataSet().get_dataset_names)
+    subparser_datasets.set_defaults(func=_list_dataset_names)
 
      # get default time series variables
     subparser_time_series_variables = subparsers.add_parser(
@@ -525,12 +573,14 @@ def main():
 
     if not sphinx:
         args = parser.parse_args()
+        # The CLI is an application, so it configures logging; the library itself only adds a NullHandler.
+        logging.basicConfig(level=logging.INFO)
         arg_spec = inspect.getfullargspec(args.func)
         kwargs = {key:value for (key, value) in args._get_kwargs() 
             if (key in arg_spec.args or (arg_spec.varkw is not None and key not in ['func','subcommands']))
         }
 
-        return args.func(**kwargs)
+        return _exit_code(args.func(**kwargs))
     
     else:
         return parser

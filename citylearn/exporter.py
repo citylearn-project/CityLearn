@@ -702,7 +702,7 @@ class EpisodeExporter:
 
         env = self.env
         base_render_path = Path(
-            getattr(env, 'render_output_root', Path(__file__).resolve().parents[1] / 'render_logs')
+            getattr(env, 'render_output_root', Path.cwd() / 'render_logs')
         ).expanduser()
 
         if ensure_exists:

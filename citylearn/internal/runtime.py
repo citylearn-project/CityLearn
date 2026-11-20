@@ -5,6 +5,8 @@ import time
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Union
 
+import math
+
 import numpy as np
 
 from citylearn.internal.scalars import numpy1_scalar
@@ -184,6 +186,7 @@ class CityLearnRuntimeService:
         env._observations_cache_time_step = -1
         timer_start = time.perf_counter() if debug_timing else 0.0
         actions = self.parse_actions(actions) if parsed_actions is None else parsed_actions
+        self._require_finite_actions(actions)
         capture_entity_execution = (
             bool(collect_info)
             and getattr(env, 'interface', 'flat') == 'entity'
@@ -756,6 +759,33 @@ class CityLearnRuntimeService:
 
         env._provenance_service.synchronize()
         return env.terminated, env.truncated
+
+    def _require_finite_actions(self, parsed_actions) -> None:
+        """Reject NaN and infinite actions before they reach the device models.
+
+        A non-finite value would otherwise pass ``min``/``max`` limits unchanged (``min(x, nan)``
+        returns ``x``), so a NaN storage action became the largest possible discharge.
+        """
+
+        def check(mapping, index, prefix=''):
+            for key, value in mapping.items():
+                if isinstance(value, Mapping):
+                    check(value, index, f'{prefix}{key}.')
+                    continue
+                try:
+                    finite = math.isfinite(value)
+                except TypeError:
+                    continue
+                if not finite:
+                    buildings = self.env.buildings
+                    building = buildings[index].name if index < len(buildings) else index
+                    raise ValueError(
+                        f"Action '{prefix}{key}' of building '{building}' is {value!r}; actions must be finite numbers."
+                    )
+
+        for index, mapping in enumerate(parsed_actions or []):
+            if isinstance(mapping, Mapping):
+                check(mapping, index)
 
     def parse_actions(self, actions) -> List[Mapping[str, float]]:
         """Return mapping of action name to action value for each building."""
