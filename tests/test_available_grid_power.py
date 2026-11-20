@@ -259,7 +259,7 @@ def test_rule_policies_plan_against_the_observed_limit(tmp_path):
 
     policy = RulePolicyBase({'simulator': {'schema': make_schema(tmp_path)}})
     policy._agent_buildings = {0: 'Building_1'}
-    policy._current_base_power_kw = lambda obs, obs_map: FIXED_LOAD_KW
+    policy._current_base_power_kw = lambda obs, obs_map, **_: FIXED_LOAD_KW
     headroom = policy._computed_current_service_headroom_kw
 
     # Without the observation the policy only knows the static connection capacity.

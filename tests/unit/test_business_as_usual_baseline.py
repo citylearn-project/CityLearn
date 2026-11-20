@@ -201,7 +201,7 @@ def test_bau_definition_and_removed_names():
     for name in ("NormalPolicy", "NormalTargetPolicy", "NormalNoBatteryPolicy", "ServiceOnlyBaselineAgent",
                  "GridAwareBaselineAgent", "CommunityAwareBaselineAgent"):
         assert not hasattr(baseline, name)
-    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-full-charge-v3"
+    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-full-charge-v4"
 
 
 @pytest.mark.parametrize("kwargs", [
@@ -618,15 +618,15 @@ def test_bau_charge_target_is_validated_and_recorded():
             BusinessAsUsualAgent(env, ev_charge_target="half")
         assert BusinessAsUsualAgent(env).ev_charge_target == "full"
         agent = BusinessAsUsualAgent(env, ev_charge_target="requested")
-        assert agent.DEFINITION_VERSION == "immediate-user-target-v2"
+        assert agent.DEFINITION_VERSION == "immediate-user-target-v3"
         parameters = agent.comparison_identity()["parameters"]
         assert parameters["ev_charge_target"] == "requested"
-        assert parameters["definition_version"] == "immediate-user-target-v2"
+        assert parameters["definition_version"] == "immediate-user-target-v3"
     finally:
         env.close()
 
 
-@pytest.mark.parametrize("target,definition", [("requested", "immediate-user-target-v2"), ("full", "immediate-full-charge-v3")])
+@pytest.mark.parametrize("target,definition", [("requested", "immediate-user-target-v3"), ("full", "immediate-full-charge-v4")])
 def test_evaluate_v2_uses_the_selected_bau(target, definition):
     env = CityLearnEnv(str(SOURCE_DATASET / "schema.json"), central_agent=True, episode_time_steps=4,
                        random_seed=0, business_as_usual_ev_charge_target=target)
@@ -720,7 +720,7 @@ def test_bau_reference_cache_follows_the_selected_target():
         env.business_as_usual_ev_charge_target = "requested"
         requested = env.run_business_as_usual_baseline()
         assert requested is not full
-        assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v2"
+        assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v3"
     finally:
         env.close()
 
@@ -895,6 +895,8 @@ def test_bau_bess_uses_current_step_load_and_pv_without_one_step_lag(
         str(schema_path),
         central_agent=True,
         seconds_per_time_step=seconds,
+        # 3600 s on these 900 s rows exercises the `time_step_ratio` scaling of the load.
+        time_step_ratio_mode="compress",
         episode_time_steps=4,
         random_seed=0,
     )
@@ -979,5 +981,29 @@ def test_battery_does_not_charge_from_grid_or_export_due_to_lag_with_core_bundle
 
         assert grid_charge <= max_grid_charge_kwh
         assert battery_export <= max_export_kwh
+    finally:
+        env.close()
+
+
+def test_bau_passive_net_leaves_out_settled_thermal_electricity():
+    # Review of #224: the `*_electricity_consumption` observations report the last
+    # settled step. Adding them to the coming step's load mixed time steps and made
+    # the battery discharge (and export) for HVAC load that had already dropped.
+    env = CityLearnEnv(str(SOURCE_DATASET / "schema.json"), central_agent=True, episode_time_steps=4, random_seed=0)
+    try:
+        env.reset(seed=0)
+        engine = BusinessAsUsualAgent(env)._engine
+        step_hours = env.seconds_per_time_step / 3600.0
+        obs_map = {
+            "non_shiftable_load": 0,
+            "solar_generation": 1,
+            "cooling_electricity_consumption": 2,
+            "heating_electricity_consumption": 3,
+            "dhw_electricity_consumption": 4,
+        }
+        obs = np.array([0.5, 0.2, 0.4, 0.3, 0.1])
+        expected_kw = (0.5 - 0.2) / step_hours
+        assert engine._observed_passive_net_kw(obs, obs_map, agent_idx=0) == pytest.approx(expected_kw)
+        assert engine._get_import_power(obs, obs_map, agent_idx=0) == pytest.approx(expected_kw)
     finally:
         env.close()

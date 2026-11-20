@@ -28,8 +28,8 @@ It is not a scenario with all equipment switched off.
 
 | `ev_charge_target` | Definition | EV behaviour |
 |---|---|---|
-| `'full'` (default) | `immediate-full-charge-v3` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. |
-| `'requested'` | `immediate-user-target-v2` | Charges up to the user's requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger's minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC. |
+| `'full'` (default) | `immediate-full-charge-v4` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. |
+| `'requested'` | `immediate-user-target-v3` | Charges up to the user's requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger's minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC. |
 
 Everything else is the same. Select the BAU used as the KPI reference by
 `evaluate_v2()` with the environment setting
@@ -57,13 +57,30 @@ reference of `evaluate_v2()` uses, reads them uncorrupted.
 
 ### Known limits
 
-The baselines decide from observations. When the current step's exogenous
-`non_shiftable_load` and `solar_generation` are observed (as in the bundled
-schemas), passive net demand is estimated from those current-step values plus
-any already-running deferrable appliance power and observed thermal-device
-electricity consumption, falling back to the last settled step only when those
-observations are disabled. Unobserved current-step HVAC/DHW electrical power
-still uses the settled observation when enabled. The BAU battery serves only the EV power the
+The baselines decide from observations. Passive net demand, the load the battery
+may serve minus PV, uses only values known for the coming step when the schema
+observes `non_shiftable_load` and `solar_generation`, as the bundled schemas
+other than the `ca_`, `tx_`, `vt_` and Quebec neighbourhoods do: that step's non-shiftable load (scaled
+to the control step with `time_step_ratio`), the power of any running deferrable
+cycle, and that step's PV generation. Without those two observations they use the
+last settled step (`net_power_kw - bess_power_kw - ev_charging_power_kw`, or
+`net_electricity_consumption`), so the battery reacts one step late.
+
+Cooling, heating and DHW electricity of the coming step is not observed: it
+depends on that step's COP and thermal actions, and the
+`*_electricity_consumption` observations report the last settled step. The
+baselines leave it out of passive net demand instead of using the settled value.
+Over 30 days of `citylearn_challenge_2023_phase_2_local_evaluation` with the BAU,
+leaving it out makes the battery charge 32.5 kWh from the grid, against PV that
+the heat pumps use in the same step, and export nothing. Using the settled value
+instead charges 24.5 kWh from the grid but exports 25.4 kWh of stored energy, and
+costs 2.9% more. With the true value of the step, which no controller observes,
+both would be zero and the cost 3.3% lower. The same comparison on
+`tx_travis_county_neighborhood`, with `non_shiftable_load` observed, gives
+132.9 kWh and 0 kWh when it is left out and 81.3 kWh and 32.2 kWh with the
+settled value.
+
+The BAU battery serves only the EV power the
 EV can still accept: the `available_charge_power_kw` observation of the
 `entity_core_electrical` bundle, or, without that bundle, an estimate from the
 observed SOC, battery capacity, charger power and charger efficiency and the
@@ -72,6 +89,14 @@ includes the EV battery's capacity-power curve, so at steps of a few seconds
 near 100% SOC the battery can still discharge more than the EV takes. The
 estimate also omits the electrical-service import limit, which the bundle
 includes. The rule-based baselines reserve the EV power they command.
+
+Both also count the energy to full from the EV battery's nominal capacity, but a
+battery that has lost capacity is full below 100% SOC and accepts nothing. With
+`ev_charge_target='full'` the BAU then keeps reserving power for a full EV, and
+its battery discharges for that reservation, which is exported when the load is
+lower. On `citylearn_challenge_2022_phase_all_plus_evs` this exports 0.84 kWh
+over 720 hourly steps and 7.8 kWh over 2,880 steps of 900 s
+(`time_step_ratio_mode='compress'`); without capacity fade it exports nothing.
 
 Without that bundle the baselines also do not observe the building's import and
 export, so they take PV generation above the observed load as the surplus the

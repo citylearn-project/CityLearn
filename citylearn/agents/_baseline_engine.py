@@ -875,15 +875,11 @@ class _OperationalBaselinePolicy(RulePolicyBase):
             if idx < len(obs) and math.isfinite(obs[idx]):
                 load_kw += max(0.0, float(obs[idx]))
 
-        for thermal_name in (
-            "cooling_electricity_consumption",
-            "heating_electricity_consumption",
-            "dhw_electricity_consumption",
-        ):
-            val = self._get_value(obs, obs_map, thermal_name, default=float("nan"))
-            if math.isfinite(val):
-                load_kw += max(0.0, float(val) / step_hours)
-
+        # Only terms known for the coming step are used. Cooling, heating and DHW
+        # electricity of the coming step depend on its COP and thermal actions and are
+        # not observed before it; the observed values are the last settled step's.
+        # Adding them would make the battery discharge for HVAC load that has already
+        # dropped and export it (#190), so they are left out (see docs/baselines.md).
         return load_kw
 
     def _get_pv_power(self, obs: np.ndarray, obs_map: Mapping[str, int]) -> float:
@@ -934,8 +930,10 @@ class _OperationalBaselinePolicy(RulePolicyBase):
         """Estimate passive net power (load minus PV) before allocating controllable commands.
 
         Prefer current-step exogenous `non_shiftable_load` (plus any running
-        deferrable cycle and observed thermal load) minus current-step
+        deferrable cycle's current-step power) minus current-step
         `solar_generation` so the battery does not lag by one step (#190).
+        Thermal-device electricity of the coming step is not observable and is
+        left out.
         When those current-step observations are unavailable, fall back to the
         simultaneous settled entity measurements (`net - bess - ev`).
         """
