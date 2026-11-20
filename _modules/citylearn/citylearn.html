@@ -136,6 +136,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">Env</span><span class="p">,</span> <span class="n">spaces</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">difflib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
@@ -168,7 +169,7 @@
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
 
-<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">'matplotlib.font_manager'</span><span class="p">)</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">'matplotlib.pyplot'</span><span class="p">)</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -265,9 +266,9 @@
 <span class="sd">    Other Parameters</span>
 <span class="sd">    ----------------</span>
 <span class="sd">    render_directory: Union[str, Path], optional</span>
-<span class="sd">        Base directory where rendering and export artifacts are stored. Relative paths are resolved from the project root.</span>
+<span class="sd">        Base directory where rendering and export artifacts are stored. Relative paths are resolved from the current working directory.</span>
 <span class="sd">    render_directory_name: str, optional</span>
-<span class="sd">        Folder name created inside the project root for rendering and export artifacts when ``render_directory`` is not provided.</span>
+<span class="sd">        Folder name created in the current working directory for rendering and export artifacts when ``render_directory`` is not provided.</span>
 <span class="sd">        Defaults to ``render_logs``.</span>
 <span class="sd">    render_session_name: str, optional</span>
 <span class="sd">        Name of the subfolder created under ``render_directory``/``render_directory_name`` for export artifacts. When omitted,</span>
@@ -300,6 +301,18 @@
 <span class="sd">    """</span>
 
     <span class="n">DEFAULT_RENDER_START_DATE</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Options accepted through **kwargs in addition to the named parameters (used for suggestions).</span>
+    <span class="n">_KNOWN_CONSTRUCTOR_OPTIONS</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">'render_directory'</span><span class="p">,</span> <span class="s1">'render_directory_name'</span><span class="p">,</span> <span class="s1">'render'</span><span class="p">,</span> <span class="s1">'render_file_format'</span><span class="p">,</span> <span class="s1">'render_chunk_size'</span><span class="p">,</span>
+        <span class="s1">'export_only_final_episode'</span><span class="p">,</span> <span class="s1">'export_kpis_on_episode_end'</span><span class="p">,</span> <span class="s1">'debug_timing'</span><span class="p">,</span> <span class="s1">'check_observation_limits'</span><span class="p">,</span>
+        <span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="s1">'energy_provenance'</span><span class="p">,</span> <span class="s1">'metrics_log_interval'</span><span class="p">,</span> <span class="s1">'ev_departure_within_tolerance'</span><span class="p">,</span>
+        <span class="s1">'ev_departure_service_tolerance'</span><span class="p">,</span> <span class="s1">'business_as_usual_ev_charge_target'</span><span class="p">,</span> <span class="s1">'render_mode'</span><span class="p">,</span> <span class="s1">'render_session_name'</span><span class="p">,</span>
+        <span class="s1">'root_directory'</span><span class="p">,</span> <span class="s1">'buildings'</span><span class="p">,</span> <span class="s1">'electric_vehicles'</span><span class="p">,</span> <span class="s1">'simulation_start_time_step'</span><span class="p">,</span> <span class="s1">'simulation_end_time_step'</span><span class="p">,</span>
+        <span class="s1">'episode_time_steps'</span><span class="p">,</span> <span class="s1">'rolling_episode_split'</span><span class="p">,</span> <span class="s1">'random_episode_split'</span><span class="p">,</span> <span class="s1">'seconds_per_time_step'</span><span class="p">,</span>
+        <span class="s1">'reward_function'</span><span class="p">,</span> <span class="s1">'reward_function_kwargs'</span><span class="p">,</span> <span class="s1">'central_agent'</span><span class="p">,</span> <span class="s1">'shared_observations'</span><span class="p">,</span> <span class="s1">'active_observations'</span><span class="p">,</span>
+        <span class="s1">'inactive_observations'</span><span class="p">,</span> <span class="s1">'active_actions'</span><span class="p">,</span> <span class="s1">'inactive_actions'</span><span class="p">,</span> <span class="s1">'simulate_power_outage'</span><span class="p">,</span> <span class="s1">'solar_generation'</span><span class="p">,</span>
+        <span class="s1">'random_seed'</span><span class="p">,</span> <span class="s1">'offline'</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="s1">'interface'</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'start_date'</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
         <span class="n">schema</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">root_directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">buildings</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Building</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -337,6 +350,14 @@
         <span class="n">kw_render_session_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'render_session_name'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">kw_render_session_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">render_session_name</span> <span class="o">=</span> <span class="n">kw_render_session_name</span> <span class="k">if</span> <span class="n">render_session_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">render_session_name</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="c1"># A misspelled option (e.g. physics_invariants_checks) used to be ignored silently.</span>
+            <span class="n">known</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_KNOWN_CONSTRUCTOR_OPTIONS</span>
+            <span class="n">details</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="n">difflib</span><span class="o">.</span><span class="n">get_close_matches</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">known</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">details</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">'"</span> <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">" (did you mean '</span><span class="si">{</span><span class="n">match</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">'?)"</span> <span class="k">if</span> <span class="n">match</span> <span class="k">else</span> <span class="s1">''</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"CityLearnEnv got unexpected keyword argument(s): </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">details</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">offline</span> <span class="o">=</span> <span class="n">offline</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span>
         <span class="n">schema_interface</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'interface'</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
@@ -567,15 +588,17 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_directory</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">root_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
 
-        <span class="n">project_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Relative paths and the default resolve against the working directory. They used to resolve</span>
+        <span class="c1"># against the package's parent folder, which is site-packages for an installed wheel.</span>
+        <span class="n">output_base</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
         <span class="n">render_directory_name</span> <span class="o">=</span> <span class="n">render_directory_name</span> <span class="ow">or</span> <span class="s1">'render_logs'</span>
 
         <span class="k">if</span> <span class="n">render_directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">render_root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">render_directory</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">render_root</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
-                <span class="n">render_root</span> <span class="o">=</span> <span class="n">project_root</span> <span class="o">/</span> <span class="n">render_root</span>
+                <span class="n">render_root</span> <span class="o">=</span> <span class="n">output_base</span> <span class="o">/</span> <span class="n">render_root</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">render_root</span> <span class="o">=</span> <span class="n">project_root</span> <span class="o">/</span> <span class="n">render_directory_name</span>
+            <span class="n">render_root</span> <span class="o">=</span> <span class="n">output_base</span> <span class="o">/</span> <span class="n">render_directory_name</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">render_output_root</span> <span class="o">=</span> <span class="n">render_root</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_render_timestamp</span> <span class="o">=</span> <span class="kc">None</span>

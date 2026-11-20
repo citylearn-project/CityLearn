@@ -137,6 +137,17 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
 
+<div class="viewcode-block" id="PhysicsInvariantError">
+<a class="viewcode-back" href="../../../api/citylearn.internal.physics_invariants.html#citylearn.internal.physics_invariants.PhysicsInvariantError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PhysicsInvariantError</span><span class="p">(</span><span class="ne">AssertionError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A hard physics invariant was violated.</span>
+
+<span class="sd">    Subclasses ``AssertionError`` so existing handlers keep working, but is raised</span>
+<span class="sd">    explicitly, so ``python -O`` does not disable the checks.</span>
+<span class="sd">    """</span></div>
+
+
+
 <div class="viewcode-block" id="CityLearnPhysicsInvariantService">
 <a class="viewcode-back" href="../../../api/citylearn.internal.physics_invariants.html#citylearn.internal.physics_invariants.CityLearnPhysicsInvariantService">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CityLearnPhysicsInvariantService</span><span class="p">:</span>
@@ -182,11 +193,35 @@
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">battery</span><span class="p">,</span> <span class="n">energy_before</span><span class="p">,</span> <span class="n">transfer_before</span> <span class="ow">in</span> <span class="n">snapshot</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="n">energy_after</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">[</span><span class="n">time_step</span><span class="p">])</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">battery</span><span class="o">.</span><span class="n">capacity</span><span class="p">)</span>
             <span class="n">expected_change</span> <span class="o">=</span> <span class="n">battery</span><span class="o">.</span><span class="n">stored_energy_transfer</span> <span class="o">-</span> <span class="n">transfer_before</span>
-            <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">energy_after</span> <span class="o">-</span> <span class="n">energy_before</span> <span class="o">-</span> <span class="n">expected_change</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">energy_after</span> <span class="o">-</span> <span class="n">energy_before</span> <span class="o">-</span> <span class="n">expected_change</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Stored battery energy mismatch for '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">' at t=</span><span class="si">{</span><span class="n">time_step</span><span class="si">}</span><span class="s2">: "</span>
                 <span class="sa">f</span><span class="s2">"before=</span><span class="si">{</span><span class="n">energy_before</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, after=</span><span class="si">{</span><span class="n">energy_after</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, "</span>
                 <span class="sa">f</span><span class="s2">"expected_change=</span><span class="si">{</span><span class="n">expected_change</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh."</span>
-            <span class="p">)</span>
+            <span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_require</span><span class="p">(</span><span class="n">condition</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">condition</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PhysicsInvariantError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_state</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Read a simulated state value; a NaN or inf value is a violation, not zero."""</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">scalar</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">scalar</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PhysicsInvariantError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Non-finite </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">scalar</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">scalar</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_to_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -202,15 +237,14 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_safe_index</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">default</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Read a state value at ``idx``; missing values default, non-finite values are violations."""</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_state</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CityLearnPhysicsInvariantService.assert_step_invariants">
 <a class="viewcode-back" href="../../../api/citylearn.internal.physics_invariants.html#citylearn.internal.physics_invariants.CityLearnPhysicsInvariantService.assert_step_invariants">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">assert_step_invariants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Raise ``AssertionError`` if hard physics invariants are violated."""</span>
+<span class="w">        </span><span class="sd">"""Raise ``PhysicsInvariantError`` (an ``AssertionError``) if hard physics invariants are violated."""</span>
 
         <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">time_step</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
         <span class="n">buildings</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">)</span>
@@ -228,11 +262,21 @@
             <span class="p">]</span>
 
         <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">buildings</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_building_energy_balance</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_outage_local_balance</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_soc_bounds</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_storage_power_bounds</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assert_charger_power_bounds</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">check</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_assert_building_energy_balance</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_assert_outage_local_balance</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_assert_soc_bounds</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_assert_storage_power_bounds</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_assert_charger_power_bounds</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">check</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">PhysicsInvariantError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'Non-finite'</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="n">PhysicsInvariantError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2"> Found by </span><span class="si">{</span><span class="n">check</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span><span class="si">}</span><span class="s2"> for '</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' at t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">."</span>
+                        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+                    <span class="k">raise</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assert_battery_energy_changes</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div>
 
 
@@ -253,10 +297,10 @@
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'escalators_electricity_consumption'</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">net</span> <span class="o">-</span> <span class="n">terms</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">net</span> <span class="o">-</span> <span class="n">terms</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">"Net energy balance mismatch for '</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' at t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: "</span>
             <span class="sa">f</span><span class="s2">"net=</span><span class="si">{</span><span class="n">net</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, terms=</span><span class="si">{</span><span class="n">terms</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh."</span>
-        <span class="p">)</span>
+        <span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_assert_outage_local_balance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">outage_signal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s2">"power_outage_signal"</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
@@ -283,10 +327,10 @@
             <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'escalators_electricity_consumption'</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="k">assert</span> <span class="n">local_loads</span> <span class="o">&lt;=</span> <span class="n">local_sources</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="n">local_loads</span> <span class="o">&lt;=</span> <span class="n">local_sources</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">"Outage local energy balance violated for '</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' at t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: "</span>
             <span class="sa">f</span><span class="s2">"loads=</span><span class="si">{</span><span class="n">local_loads</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, local_sources=</span><span class="si">{</span><span class="n">local_sources</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh."</span>
-        <span class="p">)</span>
+        <span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_assert_soc_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">storages</span> <span class="o">=</span> <span class="p">[</span>
@@ -301,16 +345,16 @@
                 <span class="k">continue</span>
 
             <span class="n">soc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s2">"soc"</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-            <span class="k">assert</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">SOC_EPS</span> <span class="o">&lt;=</span> <span class="n">soc</span> <span class="o">&lt;=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOC_EPS</span><span class="p">,</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">SOC_EPS</span> <span class="o">&lt;=</span> <span class="n">soc</span> <span class="o">&lt;=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOC_EPS</span><span class="p">,</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> SOC out of bounds for '</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' at t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: soc=</span><span class="si">{</span><span class="n">soc</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">."</span>
-            <span class="p">)</span>
+            <span class="p">))</span>
 
         <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">building</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span> <span class="ow">or</span> <span class="p">[]:</span>
             <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iter_charger_evs</span><span class="p">(</span><span class="n">charger</span><span class="p">):</span>
                 <span class="n">soc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">battery</span><span class="o">.</span><span class="n">soc</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-                <span class="k">assert</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">SOC_EPS</span> <span class="o">&lt;=</span> <span class="n">soc</span> <span class="o">&lt;=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOC_EPS</span><span class="p">,</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">SOC_EPS</span> <span class="o">&lt;=</span> <span class="n">soc</span> <span class="o">&lt;=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOC_EPS</span><span class="p">,</span> <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"EV SOC out of bounds for '</span><span class="si">{</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' at t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: soc=</span><span class="si">{</span><span class="n">soc</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">."</span>
-                <span class="p">)</span>
+                <span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_assert_storage_power_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">step_seconds</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
@@ -324,10 +368,10 @@
 
         <span class="n">energy_kwh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">electrical_storage_electricity_consumption</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="n">max_abs_energy_kwh</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="n">nominal_power_kw</span><span class="p">,</span> <span class="n">step_seconds</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">energy_kwh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">max_abs_energy_kwh</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">energy_kwh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">max_abs_energy_kwh</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">"Battery power bound exceeded for '</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' at t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: "</span>
             <span class="sa">f</span><span class="s2">"energy=</span><span class="si">{</span><span class="n">energy_kwh</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, limit=</span><span class="si">{</span><span class="n">max_abs_energy_kwh</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh/step."</span>
-        <span class="p">)</span>
+        <span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_assert_charger_power_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="n">step_seconds</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_scalar</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
@@ -343,14 +387,14 @@
             <span class="n">commanded_energy_kwh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">past_charging_action_values_kwh</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
             <span class="n">max_abs_energy_kwh</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="n">max_power_kw</span><span class="p">,</span> <span class="n">step_seconds</span><span class="p">)</span>
 
-            <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">applied_energy_kwh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">max_abs_energy_kwh</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">applied_energy_kwh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">max_abs_energy_kwh</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Charger power bound exceeded at '</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span><span class="si">}</span><span class="s2">' t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: "</span>
                 <span class="sa">f</span><span class="s2">"applied=</span><span class="si">{</span><span class="n">applied_energy_kwh</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, limit=</span><span class="si">{</span><span class="n">max_abs_energy_kwh</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh/step."</span>
-            <span class="p">)</span>
-            <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">commanded_energy_kwh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">max_abs_energy_kwh</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
+            <span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">commanded_energy_kwh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">max_abs_energy_kwh</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENERGY_EPS</span><span class="p">,</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Charger command bound exceeded at '</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span><span class="si">}</span><span class="s2">' t=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">: "</span>
                 <span class="sa">f</span><span class="s2">"commanded=</span><span class="si">{</span><span class="n">commanded_energy_kwh</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh, limit=</span><span class="si">{</span><span class="n">max_abs_energy_kwh</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> kWh/step."</span>
-            <span class="p">)</span>
+            <span class="p">))</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_iter_charger_evs</span><span class="p">(</span><span class="n">charger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">:</span>

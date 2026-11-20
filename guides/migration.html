@@ -60,6 +60,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-5-0-to-3-6-0">Upgrade from 3.5.0 to 3.6.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#battery-discharge-features-during-outages">Battery discharge features during outages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#baselines-without-the-entity-core-electrical-bundle">Baselines without the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle</a></li>
@@ -199,6 +200,18 @@ local schema and files for data that are not in the public catalogue; a
 repository-relative path is not created by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>.</p>
 <p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
 development-line history.</p>
+</section>
+<section id="unreleased">
+<h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<p>No dataset, schema or KPI migration is required. Valid runs give the same results; a few silent mistakes now raise.</p>
+<ul class="simple">
+<li><p><strong>Non-finite actions raise.</strong> <code class="docutils literal notranslate"><span class="pre">env.step()</span></code> raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> for NaN or infinite actions. A training loop that used to continue with a diverged policy now stops at the first bad action; check the policy output or replace non-finite values before stepping.</p></li>
+<li><p><strong>Unknown constructor arguments raise.</strong> <code class="docutils literal notranslate"><span class="pre">CityLearnEnv(...,</span> <span class="pre">**kwargs)</span></code> raises <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> for an unknown keyword argument, with the closest valid name. Remove or correct arguments that were silently ignored before.</p></li>
+<li><p><strong>Topology events are validated at construction.</strong> An event that names a member missing from the schema, or an asset override with an unknown key or an invalid value, raises when the environment is built. Members declared in the schema but not loaded (<code class="docutils literal notranslate"><span class="pre">buildings=[...]</span></code>) are still accepted.</p></li>
+<li><p><strong>Logging.</strong> CityLearn no longer configures the root logger. Warnings still print; to see INFO messages, configure logging in your script, for example <code class="docutils literal notranslate"><span class="pre">logging.basicConfig(level=logging.INFO)</span></code>. <code class="docutils literal notranslate"><span class="pre">learn(logging_level=...)</span></code> and <code class="docutils literal notranslate"><span class="pre">DataSet(logging_level=...)</span></code> set the level of the <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> logger only when passed.</p></li>
+<li><p><strong>Export location.</strong> Exports go to <code class="docutils literal notranslate"><span class="pre">./render_logs</span></code> in the working directory by default, and relative <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> values resolve against the working directory. Pass an absolute <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> to keep the previous location.</p></li>
+<li><p><strong>Physics invariants</strong> raise <code class="docutils literal notranslate"><span class="pre">PhysicsInvariantError</span></code>, which is an <code class="docutils literal notranslate"><span class="pre">AssertionError</span></code>, so existing handlers keep working.</p></li>
+</ul>
 </section>
 <section id="upgrade-from-3-5-0-to-3-6-0">
 <span id="upgrade-from-350-to-360"></span><h2>Upgrade from 3.5.0 to 3.6.0<a class="headerlink" href="#upgrade-from-3-5-0-to-3-6-0" title="Link to this heading"></a></h2>

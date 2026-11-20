@@ -132,7 +132,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
-<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="get_env_attr">
 <a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.get_env_attr">[docs]</a>
@@ -387,7 +387,7 @@
 
                     <span class="n">observations</span> <span class="o">=</span> <span class="n">next_observations</span>
 
-                    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s1">'Time step: </span><span class="si">{</span><span class="n">time_step</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_time_steps</span><span class="si">}</span><span class="s1">,'</span>\
                             <span class="sa">f</span><span class="s1">' Episode: </span><span class="si">{</span><span class="n">episode</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">episodes</span><span class="si">}</span><span class="s1">,'</span>\
                                 <span class="sa">f</span><span class="s1">' Actions: </span><span class="si">{</span><span class="n">actions</span><span class="si">}</span><span class="s1">,'</span>\
@@ -418,7 +418,7 @@
                         <span class="s1">'sum'</span><span class="p">:</span> <span class="n">empty</span><span class="p">,</span>
                         <span class="s1">'mean'</span><span class="p">:</span> <span class="n">empty</span><span class="p">,</span>
                     <span class="p">}</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Completed episode: </span><span class="si">{</span><span class="n">episode</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">episodes</span><span class="si">}</span><span class="s1">, Reward: </span><span class="si">{</span><span class="n">rewards_summary</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+                <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Completed episode: </span><span class="si">{</span><span class="n">episode</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">episodes</span><span class="si">}</span><span class="s1">, Reward: </span><span class="si">{</span><span class="n">rewards_summary</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'plan_final_episode_exports'</span><span class="p">):</span>
                 <span class="n">env</span><span class="o">.</span><span class="n">_final_export_episode_index</span> <span class="o">=</span> <span class="n">previous_final_export_episode_index</span></div>
@@ -462,9 +462,11 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">__set_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logging_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Set logging level."""</span>
 
-        <span class="n">logging_level</span> <span class="o">=</span> <span class="mi">30</span> <span class="k">if</span> <span class="n">logging_level</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">logging_level</span>
+        <span class="k">if</span> <span class="n">logging_level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
         <span class="k">assert</span> <span class="n">logging_level</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'logging_level must be &gt;= 0'</span>
-        <span class="n">LOGGER</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging_level</span><span class="p">)</span>
+        <span class="c1"># Level of the package logger only; configure handlers (e.g. logging.basicConfig) to see the messages.</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">'citylearn'</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging_level</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Agent.update">
 <a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.Agent.update">[docs]</a>

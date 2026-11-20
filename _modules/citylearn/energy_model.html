@@ -154,14 +154,25 @@
     <span class="n">to_dataset_resolution_energy</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.deferrable_cycles</span><span class="w"> </span><span class="kn">import</span> <span class="n">CycleIndex</span>
-<span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">'ignore'</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">'ignore'</span><span class="p">)</span>
 
-<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="c1"># Zero-size devices stand in for absent equipment. Without a seed, each would draw one from Python's</span>
 <span class="c1"># global `random`, so its (unused) random parameters changed between constructions and building an</span>
 <span class="c1"># env advanced the caller's random stream.</span>
 <span class="n">PLACEHOLDER_DEVICE_RANDOM_SEED</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_require_finite_energy</span><span class="p">(</span><span class="n">energy</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Reject a NaN or infinite charge request: ``min``/``max`` limits would pass it through."""</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">finite</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">energy</span><span class="p">)))</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">finite</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">.charge() received non-finite energy </span><span class="si">{</span><span class="n">energy</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="Device">
 <a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.Device">[docs]</a>
@@ -503,11 +514,13 @@
         <span class="n">c_to_k</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="mf">273.15</span>
         <span class="n">outdoor_dry_bulb_temperature</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">outdoor_dry_bulb_temperature</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">heating</span><span class="p">:</span>
-            <span class="n">cop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">efficiency</span><span class="o">*</span><span class="n">c_to_k</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_heating_temperature</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_heating_temperature</span> <span class="o">-</span> <span class="n">outdoor_dry_bulb_temperature</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">cop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">efficiency</span><span class="o">*</span><span class="n">c_to_k</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_cooling_temperature</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">outdoor_dry_bulb_temperature</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_cooling_temperature</span><span class="p">)</span>
-        
+        <span class="c1"># A zero temperature difference gives an infinite COP, capped at 20 below (was hidden by a global np.seterr).</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">'ignore'</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">'ignore'</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">heating</span><span class="p">:</span>
+                <span class="n">cop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">efficiency</span><span class="o">*</span><span class="n">c_to_k</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_heating_temperature</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_heating_temperature</span> <span class="o">-</span> <span class="n">outdoor_dry_bulb_temperature</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">efficiency</span><span class="o">*</span><span class="n">c_to_k</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_cooling_temperature</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">outdoor_dry_bulb_temperature</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_cooling_temperature</span><span class="p">)</span>
+
         <span class="n">cop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cop</span><span class="p">)</span>
         <span class="n">cop</span><span class="p">[</span><span class="n">cop</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
         <span class="n">cop</span><span class="p">[</span><span class="n">cop</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
@@ -1136,6 +1149,8 @@
 <div class="viewcode-block" id="StorageDevice.charge">
 <a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.StorageDevice.charge">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">_require_finite_energy</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_charge</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span></div>
 
 
@@ -1342,6 +1357,8 @@
 <span class="sd">        If charging, soc = min(`soc_init` + energy*`efficiency`, `max_input_power`, `capacity`)</span>
 <span class="sd">        If discharging, soc = max(0, `soc_init` + energy/`efficiency`, `max_output_power`)</span>
 <span class="sd">        """</span>
+        <span class="n">_require_finite_energy</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">energy</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_input_power</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">max_input_energy</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_input_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
@@ -1562,6 +1579,8 @@
 <span class="sd">        energy : float</span>
 <span class="sd">            Energy to charge if (+) or discharge if (-) in [kWh].</span>
 <span class="sd">        """</span>
+        <span class="n">_require_finite_energy</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capacity_before_step</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">capacity_before_step</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">degraded_capacity</span>
         <span class="c1"># Public control paths pass dataset-resolution kWh; physical limits are per control step.</span>

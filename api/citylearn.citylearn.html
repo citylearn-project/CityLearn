@@ -202,8 +202,8 @@ each building independently in a <code class="code docutils literal notranslate"
 <li><p><strong>offline</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
 error when required files are not available locally. Defaults to the <code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE</span></code> environment
 variable, read at initialization, or False when it is unset.</p></li>
-<li><p><strong>render_directory</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Base directory where rendering and export artifacts are stored. Relative paths are resolved from the project root.</p></li>
-<li><p><strong>render_directory_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Folder name created inside the project root for rendering and export artifacts when <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> is not provided.
+<li><p><strong>render_directory</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Base directory where rendering and export artifacts are stored. Relative paths are resolved from the current working directory.</p></li>
+<li><p><strong>render_directory_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Folder name created in the current working directory for rendering and export artifacts when <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> is not provided.
 Defaults to <code class="docutils literal notranslate"><span class="pre">render_logs</span></code>.</p></li>
 <li><p><strong>render_session_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the subfolder created under <code class="docutils literal notranslate"><span class="pre">render_directory</span></code>/<code class="docutils literal notranslate"><span class="pre">render_directory_name</span></code> for export artifacts. When omitted,
 a timestamp is used.</p></li>

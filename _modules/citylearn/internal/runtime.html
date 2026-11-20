@@ -132,6 +132,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.scalars</span><span class="w"> </span><span class="kn">import</span> <span class="n">numpy1_scalar</span>
@@ -319,6 +321,7 @@
         <span class="n">env</span><span class="o">.</span><span class="n">_observations_cache_time_step</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="n">timer_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="k">if</span> <span class="n">debug_timing</span> <span class="k">else</span> <span class="mf">0.0</span>
         <span class="n">actions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_actions</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span> <span class="k">if</span> <span class="n">parsed_actions</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">parsed_actions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require_finite_actions</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
         <span class="n">capture_entity_execution</span> <span class="o">=</span> <span class="p">(</span>
             <span class="nb">bool</span><span class="p">(</span><span class="n">collect_info</span><span class="p">)</span>
             <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'interface'</span><span class="p">,</span> <span class="s1">'flat'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'entity'</span>
@@ -894,6 +897,33 @@
         <span class="n">env</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">truncated</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_require_finite_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parsed_actions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Reject NaN and infinite actions before they reach the device models.</span>
+
+<span class="sd">        A non-finite value would otherwise pass ``min``/``max`` limits unchanged (``min(x, nan)``</span>
+<span class="sd">        returns ``x``), so a NaN storage action became the largest possible discharge.</span>
+<span class="sd">        """</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">''</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+                    <span class="n">check</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">key</span><span class="si">}</span><span class="s1">.'</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">finite</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">finite</span><span class="p">:</span>
+                    <span class="n">buildings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span>
+                    <span class="n">building</span> <span class="o">=</span> <span class="n">buildings</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">buildings</span><span class="p">)</span> <span class="k">else</span> <span class="n">index</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Action '</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">key</span><span class="si">}</span><span class="s2">' of building '</span><span class="si">{</span><span class="n">building</span><span class="si">}</span><span class="s2">' is </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">; actions must be finite numbers."</span>
+                    <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">mapping</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parsed_actions</span> <span class="ow">or</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+                <span class="n">check</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CityLearnRuntimeService.parse_actions">
 <a class="viewcode-back" href="../../../api/citylearn.internal.runtime.html#citylearn.internal.runtime.CityLearnRuntimeService.parse_actions">[docs]</a>

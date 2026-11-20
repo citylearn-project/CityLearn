@@ -245,6 +245,17 @@
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">splits</span> <span class="o">=</span> <span class="n">episode_time_steps</span>
+            <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">splits</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Each episode window must be a (start, end) pair of integers, got </span><span class="si">{</span><span class="n">split</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+                <span class="c1"># Schemas may define windows beyond a simulation window narrowed by the caller; those rows still</span>
+                <span class="c1"># exist in the data files, so only windows that can never be valid are rejected here.</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">start</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Episode window (</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s1">) must satisfy 0 &lt;= start &lt;= end.'</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">episode_time_steps</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>

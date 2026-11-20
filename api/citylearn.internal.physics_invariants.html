@@ -163,7 +163,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.internal.physics_invariants.CityLearnPhysicsInvariantService.assert_step_invariants">
 <span class="sig-name descname"><span class="pre">assert_step_invariants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/internal/physics_invariants.html#CityLearnPhysicsInvariantService.assert_step_invariants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.physics_invariants.CityLearnPhysicsInvariantService.assert_step_invariants" title="Link to this definition"></a></dt>
-<dd><p>Raise <code class="docutils literal notranslate"><span class="pre">AssertionError</span></code> if hard physics invariants are violated.</p>
+<dd><p>Raise <code class="docutils literal notranslate"><span class="pre">PhysicsInvariantError</span></code> (an <code class="docutils literal notranslate"><span class="pre">AssertionError</span></code>) if hard physics invariants are violated.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -174,6 +174,15 @@
 that silently replaces measured energy with its operational reserve.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="citylearn.internal.physics_invariants.PhysicsInvariantError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.internal.physics_invariants.</span></span><span class="sig-name descname"><span class="pre">PhysicsInvariantError</span></span><a class="reference internal" href="../_modules/citylearn/internal/physics_invariants.html#PhysicsInvariantError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.internal.physics_invariants.PhysicsInvariantError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">AssertionError</span></code></p>
+<p>A hard physics invariant was violated.</p>
+<p>Subclasses <code class="docutils literal notranslate"><span class="pre">AssertionError</span></code> so existing handlers keep working, but is raised
+explicitly, so <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-O</span></code> does not disable the checks.</p>
 </dd></dl>
 
 </section>
