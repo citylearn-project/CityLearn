@@ -2,6 +2,7 @@ import logging
 from typing import Any, List, Mapping
 from gymnasium import spaces
 import numpy as np
+from citylearn import random_streams
 from citylearn.base import Environment
 from citylearn.citylearn import CityLearnEnv
 
@@ -78,6 +79,12 @@ class Agent(Environment):
             episode_tracker=self.env.unwrapped.episode_tracker,
             time_step_ratio=self.env.unwrapped.time_step_ratio
         )
+        # The agent's own random streams follow the derivation of its environment's streams. The default is not
+        # stored, so agents saved before the setting existed load with the same attributes as new ones.
+        random_stream_version = getattr(self.env.unwrapped, 'random_stream_version', None)
+
+        if random_stream_version != random_streams.DEFAULT_RANDOM_STREAM_VERSION:
+            self._set_random_stream(random_stream_version=random_stream_version)
         self.reset()
 
     @property
@@ -333,6 +340,22 @@ class Agent(Environment):
         """
 
         pass
+
+    def episode_random_generator(self, purpose: str) -> np.random.Generator:
+        """Generator of `purpose` for the current episode (``random_stream_version='v2'``).
+
+        The generator is derived from :py:attr:`random_seed`, `purpose` and the episode key of the shared
+        episode tracker, and persists for the rest of the episode, so draws within an episode come from one
+        stream and every episode starts a new, independent stream. Generators of earlier episodes are dropped.
+        """
+
+        episode = self.episode_tracker.random_stream_episode
+        generators = getattr(self, '_random_generators', None) or {}
+
+        for key in [k for k in generators if k[0] == purpose and k[1:] != (episode,)]:
+            del generators[key]
+
+        return self.random_generator(purpose, episode)
 
     def next_time_step(self):
         super().next_time_step()

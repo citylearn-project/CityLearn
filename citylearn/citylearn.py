@@ -157,7 +157,8 @@ class CityLearnEnv(Environment, Env):
         state of charge, occupant set-point interactions and stochastic power outages are derived from
         `random_seed`: ``'v2'`` (default) derives one independent stream per purpose, object and episode
         with :class:`numpy.random.SeedSequence`; ``'v1'`` reproduces CityLearn 3.6.0 and earlier. Overrides
-        ``random_stream_version`` in the schema. See :py:mod:`citylearn.random_streams`.
+        ``random_stream_version`` in the schema. Agents built on the environment use the same version for
+        their own random streams. See :py:mod:`citylearn.random_streams`.
     offline: bool, optional
         If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
         error when required files are not available locally. Defaults to the ``CITYLEARN_OFFLINE`` environment
