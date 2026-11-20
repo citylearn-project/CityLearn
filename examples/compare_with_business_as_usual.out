@@ -1,8 +1,8 @@
                                                     cost_function      value
-                                  district_cost_total_control_eur  95.293798
-                        district_cost_total_business_as_usual_eur 127.655208
-               district_cost_total_delta_to_business_as_usual_eur -32.361410
+                                  district_cost_total_control_eur  92.182836
+                        district_cost_total_business_as_usual_eur 124.753948
+               district_cost_total_delta_to_business_as_usual_eur -32.571112
 district_ev_departure_audit_min_acceptable_service_feasible_ratio   1.000000
- district_battery_total_throughput_delta_to_business_as_usual_kwh   1.219937
-                    district_energy_grid_total_import_control_kwh 562.041556
-          district_energy_grid_total_import_business_as_usual_kwh 733.916654
+ district_battery_total_throughput_delta_to_business_as_usual_kwh   6.096661
+                    district_energy_grid_total_import_control_kwh 566.794944
+          district_energy_grid_total_import_business_as_usual_kwh 739.822226
