@@ -178,6 +178,8 @@ docs/source/api/
 examples/*
 !examples/*.py
 !examples/*.ipynb
+# expected output of the quickstart examples, shown in the documentation
+!examples/*.out
 
 # ignore folder
 .ignore

@@ -1,0 +1,41 @@
+name: Documentation links
+
+# External links are checked weekly rather than on every pull request, because
+# third-party sites can be slow or briefly unavailable. scripts/ci/check_docs.py
+# checks the internal links of every build.
+on:
+  schedule:
+  - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linkcheck:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        sudo rm -f \
+          /etc/apt/sources.list.d/google-chrome.list \
+          /etc/apt/sources.list.d/google-chrome.sources
+        sudo apt-get update
+        sudo apt-get install -y pandoc
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt -r docs/requirements.txt
+        python -m pip install -e ".[end_use_load_profiles]"
+    - name: Check external links
+      run: sphinx-build -b linkcheck docs/source docs/build/linkcheck
+    - name: Save the link report
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: documentation-linkcheck
+        path: docs/build/linkcheck/output.*
+        retention-days: 30

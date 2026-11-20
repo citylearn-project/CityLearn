@@ -62,11 +62,12 @@ def check_site(root):
         "_images/ev-service-window.svg", "_images/v3-timeseries.png",
         "_images/v3-scorecard.png",
         "overview/index.html", "_images/dr.jpg",
+        "glossary.html", "guides/dataset_catalogue.html", "python_api.html",
     ]
     for name in required:
         if not (root / name).is_file():
             errors.add(f"Required site asset missing: {name}")
-    for name in ("guides/pt", "guides/retired_datasets.html"):
+    for name in ("guides/pt", "guides/retired_datasets.html", "api/citylearn.internal.html"):
         if (root / name).exists():
             errors.add(f"Removed website section still published: {name}")
     return len(pages), checked, sorted(errors)

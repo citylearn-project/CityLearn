@@ -88,3 +88,15 @@ html_context = {
   'github_repo': 'CityLearn',
   'github_version': 'master/docs/source/',
 }
+
+
+# -- Link check (sphinx-build -b linkcheck, run weekly by docs-linkcheck.yml) --
+
+# Sites that refuse automated requests but work in a browser.
+linkcheck_ignore = [
+    r'https://www\.ercot\.com/.*',
+]
+linkcheck_timeout = 30
+linkcheck_retries = 2
+# GitHub renders heading anchors with JavaScript, so they cannot be checked.
+linkcheck_anchors_ignore_for_url = [r'https://github\.com/.*']

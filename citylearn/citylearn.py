@@ -71,19 +71,26 @@ class EvaluationCondition(Enum):
     WITHOUT_STORAGE_AND_PARTIAL_LOAD_AND_PV = WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV + _PV_SUFFIX
 
 class CityLearnEnv(Environment, Env):
-    r"""CityLearn nvironment class.
+    r"""CityLearn environment: a Gymnasium environment that simulates a community of buildings.
+
+    Each step applies the controller's actions to the buildings' storage, EV chargers and flexible
+    loads for one control interval and returns the next observations and rewards. After an episode,
+    :py:meth:`evaluate_v2` returns the KPI table and :py:meth:`scorecard` its default selection.
 
     Parameters
     ----------
     schema: Union[str, Path, Mapping[str, Any]]
         Name of CityLearn data set, filepath to JSON representation or :code:`dict` object of a CityLearn schema.
-        Call :py:meth:`citylearn.data.DataSet.get_names` for list of available CityLearn data sets.
+        Call :py:meth:`citylearn.data.DataSet.get_dataset_names` for the list of public CityLearn data sets.
     root_directory: Union[str, Path]
         Absolute path to directory that contains the data files including the schema.
     buildings: Union[List[Building], List[str], List[int]], optional
         Buildings to include in environment. If list of :code:`citylearn.building.Building` is provided, will override :code:`buildings` definition in schema.
         If list of :str: is provided will include only schema :code:`buildings` keys that are contained in provided list of :code:`str`.
         If list of :int: is provided will include only schema :code:`buildings` whose index is contained in provided list of :code:`int`.
+    electric_vehicles: Union[List[ElectricVehicle], List[str], List[int]], optional
+        Electric vehicles to include, selected from the schema's :code:`electric_vehicles_def` in the same way as
+        :code:`buildings`: instances, names or indices. Defaults to every EV in the schema.
     simulation_start_time_step: int, optional
         Time step to start reading data files contents.
     simulation_end_time_step: int, optional
@@ -91,7 +98,8 @@ class CityLearnEnv(Environment, Env):
     episode_time_steps: Union[int, List[Tuple[int, int]]], optional
         If type is `int`, it is the number of time steps in an episode. If type is `List[Tuple[int, int]]]` is provided, 
         it is a list of episode start and end time steps between `simulation_start_time_step` and `simulation_end_time_step`. 
-        Defaults to (`simulation_end_time_step` - `simulation_start_time_step`) + 1. Will ignore `rolling_episode_split` if `episode_splits` is of type `List[Tuple[int, int]]]`.
+        Defaults to (`simulation_end_time_step` - `simulation_start_time_step`) + 1. An episode of N time steps
+        (states) executes N - 1 control steps. `rolling_episode_split` is ignored when `episode_time_steps` is a list.
     rolling_episode_split: bool, default: False
         True if episode sequences are split such that each time step is a candidate for `episode_start_time_step` otherwise, False to split episodes in steps of `episode_time_steps`.
     random_episode_split: bool, default: False
@@ -110,7 +118,11 @@ class CityLearnEnv(Environment, Env):
         between two consecutive episodes is never simulated. Can also be set with the schema key of the same name. Rolling
         and explicit list splits are not affected.
     seconds_per_time_step: float
-        Number of seconds in 1 `time_step` and must be set to >= 1.
+        Number of seconds in 1 `time_step` and must be set to >= 1. It must equal the dataset step unless
+        `time_step_ratio_mode='compress'`.
+    time_step_ratio: int, optional
+        Ratio of the control step to the dataset step. It is inferred from the data; a value passed here must
+        match the inferred ratio, otherwise a `ValueError` is raised.
     reward_function: Union[RewardFunction, str], optional
         Reward function class instance or path to function class e.g. 'citylearn.reward_function.IndependentSACReward'.
         If provided, will override :code:`reward_function` definition in schema.
@@ -150,6 +162,17 @@ class CityLearnEnv(Environment, Env):
         If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
         error when required files are not available locally. Defaults to the ``CITYLEARN_OFFLINE`` environment
         variable, read at initialization, or False when it is unset.
+    interface: str, optional
+        Observation and action contract: ``'flat'`` (default) returns one vector per agent; ``'entity'`` returns
+        tables of buildings, chargers, EVs and other assets with their edges. Overrides the schema key.
+        See the flat and entity interfaces guide.
+    topology_mode: str, optional
+        ``'static'`` (default) keeps the members and assets of the schema for the whole episode; ``'dynamic'``
+        applies the schema's ``topology_events`` (members and assets joining or leaving) and requires
+        ``interface='entity'``. Overrides the schema key.
+    start_date: Union[str, datetime.date], optional
+        Date of the first time step in rendered and exported timestamps, e.g. ``'2024-01-01'``. Defaults to the
+        schema's ``start_date``, else 2024-01-01. It does not change the simulation.
 
     Other Parameters
     ----------------
@@ -161,6 +184,12 @@ class CityLearnEnv(Environment, Env):
     render_session_name: str, optional
         Name of the subfolder created under ``render_directory``/``render_directory_name`` for export artifacts. When omitted,
         a timestamp is used.
+    render: bool, optional
+        Legacy render switch. Prefer `render_mode`.
+    render_file_format: str, optional
+        Format of rendered and exported series: ``'csv'`` (default) or ``'parquet'``, which needs ``pyarrow``.
+    render_chunk_size: int, optional
+        Number of rows buffered before a rendered file is written. Defaults to 100,000 for CSV and 50,000 for Parquet.
     render_mode: str, optional
         Rendering strategy. Accepted values are ``'none'`` (default), ``'during'`` for streaming exports each step, and
         ``'end'`` for exports performed at episode completion while still allowing manual snapshots via :meth:`render`.
@@ -176,12 +205,24 @@ class CityLearnEnv(Environment, Env):
     business_as_usual_ev_charge_target: str, optional
         EV charging of the native BAU reference built by ``evaluate_v2()``: ``'full'`` charges to 100%,
         ``'requested'`` to the user's requested departure SOC. Defaults to the schema value, else ``'full'``.
+    physics_version: int, optional
+        Physics definitions: ``2`` (default) or ``1``, which reproduces the physics of CityLearn 3.6.0. Overrides the
+        schema key. The migration guide lists the corrections of version 2.
+    debug_timing: bool, optional
+        Log runtime timings. Defaults to the schema value, else ``False``.
+    check_observation_limits: bool, optional
+        Check observations against their estimated bounds. Defaults to the schema value, else ``False``.
+    physics_invariant_checks: bool, optional
+        Check physical invariants at runtime. Defaults to the schema value, else ``False``.
+    metrics_log_interval: int, optional
+        Log runtime metrics every this many steps; ``0`` (default) disables them.
     energy_provenance: bool, optional
         Whether to keep the per-step electricity provenance ledger (``*_energy_provenance_*`` KPIs and
         provenance audits). Defaults to ``True``. Disabling it does not change any simulated quantity and
         makes ``step()`` substantially faster, e.g. for training runs that do not report provenance KPIs.
     **kwargs : dict
-        Other keyword arguments used to initialize super classes.
+        Only the options listed above are accepted; any other keyword argument raises a `TypeError` that suggests
+        the closest valid name.
 
     Notes
     -----
@@ -1638,14 +1679,45 @@ class CityLearnEnv(Environment, Env):
         *,
         progress_callback=None,
     ) -> pd.DataFrame:
-        r"""Evaluate v2 KPIs; optional progress callback receives scalar stage events.
+        r"""Return the KPI table of the simulation so far, normally called at the end of an episode.
 
-        Callback failures are logged and disable reporting, preserving evaluation.
-        No progress events or timings are added to the returned KPI table.
+        Parameters
+        ----------
+        control_condition: EvaluationCondition, optional
+            Which series of each building are evaluated as the controlled run. Defaults to the simulated series:
+            ``EvaluationCondition.WITH_STORAGE_AND_PV``, or ``WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV`` for buildings
+            with LSTM thermal dynamics.
+        baseline_condition: EvaluationCondition, optional
+            Which counterfactual series the ``*_baseline_*`` and ``*_ratio_to_baseline_*`` KPIs use. Defaults to
+            ``EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV``, or ``WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV``
+            for buildings with LSTM thermal dynamics: the same buildings without storage, PV retained.
+        comfort_band: float, optional
+            Comfort band in degrees Celsius around the set point used by the thermal comfort KPIs. Defaults to each
+            building's ``comfort_band`` series.
+        include_business_as_usual: bool, default: True
+            Also run, or reuse, the native business-as-usual rollout (:py:class:`citylearn.agents.baseline.BusinessAsUsualAgent`
+            on the same scenario and window) and add the ``*_business_as_usual_*`` values, deltas and ratios.
+            The reference is rebuilt from the schema and the constructor arguments; a `ValueError` names the
+            setting when it differs from this environment as captured at its last `reset()`. See the baselines
+            guide for the settings that are compared.
+        progress_callback: callable, optional
+            Keyword-only. Receives scalar stage events while the table is computed. A callback that raises is
+            logged and disabled; the table is unaffected, and no events or timings are added to it.
 
-        With `include_business_as_usual`, the native BAU reference is rebuilt from the schema and
-        the constructor arguments. A `ValueError` names the setting when it differs from this env as
-        captured at its last `reset()`; see the baselines guide for the settings that are compared.
+        Returns
+        -------
+        pandas.DataFrame
+            One row per KPI and scope, with the columns:
+
+            * ``cost_function`` (str): the KPI name, ``level_family_subfamily_metric_variant_unit``. The last part
+              is the unit, e.g. ``kwh``, ``kw``, ``eur``, ``kgco2``, ``hours`` or ``ratio``.
+            * ``value`` (float): the value; NaN when the KPI is undefined for this run, for example a service
+              ratio without any event to serve.
+            * ``name`` (str): the building name for building rows, ``'District'`` for district rows.
+            * ``level`` (str): ``'building'`` or ``'district'``.
+
+            Which KPIs appear depends on the scenario's assets and services. :py:meth:`scorecard` selects the
+            default subset, and the KPI reference guide defines every family.
         """
 
         return self._kpi_service.evaluate_v2(
@@ -1656,6 +1728,50 @@ class CityLearnEnv(Environment, Env):
             evaluation_condition_cls=EvaluationCondition,
             dynamics_building_cls=DynamicsBuilding,
             progress_callback=progress_callback,
+        )
+
+    #: KPI names of the default scorecard, in display order. :py:meth:`scorecard` selects these rows.
+    SCORECARD_DEFAULT_KPIS: Tuple[str, ...] = CityLearnKPIService.SCORECARD_DEFAULT_KPIS
+
+    def scorecard(self, kpis: pd.DataFrame = None, level: str = None, **evaluate_kwargs: Any) -> pd.DataFrame:
+        r"""Return the default scorecard: the rows of :py:meth:`evaluate_v2` named in `SCORECARD_DEFAULT_KPIS`.
+
+        Parameters
+        ----------
+        kpis: pandas.DataFrame, optional
+            A table returned by :py:meth:`evaluate_v2`. When omitted, :py:meth:`evaluate_v2` is called with
+            `evaluate_kwargs`.
+        level: str, optional
+            Keep only ``'district'`` or ``'building'`` rows.
+        **evaluate_kwargs: Any
+            Arguments of :py:meth:`evaluate_v2`, used only when `kpis` is omitted.
+
+        Returns
+        -------
+        pandas.DataFrame
+            The selected rows, with the columns of :py:meth:`evaluate_v2`, in the order of
+            `SCORECARD_DEFAULT_KPIS` and then by building name. KPIs that do not apply to the scenario are absent.
+        """
+
+        if kpis is None:
+            kpis = self.evaluate_v2(**evaluate_kwargs)
+        elif evaluate_kwargs:
+            raise TypeError('Pass either kpis or evaluate_v2() arguments to scorecard(), not both.')
+
+        if level is not None and level not in ('district', 'building'):
+            raise ValueError(f"level must be 'district', 'building' or None, not {level!r}.")
+
+        order = {name: index for index, name in enumerate(self.SCORECARD_DEFAULT_KPIS)}
+        rows = kpis[kpis['cost_function'].isin(order)]
+
+        if level is not None:
+            rows = rows[rows['level'] == level]
+
+        return (
+            rows.assign(_scorecard_order=rows['cost_function'].map(order))
+            .sort_values(['_scorecard_order', 'name'], kind='stable')
+            .drop(columns='_scorecard_order')
+            .reset_index(drop=True)
         )
 
     def get_kpi_family_audit(self, *, comfort_band=None, control_condition=None, baseline_condition=None):

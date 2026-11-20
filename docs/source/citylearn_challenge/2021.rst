@@ -37,7 +37,7 @@ Your team should design the agents based on :file:`Climate Zone 5`, which contai
 Submission
 **********
 
-First, you must have registered your team `here <https://docs.google.com/forms/d/1cOzwf2vSG8GL0klz9TjAq3hl7Q2fiu95Ili065zWLm4/edit>`_. All the teams must submit at least 3 files (4 files if you submit both a RL and a non-RL agent):
+Teams had to register first; registration closed with the challenge, and its form is no longer available. All the teams must submit at least 3 files (4 files if you submit both a RL and a non-RL agent):
 
 1. :file:`agent.py` and/or :file:`agent_non_rl.py`
 2. :file:`reward_function.py`

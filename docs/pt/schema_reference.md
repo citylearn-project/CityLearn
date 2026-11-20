@@ -57,6 +57,25 @@ Esta pagina documenta o contrato do `schema.json`. O schema e a fonte oficial pa
 | `physics_version` | int | nao | Versao da fisica, `1` ou `2` (predefinida). `1` reproduz a fisica do CityLearn 3.6.0; ver o [guia de migracao](../migration.md#physics-version). O argumento `physics_version` do `CityLearnEnv` tem precedencia. |
 | `metrics_log_interval` | int | nao | Periodicidade de logs. |
 
+### Chaves de calendario e metadados do dataset
+
+Estas chaves descrevem o relogio do dataset e a sua proveniencia; os schemas
+das REC portuguesas (`pt_rec_*`) usam varias delas. As cinco primeiras mudam a forma como o relogio do dataset e lido; as restantes
+sao metadados descritivos que o simulador nao le, mantidos para que um dataset
+possa ser rastreado ate a sua origem.
+
+| Chave | Tipo | Efeito |
+|---|---:|---|
+| `time_axis.calendar_file` | string | Calendario canonico com as colunas `time_step` e `timestamp_utc` (e opcionalmente `timestamp_local`), uma linha regular por linha do dataset. Define o step do dataset e os timestamps das series renderizadas e exportadas, salvo se `start_date` for passado ao `CityLearnEnv`. |
+| `timezone` | string | Fuso horario IANA do calendario, p. ex. `Europe/Lisbon`. Os timestamps exportados sao convertidos de UTC para este fuso; um nome desconhecido da erro no carregamento. Sem calendario, apenas fica registado. |
+| `dataset_seconds_per_time_step` | number | Step do dataset declarado em segundos, para dados cujas colunas de calendario nao o permitem obter. Tem de coincidir com o calendario. |
+| `dataset_contract_version` | string | Versao do contrato de dados do dataset. Um valor que comece por `portugal-native` faz de `shared/calendar.parquet` o calendario quando `time_axis` nao existe; caso contrario, e metadado. |
+| `terminal_observation_padding` | bool | Permite que os ficheiros terminem uma linha antes da janela e repete a ultima linha apenas como observacao terminal, que nunca e simulada. Predefinido `false`. |
+| `dataset_id`, `dataset_family` | string | Metadados: identificadores do dataset. |
+| `experimental_design` | object | Metadados: o desenho de avaliacao para que o dataset foi construido (fatores, objetivo, etiquetas). |
+| `native_compatibility` | object | Metadados: o commit do motor e as verificacoes com que o dataset foi validado. |
+| `_derivation`, `_derived_from` | object/string | Metadados: como um dataset derivado foi produzido a partir da origem. |
+
 ## `observations`
 
 Cada entrada tem o formato:

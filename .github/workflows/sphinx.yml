@@ -36,7 +36,8 @@ jobs:
       run: python -m pytest -q tests/test_documentation_examples.py
     - name: Build and check HTML
       run: |
-        sphinx-apidoc citylearn -o docs/source/api -e -M
+        # citylearn.internal is private; docs/source/python_api.rst lists the public modules.
+        sphinx-apidoc citylearn citylearn/internal -o docs/source/api -e -M
         sphinx-build -b html docs/source docs/build/html
         python scripts/ci/check_docs.py docs/build/html
     - name: Save documentation preview

@@ -91,7 +91,7 @@ the district control total over the district baseline total, like every
 `ratio_to_business_as_usual` ratio. A mean of building ratios is not a district
 ratio; the legacy `evaluate()` API keeps that mean as its district row, and
 `evaluate_v2()` publishes it under the `building_mean` variant (see
-[Definitions changed after 3.6.0](#definitions-changed-after-360)).
+[Definitions changed after 3.6.0](kpis_reference.md#definitions-changed-after-360)).
 
 District emissions are the emissions of the district grid import,
 `max(sum_members(net_t), 0)` at each step, so energy that one member exports and
