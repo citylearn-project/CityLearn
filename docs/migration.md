@@ -352,6 +352,29 @@ below; `v2` changes:
 Rerun stochastic experiments, and retrain policies whose results you compare
 across seeds, with `v2`; keep `v1` only to reproduce published 3.6.0 numbers.
 
+Agents and generated neighborhoods follow the same setting
+([#287](https://github.com/citylearn-project/CityLearn/issues/287)).
+`TabularQLearning` decided between exploration and exploitation with
+`RandomState(random_seed + time_step)`, and MARLISA with information sharing
+shuffled the order in which its buildings act with the same seed, so seed `s`
+at time step `t + 1` repeated seed `s + 1` at time step `t`. With `v2`, an
+agent keeps one generator per purpose and episode, derived from its seed and
+the episode, and takes the version of its environment, so an environment built
+with `random_stream_version='v1'` gives its agents the 3.6.0 streams. The
+neighborhood generator (`citylearn.end_use_load_profiles.neighborhood.Neighborhood`)
+seeded partial-load simulation `i` of building `b` with `b + i`, which ignored
+the neighborhood seed and repeated simulation `i - 1` of building `b + 1`. Its
+new `random_stream_version` argument, `v2` by default, derives that seed from
+the neighborhood seed, the building and the simulation index:
+
+```python
+Neighborhood(random_seed=0, random_stream_version='v1')  # 3.6.0 partial-load seeds
+```
+
+These changes alter the exploration of these agents, and therefore the policies
+they learn, and newly generated datasets; simulations and the bundled datasets
+are unchanged.
+
 ### Optional PyTorch and scikit-learn
 
 `pip install citylearn` no longer installs PyTorch or scikit-learn. Install the

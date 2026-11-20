@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import torch
+from citylearn import random_streams
 from citylearn.agents.base import Agent, BaselineAgent
 from citylearn.base import Environment
 from citylearn.building import Building
@@ -96,7 +97,7 @@ class Neighborhood:
     def __init__(
         self, weather_data: str = None, year_of_publication: int = None, release: int = None, cache: bool = None,
         energyplus_output_directory: Union[Path, str] = None, dataset_directory: Union[Path, str] = None,
-        max_workers: int = None, random_seed: int = None
+        max_workers: int = None, random_seed: int = None, random_stream_version: Union[str, int] = None
     ) -> None:
         self.__end_use_load_profiles = EndUseLoadProfiles(
             dataset_type=VersionDatasetType.RESSTOCK,
@@ -109,6 +110,7 @@ class Neighborhood:
         self.dataset_directory = dataset_directory
         self.max_workers = max_workers
         self.random_seed = random_seed
+        self.random_stream_version = random_stream_version
 
     @property
     def end_use_load_profiles(self) -> EndUseLoadProfiles:
@@ -142,9 +144,19 @@ class Neighborhood:
     def max_workers(self, value: int):
         self.__max_workers = value
 
+    @property
+    def random_stream_version(self) -> str:
+        """Derivation of the partial-load simulation seeds; see :py:func:`citylearn.random_streams.partial_load_simulation_seed`."""
+
+        return self.__random_stream_version
+
     @random_seed.setter
     def random_seed(self, value: int):
         self.__random_seed = random.randint(*Environment.DEFAULT_RANDOM_SEED_RANGE) if value is None else value
+
+    @random_stream_version.setter
+    def random_stream_version(self, value: Union[str, int]):
+        self.__random_stream_version = random_streams.parse_random_stream_version(value)
 
     def build(
         self, idd_filepath: Union[Path, str], bldg_ids: List[int] = None, include_lstm_models: bool = None, test_lstm_models: bool = None, 
@@ -763,7 +775,9 @@ class Neighborhood:
                     multiplier_probability=multiplier_probability,
                     simulation_id=_simulation_id,
                     output_directory=_output_directory,
-                    random_seed=int(bldg_id) + i,
+                    random_seed=random_streams.partial_load_simulation_seed(
+                        self.random_seed, bldg_id, i, self.random_stream_version
+                    ),
                     **partial_loads_kwargs
                 ))
             
