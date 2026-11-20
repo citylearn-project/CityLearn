@@ -326,6 +326,14 @@ If a curve is set, interpolates efficiency from the appropriate curve.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="citylearn.electric_vehicle_charger.Charger.preview_power_kw">
+<span class="sig-name descname"><span class="pre">preview_power_kw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/electric_vehicle_charger.html#Charger.preview_power_kw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.electric_vehicle_charger.Charger.preview_power_kw" title="Link to this definition"></a></dt>
+<dd><p>Signed AC power in [kW] that <a class="reference internal" href="#citylearn.electric_vehicle_charger.Charger.update_connected_electric_vehicle_soc" title="citylearn.electric_vehicle_charger.Charger.update_connected_electric_vehicle_soc"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_connected_electric_vehicle_soc()</span></code></a> would draw, without applying it.</p>
+<p>It is the requested power limited by what the connected EV battery can take or give at this step: zero
+without a connected EV, and the energy to full or the energy available otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="citylearn.electric_vehicle_charger.Charger.render_simulation_end_data">
 <span class="sig-name descname"><span class="pre">render_simulation_end_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../_modules/citylearn/electric_vehicle_charger.html#Charger.render_simulation_end_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.electric_vehicle_charger.Charger.render_simulation_end_data" title="Link to this definition"></a></dt>
 <dd><p>Return a dictionary containing all simulation data across all time steps.

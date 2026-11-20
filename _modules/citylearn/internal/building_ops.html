@@ -657,6 +657,7 @@
         <span class="n">building</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">building</span>
         <span class="n">action_cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_apply_action_cache</span><span class="p">()</span>
         <span class="n">active_action_set</span> <span class="o">=</span> <span class="n">action_cache</span><span class="p">[</span><span class="s1">'active_action_set'</span><span class="p">]</span>
+        <span class="n">suspended_deferrable_load</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suspend_running_deferrable_load</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">electric_vehicle_storage_actions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">electric_vehicle_storage_actions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">electric_vehicle_storage_actions</span><span class="p">)</span>
@@ -694,28 +695,42 @@
         <span class="k">if</span> <span class="n">deferrable_appliance_actions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">deferrable_appliance_actions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_deferrable_profile_constraints</span><span class="p">(</span><span class="n">deferrable_appliance_actions</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">building</span><span class="o">.</span><span class="n">_charging_constraints_enabled</span><span class="p">:</span>
-            <span class="n">electric_vehicle_storage_actions</span><span class="p">,</span> <span class="n">electrical_storage_action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_charging_constraints_to_actions</span><span class="p">(</span>
-                <span class="n">electric_vehicle_storage_actions</span><span class="p">,</span>
-                <span class="n">electrical_storage_action</span><span class="p">,</span>
-                <span class="n">deferrable_appliance_actions</span><span class="p">,</span>
-                <span class="n">requested_escalator_actions</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">building</span><span class="o">.</span><span class="n">_charging_constraint_penalty_kwh</span> <span class="o">=</span> <span class="mf">0.0</span>
-            <span class="n">building</span><span class="o">.</span><span class="n">_charging_constraint_last_penalty_kwh</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="c1"># Physics version 2 allocates electrical-service headroom after the thermal and non-shiftable updates of</span>
+        <span class="c1"># the step, so thermal storage charging counts against the limit before EVs and the battery (#230).</span>
+        <span class="n">defer_allocation</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">building</span><span class="o">.</span><span class="n">_charging_constraints_enabled</span>
+            <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">building</span><span class="o">.</span><span class="n">power_outage</span>
+            <span class="ow">and</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="n">building</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span>
+        <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">requested_electric_vehicle_storage_actions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">charger_by_id</span> <span class="o">=</span> <span class="n">action_cache</span><span class="p">[</span><span class="s1">'charger_by_id'</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">charger_id</span><span class="p">,</span> <span class="n">requested_action</span> <span class="ow">in</span> <span class="n">requested_electric_vehicle_storage_actions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">charger</span> <span class="o">=</span> <span class="n">charger_by_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">charger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="n">limited_action</span> <span class="o">=</span> <span class="p">(</span><span class="n">electric_vehicle_storage_actions</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_record_charger_action_feedback</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">requested_action</span><span class="p">,</span> <span class="n">limited_action</span><span class="p">)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">allocate</span><span class="p">():</span>
+            <span class="k">nonlocal</span> <span class="n">electric_vehicle_storage_actions</span><span class="p">,</span> <span class="n">electrical_storage_action</span>
+            <span class="k">if</span> <span class="n">building</span><span class="o">.</span><span class="n">_charging_constraints_enabled</span><span class="p">:</span>
+                <span class="n">electric_vehicle_storage_actions</span><span class="p">,</span> <span class="n">electrical_storage_action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_charging_constraints_to_actions</span><span class="p">(</span>
+                    <span class="n">electric_vehicle_storage_actions</span><span class="p">,</span>
+                    <span class="n">electrical_storage_action</span><span class="p">,</span>
+                    <span class="n">deferrable_appliance_actions</span><span class="p">,</span>
+                    <span class="n">requested_escalator_actions</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">building</span><span class="o">.</span><span class="n">_charging_constraint_penalty_kwh</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">building</span><span class="o">.</span><span class="n">_charging_constraint_last_penalty_kwh</span> <span class="o">=</span> <span class="mf">0.0</span>
 
-        <span class="k">if</span> <span class="n">requested_electrical_storage_action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_record_storage_action_feedback</span><span class="p">(</span><span class="n">requested_electrical_storage_action</span><span class="p">,</span> <span class="n">electrical_storage_action</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">requested_electric_vehicle_storage_actions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">charger_by_id</span> <span class="o">=</span> <span class="n">action_cache</span><span class="p">[</span><span class="s1">'charger_by_id'</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">charger_id</span><span class="p">,</span> <span class="n">requested_action</span> <span class="ow">in</span> <span class="n">requested_electric_vehicle_storage_actions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">charger</span> <span class="o">=</span> <span class="n">charger_by_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">charger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">limited_action</span> <span class="o">=</span> <span class="p">(</span><span class="n">electric_vehicle_storage_actions</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_record_charger_action_feedback</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">requested_action</span><span class="p">,</span> <span class="n">limited_action</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">requested_electrical_storage_action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_record_storage_action_feedback</span><span class="p">(</span><span class="n">requested_electrical_storage_action</span><span class="p">,</span> <span class="n">electrical_storage_action</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">defer_allocation</span><span class="p">:</span>
+            <span class="n">allocate</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">requested_deferrable_appliance_actions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">appliance_by_action</span> <span class="o">=</span> <span class="n">action_cache</span><span class="p">[</span><span class="s1">'deferrable_appliance_by_action'</span><span class="p">]</span>
@@ -801,7 +816,7 @@
         <span class="k">elif</span> <span class="n">limit_control_actions</span> <span class="ow">and</span> <span class="n">building</span><span class="o">.</span><span class="n">outage_vehicle_to_building</span><span class="p">:</span>
             <span class="n">priority_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vehicle_to_building_order</span><span class="p">(</span><span class="n">priority_list</span><span class="p">,</span> <span class="n">actions</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">priority_list</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
             <span class="n">func</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">actions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">args</span> <span class="ow">and</span> <span class="p">(</span><span class="n">limit_control_actions</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'deferrable_appliance_'</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'escalator_'</span><span class="p">)):</span>
                 <span class="n">original_args</span> <span class="o">=</span> <span class="n">args</span>
@@ -827,8 +842,37 @@
                 <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'deferrable_appliance_'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">owner</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_record_deferrable_post_apply_feedback</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
-                <span class="k">pass</span></div>
+                <span class="k">pass</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">defer_allocation</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">priority_list</span><span class="p">:</span>
+                <span class="n">run</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_serve_suspended_deferrable_load</span><span class="p">(</span><span class="n">suspended_deferrable_load</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">priority_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_BASE_LOAD_ACTION_KEYS</span><span class="p">:</span>
+                <span class="n">run</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="n">allocate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">'electrical_storage'</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
+            <span class="n">actions</span><span class="p">[</span><span class="s1">'electrical_storage'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">actions</span><span class="p">[</span><span class="s1">'electrical_storage'</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">electrical_storage_action</span><span class="p">,))</span>
+        <span class="k">for</span> <span class="n">charger_id</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="n">electric_vehicle_storage_actions</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'electric_vehicle_storage_</span><span class="si">{</span><span class="n">charger_id</span><span class="si">}</span><span class="s1">'</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
+                <span class="n">actions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">actions</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">action</span><span class="p">,))</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">priority_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_BASE_LOAD_ACTION_KEYS</span><span class="p">:</span>
+                <span class="n">run</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_serve_suspended_deferrable_load</span><span class="p">(</span><span class="n">suspended_deferrable_load</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Updates that physics version 2 applies before allocating electrical-service headroom (#230).</span>
+    <span class="n">_BASE_LOAD_ACTION_KEYS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">((</span>
+        <span class="s1">'cooling_demand'</span><span class="p">,</span> <span class="s1">'heating_demand'</span><span class="p">,</span> <span class="s1">'cooling_device'</span><span class="p">,</span> <span class="s1">'cooling_storage'</span><span class="p">,</span> <span class="s1">'heating_device'</span><span class="p">,</span>
+        <span class="s1">'heating_storage'</span><span class="p">,</span> <span class="s1">'dhw_device'</span><span class="p">,</span> <span class="s1">'dhw_storage'</span><span class="p">,</span> <span class="s1">'non_shiftable_load'</span><span class="p">,</span>
+    <span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_apply_action_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
         <span class="n">building</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">building</span>
@@ -1194,6 +1238,52 @@
         <span class="n">supplies</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">battery</span> <span class="o">+</span> <span class="n">vehicles</span><span class="p">)</span>
         <span class="n">others</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">priority_list</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supplies</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">others</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">lead</span><span class="p">]</span> <span class="o">+</span> <span class="n">battery</span> <span class="o">+</span> <span class="n">vehicles</span> <span class="o">+</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">others</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lead</span><span class="p">]</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_suspend_running_deferrable_load</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Set aside the energy that running deferrable cycles booked for an outage step (physics version 2).</span>
+
+<span class="sd">        A cycle books its whole profile when it starts. Physics version 2 lets a cycle start on the current</span>
+<span class="sd">        step's information only (#232), so it can run into an outage. During the outage step the booked energy is</span>
+<span class="sd">        removed until the other islanded loads have drawn on the local supply, and is then served from what is</span>
+<span class="sd">        left by :py:meth:`_serve_suspended_deferrable_load`. Version 1 never starts a cycle that meets an outage.</span>
+<span class="sd">        """</span>
+
+        <span class="n">building</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">building</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_outage_suspended_deferrable_kwh</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">building</span><span class="o">.</span><span class="n">power_outage</span> <span class="ow">or</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="n">building</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="n">suspended</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">appliance</span> <span class="ow">in</span> <span class="n">building</span><span class="o">.</span><span class="n">deferrable_appliances</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">energy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">appliance</span><span class="o">.</span><span class="n">electricity_consumption_at</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">energy</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">suspended</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">appliance</span><span class="p">,</span> <span class="n">energy</span><span class="p">))</span>
+                <span class="n">appliance</span><span class="o">.</span><span class="n">set_electricity_consumption</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_outage_suspended_deferrable_kwh</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">energy</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">energy</span> <span class="ow">in</span> <span class="n">suspended</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">suspended</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_serve_suspended_deferrable_load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">suspended</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]):</span>
+<span class="w">        </span><span class="sd">"""Serve the set-aside deferrable energy from the local supply the other loads left.</span>
+
+<span class="sd">        A cycle the islanded supply cannot cover stops: the energy left uncovered at this step is not consumed,</span>
+<span class="sd">        its later steps are cancelled, and it is reported as missed with a profile energy shortfall.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_outage_suspended_deferrable_kwh</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">suspended</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">building</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">building</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="n">available</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">downward_electrical_flexibility</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">appliance</span><span class="p">,</span> <span class="n">energy</span> <span class="ow">in</span> <span class="n">suspended</span><span class="p">:</span>
+            <span class="n">served</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">available</span><span class="p">)</span>
+            <span class="n">appliance</span><span class="o">.</span><span class="n">set_electricity_consumption</span><span class="p">(</span><span class="n">served</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">available</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">available</span> <span class="o">-</span> <span class="n">served</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">served</span> <span class="o">&lt;</span> <span class="n">energy</span> <span class="o">-</span> <span class="mf">1.0e-9</span><span class="p">:</span>
+                <span class="c1"># The outage cuts the cycle's supply: it stops and is reported as missed.</span>
+                <span class="n">appliance</span><span class="o">.</span><span class="n">interrupt_running_cycles</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_outage_unserved_load_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Islanded electric load at the current step that local supply does not cover yet, in [kW].</span>
@@ -1228,6 +1318,8 @@
             <span class="p">)</span>
             <span class="n">load_kwh</span> <span class="o">+=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">electricity_kwh</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
 
+        <span class="c1"># Running deferrable cycles set aside for this outage step (physics version 2); zero otherwise.</span>
+        <span class="n">load_kwh</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_outage_suspended_deferrable_kwh'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="n">supply_kwh</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">downward_electrical_flexibility</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_control_step_energy_to_power_kw</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">load_kwh</span> <span class="o">-</span> <span class="n">supply_kwh</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
 
@@ -1450,11 +1542,17 @@
         <span class="n">reserved_energy_by_step</span> <span class="o">=</span> <span class="n">reserved_energy_by_step</span> <span class="ow">or</span> <span class="p">{}</span>
         <span class="n">current_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">building</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
         <span class="n">episode_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">building</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span> <span class="s1">'episode_time_steps'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Physics version 1 checks every step of the cycle with the realised future outage signal, load, PV and</span>
+        <span class="c1"># limits, which the controller cannot know (#232). Later versions decide on the current step only; an</span>
+        <span class="c1"># outage or a limit excess later in the cycle is handled when it happens.</span>
+        <span class="n">current_step_only</span> <span class="o">=</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">building</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span>
 
         <span class="k">for</span> <span class="n">offset</span><span class="p">,</span> <span class="n">energy_kwh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">profile_kwh</span><span class="p">):</span>
             <span class="n">step</span> <span class="o">=</span> <span class="n">current_step</span> <span class="o">+</span> <span class="n">offset</span>
             <span class="k">if</span> <span class="n">step</span> <span class="o">&gt;=</span> <span class="n">episode_steps</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">current_step_only</span> <span class="ow">and</span> <span class="n">offset</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
 
             <span class="n">total_extra_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">energy_kwh</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">reserved_energy_by_step</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
             <span class="n">total_extra_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_control_step_energy_to_power_kw</span><span class="p">(</span><span class="n">total_extra_energy</span><span class="p">)</span>
@@ -1497,7 +1595,8 @@
             <span class="k">return</span> <span class="p">[]</span>
 
         <span class="n">current_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">building</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">)):</span>
+        <span class="n">offsets</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">building</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="k">else</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">offsets</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_power_outage_at_step</span><span class="p">(</span><span class="n">current_step</span> <span class="o">+</span> <span class="n">offset</span><span class="p">):</span>
                 <span class="k">return</span> <span class="p">[</span><span class="s1">'outage'</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">building</span><span class="p">,</span> <span class="s1">'_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
@@ -1599,6 +1698,70 @@
             <span class="k">return</span> <span class="o">-</span><span class="n">request</span> <span class="k">if</span> <span class="n">request</span> <span class="o">&gt;=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_power</span><span class="p">,</span> <span class="n">max_power</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span>
         <span class="k">return</span> <span class="mf">0.0</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_feasible_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Whether headroom is allocated to the power devices can draw rather than to raw requests (#231)."""</span>
+
+        <span class="k">return</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">building</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_feasible_charger_power_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">requested_power_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""`requested_power_kw` limited to what the charger can draw at this step: zero without an EV, and the</span>
+<span class="sd">        connected EV battery's energy to full or available energy otherwise."""</span>
+
+        <span class="n">preview</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s1">'preview_power_kw'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">preview</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">requested_power_kw</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_limit_request</span><span class="p">(</span><span class="n">requested_power_kw</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">preview</span><span class="p">(</span><span class="n">action</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_feasible_storage_power_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requested_power_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""`requested_power_kw` limited by the battery's power curves, capacity and depth of discharge."""</span>
+
+        <span class="n">building</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">building</span>
+        <span class="n">storage</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage</span>
+        <span class="n">preview</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'preview_charge'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">preview</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">requested_power_kw</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requested_power_kw</span>
+
+        <span class="n">energy_kwh</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="n">requested_power_kw</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">feasible_kwh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">preview</span><span class="p">(</span><span class="n">to_dataset_resolution_energy</span><span class="p">(</span><span class="n">energy_kwh</span><span class="p">,</span> <span class="n">ratio</span><span class="p">)),</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">feasible_kwh</span> <span class="o">*=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">ratio</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_limit_request</span><span class="p">(</span><span class="n">requested_power_kw</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_control_step_energy_to_power_kw</span><span class="p">(</span><span class="n">feasible_kwh</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_limit_request</span><span class="p">(</span><span class="n">requested_power_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">feasible_power_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The request limited to the feasible power in the same direction.</span>
+
+<span class="sd">        A feasible power within a relative 1e-9 of the request is the request itself: the round trip through</span>
+<span class="sd">        the device's energy and efficiency conversions only rounds it.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">requested_power_kw</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">feasible_power_kw</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">feasible_power_kw</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">feasible_power_kw</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">feasible_power_kw</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">feasible_power_kw</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">requested_power_kw</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="mf">1.0e-9</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">requested_power_kw</span>
+
+        <span class="k">return</span> <span class="n">feasible_power_kw</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_allocated_target_kw</span><span class="p">(</span><span class="n">requested_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">feasible_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Power to command after allocation when headroom went to `feasible_kw` instead of `requested_kw`.</span>
+
+<span class="sd">        A request the device can serve in full is scaled as before. A request the device limits is passed on</span>
+<span class="sd">        unchanged when the allocation does not curtail it, so the device applies its own limit and reports it,</span>
+<span class="sd">        and is otherwise commanded at the curtailed feasible power.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">feasible_kw</span> <span class="o">==</span> <span class="n">requested_kw</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requested_kw</span> <span class="o">*</span> <span class="n">scale</span>
+        <span class="k">if</span> <span class="n">scale</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">requested_kw</span>
+
+        <span class="k">return</span> <span class="n">feasible_kw</span> <span class="o">*</span> <span class="n">scale</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_charger_action_from_power_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">,</span> <span class="n">target_power_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="n">target_power_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">target_power_kw</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 
@@ -1657,7 +1820,9 @@
             <span class="n">building</span><span class="o">.</span><span class="n">_set_default_charging_headroom</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">actions</span>
 
+        <span class="n">feasible_requests</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feasible_requests</span><span class="p">()</span>
         <span class="n">positive_requests</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">raw_requests</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">scales</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">charger_id</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">action</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">action</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -1666,6 +1831,10 @@
             <span class="k">if</span> <span class="n">charger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">requested_power</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_charger_requested_power_kw</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">action</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">raw_requests</span><span class="p">[</span><span class="n">charger_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">requested_power</span>
+            <span class="k">if</span> <span class="n">feasible_requests</span><span class="p">:</span>
+                <span class="c1"># Physics version 2: a request the charger cannot draw takes no share of the limit (#231).</span>
+                <span class="n">requested_power</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feasible_charger_power_kw</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">requested_power</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">requested_power</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">positive_requests</span><span class="p">[</span><span class="n">charger_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">requested_power</span>
@@ -1718,7 +1887,13 @@
                 <span class="k">if</span> <span class="n">max_power</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
                     <span class="n">actions</span><span class="p">[</span><span class="n">charger_id</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
                     <span class="k">continue</span>
-                <span class="n">target_kw</span> <span class="o">=</span> <span class="n">scaled_positive_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">feasible_requests</span><span class="p">:</span>
+                    <span class="n">target_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allocated_target_kw</span><span class="p">(</span>
+                        <span class="n">raw_requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">positive_requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                        <span class="n">scales</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">target_kw</span> <span class="o">=</span> <span class="n">scaled_positive_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
                 <span class="n">actions</span><span class="p">[</span><span class="n">charger_id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">target_kw</span> <span class="o">/</span> <span class="n">max_power</span><span class="p">))</span>
 
             <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'_expose_charging_constraints'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
@@ -1780,12 +1955,19 @@
         <span class="n">controls</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">adjusted_actions</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">actions</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
 
+        <span class="n">feasible_requests</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feasible_requests</span><span class="p">()</span>
+        <span class="n">raw_requests</span> <span class="o">=</span> <span class="p">{}</span>
+
         <span class="k">for</span> <span class="n">charger_id</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="n">actions</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">charger</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_charger_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">charger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">continue</span>
 
             <span class="n">request_total_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charger_requested_power_kw</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+            <span class="n">raw_requests</span><span class="p">[</span><span class="n">charger_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">request_total_kw</span>
+            <span class="k">if</span> <span class="n">feasible_requests</span><span class="p">:</span>
+                <span class="c1"># Physics version 2: a request the device cannot draw takes no headroom (#231).</span>
+                <span class="n">request_total_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feasible_charger_power_kw</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">request_total_kw</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">request_total_kw</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1e-9</span><span class="p">:</span>
                 <span class="k">continue</span>
 
@@ -1798,6 +1980,9 @@
 
         <span class="n">storage_control_id</span> <span class="o">=</span> <span class="s1">'__electrical_storage__'</span>
         <span class="n">request_storage_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage_requested_power_kw</span><span class="p">(</span><span class="n">electrical_storage_action</span><span class="p">)</span>
+        <span class="n">raw_requests</span><span class="p">[</span><span class="n">storage_control_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">request_storage_kw</span>
+        <span class="k">if</span> <span class="n">feasible_requests</span><span class="p">:</span>
+            <span class="n">request_storage_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_feasible_storage_power_kw</span><span class="p">(</span><span class="n">request_storage_kw</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">request_storage_kw</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-9</span><span class="p">:</span>
             <span class="n">request_phase_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split_power_by_connection</span><span class="p">(</span><span class="n">request_storage_kw</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage_phase_connection</span><span class="p">)</span>
             <span class="n">controls</span><span class="p">[</span><span class="n">storage_control_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -1815,24 +2000,50 @@
         <span class="n">scales</span> <span class="o">=</span> <span class="n">allocation</span><span class="o">.</span><span class="n">scales</span>
         <span class="n">total_kw</span><span class="p">,</span> <span class="n">phase_kw</span> <span class="o">=</span> <span class="n">allocation</span><span class="o">.</span><span class="n">total_kw</span><span class="p">,</span> <span class="n">allocation</span><span class="o">.</span><span class="n">phase_kw</span>
 
+        <span class="k">def</span><span class="w"> </span><span class="nf">target_kw</span><span class="p">(</span><span class="n">control_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="n">control</span> <span class="o">=</span> <span class="n">controls</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">control_id</span><span class="p">)</span>
+            <span class="n">feasible_kw</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">control</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">control</span><span class="p">[</span><span class="s1">'request_total_kw'</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">feasible_requests</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">feasible_kw</span> <span class="o">*</span> <span class="n">scales</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">control_id</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+            <span class="n">requested_kw</span> <span class="o">=</span> <span class="n">raw_requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">control_id</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">control</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">requested_kw</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1e-9</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mf">0.0</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_allocated_target_kw</span><span class="p">(</span><span class="n">requested_kw</span><span class="p">,</span> <span class="n">feasible_kw</span><span class="p">,</span> <span class="n">scales</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">control_id</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+
         <span class="k">if</span> <span class="n">adjusted_actions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">charger_id</span> <span class="ow">in</span> <span class="n">adjusted_actions</span><span class="p">:</span>
                 <span class="n">charger</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_charger_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">charger</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">continue</span>
-                <span class="n">control</span> <span class="o">=</span> <span class="n">controls</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">)</span>
-                <span class="n">target_kw</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">control</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">control</span><span class="p">[</span><span class="s1">'request_total_kw'</span><span class="p">]</span> <span class="o">*</span> <span class="n">scales</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger_id</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-                <span class="n">adjusted_actions</span><span class="p">[</span><span class="n">charger_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charger_action_from_power_kw</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">target_kw</span><span class="p">)</span>
+                <span class="n">adjusted_actions</span><span class="p">[</span><span class="n">charger_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charger_action_from_power_kw</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">target_kw</span><span class="p">(</span><span class="n">charger_id</span><span class="p">))</span>
 
         <span class="n">adjusted_storage_action</span> <span class="o">=</span> <span class="n">electrical_storage_action</span>
         <span class="k">if</span> <span class="n">electrical_storage_action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">storage_control</span> <span class="o">=</span> <span class="n">controls</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">storage_control_id</span><span class="p">)</span>
-            <span class="n">target_kw</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">storage_control</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">storage_control</span><span class="p">[</span><span class="s1">'request_total_kw'</span><span class="p">]</span> <span class="o">*</span> <span class="n">scales</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">storage_control_id</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
-            <span class="n">adjusted_storage_action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage_action_from_power_kw</span><span class="p">(</span><span class="n">target_kw</span><span class="p">)</span>
+            <span class="n">adjusted_storage_action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage_action_from_power_kw</span><span class="p">(</span><span class="n">target_kw</span><span class="p">(</span><span class="n">storage_control_id</span><span class="p">))</span>
 
+        <span class="n">violation_kw</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">allocation</span><span class="o">.</span><span class="n">requested_violation_kw</span><span class="p">,</span> <span class="n">allocation</span><span class="o">.</span><span class="n">residual_violation_kw</span><span class="p">)</span>
+        <span class="c1"># Kept with its step: the settled state of that step only (#230).</span>
+        <span class="n">building</span><span class="o">.</span><span class="n">_electrical_service_allocation</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">allocation</span><span class="o">.</span><span class="n">requested_violation_kw</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_electrical_service_state</span><span class="p">(</span><span class="n">total_kw</span><span class="p">,</span> <span class="n">phase_kw</span><span class="p">,</span> <span class="n">total_limits</span><span class="p">,</span> <span class="n">per_phase_limits</span><span class="p">,</span> <span class="n">violation_kw</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">adjusted_actions</span><span class="p">,</span> <span class="n">adjusted_storage_action</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_electrical_service_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">total_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">phase_kw</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">total_limits</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+        <span class="n">per_phase_limits</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+        <span class="n">violation_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Record the step's electrical-service power, headroom and violation penalty."""</span>
+
+        <span class="n">building</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">building</span>
+        <span class="n">phase_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_phase_names</span><span class="p">()</span>
         <span class="n">import_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_kw'</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
         <span class="n">export_limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">total_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-        <span class="n">violation_kw</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">allocation</span><span class="o">.</span><span class="n">requested_violation_kw</span><span class="p">,</span> <span class="n">allocation</span><span class="o">.</span><span class="n">residual_violation_kw</span><span class="p">)</span>
 
         <span class="n">phase_headroom</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">phase_export_headroom</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1865,7 +2076,62 @@
             <span class="n">phase_power_kw</span><span class="o">=</span><span class="n">phase_kw</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">adjusted_actions</span><span class="p">,</span> <span class="n">adjusted_storage_action</span>
+<div class="viewcode-block" id="BuildingOpsService.record_settled_electrical_service_state">
+<a class="viewcode-back" href="../../../api/citylearn.internal.building_ops.html#citylearn.internal.building_ops.BuildingOpsService.record_settled_electrical_service_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">record_settled_electrical_service_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Record the electrical-service state from the step's settled import (physics version 2, #230).</span>
+
+<span class="sd">        The allocation estimates the step's import before the EVs, the battery, deferrable appliances and</span>
+<span class="sd">        escalators run. Once the step has settled, the total and per-phase power, the headroom and the</span>
+<span class="sd">        violation are recomputed from the building's actual net consumption, so an excess that the allocation</span>
+<span class="sd">        did not see, such as thermal storage charging, is recorded. The penalty keeps the violation the</span>
+<span class="sd">        requested powers would have caused when it is larger.</span>
+<span class="sd">        """</span>
+
+        <span class="n">building</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">building</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">physics_version_of</span><span class="p">(</span><span class="n">building</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'_charging_constraints_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">building</span><span class="o">.</span><span class="n">power_outage</span>
+        <span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="n">allocation</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'_electrical_service_allocation'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">allocation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">allocation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">t</span><span class="p">:</span>
+            <span class="c1"># No allocation ran at this step, for example at reset: nothing settled to record.</span>
+            <span class="k">return</span>
+
+        <span class="n">phase_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_phase_names</span><span class="p">()</span>
+        <span class="n">total_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_control_step_energy_to_power_kw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="n">storage_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_control_step_energy_to_power_kw</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">electrical_storage</span><span class="o">.</span><span class="n">electricity_consumption_at</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="n">phase_kw</span> <span class="o">=</span> <span class="p">{</span><span class="n">phase</span><span class="p">:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">phase</span> <span class="ow">in</span> <span class="n">phase_names</span><span class="p">}</span>
+        <span class="n">assigned_kw</span> <span class="o">=</span> <span class="n">storage_kw</span>
+
+        <span class="k">for</span> <span class="n">phase</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split_power_by_connection</span><span class="p">(</span><span class="n">storage_kw</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage_phase_connection</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">phase_kw</span><span class="p">[</span><span class="n">phase</span><span class="p">]</span> <span class="o">=</span> <span class="n">phase_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">value</span>
+
+        <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">building</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">charger_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_control_step_energy_to_power_kw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_safe_index</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">electricity_consumption</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+            <span class="n">assigned_kw</span> <span class="o">+=</span> <span class="n">charger_kw</span>
+            <span class="n">connection</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_charger_phase_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">phase</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split_power_by_connection</span><span class="p">(</span><span class="n">charger_kw</span><span class="p">,</span> <span class="n">connection</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">phase_kw</span><span class="p">[</span><span class="n">phase</span><span class="p">]</span> <span class="o">=</span> <span class="n">phase_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">value</span>
+
+        <span class="k">for</span> <span class="n">phase</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split_unassigned_power</span><span class="p">(</span><span class="n">total_kw</span> <span class="o">-</span> <span class="n">assigned_kw</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">phase_kw</span><span class="p">[</span><span class="n">phase</span><span class="p">]</span> <span class="o">=</span> <span class="n">phase_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">value</span>
+
+        <span class="n">phase_kw</span> <span class="o">=</span> <span class="p">{</span><span class="n">phase</span><span class="p">:</span> <span class="n">phase_kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">phase</span> <span class="ow">in</span> <span class="n">phase_names</span><span class="p">}</span>
+        <span class="n">total_limits</span> <span class="o">=</span> <span class="n">grid_availability</span><span class="o">.</span><span class="n">total_limits_at</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">_electrical_service_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'total'</span><span class="p">,</span> <span class="p">{}),</span> <span class="n">t</span><span class="p">)</span>
+        <span class="n">per_phase_limits</span> <span class="o">=</span> <span class="n">building</span><span class="o">.</span><span class="n">_electrical_service_limits</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'per_phase'</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">settled_violation_kw</span> <span class="o">=</span> <span class="n">electrical_service_violation_kw</span><span class="p">(</span>
+            <span class="n">total_kw</span><span class="p">,</span> <span class="n">phase_kw</span><span class="p">,</span> <span class="n">total_limits</span><span class="p">,</span> <span class="n">per_phase_limits</span><span class="p">,</span> <span class="n">phase_names</span><span class="p">)</span>
+        <span class="n">requested_violation_kw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_scalar</span><span class="p">(</span><span class="n">allocation</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_electrical_service_state</span><span class="p">(</span>
+            <span class="n">total_kw</span><span class="p">,</span> <span class="n">phase_kw</span><span class="p">,</span> <span class="n">total_limits</span><span class="p">,</span> <span class="n">per_phase_limits</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">requested_violation_kw</span><span class="p">,</span> <span class="n">settled_violation_kw</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="BuildingOpsService.apply_charging_constraints_to_actions">
 <a class="viewcode-back" href="../../../api/citylearn.internal.building_ops.html#citylearn.internal.building_ops.BuildingOpsService.apply_charging_constraints_to_actions">[docs]</a>

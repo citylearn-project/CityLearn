@@ -480,6 +480,15 @@ it. A user-supplied curve is left unchanged.</p>
 <dd><p>A reinstall must not offer the same logical request twice.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.energy_model.DeferrableAppliance.interrupt_running_cycles">
+<span class="sig-name descname"><span class="pre">interrupt_running_cycles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#DeferrableAppliance.interrupt_running_cycles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.DeferrableAppliance.interrupt_running_cycles" title="Link to this definition"></a></dt>
+<dd><p>Stop the running cycles after the current step, e.g. when an outage cuts their supply.</p>
+<p>The energy the cycles booked for later steps is removed and they become missed, so the service KPIs count
+them as not delivered. Energy already consumed, including at the current step, is kept. Returns the number
+of cycles interrupted.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.DeferrableAppliance.name">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#citylearn.energy_model.DeferrableAppliance.name" title="Link to this definition"></a></dt>

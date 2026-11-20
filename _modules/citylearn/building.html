@@ -3613,7 +3613,10 @@
         <span class="p">)</span>
 
         <span class="c1"># net electriciy consumption emission</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_emission</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">net_electricity_consumption</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">carbon_intensity</span><span class="o">.</span><span class="n">carbon_intensity</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__net_electricity_consumption_emission</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">net_electricity_consumption</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">carbon_intensity</span><span class="o">.</span><span class="n">carbon_intensity</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">])</span>
+
+        <span class="c1"># Physics version 2 records the electrical-service state from the settled import (#230).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">record_settled_electrical_service_state</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="Building.set_net_electricity_consumption_cost">

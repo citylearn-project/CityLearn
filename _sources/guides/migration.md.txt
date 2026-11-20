@@ -219,6 +219,39 @@ Version 2 changes the following on bundled datasets:
   the `citylearn_challenge_2023_*` datasets with stochastic outages and the
   `pt_rec_*` robustness, combined and all-in scenarios.
 
+- **Electrical-service headroom.** The import limit of a building with
+  `electrical_service` was shared among the EV chargers and the battery in
+  proportion to their requested power, including requests that the device
+  could not draw, such as a charge request to a full battery or to a charger
+  without an EV, so the other devices were curtailed
+  ([#231](https://github.com/citylearn-project/CityLearn/issues/231)). Version
+  2 first limits each request to the power the device can draw at that step
+  and shares the headroom among those powers; the headroom observations and the
+  requested-violation penalty use the same powers. A controller is therefore no
+  longer penalised for a request that has no physical effect.
+- **Thermal storage under an electrical-service limit.** The headroom was
+  allocated before the step's thermal storage charging, so the import could
+  exceed the limit while the recorded power, headroom and violation stayed
+  within it ([#230](https://github.com/citylearn-project/CityLearn/issues/230)).
+  Version 2 allocates the headroom to the EV chargers and the battery after the
+  thermal, domestic hot water and non-shiftable updates, and records the power,
+  the headroom and the violation from the settled import of the step.
+- **Deferrable appliance starts.** Version 1 allowed a start only if the whole
+  cycle fitted the realised future outage signal, load, PV and limits, which a
+  controller cannot know, and reported that decision through the `can_start`
+  observation, the action feedback and the simulator's refusal of the start
+  ([#232](https://github.com/citylearn-project/CityLearn/issues/232)).
+  Version 2 decides a start on the current step and on whether the cycle ends
+  within the episode. A cycle that later meets an outage is served from the
+  islanded supply that the other loads leave, after them; when that supply
+  does not cover the step, the cycle stops and is reported as missed. A cycle
+  that later meets a load peak under an electrical-service limit continues, and
+  any excess over the limit is recorded as a violation, as for the other loads
+  the controller does not set.
+
+These three changes affect the `pt_rec_*` datasets, where every member has an
+electrical-service limit, and `Building_15` of the three-phase demos.
+
 It also changes runs that use the following:
 
 - **EVs with a standby loss.** An EV away from its charger now keeps the

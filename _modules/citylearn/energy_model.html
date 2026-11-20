@@ -2215,6 +2215,39 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_ElectricDevice__electricity_consumption</span><span class="p">[</span><span class="n">local_step</span><span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0</span></div>
 
 
+<div class="viewcode-block" id="DeferrableAppliance.interrupt_running_cycles">
+<a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.DeferrableAppliance.interrupt_running_cycles">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">interrupt_running_cycles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Stop the running cycles after the current step, e.g. when an outage cuts their supply.</span>
+
+<span class="sd">        The energy the cycles booked for later steps is removed and they become missed, so the service KPIs count</span>
+<span class="sd">        them as not delivered. Energy already consumed, including at the current step, is kept. Returns the number</span>
+<span class="sd">        of cycles interrupted.</span>
+<span class="sd">        """</span>
+
+        <span class="n">current_global</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_global_time_step</span><span class="p">()</span>
+        <span class="n">local_step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="mf">1.0</span>
+        <span class="n">consumption</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ElectricDevice__electricity_consumption</span>
+        <span class="n">interrupted</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">cycle</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_cycle_index</span><span class="p">()</span><span class="o">.</span><span class="n">running</span><span class="p">()):</span>
+            <span class="n">cycle_id</span> <span class="o">=</span> <span class="n">cycle</span><span class="p">[</span><span class="s1">'cycle_id'</span><span class="p">]</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__cycle_start_time_steps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cycle_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">current_global</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">later</span><span class="p">,</span> <span class="n">energy_kwh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cycle</span><span class="p">[</span><span class="s1">'load_profile'</span><span class="p">][</span><span class="n">offset</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">step</span> <span class="o">=</span> <span class="n">local_step</span> <span class="o">+</span> <span class="n">later</span>
+                <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">consumption</span><span class="p">):</span>
+                    <span class="n">consumption</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">consumption</span><span class="p">[</span><span class="n">step</span><span class="p">])</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">energy_kwh</span><span class="p">)</span> <span class="o">/</span> <span class="n">ratio</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_cycle_state</span><span class="p">(</span><span class="n">cycle_id</span><span class="p">,</span> <span class="s1">'missed'</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__cycle_missed_time_steps</span><span class="p">[</span><span class="n">cycle_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_global</span>
+            <span class="n">interrupted</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">interrupted</span></div>
+
+
 <div class="viewcode-block" id="DeferrableAppliance.observations">
 <a class="viewcode-back" href="../../api/citylearn.energy_model.html#citylearn.energy_model.DeferrableAppliance.observations">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">observations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>

@@ -133,6 +133,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChargerSimulation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.units</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">energy_kwh_to_power_kw</span><span class="p">,</span>
     <span class="n">normalized_power_action_to_energy_kwh</span><span class="p">,</span>
     <span class="n">to_dataset_resolution_energy</span><span class="p">,</span>
 <span class="p">)</span>
@@ -487,6 +488,60 @@
 
         <span class="k">return</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">True</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_battery_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">signed_power_kw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">charging</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Charger efficiency, commanded AC energy and battery-side energy, in control-step kWh, for a power request."""</span>
+
+        <span class="k">if</span> <span class="n">charging</span><span class="p">:</span>
+            <span class="n">applied_power_kw</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">signed_power_kw</span><span class="p">)</span>
+            <span class="n">normalized_power</span> <span class="o">=</span> <span class="n">applied_power_kw</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_charging_power</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
+            <span class="n">efficiency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_efficiency</span><span class="p">(</span><span class="n">normalized_power</span><span class="p">,</span> <span class="n">charging</span><span class="p">)</span>
+            <span class="n">commanded_energy_kwh</span> <span class="o">=</span> <span class="n">normalized_power_action_to_energy_kwh</span><span class="p">(</span>
+                <span class="n">normalized_power</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">max_charging_power</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">battery_energy_kwh</span> <span class="o">=</span> <span class="n">commanded_energy_kwh</span> <span class="o">*</span> <span class="n">efficiency</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">applied_power_kw</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">signed_power_kw</span><span class="p">)</span>
+            <span class="n">normalized_power</span> <span class="o">=</span> <span class="n">applied_power_kw</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_discharging_power</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
+            <span class="n">efficiency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_efficiency</span><span class="p">(</span><span class="n">normalized_power</span><span class="p">,</span> <span class="n">charging</span><span class="p">)</span>
+            <span class="n">commanded_energy_kwh</span> <span class="o">=</span> <span class="o">-</span><span class="n">normalized_power_action_to_energy_kwh</span><span class="p">(</span>
+                <span class="n">normalized_power</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">max_discharging_power</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">battery_energy_kwh</span> <span class="o">=</span> <span class="n">commanded_energy_kwh</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">efficiency</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">efficiency</span><span class="p">,</span> <span class="n">commanded_energy_kwh</span><span class="p">,</span> <span class="n">battery_energy_kwh</span>
+
+<div class="viewcode-block" id="Charger.preview_power_kw">
+<a class="viewcode-back" href="../../api/citylearn.electric_vehicle_charger.html#citylearn.electric_vehicle_charger.Charger.preview_power_kw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preview_power_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Signed AC power in [kW] that :py:meth:`update_connected_electric_vehicle_soc` would draw, without applying it.</span>
+
+<span class="sd">        It is the requested power limited by what the connected EV battery can take or give at this step: zero</span>
+<span class="sd">        without a connected EV, and the energy to full or the energy available otherwise.</span>
+<span class="sd">        """</span>
+
+        <span class="n">signed_power_kw</span><span class="p">,</span> <span class="n">charging</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_signed_power_from_action</span><span class="p">(</span><span class="n">action_value</span><span class="p">)</span>
+        <span class="n">electric_vehicle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected_electric_vehicle</span>
+        <span class="k">if</span> <span class="n">signed_power_kw</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">electric_vehicle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+
+        <span class="n">efficiency</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">battery_energy_kwh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_battery_command</span><span class="p">(</span><span class="n">signed_power_kw</span><span class="p">,</span> <span class="n">charging</span><span class="p">)</span>
+        <span class="n">battery</span> <span class="o">=</span> <span class="n">electric_vehicle</span><span class="o">.</span><span class="n">battery</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">battery</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">battery_command</span> <span class="o">=</span> <span class="n">to_dataset_resolution_energy</span><span class="p">(</span><span class="n">battery_energy_kwh</span><span class="p">,</span> <span class="n">ratio</span><span class="p">)</span>
+        <span class="n">battery_energy</span> <span class="o">=</span> <span class="n">battery</span><span class="o">.</span><span class="n">preview_charge</span><span class="p">(</span><span class="n">battery_command</span><span class="p">)</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">ratio</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span>
+        <span class="n">battery_energy</span> <span class="o">*=</span> <span class="n">ratio</span>
+        <span class="n">ac_energy</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">battery_energy</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">efficiency</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">battery_energy</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">battery_energy</span> <span class="o">*</span> <span class="n">efficiency</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">energy_kwh_to_power_kw</span><span class="p">(</span><span class="n">ac_energy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="Charger.get_requested_power_kw">
 <a class="viewcode-back" href="../../api/citylearn.electric_vehicle_charger.html#citylearn.electric_vehicle_charger.Charger.get_requested_power_kw">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_requested_power_kw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -517,27 +572,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">__past_charging_action_values_kwh</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">return</span>
 
-        <span class="k">if</span> <span class="n">charging</span><span class="p">:</span>
-            <span class="n">applied_power_kw</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">signed_power_kw</span><span class="p">)</span>
-            <span class="n">normalized_power</span> <span class="o">=</span> <span class="n">applied_power_kw</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_charging_power</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
-            <span class="n">efficiency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_efficiency</span><span class="p">(</span><span class="n">normalized_power</span><span class="p">,</span> <span class="n">charging</span><span class="p">)</span>
-            <span class="n">commanded_energy_kwh</span> <span class="o">=</span> <span class="n">normalized_power_action_to_energy_kwh</span><span class="p">(</span>
-                <span class="n">normalized_power</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">max_charging_power</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">battery_energy_kwh</span> <span class="o">=</span> <span class="n">commanded_energy_kwh</span> <span class="o">*</span> <span class="n">efficiency</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">applied_power_kw</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">signed_power_kw</span><span class="p">)</span>
-            <span class="n">normalized_power</span> <span class="o">=</span> <span class="n">applied_power_kw</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_discharging_power</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
-            <span class="n">efficiency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_efficiency</span><span class="p">(</span><span class="n">normalized_power</span><span class="p">,</span> <span class="n">charging</span><span class="p">)</span>
-            <span class="n">commanded_energy_kwh</span> <span class="o">=</span> <span class="o">-</span><span class="n">normalized_power_action_to_energy_kwh</span><span class="p">(</span>
-                <span class="n">normalized_power</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">max_discharging_power</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">battery_energy_kwh</span> <span class="o">=</span> <span class="n">commanded_energy_kwh</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">efficiency</span><span class="p">,</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">)</span>
-
+        <span class="n">efficiency</span><span class="p">,</span> <span class="n">commanded_energy_kwh</span><span class="p">,</span> <span class="n">battery_energy_kwh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_battery_command</span><span class="p">(</span><span class="n">signed_power_kw</span><span class="p">,</span> <span class="n">charging</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__past_charging_action_values_kwh</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">]</span> <span class="o">=</span> <span class="n">commanded_energy_kwh</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connected_electric_vehicle</span><span class="p">:</span>
