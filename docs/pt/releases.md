@@ -3,6 +3,17 @@
 Alterações, compatibilidade, validação e medições da versão atual do CityLearn.
 O [guia de publicação](publishing.md) descreve o procedimento para mantenedores.
 
+## Unreleased
+
+### Topologia dinamica e alinhamento de dados
+
+Pacote de trabalho 3 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-project/CityLearn/issues/226)), em [#274](https://github.com/citylearn-project/CityLearn/pull/274). Os resultados mudam em corridas com topologia dinamica e ficheiros de janela de membro, e em splits consecutivos de episodios; o [guia de migracao](../migration.md#upgrade-from-360-to-the-next-release) indica as opcoes que repoem o comportamento da 3.6.0.
+
+- **Splits consecutivos partilham a linha de fronteira.** Os splits consecutivos avancavam `episode_time_steps` linhas, pelo que o intervalo entre dois episodios nunca era simulado. Passam a avancar `episode_time_steps - 1` linhas e todos os intervalos ate ao ultimo split completo sao simulados uma vez; `episode_split_boundary='disjoint'` mantem os splits da 3.6.0. ([#247](https://github.com/citylearn-project/CityLearn/issues/247))
+- **Os membros da topologia dinamica ficam alinhados com a janela de simulacao.** Um ficheiro de membro mais curto que o dataset e lido como comecando no timestep do seu `add_member`, para qualquer `simulation_start_time_step` e comprimento de janela, o que tambem corrige as entradas do BAU nativo em episodios dinamicos que nao comecam na linha 0. Um membro que volta a entrar precisa de um ficheiro full-horizon, os membros que entram a meio do episodio comecam o armazenamento termico em `initial_soc`, e as series publicas do distrito mantem os membros que sairam e so contam os que entram a partir da sua ativacao. ([#246](https://github.com/citylearn-project/CityLearn/issues/246))
+- **Um evento de topologia no step terminal** deixa de acrescentar um intervalo nao executado as series dos edificios.
+- **Um step de controlo diferente do step do dataset e recusado.** O CityLearn le uma linha de dados por step de controlo e nao reamostra, pelo que essa corrida avancava o calendario, os precos e os horarios dos VE ao ritmo errado. Passa a gerar um `ValueError`; `time_step_ratio_mode='compress'` mantem o comportamento da 3.6.0. O step do dataset e inferido de todas as linhas em vez das duas primeiras, e o argumento `time_step_ratio` tem de coincidir com ele. Os datasets incluidos nao sao afetados. ([#234](https://github.com/citylearn-project/CityLearn/issues/234))
+
 ## v3.6.0 - 2026-11-19
 
 A 3.6.0 reúne 26 pull requests: correções da física, dos KPIs, das baselines, dos
