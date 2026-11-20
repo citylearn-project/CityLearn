@@ -1,7 +1,0 @@
-citylearn.internal.service\_energy module
-=========================================
-
-.. automodule:: citylearn.internal.service_energy
-   :members:
-   :show-inheritance:
-   :undoc-members:

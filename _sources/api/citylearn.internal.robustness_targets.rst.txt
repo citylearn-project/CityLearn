@@ -1,7 +1,0 @@
-citylearn.internal.robustness\_targets module
-=============================================
-
-.. automodule:: citylearn.internal.robustness_targets
-   :members:
-   :show-inheritance:
-   :undoc-members:

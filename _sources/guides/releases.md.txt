@@ -85,6 +85,18 @@ Work package 5 of the 3.6.0 audit ([#226](https://github.com/citylearn-project/C
 - The publish workflow can use PyPI trusted publishing (OpenID Connect) once a trusted publisher is configured and the repository variable `PYPI_TRUSTED_PUBLISHING` is `true`; until then it uses the existing credentials. The pip cache key of the test workflow hashes `pyproject.toml` instead of the removed `setup.py`. The stale `README_PYPI.md` is removed ([#256](https://github.com/citylearn-project/CityLearn/issues/256)).
 - Documentation: `settlement_version`, `grid_export_price`, `tariff_files` and `local_trading_enabled` are documented in the schema reference; the community import-share formula, the PV self-consumption formula (curtailment term) and the timing of the entity PV features are corrected; the `BasicElectricVehicleRBC_ReferenceController` and `RLC` docstrings describe what the code does ([#256](https://github.com/citylearn-project/CityLearn/issues/256)).
 
+### Documentation and API reference
+
+Part of work package 9 of the 3.6.0 audit ([#226](https://github.com/citylearn-project/CityLearn/issues/226)). Simulation results and KPIs do not change.
+
+- **`CityLearnEnv.scorecard()`** returns the default scorecard rows of an `evaluate_v2()` table, in the order of the new `CityLearnEnv.SCORECARD_DEFAULT_KPIS`, which used to be reachable only through an internal class ([#263](https://github.com/citylearn-project/CityLearn/issues/263)).
+- **Quickstart.** One quickstart with its expected output, and a second step that compares `RBCBasicPolicy` with the BAU; the BAU is described as charging EVs to 100% by default ([#260](https://github.com/citylearn-project/CityLearn/issues/260)).
+- **Glossary and concepts.** A glossary gives "baseline" and the other core terms one meaning each, and the core concepts are part of "Getting started" ([#261](https://github.com/citylearn-project/CityLearn/issues/261)).
+- **Dataset catalogue.** A table of every public dataset, generated from the schemas: buildings, EVs, time step, window, format, size and features ([#262](https://github.com/citylearn-project/CityLearn/issues/262)).
+- **API reference.** The `CityLearnEnv` docstring is corrected and documents every argument, `evaluate_v2()` documents its arguments and returned columns, a Python API page lists the public modules, `citylearn.internal` is no longer published, and the calendar and metadata keys of the `pt_rec_*` schemas are documented ([#263](https://github.com/citylearn-project/CityLearn/issues/263), [#264](https://github.com/citylearn-project/CityLearn/issues/264)).
+- **Navigation.** One KPI landing page leads to the other KPI pages, the migration guide moves to "Project", the challenge pages to "History", and the validation commands that need a source checkout say so ([#271](https://github.com/citylearn-project/CityLearn/issues/271), [#272](https://github.com/citylearn-project/CityLearn/issues/272)).
+- **Links and versions.** Dead links are fixed, a weekly job checks external links, and every page says that the site documents `master` and where to read the documentation of a release ([#270](https://github.com/citylearn-project/CityLearn/issues/270), [#271](https://github.com/citylearn-project/CityLearn/issues/271)).
+
 ## v3.6.0 - 2026-11-19
 
 ### What's new

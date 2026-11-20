@@ -1,7 +1,0 @@
-citylearn.internal.baseline module
-==================================
-
-.. automodule:: citylearn.internal.baseline
-   :members:
-   :show-inheritance:
-   :undoc-members:

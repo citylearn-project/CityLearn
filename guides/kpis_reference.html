@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -54,12 +54,14 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
@@ -73,49 +75,59 @@
 <p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">KPIs Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#units">Units</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#kpi-v2-naming-contract">KPI v2 Naming Contract</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#core-equations">Core Equations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#kpi-families">KPI Families</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#ev-kpis">EV KPIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#bess-kpis">BESS KPIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#deferrable-appliance-kpis">Deferrable Appliance KPIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#demand-response-kpis">Demand Response KPIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#robustness-kpis">Robustness KPIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#electrical-service-and-phase-kpis">Electrical Service and Phase KPIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#community-market-kpis">Community Market KPIs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#definitions-changed-after-3-6-0">Definitions changed after 3.6.0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#export">Export</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../kpis.html">KPIs</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../kpis.html#choose-what-to-read">Choose what to read</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">KPIs Reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#units">Units</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kpi-v2-naming-contract">KPI v2 Naming Contract</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#core-equations">Core Equations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kpi-families">KPI Families</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ev-kpis">EV KPIs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bess-kpis">BESS KPIs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#deferrable-appliance-kpis">Deferrable Appliance KPIs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#demand-response-kpis">Demand Response KPIs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#robustness-kpis">Robustness KPIs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#electrical-service-and-phase-kpis">Electrical Service and Phase KPIs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#community-market-kpis">Community Market KPIs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#definitions-changed-after-3-6-0">Definitions changed after 3.6.0</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#export">Export</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../kpis.html#list-the-kpis-in-your-run">List the KPIs in your run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kpis.html#main-families">Main families</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
         </div>
@@ -132,6 +144,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../kpis.html">KPIs</a></li>
       <li class="breadcrumb-item active">KPIs Reference</li>
       <li class="wy-breadcrumbs-aside">
               <!-- User defined GitHub URL -->
@@ -141,6 +154,14 @@
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
+  listed under <a href="releases.html">Unreleased</a>, which the latest release,
+  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
+  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
+  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
            <div itemprop="articleBody">
              
   <section id="kpis-reference">
@@ -310,7 +331,7 @@ the district control total over the district baseline total, like every
 <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratio. A mean of building ratios is not a district
 ratio; the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> API keeps that mean as its district row, and
 <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> publishes it under the <code class="docutils literal notranslate"><span class="pre">building_mean</span></code> variant (see
-Definitions changed after 3.6.0).</p>
+<a class="reference internal" href="#definitions-changed-after-3-6-0"><span class="std std-ref">Definitions changed after 3.6.0</span></a>).</p>
 <p>District emissions are the emissions of the district grid import,
 <code class="docutils literal notranslate"><span class="pre">max(sum_members(net_t),</span> <span class="pre">0)</span></code> at each step, so energy that one member exports and
 another imports in the same step carries no grid carbon. Each imported kWh is
@@ -901,6 +922,7 @@ division reported as a perfect 0.</p>
 
            </div>
           </div>
+
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="scorecard_kpi_names.html" class="btn btn-neutral float-left" title="Default scorecard KPI names" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="KPI_V2_TREE.html" class="btn btn-neutral float-right" title="KPI v2 Naming Tree" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>

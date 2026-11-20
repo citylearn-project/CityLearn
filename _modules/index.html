@@ -12,7 +12,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -51,12 +51,14 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
@@ -71,33 +73,32 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
         </div>
@@ -121,6 +122,14 @@
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
+  listed under <a href="../guides/releases.html">Unreleased</a>, which the latest release,
+  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
+  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
+  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
            <div itemprop="articleBody">
              
   <h1>All modules for which code is available</h1>
@@ -149,50 +158,6 @@
 <li><a href="citylearn/end_use_load_profiles/simulate.html">citylearn.end_use_load_profiles.simulate</a></li>
 <li><a href="citylearn/energy_model.html">citylearn.energy_model</a></li>
 <li><a href="citylearn/exporter.html">citylearn.exporter</a></li>
-<li><a href="citylearn/internal/balance_audit.html">citylearn.internal.balance_audit</a></li>
-<li><a href="citylearn/internal/baseline.html">citylearn.internal.baseline</a></li>
-<li><a href="citylearn/internal/building_ops.html">citylearn.internal.building_ops</a></li>
-<li><a href="citylearn/internal/capabilities.html">citylearn.internal.capabilities</a></li>
-<li><a href="citylearn/internal/comparison.html">citylearn.internal.comparison</a></li>
-<li><a href="citylearn/internal/deferrable_cycles.html">citylearn.internal.deferrable_cycles</a></li>
-<li><a href="citylearn/internal/deferrable_service_audit.html">citylearn.internal.deferrable_service_audit</a></li>
-<li><a href="citylearn/internal/demand_response.html">citylearn.internal.demand_response</a></li>
-<li><a href="citylearn/internal/electrical_limits.html">citylearn.internal.electrical_limits</a></li>
-<li><a href="citylearn/internal/entity_interface.html">citylearn.internal.entity_interface</a></li>
-<li><a href="citylearn/internal/entity_layout.html">citylearn.internal.entity_layout</a></li>
-<li><a href="citylearn/internal/entity_observations.html">citylearn.internal.entity_observations</a></li>
-<li><a href="citylearn/internal/ev_departure_audit.html">citylearn.internal.ev_departure_audit</a></li>
-<li><a href="citylearn/internal/evaluation_progress.html">citylearn.internal.evaluation_progress</a></li>
-<li><a href="citylearn/internal/experiment.html">citylearn.internal.experiment</a></li>
-<li><a href="citylearn/internal/grid_availability.html">citylearn.internal.grid_availability</a></li>
-<li><a href="citylearn/internal/kpi.html">citylearn.internal.kpi</a></li>
-<li><a href="citylearn/internal/kpi_community.html">citylearn.internal.kpi_community</a></li>
-<li><a href="citylearn/internal/kpi_energy.html">citylearn.internal.kpi_energy</a></li>
-<li><a href="citylearn/internal/kpi_equipment.html">citylearn.internal.kpi_equipment</a></li>
-<li><a href="citylearn/internal/kpi_family_audit.html">citylearn.internal.kpi_family_audit</a></li>
-<li><a href="citylearn/internal/kpi_population.html">citylearn.internal.kpi_population</a></li>
-<li><a href="citylearn/internal/kpi_service_metrics.html">citylearn.internal.kpi_service_metrics</a></li>
-<li><a href="citylearn/internal/loading.html">citylearn.internal.loading</a></li>
-<li><a href="citylearn/internal/loading_components.html">citylearn.internal.loading_components</a></li>
-<li><a href="citylearn/internal/loading_inputs.html">citylearn.internal.loading_inputs</a></li>
-<li><a href="citylearn/internal/market_history.html">citylearn.internal.market_history</a></li>
-<li><a href="citylearn/internal/observation_contract.html">citylearn.internal.observation_contract</a></li>
-<li><a href="citylearn/internal/occupant_models.html">citylearn.internal.occupant_models</a></li>
-<li><a href="citylearn/internal/physics_invariants.html">citylearn.internal.physics_invariants</a></li>
-<li><a href="citylearn/internal/physics_version.html">citylearn.internal.physics_version</a></li>
-<li><a href="citylearn/internal/provenance.html">citylearn.internal.provenance</a></li>
-<li><a href="citylearn/internal/robustness.html">citylearn.internal.robustness</a></li>
-<li><a href="citylearn/internal/robustness_audit.html">citylearn.internal.robustness_audit</a></li>
-<li><a href="citylearn/internal/robustness_history.html">citylearn.internal.robustness_history</a></li>
-<li><a href="citylearn/internal/robustness_spaces.html">citylearn.internal.robustness_spaces</a></li>
-<li><a href="citylearn/internal/robustness_targets.html">citylearn.internal.robustness_targets</a></li>
-<li><a href="citylearn/internal/runtime.html">citylearn.internal.runtime</a></li>
-<li><a href="citylearn/internal/scalars.html">citylearn.internal.scalars</a></li>
-<li><a href="citylearn/internal/service_energy.html">citylearn.internal.service_energy</a></li>
-<li><a href="citylearn/internal/shared_series.html">citylearn.internal.shared_series</a></li>
-<li><a href="citylearn/internal/temporal.html">citylearn.internal.temporal</a></li>
-<li><a href="citylearn/internal/topology.html">citylearn.internal.topology</a></li>
-<li><a href="citylearn/internal/units.html">citylearn.internal.units</a></li>
 <li><a href="citylearn/multi_community.html">citylearn.multi_community</a></li>
 <li><a href="citylearn/occupant.html">citylearn.occupant</a></li>
 <li><a href="citylearn/power_outage.html">citylearn.power_outage</a></li>
@@ -208,6 +173,7 @@
 
            </div>
           </div>
+
           <footer>
 
   <hr/>

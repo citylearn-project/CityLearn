@@ -12,7 +12,13 @@ This page is the operational reference for installing the simulator, creating en
 | PV autosizing | `pip install "citylearn[pysam]"` | Required only for EPW/PySAM autosizing. |
 | Local development | `.venv/bin/pip install -e .` | Use the repo `.venv` when available. |
 
-## Python Quickstart
+## Episode Loop Without a Controller
+
+For a first run with its expected output, and a comparison with the
+business-as-usual controller, follow the
+[quickstart](https://www.citylearn.net/quickstart.html). The loop below is the
+smallest possible episode: it sends zero for every action, whose effect
+follows each device's action contract.
 
 ```python
 import numpy as np
@@ -31,7 +37,7 @@ while not (terminated or truncated):
 kpis_v2 = env.evaluate_v2()
 ```
 
-## Entity Interface Quickstart
+## Entity Interface Example
 
 ```python
 from citylearn.citylearn import CityLearnEnv
@@ -56,7 +62,7 @@ actions = {
 obs, reward, terminated, truncated, info = env.step(actions)
 ```
 
-## Multi-Community Quickstart
+## Multi-Community Example
 
 Use `MultiCommunityEnv` when one training loop should step several independent communities in lockstep. Each child keeps its own physics, KPIs and demand-response files.
 
@@ -237,19 +243,12 @@ Normal episode time series are controlled by `render_mode`/`render_enabled`, not
 
 For exact final-episode choices, keep `export_kpis_on_episode_end=False` and call `export_final_kpis()` yourself after the episode terminates.
 
-## Recommended Validation
+## Smoke-Test a Large Dataset
+
+For large 15s datasets, always run a short window first:
 
 ```bash
-.venv/bin/pytest -q
-.venv/bin/python scripts/audit/audit_entity_contract.py --strict
-.venv/bin/python scripts/audit/audit_physics.py
-.venv/bin/python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821
-```
-
-For large 15s datasets, always smoke-test a short window first:
-
-```bash
-.venv/bin/python - <<'PY'
+python - <<'PY'
 import numpy as np
 from citylearn.citylearn import CityLearnEnv
 
@@ -275,6 +274,20 @@ for _ in range(100):
         break
 print(env.evaluate_v2().head())
 PY
+```
+
+## Validation from a Source Checkout
+
+The test suite and the audit scripts are in the repository, not in the package
+that `pip install citylearn` installs. Run them from a clone, with the test
+requirements installed (see the [developer guide](developer_guide.md) and the
+[validation guide](validation.md)):
+
+```bash
+python -m pytest -q
+python scripts/audit/audit_entity_contract.py --strict
+python scripts/audit/audit_physics.py
+python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821
 ```
 
 KPI-only exports include a manifest and service-audit JSON sidecars. They do not

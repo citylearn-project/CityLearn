@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -28,7 +28,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Dataset Reference" href="dataset_reference.html" />
-    <link rel="prev" title="Running Simulations" href="running_simulations.html" /> 
+    <link rel="prev" title="Dataset catalogue" href="dataset_catalogue.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -54,15 +54,20 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Schema Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#general-rules">General Rules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#top-level-keys">Top-Level Keys</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#top-level-keys">Top-Level Keys</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#calendar-and-dataset-metadata-keys">Calendar and dataset metadata keys</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#observations"><code class="docutils literal notranslate"><span class="pre">observations</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#actions"><code class="docutils literal notranslate"><span class="pre">actions</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#observation-bundles"><code class="docutils literal notranslate"><span class="pre">observation_bundles</span></code></a></li>
@@ -97,33 +102,32 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
         </div>
@@ -149,6 +153,14 @@
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
+  listed under <a href="releases.html">Unreleased</a>, which the latest release,
+  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
+  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
+  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
            <div itemprop="articleBody">
              
   <section id="schema-reference">
@@ -388,6 +400,59 @@
 </tr>
 </tbody>
 </table>
+<section id="calendar-and-dataset-metadata-keys">
+<h3>Calendar and dataset metadata keys<a class="headerlink" href="#calendar-and-dataset-metadata-keys" title="Link to this heading"></a></h3>
+<p>These keys describe the dataset clock and its provenance; the Portugal REC
+schemas (<code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code>) use several of them. The first five change how the dataset
+clock is read; the others are descriptive metadata that
+the simulator does not read, kept so a dataset can be traced to its source.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_axis.calendar_file</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Canonical calendar with the columns <code class="docutils literal notranslate"><span class="pre">time_step</span></code> and <code class="docutils literal notranslate"><span class="pre">timestamp_utc</span></code> (and optionally <code class="docutils literal notranslate"><span class="pre">timestamp_local</span></code>), one regular row per dataset row. It sets the dataset step and the timestamps of rendered and exported series, unless <code class="docutils literal notranslate"><span class="pre">start_date</span></code> is passed to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">timezone</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>IANA time zone of the calendar, e.g. <code class="docutils literal notranslate"><span class="pre">Europe/Lisbon</span></code>. Exported timestamps are converted from UTC to this zone; an unknown name raises an error at load time. Without a calendar it is only recorded.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dataset_seconds_per_time_step</span></code></p></td>
+<td class="text-right"><p>number</p></td>
+<td><p>Declared dataset step in seconds, for data whose calendar columns cannot give it. It must agree with the calendar.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dataset_contract_version</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Version of the dataset’s data contract. A value starting with <code class="docutils literal notranslate"><span class="pre">portugal-native</span></code> makes <code class="docutils literal notranslate"><span class="pre">shared/calendar.parquet</span></code> the calendar when <code class="docutils literal notranslate"><span class="pre">time_axis</span></code> is absent; otherwise it is metadata.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">terminal_observation_padding</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Allows the files to stop one row short of the window and repeats the last row as the terminal observation only, which is never simulated. Default <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dataset_id</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset_family</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Metadata: dataset identifiers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">experimental_design</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td><p>Metadata: the evaluation design the dataset was built for (factors, purpose, labels).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">native_compatibility</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td><p>Metadata: the engine commit and checks the dataset was validated with.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_derivation</span></code>, <code class="docutils literal notranslate"><span class="pre">_derived_from</span></code></p></td>
+<td class="text-right"><p>object/string</p></td>
+<td><p>Metadata: how a derived dataset was produced from its source.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="observations">
 <h2><code class="docutils literal notranslate"><span class="pre">observations</span></code><a class="headerlink" href="#observations" title="Link to this heading"></a></h2>
@@ -1453,8 +1518,9 @@ it is zero with a single shared tariff.</p>
 
            </div>
           </div>
+
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="running_simulations.html" class="btn btn-neutral float-left" title="Running Simulations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dataset_catalogue.html" class="btn btn-neutral float-left" title="Dataset catalogue" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="dataset_reference.html" class="btn btn-neutral float-right" title="Dataset Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

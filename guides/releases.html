@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -54,12 +54,14 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
@@ -74,28 +76,23 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
@@ -109,6 +106,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#physics">Physics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#random-streams-and-seeds">Random streams and seeds</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#engineering">Engineering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#documentation-and-api-reference">Documentation and API reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#v3-6-0-2026-11-19">v3.6.0 - 2026-11-19</a><ul>
@@ -162,6 +160,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
 
         </div>
       </div>
@@ -186,6 +188,14 @@
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
+  listed under <a href="#">Unreleased</a>, which the latest release,
+  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
+  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
+  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
            <div itemprop="articleBody">
              
   <section id="releases">
@@ -279,6 +289,19 @@ CityLearn release. Older notes are retained in the <a class="reference internal"
 <li><p>New tests: heat-pump COP (formula and the cap at 20, including a zero temperature difference), the private test cache, the optional end-use load-profile modules (when their extras are installed) and the operator balance.</p></li>
 <li><p>The publish workflow can use PyPI trusted publishing (OpenID Connect) once a trusted publisher is configured and the repository variable <code class="docutils literal notranslate"><span class="pre">PYPI_TRUSTED_PUBLISHING</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>; until then it uses the existing credentials. The pip cache key of the test workflow hashes <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> instead of the removed <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>. The stale <code class="docutils literal notranslate"><span class="pre">README_PYPI.md</span></code> is removed (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/256">#256</a>).</p></li>
 <li><p>Documentation: <code class="docutils literal notranslate"><span class="pre">settlement_version</span></code>, <code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code>, <code class="docutils literal notranslate"><span class="pre">tariff_files</span></code> and <code class="docutils literal notranslate"><span class="pre">local_trading_enabled</span></code> are documented in the schema reference; the community import-share formula, the PV self-consumption formula (curtailment term) and the timing of the entity PV features are corrected; the <code class="docutils literal notranslate"><span class="pre">BasicElectricVehicleRBC_ReferenceController</span></code> and <code class="docutils literal notranslate"><span class="pre">RLC</span></code> docstrings describe what the code does (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/256">#256</a>).</p></li>
+</ul>
+</section>
+<section id="documentation-and-api-reference">
+<h3>Documentation and API reference<a class="headerlink" href="#documentation-and-api-reference" title="Link to this heading"></a></h3>
+<p>Part of work package 9 of the 3.6.0 audit (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/226">#226</a>). Simulation results and KPIs do not change.</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">CityLearnEnv.scorecard()</span></code></strong> returns the default scorecard rows of an <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> table, in the order of the new <code class="docutils literal notranslate"><span class="pre">CityLearnEnv.SCORECARD_DEFAULT_KPIS</span></code>, which used to be reachable only through an internal class (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/263">#263</a>).</p></li>
+<li><p><strong>Quickstart.</strong> One quickstart with its expected output, and a second step that compares <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code> with the BAU; the BAU is described as charging EVs to 100% by default (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/260">#260</a>).</p></li>
+<li><p><strong>Glossary and concepts.</strong> A glossary gives “baseline” and the other core terms one meaning each, and the core concepts are part of “Getting started” (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/261">#261</a>).</p></li>
+<li><p><strong>Dataset catalogue.</strong> A table of every public dataset, generated from the schemas: buildings, EVs, time step, window, format, size and features (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/262">#262</a>).</p></li>
+<li><p><strong>API reference.</strong> The <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> docstring is corrected and documents every argument, <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> documents its arguments and returned columns, a Python API page lists the public modules, <code class="docutils literal notranslate"><span class="pre">citylearn.internal</span></code> is no longer published, and the calendar and metadata keys of the <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> schemas are documented (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/263">#263</a>, <a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/264">#264</a>).</p></li>
+<li><p><strong>Navigation.</strong> One KPI landing page leads to the other KPI pages, the migration guide moves to “Project”, the challenge pages to “History”, and the validation commands that need a source checkout say so (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/271">#271</a>, <a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/272">#272</a>).</p></li>
+<li><p><strong>Links and versions.</strong> Dead links are fixed, a weekly job checks external links, and every page says that the site documents <code class="docutils literal notranslate"><span class="pre">master</span></code> and where to read the documentation of a release (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/270">#270</a>, <a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/271">#271</a>).</p></li>
 </ul>
 </section>
 </section>
@@ -679,6 +702,7 @@ is physically attainable. Existing infeasible service events remain visible.</p>
 
            </div>
           </div>
+
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="publishing.html" class="btn btn-neutral float-left" title="Publishing CityLearn" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="releases_archive.html" class="btn btn-neutral float-right" title="Earlier releases" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>

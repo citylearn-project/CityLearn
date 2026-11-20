@@ -1,7 +1,0 @@
-citylearn.internal.market\_history module
-=========================================
-
-.. automodule:: citylearn.internal.market_history
-   :members:
-   :show-inheritance:
-   :undoc-members:

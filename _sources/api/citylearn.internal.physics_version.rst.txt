@@ -1,7 +1,0 @@
-citylearn.internal.physics\_version module
-==========================================
-
-.. automodule:: citylearn.internal.physics_version
-   :members:
-   :show-inheritance:
-   :undoc-members:

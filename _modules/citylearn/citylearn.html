@@ -12,7 +12,7 @@
       <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
@@ -51,12 +51,14 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
@@ -71,33 +73,32 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../guides/kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
         </div>
@@ -122,6 +123,14 @@
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
+  listed under <a href="../../guides/releases.html">Unreleased</a>, which the latest release,
+  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
+  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
+  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
            <div itemprop="articleBody">
              
   <h1>Source code for citylearn.citylearn</h1><div class="highlight"><pre>
@@ -203,19 +212,26 @@
 <div class="viewcode-block" id="CityLearnEnv">
 <a class="viewcode-back" href="../../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CityLearnEnv</span><span class="p">(</span><span class="n">Environment</span><span class="p">,</span> <span class="n">Env</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""CityLearn nvironment class.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""CityLearn environment: a Gymnasium environment that simulates a community of buildings.</span>
+
+<span class="sd">    Each step applies the controller's actions to the buildings' storage, EV chargers and flexible</span>
+<span class="sd">    loads for one control interval and returns the next observations and rewards. After an episode,</span>
+<span class="sd">    :py:meth:`evaluate_v2` returns the KPI table and :py:meth:`scorecard` its default selection.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    schema: Union[str, Path, Mapping[str, Any]]</span>
 <span class="sd">        Name of CityLearn data set, filepath to JSON representation or :code:`dict` object of a CityLearn schema.</span>
-<span class="sd">        Call :py:meth:`citylearn.data.DataSet.get_names` for list of available CityLearn data sets.</span>
+<span class="sd">        Call :py:meth:`citylearn.data.DataSet.get_dataset_names` for the list of public CityLearn data sets.</span>
 <span class="sd">    root_directory: Union[str, Path]</span>
 <span class="sd">        Absolute path to directory that contains the data files including the schema.</span>
 <span class="sd">    buildings: Union[List[Building], List[str], List[int]], optional</span>
 <span class="sd">        Buildings to include in environment. If list of :code:`citylearn.building.Building` is provided, will override :code:`buildings` definition in schema.</span>
 <span class="sd">        If list of :str: is provided will include only schema :code:`buildings` keys that are contained in provided list of :code:`str`.</span>
 <span class="sd">        If list of :int: is provided will include only schema :code:`buildings` whose index is contained in provided list of :code:`int`.</span>
+<span class="sd">    electric_vehicles: Union[List[ElectricVehicle], List[str], List[int]], optional</span>
+<span class="sd">        Electric vehicles to include, selected from the schema's :code:`electric_vehicles_def` in the same way as</span>
+<span class="sd">        :code:`buildings`: instances, names or indices. Defaults to every EV in the schema.</span>
 <span class="sd">    simulation_start_time_step: int, optional</span>
 <span class="sd">        Time step to start reading data files contents.</span>
 <span class="sd">    simulation_end_time_step: int, optional</span>
@@ -223,7 +239,8 @@
 <span class="sd">    episode_time_steps: Union[int, List[Tuple[int, int]]], optional</span>
 <span class="sd">        If type is `int`, it is the number of time steps in an episode. If type is `List[Tuple[int, int]]]` is provided, </span>
 <span class="sd">        it is a list of episode start and end time steps between `simulation_start_time_step` and `simulation_end_time_step`. </span>
-<span class="sd">        Defaults to (`simulation_end_time_step` - `simulation_start_time_step`) + 1. Will ignore `rolling_episode_split` if `episode_splits` is of type `List[Tuple[int, int]]]`.</span>
+<span class="sd">        Defaults to (`simulation_end_time_step` - `simulation_start_time_step`) + 1. An episode of N time steps</span>
+<span class="sd">        (states) executes N - 1 control steps. `rolling_episode_split` is ignored when `episode_time_steps` is a list.</span>
 <span class="sd">    rolling_episode_split: bool, default: False</span>
 <span class="sd">        True if episode sequences are split such that each time step is a candidate for `episode_start_time_step` otherwise, False to split episodes in steps of `episode_time_steps`.</span>
 <span class="sd">    random_episode_split: bool, default: False</span>
@@ -242,7 +259,11 @@
 <span class="sd">        between two consecutive episodes is never simulated. Can also be set with the schema key of the same name. Rolling</span>
 <span class="sd">        and explicit list splits are not affected.</span>
 <span class="sd">    seconds_per_time_step: float</span>
-<span class="sd">        Number of seconds in 1 `time_step` and must be set to &gt;= 1.</span>
+<span class="sd">        Number of seconds in 1 `time_step` and must be set to &gt;= 1. It must equal the dataset step unless</span>
+<span class="sd">        `time_step_ratio_mode='compress'`.</span>
+<span class="sd">    time_step_ratio: int, optional</span>
+<span class="sd">        Ratio of the control step to the dataset step. It is inferred from the data; a value passed here must</span>
+<span class="sd">        match the inferred ratio, otherwise a `ValueError` is raised.</span>
 <span class="sd">    reward_function: Union[RewardFunction, str], optional</span>
 <span class="sd">        Reward function class instance or path to function class e.g. 'citylearn.reward_function.IndependentSACReward'.</span>
 <span class="sd">        If provided, will override :code:`reward_function` definition in schema.</span>
@@ -282,6 +303,17 @@
 <span class="sd">        If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear</span>
 <span class="sd">        error when required files are not available locally. Defaults to the ``CITYLEARN_OFFLINE`` environment</span>
 <span class="sd">        variable, read at initialization, or False when it is unset.</span>
+<span class="sd">    interface: str, optional</span>
+<span class="sd">        Observation and action contract: ``'flat'`` (default) returns one vector per agent; ``'entity'`` returns</span>
+<span class="sd">        tables of buildings, chargers, EVs and other assets with their edges. Overrides the schema key.</span>
+<span class="sd">        See the flat and entity interfaces guide.</span>
+<span class="sd">    topology_mode: str, optional</span>
+<span class="sd">        ``'static'`` (default) keeps the members and assets of the schema for the whole episode; ``'dynamic'``</span>
+<span class="sd">        applies the schema's ``topology_events`` (members and assets joining or leaving) and requires</span>
+<span class="sd">        ``interface='entity'``. Overrides the schema key.</span>
+<span class="sd">    start_date: Union[str, datetime.date], optional</span>
+<span class="sd">        Date of the first time step in rendered and exported timestamps, e.g. ``'2024-01-01'``. Defaults to the</span>
+<span class="sd">        schema's ``start_date``, else 2024-01-01. It does not change the simulation.</span>
 
 <span class="sd">    Other Parameters</span>
 <span class="sd">    ----------------</span>
@@ -293,6 +325,12 @@
 <span class="sd">    render_session_name: str, optional</span>
 <span class="sd">        Name of the subfolder created under ``render_directory``/``render_directory_name`` for export artifacts. When omitted,</span>
 <span class="sd">        a timestamp is used.</span>
+<span class="sd">    render: bool, optional</span>
+<span class="sd">        Legacy render switch. Prefer `render_mode`.</span>
+<span class="sd">    render_file_format: str, optional</span>
+<span class="sd">        Format of rendered and exported series: ``'csv'`` (default) or ``'parquet'``, which needs ``pyarrow``.</span>
+<span class="sd">    render_chunk_size: int, optional</span>
+<span class="sd">        Number of rows buffered before a rendered file is written. Defaults to 100,000 for CSV and 50,000 for Parquet.</span>
 <span class="sd">    render_mode: str, optional</span>
 <span class="sd">        Rendering strategy. Accepted values are ``'none'`` (default), ``'during'`` for streaming exports each step, and</span>
 <span class="sd">        ``'end'`` for exports performed at episode completion while still allowing manual snapshots via :meth:`render`.</span>
@@ -308,12 +346,24 @@
 <span class="sd">    business_as_usual_ev_charge_target: str, optional</span>
 <span class="sd">        EV charging of the native BAU reference built by ``evaluate_v2()``: ``'full'`` charges to 100%,</span>
 <span class="sd">        ``'requested'`` to the user's requested departure SOC. Defaults to the schema value, else ``'full'``.</span>
+<span class="sd">    physics_version: int, optional</span>
+<span class="sd">        Physics definitions: ``2`` (default) or ``1``, which reproduces the physics of CityLearn 3.6.0. Overrides the</span>
+<span class="sd">        schema key. The migration guide lists the corrections of version 2.</span>
+<span class="sd">    debug_timing: bool, optional</span>
+<span class="sd">        Log runtime timings. Defaults to the schema value, else ``False``.</span>
+<span class="sd">    check_observation_limits: bool, optional</span>
+<span class="sd">        Check observations against their estimated bounds. Defaults to the schema value, else ``False``.</span>
+<span class="sd">    physics_invariant_checks: bool, optional</span>
+<span class="sd">        Check physical invariants at runtime. Defaults to the schema value, else ``False``.</span>
+<span class="sd">    metrics_log_interval: int, optional</span>
+<span class="sd">        Log runtime metrics every this many steps; ``0`` (default) disables them.</span>
 <span class="sd">    energy_provenance: bool, optional</span>
 <span class="sd">        Whether to keep the per-step electricity provenance ledger (``*_energy_provenance_*`` KPIs and</span>
 <span class="sd">        provenance audits). Defaults to ``True``. Disabling it does not change any simulated quantity and</span>
 <span class="sd">        makes ``step()`` substantially faster, e.g. for training runs that do not report provenance KPIs.</span>
 <span class="sd">    **kwargs : dict</span>
-<span class="sd">        Other keyword arguments used to initialize super classes.</span>
+<span class="sd">        Only the options listed above are accepted; any other keyword argument raises a `TypeError` that suggests</span>
+<span class="sd">        the closest valid name.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -1799,14 +1849,45 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">progress_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Evaluate v2 KPIs; optional progress callback receives scalar stage events.</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the KPI table of the simulation so far, normally called at the end of an episode.</span>
 
-<span class="sd">        Callback failures are logged and disable reporting, preserving evaluation.</span>
-<span class="sd">        No progress events or timings are added to the returned KPI table.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        control_condition: EvaluationCondition, optional</span>
+<span class="sd">            Which series of each building are evaluated as the controlled run. Defaults to the simulated series:</span>
+<span class="sd">            ``EvaluationCondition.WITH_STORAGE_AND_PV``, or ``WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV`` for buildings</span>
+<span class="sd">            with LSTM thermal dynamics.</span>
+<span class="sd">        baseline_condition: EvaluationCondition, optional</span>
+<span class="sd">            Which counterfactual series the ``*_baseline_*`` and ``*_ratio_to_baseline_*`` KPIs use. Defaults to</span>
+<span class="sd">            ``EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV``, or ``WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV``</span>
+<span class="sd">            for buildings with LSTM thermal dynamics: the same buildings without storage, PV retained.</span>
+<span class="sd">        comfort_band: float, optional</span>
+<span class="sd">            Comfort band in degrees Celsius around the set point used by the thermal comfort KPIs. Defaults to each</span>
+<span class="sd">            building's ``comfort_band`` series.</span>
+<span class="sd">        include_business_as_usual: bool, default: True</span>
+<span class="sd">            Also run, or reuse, the native business-as-usual rollout (:py:class:`citylearn.agents.baseline.BusinessAsUsualAgent`</span>
+<span class="sd">            on the same scenario and window) and add the ``*_business_as_usual_*`` values, deltas and ratios.</span>
+<span class="sd">            The reference is rebuilt from the schema and the constructor arguments; a `ValueError` names the</span>
+<span class="sd">            setting when it differs from this environment as captured at its last `reset()`. See the baselines</span>
+<span class="sd">            guide for the settings that are compared.</span>
+<span class="sd">        progress_callback: callable, optional</span>
+<span class="sd">            Keyword-only. Receives scalar stage events while the table is computed. A callback that raises is</span>
+<span class="sd">            logged and disabled; the table is unaffected, and no events or timings are added to it.</span>
 
-<span class="sd">        With `include_business_as_usual`, the native BAU reference is rebuilt from the schema and</span>
-<span class="sd">        the constructor arguments. A `ValueError` names the setting when it differs from this env as</span>
-<span class="sd">        captured at its last `reset()`; see the baselines guide for the settings that are compared.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row per KPI and scope, with the columns:</span>
+
+<span class="sd">            * ``cost_function`` (str): the KPI name, ``level_family_subfamily_metric_variant_unit``. The last part</span>
+<span class="sd">              is the unit, e.g. ``kwh``, ``kw``, ``eur``, ``kgco2``, ``hours`` or ``ratio``.</span>
+<span class="sd">            * ``value`` (float): the value; NaN when the KPI is undefined for this run, for example a service</span>
+<span class="sd">              ratio without any event to serve.</span>
+<span class="sd">            * ``name`` (str): the building name for building rows, ``'District'`` for district rows.</span>
+<span class="sd">            * ``level`` (str): ``'building'`` or ``'district'``.</span>
+
+<span class="sd">            Which KPIs appear depends on the scenario's assets and services. :py:meth:`scorecard` selects the</span>
+<span class="sd">            default subset, and the KPI reference guide defines every family.</span>
 <span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kpi_service</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span>
@@ -1817,6 +1898,53 @@
             <span class="n">evaluation_condition_cls</span><span class="o">=</span><span class="n">EvaluationCondition</span><span class="p">,</span>
             <span class="n">dynamics_building_cls</span><span class="o">=</span><span class="n">DynamicsBuilding</span><span class="p">,</span>
             <span class="n">progress_callback</span><span class="o">=</span><span class="n">progress_callback</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1">#: KPI names of the default scorecard, in display order. :py:meth:`scorecard` selects these rows.</span>
+    <span class="n">SCORECARD_DEFAULT_KPIS</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">CityLearnKPIService</span><span class="o">.</span><span class="n">SCORECARD_DEFAULT_KPIS</span>
+
+<div class="viewcode-block" id="CityLearnEnv.scorecard">
+<a class="viewcode-back" href="../../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.scorecard">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scorecard</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpis</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">evaluate_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the default scorecard: the rows of :py:meth:`evaluate_v2` named in `SCORECARD_DEFAULT_KPIS`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        kpis: pandas.DataFrame, optional</span>
+<span class="sd">            A table returned by :py:meth:`evaluate_v2`. When omitted, :py:meth:`evaluate_v2` is called with</span>
+<span class="sd">            `evaluate_kwargs`.</span>
+<span class="sd">        level: str, optional</span>
+<span class="sd">            Keep only ``'district'`` or ``'building'`` rows.</span>
+<span class="sd">        **evaluate_kwargs: Any</span>
+<span class="sd">            Arguments of :py:meth:`evaluate_v2`, used only when `kpis` is omitted.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The selected rows, with the columns of :py:meth:`evaluate_v2`, in the order of</span>
+<span class="sd">            `SCORECARD_DEFAULT_KPIS` and then by building name. KPIs that do not apply to the scenario are absent.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">kpis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kpis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="o">**</span><span class="n">evaluate_kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">evaluate_kwargs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">'Pass either kpis or evaluate_v2() arguments to scorecard(), not both.'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'district'</span><span class="p">,</span> <span class="s1">'building'</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"level must be 'district', 'building' or None, not </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+
+        <span class="n">order</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SCORECARD_DEFAULT_KPIS</span><span class="p">)}</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">kpis</span><span class="p">[</span><span class="n">kpis</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">order</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">rows</span><span class="p">[</span><span class="s1">'level'</span><span class="p">]</span> <span class="o">==</span> <span class="n">level</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">_scorecard_order</span><span class="o">=</span><span class="n">rows</span><span class="p">[</span><span class="s1">'cost_function'</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">order</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s1">'_scorecard_order'</span><span class="p">,</span> <span class="s1">'name'</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s1">'stable'</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s1">'_scorecard_order'</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="p">)</span></div>
 
 
@@ -2339,6 +2467,7 @@
 
            </div>
           </div>
+
           <footer>
 
   <hr/>

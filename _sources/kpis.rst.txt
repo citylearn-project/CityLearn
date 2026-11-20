@@ -4,16 +4,30 @@ KPIs
 
 KPIs measure the completed simulation: energy, cost, emissions, service,
 comfort and electrical performance. They are available from Python and CSV
-exports; using the UI is optional.
+exports; using the UI is optional. This page is the entry point to every KPI
+page.
 
 Choose what to read
 *******************
 
+* :doc:`guides/scorecard` — start here: how to read a compact set of KPIs and
+  compare controllers.
+* :doc:`guides/scorecard_kpi_names` — the default selection, returned by
+  ``env.scorecard()``.
 * :doc:`guides/kpis_reference` — definitions, units, equations and metric families.
-* :doc:`guides/KPI_V2_TREE` — names grouped by district/building and family.
-* :doc:`guides/baselines` — the reference behind normalized results.
-* :doc:`guides/scorecard` — a compact set for comparing controllers.
-* :doc:`guides/scorecard_kpi_names` — the simulator's exact default selection.
+* :doc:`guides/KPI_V2_TREE` — every name, grouped by district/building and family.
+* :doc:`guides/baselines` — the references behind ``baseline`` and
+  ``business_as_usual`` values.
+* :doc:`overview/cost_function` — the legacy cost functions of ``evaluate()``.
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+   guides/scorecard
+   guides/scorecard_kpi_names
+   guides/kpis_reference
+   guides/KPI_V2_TREE
 
 List the KPIs in your run
 *************************
@@ -29,7 +43,16 @@ After completing an episode:
 
 The table contains ``cost_function``, ``value``, ``name`` and ``level``.
 ``name`` identifies the building or district; ``level`` identifies the scope.
-Feature-specific rows follow the scenario configuration.
+The last part of each KPI name is its unit (``kwh``, ``kw``, ``eur``, ``kgco2``,
+``ratio``...). Feature-specific rows follow the scenario configuration, and a
+KPI that is undefined for the run, such as a service ratio without any event to
+serve, is missing (NaN) rather than 0 or 1.
+
+To keep only the default scorecard rows:
+
+.. code-block:: python
+
+   scorecard = env.scorecard(kpis)
 
 Main families
 *************

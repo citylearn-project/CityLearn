@@ -57,6 +57,25 @@ This page documents the `schema.json` contract. The schema is the source of trut
 | `physics_version` | int | no | Physics version, `1` or `2` (default). `1` reproduces the physics of CityLearn 3.6.0; see the [migration guide](migration.md#physics-version). The `physics_version` argument of `CityLearnEnv` takes precedence. |
 | `metrics_log_interval` | int | no | Runtime metric log cadence. |
 
+### Calendar and dataset metadata keys
+
+These keys describe the dataset clock and its provenance; the Portugal REC
+schemas (`pt_rec_*`) use several of them. The first five change how the dataset
+clock is read; the others are descriptive metadata that
+the simulator does not read, kept so a dataset can be traced to its source.
+
+| Key | Type | Effect |
+|---|---:|---|
+| `time_axis.calendar_file` | string | Canonical calendar with the columns `time_step` and `timestamp_utc` (and optionally `timestamp_local`), one regular row per dataset row. It sets the dataset step and the timestamps of rendered and exported series, unless `start_date` is passed to `CityLearnEnv`. |
+| `timezone` | string | IANA time zone of the calendar, e.g. `Europe/Lisbon`. Exported timestamps are converted from UTC to this zone; an unknown name raises an error at load time. Without a calendar it is only recorded. |
+| `dataset_seconds_per_time_step` | number | Declared dataset step in seconds, for data whose calendar columns cannot give it. It must agree with the calendar. |
+| `dataset_contract_version` | string | Version of the dataset's data contract. A value starting with `portugal-native` makes `shared/calendar.parquet` the calendar when `time_axis` is absent; otherwise it is metadata. |
+| `terminal_observation_padding` | bool | Allows the files to stop one row short of the window and repeats the last row as the terminal observation only, which is never simulated. Default `false`. |
+| `dataset_id`, `dataset_family` | string | Metadata: dataset identifiers. |
+| `experimental_design` | object | Metadata: the evaluation design the dataset was built for (factors, purpose, labels). |
+| `native_compatibility` | object | Metadata: the engine commit and checks the dataset was validated with. |
+| `_derivation`, `_derived_from` | object/string | Metadata: how a derived dataset was produced from its source. |
+
 ## `observations`
 
 ```json

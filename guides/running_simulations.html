@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -27,8 +27,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Schema Reference" href="schema_reference.html" />
-    <link rel="prev" title="Moving an existing project to CityLearn v3" href="migration.html" /> 
+    <link rel="next" title="Dataset catalogue" href="dataset_catalogue.html" />
+    <link rel="prev" title="Features and configuration" href="features.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -54,25 +54,28 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Running Simulations</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#python-quickstart">Python Quickstart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#entity-interface-quickstart">Entity Interface Quickstart</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#multi-community-quickstart">Multi-Community Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#episode-loop-without-a-controller">Episode Loop Without a Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#entity-interface-example">Entity Interface Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multi-community-example">Multi-Community Example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citylearnenv-parameters"><code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#extra-kwargs">Extra <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reward-observation-payloads">Reward Observation Payloads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#macro-steps-action-repeat">Macro-Steps / Action Repeat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#render-and-export">Render and Export</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#recommended-validation">Recommended Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#smoke-test-a-large-dataset">Smoke-Test a Large Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validation-from-a-source-checkout">Validation from a Source Checkout</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
@@ -87,33 +90,32 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 
         </div>
@@ -139,6 +141,14 @@
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
+  listed under <a href="releases.html">Unreleased</a>, which the latest release,
+  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
+  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
+  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
            <div itemprop="articleBody">
              
   <section id="running-simulations">
@@ -177,8 +187,13 @@
 </tbody>
 </table>
 </section>
-<section id="python-quickstart">
-<h2>Python Quickstart<a class="headerlink" href="#python-quickstart" title="Link to this heading"></a></h2>
+<section id="episode-loop-without-a-controller">
+<h2>Episode Loop Without a Controller<a class="headerlink" href="#episode-loop-without-a-controller" title="Link to this heading"></a></h2>
+<p>For a first run with its expected output, and a comparison with the
+business-as-usual controller, follow the
+<a class="reference external" href="../quickstart.html">quickstart</a>. The loop below is the
+smallest possible episode: it sends zero for every action, whose effect
+follows each device’s action contract.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
@@ -196,8 +211,8 @@
 </pre></div>
 </div>
 </section>
-<section id="entity-interface-quickstart">
-<h2>Entity Interface Quickstart<a class="headerlink" href="#entity-interface-quickstart" title="Link to this heading"></a></h2>
+<section id="entity-interface-example">
+<h2>Entity Interface Example<a class="headerlink" href="#entity-interface-example" title="Link to this heading"></a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
 <span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span>
@@ -221,8 +236,8 @@
 </pre></div>
 </div>
 </section>
-<section id="multi-community-quickstart">
-<h2>Multi-Community Quickstart<a class="headerlink" href="#multi-community-quickstart" title="Link to this heading"></a></h2>
+<section id="multi-community-example">
+<h2>Multi-Community Example<a class="headerlink" href="#multi-community-example" title="Link to this heading"></a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> when one training loop should step several independent communities in lockstep. Each child keeps its own physics, KPIs and demand-response files.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.multi_community</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiCommunityEnv</span>
 
@@ -683,16 +698,10 @@ citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/m
 <p>Normal episode time series are controlled by <code class="docutils literal notranslate"><span class="pre">render_mode</span></code>/<code class="docutils literal notranslate"><span class="pre">render_enabled</span></code>, not by <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code>.</p>
 <p>For exact final-episode choices, keep <code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end=False</span></code> and call <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code> yourself after the episode terminates.</p>
 </section>
-<section id="recommended-validation">
-<h2>Recommended Validation<a class="headerlink" href="#recommended-validation" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>.venv/bin/pytest<span class="w"> </span>-q
-.venv/bin/python<span class="w"> </span>scripts/audit/audit_entity_contract.py<span class="w"> </span>--strict
-.venv/bin/python<span class="w"> </span>scripts/audit/audit_physics.py
-.venv/bin/python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>citylearn<span class="w"> </span>tests<span class="w"> </span>scripts/manual<span class="w"> </span>scripts/ci<span class="w"> </span>--select<span class="w"> </span>E9,F821
-</pre></div>
-</div>
-<p>For large 15s datasets, always smoke-test a short window first:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>.venv/bin/python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
+<section id="smoke-test-a-large-dataset">
+<h2>Smoke-Test a Large Dataset<a class="headerlink" href="#smoke-test-a-large-dataset" title="Link to this heading"></a></h2>
+<p>For large 15s datasets, always run a short window first:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
 <span class="s">import numpy as np</span>
 <span class="s">from citylearn.citylearn import CityLearnEnv</span>
 
@@ -720,6 +729,19 @@ citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/m
 <span class="s">PY</span>
 </pre></div>
 </div>
+</section>
+<section id="validation-from-a-source-checkout">
+<h2>Validation from a Source Checkout<a class="headerlink" href="#validation-from-a-source-checkout" title="Link to this heading"></a></h2>
+<p>The test suite and the audit scripts are in the repository, not in the package
+that <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">citylearn</span></code> installs. Run them from a clone, with the test
+requirements installed (see the <a class="reference internal" href="developer_guide.html"><span class="std std-doc">developer guide</span></a> and the
+<a class="reference internal" href="validation.html"><span class="std std-doc">validation guide</span></a>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q
+python<span class="w"> </span>scripts/audit/audit_entity_contract.py<span class="w"> </span>--strict
+python<span class="w"> </span>scripts/audit/audit_physics.py
+python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>citylearn<span class="w"> </span>tests<span class="w"> </span>scripts/manual<span class="w"> </span>scripts/ci<span class="w"> </span>--select<span class="w"> </span>E9,F821
+</pre></div>
+</div>
 <p>KPI-only exports include a manifest and service-audit JSON sidecars. They do not
 enable episode time-series output; CityLearn UI can load the folder as before.
 The manifest identifies input files by their path below the dataset root;
@@ -731,9 +753,10 @@ lists which spellings of a file reference record the same evidence.</p>
 
            </div>
           </div>
+
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="migration.html" class="btn btn-neutral float-left" title="Moving an existing project to CityLearn v3" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="schema_reference.html" class="btn btn-neutral float-right" title="Schema Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="features.html" class="btn btn-neutral float-left" title="Features and configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dataset_catalogue.html" class="btn btn-neutral float-right" title="Dataset catalogue" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

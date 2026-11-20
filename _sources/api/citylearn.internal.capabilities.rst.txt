@@ -1,7 +1,0 @@
-citylearn.internal.capabilities module
-======================================
-
-.. automodule:: citylearn.internal.capabilities
-   :members:
-   :show-inheritance:
-   :undoc-members:
