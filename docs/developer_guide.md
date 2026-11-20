@@ -30,6 +30,7 @@ Optional dependencies:
 | Parquet datasets | `.venv/bin/pip install -e ".[parquet]"` |
 | PV autosizing | `.venv/bin/pip install -e ".[pysam]"` |
 | Parallel tests | `.venv/bin/pip install pytest-xdist` |
+| Coverage report (`--cov=citylearn`) and the 600 s per-test timeout of `pytest.ini` | `.venv/bin/pip install pytest-cov pytest-timeout` (both are in `test_requirements.txt`) |
 | Notebook checks | `.venv/bin/pip install nbclient nbformat ipykernel` |
 | RLlib wrappers | `.venv/bin/pip install "ray[rllib]"` (a release with wheels for your Python) |
 | Build checks | `.venv/bin/pip install build twine` |

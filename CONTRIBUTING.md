@@ -58,6 +58,18 @@ python -m pytest -q
 python -m pytest -q -n 4
 ```
 
+pytest.ini sets a 600 s timeout per test (`pytest-timeout`), so a hung test
+fails instead of blocking CI; the slowest tests take about two minutes.
+`python -m pytest -q --cov=citylearn --cov-report=term` prints the coverage
+(`pytest-cov`); CI reports it on one job and does not gate on it.
+
+CI also runs the linter with the rules selected in `pyproject.toml`
+(`[tool.ruff.lint]`); run the same command before you push:
+
+```console
+python -m ruff check citylearn tests scripts/manual scripts/ci
+```
+
 Changes to the physics, the KPIs or the entity interface should also pass the
 audits that CI runs:
 
