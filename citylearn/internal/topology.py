@@ -464,9 +464,17 @@ class CityLearnTopologyService:
         env.buildings = active_buildings
 
         t = int(getattr(env, 'time_step', 0))
+        time_steps = int(getattr(env, 'time_steps', t + 1) or (t + 1))
+        # After the terminal transition the environment points at the terminal observation row, which
+        # is never executed. Buildings stay on the last executed interval, as the runtime leaves them,
+        # so an event at the terminal step does not add an unexecuted interval to their series.
+        terminal = 0 < t and t >= time_steps - 1
+        building_t = max(time_steps - 2, 0) if terminal else t
         for building in active_buildings:
             self._bind_building_runtime_context(building)
-            self._set_building_time_step(building, t)
+            self._set_building_time_step(building, building_t)
+            if terminal:
+                building._terminal_observation_time_step = t
 
         active_ev_ids = self._collect_active_ev_ids(active_buildings)
         previous_ev_ids = set(self._active_ev_ids)
@@ -519,18 +527,34 @@ class CityLearnTopologyService:
             appliance.time_step = time_step
 
     @staticmethod
-    def _initialize_storage_at_activation(building: Building):
-        """Apply the declared initial SoC at a mid-episode activation boundary."""
+    def _initialize_storage_at_activation(building: Building, thermal_storage: bool = False):
+        """Apply the declared initial SoC at a mid-episode activation boundary.
+
+        The electrical storage is always initialised. `thermal_storage` also initialises the cooling,
+        heating and DHW tanks, for a member that joins (or rejoins): `Building.reset` sets the initial
+        SoC at episode step 0 only, so its tanks would otherwise open with the empty SoC of the step
+        before its activation. An electrical storage added to an active member leaves its tanks as they are.
+        """
 
         storage = getattr(building, 'electrical_storage', None)
-        if storage is None or not hasattr(storage, 'force_set_soc'):
-            return
-        capacity = float(getattr(storage, 'capacity', 0.0) or 0.0)
-        nominal_power = float(getattr(storage, 'nominal_power', 0.0) or 0.0)
-        if capacity <= 0.0 or nominal_power <= 0.0:
-            return
-        initial_soc = float(getattr(storage, 'initial_soc', 0.0) or 0.0)
-        storage.force_set_soc(initial_soc)
+        if storage is not None and hasattr(storage, 'force_set_soc'):
+            capacity = float(getattr(storage, 'capacity', 0.0) or 0.0)
+            nominal_power = float(getattr(storage, 'nominal_power', 0.0) or 0.0)
+            if capacity > 0.0 and nominal_power > 0.0:
+                initial_soc = float(getattr(storage, 'initial_soc', 0.0) or 0.0)
+                storage.force_set_soc(initial_soc)
+
+        for attr_name in ('cooling_storage', 'heating_storage', 'dhw_storage') if thermal_storage else ():
+            tank = getattr(building, attr_name, None)
+            # At step 0 the reset state already holds the initial SoC.
+            if (
+                tank is None
+                or not hasattr(tank, 'initialize_at_activation')
+                or int(getattr(tank, 'time_step', 0) or 0) <= 0
+                or float(getattr(tank, 'capacity', 0.0) or 0.0) <= 0.0
+            ):
+                continue
+            tank.initialize_at_activation()
 
     def _bind_ev_runtime_context(self, ev: ElectricVehicle):
         env = self.env
@@ -649,7 +673,7 @@ class CityLearnTopologyService:
             building._charging_phase_power_history_kw[phase_name][:len(values)] = values
         building._archived_storage_electricity = storage_prefix
         self._set_building_time_step(building, time_step)
-        self._initialize_storage_at_activation(building)
+        self._initialize_storage_at_activation(building, thermal_storage=True)
         self._skip_expired_deferrable_requests(
             building,
             self._global_time_step(time_step),

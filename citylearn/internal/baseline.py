@@ -189,6 +189,7 @@ class CityLearnBusinessAsUsualBaselineService:
             random_seed=getattr(env, '_initialization_seed', env.random_seed),
             offline=getattr(env, 'offline', False),
             time_step_ratio=getattr(env, 'time_step_ratio', None),
+            time_step_ratio_mode=getattr(env, 'time_step_ratio_mode', None),
             interface='entity' if requires_entity_interface else 'flat',
             topology_mode=getattr(env, 'topology_mode', None),
             render_mode='none',

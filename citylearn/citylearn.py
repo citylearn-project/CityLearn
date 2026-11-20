@@ -94,6 +94,19 @@ class CityLearnEnv(Environment, Env):
         True if episode sequences are split such that each time step is a candidate for `episode_start_time_step` otherwise, False to split episodes in steps of `episode_time_steps`.
     random_episode_split: bool, default: False
         True if episode splits are to be selected at random during training otherwise, False to select sequentially.
+    time_step_ratio_mode: str, default: 'reject'
+        What to do when `seconds_per_time_step` differs from the dataset step, i.e. `time_step_ratio` != 1. CityLearn
+        does not resample the data: each control step reads one data row. `'reject'` raises a `ValueError`, so
+        that a run never simulates distorted time. `'compress'` keeps the CityLearn 3.6.0 behaviour: each control
+        step still reads one row, so the calendar, prices and EV schedules advance one row per step, while
+        energies are scaled by the ratio. Can also be set with the schema key of the same name.
+    episode_split_boundary: str, default: 'shared'
+        How consecutive (non-rolling) splits of an integer `episode_time_steps` meet. An episode of N data rows executes
+        N - 1 control steps, because its last row is only the terminal observation. `'shared'` advances consecutive episodes
+        by N - 1 rows, so the terminal row of one episode is the first row of the next and every interval is simulated
+        (N must be at least 2). `'disjoint'` advances them by N rows, as CityLearn 3.6.0 and earlier did, so the interval
+        between two consecutive episodes is never simulated. Can also be set with the schema key of the same name. Rolling
+        and explicit list splits are not affected.
     seconds_per_time_step: float
         Number of seconds in 1 `time_step` and must be set to >= 1.
     reward_function: Union[RewardFunction, str], optional
@@ -168,6 +181,7 @@ class CityLearnEnv(Environment, Env):
     """
 
     DEFAULT_RENDER_START_DATE = datetime.date(2024, 1, 1)
+    TIME_STEP_RATIO_MODES = ('reject', 'compress')
 
     def __init__(self,
         schema: Union[str, Path, Mapping[str, Any]], root_directory: Union[str, Path] = None, buildings: Union[List[Building], List[str], List[int]] = None,
@@ -182,6 +196,8 @@ class CityLearnEnv(Environment, Env):
         start_date: Union[str, datetime.date] = None, render_session_name: str = None, render_mode: str = 'none',
         export_kpis_on_episode_end: bool = None, **kwargs: Any
     ):
+        episode_split_boundary = kwargs.pop('episode_split_boundary', None)
+        time_step_ratio_mode = kwargs.pop('time_step_ratio_mode', None)
         render_directory = kwargs.pop('render_directory', None)
         render_directory_name = kwargs.pop('render_directory_name', 'render_logs')
         render_flag = kwargs.pop('render', None)
@@ -207,6 +223,10 @@ class CityLearnEnv(Environment, Env):
             render_session_name = kw_render_session_name if render_session_name is None else render_session_name
         self.offline = offline
         self.schema = schema
+        self.time_step_ratio_mode = (
+            self.schema.get('time_step_ratio_mode') if isinstance(self.schema, dict) and time_step_ratio_mode is None
+            else time_step_ratio_mode
+        )
         schema_interface = self.schema.get('interface') if isinstance(self.schema, dict) else None
         self.interface = interface if interface is not None else schema_interface
         schema_topology_mode = self.schema.get('topology_mode') if isinstance(self.schema, dict) else None
@@ -374,6 +394,18 @@ class CityLearnEnv(Environment, Env):
         self._robustness_service.initialize()
         reference_buildings = self.buildings if len(self.buildings) > 0 else self._all_buildings
         get_time_step_ratio = reference_buildings[0].time_step_ratio if len(reference_buildings) > 0 else 1.0
+
+        # The ratio is inferred from the data and the control step; the argument can only confirm it.
+        if (
+            time_step_ratio is not None and get_time_step_ratio is not None
+            and not np.isclose(float(time_step_ratio), float(get_time_step_ratio), rtol=1.0e-9, atol=1.0e-12)
+        ):
+            raise ValueError(
+                f'time_step_ratio={time_step_ratio!r} does not match the ratio of the control step to the dataset step, '
+                f'{float(get_time_step_ratio):g}. The ratio is inferred from seconds_per_time_step and the dataset '
+                'timestamps (or dataset_seconds_per_time_step); change those instead.'
+            )
+
         self.time_step_ratio = get_time_step_ratio
 
         # now call super class initialization and set episode tracker now that buildings are set
@@ -383,6 +415,9 @@ class CityLearnEnv(Environment, Env):
         self.episode_time_steps = episode_time_steps
         self.rolling_episode_split = rolling_episode_split
         self.random_episode_split = random_episode_split
+        self.episode_split_boundary = (
+            self.schema.get('episode_split_boundary') if episode_split_boundary is None else episode_split_boundary
+        )
         self.central_agent = central_agent
         self.shared_observations = shared_observations
 
@@ -530,6 +565,31 @@ class CityLearnEnv(Environment, Env):
         False to split episodes in steps of `episode_time_steps`."""
 
         return self.__rolling_episode_split
+
+    @property
+    def time_step_ratio_mode(self) -> str:
+        """`'reject'` (default) refuses a control step that differs from the dataset step; `'compress'` keeps
+        the CityLearn 3.6.0 behaviour of reading one data row per control step and scaling energies."""
+
+        return self.__time_step_ratio_mode
+
+    @time_step_ratio_mode.setter
+    def time_step_ratio_mode(self, time_step_ratio_mode: str):
+        value = 'reject' if time_step_ratio_mode is None else str(time_step_ratio_mode).strip().lower()
+
+        if value not in self.TIME_STEP_RATIO_MODES:
+            raise ValueError(
+                f'time_step_ratio_mode must be one of {self.TIME_STEP_RATIO_MODES}, got {time_step_ratio_mode!r}.'
+            )
+
+        self.__time_step_ratio_mode = value
+
+    @property
+    def episode_split_boundary(self) -> str:
+        """How consecutive episode splits meet: `'shared'` (boundary row shared, every interval simulated) or
+        `'disjoint'` (CityLearn 3.6.0 splits, which never simulate the interval between two episodes)."""
+
+        return self.__episode_split_boundary
 
     @property
     def random_episode_split(self) -> bool:
@@ -986,10 +1046,36 @@ class CityLearnEnv(Environment, Env):
         return self.__net_electricity_consumption
 
     def _sum_building_series(self, attribute: str) -> np.ndarray:
-        if len(self.buildings) == 0:
+        """Sum a building series over the members of the district at each step.
+
+        In dynamic topology every member that has been active contributes, masked to the steps at which
+        it belonged to the district, as in `net_electricity_consumption` and `_sum_counterfactual_series`:
+        a member that leaves keeps its past contribution, and a member that joins adds nothing before it
+        joined, so it adds zero at the steps where it was not a member. A step is NaN only if no member
+        has a value there.
+        """
+
+        if self.topology_mode == 'dynamic' and getattr(self, '_topology_service', None) is not None:
+            population = ActivePopulation(self)
+            series = []
+
+            for building in self._kpi_service._get_kpi_buildings():
+                values = np.asarray(getattr(building, attribute)).reshape(-1)
+                if values.dtype.kind not in 'fc':
+                    values = values.astype('float64')
+                values = values.copy()
+                values[~population.mask(building.name, len(values), energy=True)] = 0.0
+                series.append(values)
+
+        elif len(self.buildings) == 0:
             return np.array([], dtype='float64')
 
-        series = [np.asarray(getattr(b, attribute)).reshape(-1) for b in self.buildings]
+        else:
+            series = [np.asarray(getattr(b, attribute)).reshape(-1) for b in self.buildings]
+
+        if len(series) == 0:
+            return np.array([], dtype='float64')
+
         length = max((len(values) for values in series), default=0)
         total = np.zeros(length, dtype='float64')
         valid = np.zeros(length, dtype=bool)
@@ -1288,6 +1374,10 @@ class CityLearnEnv(Environment, Env):
     @rolling_episode_split.setter
     def rolling_episode_split(self, rolling_episode_split: bool):
         self.__rolling_episode_split = False if rolling_episode_split is None else rolling_episode_split
+
+    @episode_split_boundary.setter
+    def episode_split_boundary(self, episode_split_boundary: str):
+        self.__episode_split_boundary = EpisodeTracker.validate_episode_split_boundary(episode_split_boundary)
 
     @random_episode_split.setter
     def random_episode_split(self, random_episode_split: bool):
@@ -1696,6 +1786,7 @@ class CityLearnEnv(Environment, Env):
             self.rolling_episode_split,
             self.random_episode_split,
             self.random_seed,
+            self.episode_split_boundary,
         )
 
         if self.topology_mode == 'dynamic':
