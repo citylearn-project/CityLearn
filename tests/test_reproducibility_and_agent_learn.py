@@ -159,6 +159,8 @@ def test_unconnected_ev_soc_drift_uses_time_aware_variance():
             self.electric_vehicles = [_EV("EV1", _Battery([0.5, 0.5], target_index=1))]
             self.buildings = []
             self.random_seed = 7
+            # The 3.6.0 single drift stream, which this stub records draws from.
+            self.random_stream_version = 'v1'
             self._ev_drift_random_state = _RandomState()
 
     env_hourly = _Env(3600)

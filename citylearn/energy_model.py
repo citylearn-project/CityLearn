@@ -12,6 +12,7 @@ try:
     from PySAM import Pvwattsv8
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     Pvwattsv8 = None
+from citylearn import random_streams
 from citylearn.base import Environment, EpisodeTracker
 from citylearn.data import (
     DataSet,
@@ -726,7 +727,13 @@ class PV(ElectricDevice):
         tries = 3
 
         for i in range(tries):
-            self._autosize_config = sizing_data.sample(1, random_state=random_seed + i).iloc[0].to_dict()
+            if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
+                sample_random_state = random_seed + i
+            else:
+                # Every device of an environment holds the environment seed; draw from this PV's own stream.
+                sample_random_state = int(self.numpy_random_state.integers(2**32))
+
+            self._autosize_config = sizing_data.sample(1, random_state=sample_random_state).iloc[0].to_dict()
             if Pvwattsv8 is None:
                 raise ModuleNotFoundError('PySAM is required for PV sizing but is not installed.')
             model = Pvwattsv8.default('PVWattsNone')
@@ -809,6 +816,8 @@ class StorageDevice(Device):
     """
     
     def __init__(self, capacity: float = None, efficiency: Union[float, Tuple[float, float]] = None, loss_coefficient: Union[float, Tuple[float, float]] = None, initial_soc: Union[float, Tuple[float, float]] = None, time_step_ratio:float = None, **kwargs: Any):
+        # These parameters are drawn before `Environment.__init__` runs, so set the stream first.
+        self._set_random_stream(kwargs.get('random_stream_version'), kwargs.get('random_stream_key'))
         self.random_seed = kwargs.get('random_seed', None)
         self.capacity = capacity
         self.loss_coefficient = loss_coefficient
@@ -1245,6 +1254,7 @@ class Battery(StorageDevice, ElectricDevice):
         self.discharge_power_curve = discharge_power_curve
         self._efficiency_history = array('d')
         self._capacity_history = array('d')
+        self._set_random_stream(kwargs.get('random_stream_version'), kwargs.get('random_stream_key'))
         self.random_seed = kwargs.get('random_seed', None)
         self.depth_of_discharge = depth_of_discharge
         super().__init__(capacity=capacity, nominal_power=nominal_power, time_step_ratio = time_step_ratio, **kwargs)

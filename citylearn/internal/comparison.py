@@ -166,7 +166,7 @@ def context(env, data_files):
     schema = deepcopy(env.schema)
     root = str(Path(schema.get('root_directory') or '.').resolve())
     ignored = {'root_directory', 'reward_function', 'central_agent', 'interface', 'shared_observations',
-               'observations', 'actions', 'observation_bundles', 'community_market', 'random_seed',
+               'observations', 'actions', 'observation_bundles', 'community_market', 'random_seed', 'random_stream_version',
                'render', 'render_mode', 'render_directory', 'render_file_format', 'debug_timing',
                'metrics_log_interval', 'check_observation_limits', 'physics_invariant_checks',
                'export_kpis_on_episode_end', 'chargers_observations_helper', 'chargers_actions_helper',
@@ -182,7 +182,7 @@ def context(env, data_files):
     tracker = env.episode_tracker
     from citylearn.internal.temporal import axis_metadata, runtime_versions
     axis = axis_metadata(env)
-    temporal = {key:axis[key] for key in ('definition_version','initialization_seed','clock_source','dataset_seconds_per_time_step','control_seconds_per_time_step','terminal_padding','data_noise_generator','episode_split_rng')}
+    temporal = {key:axis[key] for key in ('definition_version','initialization_seed','clock_source','dataset_seconds_per_time_step','control_seconds_per_time_step','terminal_padding','data_noise_generator','episode_split_rng','random_stream_version')}
     return dict(temporal=temporal,definition_version=DEFINITION_VERSION,
                 engine=dict(version=__version__, source_sha256=source_sha256(Path(__file__).resolve().parents[1]),
                             runtime_versions=runtime_versions()),

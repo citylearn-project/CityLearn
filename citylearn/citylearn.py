@@ -13,6 +13,7 @@ import difflib
 import numpy as np
 import pandas as pd
 import random
+from citylearn import random_streams
 from citylearn.base import Environment, EpisodeTracker
 from citylearn.building import Building, DynamicsBuilding
 from citylearn.cost_function import CostFunction
@@ -139,6 +140,12 @@ class CityLearnEnv(Environment, Env):
         each building independently in a :code:`List[bool]`. Will override :code:`pv` defined in the :code:`schema`.
     random_seed: int, optional
         Pseudorandom number generator seed for repeatable results.
+    random_stream_version: str, optional
+        Keyword argument. How the random streams for unspecified device parameters, away-from-charger EV
+        state of charge, occupant set-point interactions and stochastic power outages are derived from
+        `random_seed`: ``'v2'`` (default) derives one independent stream per purpose, object and episode
+        with :class:`numpy.random.SeedSequence`; ``'v1'`` reproduces CityLearn 3.6.0 and earlier. Overrides
+        ``random_stream_version`` in the schema. See :py:mod:`citylearn.random_streams`.
     offline: bool, optional
         If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
         error when required files are not available locally. Defaults to the ``CITYLEARN_OFFLINE`` environment
@@ -194,7 +201,7 @@ class CityLearnEnv(Environment, Env):
         'reward_function', 'reward_function_kwargs', 'central_agent', 'shared_observations', 'active_observations',
         'inactive_observations', 'active_actions', 'inactive_actions', 'simulate_power_outage', 'solar_generation',
         'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
-        'episode_split_boundary', 'time_step_ratio_mode',
+        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version',
     )
 
     def __init__(self,
@@ -230,6 +237,7 @@ class CityLearnEnv(Environment, Env):
         ev_departure_within_tolerance = kwargs.pop('ev_departure_within_tolerance', None)
         ev_departure_service_tolerance = kwargs.pop('ev_departure_service_tolerance', None)
         business_as_usual_ev_charge_target = kwargs.pop('business_as_usual_ev_charge_target', None)
+        random_stream_version = kwargs.pop('random_stream_version', None)
         kw_render_mode = kwargs.pop('render_mode', None)
         requested_render_mode = render_mode if kw_render_mode is None else kw_render_mode
         requested_render_mode = 'none' if requested_render_mode is None else str(requested_render_mode).lower()
@@ -351,6 +359,10 @@ class CityLearnEnv(Environment, Env):
         self._final_export_episode_index = None
         self.__rewards = None
         self.buildings = []
+        # Set before the seed and the buildings, which draw from streams of this version.
+        self._set_random_stream(random_streams.parse_random_stream_version(
+            self.schema.get('random_stream_version', None) if random_stream_version is None else random_stream_version,
+        ))
         self.random_seed = self.schema.get('random_seed', None) if random_seed is None else random_seed
         schema_render_session = self.schema.get('render_session_name') if isinstance(self.schema, dict) else None
         self.render_session_name = render_session_name if render_session_name is not None else schema_render_session
@@ -1488,6 +1500,7 @@ class CityLearnEnv(Environment, Env):
             'kpi_family_audit': family_metadata(),
             'reward_evidence': reward_metadata(self),
             **super().get_metadata(),
+            'random_stream_version': self.random_stream_version,
             'interface': self.interface,
             'topology_mode': self.topology_mode,
             'topology_version': self.topology_version,
@@ -1818,6 +1831,12 @@ class CityLearnEnv(Environment, Env):
             self.random_seed,
             self.episode_split_boundary,
         )
+        # Episode key of the per-episode streams: an explicit seed repeats the first episode of an env
+        # built with that seed; the native BAU sidecar takes the key of the episode it evaluates.
+        stream_episode = getattr(self, '_random_stream_episode_override', None)
+        self.episode_tracker.random_stream_episode = (
+            stream_episode if stream_episode is not None else 0 if seed is not None else self.episode_tracker.episode
+        )
 
         if self.topology_mode == 'dynamic':
             self._topology_service.reset()
@@ -1852,8 +1871,19 @@ class CityLearnEnv(Environment, Env):
         self._observations_cache_time_step = -1
         episode_index = int(getattr(self.episode_tracker, 'episode', 0))
         self._reset_seed_explicit = seed is not None
-        self._ev_drift_seed = int(self.random_seed) if seed is not None else int(self.random_seed) + episode_index
-        self._ev_drift_random_state = np.random.RandomState(self._ev_drift_seed)
+        self._ev_drift_generators = {}
+
+        if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
+            self._ev_drift_seed = int(self.random_seed) if seed is not None else int(self.random_seed) + episode_index
+            self._ev_drift_random_state = np.random.RandomState(self._ev_drift_seed)
+        else:
+            # Each EV draws from its own stream (see `CityLearnRuntimeService.ev_drift_generator`);
+            # this identifies the episode's streams in metadata and comparisons.
+            self._ev_drift_seed = random_streams.stream_id(
+                self.random_seed, random_streams.EV_AWAY_SOC_DRIFT, self.episode_tracker.random_stream_episode,
+            )
+            self._ev_drift_random_state = None
+
         self._ev_suspended_drift_random_state = None
         self._render_buffer.clear()
         self._refresh_action_cache()

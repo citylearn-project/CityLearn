@@ -1,6 +1,8 @@
 import hashlib
-from typing import List
+import math
+from typing import List, Union
 import numpy as np
+from citylearn import random_streams
 from citylearn.base import Environment
 
 class PowerOutage:
@@ -12,10 +14,23 @@ class PowerOutage:
     ----------
     random_seed: int, optional
         Pseudorandom number generator seed for repeatable results.
+    random_stream_version: str, optional
+        Derivation of the outage stream, ``'v2'`` (default) or ``'v1'`` (CityLearn 3.6.0 and earlier); see
+        :py:mod:`citylearn.random_streams`. A building that owns the model sets it to its own version at reset.
     """
 
-    def __init__(self, random_seed: int = None):
-        self.random_seed = random_seed 
+    def __init__(self, random_seed: int = None, random_stream_version: Union[str, int] = None):
+        self.random_seed = random_seed
+        self.random_stream_version = random_stream_version
+        self._episode_stream_key = None
+
+    @property
+    def random_stream_version(self) -> str:
+        return getattr(self, '_PowerOutage__random_stream_version', random_streams.DEFAULT_RANDOM_STREAM_VERSION)
+
+    @random_stream_version.setter
+    def random_stream_version(self, value: Union[str, int]):
+        self.__random_stream_version = random_streams.parse_random_stream_version(value)
 
     @property
     def random_seed(self) -> int:
@@ -29,11 +44,40 @@ class PowerOutage:
     def random_seed(self, value: int):
         self.__random_seed = value
 
-    def _set_episode_seed(self, seed: int, building_name: str, start: int, end: int) -> None:
-        """Give an unseeded model a stable stream shared by the controller and BAU."""
+    def _set_episode_seed(
+        self, seed: int, building_name: str, start: int, end: int,
+        random_stream_version: Union[str, int] = None, random_stream_episode: int = None,
+    ) -> None:
+        """Give the model a stable stream for this building and episode, shared by the controller and BAU.
+
+        With ``'v1'`` only an unseeded model uses it: a seeded model draws ``RandomState(random_seed)``
+        in every building and episode. With ``'v2'`` the stream is derived from the model's seed, or
+        the environment seed when the model has none, the building, the episode key and the window.
+        """
+
+        if random_stream_version is not None:
+            self.random_stream_version = random_stream_version
 
         payload = f'power-outage:{seed}:{start}:{end}:{building_name}'.encode('utf-8')
         self._episode_seed = int.from_bytes(hashlib.sha256(payload).digest()[:4], 'big')
+        self._episode_root_seed = seed
+        self._episode_stream_key = (building_name, random_stream_episode, int(start), int(end))
+
+    def _signal_random_state(self) -> Union[np.random.RandomState, np.random.Generator]:
+        """Random stream for one call of :py:meth:`get_signals`."""
+
+        if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
+            return np.random.RandomState(self.random_seed)
+
+        explicit_seed = self.__random_seed
+        key = getattr(self, '_episode_stream_key', None)
+
+        if key is None:
+            return random_streams.generator(self.random_seed, random_streams.POWER_OUTAGE)
+
+        seed = self._episode_root_seed if explicit_seed is None else explicit_seed
+
+        return random_streams.generator(seed, random_streams.POWER_OUTAGE, *key)
 
     def get_signals(self, time_steps: int, **kwargs) -> np.ndarray:
         """Returns power outage signal time series.
@@ -58,7 +102,7 @@ class PowerOutage:
             whereas value of 1 indicates a power outage at said time step.
         """
 
-        nprs = np.random.RandomState(self.random_seed)
+        nprs = self._signal_random_state()
         signals = nprs.choice([0, 1], size=time_steps) 
 
         return signals  
@@ -153,7 +197,8 @@ class ReliabilityMetricsPowerOutage(PowerOutage):
             whereas value of 1 indicates a power outage at said time step.
         """
 
-        nprs = np.random.RandomState(self.random_seed)
+        nprs = self._signal_random_state()
+        legacy = self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION
         days_per_year = 365.0
         seconds_per_day = 86400.0
         seconds_per_minute = 60.0
@@ -161,22 +206,39 @@ class ReliabilityMetricsPowerOutage(PowerOutage):
         time_steps_per_minute = seconds_per_minute/seconds_per_time_step
         day_count = time_steps/time_steps_per_day
         daily_outage_probability = self.saifi/days_per_year
-        outage_days = nprs.binomial(n=1, p=daily_outage_probability, size=int(day_count))
-        # One index per drawn day; a float `day_count` (partial last day) would add an extra index.
-        outage_day_ixs = outage_days*np.arange(outage_days.shape[0])
-        outage_day_ixs = outage_day_ixs[outage_day_ixs != 0]
-        outage_day_count = outage_days[outage_days == 1].shape[0]
         start_time_steps = list(range(int(time_steps_per_day))) if self.start_time_steps is None else self.start_time_steps
-        outage_start_time_steps = nprs.choice(start_time_steps, size=outage_day_count)
-        outage_durations = nprs.exponential(scale=self.caidi, size=outage_day_count) # [mins]
-        outage_duration_time_steps = outage_durations*time_steps_per_minute
         signals = np.zeros(time_steps, dtype=int)
 
-        for i, j , k in zip(outage_day_ixs, outage_start_time_steps, outage_duration_time_steps):
-            start_ix = i*time_steps_per_day + j
-            end_ix = start_ix + k
-            start_ix = int(start_ix)
-            end_ix = int(end_ix)
-            signals[start_ix:end_ix] = 1
-        
+        if legacy:
+            # CityLearn 3.6.0: drops day 0 and the partial last day, and floors durations.
+            outage_days = nprs.binomial(n=1, p=daily_outage_probability, size=int(day_count))
+            outage_day_ixs = outage_days*np.arange(outage_days.shape[0])
+            outage_day_ixs = outage_day_ixs[outage_day_ixs != 0]
+            outage_day_count = outage_days[outage_days == 1].shape[0]
+            outage_start_time_steps = nprs.choice(start_time_steps, size=outage_day_count)
+            outage_durations = nprs.exponential(scale=self.caidi, size=outage_day_count) # [mins]
+            outage_duration_time_steps = outage_durations*time_steps_per_minute
+
+            for i, j , k in zip(outage_day_ixs, outage_start_time_steps, outage_duration_time_steps):
+                start_ix = i*time_steps_per_day + j
+                end_ix = start_ix + k
+                start_ix = int(start_ix)
+                end_ix = int(end_ix)
+                signals[start_ix:end_ix] = 1
+
+            return signals
+
+        # Every day can have an outage, the partial last day included; an outage that starts past
+        # the end of the series is dropped and one that runs past it is truncated.
+        outage_days = nprs.binomial(n=1, p=daily_outage_probability, size=int(math.ceil(day_count - 1e-9)))
+        outage_day_ixs = np.flatnonzero(outage_days)
+        outage_start_time_steps = nprs.choice(start_time_steps, size=outage_day_ixs.size)
+        outage_durations = nprs.exponential(scale=self.caidi, size=outage_day_ixs.size) # [mins]
+        # Round to the nearest step, so durations are not biased half a step short.
+        outage_duration_time_steps = np.floor(outage_durations*time_steps_per_minute + 0.5).astype(int)
+
+        for i, j, k in zip(outage_day_ixs, outage_start_time_steps, outage_duration_time_steps):
+            start_ix = int(math.floor(i*time_steps_per_day + j))
+            signals[start_ix:start_ix + int(k)] = 1
+
         return signals

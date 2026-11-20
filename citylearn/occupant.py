@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import List, Mapping, Tuple, Union
 import numpy as np
+from citylearn import random_streams
 from citylearn.base import Environment
 from citylearn.data import LogisticRegressionOccupantParameters
 from citylearn.internal.occupant_models import TreeClassifierModel, load_occupant_model
@@ -69,9 +70,14 @@ class LogisticRegressionOccupant(Occupant):
         interaction_input = numpy1_scalar(interaction_input)  # float32 parameters x Python input: float64, as in NumPy 1
         increase_setpoint_probability = interaction_probability(numpy1_scalar(self.parameters.a_increase[self.time_step]), numpy1_scalar(self.parameters.b_increase[self.time_step]), interaction_input)
         decrease_setpoint_probability = interaction_probability(numpy1_scalar(self.parameters.a_decrease[self.time_step]), numpy1_scalar(self.parameters.b_decrease[self.time_step]), interaction_input)
-        random_seed = max(self.random_seed, 1) + self.time_step
-        nprs = np.random.RandomState(random_seed)
-        random_probability = nprs.uniform()
+        if self.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
+            # CityLearn 3.6.0: the same draw for every occupant and episode at a given time step.
+            random_seed = max(self.random_seed, 1) + self.time_step
+            nprs = np.random.RandomState(random_seed)
+            random_probability = nprs.uniform()
+        else:
+            random_probability = float(self._interaction_draws[self.time_step])
+
         self.__probabilities['increase_setpoint'][self.time_step] = increase_setpoint_probability
         self.__probabilities['decrease_setpoint'][self.time_step] = decrease_setpoint_probability
         self.__probabilities['random'][self.time_step] = random_probability
@@ -95,6 +101,16 @@ class LogisticRegressionOccupant(Occupant):
     
     def reset(self):
         super().reset()
+        self._interaction_draws = None
+
+        if self.random_stream_version != random_streams.LEGACY_RANDOM_STREAM_VERSION:
+            # One stream per occupant and episode, drawn once per time step, so a draw does not
+            # depend on how often `predict` is called.
+            self._interaction_draws = random_streams.generator(
+                self.random_seed, random_streams.OCCUPANT_SETPOINT_INTERACTION,
+                *self.random_stream_key, self.episode_tracker.random_stream_episode,
+            ).random(self.episode_tracker.episode_time_steps)
+
         self.__probabilities = {
             'increase_setpoint': np.zeros(self.episode_tracker.episode_time_steps, dtype='float32'),
             'decrease_setpoint': np.zeros(self.episode_tracker.episode_time_steps, dtype='float32'),

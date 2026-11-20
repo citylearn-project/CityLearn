@@ -254,6 +254,9 @@ def test_clip_reasons_name_only_the_charger_phase_and_direction(tmp_path):
     charger.to_csv(dataset / 'charger_1_2.csv', index=False)
     schema['interface'] = 'entity'
     schema['observation_bundles'] = {'entity_action_feedback': {'active': True}}
+    # Both vehicles share one battery seed, so they draw identical unspecified battery parameters and
+    # request the same feasible power; the total limit is then split evenly between the two chargers.
+    schema['electric_vehicles_def']['Electric_Vehicle_1']['battery']['attributes']['random_seed'] = 0
     schema['electric_vehicles_def']['Electric_Vehicle_2'] = json.loads(
         json.dumps(schema['electric_vehicles_def']['Electric_Vehicle_1']))
     building = schema['buildings']['Building_1']

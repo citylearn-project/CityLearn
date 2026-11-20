@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from citylearn import random_streams
+
 pytest.importorskip("gymnasium")
 
 from citylearn.building import DynamicsBuilding
@@ -382,7 +384,8 @@ def test_reinstalled_charger_recovers_the_same_evolved_ev(tmp_path, seconds):
             assert ev not in env.electric_vehicles
             assert "Building_1/charger_1_1" not in env.entity_specs["actions"]["charger"]["ids"]
             expected = float(battery.soc[2])
-            mobility_rng = np.random.RandomState(np.random.SeedSequence([19, 1]).generate_state(1)[0])
+            # A suspended EV draws from its own stream; reset(seed=19) uses episode key 0.
+            mobility_rng = random_streams.generator(19, random_streams.EV_SUSPENDED_SOC_DRIFT, "electric_vehicle", ev.name, 0)
             retention = .96**(seconds/3600)
             for step in range(3, 6):
                 _step_until(env, step)
