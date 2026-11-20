@@ -29,9 +29,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff
 
-      - name: Lint (critical rules)
-        run: |
-          python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821,NPY201
+      - name: Lint (rules from pyproject.toml)
+        run: ruff check citylearn tests scripts/manual scripts/ci
 
   test:
     needs: lint

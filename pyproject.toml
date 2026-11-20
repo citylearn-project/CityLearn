@@ -54,3 +54,7 @@ dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools.packages.find]
 include = ["citylearn*"]
+
+[tool.ruff.lint]
+# Rule selection shared by local runs and CI: `ruff check citylearn tests scripts/manual scripts/ci`.
+select = ["E9", "F821", "NPY201"]

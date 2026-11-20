@@ -75,7 +75,7 @@ the comparison reports `incompatible` rather than a pair.
 | Fast subset (about one minute) | `.venv/bin/pytest -q tests/unit` |
 | Full test suite (several minutes; `-n 4` with pytest-xdist) | `.venv/bin/pytest -q` |
 | Example notebooks | `.venv/bin/python scripts/ci/run_notebooks.py` |
-| Critical lint | `.venv/bin/python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821` |
+| Lint (rules in `pyproject.toml`, as in CI) | `.venv/bin/python -m ruff check citylearn tests scripts/manual scripts/ci` |
 | Entity contract audit | `.venv/bin/python scripts/audit/audit_entity_contract.py --strict` |
 | Physics audit | `.venv/bin/python scripts/audit/audit_physics.py` |
 | Diff whitespace check | `git diff --check` |
