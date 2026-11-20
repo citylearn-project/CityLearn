@@ -227,7 +227,12 @@ def building_records(kpi: "CityLearnKPIService", building, t_start, t_end,
 
 def district_records(kpi: "CityLearnKPIService", legacy_building, control_condition,
                      baseline_condition, evaluation_condition_cls, simulated_days):
-    """Preserve district condition selection and legacy mean aggregation."""
+    """Return legacy district rows and the extended district totals.
+
+    The legacy district rows keep their mean-of-buildings aggregation and the
+    signed-net load factor; `evaluate_v2()` derives its district ratios from the
+    district totals instead.
+    """
     env = kpi.env
     get_net_electricity_consumption = lambda x, c: kpi._energy_values(x, getattr(x, f'net_electricity_consumption{c.value}'))
     get_net_electricity_consumption_cost = lambda x, c: kpi._energy_values(x, getattr(x, f'net_electricity_consumption_cost{c.value}'))
@@ -247,10 +252,18 @@ def district_records(kpi: "CityLearnKPIService", legacy_building, control_condit
     net_b_env_series = np.array(get_net_electricity_consumption(env, env_baseline_condition), dtype='float64')
     ramp_c = kpi._ramping_final(net_c_env_series)
     ramp_b = kpi._ramping_final(net_b_env_series)
-    dlf_daily_c = kpi._one_minus_load_factor_final(net_c_env_series, window=daily_steps)
-    dlf_daily_b = kpi._one_minus_load_factor_final(net_b_env_series, window=daily_steps)
-    dlf_monthly_c = kpi._one_minus_load_factor_final(net_c_env_series, window=monthly_steps)
-    dlf_monthly_b = kpi._one_minus_load_factor_final(net_b_env_series, window=monthly_steps)
+    # The legacy rows keep the signed-net load factor of 3.6.0; the v2 rows use import.
+    dlf_daily_c = kpi._one_minus_load_factor_final(net_c_env_series, window=daily_steps, signed_net=True)
+    dlf_daily_b = kpi._one_minus_load_factor_final(net_b_env_series, window=daily_steps, signed_net=True)
+    dlf_monthly_c = kpi._one_minus_load_factor_final(net_c_env_series, window=monthly_steps, signed_net=True)
+    dlf_monthly_b = kpi._one_minus_load_factor_final(net_b_env_series, window=monthly_steps, signed_net=True)
+    import_lf_ratios = {
+        name: kpi._safe_div(
+            kpi._one_minus_load_factor_final(net_c_env_series, window=window),
+            kpi._one_minus_load_factor_final(net_b_env_series, window=window),
+        )
+        for name, window in (('daily', daily_steps), ('monthly', monthly_steps))
+    }
     peak_daily_c = kpi._peak_final(net_c_env_series, window=daily_steps)
     peak_daily_b = kpi._peak_final(net_b_env_series, window=daily_steps)
     peak_all_c = kpi._peak_final(net_c_env_series, window=env.time_steps)
@@ -287,10 +300,14 @@ def district_records(kpi: "CityLearnKPIService", legacy_building, control_condit
     export_b_env = kpi._sum_finite(np.clip(-net_b_env_series, 0.0, None))
     zne_c_env = kpi._net_total(net_c_env_series)
     zne_b_env = kpi._net_total(net_b_env_series)
-    ce_c_env = kpi._positive_total(get_net_electricity_consumption_emission(env, env_control_condition))
-    ce_b_env = kpi._positive_total(get_net_electricity_consumption_emission(env, env_baseline_condition))
+    # District emissions are those of the netted district import; the sum of the
+    # members' own emissions (the definition up to 3.6.0) is kept as `member_sum`.
+    from citylearn.building import DynamicsBuilding
+    ce_c_env = kpi._sum_finite(kpi._district_netted_emissions(env_control_condition, dynamics_building_cls=DynamicsBuilding))
+    ce_b_env = kpi._sum_finite(kpi._district_netted_emissions(env_baseline_condition, dynamics_building_cls=DynamicsBuilding))
+    ce_c_member_sum = kpi._positive_total(get_net_electricity_consumption_emission(env, env_control_condition))
+    ce_b_member_sum = kpi._positive_total(get_net_electricity_consumption_emission(env, env_baseline_condition))
     if getattr(env, 'community_market_enabled', False):
-        from citylearn.building import DynamicsBuilding
         control_costs, baseline_costs = kpi._market_cost_series(
             control_condition, baseline_condition,
             evaluation_condition_cls=evaluation_condition_cls, dynamics_building_cls=DynamicsBuilding,
@@ -329,6 +346,10 @@ def district_records(kpi: "CityLearnKPIService", legacy_building, control_condit
         kpi._metric('carbon_emissions_control_daily_average_kgco2', kpi._daily_average(ce_c_env, simulated_days), 'District', 'district'),
         kpi._metric('carbon_emissions_baseline_daily_average_kgco2', kpi._daily_average(ce_b_env, simulated_days), 'District', 'district'),
         kpi._metric('carbon_emissions_delta_daily_average_kgco2', kpi._daily_average(ce_c_env - ce_b_env, simulated_days), 'District', 'district'),
+        kpi._metric('carbon_emissions_control_member_sum_total_kgco2', ce_c_member_sum, 'District', 'district'),
+        kpi._metric('carbon_emissions_baseline_member_sum_total_kgco2', ce_b_member_sum, 'District', 'district'),
+        kpi._metric('load_factor_penalty_daily_average_to_baseline_ratio', import_lf_ratios['daily'], 'District', 'district'),
+        kpi._metric('load_factor_penalty_monthly_average_to_baseline_ratio', import_lf_ratios['monthly'], 'District', 'district'),
         kpi._metric('cost_control_total_eur', cost_c_env_raw, 'District', 'district'),
         kpi._metric('cost_baseline_total_eur', cost_b_env_raw, 'District', 'district'),
         kpi._metric('cost_delta_total_eur', cost_c_env_raw - cost_b_env_raw, 'District', 'district'),

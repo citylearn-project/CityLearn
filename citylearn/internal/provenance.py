@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 DEFINITION_VERSION = '1.1'
-KPI_DEFINITION_VERSION = '1.9.0'
+KPI_DEFINITION_VERSION = '2.0.0'
 EPS = 1e-10
 
 

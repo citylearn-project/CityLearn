@@ -580,13 +580,35 @@ class MultiCommunityEnv(Env):
         district["numeric_value"] = pd.to_numeric(district.get("value"), errors="coerce")
         rows: List[Dict[str, Any]] = []
         total_ratios = CityLearnKPIService.total_ratio_components("district")
+        pooled_means = CityLearnKPIService.pooled_mean_components("district")
+        pooled_comparisons = CityLearnKPIService.pooled_mean_business_as_usual_comparisons("district")
+        pooled_mean_values = {
+            metric: self._pooled_mean(district, metric, weights)
+            for metric, weights in pooled_means.items()
+        }
 
         for cost_function, group in district.groupby("cost_function", sort=True):
             metric = str(cost_function)
             aggregate: Optional[float]
 
             if metric in total_ratios:
-                aggregate = self._pooled_ratio(district, *total_ratios[metric])
+                aggregate = self._pooled_ratio(
+                    district, *total_ratios[metric],
+                    zero_over_zero=CityLearnKPIService.ratio_zero_over_zero(metric),
+                )
+            elif metric in pooled_means:
+                aggregate = pooled_mean_values[metric]
+            elif metric in pooled_comparisons:
+                control_name, reference_name, operation = pooled_comparisons[metric]
+                control = pooled_mean_values.get(control_name, np.nan)
+                reference = pooled_mean_values.get(reference_name, np.nan)
+                if operation == "delta":
+                    aggregate = float(control - reference) if np.isfinite(control) and np.isfinite(reference) else np.nan
+                else:
+                    value = CityLearnKPIService._safe_div(
+                        control, reference, zero_over_zero=CityLearnKPIService.ratio_zero_over_zero(metric),
+                    )
+                    aggregate = np.nan if value is None else float(value)
             elif metric.endswith(self._SUM_SUFFIXES):
                 values = group["numeric_value"].dropna()
                 if values.empty:
@@ -611,7 +633,36 @@ class MultiCommunityEnv(Env):
         return pd.DataFrame(rows, columns=list(local.columns))
 
     @staticmethod
-    def _pooled_ratio(district: pd.DataFrame, control_name: str, reference_name: str, signed: bool) -> float:
+    def _pooled_mean(district: pd.DataFrame, metric: str, weight_names: Sequence[str]) -> float:
+        """Mean of community values weighted by their additive denominators.
+
+        Equals the ratio of the pooled numerator and denominator. Communities
+        whose value is undefined carry no weight; NaN when none has weight.
+        """
+
+        def values(name: str) -> pd.Series:
+            rows = district[district["cost_function"] == name]
+            return rows.set_index("community_id")["numeric_value"]
+
+        frame = pd.concat(
+            [values(metric)] + [values(name) for name in weight_names],
+            axis=1, keys=["value", *range(len(weight_names))], join="inner",
+        )
+        if frame.empty:
+            return np.nan
+
+        weights = frame.drop(columns="value").fillna(0.0).sum(axis=1)
+        valid = np.isfinite(frame["value"]) & (weights > 0.0)
+        if not valid.any():
+            return np.nan
+
+        return float((frame.loc[valid, "value"]*weights[valid]).sum()/weights[valid].sum())
+
+    @staticmethod
+    def _pooled_ratio(
+        district: pd.DataFrame, control_name: str, reference_name: str, signed: bool,
+        zero_over_zero: Optional[float] = 1.0,
+    ) -> float:
         """Ratio of control and reference totals summed over communities that report both."""
 
         def totals(name: str) -> pd.Series:
@@ -625,8 +676,11 @@ class MultiCommunityEnv(Env):
         if paired.empty:
             return np.nan
 
-        ratio = CityLearnKPIService._signed_ratio if signed else CityLearnKPIService._safe_div
-        value = ratio(float(paired["control"].sum()), float(paired["reference"].sum()))
+        control, reference = float(paired["control"].sum()), float(paired["reference"].sum())
+        if signed:
+            value = CityLearnKPIService._signed_ratio(control, reference)
+        else:
+            value = CityLearnKPIService._safe_div(control, reference, zero_over_zero=zero_over_zero)
         return np.nan if value is None else float(value)
 
     def _weighted_mean(self, group: pd.DataFrame) -> Optional[float]:

@@ -63,6 +63,7 @@ District KPIs are all `district_*`.
 - `district_energy_grid_daily_average_import_baseline_kwh`
 - `district_energy_grid_daily_average_import_delta_kwh`
 - `district_energy_grid_ratio_to_baseline_import_total_ratio`
+- `district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio` (3.6.0 definition: mean of the building ratios)
 
 - `district_energy_grid_total_export_control_kwh`
 - `district_energy_grid_total_export_baseline_kwh`
@@ -79,11 +80,14 @@ District KPIs are all `district_*`.
 - `district_energy_grid_daily_average_net_exchange_baseline_kwh`
 - `district_energy_grid_daily_average_net_exchange_delta_kwh`
 - `district_energy_grid_ratio_to_baseline_net_exchange_total_ratio`
+- `district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio` (3.6.0 definition)
 
 Shape/quality:
 - `district_energy_grid_shape_quality_ramping_average_to_baseline_ratio`
 - `district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_ratio`
 - `district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_ratio`
+- `district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_baseline_signed_net_ratio` (3.6.0 definition, on the signed net series)
+- `district_energy_grid_shape_quality_load_factor_penalty_monthly_average_to_baseline_signed_net_ratio` (3.6.0 definition)
 - `district_energy_grid_shape_quality_peak_daily_average_to_baseline_ratio`
 - `district_energy_grid_shape_quality_peak_all_time_average_to_baseline_ratio`
 
@@ -99,6 +103,9 @@ Community market (conditional):
 - `district_emissions_daily_average_baseline_kgco2`
 - `district_emissions_daily_average_delta_kgco2`
 - `district_emissions_ratio_to_baseline_total_ratio`
+- `district_emissions_total_control_member_sum_kgco2` (3.6.0 definition: sum of the members' emissions)
+- `district_emissions_total_baseline_member_sum_kgco2` (3.6.0 definition)
+- `district_emissions_ratio_to_baseline_total_building_mean_ratio` (3.6.0 definition)
 
 ### `solar_self_consumption`
 - `district_solar_self_consumption_total_generation_kwh`
@@ -242,6 +249,10 @@ values, control-minus-BAU differences and ratios. Examples:
 - `district_battery_total_throughput_business_as_usual_kwh`
 - `district_solar_self_consumption_ratio_self_consumption_business_as_usual_ratio`
 - `district_energy_grid_shape_quality_peak_daily_average_to_business_as_usual_ratio`
+- `district_energy_grid_shape_quality_ramping_average_business_as_usual_kw` (mean upward ramp per step)
+- `district_energy_grid_shape_quality_ramping_total_business_as_usual_kw` (3.6.0 value of `ramping_average`: sum over the episode)
+- `district_energy_grid_shape_quality_load_factor_penalty_daily_average_signed_net_business_as_usual_ratio` (3.6.0 definition)
+- `district_emissions_total_business_as_usual_member_sum_kgco2` (3.6.0 definition)
 
 Building rows use the same reference convention for their supported metrics.
 The [scorecard](scorecard.md#two-different-baselines) explains how this differs
@@ -265,6 +276,7 @@ Main pattern examples:
 - `building_ev_events_departure_target_infeasible_count`
 - `building_ev_performance_departure_min_acceptable_feasible_ratio`
 - `building_demand_response_net_revenue_total_eur`
+- `building_demand_response_uncapped_contribution_total_kwh` (diagnostic; not additive)
 
 ---
 
