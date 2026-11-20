@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, 
 import numpy as np
 import pandas as pd
 
+from citylearn.internal.histories import default_history
 from citylearn.utilities import parse_bool
 
 if TYPE_CHECKING:
@@ -595,7 +596,9 @@ class CityLearnDemandResponseService:
 
     def _current_district_power_kw(self, time_step: int) -> float:
         try:
-            energy = float(self.env.net_electricity_consumption[time_step])
+            # The history indexes the buffer; fall back to the public getter when overridden.
+            series = default_history(self.env, 'net_electricity_consumption')
+            energy = float((self.env.net_electricity_consumption if series is None else series)[time_step])
         except Exception:
             energy = 0.0
         return energy / self._step_hours()

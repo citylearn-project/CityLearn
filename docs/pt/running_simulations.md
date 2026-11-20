@@ -180,6 +180,26 @@ gamma_macro = gamma ** info["executed_steps"]
 
 Quando `return_substeps=True`, o `info` tambem inclui `substep_rewards`, `substep_infos` e `substep_actions_applied` para debug. Manter desligado em treinos longos.
 
+## Leitura dos Últimos Valores por Passo vs Históricos Completos
+
+O `CityLearnEnv` guarda os rewards do episódio e as três séries agregadas do distrito em buffers `float64` pré-alocados. O acesso às propriedades de lista completa (`env.rewards`, `env.net_electricity_consumption`, `env.net_electricity_consumption_cost`, `env.net_electricity_consumption_emission`) materializa uma `list` Python na primeira leitura, acrescenta apenas os novos passos em `O(1)` por passo e desliga a cache antes de qualquer edição in-place, para que ciclos existentes com `[-1]` continuem lineares e isolados.
+
+Para evitar alocar essas listas públicas em paralelo aos buffers `float64` durante a simulação, leia diretamente as propriedades do último valor:
+
+| Lista completa (vista `list` incremental) | Último valor do passo (`O(1)`, sem alocar a lista completa) |
+|---|---|
+| `env.rewards` | `env.last_rewards` |
+| `env.net_electricity_consumption` | `env.last_net_electricity_consumption` |
+| `env.net_electricity_consumption_cost` | `env.last_net_electricity_consumption_cost` |
+| `env.net_electricity_consumption_emission` | `env.last_net_electricity_consumption_emission` |
+
+```python
+latest_reward_row = env.last_rewards
+latest_net_kwh = env.last_net_electricity_consumption
+latest_cost_eur = env.last_net_electricity_consumption_cost
+latest_emission_kgco2 = env.last_net_electricity_consumption_emission
+```
+
 ## CLI
 
 Os comandos de listagem e o agente por omissão da CLI, o `BusinessAsUsualAgent`,

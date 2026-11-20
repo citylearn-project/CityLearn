@@ -234,9 +234,9 @@ def district_records(kpi: "CityLearnKPIService", legacy_building, control_condit
     district totals instead.
     """
     env = kpi.env
-    get_net_electricity_consumption = lambda x, c: kpi._energy_values(x, getattr(x, f'net_electricity_consumption{c.value}'))
-    get_net_electricity_consumption_cost = lambda x, c: kpi._energy_values(x, getattr(x, f'net_electricity_consumption_cost{c.value}'))
-    get_net_electricity_consumption_emission = lambda x, c: kpi._energy_values(x, getattr(x, f'net_electricity_consumption_emission{c.value}'))
+    get_net_electricity_consumption = lambda x, c: kpi._energy_values(x, kpi._series_array(x, 'net_electricity_consumption', c.value))
+    get_net_electricity_consumption_cost = lambda x, c: kpi._energy_values(x, kpi._series_array(x, 'net_electricity_consumption_cost', c.value))
+    get_net_electricity_consumption_emission = lambda x, c: kpi._energy_values(x, kpi._series_array(x, 'net_electricity_consumption_emission', c.value))
     daily_steps = kpi._window_steps(24.0 * 3600.0, env.seconds_per_time_step)
     monthly_steps = kpi._window_steps(730.0 * 3600.0, env.seconds_per_time_step)
     env_control_condition = (

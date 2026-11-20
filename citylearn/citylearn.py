@@ -5,7 +5,7 @@ import importlib
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Mapping, Tuple, Union
+from typing import TYPE_CHECKING, Any, List, Mapping, Optional, Tuple, Union
 from gymnasium import Env, spaces
 import datetime
 import difflib
@@ -38,6 +38,7 @@ from citylearn.internal.physics_invariants import CityLearnPhysicsInvariantServi
 from citylearn.internal.provenance import CityLearnProvenanceService
 from citylearn.internal.runtime import CityLearnRuntimeService
 from citylearn.internal.entity_interface import CityLearnEntityInterfaceService
+from citylearn.internal.histories import RowHistory, ScalarHistory, _copy_row, default_history
 from citylearn.internal.topology import CityLearnTopologyService
 from citylearn.internal.demand_response import CityLearnDemandResponseService
 from citylearn.internal.robustness import CityLearnRobustnessService
@@ -410,7 +411,10 @@ class CityLearnEnv(Environment, Env):
         self.year = self._render_start_date.year
         self._final_kpis_exported = False
         self._final_export_episode_index = None
-        self.__rewards = None
+        self._rewards_history = None
+        self._net_electricity_consumption_history = None
+        self._net_electricity_consumption_cost_history = None
+        self._net_electricity_consumption_emission_history = None
         self.buildings = []
         # Set before the seed and the buildings, which draw from streams of this version.
         self._set_random_stream(random_streams.parse_random_stream_version(
@@ -705,9 +709,29 @@ class CityLearnEnv(Environment, Env):
 
     @property
     def rewards(self) -> List[List[float]]:
-        """Reward time series"""
+        """Reward time series, one list per executed step after the leading empty list.
 
-        return self.__rewards
+        Stored in a preallocated float64 buffer; the public ``list`` view is materialized lazily and
+        extended incrementally per step while detaching before any in-place edit so caller changes never
+        alter stored history. Use :attr:`last_rewards` during a rollout to read only the latest row
+        without allocating the public list.
+        """
+
+        return None if self._rewards_history is None else self._rewards_history.to_list()
+
+    @property
+    def last_rewards(self) -> Optional[List[float]]:
+        """Latest entry of :attr:`rewards` (``[]`` after :meth:`reset`, then the most recent step's reward list).
+
+        Reads only the latest row in time independent of episode length, without building :attr:`rewards`.
+        """
+
+        history = default_history(self, 'rewards')
+        if history is not None:
+            return history.last()
+
+        series = self.rewards
+        return None if series is None or len(series) == 0 else _copy_row(series[-1])
 
     @property
     def episode_rewards(self) -> List[Mapping[str, Union[float, List[float]]]]:
@@ -1123,21 +1147,69 @@ class CityLearnEnv(Environment, Env):
 
     @property
     def net_electricity_consumption_emission(self) -> List[float]:
-        """Summed `Building.net_electricity_consumption_emission` time series, in [kg_co2]."""
+        """Summed `Building.net_electricity_consumption_emission` time series, in [kg_co2].
 
-        return self.__net_electricity_consumption_emission
+        Materialized lazily and extended incrementally per step while detaching on mutation; use
+        :attr:`last_net_electricity_consumption_emission` during a rollout to read only the latest
+        value without allocating the public list.
+        """
+
+        return None if self._net_electricity_consumption_emission_history is None else self._net_electricity_consumption_emission_history.to_list()
+
+    @property
+    def last_net_electricity_consumption_emission(self) -> Optional[float]:
+        """Latest entry of :attr:`net_electricity_consumption_emission`, in [kg_co2], read in O(1) time."""
+
+        history = default_history(self, 'net_electricity_consumption_emission')
+        if history is not None:
+            return history.last()
+
+        series = self.net_electricity_consumption_emission
+        return None if series is None or len(series) == 0 else series[-1]
 
     @property
     def net_electricity_consumption_cost(self) -> List[float]:
-        """Summed `Building.net_electricity_consumption_cost` time series, in [$]."""
+        """Summed `Building.net_electricity_consumption_cost` time series, in [$].
 
-        return self.__net_electricity_consumption_cost
+        Materialized lazily and extended incrementally per step while detaching on mutation; use
+        :attr:`last_net_electricity_consumption_cost` during a rollout to read only the latest value
+        without allocating the public list.
+        """
+
+        return None if self._net_electricity_consumption_cost_history is None else self._net_electricity_consumption_cost_history.to_list()
+
+    @property
+    def last_net_electricity_consumption_cost(self) -> Optional[float]:
+        """Latest entry of :attr:`net_electricity_consumption_cost`, in [$], read in O(1) time."""
+
+        history = default_history(self, 'net_electricity_consumption_cost')
+        if history is not None:
+            return history.last()
+
+        series = self.net_electricity_consumption_cost
+        return None if series is None or len(series) == 0 else series[-1]
 
     @property
     def net_electricity_consumption(self) -> List[float]:
-        """Summed `Building.net_electricity_consumption` time series, in [kWh]."""
+        """Summed `Building.net_electricity_consumption` time series, in [kWh].
 
-        return self.__net_electricity_consumption
+        Materialized lazily and extended incrementally per step while detaching on mutation; use
+        :attr:`last_net_electricity_consumption` during a rollout to read only the latest value
+        without allocating the public list.
+        """
+
+        return None if self._net_electricity_consumption_history is None else self._net_electricity_consumption_history.to_list()
+
+    @property
+    def last_net_electricity_consumption(self) -> Optional[float]:
+        """Latest entry of :attr:`net_electricity_consumption`, in [kWh], read in O(1) time."""
+
+        history = default_history(self, 'net_electricity_consumption')
+        if history is not None:
+            return history.last()
+
+        series = self.net_electricity_consumption
+        return None if series is None or len(series) == 0 else series[-1]
 
     def _sum_building_series(self, attribute: str) -> np.ndarray:
         """Sum a building series over the members of the district at each step.
@@ -1657,7 +1729,17 @@ class CityLearnEnv(Environment, Env):
         if self.time_step % interval != 0 and not self.terminated:
             return
 
-        idx = min(self.time_step - 1, len(self.__net_electricity_consumption) - 1)
+        net_series = default_history(self, 'net_electricity_consumption')
+        if net_series is None:
+            net_series = self.net_electricity_consumption or ()
+        cost_series = default_history(self, 'net_electricity_consumption_cost')
+        if cost_series is None:
+            cost_series = self.net_electricity_consumption_cost or ()
+        emission_series = default_history(self, 'net_electricity_consumption_emission')
+        if emission_series is None:
+            emission_series = self.net_electricity_consumption_emission or ()
+
+        idx = min(self.time_step - 1, len(net_series) - 1)
 
         if idx < 0:
             return
@@ -1667,9 +1749,9 @@ class CityLearnEnv(Environment, Env):
             self.episode_tracker.episode,
             self.time_step,
             self.time_steps - 1,
-            float(self.__net_electricity_consumption[idx]),
-            float(self.__net_electricity_consumption_cost[idx]),
-            float(self.__net_electricity_consumption_emission[idx]),
+            float(net_series[idx]),
+            float(cost_series[idx]),
+            float(emission_series[idx]),
         )
 
     def _parse_actions(self, actions: Any) -> List[Mapping[str, float]]:
@@ -2003,10 +2085,12 @@ class CityLearnEnv(Environment, Env):
         self.reward_function.reset()
 
         # variable reset
-        self.__rewards = [[]]
-        self.__net_electricity_consumption = []
-        self.__net_electricity_consumption_cost = []
-        self.__net_electricity_consumption_emission = []
+        # Histories are preallocated for the episode; they grow by doubling if a run exceeds it.
+        self._rewards_history = RowHistory(self.time_steps + 1)
+        self._rewards_history.append([])
+        self._net_electricity_consumption_history = ScalarHistory(self.time_steps)
+        self._net_electricity_consumption_cost_history = ScalarHistory(self.time_steps)
+        self._net_electricity_consumption_emission_history = ScalarHistory(self.time_steps)
         self._last_community_market_settlement = []
         self._community_market_settlement_history = MarketSettlementHistory()
         self._observations_cache = None
@@ -2225,10 +2309,20 @@ class CityLearnEnv(Environment, Env):
         dict
             Dictionary with energy and environmental metrics for the current step.
         """
-        if len(self.net_electricity_consumption) == 0:
+        net_series = default_history(self, 'net_electricity_consumption')
+        if net_series is None:
+            net_series = self.net_electricity_consumption or ()
+        emission_series = default_history(self, 'net_electricity_consumption_emission')
+        if emission_series is None:
+            emission_series = self.net_electricity_consumption_emission or ()
+        cost_series = default_history(self, 'net_electricity_consumption_cost')
+        if cost_series is None:
+            cost_series = self.net_electricity_consumption_cost or ()
+
+        if len(net_series) == 0:
             idx = 0
         else:
-            idx = max(0, min(self.time_step, len(self.net_electricity_consumption) - 1))
+            idx = max(0, min(self.time_step, len(net_series) - 1))
 
         def _safe_value(series, index: int) -> float:
             return float(series[index]) if 0 <= index < len(series) else 0.0
@@ -2248,12 +2342,12 @@ class CityLearnEnv(Environment, Env):
             total_solar_generation += _safe_value(building.solar_generation, idx)
 
         return {
-            "Net Electricity Consumption-kWh": _safe_value(self.net_electricity_consumption, idx),
+            "Net Electricity Consumption-kWh": _safe_value(net_series, idx),
             "Self Consumption-kWh": self_consumption,
             "Stored energy by community- kWh": stored_energy,
             "Total Solar Generation-kWh": total_solar_generation,
-            "CO2-kg_co2": _safe_value(self.net_electricity_consumption_emission, idx),
-            "Price-$": _safe_value(self.net_electricity_consumption_cost, idx),
+            "CO2-kg_co2": _safe_value(emission_series, idx),
+            "Price-$": _safe_value(cost_series, idx),
         }
 def _unknown_dataset_message(name: str, dataset_names: List[str]) -> str:
     """Name the closest dataset names for a schema string that is neither a dataset name nor a file."""

@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Mapping, Optional, TYPE_CHECKING, Union
 
 import numpy as np
 
+from citylearn.internal.histories import default_history
+
 if TYPE_CHECKING:
     import pandas as pd
 
@@ -327,13 +329,26 @@ class EpisodeExporter:
                 for building in self._buildings_for_time_step(time_step, baseline_env)
             ]
 
+        net_series = default_history(baseline_env, 'net_electricity_consumption')
+        cost_series = default_history(baseline_env, 'net_electricity_consumption_cost')
+        emission_series = default_history(baseline_env, 'net_electricity_consumption_emission')
+
         return {
             'time_step': time_step,
             'name': 'District',
             'level': 'district',
-            'net_electricity_consumption_kwh': self._series_value(baseline_env.net_electricity_consumption, time_step),
-            'net_electricity_consumption_cost': self._series_value(baseline_env.net_electricity_consumption_cost, time_step),
-            'net_electricity_consumption_emission_kgco2': self._series_value(baseline_env.net_electricity_consumption_emission, time_step),
+            'net_electricity_consumption_kwh': self._series_value(
+                baseline_env.net_electricity_consumption if net_series is None else net_series,
+                time_step,
+            ),
+            'net_electricity_consumption_cost': self._series_value(
+                baseline_env.net_electricity_consumption_cost if cost_series is None else cost_series,
+                time_step,
+            ),
+            'net_electricity_consumption_emission_kgco2': self._series_value(
+                baseline_env.net_electricity_consumption_emission if emission_series is None else emission_series,
+                time_step,
+            ),
             'solar_generation_kwh': sum(row['solar_generation_kwh'] for row in rows),
             'bess_electricity_consumption_kwh': sum(row['bess_electricity_consumption_kwh'] for row in rows),
             'bess_soc': '',
