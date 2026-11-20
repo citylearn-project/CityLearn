@@ -169,6 +169,12 @@
 <span class="sd">    ----------------</span>
 <span class="sd">    **kwargs: Any</span>
 <span class="sd">        Other keyword arguments used to initialize :py:class:`citylearn.agents.base.Agent` super class.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Random exploration actions, and the fallback action for observations whose Q-values are all still NaN, are</span>
+<span class="sd">    sampled from the action spaces. Spaces that are not already seeded are seeded from :attr:`random_seed`, the</span>
+<span class="sd">    environment's seed, so runs with the same seed are repeatable.</span>
 <span class="sd">    """</span>
     
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -184,6 +190,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="k">if</span> <span class="n">learning_rate</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">learning_rate</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">discount_factor</span> <span class="o">=</span> <span class="mf">0.90</span> <span class="k">if</span> <span class="n">discount_factor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">discount_factor</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">q_init_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">q_init_value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">q_init_value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_seed_action_spaces</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_exploration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_exploitation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__initialize_q</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__explored</span> <span class="o">=</span> <span class="kc">False</span>
 

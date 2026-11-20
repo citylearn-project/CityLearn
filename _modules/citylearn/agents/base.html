@@ -497,6 +497,28 @@
         <span class="k">pass</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">key</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Seed of one of the agent's random streams, derived from :attr:`random_seed` and `key`.</span>
+
+<span class="sd">        Keys in use: ``(0, i)`` for action space ``i`` (see :meth:`_seed_action_spaces`), ``(1, i)`` for the SAC</span>
+<span class="sd">        replay buffer of action space ``i``, ``(2,)`` for the SAC policy noise and ``(3, i)`` for the MARLISA PCA of</span>
+<span class="sd">        action space ``i``.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">),</span> <span class="n">spawn_key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">generate_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_seed_action_spaces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Seed the action spaces that exploration samples from, unless they are already seeded.</span>
+
+<span class="sd">        An unseeded gymnasium space seeds itself from OS entropy on first use, so its samples would differ between</span>
+<span class="sd">        runs with the same :attr:`random_seed`. Space ``i`` is seeded with :meth:`_get_seed` ``(0, i)``. Spaces the</span>
+<span class="sd">        caller has seeded keep their stream.</span>
+<span class="sd">        """</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">space</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="s1">'_np_random'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">space</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_seed</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+
 <div class="viewcode-block" id="Agent.episode_random_generator">
 <a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.Agent.episode_random_generator">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">episode_random_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">:</span>
