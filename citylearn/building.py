@@ -1,17 +1,15 @@
 import logging
 import warnings
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 from gymnasium import spaces
 import numpy as np
 from citylearn.internal.scalars import as_float, clip_scalar
 import pandas as pd
-try:
-    import torch
-except ImportError:  # pragma: no cover - optional dependency for LSTM dynamics only
-    torch = None
 from citylearn.base import Environment, EpisodeTracker
 from citylearn.data import CarbonIntensity, EnergySimulation, Pricing, TOLERANCE, Weather, ZERO_DIVISION_PLACEHOLDER
-from citylearn.dynamics import Dynamics, LSTMDynamics
+if TYPE_CHECKING:
+    # citylearn.dynamics imports torch, which only the LSTM dynamics need: import it when a schema uses them.
+    from citylearn.dynamics import Dynamics, LSTMDynamics
 from citylearn.electric_vehicle_charger import Charger
 from citylearn.energy_model import (
     Battery, DeferrableAppliance, ElectricDevice, ElectricHeater, Escalator, HeatPump, PLACEHOLDER_DEVICE_RANDOM_SEED, PV,
@@ -3388,7 +3386,7 @@ class DynamicsBuilding(Building):
     ----------
     *args: Any
         Positional arguments in :py:class:`citylearn.building.Building`.
-    dynamics: Dynamics
+    dynamics: 'Dynamics'
         Indoor dry-bulb temperature dynamics model.
     ignore_dynamics: bool, default: False
         Wether to simulate temperature dynamics at any time step.
@@ -3399,7 +3397,7 @@ class DynamicsBuilding(Building):
         Other keyword arguments used to initialize :py:class:`citylearn.building.Building` super class.
     """
 
-    def __init__(self, *args: Any, dynamics: Dynamics, ignore_dynamics: bool = None, **kwargs: Any):
+    def __init__(self, *args: Any, dynamics: 'Dynamics', ignore_dynamics: bool = None, **kwargs: Any):
         """Intialize `DynamicsBuilding`"""
 
         self.dynamics = dynamics
@@ -3575,7 +3573,7 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
     ----------
     *args: Any
         Positional arguments in :py:class:`citylearn.building.Building`.
-    dynamics: Dynamics
+    dynamics: 'Dynamics'
         Indoor dry-bulb temperature dynamics model.
 
     Other Parameters
@@ -3584,9 +3582,9 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
         Other keyword arguments used to initialize :py:class:`citylearn.building.Building` super class.
     """
 
-    def __init__(self, *args, dynamics: LSTMDynamics, **kwargs):
+    def __init__(self, *args, dynamics: 'LSTMDynamics', **kwargs):
         super().__init__(*args, dynamics=dynamics, **kwargs)
-        self.dynamics: LSTMDynamics
+        self.dynamics: 'LSTMDynamics'
 
     @DynamicsBuilding.simulate_dynamics.getter
     def simulate_dynamics(self) -> bool:
@@ -3612,8 +3610,10 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
         or heating demand at each `time_step`.
         """
 
-        if torch is None:
-            raise ImportError('torch is required to use LSTMDynamicsBuilding.')
+        try:
+            import torch
+        except ImportError as error:  # pragma: no cover - optional dependency for LSTM dynamics only
+            raise ImportError('torch is required to use LSTMDynamicsBuilding.') from error
 
         # predict
         model_input_tensor = torch.tensor(self.get_dynamics_input().T)

@@ -3,6 +3,7 @@
 import datetime
 import hashlib
 import math
+import time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 import numpy as np
@@ -41,6 +42,34 @@ def signature(path):
     return (s.st_size, s.st_mtime_ns, s.st_ino)
 
 
+# Digests of input files already hashed in this process, by resolved path. Every construction (and every
+# business-as-usual reference) snapshots the same files, so each is read once while it stays unchanged.
+_DIGEST_CACHE = {}
+# A file written this recently could change again within the same timestamp tick without changing its
+# stat fields, so it is always hashed (the "racily clean" rule git applies to its index).
+_DIGEST_CACHE_MIN_AGE_NS = 2_000_000_000
+
+
+def _cache_key(path):
+    s = Path(path).stat()
+    return (s.st_size, s.st_mtime_ns, s.st_ctime_ns, s.st_ino, s.st_dev)
+
+
+def cached_sha256(path):
+    """SHA-256 of `path`, reused while its size, times, inode and device are unchanged."""
+
+    resolved = str(Path(path).resolve())
+    key = _cache_key(resolved)
+    hit = _DIGEST_CACHE.get(resolved)
+    if hit is not None and hit[0] == key:
+        return hit[1]
+    digest = sha256(resolved)
+    newest = max(key[1], key[2])
+    if _cache_key(resolved) == key and time.time_ns() - newest >= _DIGEST_CACHE_MIN_AGE_NS:
+        _DIGEST_CACHE[resolved] = (key, digest)
+    return digest
+
+
 def snapshot_inputs(schema):
     root = Path(schema.get("root_directory") or ".").resolve()
     files = {}
@@ -57,7 +86,7 @@ def snapshot_inputs(schema):
             path = path if path.is_absolute() else root / path
             if path.is_file():
                 before = signature(path)
-                digest = sha256(path)
+                digest = cached_sha256(path)
                 if signature(path) != before:
                     raise RuntimeError("Input changed during snapshot: " + str(path))
                 files[value] = dict(

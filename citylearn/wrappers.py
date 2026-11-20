@@ -1,4 +1,5 @@
 import itertools
+from collections.abc import Sequence
 from typing import Any, List, Mapping, Tuple
 from gymnasium import ActionWrapper, Env, ObservationWrapper, RewardWrapper, spaces, Wrapper
 import numpy as np
@@ -11,6 +12,106 @@ except (ModuleNotFoundError, ImportError) as e:
 
 from citylearn.citylearn import CityLearnEnv
 from citylearn.building import Building
+
+
+def _observation_space_key(env: CityLearnEnv) -> Tuple[Any, ...]:
+    """What the flat observation spaces derived by the wrappers depend on: the buildings and their active observations."""
+
+    return (
+        bool(env.central_agent),
+        tuple(env.shared_observations),
+        tuple((id(b), tuple(b.active_observations)) for b in env.buildings),
+    )
+
+
+class DiscreteCombinations(Sequence):
+    """All combinations of discrete values, in `itertools.product` order, without materializing them.
+
+    Indexing and :py:meth:`index` map between a combination and its position with
+    :py:func:`numpy.unravel_index` and :py:func:`numpy.ravel_multi_index`, which follow the same order.
+
+    Parameters
+    ----------
+    sizes: List[int]
+        Number of values of each discrete dimension.
+    """
+
+    def __init__(self, sizes: List[int]):
+        self.sizes = tuple(int(n) for n in sizes)
+        self.__length = int(np.prod(self.sizes, dtype=object)) if self.sizes else 1
+
+    def __len__(self) -> int:
+        return self.__length
+
+    def __getitem__(self, position: int) -> Tuple[int, ...]:
+        position = int(position)
+
+        if position < 0:
+            position += len(self)
+
+        if not 0 <= position < len(self):
+            raise IndexError('combination index out of range')
+
+        if not self.sizes:
+            return ()
+
+        return tuple(int(v) for v in np.unravel_index(position, self.sizes))
+
+    def __iter__(self):
+        return itertools.product(*[range(n) for n in self.sizes])
+
+    def __contains__(self, combination) -> bool:
+        try:
+            self.index(combination)
+        except ValueError:
+            return False
+
+        return True
+
+    def index(self, combination, *args) -> int:
+        """Position of `combination`, as `list.index` returns it."""
+
+        if args:
+            raise TypeError('DiscreteCombinations.index does not take start or stop arguments.')
+
+        try:
+            values = tuple(combination)
+        except TypeError:
+            raise ValueError(f'{combination!r} is not in combinations') from None
+
+        positions = []
+
+        for v, n in zip(values, self.sizes):
+            try:
+                p = int(v)
+            except (TypeError, ValueError, OverflowError):
+                raise ValueError(f'{values!r} is not in combinations') from None
+
+            # Same membership as the list of tuples: equal values match, e.g. 2.0 matches 2.
+            if p != v or not 0 <= p < n:
+                raise ValueError(f'{values!r} is not in combinations')
+
+            positions.append(p)
+
+        if len(values) != len(self.sizes):
+            raise ValueError(f'{values!r} is not in combinations')
+
+        if not self.sizes:
+            return 0
+
+        return int(np.ravel_multi_index(tuple(positions), self.sizes))
+
+    def count(self, combination) -> int:
+        return int(combination in self)
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, DiscreteCombinations):
+            return self.sizes == other.sizes
+
+        return NotImplemented
+
+    def __repr__(self) -> str:
+        return f'DiscreteCombinations({list(self.sizes)})'
 
 class ClippedObservationWrapper(ObservationWrapper):
     """Wrapper for observations min-max and periodic normalization.
@@ -108,8 +209,23 @@ class NormalizedObservationWrapper(ObservationWrapper):
 
     @property
     def observation_space(self) -> List[spaces.Box]:
-        """Returns observation space for normalized observations."""
+        """Returns observation space for normalized observations.
 
+        The space is cached: estimating it reads every building's data window, which is too slow to repeat each
+        step. Normalized limits are always 0 and 1, so the space only changes with the building set and the active
+        observations, which form the cache key.
+        """
+
+        key = _observation_space_key(self.env.unwrapped)
+        cache = self.__dict__.get('_normalized_observation_space_cache')
+
+        if cache is None or cache[0] != key:
+            cache = (key, self._estimate_normalized_observation_space())
+            self._normalized_observation_space_cache = cache
+
+        return list(cache[1])
+
+    def _estimate_normalized_observation_space(self) -> List[spaces.Box]:
         low_limit = []
         high_limit = []
 
@@ -326,6 +442,40 @@ class DiscreteObservationWrapper(ObservationWrapper):
     def observation_space(self) -> List[spaces.MultiDiscrete]:
         """Returns observation space for discretized observations."""
 
+        return list(self._discrete_observation_space())
+
+    def _discrete_observation_space(self) -> List[spaces.MultiDiscrete]:
+        # The discrete space depends only on the bin sizes and the agent layout.
+        key = (bool(self.env.unwrapped.central_agent), tuple(tuple(b.items()) for b in self.bin_sizes))
+        cache = self.__dict__.get('_discrete_observation_space_cache')
+
+        if cache is None or cache[0] != key:
+            cache = (key, self._build_observation_space())
+            self._discrete_observation_space_cache = cache
+
+        return cache[1]
+
+    def _bin_edges(self) -> List[List[Tuple[np.ndarray, int]]]:
+        # Bin edges for every observation, rebuilt only when the wrapped limits or the bin sizes change.
+        wrapped_space = self.env.observation_space
+        discrete_space = self._discrete_observation_space()
+        key = (
+            self._discrete_observation_space_cache[0],
+            tuple((cs.low.tobytes(), cs.high.tobytes()) for cs in wrapped_space),
+        )
+        cache = self.__dict__.get('_bin_edges_cache')
+
+        if cache is None or cache[0] != key:
+            edges = [
+                [(np.linspace(ll, hl, b.n), b.n) for ll, hl, b in zip(cs.low, cs.high, ds)]
+                for cs, ds in zip(wrapped_space, discrete_space)
+            ]
+            cache = (key, edges)
+            self._bin_edges_cache = cache
+
+        return cache[1]
+
+    def _build_observation_space(self) -> List[spaces.MultiDiscrete]:
         if self.env.unwrapped.central_agent:
             bin_sizes = []
             shared_observations = []
@@ -356,12 +506,12 @@ class DiscreteObservationWrapper(ObservationWrapper):
 
         transformed_observations = []
 
-        for i, (cs, ds) in enumerate(zip(self.env.observation_space, self.observation_space)):
+        for i, building_bins in enumerate(self._bin_edges()):
             transformed_observations_ = []
 
-            for j, (ll, hl, b) in enumerate(zip(cs.low, cs.high, ds)):
-                # Values above the space's high would get bin b.n, outside MultiDiscrete(b.n): use the top bin.
-                o = min(np.digitize(observations[i][j], np.linspace(ll, hl, b.n), right=True), b.n - 1)
+            for j, (edges, n) in enumerate(building_bins):
+                # Values above the space's high would get bin n, outside MultiDiscrete(n): use the top bin.
+                o = min(np.digitize(observations[i][j], edges, right=True), n - 1)
                 transformed_observations_.append(o)
 
             transformed_observations.append(transformed_observations_)
@@ -488,17 +638,13 @@ class TabularQLearningObservationWrapper(ObservationWrapper):
 
         return [[c.index(tuple(o))] for o, c in zip(observations, self.combinations)]
     
-    def set_combinations(self) -> List[List[int]]:
-        """Returns all combinations of discrete observations."""
+    def set_combinations(self) -> List['DiscreteCombinations']:
+        """Returns all combinations of discrete observations.
 
-        combs_list = []
+        Each item behaves like the list of `itertools.product` tuples it used to be, without materializing it.
+        """
 
-        for s in self.env.observation_space:
-            options = [list(range(d.n)) for d in s]
-            combs = list(itertools.product(*options))
-            combs_list.append(combs)
-
-        return combs_list
+        return [DiscreteCombinations([d.n for d in s]) for s in self.env.observation_space]
     
 class TabularQLearningActionWrapper(ActionWrapper):
     """Action wrapper for :py:class:`citylearn.agents.q_learning.TabularQLearning` agent.
@@ -537,17 +683,13 @@ class TabularQLearningActionWrapper(ActionWrapper):
 
         return [list(c[a[0]]) for a, c in zip(actions, self.combinations)]
     
-    def set_combinations(self) -> List[List[int]]:
-        """Returns all combinations of discrete actions."""
+    def set_combinations(self) -> List['DiscreteCombinations']:
+        """Returns all combinations of discrete actions.
 
-        combs_list = []
+        Each item behaves like the list of `itertools.product` tuples it used to be, without materializing it.
+        """
 
-        for s in self.env.action_space:
-            options = [list(range(d.n)) for d in s]
-            combs = list(itertools.product(*options))
-            combs_list.append(combs)
-
-        return combs_list
+        return [DiscreteCombinations([d.n for d in s]) for s in self.env.action_space]
     
 class TabularQLearningWrapper(Wrapper):
     """Wrapper for :py:class:`citylearn.agents.q_learning.TabularQLearning` agent.
