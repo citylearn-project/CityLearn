@@ -227,6 +227,24 @@ limitations, losses to the environment quantified by <cite>efficiency</cite>, <c
 <dd><p>Returns general static information.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.community_dataset.InventoryBattery.preview_charge">
+<span class="sig-name descname"><span class="pre">preview_charge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">energy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/community_dataset.html#InventoryBattery.preview_charge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.community_dataset.InventoryBattery.preview_charge" title="Link to this definition"></a></dt>
+<dd><p>Energy that <a class="reference internal" href="#citylearn.community_dataset.InventoryBattery.charge" title="citylearn.community_dataset.InventoryBattery.charge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">charge()</span></code></a> would apply for <cite>energy</cite>, without changing the battery.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>energy</strong> (<em>float</em>) – Energy to charge if (+) or discharge if (-) in [kWh], in the units <a class="reference internal" href="#citylearn.community_dataset.InventoryBattery.charge" title="citylearn.community_dataset.InventoryBattery.charge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">charge()</span></code></a> takes.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>energy</strong> – The requested energy limited by the power curves, the capacity and the depth of discharge,
+in the same units.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">

@@ -1047,57 +1047,62 @@
 <td class="text-right"><p>kW</p></td>
 <td><p>Technical minimum powers.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">efficiency_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">round_trip_efficiency_ratio</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">efficiency_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
 <td class="text-right"><p>ratio</p></td>
-<td><p>Base and round-trip efficiency.</p></td>
+<td><p>Rated round-trip efficiency.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection_L1/L2/L3</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">round_trip_efficiency_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>One-way efficiency at the last operation, the square root of the current round-trip efficiency. The name is kept for existing observation layouts.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection_L1/L2/L3</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
 <td class="text-right"><p>one-hot</p></td>
 <td><p>Storage phase connection.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage_soc_ratio</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage_soc_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>ratio</p></td>
 <td><p>Canonical BESS SOC.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_power_kw</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_power_kw</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kW</p></td>
 <td><p>Current max powers.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_available_kwh</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_available_kwh</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh</p></td>
 <td><p>Energy headroom and available energy.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>mixed</p></td>
 <td><p>Current feasible BESS action capacity after SOC, outage and headroom limits.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">available_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">available_discharge_energy_kwh_step</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">available_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">available_discharge_energy_kwh_step</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
 <td><p>Feasible BESS energy this step after SOC/headroom/outage limits.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_energy_kwh_step</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_energy_kwh_step</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
 <td><p>Nominal BESS power limit converted to this step duration.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge_headroom_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">discharge_available_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">usable_soc_ratio</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charge_headroom_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">discharge_available_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">usable_soc_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>ratio</p></td>
 <td><p>Normalized BESS charge room, discharge energy and SOC within usable range.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">current_efficiency_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">degraded_capacity_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_min_ratio</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">current_efficiency_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">degraded_capacity_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_min_ratio</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>mixed</p></td>
 <td><p>Current efficiency, degraded capacity and minimum SOC.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">last_requested_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_limited_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_applied_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">last_projection_error_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">clip_reason_*</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">last_requested_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_limited_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_applied_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">last_projection_error_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">clip_reason_*</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_action_feedback</span></code></p></td>
 <td class="text-right"><p>mixed</p></td>
 <td><p>Previous BESS action request, limited command, applied power and clipping causes.</p></td>

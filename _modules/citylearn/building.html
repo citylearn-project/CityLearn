@@ -144,6 +144,7 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal</span><span class="w"> </span><span class="kn">import</span> <span class="n">grid_availability</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.building_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">BuildingOpsService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.physics_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">physics_version_of</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.service_energy</span><span class="w"> </span><span class="kn">import</span> <span class="n">SERVICE_ENERGY_COMPONENTS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.units</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">energy_kwh_to_power_kw</span><span class="p">,</span>
@@ -245,6 +246,10 @@
 <span class="sd">    **kwargs : Any</span>
 <span class="sd">        Other keyword arguments used to initialize super class.</span>
 <span class="sd">    """</span>
+
+    <span class="c1">#: Physics version of the building, see :py:mod:`citylearn.internal.physics_version`. Set by the</span>
+    <span class="c1">#: environment; ``None`` selects the default version.</span>
+    <span class="n">physics_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">energy_simulation</span><span class="p">:</span> <span class="n">EnergySimulation</span><span class="p">,</span> <span class="n">weather</span><span class="p">:</span> <span class="n">Weather</span><span class="p">,</span> <span class="n">observation_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span>
@@ -2163,6 +2168,17 @@
         <span class="n">ratio</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">to_dataset_resolution_energy</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">ratio</span><span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_hvac_cap_step_hours</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Keyword argument that makes an HVAC device compare an energy cap with its power over the dataset step.</span>
+
+<span class="sd">        `update_cooling_demand` and `update_heating_demand` pass an energy per dataset step as</span>
+<span class="sd">        `max_electric_power`. Physics version 1 compares it directly with the available power in [kW],</span>
+<span class="sd">        which caps the device at one hour of output for longer steps. Later versions pass the step</span>
+<span class="sd">        duration so the device converts its power to energy first.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="p">{</span><span class="s1">'step_hours'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">()}</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_dataset_step_hours</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Duration of one dataset step in hours.</span>
 
@@ -3082,7 +3098,7 @@
             <span class="n">start_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_start_time_step</span><span class="p">,</span>
             <span class="n">end_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_end_time_step</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_tank_autosize_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="Building.autosize_heating_storage">
@@ -3101,7 +3117,7 @@
             <span class="n">start_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_start_time_step</span><span class="p">,</span>
             <span class="n">end_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_end_time_step</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_tank_autosize_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="Building.autosize_dhw_storage">
@@ -3120,8 +3136,13 @@
             <span class="n">start_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_start_time_step</span><span class="p">,</span>
             <span class="n">end_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_end_time_step</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage</span><span class="o">.</span><span class="n">capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_tank_autosize_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_tank_autosize_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Storage-tank autosize arguments with the building's physics version unless one is given."""</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s1">'physics_version'</span><span class="p">:</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
 
 <div class="viewcode-block" id="Building.autosize_electrical_storage">
 <a class="viewcode-back" href="../../api/citylearn.building.html#citylearn.building.Building.autosize_electrical_storage">[docs]</a>
@@ -3170,14 +3191,56 @@
 <span class="sd">            Other keyword arguments parsed to `electrical_storage` `autosize` function.</span>
 <span class="sd">        """</span>
 
+        <span class="n">legacy</span> <span class="o">=</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span>
         <span class="n">demand</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_estimate_baseline_electricity_consumption</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">'value'</span><span class="p">])</span>
-        <span class="n">demand</span><span class="p">[</span><span class="s1">'year'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">demand</span><span class="o">.</span><span class="n">index</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">365</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">legacy</span><span class="p">:</span>
+            <span class="c1"># Physics version 1 assumes an hourly 8760-row year whatever the data resolution.</span>
+            <span class="n">demand</span><span class="p">[</span><span class="s1">'year'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">demand</span><span class="o">.</span><span class="n">index</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">365</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rows_per_year</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mf">365.0</span> <span class="o">*</span> <span class="mf">24.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">())),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">demand</span><span class="p">[</span><span class="s1">'year'</span><span class="p">]</span> <span class="o">=</span> <span class="n">demand</span><span class="o">.</span><span class="n">index</span> <span class="o">//</span> <span class="n">rows_per_year</span>
+
         <span class="n">demand</span> <span class="o">=</span> <span class="n">demand</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'year'</span><span class="p">)[</span><span class="s1">'value'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
         <span class="n">epw_filepath</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'epw_filepath'</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">nominal_power</span><span class="p">,</span> <span class="n">solar_generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">autosize</span><span class="p">(</span><span class="n">demand</span><span class="p">,</span> <span class="n">epw_filepath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">generation_mode</span> <span class="o">=</span> <span class="s1">'per_kw'</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">legacy</span><span class="p">:</span>
+            <span class="n">solar_generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hourly_profile_to_dataset_resolution</span><span class="p">(</span>
+                <span class="n">solar_generation</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">))</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="s1">'solar_generation'</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">solar_generation</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">))</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_hourly_profile_to_dataset_resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profile</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">rows</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Resample an hourly power profile, such as the PVWatts output in [W/kW], to the dataset steps.</span>
+
+<span class="sd">        Each hourly value is an average power, so a sub-hourly step repeats it and a multi-hour step</span>
+<span class="sd">        averages the hours it spans. The result is repeated or truncated to `rows` values when the</span>
+<span class="sd">        dataset does not cover exactly the profile's period. An hourly profile on an hourly dataset of</span>
+<span class="sd">        the same length is returned unchanged.</span>
+<span class="sd">        """</span>
+
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
+        <span class="n">step_hours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">()</span>
+        <span class="n">steps_per_hour</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">step_hours</span>
+
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">steps_per_hour</span> <span class="o">-</span> <span class="nb">round</span><span class="p">(</span><span class="n">steps_per_hour</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">1.0e-9</span> <span class="ow">and</span> <span class="nb">round</span><span class="p">(</span><span class="n">steps_per_hour</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">steps_per_hour</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">step_hours</span> <span class="o">-</span> <span class="nb">round</span><span class="p">(</span><span class="n">step_hours</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">1.0e-9</span> <span class="ow">and</span> <span class="nb">round</span><span class="p">(</span><span class="n">step_hours</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">hours</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">step_hours</span><span class="p">))</span>
+            <span class="n">usable</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span> <span class="o">//</span> <span class="n">hours</span><span class="p">)</span> <span class="o">*</span> <span class="n">hours</span>
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[:</span><span class="n">usable</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hours</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">step_hours</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">1.0e-9</span><span class="p">:</span>
+            <span class="c1"># A step that neither divides nor is a multiple of an hour: sample the hour each step starts in.</span>
+            <span class="n">hour_index</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span> <span class="o">/</span> <span class="n">step_hours</span><span class="p">)))</span> <span class="o">*</span> <span class="n">step_hours</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">profile</span><span class="p">[</span><span class="n">hour_index</span><span class="p">[</span><span class="n">hour_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">)]]</span>
+
+        <span class="k">if</span> <span class="n">rows</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span> <span class="o">!=</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">profile</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_estimate_baseline_electricity_consumption</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Returns estimated baseline electricity consumption time series for entire simulation period.</span>
@@ -4054,7 +4117,8 @@
                 <span class="n">demand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cooling_device</span><span class="o">.</span><span class="n">get_max_output_power</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">weather</span><span class="o">.</span><span class="n">outdoor_dry_bulb_temperature</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">],</span>
                     <span class="n">heating</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">max_electric_power</span><span class="o">=</span><span class="n">electric_power</span>
+                    <span class="n">max_electric_power</span><span class="o">=</span><span class="n">electric_power</span><span class="p">,</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_hvac_cap_step_hours</span><span class="p">(),</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">demand</span> <span class="o">=</span> <span class="mf">0.0</span>
@@ -4094,8 +4158,12 @@
                 <span class="n">demand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_device</span><span class="o">.</span><span class="n">get_max_output_power</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">weather</span><span class="o">.</span><span class="n">outdoor_dry_bulb_temperature</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">],</span>
                     <span class="n">heating</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">max_electric_power</span><span class="o">=</span><span class="n">electric_power</span>
-                <span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heating_device</span><span class="p">,</span> <span class="n">HeatPump</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_device</span><span class="o">.</span><span class="n">get_max_output_power</span><span class="p">(</span><span class="n">max_electric_power</span><span class="o">=</span><span class="n">electric_power</span><span class="p">)</span>
+                    <span class="n">max_electric_power</span><span class="o">=</span><span class="n">electric_power</span><span class="p">,</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_hvac_cap_step_hours</span><span class="p">(),</span>
+                <span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heating_device</span><span class="p">,</span> <span class="n">HeatPump</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_device</span><span class="o">.</span><span class="n">get_max_output_power</span><span class="p">(</span>
+                    <span class="n">max_electric_power</span><span class="o">=</span><span class="n">electric_power</span><span class="p">,</span>
+                    <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_hvac_cap_step_hours</span><span class="p">(),</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">demand</span> <span class="o">=</span> <span class="mf">0.0</span>
 

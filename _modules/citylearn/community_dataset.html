@@ -219,6 +219,17 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">charge</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="InventoryBattery.preview_charge">
+<a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBattery.preview_charge">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preview_charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">energy</span><span class="p">):</span>
+        <span class="n">charging</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_charging</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_charging</span> <span class="o">=</span> <span class="n">energy</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">preview_charge</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_charging</span> <span class="o">=</span> <span class="n">charging</span></div>
+
+
 <div class="viewcode-block" id="InventoryBattery.get_metadata">
 <a class="viewcode-back" href="../../api/citylearn.community_dataset.html#citylearn.community_dataset.InventoryBattery.get_metadata">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

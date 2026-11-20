@@ -367,6 +367,24 @@ limitations, losses to the environment quantified by <cite>efficiency</cite>, <c
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="citylearn.energy_model.Battery.preview_charge">
+<span class="sig-name descname"><span class="pre">preview_charge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#Battery.preview_charge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.Battery.preview_charge" title="Link to this definition"></a></dt>
+<dd><p>Energy that <a class="reference internal" href="#citylearn.energy_model.Battery.charge" title="citylearn.energy_model.Battery.charge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">charge()</span></code></a> would apply for <cite>energy</cite>, without changing the battery.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>energy</strong> (<em>float</em>) – Energy to charge if (+) or discharge if (-) in [kWh], in the units <a class="reference internal" href="#citylearn.energy_model.Battery.charge" title="citylearn.energy_model.Battery.charge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">charge()</span></code></a> takes.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>energy</strong> – The requested energy limited by the power curves, the capacity and the depth of discharge,
+in the same units.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.reset">
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/energy_model.html#Battery.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.Battery.reset" title="Link to this definition"></a></dt>
 <dd><p>Reset <cite>Battery</cite> to initial state.</p>
@@ -694,12 +712,17 @@ control-step power in [kW] for sizing.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.energy_model.ElectricHeater.get_max_output_power">
-<span class="sig-name descname"><span class="pre">get_max_output_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_electric_power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#ElectricHeater.get_max_output_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.ElectricHeater.get_max_output_power" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_max_output_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_electric_power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_hours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#ElectricHeater.get_max_output_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.ElectricHeater.get_max_output_power" title="Link to this definition"></a></dt>
 <dd><p>Return maximum output power.</p>
 <p>Calculate maximum output power from heat pump given <cite>max_electric_power</cite> limitations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>max_electric_power</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Maximum amount of electric power that the heat pump can consume from the power grid.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_electric_power</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Maximum amount of electric power that the heat pump can consume from the power grid.</p></li>
+<li><p><strong>step_hours</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration in [h] over which <cite>max_electric_power</cite> is an energy in [kWh]. When given, the
+available power is converted to energy over the same duration before the comparison,
+and the result is an output energy in [kWh] rather than a power.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>max_output_power</strong> – Maximum output power as single value or time series depending on input parameter types.</p>
@@ -908,7 +931,7 @@ cooling_cop = (<cite>t_target_cooling</cite> + 273.15)*`efficiency`/(outdoor_dry
 
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.energy_model.HeatPump.get_max_output_power">
-<span class="sig-name descname"><span class="pre">get_max_output_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outdoor_dry_bulb_temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heating</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_electric_power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#HeatPump.get_max_output_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.HeatPump.get_max_output_power" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_max_output_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outdoor_dry_bulb_temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heating</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_electric_power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_hours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#HeatPump.get_max_output_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.HeatPump.get_max_output_power" title="Link to this definition"></a></dt>
 <dd><p>Return maximum output power.</p>
 <p>Calculate maximum output power from heat pump given <cite>cop</cite>, <cite>available_nominal_power</cite> and <cite>max_electric_power</cite> limitations.</p>
 <dl class="field-list simple">
@@ -917,6 +940,9 @@ cooling_cop = (<cite>t_target_cooling</cite> + 273.15)*`efficiency`/(outdoor_dry
 <li><p><strong>outdoor_dry_bulb_temperature</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em>) – Outdoor dry bulb temperature in [C].</p></li>
 <li><p><strong>heating</strong> (<em>bool</em>) – If <cite>True</cite> use heating COP else use cooling COP.</p></li>
 <li><p><strong>max_electric_power</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Maximum amount of electric power that the heat pump can consume from the power grid.</p></li>
+<li><p><strong>step_hours</strong> (<em>float</em><em>, </em><em>optional</em>) – Duration in [h] over which <cite>max_electric_power</cite> is an energy in [kWh]. When given, the
+available power is converted to energy over the same duration before the comparison,
+and the result is an output energy in [kWh] rather than a power.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1057,15 +1083,19 @@ when <code class="docutils literal notranslate"><span class="pre">generation_mod
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.autosize">
-<span class="sig-name descname"><span class="pre">autosize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">demand</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#StorageDevice.autosize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.StorageDevice.autosize" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">autosize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">demand</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">physics_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/citylearn/energy_model.html#StorageDevice.autosize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.StorageDevice.autosize" title="Link to this definition"></a></dt>
 <dd><p>Autosize <cite>capacity</cite>.</p>
-<p>Set <cite>capacity</cite> to the minimum capacity needed to always meet <cite>demand</cite>.</p>
+<p>Set <cite>capacity</cite> to hold <cite>duration</cite> hours of the peak <cite>demand</cite> power.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Thermal energy in [kWh] at dataset resolution. Capacity covers the
-largest control-step demand, rather than a power in [kW].</p></li>
+<li><p><strong>demand</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Thermal energy in [kWh] at dataset resolution. It is converted to
+average control-step power in [kW] before <cite>duration</cite> is applied.</p></li>
 <li><p><strong>safety_factor</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default:</em><em> (</em><em>1.0</em><em>, </em><em>2.0</em><em>)</em>) – The <cite>capacity</cite> is oversized by factor of <cite>safety_factor</cite>.</p></li>
+<li><p><strong>duration</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default: 1.0</em>) – Hours of peak demand power the tank holds. Ignored by physics version 1.</p></li>
+<li><p><strong>physics_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Physics version, see <a class="reference internal" href="citylearn.internal.physics_version.html#module-citylearn.internal.physics_version" title="citylearn.internal.physics_version"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.physics_version</span></code></a>. Version 1 sizes the
+tank to the largest control-step demand in [kWh], which equals one hour of peak power
+only for hourly steps. Defaults to the latest version.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1076,7 +1106,7 @@ largest control-step demand, rather than a power in [kW].</p></li>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p><cite>capacity</cite> = max(control-step demand)*safety_factor</p>
+<p><cite>capacity</cite> = max(demand power)*duration*safety_factor</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1164,6 +1194,14 @@ largest control-step demand, rather than a power in [kW].</p></li>
 <p>Override in subclass for custom implementation when advancing to next <cite>time_step</cite>.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.one_way_efficiency">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">one_way_efficiency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.StorageDevice.one_way_efficiency" title="Link to this definition"></a></dt>
+<dd><p>Efficiency of a single charge or discharge, the square root of <cite>efficiency</cite>.</p>
+<p><cite>efficiency</cite> is the round-trip efficiency: energy charged and then discharged keeps <cite>efficiency</cite>
+of its value, and each of the two conversions keeps <cite>one_way_efficiency</cite> of it.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.reset">
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/energy_model.html#StorageDevice.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.StorageDevice.reset" title="Link to this definition"></a></dt>
@@ -1173,7 +1211,10 @@ largest control-step demand, rather than a power in [kW].</p></li>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.round_trip_efficiency">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">round_trip_efficiency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.StorageDevice.round_trip_efficiency" title="Link to this definition"></a></dt>
-<dd><p>Efficiency square root.</p>
+<dd><p>Deprecated alias of <cite>one_way_efficiency</cite>.</p>
+<p>Despite its name, this property has always returned the one-way efficiency, the square root of
+<cite>efficiency</cite>; the round-trip efficiency is <cite>efficiency</cite> itself. It is kept, with the same value,
+for existing code and will be removed in a future release.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1190,7 +1231,7 @@ largest control-step demand, rather than a power in [kW].</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><strong>energy</strong> (<em>float</em>) – Charged/discharged energy since last time step in [kWh]</p></li>
-<li><p>The energy balance is a derived quantity and is the product or quotient of the difference between consecutive SOCs and <cite>round_trip_efficiency</cite></p></li>
+<li><p>The energy balance is a derived quantity and is the product or quotient of the difference between consecutive SOCs and <cite>one_way_efficiency</cite></p></li>
 <li><p><em>for discharge or charge events respectively thus, thus accounts for energy losses to environment during charging and discharge. It is the</em></p></li>
 <li><p><em>actual energy charged/discharged irrespective of what is determined in the step function after taking into account storage design limits</em></p></li>
 <li><p><em>e.g. maximum power input/output, capacity.</em></p></li>

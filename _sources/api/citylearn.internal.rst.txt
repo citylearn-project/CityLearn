@@ -42,6 +42,7 @@ Submodules
    citylearn.internal.observation_contract
    citylearn.internal.occupant_models
    citylearn.internal.physics_invariants
+   citylearn.internal.physics_version
    citylearn.internal.provenance
    citylearn.internal.robustness
    citylearn.internal.robustness_audit
