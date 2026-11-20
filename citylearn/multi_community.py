@@ -14,6 +14,7 @@ from gymnasium import Env
 
 from citylearn.citylearn import CityLearnEnv, EvaluationCondition
 from citylearn.internal.kpi import CityLearnKPIService
+from citylearn.internal.kpi_registry import KPI_COLUMNS, resolve_kpi_metadata
 
 
 __all__ = ["MultiCommunityEnv"]
@@ -253,7 +254,11 @@ class MultiCommunityEnv(Env):
             frame["community_id"] = community_id
             frames.append(frame)
 
-        local = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+        local = (
+            pd.concat(frames, ignore_index=True)
+            if frames
+            else pd.DataFrame(columns=[*KPI_COLUMNS, "community_id"])
+        )
         portfolio = self._portfolio_kpis(local)
 
         if portfolio.empty:
@@ -622,11 +627,18 @@ class MultiCommunityEnv(Env):
             else:
                 continue
 
+            portfolio_cf = self._portfolio_cost_function(metric)
             row = {column: None for column in local.columns}
-            row["cost_function"] = self._portfolio_cost_function(metric)
+            row["cost_function"] = portfolio_cf
             row["value"] = aggregate
             row["name"] = self.PORTFOLIO_NAME
             row["level"] = "portfolio"
+            if "unit" in local.columns or "description" in local.columns:
+                unit, description = resolve_kpi_metadata(portfolio_cf)
+                if "unit" in local.columns:
+                    row["unit"] = unit
+                if "description" in local.columns:
+                    row["description"] = description
             row["community_id"] = self.PORTFOLIO_COMMUNITY_ID
             rows.append(row)
 

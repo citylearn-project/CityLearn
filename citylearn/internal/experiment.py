@@ -13,7 +13,7 @@ def _sha256(path):
     return digest.hexdigest()
 
 
-def experiment_manifest(env):
+def experiment_manifest(env, *, kpi_definitions=None):
     from citylearn import __version__
     from citylearn.internal.comparison import context, inventory, native_reference
     from citylearn.agents.baseline import BusinessAsUsualAgent
@@ -60,26 +60,29 @@ def experiment_manifest(env):
     provenance_summary = (dict(zip(('buildings', 'district'), provenance.summary()))
                           if provenance.enabled else None)
     source_destinations = provenance.source_destinations() if provenance.enabled else None
-    return dict(simulator_version=__version__, git_commit=revision, tracked_worktree_dirty=dirty,
-                business_as_usual_definition=BusinessAsUsualAgent.definition(
-                    getattr(env, 'business_as_usual_ev_charge_target', 'full'))[1],
-                business_as_usual_reference=native_reference(env),
-                controller_identity=getattr(env, '_controller_identity', None),
-                comparison_context=context(env, files), final_inventory=inventory(env),
-                schema_sha256=hashlib.sha256(payload).hexdigest(), effective_schema=schema,
-                data_files_sha256=files, unresolved_file_references=sorted(set(missing)),
-                runtime_versions=runtime_versions(),
-                input_file_changes=changed, temporal_reproducibility=metadata['temporal_reproducibility'],
-                random_seed=env.random_seed, random_stream_version=env.random_stream_version,
-                seconds_per_time_step=env.seconds_per_time_step,
-                episode_start_time_step=tracker.episode_start_time_step,
-                episode_end_time_step=tracker.episode_end_time_step,
-                completed_intervals=env._provenance_service.steps,
-                community_market=metadata['community_market'], energy_accounting=metadata['energy_accounting'],
-                deferrable_service_audit=metadata['deferrable_service_audit'],
-                kpi_family_audit=metadata['kpi_family_audit'],
-                demand_response=metadata['demand_response'],
-                reward=metadata['reward_evidence'],
-                energy_provenance=provenance.enabled,
-                provenance_summary=provenance_summary,
-                source_destinations=source_destinations)
+    result = dict(simulator_version=__version__, git_commit=revision, tracked_worktree_dirty=dirty,
+                  business_as_usual_definition=BusinessAsUsualAgent.definition(
+                      getattr(env, 'business_as_usual_ev_charge_target', 'full'))[1],
+                  business_as_usual_reference=native_reference(env),
+                  controller_identity=getattr(env, '_controller_identity', None),
+                  comparison_context=context(env, files), final_inventory=inventory(env),
+                  schema_sha256=hashlib.sha256(payload).hexdigest(), effective_schema=schema,
+                  data_files_sha256=files, unresolved_file_references=sorted(set(missing)),
+                  runtime_versions=runtime_versions(),
+                  input_file_changes=changed, temporal_reproducibility=metadata['temporal_reproducibility'],
+                  random_seed=env.random_seed, random_stream_version=env.random_stream_version,
+                  seconds_per_time_step=env.seconds_per_time_step,
+                  episode_start_time_step=tracker.episode_start_time_step,
+                  episode_end_time_step=tracker.episode_end_time_step,
+                  completed_intervals=env._provenance_service.steps,
+                  community_market=metadata['community_market'], energy_accounting=metadata['energy_accounting'],
+                  deferrable_service_audit=metadata['deferrable_service_audit'],
+                  kpi_family_audit=metadata['kpi_family_audit'],
+                  demand_response=metadata['demand_response'],
+                  reward=metadata['reward_evidence'],
+                  energy_provenance=provenance.enabled,
+                  provenance_summary=provenance_summary,
+                  source_destinations=source_destinations)
+    if kpi_definitions is not None:
+        result['kpi_definitions'] = kpi_definitions
+    return result

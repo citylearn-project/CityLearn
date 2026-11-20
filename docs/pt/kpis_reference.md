@@ -9,19 +9,21 @@ O simulador tem duas APIs de KPIs:
 
 Para a arvore completa de nomes v2, ver tambem [`KPI_V2_TREE.md`](../KPI_V2_TREE.md).
 
+`evaluate_v2()` e `scorecard()` devolvem as colunas `cost_function`, `value`, `name`, `level`, `unit` e `description`, por esta ordem. `unit` e `description` vem de um unico registo de metadados de KPIs partilhado por `evaluate_v2()`, `MultiCommunityEnv.evaluate_v2()`, `exported_kpis.manifest.json` e pela geracao da documentacao.
+
 ## Contrato de Unidades
 
-| Unidade no nome | Significado |
-|---|---|
-| `eur` | Custo monetario. Pode representar outra currency se o dataset usar outra moeda. |
-| `kwh` | Energia acumulada. |
-| `kgco2` | Emissoes acumuladas. |
-| `kw` | Potencia de pico/media. |
-| `ratio` | Razao adimensional. |
-| `percent` | Percentagem. |
-| `count` | Contagem de eventos/ciclos. |
-| `hours` | Horas. |
-| `c` | Temperatura em Celsius. |
+| Unidade no nome | Coluna `unit` | Significado |
+|---|---|---|
+| `eur` | `EUR` (`EUR/day` nas medias diarias) | Custo monetario, receita, penalizacao, poupanca ou saldo do operador. Pode representar outra moeda do dataset. |
+| `kwh` | `kWh` (`kWh/day` nas medias diarias) | Energia acumulada ou media diaria. |
+| `kgco2` | `kgCO2` (`kgCO2/day` nas medias diarias) | Emissoes acumuladas ou media diaria de CO2 equivalente. |
+| `kw` | `kW` | Potencia de pico ou rampa media por transicao. |
+| `ratio` | `ratio` | Razao adimensional, taxa ou quota. |
+| `percent` | `percent` | Percentagem (0-100) ou beneficio relativo percentual. |
+| `count` | `count` | Contagem de eventos, ciclos, passageiros, membros ou intervalos. |
+| `hours` | `hours` (`C*h` em `*_degree_hours`) | Horas ou graus-hora Celsius em integrais de desconforto termico. |
+| `c` | `C` | Diferenca de temperatura em Celsius. |
 
 ## Convencao KPI v2
 
@@ -180,9 +182,9 @@ Disponiveis quando `demand_response.enabled=true`.
 | `demand_response_delivered_total_kwh` | building/district | kWh | Delivery assinado, positivo quando o controlo segue a direcao pedida. |
 | `demand_response_shortfall_total_kwh` | building/district | kWh | Energia pedida nao entregue depois da tolerancia. |
 | `demand_response_compliance_ratio` | building/district | ratio | Delivery creditado dividido pela energia pedida valida. |
-| `demand_response_revenue_total_eur` | building/district | eur | Receita por delivery creditado. |
-| `demand_response_penalty_total_eur` | building/district | eur | Penalizacao por shortfall. |
-| `demand_response_net_revenue_total_eur` | building/district | eur | Receita menos penalizacao. |
+| `demand_response_revenue_total_eur` | building/district | EUR | Receita por delivery creditado. |
+| `demand_response_penalty_total_eur` | building/district | EUR | Penalizacao por shortfall. |
+| `demand_response_net_revenue_total_eur` | building/district | EUR | Receita menos penalizacao. |
 | `demand_response_invalid_baseline_time_step_count` | building/district | count | Steps ativos excluidos da economia porque a baseline pre-evento era invalida. |
 | `demand_response_uncapped_contribution_total_kwh` | building | kWh | Diagnostico: a contribuicao positiva do proprio membro, sem a tolerancia e o limite do distrito. Nao soma ao distrito. |
 
@@ -226,9 +228,10 @@ Condicionais a `community_market.enabled=true`.
 | local traded total | district | kWh | Energia local transacionada. |
 | local traded daily average | district | kWh/day | Media diaria local. |
 | community import share | district | ratio | Share da demanda servida localmente. |
-| settled cost | building/district | eur | Custo apos settlement local. |
-| counterfactual cost | building/district | eur | Custo sem mercado local. |
-| market savings | building/district | eur | Diferenca entre counterfactual e settled. |
+| settled cost | building/district | EUR | Custo apos settlement local. |
+| counterfactual cost | building/district | EUR | Custo sem mercado local. |
+| market savings | building/district | EUR | Diferenca entre counterfactual e settled. |
+| operator balance | district | EUR | Saldo residual do operador quando os membros tem tarifas diferentes. |
 
 ## Definicoes alteradas depois da 3.6.0
 

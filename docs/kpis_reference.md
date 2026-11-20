@@ -15,30 +15,39 @@ Start with [How to read the scorecard](scorecard.md) for a compact selection,
 baseline interpretation and an executable table-selection example. The `v2`
 method name denotes the KPI interface, not CityLearn version 2.
 
-To list the exact names available in your own configured run:
+To list the exact names, canonical units and descriptions available in your own configured run:
 
 ```python
 kpis = env.evaluate_v2()
-catalogue = kpis[["cost_function", "level"]].drop_duplicates().sort_values("cost_function")
+catalogue = (
+    kpis[["cost_function", "level", "unit", "description"]]
+    .drop_duplicates()
+    .sort_values("cost_function")
+)
 print(catalogue.to_string(index=False))
 ```
 
-Feature-specific KPI availability follows the schema. A missing/undefined value
-is not a zero measurement; preserve it when exporting or comparing.
+`evaluate_v2()` and `scorecard()` return the columns `cost_function`, `value`,
+`name`, `level`, `unit` and `description`, in that order. `unit` and
+`description` are resolved from a single KPI metadata registry shared by
+`evaluate_v2()`, `MultiCommunityEnv.evaluate_v2()`, `exported_kpis.manifest.json`
+and the documentation build. Feature-specific KPI availability follows the
+schema. A missing/undefined value is not a zero measurement; preserve it when
+exporting or comparing.
 
 ## Units
 
-| Unit suffix | Meaning |
-|---|---|
-| `eur` | Monetary cost. If the dataset uses another currency, interpret as dataset currency. |
-| `kwh` | Accumulated energy. |
-| `kgco2` | Accumulated emissions. |
-| `kw` | Power. |
-| `ratio` | Dimensionless ratio. |
-| `percent` | Percentage. |
-| `count` | Event/cycle count. |
-| `hours` | Hours. |
-| `c` | Celsius. |
+| Unit suffix | `unit` column | Meaning |
+|---|---|---|
+| `eur` | `EUR` (`EUR/day` for daily averages) | Monetary cost, revenue, penalty, savings or operator balance. Interpret as dataset currency when not EUR. |
+| `kwh` | `kWh` (`kWh/day` for daily averages) | Accumulated or daily average electrical or thermal service energy. |
+| `kgco2` | `kgCO2` (`kgCO2/day` for daily averages) | Accumulated or daily average carbon dioxide equivalent emissions. |
+| `kw` | `kW` | Peak or step-transition ramping electrical power. |
+| `ratio` | `ratio` | Dimensionless ratio, rate or share. |
+| `percent` | `percent` | Percentage on a 0-100 scale or signed relative benefit percentage. |
+| `count` | `count` | Event, cycle, passenger, member or interval count. |
+| `hours` | `hours` (`C*h` for `*_degree_hours`) | Duration or start delay in hours, or degree-Celsius hours for thermal discomfort integrals. |
+| `c` | `C` | Temperature exceedance in degrees Celsius. |
 
 ## KPI v2 Naming Contract
 
@@ -229,9 +238,9 @@ Available when `demand_response.enabled=true`.
 | `demand_response_delivered_total_kwh` | building/district | kWh | Signed delivery, positive when the controller moves in the requested direction. |
 | `demand_response_shortfall_total_kwh` | building/district | kWh | Non-delivered requested energy after tolerance. |
 | `demand_response_compliance_ratio` | building/district | ratio | Credited delivery divided by valid requested energy. |
-| `demand_response_revenue_total_eur` | building/district | eur | Credited delivery revenue. |
-| `demand_response_penalty_total_eur` | building/district | eur | Shortfall penalty. |
-| `demand_response_net_revenue_total_eur` | building/district | eur | Revenue minus penalty. |
+| `demand_response_revenue_total_eur` | building/district | EUR | Credited delivery revenue. |
+| `demand_response_penalty_total_eur` | building/district | EUR | Shortfall penalty. |
+| `demand_response_net_revenue_total_eur` | building/district | EUR | Revenue minus penalty. |
 | `demand_response_invalid_baseline_time_step_count` | building/district | count | Active steps excluded from economics because the pre-event baseline was invalid. |
 | `demand_response_uncapped_contribution_total_kwh` | building | kWh | Diagnostic: the member's own positive contribution, without the district tolerance and cap. Does not add up to the district. |
 
@@ -284,9 +293,10 @@ Available when `community_market.enabled=true`.
 | local traded total | district | kWh | Locally traded energy. |
 | local traded daily average | district | kWh/day | Daily average local trade. |
 | community import share | district | ratio | Share of demand served locally. |
-| settled cost | building/district | eur | Cost after local settlement. |
-| counterfactual cost | building/district | eur | Cost without local market settlement. |
-| market savings | building/district | eur | Counterfactual minus settled cost. |
+| settled cost | building/district | EUR | Cost after local settlement. |
+| counterfactual cost | building/district | EUR | Cost without local market settlement. |
+| market savings | building/district | EUR | Counterfactual minus settled cost. |
+| operator balance | district | EUR | Residual market balance under heterogeneous member tariffs. |
 
 ## Definitions changed after 3.6.0
 
