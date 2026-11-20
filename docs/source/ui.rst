@@ -48,8 +48,12 @@ Use an absolute ``render_directory``, as in the example, to choose an explicit
 output location. The exported folder contains ``exported_kpis.csv`` and
 ``exported_data_*_ep0.csv`` files for the available buildings, devices and
 community. Keep the filenames unchanged so the UI can identify their contents.
-The UI export is a wide table with a ``KPI`` column and one column per scope;
-the Python ``evaluate_v2()`` result is a long-form table for analysis.
+The UI export is a wide numeric table with a ``KPI`` column and one column per
+scope, accompanied by ``kpi_definitions`` (canonical units and descriptions) in
+``exported_kpis.manifest.json``; the Python ``evaluate_v2()`` result and
+``exported_kpis_multi_community.csv`` are long-form tables with
+``cost_function``, ``value``, ``name``, ``level``, ``unit`` and ``description``
+columns.
 
 Import and explore
 ==================

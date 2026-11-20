@@ -13,7 +13,9 @@ Choose what to read
 * :doc:`guides/scorecard` — start here: how to read a compact set of KPIs and
   compare controllers.
 * :doc:`guides/scorecard_kpi_names` — the default selection, returned by
-  ``env.scorecard()``.
+  ``env.scorecard()``, with units and descriptions.
+* :doc:`guides/kpi_catalogue` — every registered KPI, its canonical unit and
+  its description, generated from the simulator registry.
 * :doc:`guides/kpis_reference` — definitions, units, equations and metric families.
 * :doc:`guides/KPI_V2_TREE` — every name, grouped by district/building and family.
 * :doc:`guides/baselines` — the references behind ``baseline`` and
@@ -26,6 +28,7 @@ Choose what to read
 
    guides/scorecard
    guides/scorecard_kpi_names
+   guides/kpi_catalogue
    guides/kpis_reference
    guides/KPI_V2_TREE
 
@@ -37,16 +40,16 @@ After completing an episode:
 .. code-block:: python
 
    kpis = env.evaluate_v2()
-   names = kpis[["cost_function", "level"]].drop_duplicates()
+   names = kpis[["cost_function", "level", "unit", "description"]].drop_duplicates()
    print(names.sort_values("cost_function").to_string(index=False))
    kpis.to_csv("kpis.csv", index=False)
 
-The table contains ``cost_function``, ``value``, ``name`` and ``level``.
-``name`` identifies the building or district; ``level`` identifies the scope.
-The last part of each KPI name is its unit (``kwh``, ``kw``, ``eur``, ``kgco2``,
-``ratio``...). Feature-specific rows follow the scenario configuration, and a
-KPI that is undefined for the run, such as a service ratio without any event to
-serve, is missing (NaN) rather than 0 or 1.
+The table contains ``cost_function``, ``value``, ``name``, ``level``, ``unit``
+and ``description``, in that order. ``name`` identifies the building or
+district; ``level`` identifies the scope; ``unit`` and ``description`` come
+from the simulator's KPI registry. Feature-specific rows follow the scenario
+configuration, and a KPI that is undefined for the run, such as a service ratio
+without any event to serve, is missing (NaN) rather than 0 or 1.
 
 To keep only the default scorecard rows:
 

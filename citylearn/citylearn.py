@@ -1710,11 +1710,15 @@ class CityLearnEnv(Environment, Env):
             One row per KPI and scope, with the columns:
 
             * ``cost_function`` (str): the KPI name, ``level_family_subfamily_metric_variant_unit``. The last part
-              is the unit, e.g. ``kwh``, ``kw``, ``eur``, ``kgco2``, ``hours`` or ``ratio``.
+              is the unit suffix, e.g. ``kwh``, ``kw``, ``eur``, ``kgco2``, ``hours`` or ``ratio``.
             * ``value`` (float): the value; NaN when the KPI is undefined for this run, for example a service
               ratio without any event to serve.
             * ``name`` (str): the building name for building rows, ``'District'`` for district rows.
             * ``level`` (str): ``'building'`` or ``'district'``.
+            * ``unit`` (str): canonical physical or financial unit from the KPI registry, e.g. ``'kWh'``,
+              ``'kWh/day'``, ``'kW'``, ``'EUR'``, ``'EUR/day'``, ``'kgCO2'``, ``'ratio'``, ``'percent'``,
+              ``'count'``, ``'hours'``, ``'C'`` or ``'C*h'``.
+            * ``description`` (str): one-sentence definition of the KPI from the KPI registry.
 
             Which KPIs appear depends on the scenario's assets and services. :py:meth:`scorecard` selects the
             default subset, and the KPI reference guide defines every family.

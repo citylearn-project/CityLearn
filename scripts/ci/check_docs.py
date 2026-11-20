@@ -55,7 +55,8 @@ def check_site(root):
     required = [
         "index.html", "quickstart.html", "installation.html",
         "guides/features.html", "guides/scorecard.html",
-        "guides/scorecard_kpi_names.html", "guides/kpis_reference.html",
+        "guides/scorecard_kpi_names.html", "guides/kpi_catalogue.html",
+        "guides/kpis_reference.html",
         "guides/releases.html", "_images/citylearn-v3-overview.png",
         "guides/baselines.html", "kpis.html", "ui.html", "publications.html",
         "usage/custom_controller.html", "_images/pv-storage-flow.svg",

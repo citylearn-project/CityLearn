@@ -33,7 +33,9 @@ def test_first_simulation_and_scorecard(monkeypatch, tmp_path):
     exec(compile((ROOT / "examples/first_simulation.py").read_text(encoding="utf-8"), "first_simulation.py", "exec"), scope)
     assert scope["env"].time_step == 23
     assert scope["terminated"] or scope["truncated"]
-    assert set(("cost_function", "value", "name", "level")) <= set(scope["kpis"].columns)
+    assert list(scope["kpis"].columns) == [
+        "cost_function", "value", "name", "level", "unit", "description",
+    ]
     from citylearn.internal.kpi import CityLearnKPIService
     assert set(CityLearnKPIService.SCORECARD_DEFAULT_KPIS) <= set(scope["kpis"]["cost_function"])
     for node in ast.walk(ast.parse(python_blocks(ROOT / "docs/scorecard.md")[0])):

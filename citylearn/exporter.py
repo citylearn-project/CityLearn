@@ -191,6 +191,25 @@ class EpisodeExporter:
             kpis = env.evaluate_v2(include_business_as_usual=include_business_as_usual)
             export_env = env
 
+        kpi_definitions: Dict[str, Dict[str, str]] = {}
+        if 'cost_function' in kpis.columns:
+            from citylearn.internal.kpi_registry import resolve_kpi_metadata
+            if {'unit', 'description'} <= set(kpis.columns):
+                pairs = (
+                    kpis[['cost_function', 'unit', 'description']]
+                    .drop_duplicates(subset=['cost_function'])
+                    .sort_values('cost_function')
+                )
+                for cf, unit, desc in pairs.itertuples(index=False):
+                    kpi_definitions[str(cf)] = {'unit': str(unit), 'description': str(desc)}
+            else:
+                for cf in sorted(kpis['cost_function'].dropna().astype(str).unique()):
+                    try:
+                        unit, desc = resolve_kpi_metadata(cf)
+                    except KeyError:
+                        continue
+                    kpi_definitions[cf] = {'unit': unit, 'description': desc}
+
         kpis = kpis.pivot(index='cost_function', columns='name', values='value')
         if kpi_round_decimals is not None:
             kpis = kpis.round(kpi_round_decimals)
@@ -206,7 +225,10 @@ class EpisodeExporter:
             self.export_business_as_usual_timeseries(export_env)
         from citylearn.internal.experiment import experiment_manifest
         from citylearn.utils.file_handler import FileHandler
-        FileHandler.write_json(str(Path(file_path).with_suffix('.manifest.json')), experiment_manifest(export_env))
+        FileHandler.write_json(
+            str(Path(file_path).with_suffix('.manifest.json')),
+            experiment_manifest(export_env, kpi_definitions=kpi_definitions),
+        )
         FileHandler.write_json(str(Path(file_path).with_suffix('.deferrable_service.json')),
                                export_env.get_deferrable_service_audit())
         if export_env._robustness_service.enabled:

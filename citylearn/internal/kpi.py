@@ -11,6 +11,7 @@ from array import array
 from citylearn.energy_model import Battery
 from citylearn.internal import ev_departure_audit, deferrable_service_audit, grid_availability
 from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
+from citylearn.internal.kpi_registry import KPI_COLUMNS, get_kpi_definition, resolve_kpi_metadata
 from citylearn.internal.service_energy import service_energy_components
 
 from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -45,6 +46,17 @@ class CityLearnKPIService:
     EV_DEPARTURE_SERVICE_TOLERANCE_DEFAULT = 0.05
     EV_DEPARTURE_EPS = 1.0e-6
     ELECTRICAL_RESIDUAL_EPS_KW = 1.0e-5
+    KPI_COLUMNS: Tuple[str, ...] = KPI_COLUMNS
+    kpi_definition = staticmethod(get_kpi_definition)
+    kpi_metadata = staticmethod(resolve_kpi_metadata)
+
+    @staticmethod
+    def _empty_v2_frame(attrs: Optional[Mapping[str, object]] = None) -> pd.DataFrame:
+        empty = pd.DataFrame(columns=list(KPI_COLUMNS))
+        if attrs:
+            empty.attrs.update(attrs)
+        return empty
+
     SCORECARD_DEFAULT_KPIS: Tuple[str, ...] = (
         'district_thermal_service_audit_discomfort_ratio',
         'district_thermal_service_audit_thermal_coverage_ratio',
@@ -3025,16 +3037,18 @@ class CityLearnKPIService:
             )
 
         output = pd.DataFrame(list(records.values()))
+        attrs: Dict[str, object] = {}
         if getattr(robustness_service, 'enabled', False):
-            output.attrs['robustness_audit'] = robustness_service.audit_summary()
+            attrs['robustness_audit'] = robustness_service.audit_summary()
         if provenance is not None:
-            output.attrs['energy_accounting'] = provenance.get_metadata()
+            attrs['energy_accounting'] = provenance.get_metadata()
         from citylearn.internal.kpi_family_audit import metadata as family_metadata
-        output.attrs['kpi_family_audit'] = family_metadata()
-        output.attrs['kpi_family_audit']['equity_conditions'] = family_audit['equity_conditions']
+        attrs['kpi_family_audit'] = family_metadata()
+        attrs['kpi_family_audit']['equity_conditions'] = family_audit['equity_conditions']
         if output.empty:
-            return pd.DataFrame(columns=['cost_function', 'value', 'name', 'level'])
+            return self._empty_v2_frame(attrs)
 
+        extra_columns: List[str] = []
         if getattr(env, 'topology_mode', 'static') == 'dynamic':
             lifecycle = getattr(env, 'topology_member_lifecycle', {}) or {}
             existing_buildings = set(output[output['level'] == 'building']['name'].astype(str).tolist())
@@ -3062,6 +3076,16 @@ class CityLearnKPIService:
                 output.loc[mask, 'topology_born_at'] = state.get('born_at')
                 output.loc[mask, 'topology_removed_at'] = state.get('removed_at')
                 output.loc[mask, 'topology_active'] = 1.0 if state.get('active', False) else 0.0
+            extra_columns = ['topology_born_at', 'topology_removed_at', 'topology_active']
 
+        metadata_by_cf = {
+            str(cf): resolve_kpi_metadata(str(cf))
+            for cf in output['cost_function'].unique().tolist()
+        }
+        cfs = output['cost_function'].tolist()
+        output['unit'] = [metadata_by_cf[str(cf)][0] for cf in cfs]
+        output['description'] = [metadata_by_cf[str(cf)][1] for cf in cfs]
+        output = output[list(KPI_COLUMNS) + extra_columns]
         output = run(progress, 'formatting', lambda: output.sort_values(['level', 'name', 'cost_function']).reset_index(drop=True))
+        output.attrs.update(attrs)
         return output

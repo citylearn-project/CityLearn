@@ -2,8 +2,19 @@
 
 from pathlib import Path
 import ast
+import importlib.util
 import re
+import sys
 from urllib.parse import urlsplit
+
+
+def load_kpi_registry(root):
+    path = root / "citylearn/internal/kpi_registry.py"
+    spec = importlib.util.spec_from_file_location("_citylearn_kpi_registry", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def scorecard_names(root):
@@ -151,6 +162,73 @@ def website_guide_content(content):
     return content.replace("(../assets/", "(../../../assets/")
 
 
+def scorecard_kpi_page(root):
+    names = scorecard_names(root)
+    registry = load_kpi_registry(root)
+    lines = [
+        "# Default scorecard KPI names", "",
+        "This table is generated from `SCORECARD_DEFAULT_KPIS` and the KPI metadata registry",
+        "at documentation build time. See [How to read the scorecard](scorecard.md)",
+        "for interpretation and [KPI reference](kpis_reference.md) for equations.",
+        "The full evaluation table contains additional KPIs; see the [complete KPI catalogue](kpi_catalogue.md).", "",
+    ]
+    for level in ("district", "building"):
+        lines += [
+            "## " + level.capitalize(), "",
+            "| KPI | Unit | Description |",
+            "|---|---|---|",
+        ]
+        for name in names:
+            if name.startswith(level + "_"):
+                unit, description = registry.resolve_kpi_metadata(name)
+                lines.append(f"| `{name}` | `{unit}` | {description} |")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def kpi_catalogue(root):
+    registry = load_kpi_registry(root)
+    lines = [
+        "# Complete KPI catalogue", "",
+        "This page is generated from `citylearn.internal.kpi_registry` when the documentation is built.",
+        "Every row returned by `evaluate_v2()`, `scorecard()` and `MultiCommunityEnv.evaluate_v2()`",
+        "resolves its `unit` and `description` columns from this registry.", "",
+        "## Canonical units", "",
+        "| Unit | Meaning |",
+        "|---|---|",
+    ]
+    for unit, meaning in registry.KPI_UNITS.items():
+        lines.append(f"| `{unit}` | {meaning} |")
+    lines.append("")
+
+    for level in ("district", "building", "portfolio"):
+        entries = [
+            item for item in registry.KPI_REGISTRY.values()
+            if item.level == level and item.cost_function != "topology_lifecycle_presence"
+        ]
+        lines += [f"## {level.capitalize()} KPIs", ""]
+        families = sorted({item.family for item in entries})
+        for family in families:
+            lines += [
+                f"### `{family}`", "",
+                "| KPI | Unit | Description |",
+                "|---|---|---|",
+            ]
+            for item in sorted((e for e in entries if e.family == family), key=lambda x: x.cost_function):
+                lines.append(f"| `{item.cost_function}` | `{item.unit}` | {item.description} |")
+            lines.append("")
+
+    lifecycle = registry.get_kpi_definition("topology_lifecycle_presence")
+    lines += [
+        "## Dynamic topology lifecycle placeholder", "",
+        "| KPI | Unit | Description |",
+        "|---|---|---|",
+        f"| `{lifecycle.cost_function}` | `{lifecycle.unit}` | {lifecycle.description} |",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def prepare_guides(app):
     root = Path(app.confdir).parents[1]
     source = root / "docs"
@@ -161,19 +239,8 @@ def prepare_guides(app):
             continue
         content = website_guide_content(path.read_text(encoding="utf-8"))
         (destination / path.name).write_text(content, encoding="utf-8")
-    names = scorecard_names(root)
-    lines = [
-        "# Default scorecard KPI names", "",
-        "This list is generated from the simulator's `SCORECARD_DEFAULT_KPIS`",
-        "selection at documentation build time. See [How to read the scorecard](scorecard.md)",
-        "for interpretation and [KPI reference](kpis_reference.md) for definitions.",
-        "The full evaluation table contains additional KPIs.", "",
-    ]
-    for level in ("district", "building"):
-        lines += ["## " + level.capitalize(), ""]
-        lines += ["- `" + name + "`" for name in names if name.startswith(level + "_")]
-        lines += [""]
-    (destination / "scorecard_kpi_names.md").write_text("\n".join(lines), encoding="utf-8")
+    (destination / "scorecard_kpi_names.md").write_text(scorecard_kpi_page(root), encoding="utf-8")
+    (destination / "kpi_catalogue.md").write_text(kpi_catalogue(root), encoding="utf-8")
     (destination / "dataset_catalogue.md").write_text(dataset_catalogue(root), encoding="utf-8")
 
 
@@ -188,7 +255,7 @@ def guide_source_link(app, pagename, templatename, context, doctree):
     """Point edit links at maintained sources, not generated guide copies."""
     if not pagename.startswith("guides/"):
         return
-    if pagename in ("guides/scorecard_kpi_names", "guides/dataset_catalogue"):
+    if pagename in ("guides/scorecard_kpi_names", "guides/kpi_catalogue", "guides/dataset_catalogue"):
         context["display_github"] = False
     else:
         context["meta"] = dict(context.get("meta") or {})
