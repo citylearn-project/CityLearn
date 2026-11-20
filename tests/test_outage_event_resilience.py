@@ -101,7 +101,9 @@ def _build_minute_outage_env(
         _configure_building(b2, 'Building_2.csv')
         schema['buildings']['Building_2'] = b2
 
-    env = CityLearnEnv(schema, central_agent=True, episode_time_steps=steps, random_seed=0, offline=True)
+    # The demo rows are 900 s; other steps reuse them as rows of that step (tests then set time_step_ratio).
+    env = CityLearnEnv(schema, central_agent=True, episode_time_steps=steps, random_seed=0, offline=True,
+                       time_step_ratio_mode=None if seconds_per_time_step == 900 else 'compress')
     env.reset(seed=0)
     return env
 
