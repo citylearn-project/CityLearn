@@ -177,7 +177,15 @@ lists every changed row and the name that keeps its 3.6.0 value.
 - **Portfolio rates** of `MultiCommunityEnv` (EV departure rates and means,
   service levels, start delay, self-consumption) are pooled from their additive
   denominators instead of weighted by community
-  ([#244](https://github.com/citylearn-project/CityLearn/issues/244)).
+  ([#244](https://github.com/citylearn-project/CityLearn/issues/244)). The
+  community-market local shares of demand and export and the demand-response
+  compliance and audit coverage ratios are pooled the same way, from local plus
+  grid energy and from requested energy; the new district rows
+  `district_demand_response_valid_requested_total_kwh` and
+  `district_demand_response_credited_total_kwh` are the components of the
+  compliance ratio ([#285](https://github.com/citylearn-project/CityLearn/issues/285)).
+  District and building values are unchanged; rerun `MultiCommunityEnv`
+  evaluations whose portfolio rows you compare.
 - **BAU ramping average** is the mean upward ramp per step instead of the sum
   over the episode; the sum is published as `*_ramping_total_*_kw`
   ([#245](https://github.com/citylearn-project/CityLearn/issues/245)). The ratio

@@ -353,7 +353,15 @@ Code that reads these cells must handle <code class="docutils literal notranslat
 <li><p><strong>Portfolio rates</strong> of <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> (EV departure rates and means,
 service levels, start delay, self-consumption) are pooled from their additive
 denominators instead of weighted by community
-(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/244">#244</a>).</p></li>
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/244">#244</a>). The
+community-market local shares of demand and export and the demand-response
+compliance and audit coverage ratios are pooled the same way, from local plus
+grid energy and from requested energy; the new district rows
+<code class="docutils literal notranslate"><span class="pre">district_demand_response_valid_requested_total_kwh</span></code> and
+<code class="docutils literal notranslate"><span class="pre">district_demand_response_credited_total_kwh</span></code> are the components of the
+compliance ratio (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/285">#285</a>).
+District and building values are unchanged; rerun <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code>
+evaluations whose portfolio rows you compare.</p></li>
 <li><p><strong>BAU ramping average</strong> is the mean upward ramp per step instead of the sum
 over the episode; the sum is published as <code class="docutils literal notranslate"><span class="pre">*_ramping_total_*_kw</span></code>
 (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/245">#245</a>). The ratio

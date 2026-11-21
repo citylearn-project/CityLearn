@@ -363,15 +363,27 @@ equal the ratio of the pooled numerator and denominator and ignore <code class="
 <tr class="row-odd"><td><p>Solar self-consumption (control and BAU)</p></td>
 <td><p>Solar generation</p></td>
 </tr>
+<tr class="row-even"><td><p>Community-market local share of demand (<code class="docutils literal notranslate"><span class="pre">*_local_share_of_demand_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">*_import_share_ratio</span></code>)</p></td>
+<td><p>Local import plus grid import after local trading</p></td>
+</tr>
+<tr class="row-odd"><td><p>Community-market local share of export</p></td>
+<td><p>Local export plus grid export after local trading</p></td>
+</tr>
+<tr class="row-even"><td><p>Demand-response compliance</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">demand_response_valid_requested_total_kwh</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Demand-response audit compliance, requested-energy coverage and baseline coverage, per purpose</p></td>
+<td><p>The audit’s valid requested energy, requested energy and active intervals</p></td>
+</tr>
 </tbody>
 </table>
 <p>The BAU deltas and ratios of the pooled deferrable service level, start delay
 and self-consumption are taken between the pooled control and BAU values.
 Communities whose value is undefined carry no weight.</p>
 <p>Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
-ramping and load-factor penalties), comfort and resilience proportions, shares,
-equity, audit and coverage ratios, demand-response compliance, battery capacity
-fade, and the <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios of battery capacity fade and
+ramping and load-factor penalties), comfort and resilience proportions, equity,
+the thermal-service, EV-departure and other audit ratios, battery capacity fade,
+and the <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios of battery capacity fade and
 equivalent full cycles.</p>
 <p>Portfolio KPI names replace a leading <code class="docutils literal notranslate"><span class="pre">district_</span></code> prefix with <code class="docutils literal notranslate"><span class="pre">portfolio_</span></code>, for example <code class="docutils literal notranslate"><span class="pre">district_demand_response_revenue_total_eur</span></code> becomes <code class="docutils literal notranslate"><span class="pre">portfolio_demand_response_revenue_total_eur</span></code>.</p>
 </section>
