@@ -298,6 +298,12 @@ class CityLearnPhysicsInvariantService:
         if not bool(getattr(building, "simulate_power_outage", False)) or outage_signal < 1.0:
             return
 
+        net = self._safe_index(building.net_electricity_consumption, t, 0.0)
+        self._require(abs(net) <= self.ENERGY_EPS, (
+            f"Non-zero grid exchange during outage for '{building.name}' at t={t}: "
+            f"net={net:.6f} kWh, expected=0 kWh."
+        ))
+
         solar_generation = self._safe_index(building.solar_generation, t, 0.0)
         storage_energy = self._safe_index(building.electrical_storage.electricity_consumption, t, 0.0)
         charger_energy = self._safe_index(building.chargers_electricity_consumption, t, 0.0)
