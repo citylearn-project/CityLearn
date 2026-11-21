@@ -25,6 +25,7 @@ os wrappers RLlib só o importam quando está instalado.
 | Datasets Parquet | `.venv/bin/pip install -e ".[parquet]"` |
 | PV autosizing | `.venv/bin/pip install -e ".[pysam]"` |
 | Testes em paralelo | `.venv/bin/pip install pytest-xdist` |
+| Cobertura (`--cov=citylearn`) e limite de 600 s por teste em `pytest.ini` | `.venv/bin/pip install pytest-cov pytest-timeout` (ambos em `test_requirements.txt`) |
 | Notebooks de exemplo | `.venv/bin/pip install nbclient nbformat ipykernel` |
 | Checks de build | `.venv/bin/pip install build twine` |
 
@@ -73,7 +74,7 @@ e não um par.
 | Subconjunto rápido (cerca de um minuto) | `.venv/bin/pytest -q tests/unit` |
 | Suite completa (vários minutos; `-n 4` com pytest-xdist) | `.venv/bin/pytest -q` |
 | Notebooks de exemplo | `.venv/bin/python scripts/ci/run_notebooks.py` |
-| Lint critico | `.venv/bin/python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821` |
+| Lint (regras em `pyproject.toml`, como no CI) | `.venv/bin/python -m ruff check citylearn tests scripts/manual scripts/ci` |
 | Auditoria entity contract | `.venv/bin/python scripts/audit/audit_entity_contract.py --strict` |
 | Auditoria fisica | `.venv/bin/python scripts/audit/audit_physics.py` |
 | Whitespace diff | `git diff --check` |

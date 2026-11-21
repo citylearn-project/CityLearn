@@ -3,6 +3,10 @@ from typing import Mapping
 import numpy as np
 from citylearn.base import Environment, EpisodeTracker
 from citylearn.energy_model import Battery
+from citylearn.preprocessing import (
+    Normalize as Normalize,
+    PeriodicNormalization as PeriodicNormalization,
+)
 
 ZERO_DIVISION_PLACEHOLDER = 0.000001
 LOGGER = logging.getLogger(__name__)

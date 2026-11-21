@@ -61,7 +61,8 @@ python -m pytest -q -n 4
 pytest.ini sets a 600 s timeout per test (`pytest-timeout`), so a hung test
 fails instead of blocking CI; the slowest tests take about two minutes.
 `python -m pytest -q --cov=citylearn --cov-report=term` prints the coverage
-(`pytest-cov`); CI reports it on one job and does not gate on it.
+(`pytest-cov`); a separate workflow (`.github/workflows/coverage.yml`) reports
+it weekly and on manual dispatch without slowing down pull-request checks.
 
 CI also runs the linter with the rules selected in `pyproject.toml`
 (`[tool.ruff.lint]`); run the same command before you push:

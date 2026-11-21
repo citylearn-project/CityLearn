@@ -12,11 +12,12 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     Pvwattsv8 = None
 from citylearn import random_streams
-from citylearn.base import Environment
+from citylearn.base import Environment, EpisodeTracker as EpisodeTracker
 from citylearn.data import (
     DataSet,
     ZERO_DIVISION_PLACEHOLDER,
     DeferrableApplianceSimulation,
+    EnergySimulation as EnergySimulation,
     EscalatorSimulation,
     WashingMachineSimulation,
 )

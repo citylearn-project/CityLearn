@@ -7,7 +7,7 @@ pyarrow
 # NREL-PySAM has no Python 3.14 wheels yet; the PV autosizing tests skip without it.
 nrel-pysam; python_version < "3.14"
 pytest
-# Per-test timeout (pytest.ini) and the coverage report of the CI job.
+# Per-test timeout (pytest.ini) and the coverage report workflow (.github/workflows/coverage.yml).
 pytest-timeout
 pytest-cov
 ruff
