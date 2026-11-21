@@ -29,21 +29,39 @@ Move older entries to the [release archive](releases_archive.md) without droppin
 their validation evidence. Keep the latest release and its migration information
 on the current page.
 
-## CI, tagging and publication
+## CI, tagging, package and documentation publication
 
-Commit the reviewed changes with the maintainer's identity, push once and wait for
-the relevant CI to pass. Tag the approved commit as `vX.Y.Z`.
+1. Commit the reviewed changes with the maintainer's identity, push once and wait for
+   the relevant CI to pass.
+2. Tag the approved commit as `vX.Y.Z` and push the tag (`git push origin vX.Y.Z`).
+   - **PyPI publication:** A tag push by itself does not publish to PyPI. The
+     [publication workflow](https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/pypi_deploy.yml)
+     runs when a GitHub Release is published or when explicitly dispatched; choose one
+     trigger per release. Confirm the build, installed-export check and `pypi` publish
+     jobs succeeded for the intended commit, then verify the pinned package from PyPI
+     in a clean environment.
+   - **Documentation publication (automatic on tag push):** Pushing tag `vX.Y.Z`
+     automatically triggers the
+     [Sphinx workflow](https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/sphinx.yml),
+     which builds the documentation at `vX.Y.Z`, deploys `/X.Y.Z/`, updates
+     `/versions.json`, and—for a final (non-prerelease) version that is the newest
+     release—also updates `/stable/` and the site root `/`.
+   - **Rerunning a failed or missed documentation build:** Open **Actions → Sphinx
+     build → Run workflow** on `master` and enter the exact tag in `tag` (for example
+     `v3.6.0`). Re-dispatching is idempotent and overwrites `/X.Y.Z/` (and `/stable/`
+     plus `/` when `X.Y.Z` is the latest final release).
+   - **Post-release documentation checklist:**
+     1. Confirm the `Sphinx build` (`build` and `deploy`) jobs succeeded for `vX.Y.Z`.
+     2. Open `https://www.citylearn.net/X.Y.Z/` and verify the version banner and the
+        left-sidebar **Other versions** section show `X.Y.Z` as `(current)`.
+     3. Open `https://www.citylearn.net/versions.json` and confirm `X.Y.Z` is listed
+        and selectable from both the top selector and **Other versions** in the sidebar.
+     4. For a **final release** (no `a`/`b`/`rc` suffix), open both
+        `https://www.citylearn.net/` and `https://www.citylearn.net/stable/` and
+        confirm both serve `CityLearn X.Y.Z` (`stable (X.Y.Z)`), while
+        `https://www.citylearn.net/dev/` continues to serve `master`.
 
-The [publication workflow](https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/pypi_deploy.yml) runs when a GitHub
-Release is published or when explicitly dispatched. Choose one trigger per release.
-A tag push by itself does not publish the package.
-
-The build job checks the distributions and installed exports. The publish job
-uses the existing `citylearn` PyPI project and the GitHub `pypi` environment's
-configured credentials. Confirm both jobs succeeded for the intended commit and
-verify the pinned package from PyPI in a clean environment.
-
-The publish job supports two credential modes:
+The PyPI publish job supports two credential modes:
 
 - **API credentials (current default):** the `PYPI_USERNAME` and `PYPI_PASSWORD`
   secrets, uploaded with `twine`.
@@ -57,6 +75,47 @@ The publish job supports two credential modes:
      (Settings → Secrets and variables → Actions → Variables).
   3. After one successful release, delete the `PYPI_USERNAME` and `PYPI_PASSWORD`
      secrets.
+
+## Documentation site
+
+The [Sphinx workflow](https://github.com/citylearn-project/CityLearn/blob/master/.github/workflows/sphinx.yml)
+publishes to GitHub Pages (the `gh-pages` branch, custom domain from the `CUSTOM_DOMAIN` secret):
+
+| URL | Content | Built when |
+|---|---|---|
+| `/` | Latest final release (`stable`). The public Documentation link, the site home and existing links to individual pages open the latest stable release by default. | Together with the latest final release (`v*` tag push or manual tag dispatch). |
+| `/stable/` | Explicit alias of the latest final (non-prerelease) release. | Together with that release. |
+| `/<version>/` (for example `/3.6.0/`) | Pinned documentation at tag `v<version>`. | A tag `v*` is pushed, or the workflow is run manually with `tag=v<version>`. |
+| `/dev/` | Development documentation from `master` (includes `Unreleased` changes). | Every push to `master`. |
+| `/versions.json` | Published versions read by the top selector and the **Other versions** sidebar section. | Every `master` or release deployment. |
+
+Every page provides both a top version selector and an **Other versions** section in the left sidebar
+(`docs/source/_static/version_switcher.js`, `docs/source/_templates/layout.html`), built from `/versions.json`.
+Both show which version the reader is viewing and switch to the equivalent page in the chosen version when that
+page exists (`HTTP HEAD`), or to that version's home page when the page was added or renamed in another release.
+
+### Initial rollout tags
+
+When this workflow first lands on `master`, run **Actions → Sphinx build → Run workflow** from `master` for the
+existing `3.x` final tags that include the current Sphinx layout:
+
+1. `v3.4.0` → publishes `/3.4.0/`
+2. `v3.5.0` → publishes `/3.5.0/`
+3. `v3.6.0` → publishes `/3.6.0/`, `/stable/` and the site root `/`
+
+(`scripts/ci/update_versions.py` sorts versions semantically regardless of dispatch order, so `/stable/` and `/`
+always track the highest non-prerelease version; running `v3.6.0` last avoids intermediate root updates.) Earlier
+`3.0.0`–`3.3.1` tags can also be dispatched on demand if needed. A release build copies `layout.html` and
+`version_switcher.js` from `master`, so tags cut before this change still get both the banner selector and the
+**Other versions** sidebar section.
+
+Limits of this scheme:
+
+- Deploying a new stable release at `/` uses `keep_files: true` so `/dev/`, `/stable/`, `/<version>/` and
+  `versions.json` are preserved; if a top-level HTML page is deleted between two final releases, remove the stale
+  root file from `gh-pages` manually (versioned subfolders `/<version>/`, `/stable/` and `/dev/` are replaced
+  cleanly on each deploy).
+- In Settings → Environments → `github-pages`, allow deployments from `master` and from release tags `v*`.
 
 ## Version policy
 

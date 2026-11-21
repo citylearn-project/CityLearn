@@ -1,12 +1,24 @@
 name: Sphinx build
 
+# The site root / (and /stable/) serves the latest final release so the public Documentation link, the site home and
+# existing deep links open the latest stable release by default. Each release tag v<version> is published under
+# /<version>/, and master (development) is published under /dev/ (docs/publishing.md, "Documentation site"). To
+# publish or rerun an existing tag, run this workflow manually from master with the tag as input.
 on:
   push:
     branches:
     - master
+    tags:
+    - 'v*'
   pull_request:
     branches:
     - master
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build and publish under /<version>/, for example v3.6.0
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -14,8 +26,39 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
     - uses: actions/checkout@v7
+      with:
+        # An empty ref is the event's own ref; a manual run builds the given tag.
+        ref: ${{ inputs.tag }}
+    - name: Select the documentation version
+      id: version
+      env:
+        TAG: ${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) || '' }}
+      run: |
+        version="${TAG#v}"
+        if [ -n "$version" ] && ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?$'; then
+          echo "::error::Not a release version: $TAG"
+          exit 1
+        fi
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+    - name: Use the version switcher of master
+      # Old tags do not have the switcher or sidebar template, so release builds take them from master.
+      if: steps.version.outputs.version != ''
+      uses: actions/checkout@v7
+      with:
+        ref: master
+        path: master-docs
+        sparse-checkout: docs/source
+    - name: Copy the version switcher
+      if: steps.version.outputs.version != ''
+      run: |
+        mkdir -p docs/source/_static docs/source/_templates
+        cp master-docs/docs/source/_templates/layout.html docs/source/_templates/layout.html
+        cp master-docs/docs/source/_static/version_switcher.js docs/source/_static/version_switcher.js
+        rm -rf master-docs
     - name: Set up Python
       uses: actions/setup-python@v7
       with:
@@ -30,21 +73,30 @@ jobs:
         sudo apt-get install -y pandoc
         python -m pip install --upgrade pip
         python -m pip install -r requirements.txt -r test_requirements.txt -r docs/requirements.txt
-        # autodoc imports citylearn.end_use_load_profiles, whose dependencies are an optional extra.
-        python -m pip install -e ".[end_use_load_profiles]"
+        # autodoc imports citylearn.end_use_load_profiles; older tags without the extra fall back to a plain install.
+        python -m pip install -e ".[end_use_load_profiles]" || python -m pip install -e .
     - name: Test documentation examples
+      # Old tags may not have these tests.
+      if: steps.version.outputs.version == ''
       run: python -m pytest -q tests/test_documentation_examples.py
     - name: Check the KPI catalogue
-      # The catalogue pages are generated from docs/kpi_catalogue.yml, and every emitted KPI must be in it.
+      # The catalogue pages are generated from docs/kpi_catalogue.yml on master; older tags predate it.
+      if: steps.version.outputs.version == ''
       run: |
         python scripts/docs/kpi_catalogue.py --check
         python -m pytest -q tests/test_kpi_catalogue.py
-    - name: Build and check HTML
+    - name: Build HTML
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
       run: |
         # citylearn.internal is private; docs/source/python_api.rst lists the public modules.
         sphinx-apidoc citylearn citylearn/internal -o docs/source/api -e -M
-        sphinx-build -b html docs/source docs/build/html
-        python scripts/ci/check_docs.py docs/build/html
+        # docs_is_release marks release builds (published at /<version>/, and at / and /stable/ when latest final).
+        sphinx-build -b html ${VERSION:+-A docs_is_release=true} docs/source docs/build/html
+    - name: Check HTML
+      # The checks describe the current site; an old tag can fail them for reasons that do not matter.
+      if: steps.version.outputs.version == ''
+      run: python scripts/ci/check_docs.py docs/build/html
     - name: Save documentation preview
       uses: actions/upload-artifact@v7
       with:
@@ -53,24 +105,83 @@ jobs:
         retention-days: 7
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-24.04
     environment: github-pages
     permissions:
       contents: write
+    # Every publication commits to the same branch, so run them one after the other.
+    concurrency:
+      group: documentation-deploy
+      cancel-in-progress: false
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
     steps:
     - uses: actions/checkout@v7
+      with:
+        ref: master
     - uses: actions/download-artifact@v8
       with:
         name: documentation-html
         path: docs/build/html
-    - name: Add CNAME
+    - name: Read the published versions
+      uses: actions/checkout@v7
+      continue-on-error: true
+      with:
+        ref: gh-pages
+        path: published
+        sparse-checkout: versions.json
+        sparse-checkout-cone-mode: false
+    - name: Update versions.json and root metadata
+      id: versions
       env:
         CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
-      run: printf '%s\n' "$CUSTOM_DOMAIN" > docs/build/html/CNAME
-    - name: Deploy
+      run: |
+        python -m pip install packaging
+        mkdir -p docs/build/site-meta
+        if [ -n "$CUSTOM_DOMAIN" ]; then
+          printf '%s\n' "$CUSTOM_DOMAIN" > docs/build/site-meta/CNAME
+        fi
+        if [ -n "$VERSION" ]; then
+          python scripts/ci/update_versions.py --existing published/versions.json --add "$VERSION" \
+            --output docs/build/site-meta/versions.json >> "$GITHUB_OUTPUT"
+        else
+          python scripts/ci/update_versions.py --existing published/versions.json \
+            --output docs/build/site-meta/versions.json >> "$GITHUB_OUTPUT"
+        fi
+    - name: Publish development documentation under /dev/ (master)
+      if: env.VERSION == ''
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/build/html
+        destination_dir: dev
+    - name: Publish the release under /<version>/
+      if: env.VERSION != ''
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/build/html
+        destination_dir: ${{ env.VERSION }}
+    - name: Publish the latest final release under /stable/
+      if: env.VERSION != '' && steps.versions.outputs.is_stable == 'true'
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/build/html
+        destination_dir: stable
+    - name: Publish the latest final release at the site root /
+      if: env.VERSION != '' && steps.versions.outputs.is_stable == 'true'
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/build/html
+        # Keep /dev/, /stable/, /<version>/ and versions.json.
+        keep_files: true
+    - name: Publish versions.json and CNAME at the site root
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/build/site-meta
+        keep_files: true
