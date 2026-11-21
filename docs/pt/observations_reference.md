@@ -267,7 +267,7 @@ O `request_id` e validade da baseline de demand response ficam em `observations[
 | `charging_priority_ratio` | `entity_core_electrical` | ratio | Urgencia energetica normalizada. |
 | `connected_ev_soc_min_ratio` | `entity_core_electrical` | ratio | SOC minimo descarregavel do EV ligado. |
 | `connected_ev_energy_available_kwh` | `entity_core_electrical` | kWh | Energia V2G disponivel acima do SOC minimo. |
-| `connected_ev_energy_to_full_kwh` | `entity_core_electrical` | kWh | Energia que ainda cabe no EV ligado. |
+| `connected_ev_energy_to_full_kwh` | `entity_core_electrical` | kWh | Energia que ainda cabe no EV ligado; na versao 2 da fisica, ate a capacidade degradada, onde a carga para. |
 | `can_charge`, `can_discharge` | `entity_core_electrical` | binario | Se ha capacidade factivel de carga/descarga agora. |
 | `available_charge/discharge_power_kw` | `entity_core_electrical` | kW | Potencia factivel agora depois de SOC, availability, outage e headroom. |
 | `available_charge/discharge_action_normalized` | `entity_core_electrical` | ratio | Magnitude normalizada da acao ainda factivel. |
@@ -296,7 +296,7 @@ O `request_id` e validade da baseline de demand response ficam em `observations[
 | `soc_min_ratio` | `entity_core_electrical` | ratio | SOC minimo derivado de depth of discharge. |
 | `soc_max_ratio` | `entity_core_electrical` | ratio | SOC maximo, normalmente 1. |
 | `energy_available_kwh` | `entity_core_electrical` | kWh | Energia descarregavel acima de `soc_min`. |
-| `energy_to_full_kwh` | `entity_core_electrical` | kWh | Energia ate 100%. |
+| `energy_to_full_kwh` | `entity_core_electrical` | kWh | Energia ate `soc_max_ratio`; na versao 2 da fisica, ate a capacidade degradada se for menor, onde a carga para. |
 
 ## Tabela `storage`
 
@@ -314,7 +314,7 @@ O `request_id` e validade da baseline de demand response ficam em `observations[
 | `electrical_storage_soc_ratio` | `entity_core_electrical` | ratio | SOC canonico. |
 | `max_charge_power_kw` | `entity_core_electrical` | kW | Potencia maxima de carga no estado atual. |
 | `max_discharge_power_kw` | `entity_core_electrical` | kW | Potencia maxima de descarga no estado atual. |
-| `energy_to_full_kwh` | `entity_core_electrical` | kWh | Energia ate capacidade cheia. |
+| `energy_to_full_kwh` | `entity_core_electrical` | kWh | Energia ate capacidade cheia; na versao 2 da fisica, ate `degraded_capacity_kwh` se for menor, onde a carga para. |
 | `energy_available_kwh` | `entity_core_electrical` | kWh | Energia acima do SOC minimo. |
 | `can_charge`, `can_discharge` | `entity_core_electrical` | binario | Se o BESS pode carregar/descarregar agora. |
 | `available_charge/discharge_power_kw` | `entity_core_electrical` | kW | Potencia BESS factivel agora depois de SOC, outage e headroom. |

@@ -213,6 +213,22 @@ Pacote de trabalho 4 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-
   falha de energia é servido pela alimentação local que as outras cargas deixam
   e, se esta não chegar, para e é contado como falhado
   ([#232](https://github.com/citylearn-project/CityLearn/issues/232)).
+- **Energia até cheio em baterias degradadas.** `Battery.charge` para na
+  capacidade degradada, que a perda de capacidade baixa abaixo da nominal, mas
+  as observações de entidades calculavam a energia que a bateria ainda aceita a
+  partir da capacidade nominal. Uma bateria cheia por degradação era assim
+  observada como podendo carregar: num ano de
+  `citylearn_challenge_2022_phase_all_plus_evs` com o BAU, os carregadores
+  indicaram `can_charge` 1 e `available_charge_power_kw` positivo em 35 208
+  steps de carregador em que o EV não aceitava nada. O BAU reservava essa
+  potência, e a bateria da casa descarregava para ela e exportava a energia. Na
+  versão 2 da física, `energy_to_full_kwh`, `connected_ev_energy_to_full_kwh`,
+  `flexible_energy_to_full_kwh` e as features de carga derivadas param no menor
+  entre o limite de SOC e a capacidade degradada, para baterias de EV e
+  estacionárias. A física simulada não muda, e baterias sem degradação, incluindo
+  todas as dos `pt_rec_*`, dão as mesmas observações. Sem o bundle
+  `entity_core_electrical`, nenhuma observação mostra a degradação, pelo que o
+  BAU continua a estimar a folga do EV com a capacidade nominal.
 - **Eficiência num sentido.** `one_way_efficiency` passa a conter a raiz
   quadrada de `efficiency`, que `round_trip_efficiency` devolvia;
   `round_trip_efficiency` mantém o valor com um `DeprecationWarning`.
@@ -221,7 +237,17 @@ Pacote de trabalho 4 da auditoria da 3.6.0 ([#226](https://github.com/citylearn-
   versão 1 da física reproduz a 3.6.0 bit a bit; na versão 2, a curva de
   descarga altera ligeiramente os datasets dos challenges (por exemplo, menos
   0,05% de importação do BAU em quatro semanas de
-  `citylearn_challenge_2022_phase_all_plus_evs`).
+  `citylearn_challenge_2022_phase_all_plus_evs`). A correção da energia até
+  cheio altera o BAU nos datasets com degradação das baterias dos EVs e com o
+  bundle `entity_core_electrical`: num ano de
+  `citylearn_challenge_2022_phase_all_plus_evs`, as baterias das casas exportam
+  menos 51 kWh do que descarregavam para EVs cheios, a importação dos membros
+  desce 46 kWh e o custo 0,03%, e a importação do distrito sobe 0,03%, porque
+  essa exportação deixa de compensar a importação de outros membros; os KPIs
+  de partida dos EVs não mudam. Num dia dos demos trifásicos de 15 segundos,
+  essa exportação desce de 3,10 kWh para menos de 0,01 kWh e o custo do BAU sobe
+  0,08 a 0,09%. Os `pt_rec_*` e
+  `citylearn_three_phase_electrical_service_demo` não mudam.
 - **Referências congeladas para as duas versões da física.** A auditoria de
   paridade do refactor (`scripts/audit/audit_refactor_parity.py`) e o teste de
   versões do NumPy (`tests/test_numpy_version_independence.py`) só comparavam
