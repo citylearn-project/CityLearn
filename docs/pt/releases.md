@@ -5,6 +5,20 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Wrappers do RLlib com o Ray atual.** `RLlibSingleAgentWrapper` e
+  `RLlibMultiAgentEnv` são testados com o Ray 2.60.0 (nova API stack, Python 3.10
+  a 3.14, gymnasium 1.2.2): o PPO e o SAC treinam durante algumas iterações num
+  dia de `citylearn_challenge_2023_phase_2_local_evaluation` e o `RLModule`
+  treinado produz ações (`tests/test_rllib_wrappers.py`, ignorado sem o Ray e
+  executado no job de CI que instala o Ray). O `RLlibMultiAgentEnv` falhava
+  nessa versão no primeiro `reset()`, porque não definia `agents` nem
+  `possible_agents`; passa a definir ambos e os `observation_spaces` e
+  `action_spaces` de cada agente. O `RLlibMultiAgentActionWrapper` ordena as
+  ações pelo ID do agente e não pela ordem do dicionário. Um novo tutorial,
+  [Train a controller with RLlib](https://www.citylearn.net/usage/rllib_training.html),
+  treina controladores PPO de agente único e multiagente e avalia-os com
+  `evaluate_v2()`; o CI executa-o. Os resultados das simulações não mudam
+  ([#293](https://github.com/citylearn-project/CityLearn/issues/293)).
 - **Unidades e descrições dos KPIs.** `evaluate_v2()` e o CSV de várias comunidades em formato longo incluem `unit` e `description` do catálogo. Os CSV e Parquet em formato largo mantêm as suas colunas e incluem as definições no manifesto ([#298](https://github.com/citylearn-project/CityLearn/issues/298)).
 - **Ciclos das baterias no portefólio.** Os ciclos completos equivalentes usam a energia movimentada total e a capacidade nominal total das baterias. A diferença e o rácio face à execução BAU comparam os valores do portefólio. Volte a exportar os resultados anteriores do portefólio para comparar estes KPIs ([#330](https://github.com/citylearn-project/CityLearn/issues/330)).
 - **Catálogo de KPIs e referência de KPIs completa.** O
@@ -286,6 +300,11 @@ simulações e os KPIs não mudam.
   notebooks publicados. Um novo tutorial treina um controlador SAC do Stable
   Baselines3, avalia-o numa semana não vista e compara-o com o BAU; o notebook do
   tutorial da versão 2.1.2 é removido ([#267](https://github.com/citylearn-project/CityLearn/issues/267)).
+- **Saídas dos notebooks.** As páginas dos notebooks (`usage/agents`, `usage/load_environment`,
+  `usage/cli`, `usage/rl_training`) mostram as saídas de uma execução do CI: o workflow do Sphinx
+  executa os notebooks com `scripts/ci/run_notebooks.py --output-dir examples` antes da compilação, e
+  `check_docs.py --require-notebook-outputs` falha se uma página não tiver saídas. Os notebooks do
+  repositório continuam sem saídas ([#299](https://github.com/citylearn-project/CityLearn/issues/299)).
 - **CLI.** O `train --evaluate` avalia na janela do primeiro episódio de treino em
   vez do dataset inteiro. O resumo do treino só regista o nome da máquina e do
   utilizador com `--record_host`. O `simulate` mostra o caminho de cada ficheiro

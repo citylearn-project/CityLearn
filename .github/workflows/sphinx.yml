@@ -39,12 +39,21 @@ jobs:
       run: |
         python scripts/docs/kpi_catalogue.py --check
         python -m pytest -q tests/test_kpi_catalogue.py
+    - name: Execute the example notebooks
+      # The notebooks in the repository have no outputs. Run them as the notebooks job of run_tests.yml does and
+      # overwrite the sources in this checkout, so the pages show what CI ran. Artifacts cannot be shared between
+      # the two workflows without extra permissions, so the notebooks run again here (about one minute).
+      run: |
+        python -m pip install nbclient nbformat ipykernel "stable-baselines3>=2.4" "ray[rllib]" scikit-learn
+        python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+        python -m ipykernel install --user --name python3
+        python scripts/ci/run_notebooks.py --output-dir examples
     - name: Build and check HTML
       run: |
         # citylearn.internal is private; docs/source/python_api.rst lists the public modules.
         sphinx-apidoc citylearn citylearn/internal -o docs/source/api -e -M
         sphinx-build -b html docs/source docs/build/html
-        python scripts/ci/check_docs.py docs/build/html
+        python scripts/ci/check_docs.py --require-notebook-outputs docs/build/html
     - name: Save documentation preview
       uses: actions/upload-artifact@v7
       with:
