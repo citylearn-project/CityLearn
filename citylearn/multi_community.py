@@ -603,10 +603,10 @@ class MultiCommunityEnv(Env):
         for run_name, suffix in (("control", ""), ("business_as_usual", "_business_as_usual")):
             throughput_name = f"district_battery_total_throughput{suffix}_kwh"
             throughput = district[district["cost_function"] == throughput_name].set_index("community_id")["numeric_value"]
-            capacity = throughput.index.to_series().map({
+            capacity = pd.Series({
                 community_id: values.get(run_name, np.nan)
                 for community_id, values in capacities.items()
-            })
+            }, dtype="float64").reindex(throughput.index)
             nominal_capacity = capacity.sum()
             cycles = np.nan
             if nominal_capacity > 0 and np.isfinite(capacity).all() and np.isfinite(throughput).all():
