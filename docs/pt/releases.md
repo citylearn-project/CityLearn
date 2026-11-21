@@ -5,6 +5,7 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Atraso na resposta da bateria na BAU.** A referência usa a carga e a produção solar observadas no passo atual para decidir a ação da bateria estacionária. Os resultados face à BAU podem mudar, e o manifesto de exportação regista a nova definição. Consulte o [guia de migração](../migration.md#the-native-bau-uses-current-step-load-and-solar) e o [#190](https://github.com/citylearn-project/CityLearn/issues/190).
 - **Wrappers do RLlib com o Ray atual.** `RLlibSingleAgentWrapper` e
   `RLlibMultiAgentEnv` são testados com o Ray 2.60.0 (nova API stack, Python 3.10
   a 3.14, gymnasium 1.2.2): o PPO e o SAC treinam durante algumas iterações num
