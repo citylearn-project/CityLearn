@@ -295,7 +295,7 @@ class CityLearnPhysicsInvariantService:
 
     def _assert_outage_local_balance(self, building, t: int):
         outage_signal = self._safe_index(getattr(building, "power_outage_signal", []), t, 0.0)
-        if not bool(getattr(building, "simulate_power_outage", False)) or outage_signal < 1.0:
+        if not bool(getattr(building, "simulate_power_outage", False)) or outage_signal == 0.0:
             return
 
         net = self._safe_index(building.net_electricity_consumption, t, 0.0)
