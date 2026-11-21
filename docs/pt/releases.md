@@ -45,6 +45,18 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   pelo nome do edifício, também quando membros entram ou saem numa topologia
   dinâmica. Nenhum conjunto de dados incluído usa funções de recompensa por
   edifício.
+- **Agentes renomeados: `NoControlAgent` e `ZeroActionAgent`.** No CityLearn,
+  "baseline" designa o contrafactual dos KPIs, os mesmos edifícios sem
+  armazenamento e com PV, que os KPIs `*_baseline_*` reportam. Duas classes de
+  agentes usavam a palavra para outra coisa, pelo que passam a ter o nome do que
+  fazem: `citylearn.agents.base.BaselineAgent`, que desativa todas as ações
+  ativas, passa a `NoControlAgent`, e
+  `citylearn.agents.baseline.ZeroActionBaselineAgent`, que pede zero em todas as
+  ações, passa a `ZeroActionAgent` ([#297](https://github.com/citylearn-project/CityLearn/issues/297)). Os nomes antigos ficam como
+  aliases obsoletos das mesmas classes até uma versão futura, pelo que imports,
+  caminhos de agente na CLI e nos esquemas e agentes guardados com pickle
+  continuam a funcionar, com um `DeprecationWarning` que indica a nova classe e o
+  motivo. Os resultados não mudam.
 - **Ações não finitas.** Uma ação NaN passava por todos os limites `min`/`max`, pelo que uma ação NaN de armazenamento se tornava a maior descarga possível (a bateria do `minute_ev_demo` ia de 50% a 0% num passo de 15 minutos, o dobro do limite de potência). O `env.step()` passa a dar `ValueError` para ações NaN ou infinitas nas duas interfaces, e o `charge()` dos armazenamentos rejeita energia não finita ([#228](https://github.com/citylearn-project/CityLearn/issues/228)).
 - **Verificação de invariantes físicos.** Com `physics_invariant_checks=True`, um estado NaN ou infinito passa a ser uma violação em vez de ser lido como 0, e as verificações lançam `PhysicsInvariantError` (subclasse de `AssertionError`), pelo que o `python -O` deixa de as desligar ([#228](https://github.com/citylearn-project/CityLearn/issues/228)).
 - **Identidades físicas independentes do balanço líquido.** A verificação do balanço líquido reconstrói o consumo líquido a partir das séries dos equipamentos que o produziram, pelo que um erro de contabilização dentro do modelo de um equipamento passava: no `tests/data/minute_ev_demo`, 100 kWh somados ao consumo de uma carga não deslocável de 1,0 kWh não levantavam nenhum erro. O `physics_invariant_checks` passa a verificar também identidades que comparam cada série com as entradas e os estados do modelo. A eletricidade de cada bomba de calor e de cada aquecedor elétrico tem de igualar o calor produzido, incluindo a carga do armazenamento, dividido pelo COP ou pela eficiência. O arrefecimento, o aquecimento, as AQS e a carga não deslocável servidos não podem exceder a procura. A energia armazenada numa bateria tem de variar com a energia nos terminais à sua eficiência, e uma descarga tem de parar na reserva da profundidade de descarga. Cada identidade lança `PhysicsInvariantError`. As verificações são cumpridas em todos os datasets incluídos nas duas versões da física, e os resultados não mudam ([#277](https://github.com/citylearn-project/CityLearn/issues/277)).

@@ -2070,7 +2070,7 @@ class CityLearnEnv(Environment, Env):
         Parameters
         ----------
         agent: Union[str, 'citylearn.agents.base.Agent], optional
-            Agent class or string describing path to agent class, e.g. 'citylearn.agents.base.BaselineAgent'.
+            Agent class or string describing path to agent class, e.g. 'citylearn.agents.base.NoControlAgent'.
             If a value is not provided, defaults to the agent defined in the schema:agent:type.
 
         **kwargs : dict

@@ -14,7 +14,7 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import torch
 from citylearn import random_streams
-from citylearn.agents.base import Agent, BaselineAgent
+from citylearn.agents.base import Agent, NoControlAgent
 from citylearn.base import Environment
 from citylearn.building import Building
 from citylearn.citylearn import CityLearnEnv
@@ -348,7 +348,7 @@ class Neighborhood:
         
         # test initialization
         env = CityLearnEnv(schema, **env_kwargs)
-        model = BaselineAgent if model is None else model
+        model = NoControlAgent if model is None else model
         model = model(env=env, **model_kwargs)
         observations, _ = env.reset()
         

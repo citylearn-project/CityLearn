@@ -293,8 +293,12 @@ class RBCCommunityPolicy(_RuleBaselineAgent):
     DEFINITION_VERSION = 'community-v3'
 
 
-class ZeroActionBaselineAgent(Agent):
-    """Baseline that requests zero for every action dimension.
+class ZeroActionAgent(Agent):
+    """Agent that requests zero for every action dimension.
+
+    Up to CityLearn 3.6.0 this class was called ``ZeroActionBaselineAgent``. That name is a deprecated alias that
+    will be removed in a later release: in CityLearn, "baseline" names the KPI counterfactual, while this agent
+    requests zero actions.
 
     Under the entity interface it returns flat-like zero vectors in
     ``env.action_names`` order, which the entity interface accepts.
@@ -315,5 +319,15 @@ __all__ = [
     'RBCBasicPolicy',
     'RBCSmartPolicy',
     'RBCCommunityPolicy',
-    'ZeroActionBaselineAgent',
+    'ZeroActionAgent',
 ]
+
+
+def __getattr__(name: str):
+    # Deprecated names of renamed classes resolve to the same class, also for unpickling and import paths.
+    if name == 'ZeroActionBaselineAgent':
+        from citylearn.agents._renamed import renamed
+
+        return renamed(__name__, 'ZeroActionBaselineAgent', 'ZeroActionAgent', ZeroActionAgent)
+
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')

@@ -415,6 +415,26 @@ as before. Pass `-te start end` to evaluate on a chosen window. The training
 summary JSON records `hostname` and `username` only with `--record_host`;
 scripts that read these keys need the flag.
 
+### Renamed agent classes
+
+`citylearn.agents.base.BaselineAgent` is now `NoControlAgent`, and
+`citylearn.agents.baseline.ZeroActionBaselineAgent` is now `ZeroActionAgent`. In
+CityLearn, "baseline" names the KPI counterfactual, the same buildings without
+storage and with PV, which the `*_baseline_*` KPIs report; the two agents are a
+no-control and a zero-action controller, so their names now say so. The old
+names are deprecated aliases of the same classes, so existing imports, CLI
+`-a` paths, schema `agent.type` values and pickled agents keep working and only
+raise a `DeprecationWarning`. Replace the old names before a later release
+removes them:
+
+```python
+from citylearn.agents.base import NoControlAgent        # was BaselineAgent
+from citylearn.agents.baseline import ZeroActionAgent  # was ZeroActionBaselineAgent
+```
+
+The bundled EULP neighbourhood schemas and the default agent of generated EULP
+schemas use `citylearn.agents.base.NoControlAgent`. Results are unchanged.
+
 ## Upgrade from 3.5.0 to 3.6.0
 
 ### Battery discharge features during outages

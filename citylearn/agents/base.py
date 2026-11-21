@@ -8,6 +8,16 @@ from citylearn.citylearn import CityLearnEnv
 
 LOGGER = logging.getLogger(__name__)
 
+
+def __getattr__(name: str):
+    # Deprecated names of renamed classes resolve to the same class, also for unpickling and import paths.
+    if name == 'BaselineAgent':
+        from citylearn.agents._renamed import renamed
+
+        return renamed(__name__, 'BaselineAgent', 'NoControlAgent', NoControlAgent)
+
+    raise AttributeError(f'module {__name__!r} has no attribute {name!r}')
+
 def get_env_attr(env, name: str):
     """Read an attribute from the outermost wrapper that defines it, else from the base environment.
 
@@ -394,8 +404,12 @@ class Agent(Environment):
         count = len(self.__action_history_ids) if getattr(env, 'topology_mode', 'static') == 'dynamic' else len(self.action_space)
         self.__actions = [[[]] for _ in range(count)]
 
-class BaselineAgent(Agent):
-    r"""Passive no-control baseline where active control actions are disabled.
+class NoControlAgent(Agent):
+    r"""Passive no-control agent: every active control action is disabled.
+
+    Up to CityLearn 3.6.0 this class was called ``BaselineAgent``. That name is a deprecated alias that will be
+    removed in a later release: in CityLearn, "baseline" names the KPI counterfactual (the same buildings without
+    storage, with PV), while this agent controls nothing.
 
     This agent will provide results for when there is no storage for load shifting and no heat pump partial load. 
     The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. `None`, causing it to 
