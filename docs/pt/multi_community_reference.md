@@ -144,7 +144,7 @@ So KPIs district sao agregados:
 | Outros `_ratio`, `_percent` | Media ponderada por `weight`. |
 | `_kw`, `_c`, outros `_hours` e outros point metrics | Nao agregados na v1. |
 
-Os ratios reconstruidos a partir dos totais somados sao os ratios `ratio_to_baseline` e `ratio_to_business_as_usual` de custo, emissoes, import, export e net exchange da rede, e os ratios `ratio_to_business_as_usual` de geracao e export solar, carga EV e export V2G, carga, descarga e throughput da bateria, e contagens de ciclos e energia dos deferrable appliances. Usam apenas comunidades que reportam os dois totais, ignoram `weight` como os totais somados, e mantem a regra lower-is-better da [referencia de KPIs](kpis_reference.md#equacoes-base) para totais negativos de net exchange e custo. O ratio de um portfolio com uma comunidade e igual ao ratio district.
+Os ratios reconstruidos a partir dos totais somados sao os ratios `ratio_to_baseline` e `ratio_to_business_as_usual` de custo, emissoes, import, export e net exchange da rede, e os ratios `ratio_to_business_as_usual` de geracao e export solar, carga EV e export V2G, carga, descarga e throughput da bateria, e contagens de ciclos e energia dos deferrable appliances. Usam apenas comunidades que reportam os dois totais, ignoram `weight` como os totais somados, e mantem a regra lower-is-better da [referencia de KPIs](kpis_reference.md#regras-comuns) para totais negativos de net exchange e custo. O ratio de um portfolio com uma comunidade e igual ao ratio district.
 
 As taxas e medias agregadas sao ponderadas pelos seus denominadores aditivos, por isso igualam o ratio entre o numerador e o denominador agregados e ignoram `weight`:
 

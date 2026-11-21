@@ -254,7 +254,7 @@ This reference is neither the conventional counterfactual nor a BAU rollout.
 Configure `demand_response.baseline_window_seconds` and inspect baseline
 validity alongside requested, delivered and credited response. See the
 [DR schema](schema_reference.md#demand-response) and
-[DR KPIs](kpis_reference.md#demand-response-kpis).
+[DR KPIs](kpis_reference.md#demand-response).
 
 ## A reference run selected in the UI
 

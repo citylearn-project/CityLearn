@@ -1718,7 +1718,9 @@ class CityLearnEnv(Environment, Env):
             * ``level`` (str): ``'building'`` or ``'district'``.
 
             Which KPIs appear depends on the scenario's assets and services. :py:meth:`scorecard` selects the
-            default subset, and the KPI reference guide defines every family.
+            default subset. The KPI catalogue lists every name and the KPI reference guide defines every family.
+            :py:meth:`citylearn.multi_community.MultiCommunityEnv.evaluate_v2` returns these rows for each
+            community, with a ``community_id`` column, plus ``'portfolio'`` rows aggregated from the district rows.
         """
 
         return self._kpi_service.evaluate_v2(

@@ -180,9 +180,10 @@ lists every changed row and the name that keeps its 3.6.0 value.
   signed-net values are published as `*_signed_net_*`; the legacy `evaluate()`
   rows keep the signed-net series.
 - **Undefined values stay undefined**: a ratio with a missing control or
-  reference, the deferrable start delay without completed cycles, and the
-  deferrable service ratios to the BAU when no cycle was due are now missing
-  instead of 0 or 1 ([#243](https://github.com/citylearn-project/CityLearn/issues/243)).
+  reference, the deferrable start delay without completed cycles, and each
+  deferrable-appliance ratio to the BAU whose own two totals are zero (for
+  example the missed-cycle ratio when neither run missed a cycle, even if cycles
+  were due) are now missing instead of 0 or 1 ([#243](https://github.com/citylearn-project/CityLearn/issues/243)).
   Code that reads these cells must handle `None`/NaN.
 - **Portfolio rates** of `MultiCommunityEnv` (EV departure rates and means,
   service levels, start delay, self-consumption) are pooled from their additive

@@ -233,7 +233,16 @@ class MultiCommunityEnv(Env):
         comfort_band: float = None,
         include_business_as_usual: bool = True,
     ) -> pd.DataFrame:
-        """Return local child KPIs plus portfolio rows aggregated from district KPIs."""
+        """Return each community's KPIs plus portfolio rows aggregated from their district KPIs.
+
+        The table has the columns of :py:meth:`citylearn.citylearn.CityLearnEnv.evaluate_v2` and a
+        ``community_id`` column. Each community contributes its ``'building'`` and ``'district'`` rows under its
+        own ``community_id``. The ``'portfolio'`` rows (``community_id`` ``'__portfolio__'``, names starting
+        ``portfolio_``) aggregate the district rows: ratios of totals are recomputed from the summed totals,
+        rates with an additive denominator are pooled, ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are summed,
+        other ratios and percentages are means weighted by the community ``weight``, and other rows (``_kw``,
+        ``_c``, ``_hours``) have no portfolio row. The KPI reference guide gives the rule of each family.
+        """
 
         return self._combine_community_kpis({
             community_id: env.evaluate_v2(
