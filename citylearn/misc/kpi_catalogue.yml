@@ -387,12 +387,10 @@
     - building
     - district
     unit: count
-    en: Equivalent full cycles, throughput / (2 · nominal capacity), pooled over capacity at district level; the
-      portfolio sums it because the name ends in `_count`. `_business_as_usual` and `_delta_to_business_as_usual`
-      as in the shared rules.
+    en: Equivalent full cycles, throughput / (2 · nominal capacity), pooled over capacity at district and
+      portfolio levels. `_business_as_usual` and `_delta_to_business_as_usual` as in the shared rules.
     pt: Ciclos completos equivalentes, energia movimentada / (2 · capacidade nominal), agregados pela capacidade
-      no distrito; o portefólio soma-os porque o nome termina em `_count`. `_business_as_usual` e `_delta_to_business_as_usual`
-      como nas regras comuns.
+      no distrito e no portefólio. `_business_as_usual` e `_delta_to_business_as_usual` como nas regras comuns.
   - names: battery_health_capacity_fade{,_business_as_usual,_delta_to_business_as_usual}_ratio
     levels:
     - building

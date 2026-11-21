@@ -451,12 +451,11 @@ EFC_distrito   = Σ_b T_b / (2 · Σ_b capacidade_b)
 perda_distrito = Σ_b max(capacidade_b − capacidade_deg_b, 0) / Σ_b capacidade_b
 ```
 
-**Portefólio.** A carga, a descarga e a energia movimentada são somadas, e os seus rácios à execução BAU são rácios dos totais somados. Os ciclos completos equivalentes são somados sobre as comunidades porque o nome termina em `_count`: o valor do portefólio é a soma dos EFC das comunidades, e não `Σ T / (2 · Σ capacidade)`. A perda de capacidade e os rácios à execução BAU dos ciclos e da perda são médias ponderadas pelo `weight` de cada comunidade, e não pela capacidade.
+**Portefólio.** A carga, a descarga e a energia movimentada são somadas, e os seus rácios à execução BAU são rácios dos totais somados. Os ciclos completos equivalentes obtêm-se dividindo a energia movimentada total pelo dobro da capacidade nominal total das baterias, separadamente para o controlo e para a execução BAU. O resultado é indefinido quando a capacidade nominal total é zero. A diferença e o rácio face à execução BAU comparam esses dois valores do portefólio. A perda de capacidade e o seu rácio à execução BAU são médias ponderadas pelo `weight` de cada comunidade.
 
-**Que KPI usar.** Use a energia movimentada para a atividade da bateria e os ciclos completos equivalentes, ao nível do edifício ou do distrito, para o desgaste por unidade de capacidade. Num portefólio, calcule os ciclos a partir da energia movimentada e das capacidades somadas, em vez de ler a linha `_count` somada. Apresente a atividade da bateria com o custo e o serviço: mais ou menos atividade não é, por si só, melhor.
+**Que KPI usar.** Use a energia movimentada para medir a energia que passou pelas baterias e os ciclos completos equivalentes para medir a atividade das baterias em relação à capacidade nominal. Apresente a atividade das baterias juntamente com o custo e o serviço.
 
 **Limitações conhecidas.**
-- O EFC do portefólio é uma soma de valores das comunidades ([#330](https://github.com/citylearn-project/CityLearn/issues/330)).
 - A capacidade degradada é lida no momento da avaliação, e não no fim da janela ativa do membro.
 
 ## Serviço elétrico e fases
@@ -1564,6 +1563,7 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 | `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Alocados a partir do settlement district. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostico) |
 | Taxas e medias EV de departure, service levels dos deferrable appliances e das escadas rolantes, start delay e self-consumption solar do portefólio (`MultiCommunityEnv`) | Agregadas a partir dos seus denominadores aditivos. | nenhum |
 | Shares locais do mercado comunitário, compliance de demand response e ratios de cobertura das auditorias de demand response do portefólio (`MultiCommunityEnv`, #285) | Agregados a partir da energia local mais a da rede, da energia pedida válida, da energia pedida e dos intervalos ativos. | nenhum |
+| Ciclos completos equivalentes das baterias estacionárias do portefólio e comparações com a execução BAU (`MultiCommunityEnv`, #330) | Energia movimentada total sobre o dobro da capacidade nominal total. A diferença e o rácio face à execução BAU usam os dois valores do portefólio. | nenhum |
 
 Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo passa a ser indefinida; antes dava uma penalizacao infinita ou negativa, que a safe division reportava como um 0 perfeito.
 
@@ -1575,4 +1575,13 @@ Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo 
 | Export no fim | `CityLearnEnv(..., export_kpis_on_episode_end=True)` |
 | Com render | `render_mode="end"` ou `render_mode="during"` |
 
-Um KPI novo tem de ser acrescentado a `docs/kpi_catalogue.yml`, que gera o [catálogo de KPIs](KPI_V2_TREE.md) (`python scripts/docs/kpi_catalogue.py`), e as suas equações à secção da família nesta página; `tests/test_kpi_catalogue.py` falha enquanto um nome emitido faltar no catálogo. As alterações de definição ficam registadas em [releases.md](releases.md).
+A tabela em formato longo começa por `cost_function`, `value`, `name` e
+`level`, seguidos de `unit` e de uma breve `description` em inglês, ambas
+retiradas do catálogo de KPIs.
+
+O CSV de várias comunidades em formato longo inclui as colunas de metadados. Na exportação
+de uma só comunidade em CSV ou Parquet em formato largo, o ficheiro adjacente
+`exported_kpis.manifest.json` contém `kpi_definitions` por nome de KPI.
+O ficheiro de KPIs continua a ter uma coluna numérica por âmbito.
+
+Um KPI novo tem de ser acrescentado a `citylearn/misc/kpi_catalogue.yml`, que gera o [catálogo de KPIs](KPI_V2_TREE.md) (`python scripts/docs/kpi_catalogue.py`), e as suas equações à secção da família nesta página; `tests/test_kpi_catalogue.py` falha enquanto um nome emitido faltar no catálogo. As alterações de definição ficam registadas em [releases.md](releases.md).

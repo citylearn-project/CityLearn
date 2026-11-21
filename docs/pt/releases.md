@@ -5,10 +5,12 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Unidades e descrições dos KPIs.** `evaluate_v2()` e o CSV de várias comunidades em formato longo incluem `unit` e `description` do catálogo. Os CSV e Parquet em formato largo mantêm as suas colunas e incluem as definições no manifesto ([#298](https://github.com/citylearn-project/CityLearn/issues/298)).
+- **Ciclos das baterias no portefólio.** Os ciclos completos equivalentes usam a energia movimentada total e a capacidade nominal total das baterias. A diferença e o rácio face à execução BAU comparam os valores do portefólio. Volte a exportar os resultados anteriores do portefólio para comparar estes KPIs ([#330](https://github.com/citylearn-project/CityLearn/issues/330)).
 - **Catálogo de KPIs e referência de KPIs completa.** O
   [catálogo de KPIs](KPI_V2_TREE.md) lista todos os nomes que `evaluate_v2()`
   emite, agrupados em 21 famílias, com o seu significado em inglês e português.
-  É gerado a partir de `docs/kpi_catalogue.yml`, e um teste falha quando falta
+  É gerado a partir de `citylearn/misc/kpi_catalogue.yml`, e um teste falha quando falta
   nele um nome emitido. A [referência de KPIs](kpis_reference.md) passa a
   explicar todas as famílias, incluindo as auditorias, a proveniência da energia,
   o mercado comunitário, o conforto e a equidade. Dá as suas equações, a

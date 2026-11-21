@@ -1,4 +1,4 @@
-"""Generate the KPI catalogue pages from docs/kpi_catalogue.yml.
+"""Generate the KPI catalogue pages from citylearn/misc/kpi_catalogue.yml.
 
 The catalogue lists every KPI name that `evaluate_v2()` emits, grouped by family, with a one-line
 definition in English and Portuguese. The equations live in the KPI reference pages, which the
@@ -15,19 +15,18 @@ import re
 import sys
 from pathlib import Path
 
-import yaml
-
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "docs" / "kpi_catalogue.yml"
+sys.path.insert(0, str(ROOT))
+from citylearn.internal.kpi_catalogue import kpi_entries, load  # noqa: E402
+
 PAGES = {"en": ROOT / "docs" / "KPI_V2_TREE.md", "pt": ROOT / "docs" / "pt" / "KPI_V2_TREE.md"}
-LEVELS = ("building", "district")
 
 TEXT = {
     "en": {
         "title": "KPI catalogue",
         "intro": [
             "This page lists every KPI name that `evaluate_v2()` emits, grouped by family, with a short",
-            "definition. It is generated from `docs/kpi_catalogue.yml` by `scripts/docs/kpi_catalogue.py`,",
+            "definition. It is generated from `citylearn/misc/kpi_catalogue.yml` by `scripts/docs/kpi_catalogue.py`,",
             "and a test checks that every name the simulator emits is listed here. The equations, the",
             "district aggregation and the undefined-value rules of each family are in the",
             "[KPI reference](kpis_reference.md), which each family links to.",
@@ -51,7 +50,7 @@ TEXT = {
         "title": "Catálogo de KPIs",
         "intro": [
             "Esta página lista todos os nomes de KPI que `evaluate_v2()` emite, agrupados por família, com",
-            "uma definição curta. É gerada a partir de `docs/kpi_catalogue.yml` por",
+            "uma definição curta. É gerada a partir de `citylearn/misc/kpi_catalogue.yml` por",
             "`scripts/docs/kpi_catalogue.py`, e um teste verifica que todos os nomes que o simulador emite",
             "constam daqui. As equações, a agregação ao distrito e as regras de valores indefinidos de cada",
             "família estão na [referência de KPIs](kpis_reference.md), para a qual cada família remete.",
@@ -74,38 +73,9 @@ TEXT = {
 }
 
 
-def expand(pattern):
-    """Every name a brace pattern stands for: `{a,b}` gives each alternative, `{,_x}` an optional part."""
-    match = re.search(r"\{([^{}]*)\}", pattern)
-    if match is None:
-        return [pattern]
-    head, tail = pattern[:match.start()], pattern[match.end():]
-    return [name for option in match.group(1).split(",") for name in expand(head + option + tail)]
-
-
-def load(path=SOURCE):
-    families = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    for family in families:
-        for kpi in family["kpis"]:
-            kpi["expanded"] = expand(kpi["names"])
-            unknown = set(kpi["levels"]) - set(LEVELS)
-            if unknown:
-                raise ValueError(f"{kpi['names']}: unknown levels {sorted(unknown)}")
-    return families
-
-
 def documented_names(families):
     """Full KPI name -> family id, for every building and district name of the catalogue."""
-    names = {}
-    for family in families:
-        for kpi in family["kpis"]:
-            for name in kpi["expanded"]:
-                prefixed = [name] if name.startswith("topology_") else [f"{level}_{name}" for level in kpi["levels"]]
-                for full in prefixed:
-                    if full in names:
-                        raise ValueError(f"{full} is listed twice")
-                    names[full] = family["id"]
-    return names
+    return {name: family for name, (family, _) in kpi_entries(families).items()}
 
 
 def anchor(title):

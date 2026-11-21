@@ -1,7 +1,7 @@
 # KPI catalogue
 
 This page lists every KPI name that `evaluate_v2()` emits, grouped by family, with a short
-definition. It is generated from `docs/kpi_catalogue.yml` by `scripts/docs/kpi_catalogue.py`,
+definition. It is generated from `citylearn/misc/kpi_catalogue.yml` by `scripts/docs/kpi_catalogue.py`,
 and a test checks that every name the simulator emits is listed here. The equations, the
 district aggregation and the undefined-value rules of each family are in the
 [KPI reference](kpis_reference.md), which each family links to.
@@ -407,7 +407,7 @@ Equations and rules: [Batteries](kpis_reference.md#batteries).
 | Names | Levels | Unit | Meaning |
 |---|---|---|---|
 | `battery_total_{charge,discharge,throughput}{,_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Energy charged into and discharged from the batteries at their terminals, and throughput = charge + discharge; `_business_as_usual` and `_delta_to_business_as_usual` as in the shared rules. |
-| `battery_health_equivalent_full_cycles{,_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Equivalent full cycles, throughput / (2 · nominal capacity), pooled over capacity at district level; the portfolio sums it because the name ends in `_count`. `_business_as_usual` and `_delta_to_business_as_usual` as in the shared rules. |
+| `battery_health_equivalent_full_cycles{,_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Equivalent full cycles, throughput / (2 · nominal capacity), pooled over capacity at district and portfolio levels. `_business_as_usual` and `_delta_to_business_as_usual` as in the shared rules. |
 | `battery_health_capacity_fade{,_business_as_usual,_delta_to_business_as_usual}_ratio` | building, district | ratio | Fraction of nominal capacity lost to degradation, (capacity − degraded capacity) / capacity, clipped to [0, 1]; `_business_as_usual` and `_delta_to_business_as_usual` as in the shared rules. |
 | `battery_ratio_to_business_as_usual_{charge,discharge,throughput,equivalent_full_cycles,capacity_fade}_ratio` | building, district | ratio | Control value over BAU value of charge, discharge, throughput, equivalent full cycles or capacity fade. |
 

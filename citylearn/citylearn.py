@@ -1716,6 +1716,7 @@ class CityLearnEnv(Environment, Env):
               ratio without any event to serve.
             * ``name`` (str): the building name for building rows, ``'District'`` for district rows.
             * ``level`` (str): ``'building'`` or ``'district'``.
+            * ``unit`` (str) and ``description`` (str): the unit and English description from the KPI catalogue.
 
             Which KPIs appear depends on the scenario's assets and services. :py:meth:`scorecard` selects the
             default subset. The KPI catalogue lists every name and the KPI reference guide defines every family.
