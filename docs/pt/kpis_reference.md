@@ -114,7 +114,7 @@ explicada na sua secção:
 - [Mercado comunitário](#mercado-comunitário): Troca local de energia entre os membros de uma comunidade e a respetiva liquidação. As linhas aparecem em todas as simulações (a zero, ou com quotas indefinidas, quando `community_market.enabled` é falso), exceto `local_traded` e `import_share`, que exigem o mercado e os respetivos interruptores de KPI.
 - [Baterias](#baterias): Atividade e desgaste das baterias estacionárias; as linhas aparecem em todas as execuções, com energia nula e ciclos e perda de capacidade indefinidos para membros sem bateria.
 - [Serviço elétrico e fases](#serviço-elétrico-e-fases): Cumprimento dos limites de potência total e por fase declarados para o serviço elétrico, e o equilíbrio e os picos das fases; os valores são nulos ou indefinidos se o esquema não configurar um serviço elétrico.
-- [Veículos elétricos](#veículos-elétricos): Serviço à partida, energia de carregamento e V2G dos veículos elétricos (VE) nos carregadores dos membros. Todos os membros emitem estas linhas; sem carregadores, as contagens e energias são 0 e as taxas ficam indefinidas.
+- [Veículos elétricos](#veículos-elétricos): Serviço à partida, energia de carregamento e V2G dos veículos elétricos (VE) nos carregadores dos membros, e saúde e desgaste opt-in das baterias dos VE (`evaluate_v2(include_battery_health_audit=True)`). Todos os membros emitem as linhas de partida e energia; sem carregadores, as contagens e energias são 0 e as taxas ficam indefinidas.
 - [Auditoria das partidas dos VE](#auditoria-das-partidas-dos-ve): Serviço auditado às partidas dos VE, com uma população explícita, um estado de viabilidade com três classes e o motivo de cada caso desconhecido. Todos os membros emitem estas linhas.
 - [Equipamentos flexíveis](#equipamentos-flexíveis): Serviço dos ciclos dos equipamentos flexíveis (diferíveis) a partir dos estados dos ciclos e das energias nominais dos ciclos. Todos os membros emitem estas linhas; sem equipamentos, as contagens e energias são 0 e as taxas ficam indefinidas.
 - [Auditoria dos equipamentos flexíveis](#auditoria-dos-equipamentos-flexíveis): Serviço auditado dos ciclos dos equipamentos flexíveis a partir da energia medida nos intervalos executados, com uma população explícita e estados exclusivos. Todos os membros emitem estas linhas.
@@ -506,7 +506,7 @@ Os picos de fase são `max_t max(P_f,t, 0)` (importação) e `max_t max(−P_f,t
 
 ## Veículos elétricos
 
-Estas linhas medem o estado de carga (SOC) com que os VE partem e a energia que os carregadores trocam com eles. Todos os membros emitem as linhas. Um membro sem carregadores reporta 0 nas contagens e energias, e taxas indefinidas. Todos os valores cobrem a janela ativa do membro. As unidades, os nomes e as variantes BAU seguem as [regras comuns](#regras-comuns).
+Estas linhas medem o estado de carga (SOC) com que os VE partem, a energia que os carregadores trocam com eles e (quando se passa `evaluate_v2(include_battery_health_audit=True)`) o estado de saúde, a perda de capacidade e os ciclos completos equivalentes das baterias dos VE. Todos os membros emitem as linhas de partida e energia. Um membro sem carregadores reporta 0 nas contagens e energias, e taxas indefinidas. Todos os valores cobrem a janela ativa do membro. As unidades, os nomes e as variantes BAU seguem as [regras comuns](#regras-comuns).
 
 ### Partidas
 
@@ -601,17 +601,41 @@ shortfall_kwh (membro) = max(connected_soc_gain_kwh - ev_total_charge_kwh, 0)
 - **Significado:** a insuficiência assinala ganho de SOC que a carga medida não explica.
 - **Cobertura:** o total de carga cobre todos os passos da janela, incluindo sessões sem partida contada, pelo que a verificação é unilateral.
 
+### Saúde e desgaste das baterias
+
+Cada instância de `Battery` (armazenamento estacionário e `ElectricVehicle.battery`) expõe quatro propriedades só de leitura de saúde e desgaste: `current_state_of_health` (rácio adimensional em `[0, 1]`, `clip(degraded_capacity / capacity, 0, 1)`, devolvendo `1.0` quando `capacity <= 0` ou antes do primeiro passo), `state_of_health` (vetor `float64` de rácios adimensionais em `[0, 1]` até `time_step + 1`, devolvendo uns quando `capacity <= 0` e `[1.0]` antes do primeiro passo), `equivalent_full_cycles` (contagem adimensional de ciclos `(Σ carga + Σ descarga) / (2 · capacity)`, devolvendo `0.0` antes do primeiro passo e `0.0` quando `capacity <= 0`, enquanto os KPIs de ciclos `*_battery_health_equivalent_full_cycles_count` e `*_ev_battery_health_equivalent_full_cycles_count` ficam indefinidos quando a capacidade nominal é zero) e `capacity_fade_kwh` (capacidade acumulada perdida por degradação em `kWh`, `máx(0, capacity − degraded_capacity)`, devolvendo `0.0` quando `capacity <= 0` ou antes do primeiro passo). Os KPIs de desgaste das baterias estacionárias são reportados pela família [Baterias](#baterias).
+
+Quando se passa `evaluate_v2(include_battery_health_audit=True)` (por omissão `False`), são emitidas quatro linhas opt-in `ev_battery_health_*` para as baterias dos VE:
+
+```text
+C_i      = capacidade nominal da bateria de VE i (> 0), em kWh
+T_i      = Σ_t (carga_i,t + descarga_i,t), energia bruta aceite nos terminais da bateria em kWh
+C_deg,i  = clip(capacidade degradada da bateria de VE i, 0, C_i), em kWh
+perda_i  = máx(0, C_i − C_deg,i), em kWh
+
+ev_battery_health_terminal_soh_ratio             = clip(Σ_i C_deg,i / Σ_i C_i, 0, 1)      indefinido quando Σ_i C_i ≤ 0
+ev_battery_health_capacity_fade_kwh              = Σ_i perda_i                            0 quando Σ_i C_i ≤ 0
+ev_battery_health_capacity_fade_ratio            = clip(Σ_i perda_i / Σ_i C_i, 0, 1)      indefinido quando Σ_i C_i ≤ 0
+ev_battery_health_equivalent_full_cycles_count   = Σ_i T_i / (2 · Σ_i C_i)                indefinido quando Σ_i C_i ≤ 0
+```
+
+Ao nível do edifício, `building_ev_battery_health_*` usa apenas ligações efetivas (`past_connected_evs[t]`) e transferências executadas durante os passos ativos executados do membro (`0 ≤ t < time_step`). A energia movimentada e a perda de capacidade são atribuídas estritamente ao edifício cujo carregador executou cada transferência, `Σ C_i` conta uma única vez cada VE único (`capacity > 0`) que efetivamente se ligou nesse edifício, e `building_ev_battery_health_terminal_soh_ratio` lê a capacidade degradada de cada VE ligado no fim da sua última ligação efetiva nesse edifício. Os VE listados apenas em horários de carregadores desligados (ou apenas em passos não executados) são excluídos (`capacity_fade_kwh = 0`, rácios e ciclos indefinidos quando nenhum VE se liga efetivamente).
+
+Como `building_ev_battery_health_terminal_soh_ratio` reflete o estado acumulado da bateria na última ligação do VE nesse edifício (incluindo o desgaste recebido noutros edifícios), enquanto `building_ev_battery_health_capacity_fade_ratio` contabiliza apenas o desgaste resultante das transferências executadas nesse edifício, o SOH do edifício pode ser inferior a `1 − building_ev_battery_health_capacity_fade_ratio` (ao passo que no distrito e no portefólio o SOH é igual a `1 − capacity_fade_ratio`). Por exemplo, quando um VE de `60 kWh` (`capacity_loss_coefficient = 1e-3`) carrega `6 kWh` em `Building_1` no passo `0` (`0.05` ciclos completos equivalentes, `0.003 kWh` de perda, rácio de perda `0.00005`, SOH terminal `59.997 / 60 = 0.99995`) e depois se liga em `Building_2` no passo `1` com `0 kWh` trocados, `Building_2` reporta `0.0` ciclos completos equivalentes, `0.0 kWh` de perda, rácio de perda `0.0` e SOH terminal `0.99995` devido ao desgaste acumulado trazido de `Building_1`. Se o mesmo VE carregar mais `6 kWh` em `Building_2` no passo `2` (degradando até `59.994 kWh`), `Building_1` mantém o SOH terminal `0.99995` da sua última ligação efetiva no passo `0`, enquanto `Building_2` passa para `59.994 / 60 = 0.99990`.
+
 ### Distrito e portefólio
 
 **Distrito:**
 - as contagens, as energias e o ganho de SOC são somas dos membros;
 - as taxas e as médias são recalculadas a partir dos numeradores e denominadores somados;
 - a insuficiência é a soma das insuficiências dos membros, cada uma já limitada a 0, e não o limite dos totais do distrito;
-- a linha da tolerância é o valor configurado.
+- a linha da tolerância é o valor configurado;
+- as linhas opt-in `ev_battery_health_*` agregam a população da frota de VE do distrito, definida como os VE elegíveis únicos com `capacity > 0` (`electric_vehicles` em topologia estática, ou os VE que entraram em participação durante o episódio, `electric_vehicles` união com os VE suspensos, em topologia dinâmica), contando cada VE elegível uma única vez independentemente do número de edifícios onde se liga (os VE elegíveis da frota que nunca se ligam contribuem com a sua capacidade nominal com energia movimentada nula, perda nula e SOH terminal `1.0`).
 
 **Portfolio:**
-- as contagens e as energias somam-se;
-- as taxas e as médias são agregadas: ponderadas por `ev_events_departure_count` ou, nas taxas viáveis, pelo `*_feasible_count` correspondente;
+- as contagens, as energias e `portfolio_ev_battery_health_capacity_fade_kwh` somam-se;
+- as taxas e as médias de partida são agregadas: ponderadas por `ev_events_departure_count` ou, nas taxas viáveis, pelo `*_feasible_count` correspondente;
+- `portfolio_ev_battery_health_terminal_soh_ratio`, `portfolio_ev_battery_health_capacity_fade_ratio` e `portfolio_ev_battery_health_equivalent_full_cycles_count` são agregados pela capacidade nominal das baterias dos VE a partir dos totais de capacidade e de perda/ciclos das comunidades (indefinido quando a capacidade nominal total dos VE é zero);
 - os ratios ao BAU são ratios dos totais somados;
 - a linha da tolerância é a média dos parâmetros das comunidades ponderada pelo `weight` de cada comunidade.
 
@@ -620,6 +644,8 @@ shortfall_kwh (membro) = max(connected_soc_gain_kwh - ev_total_charge_kwh, 0)
 Para comparar controladores quanto ao serviço à partida, use os ratios da [auditoria das partidas dos VE](#auditoria-das-partidas-dos-ve), que o scorecard por omissão reporta:
 - `ev_departure_audit_min_acceptable_service_feasible_ratio` para o serviço;
 - `ev_departure_audit_within_tolerance_service_feasible_ratio` para a precisão face ao alvo.
+
+Para avaliar o desgaste das baterias dos VE devido ao carregamento e ao despacho V2G, passe `include_battery_health_audit=True` e reporte `ev_battery_health_terminal_soh_ratio` e `ev_battery_health_capacity_fade_kwh` juntamente com `ev_battery_health_equivalent_full_cycles_count`.
 
 As taxas viáveis antigas contam como viáveis as partidas com dados em falta e não reportam quantas partidas puderam ser avaliadas. Mantenha as linhas `ev_performance` por continuidade com resultados anteriores.
 

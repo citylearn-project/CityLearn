@@ -2518,13 +2518,16 @@ class CityLearnKPIService:
     @settled_cost_scope
     def evaluate_v2(
         self, control_condition=None, baseline_condition=None, comfort_band=None,
-        include_business_as_usual=True, *, evaluation_condition_cls,
+        include_business_as_usual=True, *,
+        include_battery_health_audit: bool = False,
+        evaluation_condition_cls,
         dynamics_building_cls, progress_callback=None,
     ) -> pd.DataFrame:
         progress = None if progress_callback is None else EvaluationProgress(progress_callback)
         return run(progress, 'evaluation', self._evaluate_v2,
                    control_condition=control_condition, baseline_condition=baseline_condition,
                    comfort_band=comfort_band, include_business_as_usual=include_business_as_usual,
+                   include_battery_health_audit=include_battery_health_audit,
                    evaluation_condition_cls=evaluation_condition_cls,
                    dynamics_building_cls=dynamics_building_cls, progress=progress)
 
@@ -2535,6 +2538,7 @@ class CityLearnKPIService:
         comfort_band: float = None,
         include_business_as_usual: bool = True,
         *,
+        include_battery_health_audit: bool = False,
         evaluation_condition_cls,
         dynamics_building_cls,
         progress=None,
@@ -3069,6 +3073,21 @@ class CityLearnKPIService:
                 evaluation_condition_cls=evaluation_condition_cls,
                 dynamics_building_cls=dynamics_building_cls,
             )
+
+        if bool(include_battery_health_audit):
+            from citylearn.internal import battery_health_audit
+
+            health_rows, d_ev_cap_kwh = run(
+                progress,
+                'battery_health_audit',
+                battery_health_audit.compute_battery_health_audit_records,
+                self,
+                kpi_buildings=kpi_buildings,
+                building_windows=building_windows,
+            )
+            capacities['ev_control'] = d_ev_cap_kwh
+            for row in health_rows:
+                put(str(row['level']), str(row['name']), str(row['cost_function']), row['value'])
 
         output = pd.DataFrame(list(records.values()))
         if getattr(robustness_service, 'enabled', False):
