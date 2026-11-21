@@ -21,6 +21,7 @@ Which rows appear depends on the scenario's assets and services.
 | [Community market](#community-market) | 36 |
 | [Batteries](#batteries) | 40 |
 | [Electrical service and phases](#electrical-service-and-phases) | 22 |
+| [District feeder](#district-feeder) | 3 |
 | [Electric vehicles](#electric-vehicles) | 62 |
 | [EV departure audit](#ev-departure-audit) | 128 |
 | [Flexible appliances](#flexible-appliances) | 48 |
@@ -500,6 +501,29 @@ district_electrical_service_phase_requested_pressure_energy_total_kwh
 district_electrical_service_phase_requested_pressure_event_count
 district_electrical_service_phase_violations_energy_total_kwh
 district_electrical_service_phase_violations_event_count
+```
+
+</details>
+
+## District feeder
+
+Controllable curtailment and residual power exceedance under the shared district import and export limits; the rows appear at district level when `district_electrical_service.enabled` is true.
+
+Equations and rules: [District feeder](kpis_reference.md#district-feeder).
+
+| Names | Levels | Unit | Meaning |
+|---|---|---|---|
+| `feeder_curtailed_import_kwh` | district | kWh | Controllable charging energy curtailed across grid-connected members to enforce the district import limit. |
+| `feeder_curtailed_export_kwh` | district | kWh | Controllable discharging energy curtailed across grid-connected members to enforce the district export limit. |
+| `feeder_max_violation_kw` | district | kW | Highest residual district import or export power exceedance after controllable curtailment; excesses up to 1e-5 kW are ignored. |
+
+<details>
+<summary>All 3 names</summary>
+
+```text
+district_feeder_curtailed_export_kwh
+district_feeder_curtailed_import_kwh
+district_feeder_max_violation_kw
 ```
 
 </details>

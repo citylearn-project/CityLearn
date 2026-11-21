@@ -468,6 +468,38 @@
       its members.
     pt: Maior potência de importação ou de exportação em cada fase; o valor do distrito é o pico da soma da potência
       dessa fase dos membros.
+- id: district_feeder
+  title:
+    en: District feeder
+    pt: Alimentador do distrito
+  intro:
+    en: Controllable curtailment and residual power exceedance under the shared district import and export limits;
+      the rows appear at district level when `district_electrical_service.enabled` is true.
+    pt: Corte controlável e excesso residual de potência face aos limites partilhados de importação e exportação
+      do distrito; as linhas aparecem ao nível do distrito quando `district_electrical_service.enabled` é verdadeiro.
+  kpis:
+  - names: feeder_curtailed_import_kwh
+    levels:
+    - district
+    unit: kWh
+    en: Controllable charging energy curtailed across grid-connected members to enforce the district import limit.
+    pt: Energia de carregamento controlável cortada nos membros ligados à rede para cumprir o limite de importação
+      do distrito.
+  - names: feeder_curtailed_export_kwh
+    levels:
+    - district
+    unit: kWh
+    en: Controllable discharging energy curtailed across grid-connected members to enforce the district export limit.
+    pt: Energia de descarga controlável cortada nos membros ligados à rede para cumprir o limite de exportação do
+      distrito.
+  - names: feeder_max_violation_kw
+    levels:
+    - district
+    unit: kW
+    en: Highest residual district import or export power exceedance after controllable curtailment; excesses up to
+      1e-5 kW are ignored.
+    pt: Maior excesso residual de potência de importação ou de exportação do distrito após o corte controlável;
+      excessos até 1e-5 kW são ignorados.
 - id: ev
   title:
     en: Electric vehicles

@@ -113,6 +113,7 @@ explained in its own section below:
 - [Community market](kpis_reference.md#community-market): Local energy trading between the members of a community and its settlement. The rows appear in every run (zero, or undefined shares, when `community_market.enabled` is false), except `local_traded` and `import_share`, which need the market and their KPI switches.
 - [Batteries](kpis_reference.md#batteries): Activity and wear of the stationary batteries; the rows appear in every run, with zero energy and undefined cycles and fade for members without a battery.
 - [Electrical service and phases](kpis_reference.md#electrical-service-and-phases): Compliance with the declared total and per-phase power limits of the electrical service, and the balance and peaks of the phases; the values are zero or undefined unless the schema configures an electrical service.
+- [District feeder](kpis_reference.md#district-feeder): Controllable curtailment and residual power exceedance under the shared district import and export limits; the rows appear at district level when `district_electrical_service.enabled` is true.
 - [Electric vehicles](kpis_reference.md#electric-vehicles): Departure service, charging and V2G energy of electric vehicles at the members' chargers. Every member emits these rows; without chargers, counts and energies are 0 and rates are undefined.
 - [EV departure audit](kpis_reference.md#ev-departure-audit): Audited EV departure service, with an explicit population, a three-way feasibility status and the reason for each unknown case. Every member emits these rows.
 - [Flexible appliances](kpis_reference.md#flexible-appliances): Cycle service of deferrable (flexible) appliances from their cycle states and nominal cycle energies. Every member emits these rows; without appliances, counts and energies are 0 and rates are undefined.
@@ -498,6 +499,29 @@ The phase peaks are `max_t max(P_ph,t, 0)` (import) and `max_t max(−P_ph,t, 0)
 
 **Known limits.**
 - Imbalance is defined only for three-phase buildings.
+
+## District feeder
+
+Controllable curtailment and residual power exceedance under the opt-in shared district import and export limits (`district_electrical_service.enabled=True`). Either direction (`import_kw`, `export_kw`) may be omitted or `None` when unconstrained. When disabled (the default), these rows are not emitted.
+
+```text
+curtailed_import_kwh = Σ_t Σ_{i: E_i,t^(0) > 0} max(E_i,t^(0) − E_i,t, 0)
+curtailed_export_kwh = Σ_t Σ_{i: E_i,t^(0) < 0} max(E_i,t − E_i,t^(0), 0)
+
+import excess_t = max(P_dist,t − limit_import,t, 0)    (0 when limit_import,t is unset)
+export excess_t = max(−P_dist,t − limit_export,t, 0)   (0 when limit_export,t is unset)
+excess ≤ 1e-5 kW is set to 0
+v_t = import excess_t + export excess_t
+max_violation_kw = max_t v_t
+```
+
+Here `E_i,t^(0)` and `E_i,t` are the uncurtailed and applied AC energies of controllable stationary batteries and connected EV chargers on grid-connected members at step `t`, and `P_dist,t` is the settled district net power after minimum-power deadband rules are applied.
+
+**District.** Emitted at district level only.
+
+**Portfolio.** Curtailed import and export energies (`_kwh`) are summed across communities; `district_feeder_max_violation_kw` (`_kw`) has no portfolio row.
+
+**Which KPI.** Use `district_feeder_max_violation_kw` to verify whether passive load or solar surplus exceeded the feeder limits after exhausting controllable curtailment, and the curtailed-energy rows to measure how much requested charging or export was curtailed.
 
 ## Electric vehicles
 

@@ -451,6 +451,19 @@ class Charger(Environment):
             if events:
                 events[-1]['bus'] = float(ac_energy)
 
+    def _rewind_step_charge(self, time_step: int = None) -> bool:
+        """Undo charger and connected EV battery transfers at ``time_step`` for feeder curtailment replay."""
+        step = self.time_step if time_step is None else int(time_step)
+        ev = self.connected_electric_vehicle
+        if ev is None or not ev.battery._rewind_step_charge(step):
+            return False
+
+        self.__electricity_consumption[step] = 0.0
+        self.__gross_energy_charge[step] = 0.0
+        self.__gross_energy_discharge[step] = 0.0
+        self.__past_charging_action_values_kwh[step] = 0.0
+        return True
+
 
     def next_time_step(self):
         r"""Advance to next `time_step`"""

@@ -221,6 +221,11 @@ class CityLearnEnv(Environment, Env):
         Whether to keep the per-step electricity provenance ledger (``*_energy_provenance_*`` KPIs and
         provenance audits). Defaults to ``True``. Disabling it does not change any simulated quantity and
         makes ``step()`` substantially faster, e.g. for training runs that do not report provenance KPIs.
+    district_electrical_service: Mapping[str, Any], optional
+        Opt-in shared feeder dynamic operating envelope (ENA G99/G100 style), e.g.
+        ``{"enabled": True, "limits": {"import_kw": 50.0, "export_kw": 20.0}}``. Either ``import_kw`` or
+        ``export_kw`` may be omitted or ``None`` (unconstrained in that direction), or set to a non-negative
+        scalar or per-step sequence in [kW]. Defaults to the schema value, else disabled.
     **kwargs : dict
         Only the options listed above are accepted; any other keyword argument raises a `TypeError` that suggests
         the closest valid name.
@@ -243,7 +248,7 @@ class CityLearnEnv(Environment, Env):
         'reward_function', 'reward_function_kwargs', 'central_agent', 'shared_observations', 'active_observations',
         'inactive_observations', 'active_actions', 'inactive_actions', 'simulate_power_outage', 'solar_generation',
         'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
-        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version',
+        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'district_electrical_service',
     )
 
     def __init__(self,
@@ -280,6 +285,7 @@ class CityLearnEnv(Environment, Env):
         ev_departure_service_tolerance = kwargs.pop('ev_departure_service_tolerance', None)
         business_as_usual_ev_charge_target = kwargs.pop('business_as_usual_ev_charge_target', None)
         random_stream_version = kwargs.pop('random_stream_version', None)
+        district_electrical_service = kwargs.pop('district_electrical_service', None)
         kw_render_mode = kwargs.pop('render_mode', None)
         requested_render_mode = render_mode if kw_render_mode is None else kw_render_mode
         requested_render_mode = 'none' if requested_render_mode is None else str(requested_render_mode).lower()
@@ -313,6 +319,19 @@ class CityLearnEnv(Environment, Env):
         self._last_community_market_settlement = []
         self._community_market_settlement_history = MarketSettlementHistory()
         self._configure_community_market()
+        from citylearn.internal.electrical_limits import parse_district_electrical_service_config
+        raw_district_service = (
+            self.schema.get('district_electrical_service')
+            if isinstance(self.schema, dict) and district_electrical_service is None
+            else district_electrical_service
+        )
+        self._district_electrical_service_config = deepcopy(raw_district_service) if raw_district_service is not None else None
+        self._district_electrical_service_parsed = parse_district_electrical_service_config(raw_district_service)
+        self.district_electrical_service_enabled = bool(self._district_electrical_service_parsed['enabled'])
+        self._feeder_curtailed_import_kwh = None
+        self._feeder_curtailed_export_kwh = None
+        self._feeder_limit_violation_kw = None
+        self._feeder_recorded_length = 0
         schema_start_date = self.schema.get('start_date') if isinstance(self.schema, dict) else None
         schema_render_mode = self.schema.get('render_mode') if isinstance(self.schema, dict) else None
         schema_render_file_format = self.schema.get('render_file_format') if isinstance(self.schema, dict) else None
@@ -425,6 +444,11 @@ class CityLearnEnv(Environment, Env):
             'inactive_actions': inactive_actions,
             'simulate_power_outage': simulate_power_outage,
             'solar_generation': solar_generation,
+            **(
+                {'district_electrical_service': district_electrical_service}
+                if district_electrical_service is not None
+                else {}
+            ),
         })
         self._loading_service = CityLearnLoadingService(self)
         self._runtime_service = CityLearnRuntimeService(self)
@@ -1127,6 +1151,33 @@ class CityLearnEnv(Environment, Env):
         """Summed `Building.net_electricity_consumption` time series, in [kWh]."""
 
         return self.__net_electricity_consumption
+
+    @property
+    def feeder_curtailed_import_kwh(self) -> Union[np.ndarray, None]:
+        """Per-step district import energy curtailed by ``district_electrical_service`` in [kWh], or ``None`` when disabled."""
+
+        if not getattr(self, 'district_electrical_service_enabled', False) or self._feeder_curtailed_import_kwh is None:
+            return None
+
+        return self._feeder_curtailed_import_kwh[:self._feeder_recorded_length]
+
+    @property
+    def feeder_curtailed_export_kwh(self) -> Union[np.ndarray, None]:
+        """Per-step district export energy curtailed by ``district_electrical_service`` in [kWh], or ``None`` when disabled."""
+
+        if not getattr(self, 'district_electrical_service_enabled', False) or self._feeder_curtailed_export_kwh is None:
+            return None
+
+        return self._feeder_curtailed_export_kwh[:self._feeder_recorded_length]
+
+    @property
+    def feeder_limit_violation_kw(self) -> Union[np.ndarray, None]:
+        """Per-step residual district feeder power violation after controllable curtailment in [kW], or ``None`` when disabled."""
+
+        if not getattr(self, 'district_electrical_service_enabled', False) or self._feeder_limit_violation_kw is None:
+            return None
+
+        return self._feeder_limit_violation_kw[:self._feeder_recorded_length]
 
     def _sum_building_series(self, attribute: str) -> np.ndarray:
         """Sum a building series over the members of the district at each step.
@@ -1985,6 +2036,17 @@ class CityLearnEnv(Environment, Env):
         self.__net_electricity_consumption = []
         self.__net_electricity_consumption_cost = []
         self.__net_electricity_consumption_emission = []
+        if getattr(self, 'district_electrical_service_enabled', False):
+            feeder_steps = max(int(self.episode_tracker.episode_time_steps), 1)
+            self._feeder_curtailed_import_kwh = np.zeros(feeder_steps, dtype='float64')
+            self._feeder_curtailed_export_kwh = np.zeros(feeder_steps, dtype='float64')
+            self._feeder_limit_violation_kw = np.zeros(feeder_steps, dtype='float64')
+            self._feeder_recorded_length = 0
+        else:
+            self._feeder_curtailed_import_kwh = None
+            self._feeder_curtailed_export_kwh = None
+            self._feeder_limit_violation_kw = None
+            self._feeder_recorded_length = 0
         self._last_community_market_settlement = []
         self._community_market_settlement_history = MarketSettlementHistory()
         self._observations_cache = None

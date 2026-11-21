@@ -21,6 +21,7 @@ As linhas presentes dependem dos equipamentos e serviços do cenário.
 | [Mercado comunitário](#mercado-comunitário) | 36 |
 | [Baterias](#baterias) | 40 |
 | [Serviço elétrico e fases](#serviço-elétrico-e-fases) | 22 |
+| [Alimentador do distrito](#alimentador-do-distrito) | 3 |
 | [Veículos elétricos](#veículos-elétricos) | 62 |
 | [Auditoria das partidas dos VE](#auditoria-das-partidas-dos-ve) | 128 |
 | [Equipamentos flexíveis](#equipamentos-flexíveis) | 48 |
@@ -500,6 +501,29 @@ district_electrical_service_phase_requested_pressure_energy_total_kwh
 district_electrical_service_phase_requested_pressure_event_count
 district_electrical_service_phase_violations_energy_total_kwh
 district_electrical_service_phase_violations_event_count
+```
+
+</details>
+
+## Alimentador do distrito
+
+Corte controlável e excesso residual de potência face aos limites partilhados de importação e exportação do distrito; as linhas aparecem ao nível do distrito quando `district_electrical_service.enabled` é verdadeiro.
+
+Equações e regras: [Alimentador do distrito](kpis_reference.md#alimentador-do-distrito).
+
+| Nomes | Níveis | Unidade | Significado |
+|---|---|---|---|
+| `feeder_curtailed_import_kwh` | district | kWh | Energia de carregamento controlável cortada nos membros ligados à rede para cumprir o limite de importação do distrito. |
+| `feeder_curtailed_export_kwh` | district | kWh | Energia de descarga controlável cortada nos membros ligados à rede para cumprir o limite de exportação do distrito. |
+| `feeder_max_violation_kw` | district | kW | Maior excesso residual de potência de importação ou de exportação do distrito após o corte controlável; excessos até 1e-5 kW são ignorados. |
+
+<details>
+<summary>Todos os 3 nomes</summary>
+
+```text
+district_feeder_curtailed_export_kwh
+district_feeder_curtailed_import_kwh
+district_feeder_max_violation_kw
 ```
 
 </details>

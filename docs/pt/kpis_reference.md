@@ -114,6 +114,7 @@ explicada na sua secção:
 - [Mercado comunitário](#mercado-comunitário): Troca local de energia entre os membros de uma comunidade e a respetiva liquidação. As linhas aparecem em todas as simulações (a zero, ou com quotas indefinidas, quando `community_market.enabled` é falso), exceto `local_traded` e `import_share`, que exigem o mercado e os respetivos interruptores de KPI.
 - [Baterias](#baterias): Atividade e desgaste das baterias estacionárias; as linhas aparecem em todas as execuções, com energia nula e ciclos e perda de capacidade indefinidos para membros sem bateria.
 - [Serviço elétrico e fases](#serviço-elétrico-e-fases): Cumprimento dos limites de potência total e por fase declarados para o serviço elétrico, e o equilíbrio e os picos das fases; os valores são nulos ou indefinidos se o esquema não configurar um serviço elétrico.
+- [Alimentador do distrito](#alimentador-do-distrito): Corte controlável e excesso residual de potência face aos limites partilhados de importação e exportação do distrito; as linhas aparecem ao nível do distrito quando `district_electrical_service.enabled` é verdadeiro.
 - [Veículos elétricos](#veículos-elétricos): Serviço à partida, energia de carregamento e V2G dos veículos elétricos (VE) nos carregadores dos membros. Todos os membros emitem estas linhas; sem carregadores, as contagens e energias são 0 e as taxas ficam indefinidas.
 - [Auditoria das partidas dos VE](#auditoria-das-partidas-dos-ve): Serviço auditado às partidas dos VE, com uma população explícita, um estado de viabilidade com três classes e o motivo de cada caso desconhecido. Todos os membros emitem estas linhas.
 - [Equipamentos flexíveis](#equipamentos-flexíveis): Serviço dos ciclos dos equipamentos flexíveis (diferíveis) a partir dos estados dos ciclos e das energias nominais dos ciclos. Todos os membros emitem estas linhas; sem equipamentos, as contagens e energias são 0 e as taxas ficam indefinidas.
@@ -502,6 +503,29 @@ Os picos de fase são `max_t max(P_f,t, 0)` (importação) e `max_t max(−P_f,t
 
 **Limitações conhecidas.**
 - O desequilíbrio só está definido para edifícios trifásicos.
+
+## Alimentador do distrito
+
+Corte controlável e excesso residual de potência ao abrigo dos limites partilhados opt-in de importação e exportação do distrito (`district_electrical_service.enabled=True`). Qualquer sentido (`import_kw`, `export_kw`) pode ser omitido ou `None` quando não tem limite. Quando desativado (valor por omissão), estas linhas não são emitidas.
+
+```text
+curtailed_import_kwh = Σ_t Σ_{i: E_i,t^(0) > 0} max(E_i,t^(0) − E_i,t, 0)
+curtailed_export_kwh = Σ_t Σ_{i: E_i,t^(0) < 0} max(E_i,t − E_i,t^(0), 0)
+
+excesso de importação_t = max(P_dist,t − limite_importação,t, 0)   (0 sem limite de importação)
+excesso de exportação_t = max(−P_dist,t − limite_exportação,t, 0)  (0 sem limite de exportação)
+excesso ≤ 1e-5 kW é posto a 0
+v_t = excesso de importação_t + excesso de exportação_t
+max_violation_kw = max_t v_t
+```
+
+Aqui `E_i,t^(0)` e `E_i,t` são as energias AC antes e depois do corte nas baterias estacionárias controláveis e nos carregadores de VE ligados nos membros com rede no passo `t`, e `P_dist,t` é a potência líquida liquidada do distrito depois de aplicadas as regras de potência mínima.
+
+**Distrito.** Emitido apenas ao nível do distrito.
+
+**Portefólio.** As energias cortadas de importação e de exportação (`_kwh`) são somadas entre comunidades; `district_feeder_max_violation_kw` (`_kw`) não passa para o portefólio.
+
+**Que KPI usar.** Use `district_feeder_max_violation_kw` para verificar se a carga passiva ou o excedente solar ultrapassaram os limites do alimentador após esgotado o corte controlável, e as linhas de energia cortada para medir quanto carregamento ou exportação pedidos foram cortados.
 
 ## Veículos elétricos
 

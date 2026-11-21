@@ -256,6 +256,15 @@ class ElectricDevice(Device):
             charge[step] = max(float(electricity_consumption), 0.0)
             discharge[step] = max(-float(electricity_consumption), 0.0)
 
+    def _clear_step_electricity_consumption(self, time_step: int = None):
+        step = self.time_step if time_step is None else int(time_step)
+        self.__electricity_consumption[step] = 0.0
+        charge = getattr(self, 'gross_energy_charge', None)
+        discharge = getattr(self, 'gross_energy_discharge', None)
+        if charge is not None and discharge is not None:
+            charge[step] = 0.0
+            discharge[step] = 0.0
+
     def reset(self):
         r"""Reset `ElectricDevice` to initial state and set `electricity_consumption` at `time_step` 0 to = 0.0."""
 
@@ -1036,6 +1045,34 @@ class StorageDevice(Device):
 
         self._record_energy_event('transfer', energy_init, self.energy_init, terminal_energy)
 
+    def _rewind_step_transfer(self, time_step: int = None) -> bool:
+        """Undo transfer event(s) recorded at ``time_step`` so a curtailed transfer can be replayed cleanly."""
+        step = self.time_step if time_step is None else int(time_step)
+        if getattr(self, '_energy_event_step', None) != step or not getattr(self, '_energy_events', None):
+            return False
+
+        first_transfer_idx = None
+        for idx in range(len(self._energy_events) - 1, -1, -1):
+            if self._energy_events[idx].get('kind') == 'transfer':
+                first_transfer_idx = idx
+            else:
+                break
+
+        if first_transfer_idx is None:
+            return False
+
+        energy_before = float(self._energy_events[first_transfer_idx]['before'])
+        del self._energy_events[first_transfer_idx:]
+        self.__soc[step] = energy_before / max(as_float(self.capacity), ZERO_DIVISION_PLACEHOLDER)
+        self.__soc_initialized[step] = True
+        self.__energy_balance[step] = 0.0
+        self.__stored_energy_transfer = 0.0
+        self.__transfer_time_step = step
+        if self.__gross_energy_charge is not None:
+            self.__gross_energy_charge[step] = 0.0
+            self.__gross_energy_discharge[step] = 0.0
+        return True
+
     def force_set_soc(self, soc: float):
         """Assign an external SOC in [0, 1], independently of the discharge reserve."""
         if not np.isfinite(soc) or not 0.0 <= soc <= 1.0:
@@ -1459,6 +1496,19 @@ class Battery(StorageDevice, ElectricDevice):
         ratio = self.time_step_ratio if self.time_step_ratio not in (None, 0) else 1.0
         dataset_resolution_balance = self.energy_balance[self.time_step]/ratio
         self.update_electricity_consumption(dataset_resolution_balance, enforce_polarity=False)
+
+    def _rewind_step_charge(self, time_step: int = None) -> bool:
+        """Restore battery state at ``time_step`` to before this step's ``charge`` call."""
+        step = self.time_step if time_step is None else int(time_step)
+        if not self._rewind_step_transfer(step):
+            return False
+
+        self._clear_step_electricity_consumption(step)
+        if len(self._capacity_history) > 1:
+            self._capacity_history.pop()
+        if len(self._efficiency_history) > 1:
+            self._efficiency_history.pop()
+        return True
 
     def preview_charge(self, energy: float) -> float:
         """Energy that :py:meth:`charge` would apply for `energy`, without changing the battery.
