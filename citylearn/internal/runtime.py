@@ -303,7 +303,7 @@ class CityLearnRuntimeService:
 
         timer_start = time.perf_counter() if debug_timing else 0.0
         reward = env.reward_function.calculate(observations=reward_observations)
-        env.rewards.append(reward)
+        env._rewards_history.append(reward)
         if debug_timing:
             timings['reward_calculation_time'] = time.perf_counter() - timer_start
 
@@ -326,7 +326,7 @@ class CityLearnRuntimeService:
 
         if env.terminated:
             timer_start = time.perf_counter() if debug_timing else 0.0
-            reward_history = env.rewards[1:]
+            reward_history = env._rewards_history.rows(1)
             reward_vectors: List[np.ndarray] = []
             max_len = 1
 
@@ -1362,27 +1362,16 @@ class CityLearnRuntimeService:
         if debug_timing:
             timings['community_market_settlement_time'] = time.perf_counter() - timer_start
 
-        def _set_or_append(lst, value):
-            if len(lst) == env.time_step:
-                lst.append(value)
-            elif len(lst) == env.time_step + 1:
-                lst[env.time_step] = value
-            else:
-                del lst[env.time_step + 1:]
-                if len(lst) < env.time_step:
-                    lst.extend([0.0] * (env.time_step - len(lst)))
-                lst.append(value)
-
         timer_start = time.perf_counter() if debug_timing else 0.0
         # NumPy 1 summed these float32 values from an int start in float64; keep that under NEP 50.
         total = sum((building.net_electricity_consumption[env.time_step] for building in env.buildings), numpy1_scalar(0))
-        _set_or_append(env.net_electricity_consumption, total)
+        env._net_electricity_consumption_history.put(env.time_step, total)
 
         total_cost = sum((building.net_electricity_consumption_cost[env.time_step] for building in env.buildings), numpy1_scalar(0))
-        _set_or_append(env.net_electricity_consumption_cost, total_cost)
+        env._net_electricity_consumption_cost_history.put(env.time_step, total_cost)
 
         total_emission = sum((building.net_electricity_consumption_emission[env.time_step] for building in env.buildings), numpy1_scalar(0))
-        _set_or_append(env.net_electricity_consumption_emission, total_emission)
+        env._net_electricity_consumption_emission_history.put(env.time_step, total_emission)
         if debug_timing:
             timings['district_aggregate_update_time'] = time.perf_counter() - timer_start
             env._last_update_variables_debug_timing = timings
