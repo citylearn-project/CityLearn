@@ -379,7 +379,16 @@
         <span class="n">comfort_band</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">include_business_as_usual</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return local child KPIs plus portfolio rows aggregated from district KPIs."""</span>
+<span class="w">        </span><span class="sd">"""Return each community's KPIs plus portfolio rows aggregated from their district KPIs.</span>
+
+<span class="sd">        The table has the columns of :py:meth:`citylearn.citylearn.CityLearnEnv.evaluate_v2` and a</span>
+<span class="sd">        ``community_id`` column. Each community contributes its ``'building'`` and ``'district'`` rows under its</span>
+<span class="sd">        own ``community_id``. The ``'portfolio'`` rows (``community_id`` ``'__portfolio__'``, names starting</span>
+<span class="sd">        ``portfolio_``) aggregate the district rows: ratios of totals are recomputed from the summed totals,</span>
+<span class="sd">        rates with an additive denominator are pooled, ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are summed,</span>
+<span class="sd">        other ratios and percentages are means weighted by the community ``weight``, and other rows (``_kw``,</span>
+<span class="sd">        ``_c``, ``_hours``) have no portfolio row. The KPI reference guide gives the rule of each family.</span>
+<span class="sd">        """</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_community_kpis</span><span class="p">({</span>
             <span class="n">community_id</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span>

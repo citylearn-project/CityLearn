@@ -154,7 +154,7 @@ net exchange, and the `ratio_to_business_as_usual` ratios of solar generation
 and export, EV charge and V2G export, battery charge, discharge and throughput,
 and deferrable-appliance cycle and energy counts. They use only communities that
 report both totals, ignore `weight` like the summed totals, and keep the
-lower-is-better rule of the [KPI reference](kpis_reference.md#core-equations)
+lower-is-better rule of the [KPI reference](kpis_reference.md#shared-rules)
 for negative net-exchange and cost totals. A one-community portfolio ratio
 equals the district ratio.
 

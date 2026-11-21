@@ -87,11 +87,12 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
 <li class="toctree-l3"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="KPI_V2_TREE.html">KPI catalogue</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../kpis.html#list-the-kpis-in-your-run">List the KPIs in your run</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../kpis.html#main-families">Main families</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kpis.html#families">Families</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kpis.html#which-kpi-to-use">Which KPI to use</a></li>
 </ul>
 </li>
 </ul>
@@ -205,12 +206,13 @@ weighted score. Keep the full KPI export so each headline result can be traced.<
 </tr>
 <tr class="row-even"><td><p>How demanding was the import profile?</p></td>
 <td><p>Peak and load-factor-penalty ratios to BAU</p></td>
-<td><p>For these non-negative penalty/peak ratios, below 1 is lower than BAU and above 1 is higher.</p></td>
+<td><p>Below 1 is lower than BAU and above 1 is higher. Load-factor penalties use import power; peaks use signed net power, so a community that exports at every step has a zero or negative peak (see <a class="reference internal" href="kpis_reference.html#grid-energy-and-load-shape"><span class="std std-ref">grid energy and load shape</span></a>).</p></td>
 </tr>
 </tbody>
 </table>
-<p>The simulator defines a default selection for both building and district rows.
-The <a class="reference external" href="scorecard_kpi_names.html">exact default names</a>
+<p>The simulator defines a default selection for both building and district rows,
+which <code class="docutils literal notranslate"><span class="pre">env.scorecard()</span></code> returns. The
+<a class="reference external" href="scorecard_kpi_names.html">exact default names</a>
 are generated from that selection when the documentation is built.</p>
 </section>
 <section id="build-a-compact-scorecard">
@@ -254,7 +256,10 @@ for PV self-consumption. <code class="docutils literal notranslate"><span class=
 <p>Do not mix <code class="docutils literal notranslate"><span class="pre">ratio_to_baseline</span></code> and <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> columns in a
 comparison without identifying the reference. A ratio is dimensionless.
 For a zero denominator the safe division rule returns 1 when both values are
-effectively zero, and a missing value when the numerator is non-zero.</p>
+effectively zero, and a missing value when the numerator is non-zero. The
+flexible-appliance ratios to the BAU are the exception: they are missing when
+both of their totals are zero (see
+<a class="reference internal" href="kpis_reference.html#shared-rules"><span class="std std-ref">shared rules</span></a>).</p>
 </section>
 <section id="ev-service-versus-target-accuracy">
 <h2>EV service versus target accuracy<a class="headerlink" href="#ev-service-versus-target-accuracy" title="Link to this heading"></a></h2>
@@ -301,12 +306,14 @@ complement the default selection:</p>
 </tr>
 </tbody>
 </table>
-<p>An absolute peak in kW can be calculated from the recorded step energy divided
-by the timestep duration in hours. Do not label a normalized peak ratio as kW.
+<p>The absolute peaks are <code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_peak_all_time_average_control_kw</span></code>
+and its <code class="docutils literal notranslate"><span class="pre">_business_as_usual_kw</span></code> counterpart; do not label a peak ratio as kW.
 For DR experiments add request, delivery, compliance, shortfall and net revenue;
-for thermal studies add comfort; for failure studies add the robustness counters.</p>
+for thermal studies add <code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_discomfort_ratio</span></code>, the
+canonical discomfort KPI, with its coverage counts; for failure studies add the
+robustness counters.</p>
 <p>Use the <a class="reference internal" href="kpis_reference.html"><span class="std std-doc">KPI reference</span></a> for units and definitions, the
-<a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">naming catalogue</span></a> for further names and the
+<a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">KPI catalogue</span></a> for every other name and the
 <a class="reference external" href="../ui.html">UI guide</a> for visual comparisons.</p>
 </section>
 </section>

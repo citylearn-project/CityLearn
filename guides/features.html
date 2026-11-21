@@ -168,7 +168,7 @@ temperature. Comfort and outage indicators report the resulting service.</p>
 <p>Choose devices under each building’s schema entry and enable their actions.
 <a class="reference internal" href="schema_reference.html#device-sections"><span class="std std-ref">Device configuration</span></a>,
 <a class="reference internal" href="actions_reference.html#flat-actions"><span class="std std-ref">action meanings</span></a> and
-<a class="reference internal" href="kpis_reference.html#kpi-families"><span class="std std-ref">comfort KPIs</span></a> provide the details.</p>
+<a class="reference internal" href="kpis_reference.html#comfort-and-resilience"><span class="std std-ref">comfort KPIs</span></a> provide the details.</p>
 </section>
 <section id="photovoltaics-and-batteries">
 <h2>Photovoltaics and batteries<a class="headerlink" href="#photovoltaics-and-batteries" title="Link to this heading"></a></h2>
@@ -225,7 +225,7 @@ after constraint handling.</p>
 <a class="reference internal" href="schema_reference.html#buildings"><span class="std std-ref">schema reference</span></a>. Start with
 <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo</span></code>. These are active-power
 connection constraints; they do not calculate feeder voltage or AC power flow.
-See <a class="reference internal" href="kpis_reference.html#electrical-service-and-phase-kpis"><span class="std std-ref">electrical KPIs</span></a>.</p>
+See <a class="reference internal" href="kpis_reference.html#electrical-service-and-phases"><span class="std std-ref">electrical KPIs</span></a>.</p>
 <p>The import limit can also vary in time. An <a class="reference internal" href="schema_reference.html#available-grid-power"><span class="std std-ref">available grid power</span></a>
 series lowers it below the connection capacity per step, for example when a distribution system
 operator dims controllable devices or reduces capacity during grid stress. Controllers can
@@ -250,7 +250,7 @@ Controllers respond through the existing storage, EV and flexible-load actions.<
 <p>The baseline is the mean net power over the configured pre-event history window,
 frozen for that request. Delivered energy, credited response and penalized
 shortfall are separate quantities. See the <a class="reference internal" href="schema_reference.html#demand-response"><span class="std std-ref">request format and baseline</span></a>
-and <a class="reference internal" href="kpis_reference.html#demand-response-kpis"><span class="std std-ref">settlement KPIs</span></a>.
+and <a class="reference internal" href="kpis_reference.html#demand-response"><span class="std std-ref">settlement KPIs</span></a>.
 Use <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_demand_response</span></code> for a public example.</p>
 </section>
 <section id="changing-members-and-assets">

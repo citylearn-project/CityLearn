@@ -550,7 +550,9 @@ ratio without any event to serve.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">level</span></code> (str): <code class="docutils literal notranslate"><span class="pre">'building'</span></code> or <code class="docutils literal notranslate"><span class="pre">'district'</span></code>.</p></li>
 </ul>
 <p>Which KPIs appear depends on the scenario’s assets and services. <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.scorecard" title="citylearn.citylearn.CityLearnEnv.scorecard"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scorecard()</span></code></a> selects the
-default subset, and the KPI reference guide defines every family.</p>
+default subset. The KPI catalogue lists every name and the KPI reference guide defines every family.
+<a class="reference internal" href="citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.evaluate_v2" title="citylearn.multi_community.MultiCommunityEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">citylearn.multi_community.MultiCommunityEnv.evaluate_v2()</span></code></a> returns these rows for each
+community, with a <code class="docutils literal notranslate"><span class="pre">community_id</span></code> column, plus <code class="docutils literal notranslate"><span class="pre">'portfolio'</span></code> rows aggregated from the district rows.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
