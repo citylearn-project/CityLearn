@@ -216,7 +216,7 @@ def test_bau_definition_and_removed_names():
     for name in ("NormalPolicy", "NormalTargetPolicy", "NormalNoBatteryPolicy", "ServiceOnlyBaselineAgent",
                  "GridAwareBaselineAgent", "CommunityAwareBaselineAgent"):
         assert not hasattr(baseline, name)
-    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-full-charge-v3"
+    assert BusinessAsUsualAgent.DEFINITION_VERSION == "immediate-full-charge-v4"
 
 
 @pytest.mark.parametrize("kwargs", [
@@ -633,15 +633,18 @@ def test_bau_charge_target_is_validated_and_recorded():
             BusinessAsUsualAgent(env, ev_charge_target="half")
         assert BusinessAsUsualAgent(env).ev_charge_target == "full"
         agent = BusinessAsUsualAgent(env, ev_charge_target="requested")
-        assert agent.DEFINITION_VERSION == "immediate-user-target-v2"
+        assert agent.DEFINITION_VERSION == "immediate-user-target-v3"
         parameters = agent.comparison_identity()["parameters"]
         assert parameters["ev_charge_target"] == "requested"
-        assert parameters["definition_version"] == "immediate-user-target-v2"
+        assert parameters["definition_version"] == "immediate-user-target-v3"
     finally:
         env.close()
 
 
-@pytest.mark.parametrize("target,definition", [("requested", "immediate-user-target-v2"), ("full", "immediate-full-charge-v3")])
+@pytest.mark.parametrize("target,definition", [
+    ("requested", "immediate-user-target-v3"),
+    ("full", "immediate-full-charge-v4"),
+])
 def test_evaluate_v2_uses_the_selected_bau(target, definition):
     env = CityLearnEnv(str(SOURCE_DATASET / "schema.json"), central_agent=True, episode_time_steps=4,
                        random_seed=0, business_as_usual_ev_charge_target=target)
@@ -653,6 +656,7 @@ def test_evaluate_v2_uses_the_selected_bau(target, definition):
         assert "district_ev_total_charge_business_as_usual_kwh" in set(kpis["cost_function"])
         reference = env.run_business_as_usual_baseline().env._native_reference_metadata
         assert reference["definition_version"] == definition
+        assert BusinessAsUsualAgent(env, ev_charge_target=target).DEFINITION_VERSION == definition
         assert env.get_metadata()["business_as_usual_ev_charge_target"] == target
     finally:
         env.close()
@@ -735,9 +739,106 @@ def test_bau_reference_cache_follows_the_selected_target():
         env.business_as_usual_ev_charge_target = "requested"
         requested = env.run_business_as_usual_baseline()
         assert requested is not full
-        assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v2"
+        assert requested.env._native_reference_metadata["definition_version"] == "immediate-user-target-v3"
     finally:
         env.close()
+
+
+@pytest.mark.parametrize("seconds", [15, 900, 3600])
+@pytest.mark.parametrize("core_bundle", [False, True])
+@pytest.mark.parametrize("interface", ["flat", "entity"])
+def test_bau_bess_uses_current_step_load_and_pv_without_one_step_lag(
+    tmp_path: Path, seconds: int, core_bundle: bool, interface: str,
+):
+    # Issue #190, consequence 1: with settled t-1 electrical observations, the
+    # battery charged from the grid at sunset (when step 0 had PV surplus and
+    # step 1 had dark load) and discharged into export when load dropped to zero.
+    dataset_dir = tmp_path / f"lag_{seconds}_{core_bundle}"
+    shutil.copytree(SOURCE_DATASET, dataset_dir)
+    load_path = dataset_dir / "Building_1.csv"
+    frame = pd.read_csv(load_path)
+    # Dataset rows are 900 s: 0.5 kWh per row is 2.0 kW.
+    frame["non_shiftable_load"] = 0.0
+    frame.loc[1, "non_shiftable_load"] = 0.5
+    frame["solar_generation"] = 0.0
+    frame.loc[0, "solar_generation"] = 0.75  # 3 kW over the 900 s dataset step.
+    frame.to_csv(load_path, index=False)
+
+    schema_path = dataset_dir / "schema.json"
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    schema["root_directory"] = str(dataset_dir)
+    config = schema["buildings"]["Building_1"]
+    config["electrical_storage"]["attributes"]["initial_soc"] = 0.5
+    config["pv"] = {
+        "type": "citylearn.energy_model.PV",
+        "autosize": False,
+        "attributes": {"generation_mode": "absolute", "nominal_power": 3.0},
+    }
+    config["chargers"] = {}
+    schema["electric_vehicles_def"] = {}
+    if core_bundle:
+        schema["observation_bundles"] = {"entity_core_electrical": True}
+    schema_path.write_text(json.dumps(schema), encoding="utf-8")
+
+    env = CityLearnEnv(
+        str(schema_path),
+        central_agent=True,
+        interface=interface,
+        seconds_per_time_step=seconds,
+        # 3600 s on these 900 s rows exercises the `time_step_ratio` scaling of the load.
+        time_step_ratio_mode="compress",
+        episode_time_steps=4,
+        random_seed=0,
+    )
+    try:
+        env.reset(seed=0)
+        building = env.buildings[0]
+
+        storage_idx = env.action_names[0].index("electrical_storage")
+        agent = BusinessAsUsualAgent(env)
+
+        # Step 0: PV surplus -> charge battery.
+        a0 = agent.predict([])
+        assert a0[0][storage_idx] > 0.0
+        env.step(a0)
+        assert building.net_electricity_consumption[0] <= 1e-6
+
+        # Step 1 is dark with 2 kW of load. The battery must discharge.
+        a1 = agent.predict([])
+        assert a1[0][storage_idx] == pytest.approx(-2.0 / building.electrical_storage.nominal_power)
+        env.step(a1)
+
+        # Step 2: 0 PV, 0 load -> must stay idle (0.0), not export stored energy.
+        a2 = agent.predict([])
+        assert a2[0][storage_idx] == pytest.approx(0.0, abs=1.0e-6)
+        env.step(a2)
+        assert building.net_electricity_consumption[2] == pytest.approx(0.0, abs=1.0e-5)
+    finally:
+        env.close()
+
+
+def test_current_step_bau_keeps_fallback_and_does_not_mix_thermal_history():
+    with CityLearnEnv(str(SOURCE_DATASET / "schema.json"), episode_time_steps=4) as env:
+        engine = BusinessAsUsualAgent(env)._engine
+        names = {
+            "non_shiftable_load": 0,
+            "pv_power_kw": 1,
+            "solar_generation": 1,
+            "active_pvs_count": 2,
+            "net_power_kw": 3,
+            "bess_power_kw": 4,
+            "ev_charging_power_kw": 5,
+            "heating_electricity_consumption": 6,
+            "deferrable_appliance::washer::current_step_power_kw": 7,
+        }
+        values = np.array([0.5, 1.0, 1.0, 5.0, 1.0, 1.0, 7.0, 0.5, 0.25])
+        # With only the settled PV alias, the budget uses settled net minus BESS and EV.
+        engine._init_dispatch_budget(0, values, names)
+        assert engine._dispatch_budgets[0]["local_import_kw"] == pytest.approx(3.0)
+        # With current solar, the budget uses current load, current PV and the running cycle.
+        names = {**names, "solar_generation": 8}
+        engine._init_dispatch_budget(0, values, names)
+        assert engine._dispatch_budgets[0]["local_import_kw"] == pytest.approx(1.5)
 
 
 def _multi_episode_actions(env: CityLearnEnv, make_agent, episodes: int, fresh_agent_per_episode: bool):
