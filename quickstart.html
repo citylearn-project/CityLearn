@@ -210,10 +210,10 @@ instead), starts ready flexible appliances and uses stationary storage for PV
 self-consumption.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">step</span></code> returns observations, rewards, termination, truncation and information,
 in that order. The loop stops when either termination flag is true.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> returns the KPI table, with <code class="docutils literal notranslate"><span class="pre">cost_function</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>,
-<code class="docutils literal notranslate"><span class="pre">name</span></code> and <code class="docutils literal notranslate"><span class="pre">level</span></code> columns. The example prints four district indicators:
-cost, imported energy, feasible EV minimum service and residual phase-limit
-violation energy.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> returns the KPI table with <code class="docutils literal notranslate"><span class="pre">cost_function</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>,
+<code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">level</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code> and <code class="docutils literal notranslate"><span class="pre">description</span></code>. The example prints four
+district indicators covering cost, imported energy, feasible EV minimum
+service and residual phase-limit violation energy.</p></li>
 </ol>
 <p>This dataset uses hourly time steps. The 24-state episode has 23 control
 transitions: the final state is the observation after the last action.</p>

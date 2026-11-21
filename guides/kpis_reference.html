@@ -677,11 +677,10 @@ capacity_deg  = degraded capacity at the time of evaluation
 fade_district = Σ_b max(capacity_b − capacity_deg_b, 0) / Σ_b capacity_b
 </pre></div>
 </div>
-<p><strong>Portfolio.</strong> Charge, discharge and throughput are summed, and their ratios to the BAU are ratios of the summed totals. Equivalent full cycles are summed over communities because the name ends in <code class="docutils literal notranslate"><span class="pre">_count</span></code>: the portfolio value is the sum of the community EFC, not <code class="docutils literal notranslate"><span class="pre">Σ</span> <span class="pre">T</span> <span class="pre">/</span> <span class="pre">(2</span> <span class="pre">·</span> <span class="pre">Σ</span> <span class="pre">capacity)</span></code>. Capacity fade and the ratios to the BAU of cycles and fade are means weighted by community <code class="docutils literal notranslate"><span class="pre">weight</span></code>, not by capacity.</p>
-<p><strong>Which KPI.</strong> Use throughput for battery activity and equivalent full cycles at building or district level for wear per unit of capacity. For a portfolio, compute cycles from the summed throughput and capacities rather than reading the summed <code class="docutils literal notranslate"><span class="pre">_count</span></code> row. Report battery activity with cost and service: neither more nor less activity is better in itself.</p>
+<p><strong>Portfolio.</strong> Charge, discharge and throughput are summed, and their ratios to the BAU are ratios of the summed totals. Equivalent full cycles are total throughput divided by twice the total nominal battery capacity, independently for the control and BAU runs. The result is undefined when the total nominal capacity is zero. The BAU delta and ratio compare these two portfolio values. Capacity fade and its ratio to the BAU are means weighted by community <code class="docutils literal notranslate"><span class="pre">weight</span></code>.</p>
+<p><strong>Which KPI.</strong> Use throughput for energy moved and equivalent full cycles for battery activity relative to nominal capacity. Report battery activity alongside cost and service.</p>
 <p><strong>Known limits.</strong></p>
 <ul class="simple">
-<li><p>The portfolio EFC is a sum of community values (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/330">#330</a>).</p></li>
 <li><p>The degraded capacity is read at evaluation time, not at the end of a member’s active window.</p></li>
 </ul>
 </section>
@@ -1863,6 +1862,10 @@ published comparisons, it is kept under a distinct name, and the legacy
 <td><p>Pooled from local plus grid energy, valid requested energy, requested energy and active intervals.</p></td>
 <td><p>none</p></td>
 </tr>
+<tr class="row-odd"><td><p>Portfolio stationary-battery equivalent full cycles and their BAU comparisons (<code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code>, #330)</p></td>
+<td><p>Total throughput over twice the total nominal capacity, with BAU delta and ratio derived from the two portfolio values.</p></td>
+<td><p>none</p></td>
+</tr>
 </tbody>
 </table>
 <p>In the legacy rows, a load-factor window whose signed peak is not positive is
@@ -1889,7 +1892,12 @@ division reported as a perfect 0.</p>
 </tr>
 </tbody>
 </table>
-<p>A new KPI must be added to <code class="docutils literal notranslate"><span class="pre">docs/kpi_catalogue.yml</span></code>, which generates the <a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">KPI catalogue</span></a> (<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">scripts/docs/kpi_catalogue.py</span></code>), and its equations to the family section of this page; <code class="docutils literal notranslate"><span class="pre">tests/test_kpi_catalogue.py</span></code> fails while an emitted name is missing from the catalogue. Changes of definition are recorded in <a class="reference internal" href="releases.html"><span class="std std-doc">releases.md</span></a>.</p>
+<p>The long table starts with <code class="docutils literal notranslate"><span class="pre">cost_function</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code> and <code class="docutils literal notranslate"><span class="pre">level</span></code>, followed
+by <code class="docutils literal notranslate"><span class="pre">unit</span></code> and a short English <code class="docutils literal notranslate"><span class="pre">description</span></code> from the KPI catalogue.</p>
+<p>The long multi-community CSV includes the metadata columns. For a wide single-community
+export in CSV or Parquet, the adjacent <code class="docutils literal notranslate"><span class="pre">exported_kpis.manifest.json</span></code> holds
+<code class="docutils literal notranslate"><span class="pre">kpi_definitions</span></code> keyed by KPI name. The KPI file continues to contain one numeric column per scope.</p>
+<p>A new KPI must be added to <code class="docutils literal notranslate"><span class="pre">citylearn/misc/kpi_catalogue.yml</span></code>, which generates the <a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">KPI catalogue</span></a> (<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">scripts/docs/kpi_catalogue.py</span></code>), and its equations to the family section of this page; <code class="docutils literal notranslate"><span class="pre">tests/test_kpi_catalogue.py</span></code> fails while an emitted name is missing from the catalogue. Changes of definition are recorded in <a class="reference internal" href="releases.html"><span class="std std-doc">releases.md</span></a>.</p>
 </section>
 </section>
 

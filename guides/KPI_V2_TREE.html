@@ -176,7 +176,7 @@
   <section id="kpi-catalogue">
 <h1>KPI catalogue<a class="headerlink" href="#kpi-catalogue" title="Link to this heading"></a></h1>
 <p>This page lists every KPI name that <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> emits, grouped by family, with a short
-definition. It is generated from <code class="docutils literal notranslate"><span class="pre">docs/kpi_catalogue.yml</span></code> by <code class="docutils literal notranslate"><span class="pre">scripts/docs/kpi_catalogue.py</span></code>,
+definition. It is generated from <code class="docutils literal notranslate"><span class="pre">citylearn/misc/kpi_catalogue.yml</span></code> by <code class="docutils literal notranslate"><span class="pre">scripts/docs/kpi_catalogue.py</span></code>,
 and a test checks that every name the simulator emits is listed here. The equations, the
 district aggregation and the undefined-value rules of each family are in the
 <a class="reference internal" href="kpis_reference.html"><span class="std std-doc">KPI reference</span></a>, which each family links to.</p>
@@ -816,7 +816,7 @@ district_solar_self_consumption_community_market_local_share_of_export_ratio
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">battery_health_equivalent_full_cycles{,_business_as_usual,_delta_to_business_as_usual}_count</span></code></p></td>
 <td><p>building, district</p></td>
 <td><p>count</p></td>
-<td><p>Equivalent full cycles, throughput / (2 · nominal capacity), pooled over capacity at district level; the portfolio sums it because the name ends in <code class="docutils literal notranslate"><span class="pre">_count</span></code>. <code class="docutils literal notranslate"><span class="pre">_business_as_usual</span></code> and <code class="docutils literal notranslate"><span class="pre">_delta_to_business_as_usual</span></code> as in the shared rules.</p></td>
+<td><p>Equivalent full cycles, throughput / (2 · nominal capacity), pooled over capacity at district and portfolio levels. <code class="docutils literal notranslate"><span class="pre">_business_as_usual</span></code> and <code class="docutils literal notranslate"><span class="pre">_delta_to_business_as_usual</span></code> as in the shared rules.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">battery_health_capacity_fade{,_business_as_usual,_delta_to_business_as_usual}_ratio</span></code></p></td>
 <td><p>building, district</p></td>

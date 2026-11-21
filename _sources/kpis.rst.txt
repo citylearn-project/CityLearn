@@ -40,18 +40,19 @@ After completing an episode:
 .. code-block:: python
 
    kpis = env.evaluate_v2()
-   names = kpis[["cost_function", "level"]].drop_duplicates()
+   names = kpis[["cost_function", "level", "unit", "description"]].drop_duplicates()
    print(names.sort_values("cost_function").to_string(index=False))
    kpis.to_csv("kpis.csv", index=False)
 
-The table contains ``cost_function``, ``value``, ``name`` and ``level``.
+The table starts with ``cost_function``, ``value``, ``name`` and ``level``,
+followed by ``unit`` and a short English ``description`` from the catalogue.
 ``level`` is ``building`` (one row per member, ``name`` is the building) or
 ``district`` (one row for the community, ``name`` is ``District``).
 ``MultiCommunityEnv.evaluate_v2()`` adds a ``community_id`` column and
 ``portfolio`` rows that aggregate the communities' district rows; the
 :doc:`guides/kpis_reference` gives the aggregation rules.
-The last part of each KPI name is its unit (``kwh``, ``kw``, ``eur``, ``kgco2``,
-``ratio``...). Feature-specific rows follow the scenario configuration, and a
+Most KPI names end in a unit token such as ``kwh``, ``kw`` or ``ratio``.
+Use the ``unit`` column for the display unit. Feature-specific rows follow the scenario configuration, and a
 KPI that is undefined for the run, such as a service ratio without any event to
 serve, is missing (NaN) rather than 0 or 1.
 

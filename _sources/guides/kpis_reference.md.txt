@@ -445,12 +445,11 @@ EFC_district  = Σ_b T_b / (2 · Σ_b capacity_b)
 fade_district = Σ_b max(capacity_b − capacity_deg_b, 0) / Σ_b capacity_b
 ```
 
-**Portfolio.** Charge, discharge and throughput are summed, and their ratios to the BAU are ratios of the summed totals. Equivalent full cycles are summed over communities because the name ends in `_count`: the portfolio value is the sum of the community EFC, not `Σ T / (2 · Σ capacity)`. Capacity fade and the ratios to the BAU of cycles and fade are means weighted by community `weight`, not by capacity.
+**Portfolio.** Charge, discharge and throughput are summed, and their ratios to the BAU are ratios of the summed totals. Equivalent full cycles are total throughput divided by twice the total nominal battery capacity, independently for the control and BAU runs. The result is undefined when the total nominal capacity is zero. The BAU delta and ratio compare these two portfolio values. Capacity fade and its ratio to the BAU are means weighted by community `weight`.
 
-**Which KPI.** Use throughput for battery activity and equivalent full cycles at building or district level for wear per unit of capacity. For a portfolio, compute cycles from the summed throughput and capacities rather than reading the summed `_count` row. Report battery activity with cost and service: neither more nor less activity is better in itself.
+**Which KPI.** Use throughput for energy moved and equivalent full cycles for battery activity relative to nominal capacity. Report battery activity alongside cost and service.
 
 **Known limits.**
-- The portfolio EFC is a sum of community values ([#330](https://github.com/citylearn-project/CityLearn/issues/330)).
 - The degraded capacity is read at evaluation time, not at the end of a member's active window.
 
 ## Electrical service and phases
@@ -1555,6 +1554,7 @@ published comparisons, it is kept under a distinct name, and the legacy
 | `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Allocated from the district settlement. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostic) |
 | Portfolio EV departure rates and means, deferrable and escalator service levels, start delay and solar self-consumption (`MultiCommunityEnv`) | Pooled from their additive denominators. | none |
 | Portfolio community-market local shares, demand-response compliance and demand-response audit coverage ratios (`MultiCommunityEnv`, #285) | Pooled from local plus grid energy, valid requested energy, requested energy and active intervals. | none |
+| Portfolio stationary-battery equivalent full cycles and their BAU comparisons (`MultiCommunityEnv`, #330) | Total throughput over twice the total nominal capacity, with BAU delta and ratio derived from the two portfolio values. | none |
 
 In the legacy rows, a load-factor window whose signed peak is not positive is
 now undefined; it used to give an infinite or negative penalty, which safe
@@ -1568,4 +1568,11 @@ division reported as a perfect 0.
 | End-of-episode export | `CityLearnEnv(..., export_kpis_on_episode_end=True)` |
 | With render | `render_mode="end"` or `render_mode="during"` |
 
-A new KPI must be added to `docs/kpi_catalogue.yml`, which generates the [KPI catalogue](KPI_V2_TREE.md) (`python scripts/docs/kpi_catalogue.py`), and its equations to the family section of this page; `tests/test_kpi_catalogue.py` fails while an emitted name is missing from the catalogue. Changes of definition are recorded in [releases.md](releases.md).
+The long table starts with `cost_function`, `value`, `name` and `level`, followed
+by `unit` and a short English `description` from the KPI catalogue.
+
+The long multi-community CSV includes the metadata columns. For a wide single-community
+export in CSV or Parquet, the adjacent `exported_kpis.manifest.json` holds
+`kpi_definitions` keyed by KPI name. The KPI file continues to contain one numeric column per scope.
+
+A new KPI must be added to `citylearn/misc/kpi_catalogue.yml`, which generates the [KPI catalogue](KPI_V2_TREE.md) (`python scripts/docs/kpi_catalogue.py`), and its equations to the family section of this page; `tests/test_kpi_catalogue.py` fails while an emitted name is missing from the catalogue. Changes of definition are recorded in [releases.md](releases.md).

@@ -157,8 +157,7 @@ and component level.</p>
 <li><p><a class="reference external" href="https://citylearnui.netlify.app/">Open CityLearn UI</a></p></li>
 <li><p><a class="reference external" href="https://github.com/Soft-CPS-Research-Group/citylearn-ui">Source code and local setup</a></p></li>
 </ul>
-<p>The current interface reads the selected CSV files locally in the browser; it
-does not upload them to an application backend. Simulation setup, schemas and
+<p>The interface reads CSV and Parquet exports locally in the browser. Simulation setup, schemas and
 controller execution remain in Python or the CLI. For configuration, start with
 <a class="reference internal" href="guides/features.html"><span class="doc">Features and configuration</span></a> and <a class="reference internal" href="overview/schema.html"><span class="doc">Schema</span></a>.</p>
 <section id="export-a-complete-run">
@@ -226,8 +225,10 @@ no time-series data for that run.</p></li>
 output location. The exported folder contains <code class="docutils literal notranslate"><span class="pre">exported_kpis.csv</span></code> and
 <code class="docutils literal notranslate"><span class="pre">exported_data_*_ep0.csv</span></code> files for the available buildings, devices and
 community. Keep the filenames unchanged so the UI can identify their contents.
-The UI export is a wide table with a <code class="docutils literal notranslate"><span class="pre">KPI</span></code> column and one column per scope;
-the Python <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> result is a long-form table for analysis.</p>
+The single-community KPI export is a wide table with a <code class="docutils literal notranslate"><span class="pre">KPI</span></code> column and one
+numeric column per scope. Its adjacent <code class="docutils literal notranslate"><span class="pre">exported_kpis.manifest.json</span></code> contains
+<code class="docutils literal notranslate"><span class="pre">kpi_definitions</span></code>. The Python <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> result and the multi-community
+KPI CSV are long tables with <code class="docutils literal notranslate"><span class="pre">unit</span></code> and <code class="docutils literal notranslate"><span class="pre">description</span></code> columns.</p>
 </section>
 </section>
 <section id="import-and-explore">

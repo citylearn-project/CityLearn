@@ -142,7 +142,7 @@ Only district-level child KPIs are aggregated:
 
 | KPI suffix | Portfolio rule |
 |---|---|
-| `_kwh`, `_eur`, `_kgco2`, `_count` | Sum across communities. |
+| `_kwh`, `_eur`, `_kgco2`, other `_count` | Sum across communities. |
 | `_ratio` of a control total to a reference total | Ratio of the summed totals, e.g. `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
 | Rates and means with additive denominators | Pooled: mean weighted by the denominator, e.g. `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
 | Other `_ratio`, `_percent` | Weighted mean using community `weight`. |
@@ -173,16 +173,20 @@ equal the ratio of the pooled numerator and denominator and ignore `weight`:
 | Community-market local share of export | Local export plus grid export after local trading |
 | Demand-response compliance | `demand_response_valid_requested_total_kwh` |
 | Demand-response audit compliance, requested-energy coverage and baseline coverage, per purpose | The audit's valid requested energy, requested energy and active intervals |
+| Stationary-battery equivalent full cycles (control and BAU) | Nominal stationary-battery capacity |
 
-The BAU deltas and ratios of the pooled deferrable service level, start delay
-and self-consumption are taken between the pooled control and BAU values.
-Communities whose value is undefined carry no weight.
+The BAU deltas and ratios of the pooled deferrable service level, start delay,
+self-consumption and equivalent full cycles compare the pooled control and BAU
+values. Communities whose value is undefined carry no weight.
+
+For stationary batteries, the portfolio cycle count is total throughput divided
+by twice the total nominal capacity. Installed batteries contribute their capacity
+even if they are idle. The result is undefined when the total capacity is zero.
 
 Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
 ramping and load-factor penalties), comfort and resilience proportions, equity,
 the thermal-service, EV-departure and other audit ratios, battery capacity fade,
-and the `ratio_to_business_as_usual` ratios of battery capacity fade and
-equivalent full cycles.
+and the ratio of battery capacity fade to its BAU value.
 
 Portfolio KPI names replace a leading `district_` prefix with `portfolio_`, for example `district_demand_response_revenue_total_eur` becomes `portfolio_demand_response_revenue_total_eur`.
 
@@ -197,4 +201,6 @@ Portfolio KPI names replace a leading `district_` prefix with `portfolio_`, for 
   community_b/exported_kpis.csv
 ```
 
-The global CSV keeps the long `evaluate_v2()` format with local and portfolio rows.
+The global CSV keeps the long `evaluate_v2()` format with local and portfolio
+rows and the `unit` and `description` columns. Each child keeps its wide
+numeric table and stores its KPI definitions in `exported_kpis.manifest.json`.

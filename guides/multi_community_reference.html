@@ -310,7 +310,7 @@ community_id = "__portfolio__"
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">_eur</span></code>, <code class="docutils literal notranslate"><span class="pre">_kgco2</span></code>, <code class="docutils literal notranslate"><span class="pre">_count</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">_eur</span></code>, <code class="docutils literal notranslate"><span class="pre">_kgco2</span></code>, other <code class="docutils literal notranslate"><span class="pre">_count</span></code></p></td>
 <td><p>Sum across communities.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_ratio</span></code> of a control total to a reference total</p></td>
@@ -375,16 +375,21 @@ equal the ratio of the pooled numerator and denominator and ignore <code class="
 <tr class="row-odd"><td><p>Demand-response audit compliance, requested-energy coverage and baseline coverage, per purpose</p></td>
 <td><p>The audit’s valid requested energy, requested energy and active intervals</p></td>
 </tr>
+<tr class="row-even"><td><p>Stationary-battery equivalent full cycles (control and BAU)</p></td>
+<td><p>Nominal stationary-battery capacity</p></td>
+</tr>
 </tbody>
 </table>
-<p>The BAU deltas and ratios of the pooled deferrable service level, start delay
-and self-consumption are taken between the pooled control and BAU values.
-Communities whose value is undefined carry no weight.</p>
+<p>The BAU deltas and ratios of the pooled deferrable service level, start delay,
+self-consumption and equivalent full cycles compare the pooled control and BAU
+values. Communities whose value is undefined carry no weight.</p>
+<p>For stationary batteries, the portfolio cycle count is total throughput divided
+by twice the total nominal capacity. Installed batteries contribute their capacity
+even if they are idle. The result is undefined when the total capacity is zero.</p>
 <p>Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
 ramping and load-factor penalties), comfort and resilience proportions, equity,
 the thermal-service, EV-departure and other audit ratios, battery capacity fade,
-and the <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios of battery capacity fade and
-equivalent full cycles.</p>
+and the ratio of battery capacity fade to its BAU value.</p>
 <p>Portfolio KPI names replace a leading <code class="docutils literal notranslate"><span class="pre">district_</span></code> prefix with <code class="docutils literal notranslate"><span class="pre">portfolio_</span></code>, for example <code class="docutils literal notranslate"><span class="pre">district_demand_response_revenue_total_eur</span></code> becomes <code class="docutils literal notranslate"><span class="pre">portfolio_demand_response_revenue_total_eur</span></code>.</p>
 </section>
 <section id="export">
@@ -396,7 +401,9 @@ equivalent full cycles.</p>
   community_b/exported_kpis.csv
 </pre></div>
 </div>
-<p>The global CSV keeps the long <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> format with local and portfolio rows.</p>
+<p>The global CSV keeps the long <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> format with local and portfolio
+rows and the <code class="docutils literal notranslate"><span class="pre">unit</span></code> and <code class="docutils literal notranslate"><span class="pre">description</span></code> columns. Each child keeps its wide
+numeric table and stores its KPI definitions in <code class="docutils literal notranslate"><span class="pre">exported_kpis.manifest.json</span></code>.</p>
 </section>
 </section>
 
