@@ -16,6 +16,7 @@ import pandas as pd
 import pytest
 
 from citylearn.citylearn import CityLearnEnv
+from citylearn.internal.physics_invariants import PhysicsInvariantError
 
 MINUTE_DATASET = Path(__file__).resolve().parent / 'data' / 'minute_ev_demo'
 STEP_HOURS = 0.25  # the dataset and the control step are 900 s
@@ -78,6 +79,29 @@ def test_vehicle_to_building_is_off_by_default(tmp_path):
         assert charger.electricity_consumption[0] == 0.0
         # Without local supply the non-shiftable load is not served.
         assert building.non_shiftable_load_device.electricity_consumption[0] == 0.0
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize('net_kwh', [-1.5, 1.5], ids=['export', 'import'])
+def test_physics_checks_reject_grid_exchange_during_outage(tmp_path, monkeypatch, net_kwh):
+    env = _env(tmp_path, vehicle_to_building=False)
+    env.physics_invariant_checks = True
+
+    try:
+        building = env.buildings[0]
+        _step(env, 0.0)
+        assert building.net_electricity_consumption[0] == 0.0
+
+        update_variables = building.update_variables
+
+        def record_grid_exchange():
+            update_variables()
+            building._Building__net_electricity_consumption[building.time_step] = net_kwh
+
+        monkeypatch.setattr(building, 'update_variables', record_grid_exchange)
+        with pytest.raises(PhysicsInvariantError, match=r"Non-zero grid exchange during outage for 'Building_1' at t=1"):
+            _step(env, 0.0)
     finally:
         env.close()
 
