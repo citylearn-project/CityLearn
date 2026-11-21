@@ -123,12 +123,13 @@ def test_charging_constraints_scaling_and_penalty(tmp_path):
             reward_with_value = reward_with_penalty
         reward_fn = env_with_penalty.reward_function
         coeff = reward_fn.charging_constraint_penalty_coefficient
-        baseline_value = reward_fn._last_base_reward_total
+        # Version 2 of the EV reward: reward = base reward + EV terms - charging constraint penalty.
+        unpenalised_value = reward_fn._last_base_reward_total + reward_fn._last_ev_terms_total
         penalty_from_reward = reward_fn._last_penalty_total
 
         expected_delta = penalty_kwh * coeff
         assert penalty_from_reward == pytest.approx(expected_delta, rel=1e-3, abs=1e-6)
-        assert baseline_value - reward_with_value == pytest.approx(penalty_from_reward, rel=1e-3, abs=1e-6)
+        assert unpenalised_value - reward_with_value == pytest.approx(penalty_from_reward, rel=1e-3, abs=1e-6)
     finally:
         env_with_penalty.close()
 
