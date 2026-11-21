@@ -15,9 +15,9 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
     - name: Set up Python
-      uses: actions/setup-python@v7
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
       with:
         python-version: '3.11'
     - name: Install dependencies
@@ -46,7 +46,7 @@ jobs:
         sphinx-build -b html docs/source docs/build/html
         python scripts/ci/check_docs.py docs/build/html
     - name: Save documentation preview
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
       with:
         name: documentation-html
         path: docs/build/html
@@ -60,8 +60,8 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/checkout@v7
-    - uses: actions/download-artifact@v8
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8
       with:
         name: documentation-html
         path: docs/build/html
@@ -70,7 +70,7 @@ jobs:
         CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN }}
       run: printf '%s\n' "$CUSTOM_DOMAIN" > docs/build/html/CNAME
     - name: Deploy
-      uses: peaceiris/actions-gh-pages@v4
+      uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453  # v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/build/html

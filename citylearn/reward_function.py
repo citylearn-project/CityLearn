@@ -1,7 +1,6 @@
 import importlib
 from typing import Any, Iterable, List, Mapping, Optional, Set, Tuple, Union
 import numpy as np
-from citylearn.building import Building
 from citylearn.data import ZERO_DIVISION_PLACEHOLDER
 from citylearn.internal.scalars import numpy1_scalar
 import logging

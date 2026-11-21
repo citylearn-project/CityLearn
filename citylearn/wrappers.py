@@ -7,7 +7,7 @@ import pandas as pd
 
 try:
     from ray.rllib.env import MultiAgentEnv
-except (ModuleNotFoundError, ImportError) as e:
+except (ModuleNotFoundError, ImportError):
     from gymnasium import Env as MultiAgentEnv
 
 from citylearn.citylearn import CityLearnEnv
