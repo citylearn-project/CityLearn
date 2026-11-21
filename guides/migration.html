@@ -309,13 +309,22 @@ building, so their rewards change; functions that read only observations, such
 as <code class="docutils literal notranslate"><span class="pre">RewardFunction</span></code>, give the same rewards. Retrain policies trained with such a
 schema. No bundled dataset uses per-building reward functions.</p>
 <p><code class="docutils literal notranslate"><span class="pre">Electric_Vehicles_Reward_Function</span></code>, <code class="docutils literal notranslate"><span class="pre">ComfortReward</span></code> and
-<code class="docutils literal notranslate"><span class="pre">SolarPenaltyAndComfortReward</span></code> accept a <code class="docutils literal notranslate"><span class="pre">version</span></code> attribute. Version 1, the
-default, is the reward of 3.6.0, so existing schemas and trained policies keep
-their reward. Version 2 corrects the EV departure penalty, adds the base reward
+<code class="docutils literal notranslate"><span class="pre">SolarPenaltyAndComfortReward</span></code> accept a <code class="docutils literal notranslate"><span class="pre">version</span></code> attribute, and version 2 is
+the default. Version 2 corrects the EV departure penalty, adds the base reward
 and follows the HVAC mode in the comfort term, as the reward function overview
-of the documentation describes. Set <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;:</span> <span class="pre">2</span></code> in the
-reward attributes for new training runs, and compare policies only within one
-version. The reward evidence in the environment metadata records the version.</p>
+of the documentation describes. Every bundled schema that uses these rewards
+sets <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;:</span> <span class="pre">2</span></code>, so the rewards of <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>,
+the three-phase demos, the 2023 challenge datasets, both Quebec neighbourhoods
+and <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> differ from 3.6.0; their simulations and KPIs do not. Retrain
+policies trained on these rewards before comparing them with new runs, and
+compare policies only within one version.</p>
+<p>Version 1, the reward of 3.6.0, is deprecated and exists only to reproduce runs
+made with CityLearn 3.6.0 or earlier. Select it with <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;:</span> <span class="pre">1</span></code> in the
+reward attributes (or <code class="docutils literal notranslate"><span class="pre">reward_function_kwargs={&quot;version&quot;:</span> <span class="pre">1}</span></code>); it raises a
+<code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> and will be removed in a later release. Reward objects
+pickled by 3.6.0, for example inside a saved agent or environment, keep version
+1 without a warning. The reward evidence in the environment metadata and in
+export manifests records the version.</p>
 </section>
 <section id="kpi-definitions">
 <h3>KPI definitions<a class="headerlink" href="#kpi-definitions" title="Link to this heading"></a></h3>
