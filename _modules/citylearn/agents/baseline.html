@@ -444,17 +444,21 @@
 
 
 
-<div class="viewcode-block" id="ZeroActionBaselineAgent">
-<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.ZeroActionBaselineAgent">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">ZeroActionBaselineAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Baseline that requests zero for every action dimension.</span>
+<div class="viewcode-block" id="ZeroActionAgent">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.ZeroActionAgent">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ZeroActionAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Agent that requests zero for every action dimension.</span>
+
+<span class="sd">    Up to CityLearn 3.6.0 this class was called ``ZeroActionBaselineAgent``. That name is a deprecated alias that</span>
+<span class="sd">    will be removed in a later release: in CityLearn, "baseline" names the KPI counterfactual, while this agent</span>
+<span class="sd">    requests zero actions.</span>
 
 <span class="sd">    Under the entity interface it returns flat-like zero vectors in</span>
 <span class="sd">    ``env.action_names`` order, which the entity interface accepts.</span>
 <span class="sd">    """</span>
 
-<div class="viewcode-block" id="ZeroActionBaselineAgent.predict">
-<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.ZeroActionBaselineAgent.predict">[docs]</a>
+<div class="viewcode-block" id="ZeroActionAgent.predict">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.ZeroActionAgent.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_follow_entity_topology</span><span class="p">()</span>
         <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">]</span>
@@ -472,8 +476,18 @@
     <span class="s1">'RBCBasicPolicy'</span><span class="p">,</span>
     <span class="s1">'RBCSmartPolicy'</span><span class="p">,</span>
     <span class="s1">'RBCCommunityPolicy'</span><span class="p">,</span>
-    <span class="s1">'ZeroActionBaselineAgent'</span><span class="p">,</span>
+    <span class="s1">'ZeroActionAgent'</span><span class="p">,</span>
 <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="c1"># Deprecated names of renamed classes resolve to the same class, also for unpickling and import paths.</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'ZeroActionBaselineAgent'</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents._renamed</span><span class="w"> </span><span class="kn">import</span> <span class="n">renamed</span>
+
+        <span class="k">return</span> <span class="n">renamed</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">'ZeroActionBaselineAgent'</span><span class="p">,</span> <span class="s1">'ZeroActionAgent'</span><span class="p">,</span> <span class="n">ZeroActionAgent</span><span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'module </span><span class="si">{</span><span class="vm">__name__</span><span class="si">!r}</span><span class="s1"> has no attribute </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s1">'</span><span class="p">)</span>
 </pre></div>
 
            </div>

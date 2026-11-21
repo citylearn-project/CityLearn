@@ -144,6 +144,16 @@
 
 <span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+
+<span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="c1"># Deprecated names of renamed classes resolve to the same class, also for unpickling and import paths.</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">'BaselineAgent'</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents._renamed</span><span class="w"> </span><span class="kn">import</span> <span class="n">renamed</span>
+
+        <span class="k">return</span> <span class="n">renamed</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">'BaselineAgent'</span><span class="p">,</span> <span class="s1">'NoControlAgent'</span><span class="p">,</span> <span class="n">NoControlAgent</span><span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'module </span><span class="si">{</span><span class="vm">__name__</span><span class="si">!r}</span><span class="s1"> has no attribute </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s1">'</span><span class="p">)</span>
+
 <div class="viewcode-block" id="get_env_attr">
 <a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.get_env_attr">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_env_attr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -560,10 +570,14 @@
 </div>
 
 
-<div class="viewcode-block" id="BaselineAgent">
-<a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.BaselineAgent">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">BaselineAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""Passive no-control baseline where active control actions are disabled.</span>
+<div class="viewcode-block" id="NoControlAgent">
+<a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.NoControlAgent">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NoControlAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Passive no-control agent: every active control action is disabled.</span>
+
+<span class="sd">    Up to CityLearn 3.6.0 this class was called ``BaselineAgent``. That name is a deprecated alias that will be</span>
+<span class="sd">    removed in a later release: in CityLearn, "baseline" names the KPI counterfactual (the same buildings without</span>
+<span class="sd">    storage, with PV), while this agent controls nothing.</span>
 
 <span class="sd">    This agent will provide results for when there is no storage for load shifting and no heat pump partial load. </span>
 <span class="sd">    The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. `None`, causing it to </span>
@@ -604,8 +618,8 @@
 
         <span class="k">return</span> <span class="n">env</span>
 
-<div class="viewcode-block" id="BaselineAgent.predict">
-<a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.BaselineAgent.predict">[docs]</a>
+<div class="viewcode-block" id="NoControlAgent.predict">
+<a class="viewcode-back" href="../../../api/citylearn.agents.base.html#citylearn.agents.base.NoControlAgent.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
         <span class="n">actions</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_names</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">actions</span> <span class="o">=</span> <span class="n">actions</span>

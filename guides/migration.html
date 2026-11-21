@@ -108,6 +108,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#random-streams">Random streams</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#optional-pytorch-and-scikit-learn">Optional PyTorch and scikit-learn</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cli-evaluation-window-and-host-information">CLI evaluation window and host information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#renamed-agent-classes">Renamed agent classes</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-5-0-to-3-6-0">Upgrade from 3.5.0 to 3.6.0</a><ul>
@@ -580,6 +581,24 @@ simulation window. Runs without <code class="docutils literal notranslate"><span
 as before. Pass <code class="docutils literal notranslate"><span class="pre">-te</span> <span class="pre">start</span> <span class="pre">end</span></code> to evaluate on a chosen window. The training
 summary JSON records <code class="docutils literal notranslate"><span class="pre">hostname</span></code> and <code class="docutils literal notranslate"><span class="pre">username</span></code> only with <code class="docutils literal notranslate"><span class="pre">--record_host</span></code>;
 scripts that read these keys need the flag.</p>
+</section>
+<section id="renamed-agent-classes">
+<h3>Renamed agent classes<a class="headerlink" href="#renamed-agent-classes" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">citylearn.agents.base.BaselineAgent</span></code> is now <code class="docutils literal notranslate"><span class="pre">NoControlAgent</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">citylearn.agents.baseline.ZeroActionBaselineAgent</span></code> is now <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code>. In
+CityLearn, “baseline” names the KPI counterfactual, the same buildings without
+storage and with PV, which the <code class="docutils literal notranslate"><span class="pre">*_baseline_*</span></code> KPIs report; the two agents are a
+no-control and a zero-action controller, so their names now say so. The old
+names are deprecated aliases of the same classes, so existing imports, CLI
+<code class="docutils literal notranslate"><span class="pre">-a</span></code> paths, schema <code class="docutils literal notranslate"><span class="pre">agent.type</span></code> values and pickled agents keep working and only
+raise a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>. Replace the old names before a later release
+removes them:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoControlAgent</span>        <span class="c1"># was BaselineAgent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZeroActionAgent</span>  <span class="c1"># was ZeroActionBaselineAgent</span>
+</pre></div>
+</div>
+<p>The bundled EULP neighbourhood schemas and the default agent of generated EULP
+schemas use <code class="docutils literal notranslate"><span class="pre">citylearn.agents.base.NoControlAgent</span></code>. Results are unchanged.</p>
 </section>
 </section>
 <section id="upgrade-from-3-5-0-to-3-6-0">

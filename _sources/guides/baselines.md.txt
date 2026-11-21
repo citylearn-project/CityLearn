@@ -168,7 +168,7 @@ agent = SACRBC(env, rbc=RBCBasicPolicy(env, basic_price_policy='forecast_relativ
 The reinforcement learning controllers (`SAC`, `SACRBC`, `MARLISA`,
 `MARLISARBC`, `TabularQLearning`) read flat observation vectors and require
 `interface='flat'`; on the entity interface they raise a `ValueError`. The rule
-baselines, `ZeroActionBaselineAgent` and the random `Agent` work with both
+baselines, `ZeroActionAgent` and the random `Agent` work with both
 interfaces.
 
 ### Automatic BAU evaluation

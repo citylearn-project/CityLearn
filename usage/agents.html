@@ -190,14 +190,14 @@
 <h2>CityLearn Control Agents<a class="headerlink" href="#CityLearn-Control-Agents" title="Link to this heading"></a></h2>
 <section id="Passive-no-control-agent">
 <h3>Passive no-control agent<a class="headerlink" href="#Passive-no-control-agent" title="Link to this heading"></a></h3>
-<p>This passive agent disables active actions; it is not the operational <a class="reference external" href="../guides/baselines.html">BusinessAsUsualAgent</a>. Construct a fresh environment before changing controller type.</p>
-<p>Run the following to simulate an environment where the storage systems and heat pumps are not controlled (baseline). The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. <code class="docutils literal notranslate"><span class="pre">None</span></code>, causing it to deliver the ideal load in the building time series files:</p>
+<p><code class="docutils literal notranslate"><span class="pre">NoControlAgent</span></code> (called <code class="docutils literal notranslate"><span class="pre">BaselineAgent</span></code> up to CityLearn 3.6.0) disables the active actions; it is not the operational <a class="reference external" href="../guides/baselines.html">BusinessAsUsualAgent</a>. Construct a fresh environment before changing controller type.</p>
+<p>Run the following to simulate an environment where the storage systems and heat pumps are not controlled. The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. <code class="docutils literal notranslate"><span class="pre">None</span></code>, causing it to deliver the ideal load in the building time series files:</p>
 <p>Because this agent disables the active actions, its environment no longer matches the configuration from which <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> rebuilds the native BAU reference, so the KPIs are evaluated without that reference (<code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code>).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaselineAgent</span> <span class="k">as</span> <span class="n">Agent</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoControlAgent</span> <span class="k">as</span> <span class="n">Agent</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
 <span class="c1"># initialize</span>
