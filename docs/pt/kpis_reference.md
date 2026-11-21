@@ -1567,6 +1567,22 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 
 Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo passa a ser indefinida; antes dava uma penalizacao infinita ou negativa, que a safe division reportava como um 0 perfeito.
 
+## Auditoria de Resiliencia por Evento de Outage
+
+Para inspecionar interrupcoes da rede evento a evento em cenarios de topologia estatica sem alterar `evaluate_v2()`, usar `env.evaluate_outage_events()` (devolve `(events_df, summary_df)`) ou `env.get_outage_resilience_audit()` (devolve um dicionario pronto para JSON incluindo `district_windows`).
+
+Um evento de corte de um edificio e uma sequencia maxima de timesteps executados consecutivos em que `building.simulate_power_outage` esta ativo e `building.power_outage_signal` e finito e diferente de zero, seguindo a mesma regra do simulador e de `citylearn/internal/service_energy.py` (quando `simulate_power_outage` esta ativo, valores nao finitos em `power_outage`, como celulas em branco, `NaN`, `inf` ou `-inf`, levantam `ValueError` antes da simulacao; quando esta desativado, a coluna e ignorada). Uma janela de corte do distrito (`district_windows`) abrange timesteps executados consecutivos com pelo menos um edificio afetado. A energia de servico esperada, servida e nao servida vem de `citylearn/internal/service_energy.py` (usos finais `cooling`, `heating`, `dhw` e `non_shiftable`, limitados individualmente para que excessos num uso final nunca compensem falhas noutro), coincidindo com o numerador e denominador de `..._resilience_unserved_energy_outage_normalized_ratio`.
+
+| Campo | Nivel | Unidade | O que mede |
+|---|---|---:|---|
+| `start_time_step`, `end_time_step` | evento, janela do distrito | step | Limites inclusivos (base 0 no episodio) da interrupcao. |
+| `duration_steps`, `duration_hours` | evento, janela do distrito | count / hours | Duracao em steps e em horas (`duration_steps * seconds_per_time_step / 3600`). |
+| `expected_energy_kwh`, `served_energy_kwh`, `unserved_energy_kwh` | evento, janela do distrito, building, district | kWh | Energia esperada, servida e nao servida durante cortes, mais divisao `<end_use>_*_energy_kwh`. |
+| `peak_unserved_power_kw` | evento, janela do distrito, building, district | kW | Maior potencia nao servida num unico step (`max_step_unserved_kwh * 3600 / seconds_per_time_step`); no distrito, coincidente entre edificios simultaneamente afetados. |
+| `fully_served` | evento, janela do distrito | bool | Indica se a energia por servir e nula dentro da tolerancia (`<= 1e-9` kWh). |
+| `building_events_count`, `building_outage_steps_count`, `building_outage_hours`, `worst_building_event_unserved_energy_kwh`, `fully_served_building_events_ratio` | building, district | count / steps / hours / kWh / ratio | Contagem de eventos de edificio, duracao em steps/horas de edificio, pior energia nao servida num evento de edificio e fracao de eventos totalmente servidos (`None` quando `building_events_count == 0`). Na linha `District` agregam os eventos dos edificios membros. |
+| `district_windows_count`, `district_window_steps_count`, `district_window_hours`, `worst_district_window_unserved_energy_kwh`, `fully_served_district_windows_ratio` | district (`NaN` nas linhas building) | count / steps / hours / kWh / ratio | Contagem, duracao contigua em steps/horas, pior energia nao servida e fracao totalmente servida das janelas de corte do distrito com pelo menos um edificio afetado (`None` quando `district_windows_count == 0`). |
+
 ## Export
 
 | Modo | Como obter |

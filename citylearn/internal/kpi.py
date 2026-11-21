@@ -9,7 +9,12 @@ from types import SimpleNamespace
 from array import array
 
 from citylearn.energy_model import Battery
-from citylearn.internal import ev_departure_audit, deferrable_service_audit, grid_availability
+from citylearn.internal import (
+    ev_departure_audit,
+    deferrable_service_audit,
+    grid_availability,
+    outage_resilience,
+)
 from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
 from citylearn.internal.kpi_catalogue import attach_kpi_metadata
 from citylearn.internal.service_energy import service_energy_components
@@ -1326,6 +1331,12 @@ class CityLearnKPIService:
 
     def deferrable_service_audit(self):
         return deferrable_service_audit.environment_audit(self)
+
+    def outage_resilience_audit(self):
+        return outage_resilience.environment_audit(self)
+
+    def evaluate_outage_events(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        return outage_resilience.to_dataframes(self.outage_resilience_audit())
 
     def _deferrable_appliances_for_metrics(self, building) -> Sequence:
         topology_service = getattr(self.env, '_topology_service', None)

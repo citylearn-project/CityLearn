@@ -5,6 +5,26 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Métricas de resiliência por evento de falha de energia (opcional).**
+  `CityLearnEnv.evaluate_outage_events()` devolve `(events_df, summary_df)` e
+  `CityLearnEnv.get_outage_resilience_audit()` devolve o dicionário de auditoria
+  estruturado (incluindo as janelas comunitárias `district_windows`) para
+  episódios com topologia estática
+  ([#219](https://github.com/citylearn-project/CityLearn/issues/219)). Construído
+  sobre `citylearn/internal/service_energy.py`, cada sequência consecutiva máxima
+  de steps executados com `simulate_power_outage` ativo e `power_outage_signal`
+  finito e diferente de zero indica steps de início e fim, duração em steps e
+  horas, energia esperada/servida/não servida em kWh com divisão por uso final
+  (`cooling`, `heating`, `dhw`, `non_shiftable`) e `peak_unserved_power_kw`
+  convertido com `seconds_per_time_step`. `summary_df` distingue os eventos por
+  edifício (`building_events_count`, `building_outage_steps_count`,
+  `building_outage_hours`, `worst_building_event_unserved_energy_kwh`,
+  `fully_served_building_events_ratio`) das janelas do distrito com pelo menos um
+  edifício afetado (`district_windows_count`, `district_window_steps_count`,
+  `district_window_hours`, `worst_district_window_unserved_energy_kwh`,
+  `fully_served_district_windows_ratio`). `evaluate_v2()` e as exportações não
+  mudam. Ver a
+  [referência de KPIs](kpis_reference.md#auditoria-de-resiliencia-por-evento-de-outage).
 - **Versão da física nas exportações e comparações.** As exportações e as comparações não registavam `physics_version`, pelo que `compare_exports()` emparelhava uma corrida com a física 1 e outra com a física 2 e atribuía a diferença ao controlador. A versão resolvida passa a constar do manifesto de exportação e do seu contexto de comparação, e corridas com versões da física diferentes são `incompatible`. O `MultiCommunityEnv` rejeita comunidades com `physics_version` ou `random_stream_version` diferentes. Os resultados das simulações não mudam. Consulte o [guia de migração](../migration.md#physics-version) ([#301](https://github.com/citylearn-project/CityLearn/issues/301)).
 - **Definições registadas em cada corrida.** `get_metadata()`, os metadados temporais e o manifesto de exportação registam `episode_split_boundary` e `time_step_ratio_mode`; a evidência da recompensa com funções de recompensa por edifício regista a classe e a versão da recompensa de cada edifício; e um argumento `physics_version` mal escrito recebe uma sugestão. Os resultados das simulações não mudam. Consulte o [guia de migração](../migration.md#recorded-settings) ([#302](https://github.com/citylearn-project/CityLearn/issues/302)).
 - **Emissões do distrito com a troca local desligada.** Com um mercado comunitário ativo e `local_trading_enabled: false`, a liquidação, os KPIs de custo e o registo de proveniência não trocam energia localmente, mas as emissões do distrito continuavam a compensar a exportação de um membro com a importação de outro. Agora cada importação de um membro é contada com a sua intensidade carbónica, o valor `member_sum`, e as emissões são iguais a `district_energy_provenance_external_purchase_emissions_kgco2` em qualquer configuração do mercado. O rácio do preço local nunca afeta as emissões. Os resultados só mudam em execuções com a troca local desligada; nenhum dataset incluído o faz. Consulte o [guia de migração](../migration.md#district-emissions-with-local-trading-off) e o [#327](https://github.com/citylearn-project/CityLearn/issues/327).
@@ -107,6 +127,17 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   pelo nome do edifício, também quando membros entram ou saem numa topologia
   dinâmica. Nenhum conjunto de dados incluído usa funções de recompensa por
   edifício.
+- **Sinais de falha de energia não finitos.** Quando `simulate_power_outage` está
+  ativo, `Building.reset_power_outage_signal()` passa a rejeitar valores não
+  finitos em `power_outage` (células em branco, `NaN`, `inf`, `-inf`) com
+  `ValueError` antes da simulação; quando `simulate_power_outage` está
+  desativado, a coluna `power_outage` é ignorada. `Building.power_outage`,
+  `Building._without_grid_during_outage()`, `service_energy.unserved_energy()`,
+  `CostFunction.normalized_unserved_energy()` e a auditoria de resiliência
+  partilham a mesma regra finita e diferente de zero (`Building.power_outage`
+  tratava antes `NaN` como falha de energia). Substitua células em branco ou
+  infinitas em `power_outage` por `0` ou por um valor finito diferente de zero
+  ([#219](https://github.com/citylearn-project/CityLearn/issues/219)).
 - **Agentes renomeados: `NoControlAgent` e `ZeroActionAgent`.** No CityLearn,
   "baseline" designa o contrafactual dos KPIs, os mesmos edifícios sem
   armazenamento e com PV, que os KPIs `*_baseline_*` reportam. Duas classes de

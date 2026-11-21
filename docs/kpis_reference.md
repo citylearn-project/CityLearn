@@ -1562,6 +1562,22 @@ In the legacy rows, a load-factor window whose signed peak is not positive is
 now undefined; it used to give an infinite or negative penalty, which safe
 division reported as a perfect 0.
 
+## Outage Event Resilience Audit
+
+For event-by-event inspection of grid interruptions on static-topology scenarios without changing `evaluate_v2()`, call `env.evaluate_outage_events()` (returns `(events_df, summary_df)`) or `env.get_outage_resilience_audit()` (returns a JSON-ready dictionary including `district_windows`).
+
+A building outage event is a maximal run of consecutive executed timesteps where `building.simulate_power_outage` is enabled and `building.power_outage_signal` is finite and nonzero, matching the simulator and `citylearn/internal/service_energy.py` (when `simulate_power_outage` is enabled, non-finite `power_outage` inputs such as blank cells, `NaN`, `inf`, or `-inf` raise `ValueError` before simulation; when disabled, the column is ignored). A district outage window (`district_windows`) is a maximal run of consecutive executed timesteps where at least one member building has an active outage. Expected, served and unserved service energy are built from `citylearn/internal/service_energy.py` (`cooling`, `heating`, `dhw` and `non_shiftable` end uses capped individually so surpluses in one end use never offset shortfalls in another), matching the numerator and denominator of `..._resilience_unserved_energy_outage_normalized_ratio`.
+
+| Field | Scope | Unit | Meaning |
+|---|---|---:|---|
+| `start_time_step`, `end_time_step` | event, district window | step | Inclusive 0-based episode step boundaries of the interruption. |
+| `duration_steps`, `duration_hours` | event, district window | count / hours | Interruption length in steps and hours (`duration_steps * seconds_per_time_step / 3600`). |
+| `expected_energy_kwh`, `served_energy_kwh`, `unserved_energy_kwh` | event, district window, building, district | kWh | Total service energy expected, served and left unserved during outages, plus `<end_use>_*_energy_kwh` splits. |
+| `peak_unserved_power_kw` | event, district window, building, district | kW | Worst single-step unserved power (`max_step_unserved_kwh * 3600 / seconds_per_time_step`); at district level, coincident across simultaneously affected buildings. |
+| `fully_served` | event, district window | bool | Whether unserved energy is zero within tolerance (`<= 1e-9` kWh). |
+| `building_events_count`, `building_outage_steps_count`, `building_outage_hours`, `worst_building_event_unserved_energy_kwh`, `fully_served_building_events_ratio` | building, district | count / steps / hours / kWh / ratio | Building outage event count, building-step duration, largest single-building event shortfall and share of fully served building events (`None` when `building_events_count == 0`). On the `District` row these aggregate member-building events. |
+| `district_windows_count`, `district_window_steps_count`, `district_window_hours`, `worst_district_window_unserved_energy_kwh`, `fully_served_district_windows_ratio` | district (`NaN` on building rows) | count / steps / hours / kWh / ratio | Count, contiguous step/hour duration, worst window shortfall and fully served share of district outage windows spanning contiguous steps with at least one affected building (`None` when `district_windows_count == 0`). |
+
 ## Export
 
 | Mode | How |
