@@ -138,7 +138,7 @@ So KPIs district sao agregados:
 
 | Sufixo KPI | Regra no portfolio |
 |---|---|
-| `_kwh`, `_eur`, `_kgco2`, `_count` | Soma entre comunidades. |
+| `_kwh`, `_eur`, `_kgco2`, outros `_count` | Soma entre comunidades. |
 | `_ratio` de um total control sobre um total de referencia | Ratio dos totais somados, por exemplo `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
 | Taxas e medias com denominadores aditivos | Agregadas (pooled): media ponderada pelo denominador, por exemplo `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
 | Outros `_ratio`, `_percent` | Media ponderada por `weight`. |
@@ -160,10 +160,21 @@ As taxas e medias agregadas sao ponderadas pelos seus denominadores aditivos, po
 | Share local do export do mercado comunitario | Export local mais export para a rede depois das trocas locais |
 | Compliance de demand response | `demand_response_valid_requested_total_kwh` |
 | Compliance, cobertura da energia pedida e cobertura da baseline das auditorias de demand response, por objetivo | Energia pedida valida, energia pedida e intervalos ativos da auditoria |
+| Ciclos completos equivalentes das baterias estacionárias (controlo e BAU) | Capacidade nominal das baterias estacionárias |
 
-Os deltas e ratios ao BAU do service level, do start delay e da self-consumption agregados sao calculados entre os valores control e BAU agregados. As comunidades cujo valor e indefinido nao tem peso.
+As diferenças e os rácios ao BAU do nível de serviço, atraso no arranque,
+autoconsumo e ciclos completos equivalentes comparam os valores agregados do
+controlo e da execução BAU. As comunidades cujo valor é indefinido não têm peso.
 
-Os ratios sem totais aditivos continuam medias ponderadas: ratios de forma da rede (picos, ramping e penalidades de load factor), proporcoes de conforto e resiliencia, equity, os ratios das auditorias de servico termico, de partidas EV e outras, capacity fade da bateria, e os ratios `ratio_to_business_as_usual` de capacity fade e ciclos equivalentes da bateria.
+Os ciclos completos equivalentes do portefólio resultam da divisão da energia
+movimentada total pelo dobro da capacidade nominal total. As baterias instaladas
+contribuem com a sua capacidade mesmo quando estão inativas. O valor é indefinido
+quando a capacidade total é zero.
+
+Os rácios de forma da rede (picos, rampas e penalidades do fator de carga), as
+proporções de conforto e resiliência, os rácios de equidade e de auditoria, a
+perda de capacidade da bateria e o seu rácio face à execução BAU mantêm a média
+ponderada pelo `weight` das comunidades.
 
 Os nomes de portfolio substituem o prefixo `district_` por `portfolio_`, por exemplo `district_demand_response_revenue_total_eur` vira `portfolio_demand_response_revenue_total_eur`.
 
@@ -178,4 +189,7 @@ Os nomes de portfolio substituem o prefixo `district_` por `portfolio_`, por exe
   community_b/exported_kpis.csv
 ```
 
-O CSV global fica no formato longo de `evaluate_v2()`, com linhas locais e linhas portfolio.
+O CSV global usa o formato longo de `evaluate_v2()`, com linhas locais e do
+portefólio e as colunas `unit` e `description`. Cada comunidade mantém a sua
+tabela numérica em formato largo e guarda as definições dos KPIs no ficheiro
+`exported_kpis.manifest.json`.

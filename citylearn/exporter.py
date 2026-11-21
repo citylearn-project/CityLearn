@@ -191,6 +191,8 @@ class EpisodeExporter:
             kpis = env.evaluate_v2(include_business_as_usual=include_business_as_usual)
             export_env = env
 
+        from citylearn.internal.kpi_catalogue import kpi_definitions
+        definitions = kpi_definitions(kpis['cost_function'].unique())
         kpis = kpis.pivot(index='cost_function', columns='name', values='value')
         if kpi_round_decimals is not None:
             kpis = kpis.round(kpi_round_decimals)
@@ -206,7 +208,9 @@ class EpisodeExporter:
             self.export_business_as_usual_timeseries(export_env)
         from citylearn.internal.experiment import experiment_manifest
         from citylearn.utils.file_handler import FileHandler
-        FileHandler.write_json(str(Path(file_path).with_suffix('.manifest.json')), experiment_manifest(export_env))
+        manifest = experiment_manifest(export_env)
+        manifest['kpi_definitions'] = definitions
+        FileHandler.write_json(str(Path(file_path).with_suffix('.manifest.json')), manifest)
         FileHandler.write_json(str(Path(file_path).with_suffix('.deferrable_service.json')),
                                export_env.get_deferrable_service_audit())
         if export_env._robustness_service.enabled:

@@ -13,7 +13,7 @@ import pandas as pd
 from gymnasium import Env
 
 from citylearn.citylearn import CityLearnEnv, EvaluationCondition
-from citylearn.internal.kpi import CityLearnKPIService
+from citylearn.internal.kpi import BATTERY_NOMINAL_CAPACITY_ATTR, CityLearnKPIService
 
 
 __all__ = ["MultiCommunityEnv"]
@@ -239,7 +239,8 @@ class MultiCommunityEnv(Env):
         ``community_id`` column. Each community contributes its ``'building'`` and ``'district'`` rows under its
         own ``community_id``. The ``'portfolio'`` rows (``community_id`` ``'__portfolio__'``, names starting
         ``portfolio_``) aggregate the district rows: ratios of totals are recomputed from the summed totals,
-        rates with an additive denominator are pooled, ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are summed,
+        rates and stationary-battery equivalent full cycles are pooled by their denominators,
+        other ``_kwh``/``_eur``/``_kgco2``/``_count`` rows are summed,
         other ratios and percentages are means weighted by the community ``weight``, and other rows (``_kw``,
         ``_c``, ``_hours``) have no portfolio row. The KPI reference guide gives the rule of each family.
         """
@@ -256,14 +257,16 @@ class MultiCommunityEnv(Env):
 
     def _combine_community_kpis(self, community_kpis: Mapping[str, pd.DataFrame]) -> pd.DataFrame:
         frames: List[pd.DataFrame] = []
+        capacities = {}
 
         for community_id, community_frame in community_kpis.items():
             frame = community_frame.copy()
             frame["community_id"] = community_id
             frames.append(frame)
+            capacities[community_id] = frame.attrs.pop(BATTERY_NOMINAL_CAPACITY_ATTR, {})
 
         local = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
-        portfolio = self._portfolio_kpis(local)
+        portfolio = self._portfolio_kpis(local, capacities)
 
         if portfolio.empty:
             return local
@@ -578,7 +581,9 @@ class MultiCommunityEnv(Env):
         finite = values[np.isfinite(values)]
         return float(finite.sum()) if finite.size else 0.0
 
-    def _portfolio_kpis(self, local: pd.DataFrame) -> pd.DataFrame:
+    def _portfolio_kpis(
+        self, local: pd.DataFrame, capacities: Mapping[str, Mapping[str, Optional[float]]],
+    ) -> pd.DataFrame:
         if local.empty or "level" not in local.columns or "cost_function" not in local.columns:
             return pd.DataFrame(columns=list(local.columns))
 
@@ -595,6 +600,18 @@ class MultiCommunityEnv(Env):
             metric: self._pooled_mean(district, metric, weights)
             for metric, weights in pooled_means.items()
         }
+        for run_name, suffix in (("control", ""), ("business_as_usual", "_business_as_usual")):
+            throughput_name = f"district_battery_total_throughput{suffix}_kwh"
+            throughput = district[district["cost_function"] == throughput_name].set_index("community_id")["numeric_value"]
+            capacity = throughput.index.to_series().map({
+                community_id: values.get(run_name, np.nan)
+                for community_id, values in capacities.items()
+            })
+            nominal_capacity = capacity.sum()
+            cycles = np.nan
+            if nominal_capacity > 0 and np.isfinite(capacity).all() and np.isfinite(throughput).all():
+                cycles = float(throughput.sum() / (2.0 * nominal_capacity))
+            pooled_mean_values[f"district_battery_health_equivalent_full_cycles{suffix}_count"] = cycles
 
         for cost_function, group in district.groupby("cost_function", sort=True):
             metric = str(cost_function)
@@ -605,7 +622,7 @@ class MultiCommunityEnv(Env):
                     district, *total_ratios[metric],
                     zero_over_zero=CityLearnKPIService.ratio_zero_over_zero(metric),
                 )
-            elif metric in pooled_means:
+            elif metric in pooled_mean_values:
                 aggregate = pooled_mean_values[metric]
             elif metric in pooled_comparisons:
                 control_name, reference_name, operation = pooled_comparisons[metric]
@@ -637,6 +654,9 @@ class MultiCommunityEnv(Env):
             row["name"] = self.PORTFOLIO_NAME
             row["level"] = "portfolio"
             row["community_id"] = self.PORTFOLIO_COMMUNITY_ID
+            if "unit" in row:
+                row["unit"] = group["unit"].iloc[0]
+                row["description"] = group["description"].iloc[0]
             rows.append(row)
 
         return pd.DataFrame(rows, columns=list(local.columns))

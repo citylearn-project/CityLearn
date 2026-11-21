@@ -1,7 +1,7 @@
 # Catálogo de KPIs
 
 Esta página lista todos os nomes de KPI que `evaluate_v2()` emite, agrupados por família, com
-uma definição curta. É gerada a partir de `docs/kpi_catalogue.yml` por
+uma definição curta. É gerada a partir de `citylearn/misc/kpi_catalogue.yml` por
 `scripts/docs/kpi_catalogue.py`, e um teste verifica que todos os nomes que o simulador emite
 constam daqui. As equações, a agregação ao distrito e as regras de valores indefinidos de cada
 família estão na [referência de KPIs](kpis_reference.md), para a qual cada família remete.
@@ -407,7 +407,7 @@ Equações e regras: [Baterias](kpis_reference.md#baterias).
 | Nomes | Níveis | Unidade | Significado |
 |---|---|---|---|
 | `battery_total_{charge,discharge,throughput}{,_business_as_usual,_delta_to_business_as_usual}_kwh` | building, district | kWh | Energia carregada e descarregada nos terminais das baterias, e energia movimentada = carga + descarga; `_business_as_usual` e `_delta_to_business_as_usual` como nas regras comuns. |
-| `battery_health_equivalent_full_cycles{,_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Ciclos completos equivalentes, energia movimentada / (2 · capacidade nominal), agregados pela capacidade no distrito; o portefólio soma-os porque o nome termina em `_count`. `_business_as_usual` e `_delta_to_business_as_usual` como nas regras comuns. |
+| `battery_health_equivalent_full_cycles{,_business_as_usual,_delta_to_business_as_usual}_count` | building, district | count | Ciclos completos equivalentes, energia movimentada / (2 · capacidade nominal), agregados pela capacidade no distrito e no portefólio. `_business_as_usual` e `_delta_to_business_as_usual` como nas regras comuns. |
 | `battery_health_capacity_fade{,_business_as_usual,_delta_to_business_as_usual}_ratio` | building, district | ratio | Fração da capacidade nominal perdida por degradação, (capacidade − capacidade degradada) / capacidade, limitada a [0, 1]; `_business_as_usual` e `_delta_to_business_as_usual` como nas regras comuns. |
 | `battery_ratio_to_business_as_usual_{charge,discharge,throughput,equivalent_full_cycles,capacity_fade}_ratio` | building, district | ratio | Valor do controlo sobre o valor BAU da carga, descarga, energia movimentada, ciclos completos equivalentes ou perda de capacidade. |
 

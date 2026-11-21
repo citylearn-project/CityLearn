@@ -309,6 +309,53 @@ def test_evaluate_v2_includes_portfolio_sum_and_weighted_ratio_rows():
         env.close()
 
 
+@pytest.mark.parametrize("capacities", [(5.0, 15.0, 0.0), (0.0, 0.0, 0.0)])
+def test_portfolio_battery_cycles_use_total_nominal_capacity(capacities):
+    communities = []
+    for capacity, community_id, weight in zip(capacities, ("a", "b", "c"), (1.0, 0.0, 5.0)):
+        schema = json.loads(MINUTE_SCHEMA.read_text(encoding="utf-8"))
+        schema["root_directory"] = str(MINUTE_SCHEMA.parent)
+        building = schema["buildings"]["Building_1"]
+        building["electrical_storage"]["attributes"]["capacity"] = capacity
+        if capacity == 0:
+            building["inactive_actions"].append("electrical_storage")
+        communities.append(_community(community_id, schema=schema, weight=weight))
+
+    env = MultiCommunityEnv(communities=communities)
+    try:
+        env.reset(seed=0)
+        while not env.terminated:
+            actions = _multi_zero_actions(env)
+            # The idle battery still contributes its nominal capacity.
+            action_names = env.envs["a"].action_names[0]
+            if "electrical_storage" in action_names:
+                actions["a"][0][action_names.index("electrical_storage")] = -0.2
+            env.step(actions)
+        kpis = env.evaluate_v2()
+    finally:
+        env.close()
+
+    def portfolio(metric):
+        return _kpi_value(kpis, f"portfolio_{metric}", community_id=env.PORTFOLIO_COMMUNITY_ID, level="portfolio")
+
+    cycle_stem = "battery_health_equivalent_full_cycles"
+    control = portfolio(f"{cycle_stem}_count")
+    bau = portfolio(f"{cycle_stem}_business_as_usual_count")
+    delta = portfolio(f"{cycle_stem}_delta_to_business_as_usual_count")
+    ratio = portfolio("battery_ratio_to_business_as_usual_equivalent_full_cycles_ratio")
+    if sum(capacities) == 0:
+        assert all(pd.isna(value) for value in (control, bau, delta, ratio))
+        return
+
+    control_throughput = portfolio("battery_total_throughput_kwh")
+    bau_throughput = portfolio("battery_total_throughput_business_as_usual_kwh")
+    assert control_throughput > 0 and bau_throughput > 0
+    assert control == pytest.approx(control_throughput / (2 * sum(capacities)))
+    assert bau == pytest.approx(bau_throughput / (2 * sum(capacities)))
+    assert delta == pytest.approx(control - bau)
+    assert ratio == pytest.approx(control / bau)
+
+
 @pytest.mark.parametrize("weight_b", [3.0, 0.0])
 def test_portfolio_ratios_to_a_reference_are_ratios_of_summed_totals(weight_b):
     env = MultiCommunityEnv(
@@ -387,6 +434,17 @@ def test_export_final_kpis_writes_child_subfolders_and_global_csv(tmp_path: Path
         root = tmp_path / "renders" / "mc_export"
         assert (root / "exported_kpis_multi_community.csv").is_file()
         assert (root / "community_a" / "exported_kpis.csv").is_file()
+        long = pd.read_csv(root / "exported_kpis_multi_community.csv")
+        assert list(long.columns) == ["cost_function", "value", "name", "level", "unit", "description", "community_id"]
+        child_dir = root / "community_a"
+        wide = pd.read_csv(child_dir / "exported_kpis.csv")
+        assert set(wide.columns) == {"KPI", "Building_1", "District"}
+        manifest = json.loads((child_dir / "exported_kpis.manifest.json").read_text(encoding="utf-8"))
+        definitions = manifest["kpi_definitions"]
+        assert set(definitions) == set(wide["KPI"])
+        for name, metadata in definitions.items():
+            rows = long[(long["community_id"] == "community_a") & (long["cost_function"] == name)]
+            assert rows[["unit", "description"]].to_dict("records") == [metadata] * len(rows)
         assert (root / "community_b" / "exported_kpis.csv").is_file()
     finally:
         env.close()

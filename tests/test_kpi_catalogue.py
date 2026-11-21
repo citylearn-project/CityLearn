@@ -11,6 +11,7 @@ pytest.importorskip("gymnasium")
 from citylearn.agents.baseline import RBCSmartPolicy
 from citylearn.citylearn import CityLearnEnv
 from citylearn.internal.kpi import CityLearnKPIService
+from citylearn.internal.kpi_catalogue import expand, kpi_definitions
 from citylearn.multi_community import MultiCommunityEnv
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +37,8 @@ def _catalogue():
 
 
 def _names(kpis):
+    assert list(kpis.columns[:6]) == ["cost_function", "value", "name", "level", "unit", "description"]
+    assert kpis[["unit", "description"]].notna().all().all()
     return {(name, level) for name, level in zip(kpis["cost_function"], kpis["level"])}
 
 
@@ -85,7 +88,7 @@ def test_every_emitted_kpi_is_in_the_catalogue(emitted):
         if (("district_" + name[len("portfolio_"):]) if level == "portfolio" else name) not in documented
     )
     assert not missing, (
-        f"{len(missing)} KPI names are not in docs/kpi_catalogue.yml; add them and run "
+        f"{len(missing)} KPI names are not in citylearn/misc/kpi_catalogue.yml; add them and run "
         f"python scripts/docs/kpi_catalogue.py: {missing[:20]}"
     )
 
@@ -94,7 +97,7 @@ def test_every_catalogued_kpi_is_emitted(emitted):
     catalogue = _catalogue()
     names = {name for name, level in emitted if level != "portfolio"}
     stale = sorted(set(catalogue.documented_names(catalogue.load())) - names)
-    assert not stale, f"docs/kpi_catalogue.yml lists names that no scenario emits: {stale[:20]}"
+    assert not stale, f"citylearn/misc/kpi_catalogue.yml lists names that no scenario emits: {stale[:20]}"
 
 
 def test_scorecard_kpis_are_catalogued():
@@ -120,6 +123,13 @@ def test_catalogue_families_have_reference_sections():
 
 
 def test_brace_patterns_expand():
-    catalogue = _catalogue()
-    assert catalogue.expand("a_{b,c}{,_d}_e") == ["a_b_e", "a_b_d_e", "a_c_e", "a_c_d_e"]
-    assert catalogue.expand("plain") == ["plain"]
+    assert expand("a_{b,c}{,_d}_e") == ["a_b_e", "a_b_d_e", "a_c_e", "a_c_d_e"]
+    assert expand("plain") == ["plain"]
+
+
+def test_manifest_definitions_omit_unknown_extensions():
+    name = "district_battery_total_throughput_kwh"
+    definitions = kpi_definitions([name, "custom_extension"])
+    assert list(definitions) == [name]
+    assert definitions[name]["unit"] == "kWh"
+    assert definitions[name]["description"]

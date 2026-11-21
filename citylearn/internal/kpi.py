@@ -11,6 +11,7 @@ from array import array
 from citylearn.energy_model import Battery
 from citylearn.internal import ev_departure_audit, deferrable_service_audit, grid_availability
 from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
+from citylearn.internal.kpi_catalogue import attach_kpi_metadata
 from citylearn.internal.service_energy import service_energy_components
 
 from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -22,6 +23,9 @@ from citylearn.data import ZERO_DIVISION_PLACEHOLDER, ChargerSimulation
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
+
+
+BATTERY_NOMINAL_CAPACITY_ATTR = '_battery_nominal_capacity_kwh'
 
 
 def settled_cost_scope(function):
@@ -1941,8 +1945,11 @@ class CityLearnKPIService:
             rows, district = run(progress, family.__name__, family, self, buildings)
             building_rows.extend(rows)
             district_rows.extend(district)
-        return pd.concat([legacy, pd.DataFrame(district_rows), pd.DataFrame(building_rows)],
-                         ignore_index=True, sort=False)
+        output = pd.concat([legacy, pd.DataFrame(district_rows), pd.DataFrame(building_rows)],
+                           ignore_index=True, sort=False)
+        # Keep the exact district denominator available to portfolio evaluation without exporting a new KPI.
+        output.attrs[BATTERY_NOMINAL_CAPACITY_ATTR] = {'control': equipment.bess_capacity_total}
+        return output
 
     @staticmethod
     def _v2_name(
@@ -2087,6 +2094,7 @@ class CityLearnKPIService:
             ('deferrable_appliance', 'service', 'service_level', 'ratio'),
             ('deferrable_appliance', 'service', 'average_start_delay', 'hours'),
             ('solar_self_consumption', 'ratio', 'self_consumption', 'ratio'),
+            ('battery', 'health', 'equivalent_full_cycles', 'count'),
         ):
             control = v2(level, family, subfamily, metric, None, unit)
             reference = v2(level, family, subfamily, metric, 'business_as_usual', unit)
@@ -2112,6 +2120,7 @@ class CityLearnKPIService:
         )
 
         legacy = all_metrics[all_metrics['cost_function'].isin(self.LEGACY_COST_FUNCTIONS)].copy()
+        legacy.attrs.pop(BATTERY_NOMINAL_CAPACITY_ATTR, None)
         return legacy.reset_index(drop=True)
 
     def _add_business_as_usual_records(
@@ -2402,6 +2411,7 @@ class CityLearnKPIService:
                 bau('district', 'District', member_sum_key))
 
         self._add_business_as_usual_shape_records(records, result.env, v2, simulated_days)
+        return bau_df.attrs.get(BATTERY_NOMINAL_CAPACITY_ATTR, {}).get('control')
 
     def _add_business_as_usual_shape_records(
         self,
@@ -3043,8 +3053,9 @@ class CityLearnKPIService:
             for metric, value in district.items():
                 put('district', 'District', f'district_energy_provenance_{metric}', value)
 
+        capacities = all_metrics.attrs[BATTERY_NOMINAL_CAPACITY_ATTR]
         if include_business_as_usual and not bool(getattr(env, '_business_as_usual_sidecar', False)):
-            run(progress, 'business_as_usual', self._add_business_as_usual_records,
+            capacities['business_as_usual'] = run(progress, 'business_as_usual', self._add_business_as_usual_records,
                 records,
                 v2,
                 simulated_days,
@@ -3061,7 +3072,7 @@ class CityLearnKPIService:
         output.attrs['kpi_family_audit'] = family_metadata()
         output.attrs['kpi_family_audit']['equity_conditions'] = family_audit['equity_conditions']
         if output.empty:
-            return pd.DataFrame(columns=['cost_function', 'value', 'name', 'level'])
+            return attach_kpi_metadata(pd.DataFrame(columns=['cost_function', 'value', 'name', 'level']))
 
         if getattr(env, 'topology_mode', 'static') == 'dynamic':
             lifecycle = getattr(env, 'topology_member_lifecycle', {}) or {}
@@ -3092,4 +3103,5 @@ class CityLearnKPIService:
                 output.loc[mask, 'topology_active'] = 1.0 if state.get('active', False) else 0.0
 
         output = run(progress, 'formatting', lambda: output.sort_values(['level', 'name', 'cost_function']).reset_index(drop=True))
-        return output
+        output.attrs[BATTERY_NOMINAL_CAPACITY_ATTR] = capacities
+        return attach_kpi_metadata(output)
