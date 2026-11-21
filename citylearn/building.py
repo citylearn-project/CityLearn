@@ -3308,6 +3308,10 @@ class Building(Environment):
         else:
             pass
 
+        self._refresh_step_electrical_totals()
+
+    def _refresh_step_electrical_totals(self):
+        """Recompute current-step electrical aggregates, net consumption, cost, emissions and service state."""
         building_chargers_total_electricity_consumption = 0
 
         if self.electric_vehicle_chargers is not None:

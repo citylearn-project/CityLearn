@@ -2890,6 +2890,34 @@ class CityLearnKPIService:
                 for key in robustness_metrics:
                     put('building', building_name, f'building_{key}', totals.get(key))
 
+        if getattr(env, 'district_electrical_service_enabled', False):
+            executed_steps = min(
+                len(getattr(env, 'net_electricity_consumption', []) or []),
+                max(int(getattr(env, 'time_step', 0) or 0), 0),
+            )
+            cur_imp = getattr(env, 'feeder_curtailed_import_kwh', None)
+            cur_exp = getattr(env, 'feeder_curtailed_export_kwh', None)
+            viol_kw = getattr(env, 'feeder_limit_violation_kw', None)
+            imp_total = (
+                float(np.nansum(np.asarray(cur_imp[:executed_steps], dtype='float64')))
+                if executed_steps > 0 and cur_imp is not None
+                else 0.0
+            )
+            exp_total = (
+                float(np.nansum(np.asarray(cur_exp[:executed_steps], dtype='float64')))
+                if executed_steps > 0 and cur_exp is not None
+                else 0.0
+            )
+            if executed_steps > 0 and viol_kw is not None:
+                viol_arr = np.asarray(viol_kw[:executed_steps], dtype='float64')
+                finite_viol = viol_arr[np.isfinite(viol_arr)]
+                max_viol = float(np.max(finite_viol)) if finite_viol.size > 0 else 0.0
+            else:
+                max_viol = 0.0
+            put('district', 'District', 'district_feeder_curtailed_import_kwh', imp_total)
+            put('district', 'District', 'district_feeder_curtailed_export_kwh', exp_total)
+            put('district', 'District', 'district_feeder_max_violation_kw', max_viol)
+
         # Export ratio_to_baseline is derived from totals with safe division.
         for building in kpi_buildings:
             control_cond, baseline_cond = self._default_building_conditions(
