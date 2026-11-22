@@ -437,7 +437,10 @@ class Charger(Environment):
             battery_command = to_dataset_resolution_energy(battery_energy_kwh, ratio)
             electric_vehicle.battery.charge(battery_command)
 
-            battery_energy_balance = float(electric_vehicle.battery.energy_balance[self.time_step])
+            if getattr(electric_vehicle.battery, '_balance_time_step', -1) == self.time_step:
+                battery_energy_balance = float(electric_vehicle.battery._last_transfer_energy)
+            else:
+                battery_energy_balance = float(electric_vehicle.battery.energy_balance[self.time_step])
             ac_energy = (
                 battery_energy_balance / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
                 if battery_energy_balance >= 0 else battery_energy_balance * efficiency
