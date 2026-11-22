@@ -172,7 +172,7 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">pip</span> <span class="n">install</span> <span class="s2">"citylearn[rl]"</span> <span class="s2">"stable-baselines3&gt;=2.4"</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "citylearn[rl]" "stable-baselines3&gt;=2.4"
 </pre></div>
 </div>
 </div>
@@ -182,10 +182,10 @@
 <p>The reward is the learning signal, while the KPIs judge the finished episode. This dataset configures version 2 of <code class="docutils literal notranslate"><span class="pre">Electric_Vehicles_Reward_Function</span></code>, the default, which adds the grid-import reward of each building to the EV charging terms and penalises vehicles that leave far below their requested state of charge (see the <a class="reference external" href="../overview/reward_function.html">reward function guide</a>).</p>
 <p>The controller trains on the first week and is evaluated on the second week, which it has not seen during training.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
 <span class="n">DATASET</span> <span class="o">=</span> <span class="s1">'citylearn_challenge_2022_phase_all_plus_evs'</span>
 <span class="n">BUILDINGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'Building_1'</span><span class="p">,</span> <span class="s1">'Building_4'</span><span class="p">,</span> <span class="s1">'Building_5'</span><span class="p">]</span>
@@ -210,11 +210,11 @@
 <section id="2.-Wrappers">
 <h2>2. Wrappers<a class="headerlink" href="#2.-Wrappers" title="Link to this heading"></a></h2>
 <p>Stable Baselines3 expects one flat observation vector and one flat action vector. <code class="docutils literal notranslate"><span class="pre">NormalizedObservationWrapper</span></code> scales the observations to [0, 1] and encodes cyclical features such as the hour with sine and cosine, and <code class="docutils literal notranslate"><span class="pre">StableBaselines3Wrapper</span></code> turns the central agent’s lists into the arrays the library expects.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">NormalizedObservationWrapper</span><span class="p">,</span> <span class="n">StableBaselines3Wrapper</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">NormalizedObservationWrapper</span><span class="p">,</span> <span class="n">StableBaselines3Wrapper</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">wrap</span><span class="p">(</span><span class="n">env</span><span class="p">):</span>
@@ -226,15 +226,23 @@
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+observations: (77,) actions: (7,)
+</pre></div></div>
+</div>
 </section>
 <section id="3.-Training">
 <h2>3. Training<a class="headerlink" href="#3.-Training" title="Link to this heading"></a></h2>
 <p>Each training episode covers the training window once. Three episodes are enough to check that the setup works; a study would train for hundreds.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stable_baselines3</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAC</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stable_baselines3</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAC</span>
 
 <span class="n">EPISODES</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">episode_steps</span> <span class="o">=</span> <span class="n">train_env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">time_steps</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># the last data row is only the terminal observation</span>
@@ -249,10 +257,10 @@
 <h2>4. Evaluation and comparison with the BAU<a class="headerlink" href="#4.-Evaluation-and-comparison-with-the-BAU" title="Link to this heading"></a></h2>
 <p>The trained policy runs deterministically on the evaluation week. <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> then returns the KPIs of the episode next to those of the native BAU reference, which CityLearn simulates on the same window. The scorecard selects a few district rows; the <a class="reference external" href="../guides/scorecard.html">scorecard guide</a> explains how to read them.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">eval_env</span> <span class="o">=</span> <span class="n">wrap</span><span class="p">(</span><span class="n">make_env</span><span class="p">(</span><span class="n">EVALUATION_WINDOW</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eval_env</span> <span class="o">=</span> <span class="n">wrap</span><span class="p">(</span><span class="n">make_env</span><span class="p">(</span><span class="n">EVALUATION_WINDOW</span><span class="p">))</span>
 <span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">eval_env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
 <span class="k">while</span> <span class="ow">not</span> <span class="n">eval_env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
@@ -263,11 +271,11 @@
 </pre></div>
 </div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">selected</span> <span class="o">=</span> <span class="p">{</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">selected</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">'district_cost_total_control_eur'</span><span class="p">:</span> <span class="s1">'Cost, SAC (EUR)'</span><span class="p">,</span>
     <span class="s1">'district_cost_total_business_as_usual_eur'</span><span class="p">:</span> <span class="s1">'Cost, BAU (EUR)'</span><span class="p">,</span>
     <span class="s1">'district_energy_grid_total_import_control_kwh'</span><span class="p">:</span> <span class="s1">'Grid import, SAC (kWh)'</span><span class="p">,</span>
@@ -279,6 +287,21 @@
 <span class="n">scorecard</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+indicator
+Cost, BAU (EUR)                           152.347
+Cost, SAC (EUR)                            39.174
+Grid import, BAU (kWh)                    972.235
+Grid import, SAC (kWh)                    165.720
+EVs leaving with enough charge (ratio)      0.000
+Name: value, dtype: float64
+</pre></div></div>
 </div>
 <p>Read the rows together. A controller can lower the cost and the grid import simply by charging the vehicles less, and the EV service row then shows how many vehicles left without the charge they needed. After this short training, that trade-off is typical: the SAC policy has not yet learned to charge the vehicles when energy is cheap, so the comparison with the BAU judges the whole service, not the cost alone.</p>
 </section>

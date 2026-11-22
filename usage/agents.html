@@ -179,7 +179,7 @@
 </div>
 <p>Every example simulates the first week of the dataset (168 hourly time steps), so that the notebook runs in a few minutes. Remove <code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code> and <code class="docutils literal notranslate"><span class="pre">simulation_end_time_step</span></code> to simulate the whole dataset, and train for many more episodes for meaningful results.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">WEEK</span> <span class="o">=</span> <span class="mi">24</span><span class="o">*</span><span class="mi">7</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># last time step of the first week</span>
@@ -193,8 +193,8 @@
 <p><code class="docutils literal notranslate"><span class="pre">NoControlAgent</span></code> (called <code class="docutils literal notranslate"><span class="pre">BaselineAgent</span></code> up to CityLearn 3.6.0) disables the active actions; it is not the operational <a class="reference external" href="../guides/baselines.html">BusinessAsUsualAgent</a>. Construct a fresh environment before changing controller type.</p>
 <p>Run the following to simulate an environment where the storage systems and heat pumps are not controlled. The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. <code class="docutils literal notranslate"><span class="pre">None</span></code>, causing it to deliver the ideal load in the building time series files:</p>
 <p>Because this agent disables the active actions, its environment no longer matches the configuration from which <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> rebuilds the native BAU reference, so the KPIs are evaluated without that reference (<code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code>).</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoControlAgent</span> <span class="k">as</span> <span class="n">Agent</span>
@@ -219,12 +219,141 @@
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:297: UserWarning: <span class="ansi-yellow-fg">WARN: Box low&#39;s precision lowered by casting to float32, current low.dtype=float64</span>
+  gym.logger.warn(
+/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:364: UserWarning: <span class="ansi-yellow-fg">WARN: Box high&#39;s precision lowered by casting to float32, current high.dtype=float64</span>
+  gym.logger.warn(
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_total_charge_kwh</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_total_discharge_kwh</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_total_throughput_kwh</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1417.095</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>561 rows × 4 columns</p>
+</div></div>
+</div>
 </section>
 <section id="Centralized-RBC">
 <h3>Centralized RBC<a class="headerlink" href="#Centralized-RBC" title="Link to this heading"></a></h3>
 <p>Run the following to simulate an environment controlled by centralized RBC agent for a single episode:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.rbc</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasicRBC</span> <span class="k">as</span> <span class="n">Agent</span>
@@ -249,12 +378,130 @@
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>-0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
+      <td>4.969</td>
+      <td>1.130</td>
+      <td>3.821</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>5.325</td>
+      <td>5.325</td>
+      <td>3.100</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>3291.764</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>949 rows × 4 columns</p>
+</div></div>
+</div>
 </section>
 <section id="Decentralized-Independent-SAC">
 <h3>Decentralized-Independent SAC<a class="headerlink" href="#Decentralized-Independent-SAC" title="Link to this heading"></a></h3>
 <p>Run the following to simulate an environment controlled by decentralized-independent SAC agents for two episodes:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAC</span> <span class="k">as</span> <span class="n">Agent</span>
@@ -275,12 +522,130 @@
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.00</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>-0.000</td>
+      <td>-0.00</td>
+      <td>-0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.000</td>
+      <td>0.00</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
+      <td>4.969</td>
+      <td>1.13</td>
+      <td>3.821</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>0.432</td>
+      <td>0.00</td>
+      <td>0.326</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1659.344</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>955 rows × 4 columns</p>
+</div></div>
+</div>
 </section>
 <section id="Decentralized-Cooperative-MARLISA">
 <h3>Decentralized-Cooperative MARLISA<a class="headerlink" href="#Decentralized-Cooperative-MARLISA" title="Link to this heading"></a></h3>
 <p>Run the following to simulate an environment controlled by decentralized-cooperative MARLISA agents for two episodes:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.marlisa</span><span class="w"> </span><span class="kn">import</span> <span class="n">MARLISA</span> <span class="k">as</span> <span class="n">Agent</span>
@@ -300,6 +665,124 @@
 <span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>-0.000</td>
+      <td>-0.000</td>
+      <td>-0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
+      <td>4.969</td>
+      <td>1.130</td>
+      <td>3.821</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>0.434</td>
+      <td>0.087</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1667.595</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>959 rows × 4 columns</p>
+</div></div>
 </div>
 </section>
 </section>
@@ -321,8 +804,8 @@
 <blockquote>
 <div><p>⚠️ <strong>NOTE</strong>: <code class="docutils literal notranslate"><span class="pre">central_agent</span></code> in the <code class="docutils literal notranslate"><span class="pre">env</span></code> must be <code class="docutils literal notranslate"><span class="pre">True</span></code> when using Stable Baselines3 as it does not support multi-agents.</p>
 </div></blockquote>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stable_baselines3.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAC</span> <span class="k">as</span> <span class="n">Agent</span>
@@ -352,6 +835,124 @@
 <span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.00</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>-0.000</td>
+      <td>-0.00</td>
+      <td>-0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.000</td>
+      <td>0.00</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
+      <td>4.969</td>
+      <td>1.13</td>
+      <td>3.821</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>0.000</td>
+      <td>0.00</td>
+      <td>0.553</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1865.546</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>959 rows × 4 columns</p>
+</div></div>
 </div>
 </section>
 <section id="RLlib">

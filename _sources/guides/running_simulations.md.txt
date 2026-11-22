@@ -327,7 +327,7 @@ requirements installed (see the [developer guide](developer_guide.md) and the
 python -m pytest -q
 python scripts/audit/audit_entity_contract.py --strict
 python scripts/audit/audit_physics.py
-python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821
+python -m ruff check citylearn tests scripts/manual scripts/ci
 ```
 
 KPI-only exports include a manifest and service-audit JSON sidecars. They do not
