@@ -48,6 +48,19 @@ development-line history.
 
 ## Unreleased
 
+### District emissions with local trading off
+
+With a community market enabled and `community_market.local_trading_enabled`
+set to `false`, `district_emissions_total_*_kgco2` and the KPIs derived from it
+now count every member import at its carbon intensity, because no energy is
+exchanged locally. They used to net members' exports against other members'
+imports as if trading were on. The new value equals the `member_sum` row and
+`district_energy_provenance_external_purchase_emissions_kgco2`. Runs with
+local trading on, runs without a market and every bundled dataset are
+unchanged, and the local price ratio does not affect emissions. To compare
+with an earlier run made with local trading off, re-evaluate it with the
+current release. See [#327](https://github.com/citylearn-project/CityLearn/issues/327).
+
 ### The native BAU uses current-step load and solar
 
 The native BAU now uses observed load and PV from the step being planned when
