@@ -64,7 +64,9 @@ current release. See [#327](https://github.com/citylearn-project/CityLearn/issue
 ### Observation spaces follow the observations
 
 The observation values, their order and `observation_names` do not change, and
-neither do simulations or KPIs. The observation spaces change, and so does
+neither do simulations or KPIs, except runs with robustness faults on the flat
+interface of `pt_rec_*` or the three-phase electrical-service demo: those faults
+now reach the feature they name. The observation spaces change, and so does
 anything that reads bounds from them: agents trained on the datasets below
 should be retrained, and their earlier results are not comparable.
 
