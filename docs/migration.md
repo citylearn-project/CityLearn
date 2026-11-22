@@ -68,6 +68,21 @@ These changes require no dataset, schema or KPI migration. Valid runs give the s
 - **Export location.** Exports go to `./render_logs` in the working directory by default, and relative `render_directory` values resolve against the working directory. Pass an absolute `render_directory` to keep the previous location.
 - **Physics invariants** raise `PhysicsInvariantError`, which is an `AssertionError`, so existing handlers keep working.
 
+### Recorded settings
+
+The settings added since 3.6.0 are recorded with each run. `env.get_metadata()`,
+its `temporal_reproducibility` block and the export manifest hold
+`physics_version`, `episode_split_boundary` and `time_step_ratio_mode`; the
+manifest also keeps `random_stream_version`. With per-building reward
+functions, the reward evidence lists each building's reward class and
+parameters, including `version`, under `per_building`, because the
+`MultiBuildingRewardFunction` that combines them has no version of its own.
+Invalid values of these settings raise `ValueError` that names the accepted
+values, whether set in the schema or as a constructor argument, and a
+misspelled `physics_version` argument gets a suggestion. Simulation results do
+not change ([#301](https://github.com/citylearn-project/CityLearn/issues/301),
+[#302](https://github.com/citylearn-project/CityLearn/issues/302)).
+
 ### Consecutive episode splits share their boundary row
 
 An episode of N data rows executes N - 1 control steps: its last row is only
@@ -218,9 +233,20 @@ definitions, selected with the `physics_version` schema key or the
 `CityLearnEnv(physics_version=...)` argument, which takes precedence. Version
 `1` is the physics of CityLearn 3.6.0 and earlier; version `2`, the default,
 contains the corrections below. The native BAU reference of `evaluate_v2()`
-uses the version of the evaluated environment, and exports record it in the
-run metadata. To reproduce a 3.6.0 result, set `physics_version` to `1`; to
-compare controllers, run them under the same version.
+uses the version of the evaluated environment. The resolved version is in
+`env.get_metadata()`, its temporal block, and the export manifest, both at top
+level and in `comparison_context`. `compare_manifests()` and `compare_exports()`
+report two runs under different physics versions as `incompatible`, with
+`physics_version` among the mismatches, and a manifest written before the
+version was recorded as `unknown`, with `physics_version` among the missing
+evidence; export such runs again to pair them. To reproduce a 3.6.0 result, set
+`physics_version` to `1`; to compare controllers, run them under the same
+version.
+
+`MultiCommunityEnv` requires every community to use the same
+`physics_version` and `random_stream_version`, because portfolio KPIs add up
+the communities' totals; mixed versions raise `ValueError` at construction.
+Its `get_metadata()` records both.
 
 Version 2 changes the following on bundled datasets:
 

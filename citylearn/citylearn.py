@@ -251,7 +251,7 @@ class CityLearnEnv(Environment, Env):
         'reward_function', 'reward_function_kwargs', 'central_agent', 'shared_observations', 'active_observations',
         'inactive_observations', 'active_actions', 'inactive_actions', 'simulate_power_outage', 'solar_generation',
         'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
-        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version',
+        'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'physics_version',
     )
 
     def __init__(self,
@@ -1557,6 +1557,8 @@ class CityLearnEnv(Environment, Env):
             'topology_event_log': self.topology_event_log,
             'physics_invariant_checks': bool(getattr(self, 'physics_invariant_checks', False)),
             'physics_version': self.physics_version,
+            'episode_split_boundary': self.episode_split_boundary,
+            'time_step_ratio_mode': self.time_step_ratio_mode,
             'energy_accounting': self._provenance_service.get_metadata(),
             'temporal_reproducibility': axis_metadata(self),
             'ev_departure_within_tolerance': self.ev_departure_within_tolerance,
