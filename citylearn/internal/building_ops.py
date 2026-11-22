@@ -148,8 +148,6 @@ class BuildingOpsService:
     def update_ev_charger_observations(self, observations, valid_observations, ev_chargers, include_all: bool = False):
         """Update observations for each electric vehicle charger."""
 
-        building = self.building
-
         for charger in ev_chargers:
             charger_id = charger.charger_id
             sim = charger.charger_simulation

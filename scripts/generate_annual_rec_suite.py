@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import date, timedelta
 import hashlib
 import json

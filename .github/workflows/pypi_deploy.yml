@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
         with:
           python-version: "3.11"
 
@@ -37,7 +37,7 @@ jobs:
             --output "${{ runner.temp }}/citylearn-publish-export"
 
       - name: Upload package artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: python-dist
           path: dist/
@@ -57,7 +57,7 @@ jobs:
 
     steps:
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
         with:
           python-version: "3.11"
 
@@ -67,14 +67,14 @@ jobs:
           pip install twine
 
       - name: Download package artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8
         with:
           name: python-dist
           path: dist/
 
       - name: Publish to PyPI (trusted publishing)
         if: ${{ vars.PYPI_TRUSTED_PUBLISHING == 'true' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # release/v1
         with:
           packages-dir: dist/
           verbose: true

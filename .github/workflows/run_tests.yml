@@ -17,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
         with:
           python-version: "3.10"
 
@@ -29,9 +29,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff
 
-      - name: Lint (critical rules)
-        run: |
-          python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821,NPY201
+      - name: Lint (rules from pyproject.toml)
+        run: ruff check citylearn tests scripts/manual scripts/ci
 
   test:
     needs: lint
@@ -49,15 +48,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Cache pip dependencies
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-py${{ matrix.python-version }}-numpy${{ matrix.numpy }}-pip-${{ hashFiles('requirements.txt', 'test_requirements.txt', 'pyproject.toml') }}
@@ -97,7 +96,7 @@ jobs:
 
       - name: Upload performance smoke report
         if: always() && matrix.python-version == '3.10' && matrix.numpy == '2.x'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: perf-smoke-report
           path: ${{ runner.temp }}/perf/perf_smoke_report.json
@@ -119,10 +118,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
         with:
           python-version: "3.12"
 
@@ -150,10 +149,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -180,8 +179,8 @@ jobs:
     needs: lint
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
         with:
           python-version: '3.10'
       - name: Install audit dependencies
@@ -190,7 +189,7 @@ jobs:
         run: python scripts/audit/run_full_audit.py --strict --output-dir "${{ runner.temp }}/citylearn-audits"
       - name: Upload runtime audit evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
           name: citylearn-runtime-audits
           path: ${{ runner.temp }}/citylearn-audits/*.json

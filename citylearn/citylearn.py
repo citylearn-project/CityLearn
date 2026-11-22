@@ -1,7 +1,6 @@
 from collections import defaultdict
 from copy import deepcopy
 from enum import Enum
-import hashlib
 import importlib
 import logging
 import os
@@ -12,14 +11,23 @@ import datetime
 import difflib
 import numpy as np
 import pandas as pd
-import random
 from citylearn import random_streams
 from citylearn.base import Environment, EpisodeTracker
 from citylearn.building import Building, DynamicsBuilding
-from citylearn.cost_function import CostFunction
-from citylearn.data import _parse_env_bool, CarbonIntensity, DataSet, OfflineDataError, ChargerSimulation, EnergySimulation, LogisticRegressionOccupantParameters, Pricing, Weather
+from citylearn.cost_function import CostFunction as CostFunction
+from citylearn.data import (
+    _parse_env_bool,
+    CarbonIntensity as CarbonIntensity,
+    ChargerSimulation as ChargerSimulation,
+    DataSet,
+    EnergySimulation,
+    LogisticRegressionOccupantParameters as LogisticRegressionOccupantParameters,
+    OfflineDataError,
+    Pricing as Pricing,
+    Weather as Weather,
+)
 from citylearn.electric_vehicle import ElectricVehicle
-from citylearn.energy_model import Battery, DeferrableAppliance, PV
+from citylearn.energy_model import Battery as Battery, DeferrableAppliance, PV as PV
 from citylearn.exporter import EpisodeExporter
 from citylearn.internal.market_history import MarketSettlementHistory
 from citylearn.internal.kpi import CityLearnKPIService
@@ -35,7 +43,7 @@ from citylearn.internal.demand_response import CityLearnDemandResponseService
 from citylearn.internal.robustness import CityLearnRobustnessService
 from citylearn.utilities import parse_bool
 from citylearn.reward_function import (
-    MultiBuildingRewardFunction,
+    MultiBuildingRewardFunction as MultiBuildingRewardFunction,
     RewardFunction,
 )
 from citylearn.utilities import FileHandler

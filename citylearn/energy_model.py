@@ -1,4 +1,3 @@
-import ast
 from array import array
 import logging
 import math
@@ -13,12 +12,12 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     Pvwattsv8 = None
 from citylearn import random_streams
-from citylearn.base import Environment, EpisodeTracker
+from citylearn.base import Environment, EpisodeTracker as EpisodeTracker
 from citylearn.data import (
     DataSet,
     ZERO_DIVISION_PLACEHOLDER,
     DeferrableApplianceSimulation,
-    EnergySimulation,
+    EnergySimulation as EnergySimulation,
     EscalatorSimulation,
     WashingMachineSimulation,
 )

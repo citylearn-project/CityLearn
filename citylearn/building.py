@@ -28,7 +28,7 @@ from citylearn.internal.units import (
 )
 from citylearn.occupant import LogisticRegressionOccupant, Occupant
 from citylearn.power_outage import PowerOutage
-from citylearn.preprocessing import Normalize, PeriodicNormalization
+from citylearn.preprocessing import Normalize as Normalize, PeriodicNormalization
 from citylearn.utilities import parse_bool
 
 LOGGER = logging.getLogger(__name__)

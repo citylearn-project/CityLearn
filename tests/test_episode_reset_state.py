@@ -1,7 +1,6 @@
 """State that must not leak from one episode into the next."""
 
 import numpy as np
-import pytest
 
 import citylearn.utilities as utilities
 from citylearn.citylearn import CityLearnEnv

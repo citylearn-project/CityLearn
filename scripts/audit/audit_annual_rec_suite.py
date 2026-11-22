@@ -7,7 +7,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-from typing import Dict, List, Mapping
+from typing import List, Mapping
 
 import numpy as np
 import pandas as pd

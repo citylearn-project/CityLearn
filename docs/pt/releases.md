@@ -23,6 +23,17 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   e `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average{,_signed_net}_control_ratio`.
   As linhas existentes não mudam.
   ([#326](https://github.com/citylearn-project/CityLearn/issues/326))
+- **Lint e CI (engenharia, sem alteração de resultados).** O `ruff` usa as
+  regras de `pyproject.toml`: F401 (imports não usados removidos mantendo
+  reexportações explícitas `as` nos módulos públicos), F841 (variáveis não
+  usadas), B006 (os valores por omissão mutáveis `hidden_dim` e `hidden_size` em
+  `citylearn/rl.py`, agora `None`), E722 (`except` simples) e as anteriores E9,
+  F821 e NPY201. As ações de terceiros do GitHub ficam fixadas a SHAs de commit
+  e o Dependabot propõe atualizações semanais. Um workflow separado
+  (`.github/workflows/coverage.yml`) reporta a cobertura de testes (`pytest-cov`,
+  sem bloquear) fora dos checks de pull request e o `pytest.ini` define um
+  limite de 600 s por teste (`pytest-timeout`). Os resultados das simulações não
+  mudam ([#289](https://github.com/citylearn-project/CityLearn/issues/289)).
 - **Agentes genéricos na interface de entidades.** Na interface de entidades os
   espaços de ações e de observações são dicionários de tabelas de entidades, pelo
   que `Agent` e `ZeroActionBaselineAgent` falhavam com `AttributeError` no
