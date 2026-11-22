@@ -207,6 +207,40 @@ def test_v2_ev_drift_is_per_ev_and_episode_and_repeats_with_the_seed():
             env.close()
 
 
+def test_seeded_reset_restarts_the_episode_streams_but_not_the_window_or_construction_draws():
+    """What ``reset(seed=s)`` repeats (#303): the episode-0 streams, not the window or construction draws."""
+
+    env_7, env_8 = _ev_env('v2', seed=7), _ev_env('v2', seed=8)
+    try:
+        first_7 = _run_zero(env_7)
+        efficiencies_7 = [ev.battery.efficiency for ev in env_7.electric_vehicles]
+        efficiencies_8 = [ev.battery.efficiency for ev in env_8.electric_vehicles]
+        assert efficiencies_7 != efficiencies_8
+
+        # A seeded reset of the seed-8 env takes the episode-0 streams of seed 7 ...
+        env_8.reset(seed=7)
+        assert env_8.random_seed == 7
+        assert env_8.episode_tracker.random_stream_episode == 0
+        assert env_8._ev_drift_seed == env_7._ev_drift_seed
+        # ... but keeps the parameters drawn at construction with seed 8.
+        assert [ev.battery.efficiency for ev in env_8.electric_vehicles] == efficiencies_8
+
+        # The window still advances; the streams restart at episode 0 at every seeded reset.
+        start = env_7.episode_tracker.episode_start_time_step
+        env_7.reset(seed=7)
+        assert env_7.episode_tracker.episode == 1
+        assert env_7.episode_tracker.episode_start_time_step != start
+        assert env_7.episode_tracker.random_stream_episode == 0
+
+        # Without a seed, episode_index replays both the window and the streams of that episode.
+        env_7.reset(options={'episode_index': 1})
+        assert env_7.episode_tracker.random_stream_episode == 1
+        np.testing.assert_array_equal(_run_zero(env_7, options={'episode_index': 0}), first_7)
+    finally:
+        env_7.close()
+        env_8.close()
+
+
 # --- 3. shared occupant draws ------------------------------------------------------------------
 
 def _occupant_draws(version, seed=0, episodes=2):
