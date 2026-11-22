@@ -187,7 +187,10 @@ If list of :int: is provided will include only schema <code class="code docutils
 <li><p><strong>episode_time_steps</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – If type is <cite>int</cite>, it is the number of time steps in an episode. If type is <cite>List[Tuple[int, int]]]</cite> is provided,
 it is a list of episode start and end time steps between <cite>simulation_start_time_step</cite> and <cite>simulation_end_time_step</cite>.
 Defaults to (<cite>simulation_end_time_step</cite> - <cite>simulation_start_time_step</cite>) + 1. An episode of N time steps
-(states) executes N - 1 control steps. <cite>rolling_episode_split</cite> is ignored when <cite>episode_time_steps</cite> is a list.</p></li>
+(states) executes N - 1 control steps. <cite>rolling_episode_split</cite> is ignored when <cite>episode_time_steps</cite> is a list.
+A list outside the simulation window raises <cite>ValueError</cite>. When <cite>simulation_start_time_step</cite> or
+<cite>simulation_end_time_step</cite> narrows the window and this argument is not given, the schema’s list is clipped
+to the window and its episodes without an interval inside the window are dropped.</p></li>
 <li><p><strong>rolling_episode_split</strong> (<em>bool</em><em>, </em><em>default: False</em>) – True if episode sequences are split such that each time step is a candidate for <cite>episode_start_time_step</cite> otherwise, False to split episodes in steps of <cite>episode_time_steps</cite>.</p></li>
 <li><p><strong>random_episode_split</strong> (<em>bool</em><em>, </em><em>default: False</em>) – True if episode splits are to be selected at random during training otherwise, False to select sequentially.</p></li>
 <li><p><strong>time_step_ratio_mode</strong> (<em>str</em><em>, </em><em>default: 'reject'</em>) – What to do when <cite>seconds_per_time_step</cite> differs from the dataset step, i.e. <cite>time_step_ratio</cite> != 1. CityLearn

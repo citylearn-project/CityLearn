@@ -261,6 +261,9 @@
 <span class="sd">        it is a list of episode start and end time steps between `simulation_start_time_step` and `simulation_end_time_step`. </span>
 <span class="sd">        Defaults to (`simulation_end_time_step` - `simulation_start_time_step`) + 1. An episode of N time steps</span>
 <span class="sd">        (states) executes N - 1 control steps. `rolling_episode_split` is ignored when `episode_time_steps` is a list.</span>
+<span class="sd">        A list outside the simulation window raises `ValueError`. When `simulation_start_time_step` or</span>
+<span class="sd">        `simulation_end_time_step` narrows the window and this argument is not given, the schema's list is clipped</span>
+<span class="sd">        to the window and its episodes without an interval inside the window are dropped.</span>
 <span class="sd">    rolling_episode_split: bool, default: False</span>
 <span class="sd">        True if episode sequences are split such that each time step is a candidate for `episode_start_time_step` otherwise, False to split episodes in steps of `episode_time_steps`.</span>
 <span class="sd">    random_episode_split: bool, default: False</span>
@@ -1613,6 +1616,10 @@
 
     <span class="nd">@episode_time_steps</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">episode_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="c1"># Fail at construction, not at the first reset or out of bounds mid-episode (CityLearn #308).</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">validate_episode_splits</span><span class="p">(</span><span class="n">episode_time_steps</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">__episode_time_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">simulation_time_steps</span> <span class="k">if</span> <span class="n">episode_time_steps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">episode_time_steps</span>
 
     <span class="nd">@rolling_episode_split</span><span class="o">.</span><span class="n">setter</span>

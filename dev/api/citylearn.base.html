@@ -421,6 +421,14 @@ Unset, it is the episode index.</p>
 <dd><p>Return the normalised episode split boundary mode, <cite>‘shared’</cite> when <cite>None</cite>.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.base.EpisodeTracker.validate_episode_splits">
+<span class="sig-name descname"><span class="pre">validate_episode_splits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode_time_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/base.html#EpisodeTracker.validate_episode_splits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.base.EpisodeTracker.validate_episode_splits" title="Link to this definition"></a></dt>
+<dd><p>Return explicit episode splits as <code class="docutils literal notranslate"><span class="pre">[start,</span> <span class="pre">end]</span></code> pairs, or raise <cite>ValueError</cite> for an invalid one.</p>
+<p>Only the rows of the simulation window are loaded, so every split must lie inside
+[<cite>simulation_start_time_step</cite>, <cite>simulation_end_time_step</cite>] (CityLearn #308).</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>

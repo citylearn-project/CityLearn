@@ -310,24 +310,46 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__episode_random_seed</span> <span class="o">=</span> <span class="n">random_seed</span></div>
 
         
+<div class="viewcode-block" id="EpisodeTracker.validate_episode_splits">
+<a class="viewcode-back" href="../../api/citylearn.base.html#citylearn.base.EpisodeTracker.validate_episode_splits">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_episode_splits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Return explicit episode splits as ``[start, end]`` pairs, or raise `ValueError` for an invalid one.</span>
+
+<span class="sd">        Only the rows of the simulation window are loaded, so every split must lie inside</span>
+<span class="sd">        [`simulation_start_time_step`, `simulation_end_time_step`] (CityLearn #308).</span>
+<span class="sd">        """</span>
+
+        <span class="n">splits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">simulation_start</span><span class="p">,</span> <span class="n">simulation_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_start_time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__simulation_end_time_step</span>
+
+        <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">episode_time_steps</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Each episode window must be a (start, end) pair of integers, got </span><span class="si">{</span><span class="n">split</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">start</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Episode window (</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s1">) must satisfy 0 &lt;= start &lt;= end.'</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">simulation_start</span> <span class="o">&lt;=</span> <span class="n">start</span> <span class="ow">and</span> <span class="n">end</span> <span class="o">&lt;=</span> <span class="n">simulation_end</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">'Episode window (</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s1">) lies outside the simulation window '</span>
+                    <span class="sa">f</span><span class="s1">'(</span><span class="si">{</span><span class="n">simulation_start</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">simulation_end</span><span class="si">}</span><span class="s1">); only the rows of the simulation window are loaded. '</span>
+                    <span class="s1">'Pass episode_time_steps inside the window, or widen simulation_start_time_step/'</span>
+                    <span class="s1">'simulation_end_time_step.'</span>
+                <span class="p">)</span>
+            <span class="n">splits</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">splits</span></div>
+
+
     <span class="k">def</span><span class="w"> </span><span class="nf">__next_episode_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span> <span class="n">rolling_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_episode_split</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">episode_split_boundary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'shared'</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Sets `episode_start_time_step` and `episode_end_time_step` for reading data files."""</span>
 
         <span class="n">splits</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">episode_time_steps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">splits</span> <span class="o">=</span> <span class="n">episode_time_steps</span>
-            <span class="k">for</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">splits</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">split</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span>
-                <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Each episode window must be a (start, end) pair of integers, got </span><span class="si">{</span><span class="n">split</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-                <span class="c1"># Schemas may define windows beyond a simulation window narrowed by the caller; those rows still</span>
-                <span class="c1"># exist in the data files, so only windows that can never be valid are rejected here.</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">start</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Episode window (</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s1">) must satisfy 0 &lt;= start &lt;= end.'</span><span class="p">)</span>
+            <span class="n">splits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_episode_splits</span><span class="p">(</span><span class="n">episode_time_steps</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">episode_time_steps</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
