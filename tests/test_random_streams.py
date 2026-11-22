@@ -252,6 +252,53 @@ def test_v2_occupant_draws_differ_by_building_and_episode_and_repeat_with_the_se
     assert both.sum() > 5 and not np.allclose(draws[both], other[both])
 
 
+def _cloned_member_env(version='v2'):
+    schema = DataSet().get_schema('quebec_neighborhood_without_demand_response_set_points')
+    names = list(schema['buildings'])
+    for name in names[2:]:
+        schema['buildings'][name]['include'] = False
+    schema.update(interface='entity', topology_mode='dynamic', topology_events=[{
+        'id': 'clone', 'time_step': 1, 'operation': 'add_member',
+        'target_member_id': 'Clone_1', 'source_member_id': names[0],
+    }])
+    env = CityLearnEnv(schema, random_seed=0, random_stream_version=version, episode_time_steps=24,
+                       simulation_start_time_step=0, simulation_end_time_step=47)
+    return env, names[0]
+
+
+def _zero_entity_actions(env):
+    tables = env.action_space['tables']
+    return {'tables': {
+        name: np.zeros(space.shape, dtype='float32') for name, space in tables.items()
+        if name in {'building', 'charger', 'deferrable_appliance'}
+    }}
+
+
+def test_v2_cloned_member_draws_its_own_streams():
+    """A member cloned from ``source_member_id`` is keyed by its own name, not its source's (#304)."""
+
+    env, source_name = _cloned_member_env()
+    try:
+        env.reset()
+        for _ in range(3):
+            env.step(_zero_entity_actions(env))
+        pool = env._topology_service._member_pool
+        source, clone = pool[source_name], pool['Clone_1']
+        assert clone.random_stream_key == ('building', 'Clone_1')
+        assert clone.occupant.random_stream_key == ('building', 'Clone_1', 'occupant')
+        assert clone.non_shiftable_load_device.random_stream_key == ('building', 'Clone_1', 'non_shiftable_load_device')
+        # The source keeps its own keys and draws.
+        assert source.occupant.random_stream_key == ('building', source_name, 'occupant')
+        assert not np.array_equal(clone.occupant._interaction_draws, source.occupant._interaction_draws)
+        expected = random_streams.generator(
+            0, random_streams.OCCUPANT_SETPOINT_INTERACTION, 'building', 'Clone_1', 'occupant',
+            env.episode_tracker.random_stream_episode,
+        ).random(env.episode_tracker.episode_time_steps)
+        np.testing.assert_array_equal(clone.occupant._interaction_draws, expected)
+    finally:
+        env.close()
+
+
 # --- 4. stochastic outages ---------------------------------------------------------------------
 
 def test_v1_outage_signals_reproduce_3_6_0():
