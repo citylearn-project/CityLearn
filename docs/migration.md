@@ -237,6 +237,24 @@ Version 2 changes the following on bundled datasets:
   `PhysicsInvariantError`. This changes scenarios with outages and batteries, such as
   the `citylearn_challenge_2023_*` datasets with stochastic outages and the
   `pt_rec_*` robustness, combined and all-in scenarios.
+- **Energy to full of faded batteries.** Charging stops at a battery's
+  degraded capacity, which capacity fade lowers below its nominal capacity,
+  but version 1 computed the entity observations of the energy a battery can
+  still take from the nominal capacity, so a battery that fade had made full
+  was observed with `can_charge` 1 and charge power available. Version 2 stops
+  `energy_to_full_kwh`, `connected_ev_energy_to_full_kwh`,
+  `flexible_energy_to_full_kwh` and the charge features derived from them at
+  the degraded capacity (see [energy to full](observations_reference.md#energy-to-full)).
+  The simulated physics is unchanged, but controllers that read these
+  observations act differently: the BAU no longer reserves power for a faded EV
+  that is already full, so its home battery no longer discharges for it and
+  exports the energy. This changes the BAU on datasets whose EV batteries fade
+  and that publish the `entity_core_electrical` bundle:
+  `citylearn_challenge_2022_phase_all_plus_evs`, the dynamic assets and
+  dynamic topology three-phase demos and the 15-second three-phase demos.
+  Batteries without fade, including every `pt_rec_*` battery, and
+  `citylearn_three_phase_electrical_service_demo`, which does not publish
+  the bundle, are unchanged.
 
 - **Electrical-service headroom.** The import limit of a building with
   `electrical_service` was shared among the EV chargers and the battery in
