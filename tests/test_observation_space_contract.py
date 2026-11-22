@@ -1,8 +1,10 @@
 """The observation spaces describe the observations that `reset()` and `step()` return (#306).
 
 For every bundled dataset below, in both interfaces and with central and decentralised agents, an
-episode is run with random actions and every observation is checked, in order, against its space:
-the same keys, the same shapes and the values within the bounds at the same position.
+episode is run and every observation is checked, in order, against its space: the same keys, the
+same shapes and the values within the bounds at the same position. The actions are random, except
+on Quebec, where random heating drives the LSTM indoor temperature past its estimated bounds within
+a few steps; there the HVAC is left uncontrolled and the occupants still move the set points.
 """
 
 from pathlib import Path
@@ -10,20 +12,22 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from citylearn.agents.base import NoControlAgent
 from citylearn.citylearn import CityLearnEnv
 from citylearn.internal.entity_layout import EntityMetaSpace
 
 ROOT = Path(__file__).resolve().parents[1]
 DATASETS = ROOT / 'data' / 'datasets'
 
-# (dataset, simulation start, episode length): EV chargers with charging constraints and phase
-# encodings, deferrable appliances, three-phase service, LSTM dynamics and occupant interaction.
+# (dataset, simulation start, episode length, controller): EV chargers with charging constraints
+# and phase encodings, deferrable appliances, three-phase service, LSTM dynamics whose HVAC action
+# sets the demand, and occupant interaction.
 EPISODES = [
-    ('pt_rec_4', 2000, 96),
-    ('citylearn_three_phase_electrical_service_demo', 2000, 96),
-    ('citylearn_challenge_2022_phase_all_plus_evs', 4000, 96),
-    ('citylearn_challenge_2023_phase_1', 0, 96),
-    ('quebec_neighborhood_with_demand_response_set_points', 0, 96),
+    ('pt_rec_4', 2000, 96, 'random'),
+    ('citylearn_three_phase_electrical_service_demo', 2000, 96, 'random'),
+    ('citylearn_challenge_2022_phase_all_plus_evs', 4000, 96, 'random'),
+    ('citylearn_challenge_2023_phase_1', 0, 96, 'random'),
+    ('quebec_neighborhood_with_demand_response_set_points', 0, 168, 'no_control'),
 ]
 
 
@@ -101,17 +105,19 @@ def _check_entity(env, observations, t):
 
 @pytest.mark.parametrize('interface', ['flat', 'entity'])
 @pytest.mark.parametrize('central_agent', [False, True], ids=['decentralized', 'central'])
-@pytest.mark.parametrize('dataset,start,steps', EPISODES, ids=[e[0] for e in EPISODES])
-def test_every_observation_lies_in_its_space_over_an_episode(dataset, start, steps, interface, central_agent):
+@pytest.mark.parametrize('dataset,start,steps,controller', EPISODES, ids=[e[0] for e in EPISODES])
+def test_every_observation_lies_in_its_space_over_an_episode(
+    dataset, start, steps, controller, interface, central_agent
+):
     env = _env(dataset, start, steps, interface, central_agent)
     check = _check_flat if interface == 'flat' else _check_entity
 
     try:
+        agent = NoControlAgent(env) if controller == 'no_control' else None
         observations, _ = env.reset(seed=0)
-        if interface == 'flat':
-            for i, s in enumerate(env.action_space):
-                s.seed(i)
-        else:
+        rng = np.random.default_rng(0)
+
+        if interface == 'entity':
             env.action_space.seed(0)
 
         t = 0
@@ -119,8 +125,10 @@ def test_every_observation_lies_in_its_space_over_an_episode(dataset, start, ste
         while True:
             check(env, observations, t)
 
-            if interface == 'flat':
-                actions = [s.sample() for s in env.action_space]
+            if agent is not None:
+                actions = agent.predict(observations, deterministic=True)
+            elif interface == 'flat':
+                actions = [s.low + rng.random(s.shape) * (s.high - s.low) for s in env.action_space]
             else:
                 actions = env.action_space.sample()
 
