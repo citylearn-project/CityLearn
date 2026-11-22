@@ -286,6 +286,11 @@ simulações e os KPIs não mudam.
   notebooks publicados. Um novo tutorial treina um controlador SAC do Stable
   Baselines3, avalia-o numa semana não vista e compara-o com o BAU; o notebook do
   tutorial da versão 2.1.2 é removido ([#267](https://github.com/citylearn-project/CityLearn/issues/267)).
+- **Saídas dos notebooks.** As páginas dos notebooks (`usage/agents`, `usage/load_environment`,
+  `usage/cli`, `usage/rl_training`) mostram as saídas de uma execução do CI: o workflow do Sphinx
+  executa os notebooks com `scripts/ci/run_notebooks.py --output-dir examples` antes da compilação, e
+  `check_docs.py --require-notebook-outputs` falha se uma página não tiver saídas. Os notebooks do
+  repositório continuam sem saídas ([#299](https://github.com/citylearn-project/CityLearn/issues/299)).
 - **CLI.** O `train --evaluate` avalia na janela do primeiro episódio de treino em
   vez do dataset inteiro. O resumo do treino só regista o nome da máquina e do
   utilizador com `--record_host`. O `simulate` mostra o caminho de cada ficheiro
