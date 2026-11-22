@@ -398,9 +398,24 @@ key, and keeps one generator per stream:
   outage model is now the root of that building's stream instead of a stream
   shared by every building that uses it.
 
-`reset(seed=s)` repeats the first episode of an environment built with
-`random_seed=s`, and `reset(options={'episode_index': k})` repeats episode `k`.
-The native BAU reference uses the streams of the episode it evaluates.
+`reset(seed=s)` sets `random_seed` to `s` and restarts the per-episode streams
+(EV drift, occupant interactions and stochastic outages) at episode key 0, the
+key of the first episode of an environment built with `random_seed=s`. It does
+not rebuild the environment, so it repeats that first episode only on a new
+environment built with `random_seed=s`:
+
+- the episode window still advances, so a second `reset(seed=s)` simulates the
+  next window; `reset(seed=s, options={'episode_index': k})` simulates window
+  `k` with the streams of episode 0;
+- device and EV battery parameters drawn at construction, and the initial EV
+  state of charge, keep the values drawn with the construction seed.
+
+To repeat a run with another seed, build a new environment with that
+`random_seed`. `reset(options={'episode_index': k})` without a seed repeats
+episode `k` of the same environment, or of another one built with the same
+seed. As Gymnasium recommends, pass a seed to the first reset only: a seed at
+every reset gives every episode the same per-episode streams. The native BAU
+reference uses the streams of the episode it evaluates.
 
 Runs that use none of these random features are unchanged. To reproduce results
 obtained with 3.6.0 or earlier for the same seed, set `random_stream_version`

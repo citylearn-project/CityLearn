@@ -1921,7 +1921,11 @@ class CityLearnEnv(Environment, Env):
         Parameters
         ----------
         seed: int, optional
-            Use to updated :code:`citylearn.CityLearnEnv.random_seed` if value is provided.
+            New :code:`citylearn.CityLearnEnv.random_seed`. The per-episode random streams (EV drift,
+            occupant interactions, stochastic outages) restart at the key of episode 0. Parameters drawn
+            when the environment was built keep their values and the episode window still advances, so
+            only on a new environment built with the same seed does this repeat its first episode. Pass a
+            seed to the first reset only; a seed at every reset repeats the same streams in every episode.
         options: Mapping[str, Any], optional
             Optional ``episode_index`` selects a specific episode split for replay.
         
@@ -1961,8 +1965,9 @@ class CityLearnEnv(Environment, Env):
             self.random_seed,
             self.episode_split_boundary,
         )
-        # Episode key of the per-episode streams: an explicit seed repeats the first episode of an env
-        # built with that seed; the native BAU sidecar takes the key of the episode it evaluates.
+        # Episode key of the per-episode streams: an explicit seed restarts them at the key of the first
+        # episode of an env built with that seed (construction-time draws and the window are not reset);
+        # the native BAU sidecar takes the key of the episode it evaluates.
         stream_episode = getattr(self, '_random_stream_episode_override', None)
         self.episode_tracker.random_stream_episode = (
             stream_episode if stream_episode is not None else 0 if seed is not None else self.episode_tracker.episode
