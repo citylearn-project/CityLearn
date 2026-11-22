@@ -308,7 +308,9 @@ l_b = share of the locally traded energy min(Σ_b i_b, Σ_b max(−net_b, 0)) al
 E_district = Σ_t e_t
 ```
 
-A non-finite net value or carbon intensity counts as zero. The control total equals `energy_provenance_external_purchase_emissions_kgco2`, except when a community market is configured with local trading off (#327).
+When a community market is enabled with `local_trading_enabled` false, no energy is exchanged locally, so every member import comes from the grid and `e_t = Σ_b i_b · CI_b`, the member sum. The local price ratio only prices the exchange and never enters the emissions ([#327](https://github.com/citylearn-project/CityLearn/issues/327)).
+
+A non-finite net value or carbon intensity counts as zero. The control total equals `energy_provenance_external_purchase_emissions_kgco2` in every market configuration.
 
 Because of the netting, the district total is smaller than or equal to the sum of the building totals. The 3.6.0 district definition, the sum of the members' own emissions, is kept as `emissions_total_{control,baseline,business_as_usual}_member_sum_kgco2`.
 
@@ -320,7 +322,6 @@ Ratios use the plain ratio (emissions are never negative). The district ratio to
 
 **Known limits.**
 - A building's baseline emissions are set to 0 when the carbon intensity sums to 0 over its window; the control value is not.
-- The equality with the provenance ledger fails when a community market is configured with local trading off (#327).
 
 ## Solar self-consumption
 
@@ -1504,7 +1505,7 @@ The default scorecard includes six provenance rows:
 
 ### Which row to use
 
-- **District emissions.** For the emissions total, use the [Emissions](kpis_reference.md#emissions) family. The district control total of that family equals `district_energy_provenance_external_purchase_emissions_kgco2`, except when a community market is configured with local trading disabled (#327). In that case the ledger records no local sharing, while district emissions still net the members' imports and exports. Use the provenance row when you need to know where that carbon went.
+- **District emissions.** For the emissions total, use the [Emissions](kpis_reference.md#emissions) family. The district control total of that family equals `district_energy_provenance_external_purchase_emissions_kgco2`, also when a community market is configured with local trading disabled. Use the provenance row when you need to know where that carbon went.
 - **Building emissions.** At building level, `external_purchase_emissions` counts import after local sharing, while building emissions count each member's own import. The two differ whenever members share energy.
 - **Solar self-consumption or useful PV.** Solar self-consumption counts all PV that was neither exported nor curtailed, including PV lost in storage or still stored. `pv_useful_building_ratio` counts only PV that reached a load. Use the latter when the question is how much PV served demand.
 - **PV in the load.** `pv_load` is the total PV in a member's load. `pv_load_direct` and `pv_load_after_storage` split it into PV used without storage and PV used after storage. Use the split only to assess how much storage contributed.
@@ -1515,7 +1516,6 @@ The default scorecard includes six provenance rows:
 - The energy of an EV at connection, and any imposed state of charge, is unknown and carbon-free in the ledger. The `carbon_*` rows therefore undercount; the `carbon_unknown_*` rows show by how much energy.
 - Building rows are counted by the receiving member and do not balance per member. Only the district balances.
 - The ledger has no evaluation window: it covers every interval simulated since reset.
-- District emissions and `external_purchase_emissions` differ when a community market is configured with local trading disabled (#327).
 - At portfolio level, the `pv_useful_*` ratios are community-weight means, and the two max-residual diagnostics are sums of community maxima.
 
 ## Dynamic topology

@@ -565,7 +565,8 @@ l_b = share of the locally traded energy min(Σ_b i_b, Σ_b max(−net_b, 0)) al
 E_district = Σ_t e_t
 </pre></div>
 </div>
-<p>A non-finite net value or carbon intensity counts as zero. The control total equals <code class="docutils literal notranslate"><span class="pre">energy_provenance_external_purchase_emissions_kgco2</span></code>, except when a community market is configured with local trading off (#327).</p>
+<p>When a community market is enabled with <code class="docutils literal notranslate"><span class="pre">local_trading_enabled</span></code> false, no energy is exchanged locally, so every member import comes from the grid and <code class="docutils literal notranslate"><span class="pre">e_t</span> <span class="pre">=</span> <span class="pre">Σ_b</span> <span class="pre">i_b</span> <span class="pre">·</span> <span class="pre">CI_b</span></code>, the member sum. The local price ratio only prices the exchange and never enters the emissions (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/327">#327</a>).</p>
+<p>A non-finite net value or carbon intensity counts as zero. The control total equals <code class="docutils literal notranslate"><span class="pre">energy_provenance_external_purchase_emissions_kgco2</span></code> in every market configuration.</p>
 <p>Because of the netting, the district total is smaller than or equal to the sum of the building totals. The 3.6.0 district definition, the sum of the members’ own emissions, is kept as <code class="docutils literal notranslate"><span class="pre">emissions_total_{control,baseline,business_as_usual}_member_sum_kgco2</span></code>.</p>
 <p>Ratios use the plain ratio (emissions are never negative). The district ratio to the baseline divides the netted district totals. <code class="docutils literal notranslate"><span class="pre">emissions_ratio_to_baseline_total_building_mean_ratio</span></code> keeps the 3.6.0 value, the unweighted mean of the building ratios. Daily averages divide a member’s total by the member’s active days, and the district total by the simulated days (<a class="reference internal" href="#shared-rules"><span class="std std-ref">shared rules</span></a>).</p>
 <p><strong>Portfolio.</strong> Totals, <code class="docutils literal notranslate"><span class="pre">member_sum</span></code> totals and daily averages are summed. Ratios to the baseline and to the BAU are ratios of the summed totals. The <code class="docutils literal notranslate"><span class="pre">building_mean</span></code> ratio is a mean weighted by community <code class="docutils literal notranslate"><span class="pre">weight</span></code>.</p>
@@ -573,7 +574,6 @@ E_district = Σ_t e_t
 <p><strong>Known limits.</strong></p>
 <ul class="simple">
 <li><p>A building’s baseline emissions are set to 0 when the carbon intensity sums to 0 over its window; the control value is not.</p></li>
-<li><p>The equality with the provenance ledger fails when a community market is configured with local trading off (#327).</p></li>
 </ul>
 </section>
 <section id="solar-self-consumption">
@@ -1777,7 +1777,7 @@ storage_max_residual = max over stocks and intervals of |stock in the ledger - s
 <section id="which-row-to-use">
 <h3>Which row to use<a class="headerlink" href="#which-row-to-use" title="Link to this heading"></a></h3>
 <ul class="simple">
-<li><p><strong>District emissions.</strong> For the emissions total, use the <a class="reference internal" href="#emissions"><span class="std std-ref">Emissions</span></a> family. The district control total of that family equals <code class="docutils literal notranslate"><span class="pre">district_energy_provenance_external_purchase_emissions_kgco2</span></code>, except when a community market is configured with local trading disabled (#327). In that case the ledger records no local sharing, while district emissions still net the members’ imports and exports. Use the provenance row when you need to know where that carbon went.</p></li>
+<li><p><strong>District emissions.</strong> For the emissions total, use the <a class="reference internal" href="#emissions"><span class="std std-ref">Emissions</span></a> family. The district control total of that family equals <code class="docutils literal notranslate"><span class="pre">district_energy_provenance_external_purchase_emissions_kgco2</span></code>, also when a community market is configured with local trading disabled. Use the provenance row when you need to know where that carbon went.</p></li>
 <li><p><strong>Building emissions.</strong> At building level, <code class="docutils literal notranslate"><span class="pre">external_purchase_emissions</span></code> counts import after local sharing, while building emissions count each member’s own import. The two differ whenever members share energy.</p></li>
 <li><p><strong>Solar self-consumption or useful PV.</strong> Solar self-consumption counts all PV that was neither exported nor curtailed, including PV lost in storage or still stored. <code class="docutils literal notranslate"><span class="pre">pv_useful_building_ratio</span></code> counts only PV that reached a load. Use the latter when the question is how much PV served demand.</p></li>
 <li><p><strong>PV in the load.</strong> <code class="docutils literal notranslate"><span class="pre">pv_load</span></code> is the total PV in a member’s load. <code class="docutils literal notranslate"><span class="pre">pv_load_direct</span></code> and <code class="docutils literal notranslate"><span class="pre">pv_load_after_storage</span></code> split it into PV used without storage and PV used after storage. Use the split only to assess how much storage contributed.</p></li>
@@ -1790,7 +1790,6 @@ storage_max_residual = max over stocks and intervals of |stock in the ledger - s
 <li><p>The energy of an EV at connection, and any imposed state of charge, is unknown and carbon-free in the ledger. The <code class="docutils literal notranslate"><span class="pre">carbon_*</span></code> rows therefore undercount; the <code class="docutils literal notranslate"><span class="pre">carbon_unknown_*</span></code> rows show by how much energy.</p></li>
 <li><p>Building rows are counted by the receiving member and do not balance per member. Only the district balances.</p></li>
 <li><p>The ledger has no evaluation window: it covers every interval simulated since reset.</p></li>
-<li><p>District emissions and <code class="docutils literal notranslate"><span class="pre">external_purchase_emissions</span></code> differ when a community market is configured with local trading disabled (#327).</p></li>
 <li><p>At portfolio level, the <code class="docutils literal notranslate"><span class="pre">pv_useful_*</span></code> ratios are community-weight means, and the two max-residual diagnostics are sums of community maxima.</p></li>
 </ul>
 </section>
