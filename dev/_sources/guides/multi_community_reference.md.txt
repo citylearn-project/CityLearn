@@ -1,0 +1,206 @@
+# Multi-Community Reference
+
+`MultiCommunityEnv` orchestrates several independent `CityLearnEnv` instances with one child environment per community. V1 is synchronization and portfolio reporting only: there is no global physics layer, inter-community market, global DSO/TSO coordination or building mixing across communities.
+
+## Quickstart
+
+```python
+import numpy as np
+from citylearn.multi_community import MultiCommunityEnv
+
+env = MultiCommunityEnv(
+    communities=[
+        {
+            "community_id": "community_a",
+            "schema": "citylearn_challenge_2022_phase_all_plus_evs",
+            "env_kwargs": {"interface": "entity", "episode_time_steps": 48},
+            "weight": 1.0,
+        },
+        {
+            "community_id": "community_b",
+            "schema": "citylearn_challenge_2022_phase_all",
+            "env_kwargs": {"interface": "entity", "episode_time_steps": 48},
+            "weight": 2.0,
+        },
+    ],
+    render_directory="outputs/runs",
+    render_session_name="portfolio_001",
+)
+
+observations, info = env.reset(seed=0)
+terminated = truncated = False
+
+while not (terminated or truncated):
+    actions = {
+        community_id: {
+            "tables": {
+                table: np.zeros(space.shape, dtype="float32")
+                for table, space in child.action_space["tables"].items()
+            }
+        }
+        for community_id, child in env.envs.items()
+    }
+    observations, rewards, terminated, truncated, info = env.step(actions)
+
+kpis = env.evaluate_v2(include_business_as_usual=False)
+print(kpis.loc[kpis["level"] == "portfolio"].head())
+env.close()
+```
+
+## Constructor
+
+```python
+MultiCommunityEnv(
+    communities=[
+        {
+            "community_id": "community_a",
+            "schema": "path/or/dataset/name/schema.json",
+            "env_kwargs": {"interface": "entity", "episode_time_steps": 48},
+            "weight": 1.0,
+        }
+    ],
+    render_directory=None,
+    render_session_name=None,
+)
+```
+
+`community_id` must be unique, non-empty and safe as a relative path component. It may contain only letters, numbers, `_`, `-` and `.`. `weight` defaults to `1.0`, must be finite and non-negative, and at least one community must have a positive weight.
+
+`env_kwargs` are passed to the child `CityLearnEnv`. The wrapper sets each child export session to `<render_session_name>/<community_id>` so render and KPI files are separated by community.
+
+## Reset And Step
+
+`reset()` returns child observations by community plus wrapper info:
+
+```python
+observations = {"community_a": child_observations, "community_b": child_observations}
+info = {"communities": {...}, "time_step": 0}
+```
+
+`step(actions)` expects one child action payload per community:
+
+```python
+actions = {"community_a": child_actions, "community_b": child_actions}
+```
+
+It returns:
+
+```python
+observations_by_community,
+rewards_by_community,
+terminated,
+truncated,
+info
+```
+
+`info` includes:
+
+| Key | Meaning |
+|---|---|
+| `community_rewards_scalar` | Finite sum of each child reward payload. |
+| `reward_total` | `sum(weight * community_reward_scalar)`. |
+| `reward_mean_weighted` | `reward_total / sum(weights)`. |
+| `terminated_by_community` | Child termination flags. |
+| `truncated_by_community` | Child truncation flags. |
+
+If any child terminates or truncates, the wrapper terminates or truncates too. This prevents the communities from drifting into different episode positions.
+
+## Synchronization Contract
+
+All child environments must use:
+
+| Requirement | Reason |
+|---|---|
+| Same `seconds_per_time_step` | Keeps step time aligned. |
+| Same effective episode length | Keeps training batches rectangular. |
+| Same `interface` | Keeps observation/action payload contracts stable. |
+| Same `central_agent` mode | Avoids mixing centralized and decentralized reward/action semantics. |
+
+The wrapper validates these conditions at construction and again after reset.
+
+Calendar windows are not part of the contract. Each child selects its episode
+split from its own simulation window, `random_episode_split` setting and
+`random_seed`, so communities can simulate different dates at the same step.
+To share windows, give the children the same window settings and the same
+`random_seed`, or pass a seed to `reset(seed=...)`, which reaches every child.
+
+## Demand Response
+
+Demand response remains local to each community. If a child schema has `demand_response.enabled=true`, that child loads its own `requests_file`, exposes its own request metadata in entity observations, and computes local settlement/KPIs. `MultiCommunityEnv` does not coordinate DSO/TSO requests across communities in v1.
+
+## KPI Aggregation
+
+`evaluate_v2()` concatenates the child KPI tables and adds a `community_id` column. It also adds portfolio rows:
+
+```text
+level = "portfolio"
+name = "Portfolio"
+community_id = "__portfolio__"
+```
+
+Only district-level child KPIs are aggregated:
+
+| KPI suffix | Portfolio rule |
+|---|---|
+| `_kwh`, `_eur`, `_kgco2`, other `_count` | Sum across communities. |
+| `_ratio` of a control total to a reference total | Ratio of the summed totals, e.g. `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
+| Rates and means with additive denominators | Pooled: mean weighted by the denominator, e.g. `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
+| Other `_ratio`, `_percent` | Weighted mean using community `weight`. |
+| `_kw`, `_c`, other `_hours` and other point metrics | Not aggregated in v1. |
+
+Ratios rebuilt from summed totals are the `ratio_to_baseline` and
+`ratio_to_business_as_usual` ratios of cost, emissions, grid import, export and
+net exchange, and the `ratio_to_business_as_usual` ratios of solar generation
+and export, EV charge and V2G export, battery charge, discharge and throughput,
+and deferrable-appliance cycle and energy counts. They use only communities that
+report both totals, ignore `weight` like the summed totals, and keep the
+lower-is-better rule of the [KPI reference](kpis_reference.md#shared-rules)
+for negative net-exchange and cost totals. A one-community portfolio ratio
+equals the district ratio.
+
+Pooled rates and means are weighted by their additive denominators, so they
+equal the ratio of the pooled numerator and denominator and ignore `weight`:
+
+| Rate or mean | Weight |
+|---|---|
+| EV departure success, minimum-acceptable and within-tolerance rates; SOC deficit, shortfall, surplus and absolute-error means | `ev_events_departure_count` |
+| EV `*_feasible` departure rates | The matching `ev_events_departure_*_feasible_count` |
+| Deferrable-appliance service level (control and BAU) | Completed plus missed cycles |
+| Deferrable-appliance average start delay (control and BAU) | Completed cycles |
+| Escalator service level | Requested passengers |
+| Solar self-consumption (control and BAU) | Solar generation |
+| Community-market local share of demand (`*_local_share_of_demand_ratio`, `*_import_share_ratio`) | Local import plus grid import after local trading |
+| Community-market local share of export | Local export plus grid export after local trading |
+| Demand-response compliance | `demand_response_valid_requested_total_kwh` |
+| Demand-response audit compliance, requested-energy coverage and baseline coverage, per purpose | The audit's valid requested energy, requested energy and active intervals |
+| Stationary-battery equivalent full cycles (control and BAU) | Nominal stationary-battery capacity |
+
+The BAU deltas and ratios of the pooled deferrable service level, start delay,
+self-consumption and equivalent full cycles compare the pooled control and BAU
+values. Communities whose value is undefined carry no weight.
+
+For stationary batteries, the portfolio cycle count is total throughput divided
+by twice the total nominal capacity. Installed batteries contribute their capacity
+even if they are idle. The result is undefined when the total capacity is zero.
+
+Ratios without additive totals stay weighted means: grid-shape ratios (peaks,
+ramping and load-factor penalties), comfort and resilience proportions, equity,
+the thermal-service, EV-departure and other audit ratios, battery capacity fade,
+and the ratio of battery capacity fade to its BAU value.
+
+Portfolio KPI names replace a leading `district_` prefix with `portfolio_`, for example `district_demand_response_revenue_total_eur` becomes `portfolio_demand_response_revenue_total_eur`.
+
+## Export
+
+`export_final_kpis()` writes each child export in its own subfolder and writes a global CSV in the wrapper session folder:
+
+```text
+<render_directory>/<render_session_name>/
+  exported_kpis_multi_community.csv
+  community_a/exported_kpis.csv
+  community_b/exported_kpis.csv
+```
+
+The global CSV keeps the long `evaluate_v2()` format with local and portfolio
+rows and the `unit` and `description` columns. Each child keeps its wide
+numeric table and stores its KPI definitions in `exported_kpis.manifest.json`.

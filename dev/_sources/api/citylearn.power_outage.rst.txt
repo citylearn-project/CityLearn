@@ -1,0 +1,7 @@
+citylearn.power\_outage module
+==============================
+
+.. automodule:: citylearn.power_outage
+   :members:
+   :show-inheritance:
+   :undoc-members:

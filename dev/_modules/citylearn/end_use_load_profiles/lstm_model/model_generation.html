@@ -1,0 +1,402 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.end_use_load_profiles.lstm_model.model_generation &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+ 
+<script src="../../../../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.end_use_load_profiles.lstm_model.model_generation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="false"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This documentation is built from the development branch, <code>master</code> (<code>/dev/</code>). It includes
+  changes listed under <a href="../../../../guides/releases.html">Unreleased</a> that are not yet in a PyPI release.
+  Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
+  release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.end_use_load_profiles.lstm_model.model_generation</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.end_use_load_profiles.lstm_model.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LSTM</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.end_use_load_profiles.lstm_model.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">preprocess_df</span>
+
+<div class="viewcode-block" id="run">
+<a class="viewcode-back" href="../../../../api/citylearn.end_use_load_profiles.lstm_model.model_generation.html#citylearn.end_use_load_profiles.lstm_model.model_generation.run">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">LSTM</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+    <span class="c1"># preprocess data</span>
+    <span class="n">data_dict</span> <span class="o">=</span> <span class="n">preprocess_df</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">df</span><span class="p">)</span>
+
+    <span class="c1"># initialize LSTM model</span>
+    <span class="n">lstm</span> <span class="o">=</span> <span class="n">LSTM</span><span class="p">(</span>
+        <span class="n">n_features</span><span class="o">=</span><span class="n">data_dict</span><span class="p">[</span><span class="s1">'train'</span><span class="p">][</span><span class="s1">'X'</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">n_output</span><span class="o">=</span><span class="n">data_dict</span><span class="p">[</span><span class="s1">'train'</span><span class="p">][</span><span class="s1">'y'</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">seq_len</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">'lb'</span><span class="p">],</span>
+        <span class="n">num_layers</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">'num_layer'</span><span class="p">],</span>
+        <span class="n">num_hidden</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">'hidden_size'</span><span class="p">],</span>
+        <span class="n">drop_prob</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">'dropout'</span><span class="p">],</span>
+        <span class="n">weight_decay</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">'weight_decay'</span><span class="p">]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">'device'</span><span class="p">])</span>
+    <span class="n">criterion</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">()</span>  <span class="c1"># mean-squared error for regression</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">'optimizer_name'</span><span class="p">])(</span><span class="n">lstm</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">'learning_rate'</span><span class="p">])</span>    
+    
+    <span class="c1"># train model</span>
+    <span class="n">lstm</span> <span class="o">=</span> <span class="n">train</span><span class="p">(</span>
+        <span class="n">lstm</span><span class="p">,</span> 
+        <span class="n">data_dict</span><span class="p">[</span><span class="s1">'loaders'</span><span class="p">][</span><span class="s1">'train'</span><span class="p">],</span> 
+        <span class="n">data_dict</span><span class="p">[</span><span class="s1">'loaders'</span><span class="p">][</span><span class="s1">'val'</span><span class="p">],</span>
+        <span class="n">optimizer</span><span class="p">,</span>
+        <span class="n">criterion</span><span class="p">,</span>
+        <span class="n">config</span><span class="p">,</span>
+        <span class="n">data_dict</span><span class="p">[</span><span class="s1">'temp_limits'</span><span class="p">][</span><span class="s1">'max'</span><span class="p">],</span>
+        <span class="n">data_dict</span><span class="p">[</span><span class="s1">'temp_limits'</span><span class="p">][</span><span class="s1">'min'</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="c1"># get model error summary</span>
+    <span class="n">total_errors</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">,</span>
+        <span class="n">lstm</span><span class="p">,</span>
+        <span class="n">data_dict</span><span class="p">[</span><span class="s1">'loaders'</span><span class="p">][</span><span class="s1">'test'</span><span class="p">],</span>
+        <span class="n">optimizer</span><span class="p">,</span>
+        <span class="n">data_dict</span><span class="p">[</span><span class="s1">'temp_limits'</span><span class="p">][</span><span class="s1">'max'</span><span class="p">],</span>
+        <span class="n">data_dict</span><span class="p">[</span><span class="s1">'temp_limits'</span><span class="p">][</span><span class="s1">'min'</span><span class="p">],</span>
+    <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">lstm</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">[</span><span class="s1">'observation_metadata'</span><span class="p">],</span> <span class="n">total_errors</span></div>
+
+
+<div class="viewcode-block" id="eval">
+<a class="viewcode-back" href="../../../../api/citylearn.end_use_load_profiles.lstm_model.model_generation.html#citylearn.end_use_load_profiles.lstm_model.model_generation.eval">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">eval</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">model</span><span class="p">:</span> <span class="n">LSTM</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">temperature_normalization_maximum</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">temperature_normalization_minimum</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">init_hidden</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">'batch_size'</span><span class="p">],</span> <span class="n">config</span><span class="p">[</span><span class="s1">'device'</span><span class="p">])</span>
+    <span class="n">ypred</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ylab</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">criteria</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">L1Loss</span><span class="p">(),</span> <span class="c1"># MAE</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">(),</span> <span class="c1"># RMSE</span>
+    <span class="p">]</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cumulative_error_profiles</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="p">:</span>
+        <span class="n">input_test</span><span class="p">,</span> <span class="n">target_test</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="n">input_test</span> <span class="o">=</span> <span class="n">input_test</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">'device'</span><span class="p">])</span>
+        <span class="n">target_test</span> <span class="o">=</span> <span class="n">target_test</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">'device'</span><span class="p">])</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">each</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">h</span><span class="p">])</span>
+        <span class="n">output_test</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_test</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">h</span><span class="p">)</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">criterion</span><span class="p">(</span><span class="n">output_test</span><span class="p">,</span> <span class="n">target_test</span><span class="o">.</span><span class="n">float</span><span class="p">())</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">for</span> <span class="n">criterion</span> <span class="ow">in</span> <span class="n">criteria</span><span class="p">])</span>
+        <span class="n">output_test</span> <span class="o">=</span> <span class="n">output_test</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">'cpu'</span><span class="p">)</span>
+        <span class="n">output_test</span> <span class="o">=</span> <span class="n">output_test</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">output_test</span> <span class="o">=</span> <span class="n">output_test</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">output_test</span> <span class="o">=</span> <span class="n">output_test</span> <span class="o">*</span> <span class="p">(</span><span class="n">temperature_normalization_maximum</span> <span class="o">-</span> <span class="n">temperature_normalization_minimum</span><span class="p">)</span> <span class="o">+</span> <span class="n">temperature_normalization_minimum</span>
+        <span class="n">target_test</span> <span class="o">=</span> <span class="n">target_test</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">'cpu'</span><span class="p">)</span>
+        <span class="n">target_test</span> <span class="o">=</span> <span class="n">target_test</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">target_test</span> <span class="o">=</span> <span class="n">target_test</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">target_test</span> <span class="o">=</span> <span class="n">target_test</span> <span class="o">*</span> <span class="p">(</span><span class="n">temperature_normalization_maximum</span> <span class="o">-</span> <span class="n">temperature_normalization_minimum</span><span class="p">)</span> <span class="o">+</span> <span class="n">temperature_normalization_minimum</span>
+        <span class="n">ypred</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_test</span><span class="p">)</span>
+        <span class="n">ylab</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_test</span><span class="p">)</span>
+        <span class="n">cumulative_error_profiles</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">output_test</span> <span class="o">-</span> <span class="n">target_test</span><span class="p">)</span><span class="o">.</span><span class="n">cumsum</span><span class="p">())</span>
+    
+    <span class="n">ypred</span><span class="p">,</span> <span class="n">ylab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ypred</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ylab</span><span class="p">)</span>
+    <span class="n">absolute_error</span> <span class="o">=</span> <span class="p">(</span><span class="n">ypred</span> <span class="o">-</span> <span class="n">ylab</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">'absolute error'</span><span class="p">:</span> <span class="n">absolute_error</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+        <span class="s1">'mae'</span><span class="p">:</span> <span class="n">losses</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+        <span class="s1">'rmse'</span><span class="p">:</span> <span class="n">losses</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="train">
+<a class="viewcode-back" href="../../../../api/citylearn.end_use_load_profiles.lstm_model.model_generation.html#citylearn.end_use_load_profiles.lstm_model.model_generation.train">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="n">lstm</span><span class="p">:</span> <span class="n">LSTM</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">criterion</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">temperature_normalization_maximum</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">temperature_normalization_minimum</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LSTM</span><span class="p">:</span>
+    <span class="n">lstm</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">train_losses</span><span class="p">,</span> <span class="n">val_losses</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">'epochs'</span><span class="p">]):</span>
+        <span class="n">loss_train</span><span class="p">,</span> <span class="n">loss_val</span><span class="p">,</span> \
+        <span class="n">ylab_train</span><span class="p">,</span> <span class="n">ypred_train</span><span class="p">,</span> \
+        <span class="n">ylab_val</span><span class="p">,</span> <span class="n">ypred_val</span> <span class="o">=</span> <span class="n">_train</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">lstm</span><span class="p">,</span> <span class="n">train_loader</span><span class="o">=</span><span class="n">train_loader</span><span class="p">,</span> <span class="n">val_loader</span><span class="o">=</span><span class="n">val_loader</span><span class="p">,</span>
+                                        <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">criterion</span><span class="o">=</span><span class="n">criterion</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+                                        <span class="n">temperature_normalization_maximum</span><span class="o">=</span><span class="n">temperature_normalization_maximum</span><span class="p">,</span> <span class="n">temperature_normalization_minimum</span><span class="o">=</span><span class="n">temperature_normalization_minimum</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ylab_val</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ypred_val</span><span class="p">)])</span>
+        <span class="n">train_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_train</span><span class="p">)</span>
+        <span class="n">val_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_val</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lstm</span></div>
+
+
+<span class="c1"># TODO: Explicitly define the data type contained in returned lists</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_train</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">LSTM</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">criterion</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">temperature_normalization_maximum</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">temperature_normalization_minimum</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">train_loss_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">val_loss_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+    <span class="n">ypred_train</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ylab_train</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ypred_val</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ylab_val</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">train_loss_list</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">train_loss_list</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">train_loss_list</span>
+    <span class="n">val_loss_list</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">val_loss_list</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">val_loss_list</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+    <span class="c1"># Hidden state is initialized at each epochs</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">init_hidden</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"batch_size"</span><span class="p">],</span> <span class="n">config</span><span class="p">[</span><span class="s2">"device"</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+        <span class="n">input_train</span><span class="p">,</span> <span class="n">target_train</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="n">input_train</span> <span class="o">=</span> <span class="n">input_train</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"device"</span><span class="p">])</span>
+        <span class="n">target_train</span> <span class="o">=</span> <span class="n">target_train</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"device"</span><span class="p">])</span>
+
+        <span class="c1"># since the batch is big enough, a stateless mode is used</span>
+        <span class="c1"># (also considering the possibility to shuffle the training examples,</span>
+        <span class="c1"># which increase the generalization ability of the network)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">init_hidden</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"batch_size"</span><span class="p">],</span> <span class="n">config</span><span class="p">[</span><span class="s2">"device"</span><span class="p">])</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">each</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">h</span><span class="p">])</span>
+
+        <span class="c1"># FORWARD PASS</span>
+        <span class="n">output_train</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_train</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">h</span><span class="p">)</span>
+        <span class="n">loss_train</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output_train</span><span class="p">,</span> <span class="n">target_train</span><span class="o">.</span><span class="n">float</span><span class="p">())</span>
+
+        <span class="c1"># BACKWARD PASS</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="c1"># obtain the loss function</span>
+        <span class="n">loss_train</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+
+        <span class="c1"># STEP WITH OPTIMIZER</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+        <span class="c1"># EVALUATE METRICS FOR TRAIN</span>
+        <span class="c1"># if config.device.type == 'cuda':</span>
+        <span class="n">output_train</span> <span class="o">=</span> <span class="n">output_train</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">'cpu'</span><span class="p">)</span>
+        <span class="n">output_train</span> <span class="o">=</span> <span class="n">output_train</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="c1"># RESCALE OUTPUT</span>
+        <span class="n">output_train</span> <span class="o">=</span> <span class="n">output_train</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># output_test = np.reshape(output_test, (-1, 1)).shape</span>
+        <span class="n">output_train</span> <span class="o">=</span> <span class="n">output_train</span> <span class="o">*</span> <span class="p">(</span><span class="n">temperature_normalization_maximum</span> <span class="o">-</span> <span class="n">temperature_normalization_minimum</span><span class="p">)</span> <span class="o">+</span> <span class="n">temperature_normalization_minimum</span>
+
+        <span class="c1"># labels = labels.item()</span>
+        <span class="c1"># if config.device.type == 'cuda':</span>
+        <span class="n">target_train</span> <span class="o">=</span> <span class="n">target_train</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">'cpu'</span><span class="p">)</span>
+        <span class="n">target_train</span> <span class="o">=</span> <span class="n">target_train</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">target_train</span> <span class="o">=</span> <span class="n">target_train</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># target_test = np.reshape(target_test, (-1, 1))</span>
+        <span class="c1"># RESCALE LABELS</span>
+        <span class="n">target_train</span> <span class="o">=</span> <span class="n">target_train</span> <span class="o">*</span> <span class="p">(</span><span class="n">temperature_normalization_maximum</span> <span class="o">-</span> <span class="n">temperature_normalization_minimum</span><span class="p">)</span> <span class="o">+</span> <span class="n">temperature_normalization_minimum</span>
+        <span class="n">ypred_train</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_train</span><span class="p">)</span>
+        <span class="n">ylab_train</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_train</span><span class="p">)</span>
+
+    <span class="c1"># train_loss_list.append(loss_train.item())</span>
+    <span class="n">train_loss_list</span> <span class="o">=</span> <span class="n">loss_train</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+    <span class="n">flatten</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">l</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">]</span>
+    <span class="n">ypred_train</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">ypred_train</span><span class="p">)</span>
+    <span class="n">ylab_train</span> <span class="o">=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">ylab_train</span><span class="p">)</span>
+
+    <span class="n">h</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">init_hidden</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"batch_size"</span><span class="p">],</span> <span class="n">config</span><span class="p">[</span><span class="s2">"device"</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">val_loader</span><span class="p">:</span>
+        <span class="n">input_val</span><span class="p">,</span> <span class="n">target_val</span> <span class="o">=</span> <span class="n">batch</span>
+        <span class="n">input_val</span> <span class="o">=</span> <span class="n">input_val</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"device"</span><span class="p">])</span>
+        <span class="n">target_val</span> <span class="o">=</span> <span class="n">target_val</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">"device"</span><span class="p">])</span>
+
+        <span class="n">h</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">each</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">h</span><span class="p">])</span>
+        <span class="n">output_val</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_val</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">h</span><span class="p">)</span>
+        <span class="c1"># target_val = target_val.unsqueeze(1)</span>
+
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+
+        <span class="c1"># obtain loss function</span>
+        <span class="n">loss_val</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output_val</span><span class="p">,</span> <span class="n">target_val</span><span class="o">.</span><span class="n">float</span><span class="p">())</span>
+
+        <span class="c1"># EVALUATE METRICS FOR TRAIN</span>
+        <span class="c1"># if config.device.type == 'cuda':</span>
+        <span class="n">output_val</span> <span class="o">=</span> <span class="n">output_val</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">'cpu'</span><span class="p">)</span>
+        <span class="n">output_val</span> <span class="o">=</span> <span class="n">output_val</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="c1"># RESCALE OUTPUT</span>
+        <span class="n">output_val</span> <span class="o">=</span> <span class="n">output_val</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># output_test = np.reshape(output_test, (-1, 1)).shape</span>
+        <span class="n">output_val</span> <span class="o">=</span> <span class="n">output_val</span> <span class="o">*</span> <span class="p">(</span><span class="n">temperature_normalization_maximum</span> <span class="o">-</span> <span class="n">temperature_normalization_minimum</span><span class="p">)</span> <span class="o">+</span> <span class="n">temperature_normalization_minimum</span>
+
+        <span class="c1"># labels = labels.item()</span>
+        <span class="c1"># if config.device.type == 'cuda':</span>
+        <span class="n">target_val</span> <span class="o">=</span> <span class="n">target_val</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">'cpu'</span><span class="p">)</span>
+        <span class="n">target_val</span> <span class="o">=</span> <span class="n">target_val</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="n">target_val</span> <span class="o">=</span> <span class="n">target_val</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># target_test = np.reshape(target_test, (-1, 1))</span>
+        <span class="c1"># RESCALE LABELS</span>
+        <span class="n">target_val</span> <span class="o">=</span> <span class="n">target_val</span> <span class="o">*</span> <span class="p">(</span><span class="n">temperature_normalization_maximum</span> <span class="o">-</span> <span class="n">temperature_normalization_minimum</span><span class="p">)</span> <span class="o">+</span> <span class="n">temperature_normalization_minimum</span>
+        <span class="n">ypred_val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_val</span><span class="p">)</span>
+        <span class="n">ylab_val</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_val</span><span class="p">)</span>
+
+    <span class="c1"># val_loss_list.append(loss_val.item())</span>
+    <span class="n">val_loss_list</span> <span class="o">=</span> <span class="n">loss_val</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+    <span class="c1"># if len(train_loss_list) &gt;= (config.epochs - 1):</span>
+    <span class="c1">#     train_loss_list = []</span>
+    <span class="c1"># if len(val_loss_list) &gt;= (config.epochs - 1):</span>
+    <span class="c1">#     val_loss_list = []</span>
+
+    <span class="k">return</span> <span class="n">train_loss_list</span><span class="p">,</span> <span class="n">val_loss_list</span><span class="p">,</span> <span class="n">ylab_train</span><span class="p">,</span> <span class="n">ypred_train</span><span class="p">,</span> <span class="n">ylab_val</span><span class="p">,</span> <span class="n">ypred_val</span>
+</pre></div>
+
+           </div>
+          </div>
+
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.random_streams &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+ 
+<script src="../../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.random_streams</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="false"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This documentation is built from the development branch, <code>master</code> (<code>/dev/</code>). It includes
+  changes listed under <a href="../../guides/releases.html">Unreleased</a> that are not yet in a PyPI release.
+  Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
+  release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.random_streams</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Versioned derivation of the simulator's random streams.</span>
+
+<span class="sd">CityLearn draws random values for unspecified device parameters, the state of charge of electric</span>
+<span class="sd">vehicles away from their charger, occupant set-point interactions and stochastic power outages.</span>
+<span class="sd">``random_stream_version`` selects how those streams are derived from ``random_seed``:</span>
+
+<span class="sd">``'v1'``</span>
+<span class="sd">    The derivation of CityLearn 3.6.0 and earlier, kept so that an existing seed reproduces</span>
+<span class="sd">    earlier results. Every device parameter is the first draw of a new ``RandomState``, so all</span>
+<span class="sd">    of them sit at the same quantile; the electric-vehicle drift seed is ``seed + episode``, so</span>
+<span class="sd">    seed ``s`` in episode 1 repeats seed ``s + 1`` in episode 0; every occupant draws</span>
+<span class="sd">    ``RandomState(seed + time_step)``, the same value in every building and episode; and</span>
+<span class="sd">    stochastic outages skip day 0 and the partial last day and floor their durations.</span>
+<span class="sd">``'v2'`` (default)</span>
+<span class="sd">    Each stream comes from :class:`numpy.random.SeedSequence` with the seed as entropy and the</span>
+<span class="sd">    purpose, entity and episode as its spawn key, so streams for different purposes, objects</span>
+<span class="sd">    and episodes are independent. Each object keeps one generator per stream.</span>
+
+<span class="sd">Agents follow the version of their environment. With ``'v1'``, :class:`~citylearn.agents.q_learning.TabularQLearning`</span>
+<span class="sd">draws its exploration decision from ``RandomState(seed + time_step)`` and</span>
+<span class="sd">:class:`~citylearn.agents.marlisa.MARLISA` shuffles its coordination order with the same seed, so</span>
+<span class="sd">seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``; with ``'v2'`` each agent</span>
+<span class="sd">keeps one generator per purpose and episode. :class:`~citylearn.end_use_load_profiles.neighborhood.Neighborhood`</span>
+<span class="sd">takes its own ``random_stream_version``: with ``'v1'`` partial-load simulation ``i`` of building</span>
+<span class="sd">``b`` is seeded with ``b + i``, which repeats simulation ``i - 1`` of building ``b + 1``; with ``'v2'``</span>
+<span class="sd">the seed is derived from the neighborhood seed, the building and the simulation index.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">RANDOM_STREAM_VERSIONS</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'v1'</span><span class="p">,</span> <span class="s1">'v2'</span><span class="p">)</span>
+<span class="n">DEFAULT_RANDOM_STREAM_VERSION</span> <span class="o">=</span> <span class="s1">'v2'</span>
+<span class="n">LEGACY_RANDOM_STREAM_VERSION</span> <span class="o">=</span> <span class="s1">'v1'</span>
+
+<span class="c1"># Stream purposes. A purpose is part of every spawn key, so two purposes never share a stream.</span>
+<span class="n">DEVICE_PARAMETERS</span> <span class="o">=</span> <span class="s1">'device_parameters'</span>
+<span class="n">EV_AWAY_SOC_DRIFT</span> <span class="o">=</span> <span class="s1">'ev_away_soc_drift'</span>
+<span class="n">EV_SUSPENDED_SOC_DRIFT</span> <span class="o">=</span> <span class="s1">'ev_suspended_soc_drift'</span>
+<span class="n">OCCUPANT_SETPOINT_INTERACTION</span> <span class="o">=</span> <span class="s1">'occupant_setpoint_interaction'</span>
+<span class="n">POWER_OUTAGE</span> <span class="o">=</span> <span class="s1">'power_outage'</span>
+<span class="n">AGENT_EXPLORATION</span> <span class="o">=</span> <span class="s1">'agent_exploration'</span>
+<span class="n">AGENT_COORDINATION_ORDER</span> <span class="o">=</span> <span class="s1">'agent_coordination_order'</span>
+<span class="n">PARTIAL_LOAD_SIMULATION</span> <span class="o">=</span> <span class="s1">'partial_load_simulation'</span>
+
+
+<div class="viewcode-block" id="parse_random_stream_version">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.parse_random_stream_version">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_random_stream_version</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'random_stream_version'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the canonical random-stream version for `value`; None gives the default."""</span>
+
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DEFAULT_RANDOM_STREAM_VERSION</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1"> must be one of </span><span class="si">{</span><span class="n">RANDOM_STREAM_VERSIONS</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
+    <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span> <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'v'</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">'v</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s1">'</span>
+
+    <span class="k">if</span> <span class="n">text</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RANDOM_STREAM_VERSIONS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1"> must be one of </span><span class="si">{</span><span class="n">RANDOM_STREAM_VERSIONS</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">text</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_canonical</span><span class="p">(</span><span class="n">part</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">part</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_canonical</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">part</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">part</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Random stream key parts must be str, int, float, None or sequences, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">part</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">.'</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="spawn_key">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.spawn_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spawn_key</span><span class="p">(</span><span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Fixed-width spawn key for a purpose and its parts.</span>
+
+<span class="sd">    The parts are serialised as JSON before hashing, so keys such as ``('a', 'bc')`` and</span>
+<span class="sd">    ``('ab', 'c')`` stay distinct. The result is eight 32-bit words of SHA-256.</span>
+<span class="sd">    """</span>
+
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">purpose</span><span class="p">),</span> <span class="o">*</span><span class="p">[</span><span class="n">_canonical</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">]],</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s1">','</span><span class="p">,</span> <span class="s1">':'</span><span class="p">))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf-8'</span><span class="p">)</span>
+    <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">digest</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">4</span><span class="p">],</span> <span class="s1">'big'</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="seed_sequence">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.seed_sequence">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">seed_sequence</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">""":class:`numpy.random.SeedSequence` for `seed`, `purpose` and the entity/episode `parts`."""</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span> <span class="o">!=</span> <span class="n">seed</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'random_seed must be a non-negative integer, got </span><span class="si">{</span><span class="n">seed</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">(</span><span class="n">entropy</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">),</span> <span class="n">spawn_key</span><span class="o">=</span><span class="n">spawn_key</span><span class="p">(</span><span class="n">purpose</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="generator">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.generator">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generator</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""New :class:`numpy.random.Generator` (PCG64) for `seed`, `purpose` and `parts`."""</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">PCG64</span><span class="p">(</span><span class="n">seed_sequence</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">purpose</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">)))</span></div>
+
+
+
+<div class="viewcode-block" id="stream_id">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.stream_id">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stream_id</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A 32-bit identifier of the stream, for metadata and comparisons; not a seed to draw from."""</span>
+
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed_sequence</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">purpose</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">)</span><span class="o">.</span><span class="n">generate_state</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="derived_seed">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.derived_seed">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">derived_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">purpose</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""32-bit integer seed for a consumer that only accepts an integer, derived like :func:`generator`.</span>
+
+<span class="sd">    Use it where the stream is created by code that takes a plain seed, such as a simulator that builds</span>
+<span class="sd">    its own ``RandomState``; otherwise prefer :func:`generator`.</span>
+<span class="sd">    """</span>
+
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed_sequence</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">purpose</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">)</span><span class="o">.</span><span class="n">generate_state</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="partial_load_simulation_seed">
+<a class="viewcode-back" href="../../api/citylearn.random_streams.html#citylearn.random_streams.partial_load_simulation_seed">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">partial_load_simulation_seed</span><span class="p">(</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">building_id</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">simulation_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">random_stream_version</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Seed of partial-load simulation `simulation_index` of building `building_id` in a generated neighborhood.</span>
+
+<span class="sd">    With ``random_stream_version='v1'`` it is ``int(building_id) + simulation_index``, as in CityLearn 3.6.0,</span>
+<span class="sd">    which ignores `seed` and repeats simulation ``i - 1`` of building ``b + 1`` in simulation ``i`` of building</span>
+<span class="sd">    ``b``. With ``'v2'`` it is derived from `seed`, the building and the simulation index.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">parse_random_stream_version</span><span class="p">(</span><span class="n">random_stream_version</span><span class="p">)</span> <span class="o">==</span> <span class="n">LEGACY_RANDOM_STREAM_VERSION</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">building_id</span><span class="p">)</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">simulation_index</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">derived_seed</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">PARTIAL_LOAD_SIMULATION</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">building_id</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">simulation_index</span><span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

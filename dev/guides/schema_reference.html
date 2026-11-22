@@ -1,0 +1,1562 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schema Reference &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Dataset Reference" href="dataset_reference.html" />
+    <link rel="prev" title="Dataset catalogue" href="dataset_catalogue.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Schema Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#general-rules">General Rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#top-level-keys">Top-Level Keys</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#calendar-and-dataset-metadata-keys">Calendar and dataset metadata keys</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#observations"><code class="docutils literal notranslate"><span class="pre">observations</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#actions"><code class="docutils literal notranslate"><span class="pre">actions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#observation-bundles"><code class="docutils literal notranslate"><span class="pre">observation_bundles</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#buildings"><code class="docutils literal notranslate"><span class="pre">buildings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#device-sections">Device Sections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pv">PV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#electrical-service">Electrical Service</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#available-grid-power">Available grid power</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#chargers">Chargers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ev-definitions">EV Definitions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deferrable-appliances">Deferrable Appliances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#escalators-flat-interface">Escalators (flat interface)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dynamic-topology">Dynamic Topology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demand-response">Demand Response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#robustness">Robustness</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#community-market">Community Market</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#important-combinations">Important Combinations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Schema Reference</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/schema_reference.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="false"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This documentation is built from the development branch, <code>master</code> (<code>/dev/</code>). It includes
+  changes listed under <a href="releases.html">Unreleased</a> that are not yet in a PyPI release.
+  Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
+  release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="schema-reference">
+<h1>Schema Reference<a class="headerlink" href="#schema-reference" title="Link to this heading"></a></h1>
+<p>This page documents the <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> contract. The schema is the source of truth for buildings, devices, EVs, deferrable appliances, escalators, interfaces, observation bundles, demand response, robustness, dynamic topology and local market configuration.</p>
+<section id="general-rules">
+<h2>General Rules<a class="headerlink" href="#general-rules" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Rule</p></th>
+<th class="head"><p>Contract</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Paths</p></td>
+<td><p>Relative paths are resolved from <code class="docutils literal notranslate"><span class="pre">root_directory</span></code>; absolute paths are allowed.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Tabular files</p></td>
+<td><p>CSV and Parquet are interchangeable when columns and units are equivalent.</p></td>
+</tr>
+<tr class="row-even"><td><p>Energy</p></td>
+<td><p>Dataset energy series are <code class="docutils literal notranslate"><span class="pre">kWh/step</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Power and limits</p></td>
+<td><p>Power ratings and limits are <code class="docutils literal notranslate"><span class="pre">kW</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Prices</p></td>
+<td><p>Prices are per <code class="docutils literal notranslate"><span class="pre">kWh</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Emissions</p></td>
+<td><p>Carbon intensity is <code class="docutils literal notranslate"><span class="pre">kgCO2/kWh</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Timesteps</p></td>
+<td><p>Windows, deadlines and topology events use global simulation timestep indices.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Legacy washing machines</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">washing_machines</span></code> and <code class="docutils literal notranslate"><span class="pre">washing_machine_energy_simulation</span></code> are not the official format. Use <code class="docutils literal notranslate"><span class="pre">deferrable_appliances</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="top-level-keys">
+<h2>Top-Level Keys<a class="headerlink" href="#top-level-keys" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head text-right"><p>Required</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">root_directory</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Base folder for dataset files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
+<td class="text-right"><p>int/null</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Global random seed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>How random streams are derived from <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>: <code class="docutils literal notranslate"><span class="pre">v2</span></code> (default, one independent <code class="docutils literal notranslate"><span class="pre">SeedSequence</span></code> stream per purpose, object and episode) or <code class="docutils literal notranslate"><span class="pre">v1</span></code> (CityLearn 3.6.0 and earlier). The <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> constructor argument overrides it. See the <a class="reference internal" href="migration.html#random-streams"><span class="std std-ref">migration guide</span></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">central_agent</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Single controller or one agent per building.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code></p></td>
+<td class="text-right"><p>number</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Physical duration of each step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>First global timestep.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulation_end_time_step</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Last global timestep.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code></p></td>
+<td class="text-right"><p>int/list/null</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Episode length or explicit episode windows.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_episode_split</span></code></p></td>
+<td class="text-right"><p>bool/null</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Sequential episode windows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_episode_split</span></code></p></td>
+<td class="text-right"><p>bool/null</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Random episode windows.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">reject</span></code>/<code class="docutils literal notranslate"><span class="pre">compress</span></code>/null</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">reject</span></code> (default) refuses a <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> that differs from the dataset step; <code class="docutils literal notranslate"><span class="pre">compress</span></code> keeps the 3.6.0 behaviour of reading one data row per control step and scaling energies.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">episode_split_boundary</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">shared</span></code>/<code class="docutils literal notranslate"><span class="pre">disjoint</span></code>/null</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>How consecutive episode splits meet. <code class="docutils literal notranslate"><span class="pre">shared</span></code> (default) starts each split on the terminal row of the previous one, so every interval is simulated; <code class="docutils literal notranslate"><span class="pre">disjoint</span></code> keeps the 3.6.0 splits, which skip the interval between two episodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function</span></code></p></td>
+<td class="text-right"><p>object/string</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Reward class and kwargs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observations</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Flat observation catalog and flags.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">actions</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Flat action catalog and flags.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">buildings</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Building definitions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">agent</span></code></p></td>
+<td class="text-right"><p>object/string</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>CLI agent configuration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicles_def</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>if EVs exist</p></td>
+<td><p>EV catalog.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interface</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">flat</span></code>/<code class="docutils literal notranslate"><span class="pre">entity</span></code></p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Environment I/O mode.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observation_bundles</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Additional entity observation bundles.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">topology_mode</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">static</span></code>/<code class="docutils literal notranslate"><span class="pre">dynamic</span></code></p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Enables topology events.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">topology_events</span></code></p></td>
+<td class="text-right"><p>list</p></td>
+<td class="text-right"><p>if dynamic</p></td>
+<td><p>Add/remove events.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Dataset-driven DSO/TSO flexibility requests and settlement.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">robustness</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Dataset-driven observation, forecast, action and asset availability perturbations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">community_market</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Local market and market KPIs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ev_departure_within_tolerance</span></code></p></td>
+<td class="text-right"><p>float</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Symmetric departure SOC accuracy tolerance, default <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_departure_service_tolerance</span></code></p></td>
+<td class="text-right"><p>float</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Lower departure SOC service tolerance for minimum acceptable EV service, default <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_mode</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">none</span></code>, <code class="docutils literal notranslate"><span class="pre">during</span></code> or <code class="docutils literal notranslate"><span class="pre">end</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">render_file_format</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">csv</span></code>/<code class="docutils literal notranslate"><span class="pre">parquet</span></code></p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Export format for render, KPI and BAU time-series files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_chunk_size</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Rows per export chunk; defaults to <code class="docutils literal notranslate"><span class="pre">50000</span></code> for parquet and <code class="docutils literal notranslate"><span class="pre">100000</span></code> for CSV.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Export KPIs at episode end.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start_date</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Base date for render/export.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">debug_timing</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Runtime timing logs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">check_observation_limits</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Validate observation bounds.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">physics_invariant_checks</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Runtime physical invariant checks.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">physics_version</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Physics version, <code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code> (default). <code class="docutils literal notranslate"><span class="pre">1</span></code> reproduces the physics of CityLearn 3.6.0; see the <a class="reference internal" href="migration.html#physics-version"><span class="std std-ref">migration guide</span></a>. The <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> argument of <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> takes precedence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics_log_interval</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Runtime metric log cadence.</p></td>
+</tr>
+</tbody>
+</table>
+<section id="calendar-and-dataset-metadata-keys">
+<h3>Calendar and dataset metadata keys<a class="headerlink" href="#calendar-and-dataset-metadata-keys" title="Link to this heading"></a></h3>
+<p>These keys describe the dataset clock and its provenance; the Portugal REC
+schemas (<code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code>) use several of them. The first five change how the dataset
+clock is read; the others are descriptive metadata that
+the simulator does not read, kept so a dataset can be traced to its source.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_axis.calendar_file</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Canonical calendar with the columns <code class="docutils literal notranslate"><span class="pre">time_step</span></code> and <code class="docutils literal notranslate"><span class="pre">timestamp_utc</span></code> (and optionally <code class="docutils literal notranslate"><span class="pre">timestamp_local</span></code>), one regular row per dataset row. It sets the dataset step and the timestamps of rendered and exported series, unless <code class="docutils literal notranslate"><span class="pre">start_date</span></code> is passed to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">timezone</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>IANA time zone of the calendar, e.g. <code class="docutils literal notranslate"><span class="pre">Europe/Lisbon</span></code>. Exported timestamps are converted from UTC to this zone; an unknown name raises an error at load time. Without a calendar it is only recorded.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dataset_seconds_per_time_step</span></code></p></td>
+<td class="text-right"><p>number</p></td>
+<td><p>Declared dataset step in seconds, for data whose calendar columns cannot give it. It must agree with the calendar.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dataset_contract_version</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Version of the dataset’s data contract. A value starting with <code class="docutils literal notranslate"><span class="pre">portugal-native</span></code> makes <code class="docutils literal notranslate"><span class="pre">shared/calendar.parquet</span></code> the calendar when <code class="docutils literal notranslate"><span class="pre">time_axis</span></code> is absent; otherwise it is metadata.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">terminal_observation_padding</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Allows the files to stop one row short of the window and repeats the last row as the terminal observation only, which is never simulated. Default <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dataset_id</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset_family</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Metadata: dataset identifiers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">experimental_design</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td><p>Metadata: the evaluation design the dataset was built for (factors, purpose, labels).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">native_compatibility</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td><p>Metadata: the engine commit and checks the dataset was validated with.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_derivation</span></code>, <code class="docutils literal notranslate"><span class="pre">_derived_from</span></code></p></td>
+<td class="text-right"><p>object/string</p></td>
+<td><p>Metadata: how a derived dataset was produced from its source.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="observations">
+<h2><code class="docutils literal notranslate"><span class="pre">observations</span></code><a class="headerlink" href="#observations" title="Link to this heading"></a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"hour"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"active"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"shared_in_central_agent"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head text-right"><p>Default</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Enables the flat observation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">shared_in_central_agent</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Includes a common observation once in central-agent vectors.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Observation names with prefix <code class="docutils literal notranslate"><span class="pre">electric_vehicle_</span></code> are expanded per charger. Names with prefix <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_</span></code> are expanded per deferrable appliance. Names with prefix <code class="docutils literal notranslate"><span class="pre">escalator_</span></code> are expanded per escalator.</p>
+</section>
+<section id="actions">
+<h2><code class="docutils literal notranslate"><span class="pre">actions</span></code><a class="headerlink" href="#actions" title="Link to this heading"></a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"electrical_storage"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"active"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head text-right"><p>Default</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Enables the action.</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_storage</span></code> expands to <code class="docutils literal notranslate"><span class="pre">electric_vehicle_storage_{charger_id}</span></code>. <code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code> expands to <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_{appliance_id}</span></code>. <code class="docutils literal notranslate"><span class="pre">escalator</span></code> expands to <code class="docutils literal notranslate"><span class="pre">escalator_{escalator_id}</span></code>.</p>
+</section>
+<section id="observation-bundles">
+<span id="observation_bundles"></span><h2><code class="docutils literal notranslate"><span class="pre">observation_bundles</span></code><a class="headerlink" href="#observation-bundles" title="Link to this heading"></a></h2>
+<p>Entity-only configuration:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"observation_bundles"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"entity_core_electrical"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"entity_community_operational"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"entity_forecasts_existing"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"entity_forecasts_derived"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"entity_demand_response"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"entity_robustness"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"entity_action_feedback"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"entity_temporal_derived"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Bundle</p></th>
+<th class="head text-right"><p>Default</p></th>
+<th class="head"><p>Adds</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
+<td class="text-right"><p>always on</p></td>
+<td><p>Essential charger, storage, phase and deferrable features.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Power, step energy, PV, BESS, EV, efficiency and building electrical metrics.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">entity_community_operational</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>District/community aggregates, headroom, counts and topology version.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">entity_forecasts_existing</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Forecasts already present in the dataset.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Compact point forecasts for price, load, PV and net demand.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Current district DR request fields, frozen baseline and previous-step delivery/shortfall.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">entity_robustness</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Active robustness state and previous-step corruption counters in the district table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">entity_temporal_derived</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Short lags, rolling means and calendar sin/cos features.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">entity_action_feedback</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Requested, limited and applied action feedback plus clipping-reason flags.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Load/PV sources for the derived bundle are configurable:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"derived_forecasts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"load_pv_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"daily_persistence"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"persistence_period_seconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">86400</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"cold_start"</span><span class="p">:</span><span class="w"> </span><span class="s2">"current_step"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"price_source"</span><span class="p">:</span><span class="w"> </span><span class="s2">"publication_aware_day_ahead_market_input"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"price_publication_time_local"</span><span class="p">:</span><span class="w"> </span><span class="s2">"13:00"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"price_unpublished_fallback"</span><span class="p">:</span><span class="w"> </span><span class="s2">"daily_persistence"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"price_horizon_steps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">24</span><span class="p">,</span><span class="w"> </span><span class="mi">96</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">actual_future</span></code> remains the backward-compatible load/PV default. Use
+<code class="docutils literal notranslate"><span class="pre">daily_persistence</span></code> for causal algorithm benchmarks that must not expose future
+load or PV truth.</p>
+</section>
+<section id="buildings">
+<h2><code class="docutils literal notranslate"><span class="pre">buildings</span></code><a class="headerlink" href="#buildings" title="Link to this heading"></a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"buildings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Building_1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"include"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.building.Building"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"energy_simulation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Building_1.csv"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"weather"</span><span class="p">:</span><span class="w"> </span><span class="s2">"weather.parquet"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"pricing"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pricing.csv"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"carbon_intensity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"carbon.csv"</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head text-right"><p>Required</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">include</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Include the building initially. In dynamic topology it may start inactive.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Building class path, e.g. <code class="docutils literal notranslate"><span class="pre">citylearn.building.Building</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_simulation</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Main load, calendar and PV input file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">weather</span></code></p></td>
+<td class="text-right"><p>string/object</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Weather file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pricing</span></code></p></td>
+<td class="text-right"><p>string/object</p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Pricing file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">carbon_intensity</span></code></p></td>
+<td class="text-right"><p>string/object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Carbon intensity file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">inactive_observations</span></code></p></td>
+<td class="text-right"><p>list</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Disable observations for this building.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">inactive_actions</span></code></p></td>
+<td class="text-right"><p>list</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Disable actions for this building.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cooling_device</span></code>, <code class="docutils literal notranslate"><span class="pre">heating_device</span></code>, <code class="docutils literal notranslate"><span class="pre">dhw_device</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>HVAC datasets</p></td>
+<td><p>End-use devices.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cooling_storage</span></code>, <code class="docutils literal notranslate"><span class="pre">heating_storage</span></code>, <code class="docutils literal notranslate"><span class="pre">dhw_storage</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>HVAC datasets</p></td>
+<td><p>Thermal storages.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Building BESS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pv</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Building PV.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">chargers</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>EV chargers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliances</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Normalized deferrable appliances.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charging_constraints</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Building/phase charging limits.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_service</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Import/export service limits, see <a class="reference internal" href="#electrical-service"><span class="std std-ref">Electrical Service</span></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">equity_group</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Group used by equity KPIs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dynamics</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Indoor temperature dynamics model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">occupant</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Occupant interaction model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">power_outage</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Outage configuration.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">set_point_hold_time_steps</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Hold time for occupant interaction.</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">power_outage</span></code> keys:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Simulate grid outages for this building.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stochastic_power_outage</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Draw outages from <code class="docutils literal notranslate"><span class="pre">stochastic_power_outage_model</span></code> instead of the <code class="docutils literal notranslate"><span class="pre">power_outage</span></code> column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stochastic_power_outage_model</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PowerOutage</span></code></p></td>
+<td><p>Outage model class and attributes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vehicle_to_building</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Let a connected EV discharge to the building during an outage (vehicle-to-building backup), up to the islanded load that PV and the battery leave uncovered. The entity charger features <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code> and <code class="docutils literal notranslate"><span class="pre">available_discharge_power_kw</span></code> report the vehicle’s discharge capacity during the outage. The discharge can take the vehicle below its required departure SOC.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="device-sections">
+<h2>Device Sections<a class="headerlink" href="#device-sections" title="Link to this heading"></a></h2>
+<p>Common shape:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"electrical_storage"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.energy_model.Battery"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"capacity"</span><span class="p">:</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"nominal_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">25.0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"depth_of_discharge"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"autosize"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"autosize_attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Python class path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attributes</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td><p>Constructor kwargs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">autosize</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Calls the building autosizer when available.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">autosize_attributes</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td><p>Autosizer kwargs.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Common classes:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Main attributes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.energy_model.HeatPump</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">nominal_power</span></code>, <code class="docutils literal notranslate"><span class="pre">efficiency</span></code>, <code class="docutils literal notranslate"><span class="pre">target_heating_temperature</span></code>, <code class="docutils literal notranslate"><span class="pre">target_cooling_temperature</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.energy_model.ElectricHeater</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">nominal_power</span></code>, <code class="docutils literal notranslate"><span class="pre">efficiency</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.energy_model.StorageTank</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">capacity</span></code>, <code class="docutils literal notranslate"><span class="pre">efficiency</span></code>, <code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code>, <code class="docutils literal notranslate"><span class="pre">initial_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">max_output_power</span></code>, <code class="docutils literal notranslate"><span class="pre">max_input_power</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.energy_model.Battery</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">capacity</span></code>, <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code>, <code class="docutils literal notranslate"><span class="pre">capacity_loss_coefficient</span></code>, <code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code>, <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> (charging), <code class="docutils literal notranslate"><span class="pre">discharge_power_curve</span></code> (discharging, physics version 2), <code class="docutils literal notranslate"><span class="pre">depth_of_discharge</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">citylearn.energy_model.PV</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">nominal_power</span></code>, <code class="docutils literal notranslate"><span class="pre">generation_mode</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="pv">
+<h2>PV<a class="headerlink" href="#pv" title="Link to this heading"></a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"pv"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.energy_model.PV"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"nominal_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">120.0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"generation_mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"absolute"</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">generation_mode</span></code></p></th>
+<th class="head"><p>Aliases</p></th>
+<th class="head"><p>Interprets <code class="docutils literal notranslate"><span class="pre">energy_simulation.solar_generation</span></code> as</p></th>
+<th class="head"><p>Formula</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">per_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">profile</span></code>, <code class="docutils literal notranslate"><span class="pre">w_per_kw</span></code></p></td>
+<td><p>Normalized profile per installed kW in <code class="docutils literal notranslate"><span class="pre">W/kW</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">generation_kwh</span> <span class="pre">=</span> <span class="pre">nominal_power</span> <span class="pre">*</span> <span class="pre">value</span> <span class="pre">/</span> <span class="pre">1000</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">absolute</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">absolute_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">energy</span></code></p></td>
+<td><p>Absolute generation already in <code class="docutils literal notranslate"><span class="pre">kWh/step</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">generation_kwh</span> <span class="pre">=</span> <span class="pre">value</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Use <code class="docutils literal notranslate"><span class="pre">absolute</span></code> for real measured generation or converter-generated energy series. Use <code class="docutils literal notranslate"><span class="pre">per_kw</span></code> for normalized PV profiles.</p>
+</section>
+<section id="electrical-service">
+<h2>Electrical Service<a class="headerlink" href="#electrical-service" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">buildings.&lt;name&gt;.electrical_service</span></code> sets the building’s grid connection limits. Limits are
+active power in kW; <code class="docutils literal notranslate"><span class="pre">null</span></code>, a missing key or <code class="docutils literal notranslate"><span class="pre">Infinity</span></code> means no limit.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"electrical_service"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"single_phase"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"total"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"import_kw"</span><span class="p">:</span><span class="w"> </span><span class="mf">17.25</span><span class="p">,</span><span class="w"> </span><span class="nt">"export_kw"</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"per_phase"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"L1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"import_kw"</span><span class="p">:</span><span class="w"> </span><span class="mf">17.25</span><span class="p">,</span><span class="w"> </span><span class="nt">"export_kw"</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span><span class="p">}}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"available_grid_power"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"filename"</span><span class="p">:</span><span class="w"> </span><span class="s2">"available_grid_power.csv"</span><span class="p">,</span><span class="w"> </span><span class="nt">"column"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Building_1"</span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"observations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"available_grid_power"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mode</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">single_phase</span></code>, <code class="docutils literal notranslate"><span class="pre">three_phase</span></code></p></td>
+<td><p>Service type. Single-phase services only have <code class="docutils literal notranslate"><span class="pre">L1</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">default_split</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">balanced</span></code>, <code class="docutils literal notranslate"><span class="pre">L1</span></code>, <code class="docutils literal notranslate"><span class="pre">L2</span></code>, <code class="docutils literal notranslate"><span class="pre">L3</span></code></p></td>
+<td><p>Phase split of load without a phase connection.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">limits.total.import_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">limits.total.export_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Static connection capacity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">limits.per_phase.&lt;L1/L2/L3&gt;.import_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">export_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Static per-phase limits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code></p></td>
+<td class="text-right"><p>path or object</p></td>
+<td><p>Optional per-step import availability series, see below.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observations.headroom</span></code>, <code class="docutils literal notranslate"><span class="pre">observations.headroom_export</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Expose import/export headroom observations. Default true.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">observations.violation</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Expose <code class="docutils literal notranslate"><span class="pre">charging_constraint_violation_kwh</span></code>. Default true.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observations.phase_encoding</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Expose one-hot charger phase assignment. Default false.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">observations.available_grid_power</span></code></p></td>
+<td class="text-right"><p>bool</p></td>
+<td><p>Expose the <code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code> observation when a series is set. Default true.</p></td>
+</tr>
+</tbody>
+</table>
+<section id="available-grid-power">
+<h3>Available grid power<a class="headerlink" href="#available-grid-power" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code> names a CSV or Parquet file with one row per time step, aligned with
+<code class="docutils literal notranslate"><span class="pre">energy_simulation</span></code>. Give it as a file name or as <code class="docutils literal notranslate"><span class="pre">{&quot;filename&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;column&quot;:</span> <span class="pre">...}</span></code>. Without
+<code class="docutils literal notranslate"><span class="pre">column</span></code>, the column named after the building is used, then a column named
+<code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code>, so one file can hold a column per building. Values are the grid power
+the building may import at that step, in kW (power, not energy per step).</p>
+<p>The import limit in force at a step is the smaller of <code class="docutils literal notranslate"><span class="pre">limits.total.import_kw</span></code> and the series
+value. A blank value applies the static limit only; it is an error when <code class="docutils literal notranslate"><span class="pre">import_kw</span></code> is not
+set. Values must be finite and non-negative. Use it for curtailment below the connection
+capacity, such as a distribution system operator dimming controllable devices (German
+§14a EnWG) or a capacity reduction during grid stress.</p>
+<p>The limit acts like the static one: EV chargers and the electrical storage are curtailed
+first, and load that cannot be curtailed is still served and counted as an electrical-service
+violation. A limit of 0 kW does not island the building; use <a class="reference internal" href="#buildings"><span class="std std-ref">power_outage</span></a>
+for a blackout. Per-phase limits stay static. The <code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code> observation reports
+the limit for the coming interval; the headroom observations describe the last executed
+interval, so they reflect the limit that was in force then.</p>
+</section>
+</section>
+<section id="chargers">
+<h2>Chargers<a class="headerlink" href="#chargers" title="Link to this heading"></a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"chargers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"AC001"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.electric_vehicle_charger.Charger"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"charger_simulation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"chargers/AC001.parquet"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"max_charging_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">7.4</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"min_charging_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.4</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"max_discharging_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"min_discharging_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"efficiency"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.95</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"phase_connection"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L1"</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charger_simulation</span></code></p></td>
+<td class="text-right"><p>path</p></td>
+<td><p>Charger schedule file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Charging upper limit.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min_charging_power</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Technical minimum charging power.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>V2G upper limit.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min_discharging_power</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Technical minimum V2G power.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">efficiency</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Fixed/default efficiency.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge_efficiency_curve</span></code></p></td>
+<td class="text-right"><p>ratio vs normalized power</p></td>
+<td><p>Optional charging efficiency curve.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">discharge_efficiency_curve</span></code></p></td>
+<td class="text-right"><p>ratio vs normalized power</p></td>
+<td><p>Optional discharging efficiency curve.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">L1</span></code>, <code class="docutils literal notranslate"><span class="pre">L2</span></code>, <code class="docutils literal notranslate"><span class="pre">L3</span></code>, <code class="docutils literal notranslate"><span class="pre">all_phases</span></code></p></td>
+<td><p>Electrical phase assignment.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ev-definitions">
+<h2>EV Definitions<a class="headerlink" href="#ev-definitions" title="Link to this heading"></a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"electric_vehicles_def"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"EV_1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.electric_vehicle.ElectricVehicle"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"include"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"battery"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">"capacity"</span><span class="p">:</span><span class="w"> </span><span class="mf">60.0</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"nominal_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"initial_soc"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.4</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">"depth_of_discharge"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td><p>EV class path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include</span></code></p></td>
+<td><p>Include the EV in the initial pool.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">battery.attributes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Battery</span></code> kwargs.</p></td>
+</tr>
+</tbody>
+</table>
+<p>EV battery standby loss is intentionally isolated from stationary storage defaults:</p>
+<ul class="simple">
+<li><p>Missing or <code class="docutils literal notranslate"><span class="pre">null</span></code> <code class="docutils literal notranslate"><span class="pre">battery.attributes.loss_coefficient</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code> for EVs.</p></li>
+<li><p>Explicit EV <code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code> values are interpreted as hourly loss ratios.</p></li>
+<li><p>All <code class="docutils literal notranslate"><span class="pre">StorageDevice</span></code> implementations, including stationary <code class="docutils literal notranslate"><span class="pre">Battery</span></code> and <code class="docutils literal notranslate"><span class="pre">StorageTank</span></code>, convert hourly <code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code> values to effective per-step loss with <code class="docutils literal notranslate"><span class="pre">loss_coefficient</span> <span class="pre">*</span> <span class="pre">seconds_per_time_step</span> <span class="pre">/</span> <span class="pre">3600</span></code>.</p></li>
+<li><p>Stationary storage default parameter ranges are unchanged.</p></li>
+</ul>
+</section>
+<section id="deferrable-appliances">
+<h2>Deferrable Appliances<a class="headerlink" href="#deferrable-appliances" title="Link to this heading"></a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"deferrable_appliances"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"washer_1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.energy_model.DeferrableAppliance"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"cycle_profiles_file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"deferrables/washer_profiles.csv"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"flexibility_schedule_file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"deferrables/washer_schedule.csv"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"trigger_threshold"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Required</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Appliance class. Default: <code class="docutils literal notranslate"><span class="pre">citylearn.energy_model.DeferrableAppliance</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cycle_profiles_file</span></code></p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Physical cycle profile catalog.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">flexibility_schedule_file</span></code></p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Flexibility requests/windows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.trigger_threshold</span></code></p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Start action threshold (default <code class="docutils literal notranslate"><span class="pre">0.5</span></code>; <code class="docutils literal notranslate"><span class="pre">action</span> <span class="pre">&gt;</span> <span class="pre">threshold</span></code> is interpreted as ON).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="escalators-flat-interface">
+<h2>Escalators (flat interface)<a class="headerlink" href="#escalators-flat-interface" title="Link to this heading"></a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"escalators"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"EscadaRolante_1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.energy_model.Escalator"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"simulation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"EscadaRolante_1.csv"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"standby_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.08</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"slow_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.42</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"normal_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.10</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"minimum_state_steps"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"service_threshold_passengers"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Required</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Escalator class. Default: <code class="docutils literal notranslate"><span class="pre">citylearn.energy_model.Escalator</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">simulation</span></code></p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>CSV with one row per simulation step.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.standby_power</span></code>, <code class="docutils literal notranslate"><span class="pre">slow_power</span></code>, <code class="docutils literal notranslate"><span class="pre">normal_power</span></code></p></td>
+<td class="text-right"><p>yes</p></td>
+<td><p>Non-negative kW powers; must be non-decreasing.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.minimum_state_steps</span></code></p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Minimum residence in a state; default <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.service_threshold_passengers</span></code></p></td>
+<td class="text-right"><p>no</p></td>
+<td><p>Passenger demand above which service is required; default <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The CSV requires <code class="docutils literal notranslate"><span class="pre">time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">passengers_from_trains_15min</span></code>,
+<code class="docutils literal notranslate"><span class="pre">background_pedestrians_15min</span></code>, <code class="docutils literal notranslate"><span class="pre">passengers_expected_15min</span></code>, <code class="docutils literal notranslate"><span class="pre">people_detected</span></code>,
+<code class="docutils literal notranslate"><span class="pre">arriving_trains</span></code>, <code class="docutils literal notranslate"><span class="pre">departing_trains</span></code>, <code class="docutils literal notranslate"><span class="pre">minutes_to_next_train</span></code> and <code class="docutils literal notranslate"><span class="pre">available</span></code>.
+<code class="docutils literal notranslate"><span class="pre">passengers_expected_15min</span></code> must equal the sum of the two passenger components.
+Escalator support is currently exposed through the flat interface.</p>
+</section>
+<section id="dynamic-topology">
+<h2>Dynamic Topology<a class="headerlink" href="#dynamic-topology" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">topology_mode=&quot;dynamic&quot;</span></code> requires <code class="docutils literal notranslate"><span class="pre">interface=&quot;entity&quot;</span></code>.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"topology_events"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"add_pv_b2_t100"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"time_step"</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"operation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"add_asset"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"target_member_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Building_2"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"target_asset_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pv"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"target_asset_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pv_1"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"source_member_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Building_1"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"source_asset_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pv_1"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"overrides"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"nominal_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">80.0</span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Type</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">id</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Event ID.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_step</span></code></p></td>
+<td class="text-right"><p>int</p></td>
+<td><p>Global timestep where the event is applied.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">operation</span></code></p></td>
+<td class="text-right"><p>enum</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">add_member</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_member</span></code>, <code class="docutils literal notranslate"><span class="pre">add_asset</span></code>, <code class="docutils literal notranslate"><span class="pre">remove_asset</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_member_id</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Target building.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_asset_type</span></code></p></td>
+<td class="text-right"><p>enum</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">charger</span></code>, <code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code>, <code class="docutils literal notranslate"><span class="pre">pv</span></code>, <code class="docutils literal notranslate"><span class="pre">electrical_storage</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_asset_id</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Target asset.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">source_member_id</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Source building for cloning.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">source_asset_id</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Source asset for cloning.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">overrides</span></code></p></td>
+<td class="text-right"><p>object</p></td>
+<td><p>Attributes applied after cloning.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Removing a deferrable appliance cancels pending/running cycles and clears future consumption. Removing PV creates a zero PV. Removing storage creates a zero BESS.</p>
+<p>A member’s time-series files (energy simulation, chargers, escalators) are either full-horizon, with one row per dataset time step, or member-window files, shorter than the dataset, whose first row is the time step of the member’s <code class="docutils literal notranslate"><span class="pre">add_member</span></code> event. A member-window file should cover the member’s active steps in the simulation window (otherwise its last row is repeated, with a warning), and a member that joins again after leaving needs full-horizon files. A member that joins mid-episode starts its battery and thermal storage at <code class="docutils literal notranslate"><span class="pre">initial_soc</span></code>.</p>
+</section>
+<section id="demand-response">
+<h2>Demand Response<a class="headerlink" href="#demand-response" title="Link to this heading"></a></h2>
+<p>Demand response v1 is dataset-driven and entity-only. The agent observes district-level flexibility requests and responds through the physical actions that already exist, such as storage, EVs and flexible loads.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"demand_response"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"requests_file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"demand_response_requests.csv"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"baseline_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rolling_pre_event_average"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"baseline_window_seconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">3600</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"allow_overlapping_requests"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Default</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enabled</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Enables demand-response request loading, observations, settlement and KPIs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">requests_file</span></code></p></td>
+<td class="text-right"><p>required when enabled</p></td>
+<td><p>CSV or Parquet file relative to <code class="docutils literal notranslate"><span class="pre">root_directory</span></code> or the schema folder.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">baseline_method</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">rolling_pre_event_average</span></code></p></td>
+<td><p>Baseline method. This is the only v1 method.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">baseline_window_seconds</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">3600</span></code></p></td>
+<td><p>Pre-event history window used to compute the frozen event baseline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">allow_overlapping_requests</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Overlapping requests are rejected in v1.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Request file columns:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head text-right"><p>Unit/domain</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">request_id</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Unique request ID. Exposed in observation <code class="docutils literal notranslate"><span class="pre">meta</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">issuer</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">dso</span></code>/<code class="docutils literal notranslate"><span class="pre">tso</span></code></p></td>
+<td><p>Entity that issued the request.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">direction</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">up</span></code>/<code class="docutils literal notranslate"><span class="pre">down</span></code></p></td>
+<td><p>Load perspective: <code class="docutils literal notranslate"><span class="pre">up</span></code> increases net load, <code class="docutils literal notranslate"><span class="pre">down</span></code> reduces net load.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">end_time_step</span></code></p></td>
+<td class="text-right"><p>global timestep</p></td>
+<td><p>Inclusive activation window.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_power_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Positive district target power.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">activation_price_eur_per_kwh</span></code></p></td>
+<td class="text-right"><p>currency/kWh</p></td>
+<td><p>Credited delivery price.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">shortfall_penalty_eur_per_kwh</span></code></p></td>
+<td class="text-right"><p>currency/kWh</p></td>
+<td><p>Penalty for shortfall.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tolerance_power_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Optional tolerance; defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>When active, enable the observation bundle:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"observation_bundles"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"entity_demand_response"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The numeric features are added to the <code class="docutils literal notranslate"><span class="pre">district</span></code> entity table. The active <code class="docutils literal notranslate"><span class="pre">request_id</span></code> is kept in <code class="docutils literal notranslate"><span class="pre">observations[&quot;meta&quot;][&quot;demand_response&quot;]</span></code>, not in the numeric matrix.</p>
+</section>
+<section id="robustness">
+<h2>Robustness<a class="headerlink" href="#robustness" title="Link to this heading"></a></h2>
+<p>Robustness v1 is dataset-driven and fully optional. Observation and forecast events corrupt only the payload returned to the agent. Rewards, physical KPIs and demand-response settlement continue to use the real simulator state. Action and asset-control events change the action effectively applied.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"robustness"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"events_file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"robustness_events.csv"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"random_seed"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"missing_replacement_value"</span><span class="p">:</span><span class="w"> </span><span class="mf">-9999.0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"modules"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"observations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"forecasts"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"assets"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Default</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enabled</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Enables robustness event loading and application.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">events_file</span></code></p></td>
+<td class="text-right"><p>required when enabled</p></td>
+<td><p>CSV or Parquet file relative to <code class="docutils literal notranslate"><span class="pre">root_directory</span></code> or the schema folder.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Deterministic seed for event noise.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">missing_replacement_value</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">-9999.0</span></code></p></td>
+<td><p>Default sentinel for missing observation/telemetry values.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">modules.*.enabled</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> when robustness is enabled</p></td>
+<td><p>Individually enables observations, forecasts, actions and assets.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Event file columns:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head text-right"><p>Unit/domain</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">event_id</span></code></p></td>
+<td class="text-right"><p>string</p></td>
+<td><p>Unique event ID exposed in metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">module</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">observation</span></code>/<code class="docutils literal notranslate"><span class="pre">forecast</span></code>/<code class="docutils literal notranslate"><span class="pre">action</span></code>/<code class="docutils literal notranslate"><span class="pre">asset</span></code></p></td>
+<td><p>Perturbation module.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_type</span></code></p></td>
+<td class="text-right"><p>entity type</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">district</span></code>, <code class="docutils literal notranslate"><span class="pre">building</span></code>, <code class="docutils literal notranslate"><span class="pre">storage</span></code>, <code class="docutils literal notranslate"><span class="pre">charger</span></code>, <code class="docutils literal notranslate"><span class="pre">ev</span></code>, <code class="docutils literal notranslate"><span class="pre">pv</span></code> or <code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_id</span></code></p></td>
+<td class="text-right"><p>id or <code class="docutils literal notranslate"><span class="pre">*</span></code></p></td>
+<td><p>Target entity name/id, or all compatible targets.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_feature</span></code></p></td>
+<td class="text-right"><p>feature/action</p></td>
+<td><p>For assets use <code class="docutils literal notranslate"><span class="pre">telemetry</span></code>, <code class="docutils literal notranslate"><span class="pre">control</span></code> or <code class="docutils literal notranslate"><span class="pre">both</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">end_time_step</span></code></p></td>
+<td class="text-right"><p>global timestep</p></td>
+<td><p>Inclusive activation window.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mode</span></code></p></td>
+<td class="text-right"><p>enum</p></td>
+<td><p>Observation/forecast: <code class="docutils literal notranslate"><span class="pre">missing</span></code>, <code class="docutils literal notranslate"><span class="pre">noise</span></code>, <code class="docutils literal notranslate"><span class="pre">bias</span></code>, <code class="docutils literal notranslate"><span class="pre">stuck</span></code>, <code class="docutils literal notranslate"><span class="pre">clip</span></code>; action: <code class="docutils literal notranslate"><span class="pre">dropout</span></code>, <code class="docutils literal notranslate"><span class="pre">noise</span></code>, <code class="docutils literal notranslate"><span class="pre">bias</span></code>, <code class="docutils literal notranslate"><span class="pre">stuck</span></code>, <code class="docutils literal notranslate"><span class="pre">delay</span></code>, <code class="docutils literal notranslate"><span class="pre">clip</span></code>; asset: <code class="docutils literal notranslate"><span class="pre">unavailable</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, <code class="docutils literal notranslate"><span class="pre">min_value</span></code>, <code class="docutils literal notranslate"><span class="pre">max_value</span></code></p></td>
+<td class="text-right"><p>numeric</p></td>
+<td><p>Optional mode parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">replacement_value</span></code></p></td>
+<td class="text-right"><p>numeric</p></td>
+<td><p>Optional missing/telemetry sentinel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">delay_steps</span></code></p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Optional action delay horizon.</p></td>
+</tr>
+</tbody>
+</table>
+<p>When using entity observations, enable diagnostics if needed:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"observation_bundles"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"entity_robustness"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Metadata is exposed under <code class="docutils literal notranslate"><span class="pre">observations[&quot;meta&quot;][&quot;robustness&quot;]</span></code>.</p>
+</section>
+<section id="community-market">
+<h2>Community Market<a class="headerlink" href="#community-market" title="Link to this heading"></a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"community_market"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"local_price_ratio_to_grid_import"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.8</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"import_member_weights"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"Building_1"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"Building_2"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.0</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"kpis"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"community_local_traded_enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"community_self_consumption_enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head text-right"><p>Default</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enabled</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Enables local settlement.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">local_price_ratio_to_grid_import</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.8</span></code></p></td>
+<td><p>Local price relative to grid import price.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">intra_community_sell_ratio</span></code></p></td>
+<td class="text-right"><p>alias</p></td>
+<td><p>Legacy name for the same ratio.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">settlement_version</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2</span></code> enables <code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code>; with <code class="docutils literal notranslate"><span class="pre">1</span></code>, residual grid exports earn nothing.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></td>
+<td><p>EUR/kWh paid for residual grid exports when <code class="docutils literal notranslate"><span class="pre">settlement_version</span></code> is <code class="docutils literal notranslate"><span class="pre">2</span></code>. Must be finite.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tariff_files</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
+<td><p>Per-member CSV tariffs, <code class="docutils literal notranslate"><span class="pre">{&quot;&lt;building&gt;&quot;:</span> <span class="pre">&quot;&lt;file</span> <span class="pre">inside</span> <span class="pre">the</span> <span class="pre">dataset&gt;&quot;}</span></code>. Each file has one row per global time step with <code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code>, <code class="docutils literal notranslate"><span class="pre">community_buy_price</span></code> and <code class="docutils literal notranslate"><span class="pre">community_sell_price</span></code> (EUR/kWh) and must cover the episode. A member with a file uses these prices instead of the ratio and <code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">local_trading_enabled</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code> keeps the market’s settlement and KPIs but trades no energy locally. Booleans or <code class="docutils literal notranslate"><span class="pre">&quot;true&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;false&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">import_member_weights</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
+<td><p>Weights for allocating local energy among importers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kpis.community_local_traded_enabled</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Enables local traded energy KPI.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kpis.community_self_consumption_enabled</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Enables local import-share KPI.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="important-combinations">
+<h2>Important Combinations<a class="headerlink" href="#important-combinations" title="Link to this heading"></a></h2>
+<p>The local price ratio is clipped to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>. The legacy
+<code class="docutils literal notranslate"><span class="pre">intra_community_sell_ratio</span></code> key is an alias. Local settlement values
+same-timestep member imports and exports; it does not change the physical
+device dispatch.</p>
+<p>Each side of a local trade is priced with its own member’s tariff. When members
+have different grid tariffs or <code class="docutils literal notranslate"><span class="pre">tariff_files</span></code>, importers can pay a different amount
+from what exporters receive for the same energy. The difference is reported as
+<code class="docutils literal notranslate"><span class="pre">community_operator_balance_total_eur</span></code> (positive when the market keeps money);
+it is zero with a single shared tariff.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Case</p></th>
+<th class="head"><p>Configuration</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Classic flat training</p></td>
+<td><p>Omit <code class="docutils literal notranslate"><span class="pre">interface</span></code> or use <code class="docutils literal notranslate"><span class="pre">interface=&quot;flat&quot;</span></code>; static topology.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Entity/GNN/Transformer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">interface=&quot;entity&quot;</span></code> plus desired observation bundles.</p></td>
+</tr>
+<tr class="row-even"><td><p>Dynamic topology</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">interface=&quot;entity&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">topology_mode=&quot;dynamic&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">topology_events</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Demand response</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">interface=&quot;entity&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">demand_response.enabled=true</span></code>, <code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code> bundle.</p></td>
+</tr>
+<tr class="row-even"><td><p>Robustness</p></td>
+<td><p>Any interface, <code class="docutils literal notranslate"><span class="pre">robustness.enabled=true</span></code>; add <code class="docutils literal notranslate"><span class="pre">entity_robustness</span></code> for entity diagnostics.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Real PV measurements</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pv.attributes.generation_mode=&quot;absolute&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>15-second data</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">seconds_per_time_step=15</span></code> and files already at that cadence.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Large datasets</p></td>
+<td><p>Prefer Parquet paths with the same columns.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dataset_catalogue.html" class="btn btn-neutral float-left" title="Dataset catalogue" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dataset_reference.html" class="btn btn-neutral float-right" title="Dataset Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

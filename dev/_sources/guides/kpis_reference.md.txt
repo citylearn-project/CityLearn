@@ -1,0 +1,1578 @@
+# KPIs Reference
+
+This page defines every KPI that CityLearn computes: what each family measures,
+its equations, how members are aggregated to the district and the portfolio, and
+when a value is undefined. Each equation is stated here and nowhere else. The
+[KPI catalogue](KPI_V2_TREE.md) lists every name with a one-line meaning and
+links back to these sections.
+
+| API | Status | Format | Recommended use |
+|---|---|---|---|
+| `evaluate()` | legacy | DataFrame with historical cost-function names | Compatibility with older workflows. |
+| `evaluate_v2()` | primary | DataFrame with structured KPI names | Scientific comparison, dashboards and exports. |
+
+Start with [How to read the scorecard](scorecard.md) for a compact selection
+and its interpretation; `env.scorecard()` returns the default rows. The `v2`
+method name denotes the KPI interface, not CityLearn version 2.
+
+To list the names available in your own run:
+
+```python
+kpis = env.evaluate_v2()
+names = kpis[["cost_function", "level"]].drop_duplicates().sort_values("cost_function")
+print(names.to_string(index=False))
+```
+
+Which rows appear follows the scenario's assets and services. A missing value
+is not a zero measurement; keep it missing when exporting or comparing.
+
+## Units
+
+| Unit suffix | Meaning |
+|---|---|
+| `eur` | Monetary cost, in the currency of the dataset's prices. |
+| `kwh` | Energy accumulated over the evaluated steps. |
+| `kgco2` | Emissions accumulated over the evaluated steps. |
+| `kw` | Power. |
+| `ratio` | Dimensionless ratio. |
+| `percent` | Percentage. |
+| `count` | Count of events, cycles, steps or members. |
+| `hours` | Hours; for thermal comfort, degree-hours (°C·h) where the section says so. |
+| `c` | Degrees Celsius. |
+
+## Levels
+
+`evaluate_v2()` returns one row per KPI and scope; the `level` column gives the
+scope and the name starts with it.
+
+| Level | Rows | Built from |
+|---|---|---|
+| `building` | One row per member (`name` is the building). | The member's own series. |
+| `district` | One row for the community (`name` is `District`). | The district series or the members' values, as each family section states. |
+| `portfolio` | One row for a `MultiCommunityEnv` portfolio (`community_id` is `__portfolio__`). | The district rows of the communities, by the rules below. |
+
+`MultiCommunityEnv.evaluate_v2()` returns each community's building and district
+rows, with their `community_id`, plus the portfolio rows. A portfolio name
+replaces the `district_` prefix with `portfolio_`. Each district KPI is
+aggregated by the first rule that applies:
+
+1. **Ratios of a control total to a reference total** (the `ratio_to_baseline`
+   and `ratio_to_business_as_usual` ratios of cost, emissions, grid import,
+   export and net exchange, and the `ratio_to_business_as_usual` ratios of solar
+   generation and export, EV charge and V2G export, battery charge, discharge and
+   throughput, and flexible-appliance cycles and energy) are the ratio of the
+   totals summed over the communities that report both, with the rules of
+   [Shared rules](kpis_reference.md#shared-rules).
+2. **Rates and means with an additive denominator** are pooled: the mean of the
+   community values weighted by that denominator, which equals the ratio of the
+   pooled numerator and denominator. The family sections name each pooled row
+   and its weight; the BAU deltas and ratios of pooled rows are taken between the
+   pooled values.
+3. **Names ending in `_kwh`, `_eur`, `_kgco2` or `_count`** are summed.
+4. **Other `_ratio` and `_percent` names** are means weighted by the community
+   `weight`.
+5. **Everything else** (`_kw`, `_c`, `_hours` and other point values) has no
+   portfolio row.
+
+A pooled rate keeps its portfolio row whatever its unit, so the pooled
+flexible-appliance start delay (`_hours`) has one. The
+[multi-community reference](multi_community_reference.md#kpi-aggregation) explains the
+portfolio itself.
+
+## Naming Contract
+
+```text
+level_family_subfamily_metric_variant_unit
+```
+
+| Part | Examples |
+|---|---|
+| `level` | `building`, `district`, `portfolio`. |
+| `family` | `cost`, `energy_grid`, `emissions`, `solar_self_consumption`, `battery`, `electrical_service_phase`, `ev`, `deferrable_appliance`, `escalator`, `comfort_resilience`, `thermal_service_audit`, `equity`, `equity_audit`, `demand_response`, `demand_response_audit`, `robustness`, `energy_provenance`. |
+| `subfamily` | `total`, `daily_average`, `ratio_to_baseline`, `ratio_to_business_as_usual`, `shape_quality`, `service`, `community_market`, `departure_audit`. |
+| `metric` | `import`, `export`, `charge`, `completed_cycles`. |
+| `variant` | `control`, `baseline`, `business_as_usual`, `delta`, `delta_to_business_as_usual`, `building_mean`, `signed_net`. |
+| `unit` | See [Units](kpis_reference.md#units). |
+
+The contract is followed by the core families. The audit, provenance and
+demand-response rows put their own qualifiers after the family token and do not
+always use the five parts, and the position of the variant varies between
+families; the [catalogue](KPI_V2_TREE.md) gives every exact name. One row has no
+level prefix: `topology_lifecycle_presence` (see
+[Dynamic topology](kpis_reference.md#dynamic-topology)).
+
+The [KPI catalogue](KPI_V2_TREE.md) groups the names into these families, each
+explained in its own section below:
+
+- [Cost](kpis_reference.md#cost): Electricity cost of each member and of the district over the evaluated episode; the rows appear in every run.
+- [Grid energy and load shape](kpis_reference.md#grid-energy-and-load-shape): Energy exchanged with the grid by each member and by the district, and the shape of the district load (peaks, ramping, load factor); the rows appear in every run, the shape rows at district level only.
+- [Emissions](kpis_reference.md#emissions): Carbon emissions of the electricity imported from the grid by each member and by the district; the rows appear in every run.
+- [Solar self-consumption](kpis_reference.md#solar-self-consumption): PV generation and how much of it is used inside each member or the district rather than exported or curtailed; the rows appear in every run and are zero or undefined without PV.
+- [Community market](kpis_reference.md#community-market): Local energy trading between the members of a community and its settlement. The rows appear in every run (zero, or undefined shares, when `community_market.enabled` is false), except `local_traded` and `import_share`, which need the market and their KPI switches.
+- [Batteries](kpis_reference.md#batteries): Activity and wear of the stationary batteries; the rows appear in every run, with zero energy and undefined cycles and fade for members without a battery.
+- [Electrical service and phases](kpis_reference.md#electrical-service-and-phases): Compliance with the declared total and per-phase power limits of the electrical service, and the balance and peaks of the phases; the values are zero or undefined unless the schema configures an electrical service.
+- [Electric vehicles](kpis_reference.md#electric-vehicles): Departure service, charging and V2G energy of electric vehicles at the members' chargers. Every member emits these rows; without chargers, counts and energies are 0 and rates are undefined.
+- [EV departure audit](kpis_reference.md#ev-departure-audit): Audited EV departure service, with an explicit population, a three-way feasibility status and the reason for each unknown case. Every member emits these rows.
+- [Flexible appliances](kpis_reference.md#flexible-appliances): Cycle service of deferrable (flexible) appliances from their cycle states and nominal cycle energies. Every member emits these rows; without appliances, counts and energies are 0 and rates are undefined.
+- [Flexible-appliance audit](kpis_reference.md#flexible-appliance-audit): Audited cycle service of flexible appliances from metered energy in executed intervals, with an explicit population and exclusive states. Every member emits these rows.
+- [Escalators](kpis_reference.md#escalators): Passenger service, operating-state changes and electricity use of escalators. Every member emits these rows; without escalators, totals are 0 and the service level is undefined.
+- [Comfort and resilience](kpis_reference.md#comfort-and-resilience): Legacy thermal-comfort and outage-resilience rows of each building, always emitted; the district value is the plain mean of the building values, and the canonical discomfort KPI is `district_thermal_service_audit_discomfort_ratio`.
+- [Thermal-service audit](kpis_reference.md#thermal-service-audit): Interval counts, hours, energy and ratios that audit thermal comfort and service energy of each building, always emitted; the district pools the counts, and `district_thermal_service_audit_discomfort_ratio` is the canonical discomfort KPI.
+- [Equity](kpis_reference.md#equity): Relative cost benefit of each building against the conventional baseline and its distribution over the district, always emitted; the canonical Gini KPI is `district_equity_audit_positive_benefit_gini_ratio`.
+- [Equity audit](kpis_reference.md#equity-audit): District equity rows with their member population, always emitted; `district_equity_audit_positive_benefit_gini_ratio` is the canonical Gini KPI.
+- [Demand response](kpis_reference.md#demand-response): Delivery against dataset demand-response requests, measured from a pre-event baseline, and its settlement; the rows appear when `demand_response.enabled` is true.
+- [Demand-response audit](kpis_reference.md#demand-response-audit): District demand-response totals, coverage and exclusions split by the declared request purpose (`all`, `service`, `stress`, `unspecified`); the rows appear when demand response is enabled, for all four purposes.
+- [Robustness](kpis_reference.md#robustness): Counters of the observation, forecast, action and asset perturbations applied by dataset robustness events; the rows appear when `robustness.enabled` is true.
+- [Energy provenance](kpis_reference.md#energy-provenance): Traces every kWh of electricity from its origin (own or neighbour PV, grid import, or storage inventory of unknown origin) to its destination (load, storage, mobility, export, losses and others), with the grid carbon it carries; rows appear whenever the environment keeps the provenance ledger (`energy_provenance=True`, the default).
+- [Dynamic topology](kpis_reference.md#dynamic-topology): Lifecycle bookkeeping for members of a dynamic topology; the row appears only with `topology_mode='dynamic'`.
+
+## Shared Rules
+
+### Energy series
+
+For the net electricity of a member or of the district at step `t`, `net_t`,
+positive when importing:
+
+```text
+import_kwh       = sum_t max(net_t, 0)
+export_kwh       = sum_t max(-net_t, 0)
+net_exchange_kwh = sum_t net_t
+```
+
+Sums run over the executed steps of the episode; the terminal observation is not
+a step. With dynamic topology a member counts only while it is active.
+
+### Control, baseline and business as usual
+
+| Variant | Meaning |
+|---|---|
+| `control` | The run being evaluated. |
+| `baseline` | The conventional counterfactual of the same run: the members without storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
+| `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). |
+| `delta` | `control - baseline`. |
+| `delta_to_business_as_usual` | `control - business_as_usual`. |
+
+```text
+ratio_to_baseline_x          = control_x / baseline_x
+ratio_to_business_as_usual_x = control_x / business_as_usual_x
+```
+
+District ratios divide district totals; a mean of building ratios is not a
+district ratio. Where a 3.6.0 value was a mean of building ratios, it is kept as
+the `building_mean` variant (see
+[Definitions changed after 3.6.0](kpis_reference.md#definitions-changed-after-360)).
+
+### Safe division and undefined values
+
+Every ratio uses safe division:
+
+- it is undefined (missing, `NaN`) when the control or the reference is missing
+  or not finite;
+- when the reference is within the numerical zero tolerance, it is `1.0` ("no
+  change") if the control is also effectively zero, and undefined otherwise;
+- **exception:** each `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio`
+  is undefined when its own two totals are zero, even when cycles were due. For
+  example, the missed-cycle ratio is undefined when neither run missed a cycle.
+
+Ratios stay lower-is-better when the reference total is negative. Net exchange
+and cost totals can be negative, for a net exporter or after community-market
+revenue; their ratios use
+
+```text
+ratio_x = control_x / reference_x                        if reference_x > 0
+ratio_x = 1 + (control_x - reference_x) / |reference_x|  if reference_x < 0
+```
+
+so 1 still means no change and a higher control total gives a higher ratio.
+Import, export and emission totals are never negative and use the plain ratio.
+
+An undefined value is never read as zero. Rates without events to rate (for
+example an EV success rate without departures) are undefined, not 0 or 1.
+
+### Daily averages
+
+```text
+daily_average_x = total_x / days
+```
+
+At building level, `days` is the length of the member's active window in days:
+the whole episode for a static community, the time the member was present with
+dynamic topology. At district level it is the length of the evaluated episode,
+`steps * seconds_per_time_step / 86400`.
+
+## Cost
+
+The electricity cost of each member and of the district over the evaluated episode. The rows appear in every run.
+
+```text
+cost_t   = max(net_t, 0) · price_t
+total    = Σ_t cost_t
+net_t    = net electricity of the member at step t, in kWh (import > 0, export < 0)
+price_t  = electricity price at step t
+```
+
+Without a community market only imports are charged: exported energy earns nothing, so the totals are never negative. With a community market, the controlled run and the conventional counterfactual are both settled with the scenario's market rules, and the totals can be negative. `control` uses the series of the controlled run, and `baseline` uses the conventional counterfactual series (by default without storage and, for dynamic building models, without partial-load control). `delta = control − baseline`.
+
+Ratios to the baseline and to the BAU use the signed ratio:
+
+```text
+ratio = control / reference                       if reference ≥ 0
+ratio = 1 + (control − reference) / |reference|   if reference < 0
+```
+
+So 1 means no change, and a higher control cost always gives a higher ratio. Daily averages divide a member's total by the member's active days, and the district total by the simulated days ([shared rules](kpis_reference.md#shared-rules)).
+
+**District.** The district cost is the sum of the members' costs: it is not the cost of the netted district import, unlike the district emissions. The district ratios divide the district totals.
+
+**Portfolio.** The totals and daily averages are summed over communities. The ratios are signed ratios of the summed control and reference totals, over the communities that report both.
+
+**Which KPI.** Use `cost_total_control_eur` with `cost_total_business_as_usual_eur` and its delta to compare controllers against the native BAU. Use the `baseline` rows only to compare against the conventional counterfactual, and do not mix the two references.
+
+**Known limits.**
+- Without a community market, exports are not credited, so a controller gets no value from exporting.
+- A missing cost total is reported as 0, not as undefined.
+
+## Grid energy and load shape
+
+The energy exchanged with the grid by each member and by the district, and the shape of the district load. The totals appear in every run at building and district level. The shape rows (`shape_quality`) appear at district level only.
+
+### Energy totals
+
+```text
+import       = Σ_t max(net_t, 0)
+export       = Σ_t max(−net_t, 0)
+net_exchange = Σ_t net_t
+```
+
+`net_t` is in kWh per step, and non-finite steps are skipped. A building uses its own net series. The district uses the district net series `N_t = Σ_b net_b,t`, so energy that one member exports and another imports in the same step does not appear in the district import or export. The district import is therefore smaller than or equal to the sum of the building imports.
+
+The ratios to the baseline and to the BAU divide control totals by reference totals. Net exchange uses the signed ratio (see [Cost](kpis_reference.md#cost)), and import and export use the plain ratio. The district ratios divide the district totals. Daily averages divide a member's total by the member's active days, and the district total by the simulated days ([shared rules](kpis_reference.md#shared-rules)).
+
+### Load shape
+
+Windows are consecutive blocks of `round(W / Δt)` steps from the first step of the episode: `W` = 24 h (daily), 730 h (monthly), or the whole episode (all-time). They are not aligned with calendar days or months, and the last window may be partial. Power is `p_t = N_t / Δh`, with `Δh` the step length in hours.
+
+```text
+peak      P = mean over windows w of max_{t∈w} p_t                 (signed net power, not clipped)
+ramping   R_total = Σ_{t≥1} max(p_t − p_{t−1}, 0)
+          R_avg   = R_total / (number of transitions with p_t and p_{t−1} both finite)
+penalty   L = mean over windows w of (1 − mean_{t∈w} x_t / max_{t∈w} x_t)
+          x_t = max(p_t, 0) (import),   or x_t = p_t for the _signed_net rows
+```
+
+- Non-finite steps are left out of each window. A peak window with no finite value is skipped.
+- A load-factor window whose maximum is ≤ 1e-6 has no penalty and is skipped. `L` is undefined when no window is defined. With `_signed_net`, a negative window mean gives a penalty above 1.
+- `R_avg` is undefined when there is no finite transition.
+- A net exporter can have a negative peak, so peak ratios can be negative or undefined.
+
+Two sets of rows use different series:
+
+- **Ratios to the baseline** (`*_to_baseline_ratio`, `*_to_baseline_signed_net_ratio`) compare the district series of the evaluation's `control_condition` and `baseline_condition`. `ramping_average_to_baseline_ratio` is `R_total(control) / R_total(baseline)`, the 3.6.0 definition; it equals the ratio of the averages only when both series have the same number of finite transitions.
+- **BAU rows** compare the district power of the controlled run (the default control series, whatever `control_condition` is; [#331](https://github.com/citylearn-project/CityLearn/issues/331)) with that of the native BAU run. Each metric publishes `_control` (the control value), `_business_as_usual` (the BAU value), `_delta_to_business_as_usual` (control − BAU) and `*_to_business_as_usual_ratio`; these rows exist when `evaluate_v2()` includes the BAU comparison. `ramping_total` has no ratio row.
+
+Note the word order of the signed-net names: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, but `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
+
+**Portfolio.** Energy totals and daily averages are summed over communities. Import, export and net-exchange ratios are ratios of the summed totals (signed for net exchange). The shape ratios and the `building_mean` ratios are means weighted by community `weight`. The shape rows in kW are not carried over.
+
+**Which KPI.**
+- Use the district ratio `ratio_to_baseline_import_total_ratio`. `*_building_mean_ratio` is the mean of the building ratios, kept only to compare with results up to 3.6.0.
+- Use the import-based load-factor penalty. The `_signed_net` rows keep the 3.6.0 definition.
+- Use `ramping_average`, which does not grow with the episode length. `ramping_total` keeps the 3.6.0 value.
+- Read import, export and net exchange together: net exchange alone can hide large imports and exports.
+
+**Known limits.**
+- The BAU shape rows ignore `control_condition`; the ratios to the baseline honour it.
+- `ramping_average_to_baseline_ratio` is a ratio of total ramps, despite its name.
+- No monthly peak is computed.
+- The shape windows are counted from the episode start, not from midnight or the start of a month.
+
+## Emissions
+
+The carbon emissions of the electricity imported from the grid. The rows appear in every run.
+
+A building's emissions are those of its own import:
+
+```text
+E_b = Σ_t max(0, net_b,t · CI_b,t)
+CI_b,t = carbon intensity of member b at step t, in kgCO2/kWh
+```
+
+The district emissions are those of the netted district import, so energy that one member exports and another imports in the same step carries no grid carbon. At each step, with `i_b = max(net_b, 0)` the import of member b, `D = max(Σ_b net_b, 0)` the district import, and importers the members with `i_b > 1e-6`:
+
+```text
+e_t = 0                         if no member imports
+e_t = D · CI                    if all importers have the same carbon intensity CI
+e_t = Σ_b (i_b − l_b) · CI_b    otherwise
+l_b = share of the locally traded energy min(Σ_b i_b, Σ_b max(−net_b, 0)) allocated to importer b,
+      in proportion to the member import weights (1 by default), capped at i_b and reallocated until exhausted
+E_district = Σ_t e_t
+```
+
+A non-finite net value or carbon intensity counts as zero. The control total equals `energy_provenance_external_purchase_emissions_kgco2`, except when a community market is configured with local trading off (#327).
+
+Because of the netting, the district total is smaller than or equal to the sum of the building totals. The 3.6.0 district definition, the sum of the members' own emissions, is kept as `emissions_total_{control,baseline,business_as_usual}_member_sum_kgco2`.
+
+Ratios use the plain ratio (emissions are never negative). The district ratio to the baseline divides the netted district totals. `emissions_ratio_to_baseline_total_building_mean_ratio` keeps the 3.6.0 value, the unweighted mean of the building ratios. Daily averages divide a member's total by the member's active days, and the district total by the simulated days ([shared rules](kpis_reference.md#shared-rules)).
+
+**Portfolio.** Totals, `member_sum` totals and daily averages are summed. Ratios to the baseline and to the BAU are ratios of the summed totals. The `building_mean` ratio is a mean weighted by community `weight`.
+
+**Which KPI.** Use the netted district totals, `emissions_total_control_kgco2` and its references. Use the `member_sum` and `building_mean` rows only to compare with results up to 3.6.0. Do not add building emissions to obtain a district value.
+
+**Known limits.**
+- A building's baseline emissions are set to 0 when the carbon intensity sums to 0 over its window; the control value is not.
+- The equality with the provenance ledger fails when a community market is configured with local trading off (#327).
+
+## Solar self-consumption
+
+The PV generation and how much of it is used inside each member or the district rather than exported or curtailed. The rows appear in every run; without PV, the energies are 0 and the ratio is undefined. They always describe the controlled run: the evaluation conditions do not apply.
+
+```text
+g_t = max(−solar_t, 0)     available PV generation at step t (solar_t is negative)
+c_t = PV curtailment at step t: max(g_t − served load_t, 0) during an islanded power outage, otherwise 0
+G = Σ_t g_t,  C = Σ_t c_t
+
+building:  E = Σ_t min(g_t, max(−net_t, 0))
+district:  G_t = Σ_b g_b,t,  C_t = Σ_b c_b,t,  N_t = Σ_b net_b,t
+           E = Σ_t min(max(G_t − C_t, 0), max(−N_t, 0))
+
+self-consumption = (G − E − C) / G      undefined when G ≤ 0
+```
+
+The building export is the export the member's PV can back. The district export is the PV-backed export that leaves the district after members share energy within the step, so the district self-consumption includes PV used by other members. The district sums each member over its active steps. Daily averages divide a member's total by the member's active days, and the district total by the simulated days ([shared rules](kpis_reference.md#shared-rules)). Curtailment has no daily-average or BAU row.
+
+**Portfolio.** Generation, export and curtailment are summed. Self-consumption, control and BAU, is the mean of the community values weighted by their generation, which equals `(ΣG − ΣE − ΣC) / ΣG`. Its delta and ratio to the BAU are taken between these pooled values. The generation and export ratios to the BAU are ratios of the summed totals.
+
+**Which KPI.** Use the district self-consumption ratio for a community result. Do not average building ratios: they ignore energy shared between members. Read it with total generation and grid import.
+
+**Known limits.**
+- Curtailment is recorded only during islanded power outages; PV that is not curtailed otherwise counts as generation.
+
+## Community market
+
+The community market settles, at each executed step, the energy that members exchange with one another before the rest goes to or comes from the grid. Settlement runs only when `community_market.enabled` is true. The building and district rows are still emitted in every run: without the market, the energy and cost rows are 0 and the shares are undefined. Two district rows are conditional:
+- `local_traded` needs the market and `community_market.kpis.community_local_traded_enabled`;
+- `import_share` needs the market and `community_market.kpis.community_self_consumption_enabled`.
+
+Both switches default to true.
+
+Settlement at step t, over the members active at that step:
+
+```text
+n_i      = net electricity consumption of member i in the controlled run (kWh; import > 0)
+imp_i    = max(n_i, 0)          exp_i = max(-n_i, 0)
+traded   = min(sum_i imp_i, sum_i exp_i)      (0 when community_market.local_trading_enabled is false)
+li_i     = local import of i: traded shared over the importers in proportion to
+           community_market.import_member_weights (default 1; equal shares if all weights are 0),
+           never above imp_i, redistributed until traded is allocated
+le_i     = local export of i = exp_i * traded / sum_j exp_j
+gi_i     = max(imp_i - li_i, 0)   grid import after local
+ge_i     = max(exp_i - le_i, 0)   grid export after local
+```
+
+The district sums of `li_i` and `le_i` both equal `traded`.
+
+Prices of member i at step t:
+- `p_imp` is the member's grid import price.
+- `p_exp`, `p_buy` and `p_sell` come from the member's `tariff_files` series when one is given.
+- Otherwise, `p_exp` is `community_market.grid_export_price` when `settlement_version` is 2, and 0 otherwise.
+- Otherwise, `p_buy = p_sell = r * p_imp`, where r is `community_market.local_price_ratio_to_grid_import` (legacy key `intra_community_sell_ratio`), clipped to [0, 1] (default 0.8).
+
+```text
+settled_i        = gi_i*p_imp + li_i*p_buy - le_i*p_sell - ge_i*p_exp
+counterfactual_i = imp_i*p_imp - exp_i*p_exp
+savings_i        = counterfactual_i - settled_i
+operator_i       = li_i*p_buy - le_i*p_sell
+```
+
+All the energy and cost totals are sums over executed steps. The settled cost also replaces the member's cost in the controlled run. The counterfactual is the grid-only cost of the same controlled flows. It is not the `baseline` evaluation condition: that one is a separate counterfactual, whose cost the cost family also settles with the market rules.
+
+Operator balance, district only (#239):
+
+```text
+operator_balance = sum_t sum_i operator_i
+sum_i settled_i  = sum_i (gi_i*p_imp - ge_i*p_exp) + operator_balance
+```
+
+The operator balance is positive when the market keeps money. It is zero when every member has the same local price at each step. It is nonzero when members have different grid import prices or tariff series, because each side of a local trade is then priced at its own member's price.
+
+Shares:
+
+```text
+import_share          = sum li / (sum li + sum gi)        undefined if the denominator <= 1e-6
+local_share_of_demand = sum li / (sum li + sum gi)        undefined if the denominator <= 0
+local_share_of_export = sum le / (sum le + sum ge)        undefined if the denominator <= 0
+```
+
+The sums run over the executed steps, and over the members for the district value. The denominator of the demand share is the members' gross import (the sum of positive member nets), not their load.
+
+District and portfolio:
+- District energy and cost totals are sums over the members that took part in the episode, including members that later left. District shares are ratios of these totals.
+- Daily averages follow the [shared rules](kpis_reference.md#shared-rules): building rows divide by the member's active days, district rows by the simulated days.
+- Portfolio: energy and cost rows, including their daily averages, are summed over communities. The communities share the step length and the episode length, so the sum of daily averages equals the pooled total per day.
+- Portfolio shares are pooled (#312), which gives the share of the summed totals:
+  - `import_share` and `local_share_of_demand` are weighted by local import plus grid import after local;
+  - `local_share_of_export` by local export plus grid export after local.
+
+Which KPI to use:
+- For the share of demand covered locally, use `district_solar_self_consumption_community_market_import_share_ratio`.
+- `local_share_of_demand_ratio` is a deprecated alias with the same formula, kept for compatibility. It differs from `import_share` in two ways: it is emitted in every run, and it is undefined only for a zero denominator, not one at or below 1e-6. At building level it is the only demand share, because `import_share` is not emitted for buildings.
+- `local_traded` repeats the district local import.
+- None of these shares is the solar self-consumption ratio of the `solar_self_consumption` family.
+
+Known limits:
+- The rows exist when the market is disabled: zeros are not a measurement of local trading.
+- The name `local_share_of_demand` says demand, but its denominator is gross member import.
+- Shares and the operator balance have no business-as-usual variant.
+
+## Batteries
+
+The activity and wear of the stationary batteries; electric-vehicle batteries are not included. The rows appear in every run. Members without a battery have zero energy and undefined cycles and fade.
+
+```text
+charge     = Σ_t charge_t        energy entering the battery terminals, in kWh
+discharge  = Σ_t discharge_t     energy leaving the battery terminals, in kWh
+T          = charge + discharge  (throughput)
+EFC        = T / (2 · capacity)              undefined when capacity ≤ 0
+fade       = clip((capacity − capacity_deg) / capacity, 0, 1)    undefined when capacity ≤ 0
+capacity      = nominal capacity, summed over the member's batteries with capacity > 0
+capacity_deg  = degraded capacity at the time of evaluation
+```
+
+**District.** The energies are sums over members. Cycles and fade are pooled over capacity:
+
+```text
+EFC_district  = Σ_b T_b / (2 · Σ_b capacity_b)
+fade_district = Σ_b max(capacity_b − capacity_deg_b, 0) / Σ_b capacity_b
+```
+
+**Portfolio.** Charge, discharge and throughput are summed, and their ratios to the BAU are ratios of the summed totals. Equivalent full cycles are total throughput divided by twice the total nominal battery capacity, independently for the control and BAU runs. The result is undefined when the total nominal capacity is zero. The BAU delta and ratio compare these two portfolio values. Capacity fade and its ratio to the BAU are means weighted by community `weight`.
+
+**Which KPI.** Use throughput for energy moved and equivalent full cycles for battery activity relative to nominal capacity. Report battery activity alongside cost and service.
+
+**Known limits.**
+- The degraded capacity is read at evaluation time, not at the end of a member's active window.
+
+## Electrical service and phases
+
+Compliance with the declared total and per-phase power limits of the electrical service, and the balance and peaks of the phases. Unless the schema configures an electrical service, the energies and counts are 0, the imbalance is undefined and the building has no phase-peak rows.
+
+```text
+Δh = step length in hours
+P_t = applied power on the checked quantity (total, or one phase), in kW
+import excess_t = max(P_t − limit_import, 0)
+export excess_t = max(−P_t − limit_export, 0)
+excess ≤ 1e-5 kW is set to 0
+v_t = sum of the excesses over all declared limits (total import, total export, each phase's import and export)
+
+violation energy = Σ_t Δh · v_t
+violation count  = number of steps with Δh · v_t > 1e-9 kWh
+```
+
+The total import limit follows the grid-availability series when one is configured; a step without a value has no import limit. Requested pressure `r_t` is the energy by which the controller's request, before it is projected onto the limits, would have exceeded them:
+
+```text
+requested pressure energy = Σ_t max(r_t, 0)
+requested pressure count  = number of steps with r_t > 1e-9 kWh
+```
+
+Phase imbalance applies to three-phase buildings with L1, L2 and L3 power histories:
+
+```text
+u_t = (max_ph |P_ph,t| − min_ph |P_ph,t|) / mean_ph |P_ph,t|      ph ∈ {L1, L2, L3}
+u_t = 0 when mean_ph |P_ph,t| ≤ 1e-9 kW
+imbalance_building = mean of u_t over the steps of the member's window
+imbalance_district = Σ_b Σ_t u_b,t / Σ_b n_b       n_b = steps counted for building b
+```
+
+So the district value is the mean over all building-steps of the three-phase buildings, not the mean of the building values. It is undefined when no building is three-phase.
+
+The phase peaks are `max_t max(P_ph,t, 0)` (import) and `max_t max(−P_ph,t, 0)` (export), and 0 if the power never has that sign. A building has a row for each phase in its history. The district takes the peak of the per-phase power summed over its members, for each phase that at least one member has.
+
+**District.** Energies and counts are sums over buildings; a count is a number of building-steps.
+
+**Portfolio.** Energies and counts are summed. The imbalance is a mean weighted by community `weight`. The phase peaks in kW are not carried over.
+
+**Which KPI.** Use the violation energy to judge whether applied power respected the limits. Requested pressure measures how often and how far the controller asked for more than the limits allow; it is not a violation.
+
+**Known limits.**
+- Imbalance is defined only for three-phase buildings.
+
+## Electric vehicles
+
+These rows measure the state of charge (SOC) EVs have when they leave, and the energy the chargers exchange with them. Every member emits the rows. A member without chargers reports 0 for counts and energies, and undefined rates. All values cover the member's active window. Units, naming and the BAU variants follow the [shared rules](kpis_reference.md#shared-rules).
+
+### Departures
+
+A departure is recorded at step `t` when an EV is connected at `t` and any of the following holds:
+- at `t + 1` the charger is free;
+- the session id or the EV id changes;
+- the schedule has no session ids and the countdown to departure resets: it is at most 1 at `t` and increases at `t + 1`;
+- `t` is the last step and the countdown is in [0, 1].
+
+The target SOC is read at `t`. A target in (1, 100] is taken as a percentage and divided by 100. A target outside [0, 1] after that, or a missing one, is invalid.
+
+The `ev_events` and `ev_performance` rows count a departure only when all of these hold:
+- an EV with a battery is connected;
+- the target is valid;
+- the battery SOC at `t` is finite.
+
+`ev_events_departure_count` is the number of such departures. The other rows use these symbols:
+
+```text
+s      = battery SOC at the departure step (fraction 0-1)
+s*     = target SOC
+tol_s  = ev_departure_service_tolerance   (default 0.05, >= 0)
+tol_w  = ev_departure_within_tolerance    (default 0.05, >= 0)
+eps    = 1e-6
+
+met              : s* - s <= eps
+min_acceptable   : s + tol_s + eps >= s*
+within_tolerance : |s - s*| <= tol_w + eps
+
+deficit   = max(s* - s, 0)
+shortfall = max(s* - tol_s - s, 0)
+surplus   = max(s - s*, 0)
+abs_error = |s - s*|
+```
+
+- **Rates:** `ev_performance_departure_{success,min_acceptable,within_tolerance}_ratio` is the count meeting the condition divided by `ev_events_departure_count`.
+- **Means:** the `*_mean_ratio` rows are the means of deficit, shortfall, surplus and absolute error over the same departures, as SOC fractions.
+- **Undefined values:** both rates and means are undefined without departures.
+
+The counts are ordered: met ≤ min_acceptable ≤ departures, and within_tolerance ≤ departures. Met and within_tolerance are not ordered relative to each other: an EV charged above the band is met but not within tolerance.
+
+### Legacy feasibility
+
+The `ev_events_departure_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count` rows say whether each threshold could be reached. A threshold is feasible when an isolated replay reaches it. The thresholds are:
+
+```text
+threshold_target         = s*
+threshold_min_acceptable = max(s* - tol_s, 0)
+threshold_within         = max(s* - tol_w, 0)
+feasible                 : s_replay + eps >= threshold
+```
+
+The replay works as follows:
+- **Start.** It starts from the EV's arrival SOC at the beginning of the connected session. That SOC is the dataset value, or else the simulated SOC at the session start.
+- **Charging.** It charges at the charger's maximum power at every connected step, through the charger efficiency and a copy of the battery model.
+- **Power limits.** When the building enforces charging constraints, the power is capped by the import headroom of the building and of the charger's phase, and it is zero at power-outage steps. The charger's minimum-power deadband always applies.
+- **Permissive cases.** A threshold of 0 counts as feasible. So does a departure whose battery capacity, charger power, step length or arrival SOC is missing or invalid.
+- **Identity.** As a result, feasible + infeasible = `ev_events_departure_count` for every threshold.
+
+The `ev_performance_*_feasible_ratio` rows divide the departures that met the threshold among the feasible ones by the feasible count. They are undefined when the feasible count is 0.
+
+### Tolerance row
+
+`ev_performance_departure_tolerance_ratio` is a configuration echo. It reports the `ev_departure_service_tolerance` setting, the same value at every building and district, whatever the simulation did. It is not a measurement. The `ev_departure_within_tolerance` setting has no row. Both settings are also in the environment metadata.
+
+### Charge and V2G totals
+
+The totals are gross energies on the AC side of the charger, summed over chargers and steps:
+
+```text
+ac_t = battery energy change at t / eta_c   when charging
+ac_t = battery energy change at t * eta_c   when discharging   (negative)
+
+ev_total_charge_kwh     = sum_t max(ac_t, 0)
+ev_total_v2g_export_kwh = sum_t max(-ac_t, 0)
+```
+
+`eta_c` is the charger efficiency.
+- **Gross:** charge and discharge within one step are accumulated separately and never netted.
+- **Losses:** the charge total includes the charger losses.
+- **Not grid export:** the V2G total is the energy the EVs deliver through the charger, wherever it is used. It is not grid export: a member can use V2G energy itself, and only the member's net exchange shows what crosses the grid boundary.
+- **Fallback:** a charger without gross records uses the positive and negative parts of its electricity consumption instead.
+
+### Energy accounting
+
+```text
+connected_soc_gain_kwh = sum over counted departures of max(s - s_arrival, 0) * C
+shortfall_kwh (member) = max(connected_soc_gain_kwh - ev_total_charge_kwh, 0)
+```
+
+- **Inputs:** `s_arrival` is the arrival SOC used by the legacy replay, and `C` is the nominal battery capacity, not the degraded capacity.
+- **Meaning:** the shortfall flags SOC gain that metered charging does not explain.
+- **Coverage:** the charge total covers every step in the window, including sessions with no counted departure, so the check is one-sided.
+
+### District and portfolio
+
+**District:**
+- counts, energies and the SOC gain are sums over members;
+- rates and means are recomputed from the summed numerators and denominators;
+- the shortfall is the sum of the member shortfalls, each already clipped at 0, not the clip of the district totals;
+- the tolerance row is the configured value.
+
+**Portfolio:**
+- counts and energies are summed;
+- the rates and means are pooled: weighted by `ev_events_departure_count`, or by the matching `*_feasible_count` for the feasible rates;
+- the ratios to the BAU are ratios of the summed totals;
+- the tolerance row is the mean of the communities' settings weighted by community `weight`.
+
+### Which KPI to use
+
+To compare controllers on departure service, use the [EV departure audit](kpis_reference.md#ev-departure-audit) ratios, which the default scorecard reports:
+- `ev_departure_audit_min_acceptable_service_feasible_ratio` for service;
+- `ev_departure_audit_within_tolerance_service_feasible_ratio` for target accuracy.
+
+The legacy feasible rates count departures with missing data as feasible, and they do not report how many departures could be judged. Keep the `ev_performance` rows for continuity with earlier results.
+
+`ev_performance_departure_min_acceptable_ratio` and `ev_departure_audit_min_acceptable_service_observed_ratio` are equal in a static topology when every departure SOC lies in [0, 1].
+
+### Known limits
+
+- Because the BAU never uses V2G, `ev_ratio_to_business_as_usual_v2g_export_total_ratio` is undefined whenever the controller discharges an EV.
+- Under dynamic topology, the `ev_events` rows also count departures at historical chargers that are inactive at that step, which the audit skips.
+- The legacy feasibility replay applies building and phase limits only when the building enforces charging constraints.
+
+## EV departure audit
+
+The audit reports departure service with an explicit population, and it separates feasibility that could not be judged from feasibility that failed. Every member emits the rows. A member without departures reports 0 counts and undefined ratios. It uses the departure detection, target normalisation, tolerances and met tests of [Electric vehicles](kpis_reference.md#electric-vehicles), applied to three thresholds:
+
+```text
+target           : tolerance 0
+min_acceptable   : tolerance tol_s
+within_tolerance : tolerance tol_w   (met test is symmetric: |s - s*| <= tol_w + eps)
+```
+
+### Population
+
+- **Departures.** `ev_departure_audit_departures_count` counts every detected departure, whether or not its EV, battery, target or SOC is known. Under dynamic topology, a departure at a charger that is not active at that step is skipped.
+- **Observed service.** A departure's service is observed when its target is valid and its departure SOC is finite and in [0, 1]. Otherwise it is unknown:
+
+```text
+service_observed_count + service_unknown_count = departures_count
+service_coverage_ratio = service_observed_count / departures_count
+```
+
+### Feasibility
+
+The audit gives each threshold a status of feasible, infeasible or unknown, so feasible + infeasible + unknown = departures for each threshold.
+
+**Unknown reasons.** A departure is unknown when the first failing prerequisite, in this order, applies:
+1. missing_target;
+2. missing_ev;
+3. missing_battery;
+4. invalid_capacity (not finite or ≤ 0);
+5. invalid_charger_power (not finite or < 0);
+6. invalid_charger_efficiency (outside [0, 1]);
+7. invalid_time_step (≤ 0);
+8. missing_arrival_soc;
+9. unsupported_battery_model (not the native battery model);
+10. invalid_battery_parameters (nominal power < 0, or efficiency, loss coefficient or maximum SOC outside [0, 1]).
+
+**Replay.** When every prerequisite holds, one replay judges all three thresholds:
+- **Start.** The connected interval starts at the session start and moves forward past any step at which this EV was not actually connected. The arrival SOC is the topology connection SOC, else the dataset current SOC at the start, else the dataset estimated arrival SOC, else the initial SOC at step 0. It never uses the simulated SOC history.
+- **Charging.** The replay charges a copy of the battery at the charger's maximum power, with the same headroom limits and deadband as the legacy rule.
+- **Outages.** Power is zero at every power-outage step.
+
+```text
+feasible : s_replay + eps >= max(s* - tolerance, 0)
+```
+
+**Unknown after the replay.** Two further cases make a threshold unknown:
+- invalid_battery_parameters, when the replay SOC is not finite;
+- outage_supply_not_replayed, when the threshold is not reached and any step of the interval had an outage. Zero outage charging is only a sufficient test: local PV or storage might have supplied the EV.
+
+The reason counts of a threshold sum to its unknown count.
+
+### Ratios
+
+```text
+coverage_ratio          = (feasible + infeasible) / departures
+service_observed_ratio  = service_met / service_observed
+service_feasible_ratio  = feasible_service_met / feasible_service_observed
+```
+
+- `service_met` counts observed departures that met the threshold, feasible or not.
+- `feasible_service_observed` counts departures that are feasible and observed, and `feasible_service_met` counts those of them that met the threshold.
+- Every ratio is undefined when its denominator is 0.
+
+### Differences from the legacy rows
+
+| | `ev_events` / `ev_performance` | Audit |
+|---|---|---|
+| Population | Departures with EV, battery, valid target and finite SOC | All detected departures at active chargers |
+| Missing data | Counted as feasible | Unknown, with a reason |
+| Outage steps | Zero power only under charging constraints | Zero power always; infeasible with an outage becomes unknown |
+| Feasible-rate denominator | All feasible counted departures | Feasible departures with observed service |
+| Coverage | Not reported | Service and feasibility coverage ratios |
+
+### District and portfolio
+
+**District:** counts are sums over members, and the ratios are recomputed from the summed counts.
+
+**Portfolio:**
+- counts are summed;
+- the ratios are means of the district ratios weighted by community `weight`;
+- the ratios are not pooled from the counts, even though their denominators are counts.
+
+### Which KPI to use
+
+For controller comparison, use the following rows, as in the default scorecard:
+- `ev_departure_audit_min_acceptable_service_feasible_ratio` for service;
+- `ev_departure_audit_within_tolerance_service_feasible_ratio` for target accuracy.
+
+Always report `ev_departure_audit_service_coverage_ratio`, the threshold's `coverage_ratio` and its unknown count with them. A high feasible ratio over low coverage covers few departures. The `service_observed_ratio` rows include departures that no controller could have served.
+
+### Known limits
+
+- Each departure is replayed on its own, without the other EVs that share the same limits, so joint feasibility is not tested.
+- The headroom uses the run's own base load, so with electrical limits the feasible population can differ between controllers on the same scenario.
+- The portfolio ratios are weighted by community `weight`, not pooled from the counts.
+
+## Flexible appliances
+
+These rows measure whether the cycles requested from deferrable (flexible) appliances ran. They use the appliances' cycle states and the nominal cycle energies. Every member emits the rows. A member without appliances reports 0 for counts and energies, and undefined rates. Under dynamic topology, appliances removed during the episode still count.
+
+### Cycle states
+
+Each requested cycle has an earliest start, a latest start, a deadline, a duration and a load profile with a total energy. A cycle can start only at a step from its earliest to its latest start, and only if it finishes before its deadline and before the last step of the episode.
+
+- **Completed:** the cycle ran through its last profile step.
+- **Missed:** the latest start passed while the cycle was still pending, or the cycle was running when a power outage interrupted it. An interrupted cycle stops, and its remaining energy is removed.
+- **In neither count:** cycles cancelled by a topology removal, cycles still pending or running at evaluation time, and cycles that expired before the episode or before their appliance became active.
+
+### Equations
+
+```text
+completed  = number of completed cycles
+missed     = number of missed cycles
+service_level             = completed / (completed + missed)
+served_energy_total_kwh   = sum over completed cycles of E_c
+unserved_energy_total_kwh = sum over missed cycles of E_c
+average_start_delay_hours = mean over completed cycles of max(start - earliest_start, 0) * step_hours
+```
+
+- **Nominal energy.** `E_c` is the cycle's requested total energy, so served and unserved energy are nominal, not metered. A cycle interrupted by an outage counts its full energy as unserved, including the part consumed before the interruption.
+- **Undefined values.** The service level is undefined when completed + missed = 0. The start delay is undefined when no cycle completed. A delta to the BAU is undefined when either side is undefined.
+
+**Ratios to the BAU.** Each `deferrable_appliance_ratio_to_business_as_usual_*_ratio` divides the control value by the BAU value:
+- it is undefined when its own two totals are zero, even when cycles were due (#305): for example, the missed-cycles ratio of two runs that both completed every cycle;
+- it is also undefined when the BAU value is zero and the control value is not, or when either value is undefined.
+
+This is the exception to the zero-over-zero rule in the [shared rules](kpis_reference.md#shared-rules).
+
+### District and portfolio
+
+**District:**
+- counts and energies are sums over members;
+- the service level is recomputed from the summed counts;
+- the start delay is the mean over all completed cycles: each appliance's mean delay is weighted by its completed cycles.
+
+**Portfolio:**
+- counts and energies are summed;
+- the service level is pooled, weighted by completed + missed cycles, for both the control and BAU values;
+- the start delay is pooled, weighted by completed cycles. It is carried over to the portfolio even though its unit is hours;
+- the deltas to the BAU are taken between the pooled control and BAU values;
+- the ratios to the BAU are ratios of the summed totals for counts and energies, and ratios of the pooled values for the service level and the start delay. The undefined rule above still applies.
+
+### Which KPI to use
+
+**To judge service,** prefer the [flexible-appliance audit](kpis_reference.md#flexible-appliance-audit). It counts a cycle as completed only if its energy was delivered, it uses metered energy, and it excludes requests that could not be served within the episode.
+
+**To compare with the BAU,** use these rows: only they have BAU variants.
+
+**Energy:** `deferrable_appliance_audit_served_energy_kwh` is the metered counterpart of `deferrable_appliance_service_served_energy_total_kwh`.
+
+### Known limits
+
+- A cycle that cannot fit before the end of the episode becomes missed once its latest start passes, for every controller.
+- Served and unserved energy are nominal profile energies, not metered energy.
+
+## Flexible-appliance audit
+
+The audit reports cycle service from the energy the appliances actually consumed in executed intervals, with an explicit population and exclusive states. Every member emits the rows. Requests are identified by member, appliance and cycle id. When an appliance is reinstalled, the first included record of a request is kept, and each further included copy adds 1 to `duplicate_offered_count`.
+
+### Energy attribution
+
+At each executed step `k` before the terminal step of the episode, the appliance's metered energy `E_k` is shared among its running cycles in proportion to their profile values at that step:
+
+```text
+served_c += E_k * w_c,k / sum_j w_j,k      (w = profile value at the cycle's current offset)
+physical_energy_kwh = sum_k E_k
+```
+
+A cycle is finished once the step of its last profile value has been executed.
+
+### Population
+
+A request is offered (included) when a full cycle could have started in an executed active interval:
+
+```text
+valid_first = max(earliest_start, activation_step)
+valid_last  = min(latest_start, deadline - duration + 1, terminal_step - duration)
+```
+
+Otherwise it is excluded, with the first applicable reason:
+1. **already_accounted_previous_instance:** an earlier instance of the appliance already offered the request.
+2. **expired_before_episode:** the latest start is before the episode start.
+3. **expired_before_activation:** the latest start is before the appliance became active.
+4. **outside_episode_service_horizon:** valid_first > valid_last.
+5. **removed_before_available** (if the appliance was removed) or **not_yet_available** (otherwise): no executed step falls in [valid_first, valid_last].
+
+### States
+
+Each offered request takes the first state that applies:
+1. **completed** (profile_delivered): finished and |requested − served| ≤ 1e-6 · max(1, requested).
+2. **missed** (profile_energy_shortfall): finished otherwise, for example after an outage interruption.
+3. **missed** (start_window_elapsed): never started and the latest start has been executed.
+4. **cancelled** (asset_removed or member_removed): the appliance or member was removed.
+5. **running** (profile_in_progress): started.
+6. **pending** (window_open): none of the above.
+
+### Equations
+
+```text
+remainder              = max(requested - served, 0)
+final_unserved_energy  = remainder of missed and cancelled requests
+outstanding_energy     = remainder of pending and running requests
+resolved               = completed + missed + cancelled
+
+observed_completion_ratio = completed / offered
+resolved_completion_ratio = completed / resolved
+resolved_coverage_ratio   = resolved / offered
+
+physical_balance_residual = physical_energy - served_energy
+service_balance_residual  = requested - served - final_unserved - outstanding
+```
+
+- **Energy sums.** The energies are sums over offered requests. `excluded_requested_energy_kwh` sums the requested energy of the excluded requests.
+- **Residuals.** The physical residual is metered energy that no offered request accounts for. The service residual is close to 0 by construction and serves as a consistency check.
+- **Undefined values.** A ratio with a zero denominator is undefined.
+
+### District and portfolio
+
+**District:** all counts and energies are sums over members, and the ratios are recomputed from them.
+
+**Portfolio:**
+- counts and energies are summed;
+- the ratios are means of the district ratios weighted by community `weight`;
+- the ratios are not pooled from the counts.
+
+### Which KPI to use
+
+**To compare controllers:**
+- use `deferrable_appliance_audit_resolved_completion_ratio` with `deferrable_appliance_audit_resolved_coverage_ratio`;
+- or use `observed_completion_ratio` when pending and running requests at the end of the episode should count against the controller.
+
+The service rows of [Flexible appliances](kpis_reference.md#flexible-appliances) count excluded requests that expired within the episode as missed, and they use nominal energy.
+
+### Known limits
+
+- Terminal-step energy is not recorded: the terminal observation is not an executed interval.
+- The portfolio ratios are weighted by community `weight`, not pooled from the counts.
+
+## Escalators
+
+These rows measure the passenger service, operating-state changes and electricity use of escalators. Every member emits the rows. A member without escalators reports 0 totals and an undefined service level. Only steps at which an action was applied to the escalator count. The rows read the escalators currently attached to each building.
+
+### Equations
+
+An escalator runs in standby, slow or normal state. For each counted step `t`:
+
+```text
+p_t        = max(passengers_expected_15min_t, 0)
+required_t = p_t > service_threshold_passengers           (default 0.5)
+met_t      = not required_t or (state_t in {slow, normal} and available_t)
+unserved_t = p_t if not met_t else 0
+
+requested_passengers_total = sum_t p_t
+unserved_passengers_total  = sum_t unserved_t
+served_passengers_total    = max(requested - unserved, 0)
+service_level              = served / requested
+```
+
+- **No rescaling.** Passenger values are summed as given, without rescaling to the step length.
+- **Below the threshold.** Passengers at or below the threshold count as served in any state.
+- **Undefined values.** The service level is undefined when requested ≤ 0.
+
+The other two rows are as follows:
+- `escalator_energy_electricity_consumption_total_kwh` sums the escalator's electricity consumption, which is the applied state's power times the step length.
+- `escalator_operation_state_changes_count` counts the steps at which the applied state changed. A change happens only after the minimum dwell time, or when the escalator is forced to standby because it is unavailable.
+
+### District and portfolio
+
+**District:** totals are sums over escalators and members, and the service level is recomputed from the summed passengers.
+
+**Portfolio:** totals are summed, and the service level is pooled, weighted by requested passengers.
+
+### Known limits
+
+- A non-finite passenger value makes the requested total non-finite, while the per-step service test treats it as 0.
+- Under dynamic topology, the rows use only the escalators attached at evaluation time.
+
+## Comfort and resilience
+
+The `comfort_resilience` rows measure the thermal comfort of occupants and the service lost during
+power outages, for each building. They are always emitted. They keep the definitions of the legacy
+`evaluate()` cost functions (`discomfort_*`, `one_minus_thermal_resilience_proportion`,
+`*_normalized_unserved_energy_total`), so values stay comparable with earlier releases. To compare
+controllers, use the [thermal-service audit](kpis_reference.md#thermal-service-audit) instead (see the canonical choice below).
+Units, naming and the handling of undefined values follow the [shared rules](kpis_reference.md#shared-rules). None of these
+rows has a business-as-usual variant.
+
+**Comfort band and steps.** All series are taken over the executed time steps of the building:
+
+```text
+T_t       indoor dry-bulb temperature                         [degC]
+T_heat,t  heating set point,  T_cool,t  cooling set point     [degC]
+band_t    comfort band: the building's comfort_band series (dataset column comfort_band,
+          2.0 degC when absent), or the comfort_band argument of evaluate_v2(), which replaces it
+N_t       occupant count
+outage_t  power-outage signal
+
+evaluated_t = N_t finite and N_t > 0
+              and T_t, T_heat,t, T_cool,t, band_t finite
+              and band_t >= 0 and T_heat,t <= T_cool,t
+cold_t      = evaluated_t and T_t < T_heat,t - band_t
+hot_t       = evaluated_t and T_t > T_cool,t + band_t
+```
+
+Only occupied steps are evaluated. A step is comfortable when
+`T_heat - band <= T <= T_cool + band`.
+
+**Discomfort ratios.**
+
+```text
+discomfort_overall_ratio = count(cold or hot) / count(evaluated)
+discomfort_cold_ratio    = count(cold)        / count(evaluated)
+discomfort_hot_ratio     = count(hot)         / count(evaluated)
+```
+
+They are undefined when no step is evaluated.
+
+**Discomfort deltas.** The deltas are distances from the set point, not from the band edge. Both are
+positive, and every delta is larger than the band:
+
+```text
+cold delta_t = T_heat,t - T_t   over cold steps   (> band_t > 0)
+hot delta_t  = T_t - T_cool,t   over hot steps    (> band_t > 0)
+discomfort_{cold,hot}_delta_{min,max,average}_c = min, max, mean of the delta over those steps
+```
+
+They are undefined when there is no cold (or hot) step.
+
+**Outage variants.**
+
+```text
+outage step_t = outage_t finite and outage_t > 0
+one_minus_thermal_ratio = count(evaluated and outage step and (cold or hot))
+                        / count(evaluated and outage step)
+```
+
+It is undefined when no occupied outage step is evaluated.
+
+The unserved-energy ratios cover four end uses, i = cooling, heating, domestic hot water (DHW) and
+non-shiftable load. For end use i, `e_i,t` is the expected energy (the demand) and `s_i,t` the served energy
+(from the device plus storage), in kWh:
+
+```text
+E_t = sum_i e_i,t
+S_t = sum_i min(e_i,t, s_i,t)          (serving one end use never offsets a shortfall in another)
+E_t, S_t := 0 when not finite; both clipped at 0
+U_t = max(E_t - S_t, 0)
+
+unserved_energy_annual_normalized_ratio = sum_t U_t / sum_t E_t
+unserved_energy_outage_normalized_ratio = sum_{outage_t != 0} U_t / sum_{outage_t != 0} E_t
+```
+
+Both ratios are 0, not undefined, when their denominator is 0. The outage ratio is therefore 0 in any run
+without outages.
+
+**District and portfolio.** The district value of every `comfort_resilience` row is the plain mean of the
+building values; buildings with an undefined value are skipped. Each building counts once, whatever its
+number of occupied steps. The district `max` delta is therefore the mean of the building maxima, not the
+largest district delta. In the portfolio, the ratios are means of the community values weighted by the
+community `weight`, and the `_c` deltas are not carried over.
+
+**Canonical choice.** Per building, `comfort_resilience_discomfort_overall_ratio` and
+`thermal_service_audit_discomfort_ratio` are equal. So are `resilience_one_minus_thermal_ratio` and
+`thermal_service_audit_outage_discomfort_ratio`. At district level they differ: here a mean of building
+ratios, there a ratio of summed counts. The canonical discomfort KPI is
+`district_thermal_service_audit_discomfort_ratio`. The `comfort_resilience` rows remain useful for continuity
+with legacy results and for the min/max/mean discomfort deltas, which the audit does not provide.
+
+Known limits:
+- A building with few occupied steps weighs as much in the district mean as a fully occupied one.
+- The unserved-energy ratios read 0 when no service energy was expected, which cannot be told apart from full service.
+- An interval with an invalid served energy counts as unserved here, but is left out by the audit.
+
+## Thermal-service audit
+
+The `thermal_service_audit` rows report thermal comfort and service energy for each building. Next to each
+rate they give the counts behind it, so the population and its coverage can be checked. They are always
+emitted. They use the comfort band, the evaluated occupied steps and the cold and hot conditions of
+[Comfort and resilience](kpis_reference.md#comfort-and-resilience). Units and undefined values follow the
+[shared rules](kpis_reference.md#shared-rules). None of these rows has a business-as-usual variant.
+
+**Intervals.** The audit counts the executed intervals of each building (`executed`). In dynamic topologies,
+it counts only the intervals in which the building was active.
+
+```text
+known occupancy_t   = N_t finite and N_t >= 0
+occupied_t          = known occupancy_t and N_t > 0
+evaluated_t         = occupied_t and thermally known (as in Comfort and resilience)
+excluded_t          = occupied_t and not evaluated_t
+outage_t            = outage signal finite and > 0
+unknown outage_t    = outage signal not finite or < 0
+energy evaluated_t  = e_i,t and s_i,t finite and >= 0 for all four end uses
+```
+
+`*_intervals_count` rows count these intervals. Discomfort intervals are `cold or hot`. The outage counts
+combine the outage condition with occupied, evaluated and discomfort intervals. `occupied_hours`,
+`evaluated_occupied_hours` and `discomfort_hours` are the matching counts times the step length `dt` in hours.
+
+**Degree-hours.** They are measured from the set point, like the comfort deltas:
+
+```text
+cold_degree_hours = dt * sum_{cold t} (T_heat,t - T_t)        [degC·h]
+hot_degree_hours  = dt * sum_{hot t}  (T_t - T_cool,t)        [degC·h]
+```
+
+**Service energy.** It uses the same four end uses as the unserved-energy ratios. An interval that is not
+energy-evaluated adds nothing to any total.
+
+```text
+expected_service_energy_kwh = sum_{energy evaluated t} sum_i e_i,t
+served_service_energy_kwh   = sum_{energy evaluated t} sum_i s_i,t                (not capped at demand)
+unserved_service_energy_kwh = sum_{energy evaluated t} sum_i max(e_i,t - s_i,t, 0)
+outage_expected_service_energy_kwh, outage_unserved_service_energy_kwh: the same over outage intervals
+```
+
+**Ratios.** Each ratio is `numerator / denominator`, undefined (never 0 or 1) when the denominator is 0:
+
+```text
+discomfort_ratio               = discomfort intervals              / evaluated occupied intervals
+outage_discomfort_ratio        = outage discomfort intervals       / evaluated outage occupied intervals
+thermal_coverage_ratio         = evaluated occupied intervals      / occupied intervals
+outage_thermal_coverage_ratio  = evaluated outage occupied intervals / outage occupied intervals
+occupancy_coverage_ratio       = known occupancy intervals         / executed intervals
+energy_coverage_ratio          = energy evaluated intervals        / executed intervals
+unserved_service_ratio         = unserved_service_energy_kwh        / expected_service_energy_kwh
+outage_unserved_service_ratio  = outage_unserved_service_energy_kwh / outage_expected_service_energy_kwh
+```
+
+**District and portfolio.** The district sums every count, hour and kWh over the buildings, then recomputes
+each ratio from the sums. For example:
+
+```text
+district discomfort_ratio = sum_b discomfort intervals_b / sum_b evaluated occupied intervals_b
+```
+
+This is a rate weighted by occupied exposure. In the portfolio, `_count` and `_kwh` rows are summed over
+communities. The `_hours` and `_degree_hours` rows are not carried over. The ratios are means of the
+community ratios weighted by the community `weight`; they are not recomputed from the summed portfolio
+counts. A pooled portfolio rate can be obtained by dividing the summed counts, for example
+`portfolio_thermal_service_audit_discomfort_intervals_count / portfolio_thermal_service_audit_evaluated_occupied_intervals_count`.
+
+**Canonical choice.** `district_thermal_service_audit_discomfort_ratio` is the canonical discomfort KPI for
+comparing controllers, for four reasons:
+- It is the share of occupied, evaluated time that was uncomfortable, so rarely occupied buildings do not dominate it.
+- It is undefined, never a synthetic 0, when nothing could be evaluated.
+- Its numerator, denominator and coverage are published with it.
+- It belongs to the default scorecard.
+
+Report it with `thermal_coverage_ratio` and `evaluated_occupied_intervals_count`, and use the cold and hot
+degree-hours for severity. For the same reasons, `outage_discomfort_ratio` is preferred to
+`resilience_one_minus_thermal_ratio`, and `unserved_service_ratio` to the legacy unserved-energy ratios.
+
+Known limits:
+- Portfolio ratios are weight-means of community ratios, not ratios of the summed portfolio counts.
+- Degree-hours and comfort conditions do not consider whether heating or cooling was available (HVAC mode).
+
+## Equity
+
+The `equity` rows measure how the cost benefit of the controller is shared among the buildings. They are
+always emitted. The per-building benefit is at building level. Its distribution (Gini, top-20 % share,
+losers, benefit parity ratio) is at district level. Units and undefined values follow the
+[shared rules](kpis_reference.md#shared-rules).
+
+**Relative benefit.** For building b:
+
+```text
+C_b = sum over executed steps of the building's cost under control             [EUR]
+B_b = the same under the conventional baseline evaluation condition            [EUR]
+      (default: without storage, PV kept; for buildings with thermal dynamics, also without
+       partial-load control). This is the counterfactual baseline, not the BAU rollout.
+
+benefit_b = 100 * (B_b - C_b) / B_b        [percent]; undefined when B_b <= 0
+```
+
+Without the community market, each step cost is `price_t * max(net_t, 0)`: imports are paid, and exports
+earn nothing. With the market enabled, C_b and B_b are both settled with the market rules: grid and local
+imports are paid, and local and grid exports earn revenue. Local-trading savings are therefore not credited
+to the controller, and a cost total can be negative. Totals are never clipped. Steps with a non-finite cost
+add 0. The baseline series exchanges no energy with the grid at power-outage steps, so its cost is 0 there.
+
+**Distribution.** Let E be the buildings with a defined benefit, n = |E|, and `x_b = max(benefit_b, 0)`.
+Buildings that lose money enter the Gini and the top-20 % share with 0.
+
+```text
+losers_percent = 100 * count(b in E with benefit_b < 0) / n                 (undefined if n = 0)
+gini_benefit   = sum_{b in E} sum_{c in E} |x_b - x_c| / (2 * n * sum_{b in E} x_b)
+top20_benefit  = (sum of the k largest x_b) / sum_{b in E} x_b,  k = max(1, ceil(0.2 * n))
+```
+
+The Gini coefficient and the top-20 % share are undefined when n = 0 or when the sum of x is 0. The losers
+percentage stays defined in the second case.
+
+**Benefit parity ratio.**
+
+```text
+bpr_asset_poor_over_rich = mean_{b in E, asset_poor} x_b / mean_{b in E, asset_rich} x_b
+```
+
+Every building must carry the schema field `equity_group` with the value `asset_rich` or `asset_poor`.
+Otherwise the ratio is undefined. It is also undefined when either group has no building in E, or when the
+`asset_rich` mean is 0.
+
+**District and portfolio.** The distribution rows are computed from the building benefits of the district.
+In the portfolio, they are means of the community values weighted by the community `weight`. A portfolio
+Gini is therefore not the Gini of all buildings of the portfolio.
+
+**Canonical choice.** `equity_distribution_gini_benefit_ratio` equals
+`district_equity_audit_positive_benefit_gini_ratio`: they use the same costs, the same eligible buildings and
+the same clipping. The canonical Gini KPI is the [equity audit](kpis_reference.md#equity-audit) row. The `equity` rows remain
+useful for the per-building relative benefit and for the benefit parity ratio, which the audit does not provide.
+
+Known limits:
+- Clipping at 0 hides losses in the Gini; read it with the losers percentage.
+- The benefit is relative to the conventional baseline, not to the BAU rollout.
+
+## Equity audit
+
+The `equity_audit` rows repeat the district equity distribution together with the population it was computed
+on. They are always emitted, at district level. The relative benefit, the eligibility rule and the clipping are
+those of [Equity](kpis_reference.md#equity). Units and undefined values follow the [shared rules](kpis_reference.md#shared-rules).
+
+```text
+population_members_count            = number of KPI buildings
+eligible_members_count              = n = buildings with finite costs and B_b > 0
+excluded_nonpositive_reference_count = buildings with B_b <= 0
+excluded_unknown_cost_count         = buildings with a non-finite cost total
+coverage_ratio                      = n / population_members_count     (undefined without buildings)
+losers_percent                      = 100 * count(eligible b with benefit_b < 0) / n   (undefined if n = 0)
+positive_benefit_gini_ratio         = sum_{i=1..n} (2i - n - 1) * x_(i) / (n * sum x)
+positive_benefit_top20_ratio        = (sum of the k largest x) / sum x,  k = max(1, ceil(0.2 * n))
+```
+
+In the Gini formula, `x_(1) <= ... <= x_(n)` are the clipped benefits in ascending order. This form equals the
+pairwise formula of [Equity](kpis_reference.md#equity). The Gini coefficient and the top-20 % share are undefined when the
+sum of x is 0. The evaluation conditions used for each building are stored in the `kpi_family_audit`
+metadata of the returned table.
+
+**Portfolio.** The `_count` rows are summed over communities. The ratio and the percentage are means
+weighted by the community `weight`; they are not recomputed from the summed counts.
+
+**Canonical choice.** `district_equity_audit_positive_benefit_gini_ratio` is the canonical Gini KPI for
+comparing controllers. It has the same value as `equity_distribution_gini_benefit_ratio`. Its name states
+that losses are clipped at 0, and its eligibility counts are published with it, so a Gini computed on few
+buildings can be recognised. Report it with `losers_percent`, `eligible_members_count` and
+`coverage_ratio`.
+
+Known limits:
+- Step costs that are not finite are summed as 0, so `excluded_unknown_cost_count` is always 0.
+- Portfolio coverage and Gini are weight-means of community values.
+
+## Demand response
+
+Demand response measures how the district follows the requests in the `demand_response.requests_file` dataset, and settles revenue and penalties. The rows appear when `demand_response.enabled` is true, which requires the entity interface. Requests cannot overlap.
+
+A request is active at local step t when `start_time_step <= episode_start + t <= end_time_step`. Each active step is settled after the physics update of that step.
+
+Baseline of a request starting at local step s (fixed once computed):
+
+```text
+h          = seconds_per_time_step / 3600
+w          = max(1, ceil(baseline_window_seconds / seconds_per_time_step))     (default 3600 s)
+P_base,i   = mean(n_i over local steps s-w .. s-1) / h       (kW, member i)
+P_base     = sum_i P_base,i
+```
+
+The members are those active when the baseline is first computed. The baseline is invalid for a step for one of four reasons:
+- `insufficient_history`: the request starts before the episode, or `s - w < 0`;
+- `nonfinite_history`: a member's net energy in the window is missing or not finite;
+- `no_members`: there is no active member;
+- `topology_changed`: with dynamic topology, the topology version changes between `s - w` and the current step. Every later step of that request is then invalid as well.
+
+Settlement at an active step t, with `target` and `tolerance` in kW from the request:
+
+```text
+R_t = target * h                                     requested energy (all active steps)
+V_t = R_t if the baseline is valid, else 0           valid requested energy
+P_t = district net electricity consumption at t / h
+d_t = P_t - P_base   (direction up)    or   P_base - P_t   (direction down)
+D_t = d_t * h                                        delivered, signed, uncapped
+C_t = min(max(d_t, 0), target) * h                   credited
+S_t = max(target - d_t - tolerance, 0) * h           shortfall
+revenue_t = C_t * activation_price_eur_per_kwh
+penalty_t = S_t * shortfall_penalty_eur_per_kwh
+```
+
+Credited energy is capped at the target. The tolerance applies only to the shortfall, not to the credit. At a step with an invalid baseline, V, D, C, S, revenue and penalty are 0, while R still counts. Totals sum these values over the active steps; a non-finite value counts as 0.
+
+Compliance:
+
+```text
+compliance = clip(sum_t C_t / sum_t V_t, 0, 1)       undefined if sum_t V_t <= 1e-12
+```
+
+At district level the clip never binds, because `C_t <= R_t = V_t` at each valid step.
+
+Members. At each active step, the district settlement is split over the n active members. Let `c_i = P_i - P_base,i` for an up request and `P_base,i - P_i` for a down request, with `P_i` the member's net power (a non-finite value counts as 0).
+
+```text
+requested_i, valid requested_i = R_t / n, V_t / n
+delivered_i                    = c_i * h
+w+_i = max(c_i,0) / sum_j max(c_j,0)          (1/n if that sum <= 1e-12)
+w-_i = max(-c_i,0) / sum_j max(-c_j,0);  else |P_base,i| / sum_j |P_base,j|;  else 1/n
+credited_i = C_t * w+_i      revenue_i = revenue_t * w+_i
+shortfall_i = S_t * w-_i     penalty_i = penalty_t * w-_i
+uncapped contribution_i = max(c_i, 0) * h
+building compliance = clip(sum credited_i / sum valid requested_i, 0, 1)
+```
+
+Requested, delivered, credited and shortfall energy, revenue, penalty and net revenue add up from the members to the district. The counts do not add up: a building counts each event and each active or invalid step at which it was a member. The uncapped contribution is a building-only diagnostic and adds up to nothing. Valid requested and credited energy are emitted at district level only; they are the additive components of compliance.
+
+Portfolio:
+- Energy, cash and counts are summed over communities. A request ID used in two communities counts twice.
+- Compliance is pooled with weight `valid_requested_total_kwh` (#312), so the portfolio value is the summed credited energy over the summed valid requested energy.
+- Building rows are not carried to the portfolio.
+
+Which KPI to use:
+- Use the district compliance ratio for performance, and `net_revenue_total_eur` for economics.
+- To check how much of the request could be judged at all, use the [demand-response audit](kpis_reference.md#demand-response-audit) coverage ratios.
+- A building compliance is the member's credited share over its equal share of the request, capped at 1. Every member that delivered more than its equal share therefore reads 1. To compare the members' own movement, use `uncapped_contribution_total_kwh`.
+
+Known limits:
+- The baseline is measured on the controlled run itself. A controller that changes its consumption before an event also changes its baseline.
+- With stable membership, the mean of the building compliance ratios cannot exceed the district ratio. With dynamic topology, this bound does not hold, because members have different valid requested energy.
+- If the district net is not finite at an active step, delivered, credited and shortfall energy and the cash terms count as 0, while valid requested energy still counts.
+
+## Demand-response audit
+
+The audit splits the district demand-response settlement by the purpose declared for each request. The purpose comes from `demand_response.request_purposes`, otherwise from the requests file's `purpose` column, otherwise it is `unspecified`. It is never inferred from performance. The rows appear when demand response is enabled, for `all` and for each of `service`, `stress` and `unspecified`, even a purpose with no requests. They are district only.
+
+For a purpose, let A be its set of settled steps (all settled steps for `all`). All the step quantities are those of [Demand response](kpis_reference.md#demand-response).
+
+```text
+requested, valid_requested, delivered, credited, shortfall = sum over A of R_t, V_t, D_t, C_t, S_t
+revenue, penalty, net_revenue                              = sum over A
+events_count            = number of distinct request IDs in A
+active_intervals        = |A|
+valid_intervals         = number of steps in A with a valid baseline
+excluded_<reason>       = number of steps in A whose baseline is invalid for <reason>
+baseline_coverage       = valid_intervals / active_intervals         undefined if |A| = 0
+requested_energy_coverage = valid_requested / requested              undefined if requested <= 0
+compliance              = clip(credited / valid_requested, 0, 1)     undefined if valid_requested <= 0
+```
+
+The four `excluded_*` counts add up to `active_intervals - valid_intervals`. For `all`, the totals equal the district demand-response rows: `active_intervals` equals the active step count, and `active - valid` equals the invalid-baseline step count.
+
+Portfolio:
+- Counts, energy and cash are summed.
+- The three ratios are pooled (#312), so each portfolio value is the ratio of the summed totals:
+  - compliance with weight `valid_requested_kwh`;
+  - requested-energy coverage with weight `requested_kwh`;
+  - baseline coverage with weight `active_intervals_count`.
+
+Which KPI to use: the `all` compliance repeats `district_demand_response_compliance_ratio`, apart from the zero threshold. Use the audit for the split by purpose and for the coverage and exclusion counts.
+
+Known limits:
+- The audit compliance is undefined only when valid requested energy is exactly 0, whereas the main compliance ratio uses a threshold of 1e-12.
+- No building-level audit exists.
+
+## Robustness
+
+Robustness counts the perturbations that dataset events apply to observations, forecasts, actions and assets. The rows appear when `robustness.enabled` is true. Observation and forecast corruption changes only what the agent sees. Action and asset events change the applied action, and so the physics and the other KPIs.
+
+Every application is recorded at a global step k (episode start plus local step), with a key:
+- `event:kind:target` for observation, forecast and action applications;
+- `event:asset:asset` for an asset application, so an asset counts once per step however many fields and ports it hides.
+
+A key is counted once per step. Let K_k(kind) be the set of keys of a kind recorded at step k.
+
+```text
+corruption count (kind)        = sum_k |K_k(kind)|          kind = observation, forecast, action
+asset_unavailable_time_step    = sum_k |K_k(asset)|
+missing_observation            = sum_k |K_k(missing)|       missing mode, plus observation applications of asset events
+action_dropout                 = sum_k |K_k(dropout)|       dropout mode, plus action applications of asset events
+active_time_step (district)    = number of k with any observation, forecast, action or asset key
+events_count                   = number of distinct event IDs with at least one application
+```
+
+Building rows count only the applications attributed to that building. Their active steps are the steps with at least one such application. District rows count every application, including those without a building. Building values therefore need not add up to the district value.
+
+The counted population includes:
+- every queried observation, including the terminal observation after the last executed step;
+- applications that the hidden-fault observation contract masks later.
+
+Counts restricted to executed intervals are reported only in the `robustness_audit` metadata of the `evaluate_v2()` result (`attrs['robustness_audit']['executed_intervals']`).
+
+Portfolio: all rows end in `_count` and are summed over communities.
+
+Which KPI to use:
+- `asset_unavailable_time_step_count` measures outage duration, in asset-steps.
+- `missing_observation_count` and `action_dropout_count` overlap with the corruption counts: they are subsets by mode, not additional events.
+
+Known limits:
+- The counters include the terminal observation, so they can exceed the number of executed steps.
+- Counts are taken before masking.
+
+## Energy provenance
+
+The energy provenance ledger follows electricity from where it came from (its **origin**) to where it ended (its **destination**), together with the grid carbon it carries. It answers questions that net import and export cannot answer on their own. How much of the PV reached a load? How much passed through a battery first? How much left in an EV? Where did the purchased grid carbon go?
+
+The rows `*_energy_provenance_*` appear in `evaluate_v2()` whenever the environment keeps the ledger. That is the default: `CityLearnEnv(energy_provenance=True)`. With `energy_provenance=False` no rows are emitted; the simulated physics is the same either way. The ledger is passive: it reads the executed simulation and never changes it. Its totals cover every interval simulated since `reset()`. They do not depend on the `control_condition` or `baseline_condition` arguments of `evaluate_v2()`. The BAU rows come from the native BAU rollout, which keeps the same ledger. The rules for `_business_as_usual` and `_delta_to_business_as_usual` are in the [shared rules](kpis_reference.md#shared-rules). The family has no `ratio_to_business_as_usual` rows.
+
+### Boundary and mixing
+
+The ledger has two kinds of nodes:
+
+- **Member buses.** The electricity bus of each active member (building) in each interval.
+- **Storage stocks.** Each stationary battery with a positive capacity, and each EV battery while it is connected to a charger.
+
+Thermal storage is not a stock: electricity used for heating or cooling, including electricity that charges thermal tanks, is part of the member's load.
+
+Each node holds a record of how many kWh of each origin it contains and how much carbon they carry. Two rules move energy through the ledger:
+
+- **Bus mixing.** Within one interval, each member bus is perfectly mixed. Every kWh that leaves the bus has the same origin composition as the bus as a whole.
+- **Proportional storage.** When energy leaves a stock, it takes a proportional share of every origin present, rather than first-in first-out. Storage operations are applied in the order they happened in the interval.
+
+### Origins
+
+| Origin | Meaning | Carbon |
+|---|---|---|
+| `pv` | PV generated by a member. | 0 |
+| `grid` | Grid import of a member after local sharing. The `grid_*` rows also include grid import of unknown carbon. | Import × the member's carbon intensity in that interval |
+| `unknown` | Stored energy whose history the ledger did not see (below). | 0 |
+
+Grid import in an interval with a non-finite carbon intensity is kept as a separate origin with zero carbon. It is counted in the `grid_*` energy rows, in `external_purchase_unknown_carbon_kwh` and in the `carbon_unknown_*` rows.
+
+**Unknown energy.** Energy is unknown when the ledger first finds it inside a storage stock rather than seeing it enter. This happens in two cases:
+
+- **New stocks.** When the ledger first meets a stock, its stored energy enters as `unknown`. That covers every battery at reset, a battery that appears mid-episode, and **every EV at connection**: the whole arrival state of charge is unknown energy.
+- **Imposed states of charge.** Sometimes the state of charge is set from outside the simulation: an EV arrival state of charge from the data, the drift of a connected but suspended EV, or a battery activated by a topology change. The energy then in the stock leaves as `external_reset`, and the new content enters as `unknown`.
+
+Unknown energy carries no carbon and is never counted as PV, even if it was historically renewable. `unknown_input_kwh` is the total that entered this way.
+
+### Destinations
+
+Destination rows are counted by the **member that receives** the energy, whoever produced it.
+
+| Destination | Meaning |
+|---|---|
+| `load` | The member's electricity consumption other than charging of stationary and EV batteries. |
+| `stored` | Energy still in the member's stocks when `evaluate_v2()` runs. |
+| `mobility` | Content of an EV battery that disconnected from a charger that is still in an active building. This is energy that left with the vehicle, not an estimate of energy used for driving. |
+| `grid_export` | Export to the grid after local sharing. |
+| `loss` | Battery and charger conversion losses on charge and discharge, and standby losses. |
+| `asset_exit` | Content of a stock that left the boundary in any other way: battery removed or set to zero capacity, charger or member removed, or EV moved to another member. |
+| `external_reset` | Content replaced by an imposed state of charge. |
+| `curtailment` | PV that could not be used during an outage. Only PV is curtailed, so the `grid_curtailment`, `unknown_curtailment` and `carbon_curtailment` rows are always 0. |
+
+Local transfers between members are not destinations. `local_import_kwh` and `local_export_kwh`, with their `pv_` and `grid_` shares, show what each member received from or sent to the others in the same interval. That energy is counted again in the receiving member's destinations. There is no `unknown_` share of the local transfers.
+
+### One interval
+
+For member `m` in interval `t`:
+
+```text
+pv_generated(m,t) = max(-solar_generation(m,t), 0)
+pv_bus(m,t)       = max(pv_generated(m,t) - curtailment(m,t), 0)
+grid_in(m,t)      = max(net(m,t), 0) - local_in(m,t)
+supply(m,t)       = pv_bus + discharge + max(net, 0)
+load(m,t)         = max(net + pv_bus + discharge - charge, 0)
+mix(m,t)          = known(m,t) / (supply - recycle)
+```
+
+- `net` is the member's net electricity consumption.
+- `pv_generated` includes the curtailed part.
+- `charge` and `discharge` are the AC energies into and out of the member's stocks. For EVs they are measured at the charger, so charger losses are included.
+- `known` is the energy that entered the bus with a known composition: PV, grid import, energy discharged from storage (with the origins it had in storage), and local imports.
+- `recycle` is energy charged into a stock and discharged again in the same interval. Its composition is the bus mix itself, so dividing by `supply - recycle` resolves same-interval storage cycles without creating PV.
+- `mix` has one entry per origin and producer, in kWh per kWh of supply.
+
+Each flow out of the bus takes `mix` times its energy:
+
+```text
+load destination  = mix × load
+grid_export       = mix × (max(-net, 0) - local_out)
+local_export      = mix × local_out
+storage charge    = mix × energy stored this interval
+charging loss     = mix × (AC charge - energy stored)
+```
+
+`grid_in` is recorded as `external_import_kwh`. `grid_in × carbon intensity`, summed over intervals with a finite intensity, is recorded as `external_purchase_emissions_kgco2`.
+
+**Local sharing.** `local_in` and `local_out` are the local import and export of the member in interval `t`.
+
+- **Community market on.** They are the market settlement quantities. They are zero when local trading is disabled.
+- **No community market.** The ledger nets the members:
+
+```text
+traded       = min(Σ_m max(net(m), 0), Σ_m max(-net(m), 0))
+local_out(m) = max(-net(m), 0) × traded / Σ_m max(-net(m), 0)
+```
+
+Without a market, `local_in` divides `traded` among the importers in proportion to `community_market_import_member_weights` (default 1 each). No member receives more than its own import: a share that exceeds it is capped, and the excess is shared again among the remaining importers.
+
+The exporters' mixes are solved first, and their combined local export is passed to the importers in proportion to `local_in`.
+
+**Direct PV.**
+
+```text
+direct(m,t)           = (pv_bus + PV received directly from exporters) / supply
+pv_load_direct        = Σ_t direct × load
+pv_load_after_storage = max(pv_load - pv_load_direct, 0)
+```
+
+`PV received directly from exporters` is the share of each exporter's local export that came straight from its PV in that interval.
+
+### Stored energy that later leaves storage
+
+Storage operations are applied to a stock in order:
+
+- **Charge.** The stored energy joins the stock with the bus mix of that interval. The charging loss is booked as `loss` with the same mix.
+- **Discharge.** Removing `removed` kWh takes the fraction `removed / stock` of every origin in the stock. Of that slice, the share `delivered AC / removed` enters the member bus, keeping its origin, producer and carbon. The rest is `loss`.
+- **Standby.** The fraction of stored energy lost takes the same proportional share of every origin and is `loss`.
+
+Energy that re-enters the bus is shared out with the bus mix like any other supply. For example, PV that was stored and later discharged to the load counts in `pv_load` and in `pv_load_after_storage`, not in `pv_load_direct`. Grid energy stored and later used counts in `grid_load` and in `carbon_load`.
+
+Energy that is still stored at evaluation counts as `stored`. Energy in an EV that leaves counts as `mobility`, with the origins it had at departure.
+
+### Carbon rows
+
+- `carbon_<destination>_kgco2` is the grid carbon carried by the energy that reached the destination. Only grid energy carries carbon.
+- `carbon_unknown_<destination>_kwh` is an energy, not a carbon mass. It is the kWh in that destination whose carbon is unknown: unknown-origin energy plus grid import of non-finite intensity. A large value means the matching `carbon_*` row is a lower bound.
+- `external_purchase_unknown_carbon_kwh` is the grid import of unknown carbon at the point of purchase.
+- Exports earn no carbon credit.
+
+### District and portfolio
+
+The district value of every row that also exists at building level is the **sum of the member rows**.
+
+The rows below exist **only at district level**. They check or summarise the whole ledger, which balances only for the district as a whole: a building's destination rows count energy it received from neighbours, while its `pv_generated` counts only its own production.
+
+- **Balance residuals.** One per origin, and one for carbon. They are expected to be close to 0:
+
+  ```text
+  pv_balance_residual      = pv_generated                - Σ_d pv_d
+  grid_balance_residual    = external_import             - Σ_d grid_d
+  unknown_balance_residual = unknown_input               - Σ_d unknown_d
+  carbon_balance_residual  = external_purchase_emissions - Σ_d carbon_d
+  ```
+
+  `d` runs over the eight destinations: load, mobility, grid_export, loss, asset_exit, external_reset, curtailment and stored.
+
+- **Useful PV ratios.** Computed on district totals:
+
+  ```text
+  pv_useful_building      = pv_load / pv_generated
+  pv_useful_with_mobility = (pv_load + pv_mobility) / pv_generated
+  ```
+
+  Both are undefined when district `pv_generated` ≤ 1e-10 kWh. PV still in storage at evaluation (`pv_stored`) is not counted as useful.
+
+- **Diagnostics.** Running maxima over all members and intervals since reset. They are expected to be close to 0:
+
+  ```text
+  bus_max_residual     = max over m,t of max(-(net + pv_bus + discharge - charge), 0)
+  storage_max_residual = max over stocks and intervals of |stock in the ledger - stored energy of the battery|
+  ```
+
+  `bus_max_residual` is nonzero only when the bus data imply a negative load, which the ledger clips to 0.
+
+**Portfolio.**
+
+- The `_kwh` and `_kgco2` rows, including their BAU and delta rows, are summed over communities.
+- The `pv_useful_*` ratios, with their BAU and delta rows, are the **mean weighted by community `weight`** over communities with a defined value. They are not rebuilt from the summed `pv_load`, `pv_mobility` and `pv_generated`.
+- `bus_max_residual_kwh` and `storage_max_residual_kwh` are **summed** over communities like any `_kwh` row. They are therefore a sum of community maxima, not a maximum.
+
+### Reading the default scorecard rows
+
+The default scorecard includes six provenance rows:
+
+| Row | How to read it |
+|---|---|
+| `district_energy_provenance_pv_useful_building_ratio` | Share of the community's PV that reached a building load. Higher means more PV was used in buildings. |
+| `district_energy_provenance_pv_useful_with_mobility_ratio` | As above, plus PV that left in departing EVs. Higher means more PV reached a final use. |
+| `district_energy_provenance_pv_stored_kwh` | PV still held in batteries and connected EVs when the evaluation ran. It is neither lost nor yet useful; read it with the two ratios above. |
+| `district_energy_provenance_pv_grid_export_kwh` | PV that left the community through grid export after local sharing. |
+| `district_energy_provenance_external_purchase_emissions_kgco2` | Grid carbon purchased by the community after local sharing. Lower is better. |
+| `district_energy_provenance_external_purchase_emissions_business_as_usual_kgco2` | The same quantity in the BAU rollout. Compare the two directly. |
+
+### Which row to use
+
+- **District emissions.** For the emissions total, use the [Emissions](kpis_reference.md#emissions) family. The district control total of that family equals `district_energy_provenance_external_purchase_emissions_kgco2`, except when a community market is configured with local trading disabled (#327). In that case the ledger records no local sharing, while district emissions still net the members' imports and exports. Use the provenance row when you need to know where that carbon went.
+- **Building emissions.** At building level, `external_purchase_emissions` counts import after local sharing, while building emissions count each member's own import. The two differ whenever members share energy.
+- **Solar self-consumption or useful PV.** Solar self-consumption counts all PV that was neither exported nor curtailed, including PV lost in storage or still stored. `pv_useful_building_ratio` counts only PV that reached a load. Use the latter when the question is how much PV served demand.
+- **PV in the load.** `pv_load` is the total PV in a member's load. `pv_load_direct` and `pv_load_after_storage` split it into PV used without storage and PV used after storage. Use the split only to assess how much storage contributed.
+
+### Known limits
+
+- Storage is mixed proportionally, not first-in first-out. This is an accounting convention, not a measurement.
+- The energy of an EV at connection, and any imposed state of charge, is unknown and carbon-free in the ledger. The `carbon_*` rows therefore undercount; the `carbon_unknown_*` rows show by how much energy.
+- Building rows are counted by the receiving member and do not balance per member. Only the district balances.
+- The ledger has no evaluation window: it covers every interval simulated since reset.
+- District emissions and `external_purchase_emissions` differ when a community market is configured with local trading disabled (#327).
+- At portfolio level, the `pv_useful_*` ratios are community-weight means, and the two max-residual diagnostics are sums of community maxima.
+
+## Dynamic topology
+
+With `topology_mode='dynamic'`, members join and leave the community during the episode. Every building row of a lifecycle member carries three extra columns: `topology_born_at`, `topology_removed_at` and `topology_active`.
+
+`topology_lifecycle_presence` is a placeholder row, and its value is always NaN. One row is added, at building level, for each lifecycle member that has no other building row. Such a member never became active in the episode, so the KPI functions skip it. The row makes these members appear in the table with their lifecycle columns. The level is `building` because the row describes one member, whose ID is in `name`. The name has no `building_` prefix because the row is added after the KPI naming step. It is not aggregated to the district or the portfolio.
+
+Members that did take part are evaluated over their active steps only:
+- energy belongs to the steps at which the member was active;
+- building daily averages divide by the member's active days (see the [shared rules](kpis_reference.md#shared-rules));
+- district totals include members that left.
+
+Known limits: the placeholder carries no measurement; use the lifecycle columns, not its value.
+
+## Definitions changed after 3.6.0
+
+The KPI definition version (`kpi_definition_version` in the
+`energy_accounting` metadata of `evaluate_v2()`) is `2.0.0`. These rows of
+`evaluate_v2()` changed definition. Where a 3.6.0 value may have been used in
+published comparisons, it is kept under a distinct name, and the legacy
+`evaluate()` rows keep their own 3.6.0 definitions.
+
+| KPI | New definition | 3.6.0 value kept as |
+|---|---|---|
+| `district_energy_grid_ratio_to_baseline_import_total_ratio` | District import total over district baseline total. | `district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio`; legacy `electricity_consumption_total` |
+| `district_energy_grid_ratio_to_baseline_net_exchange_total_ratio` | Signed ratio of the district net-exchange totals. | `district_energy_grid_ratio_to_baseline_net_exchange_total_building_mean_ratio`; legacy `zero_net_energy` |
+| `district_emissions_ratio_to_baseline_total_ratio` | District emissions total over district baseline total. | `district_emissions_ratio_to_baseline_total_building_mean_ratio`; legacy `carbon_emissions_total` |
+| `district_emissions_total_{control,baseline,business_as_usual}_kgco2` and their deltas, daily averages and ratios | Emissions of the netted district import. | `district_emissions_total_{control,baseline,business_as_usual}_member_sum_kgco2` |
+| `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_to_baseline_ratio` | Load factor of import power; windows without import are undefined. | `..._to_baseline_signed_net_ratio`; legacy `daily_one_minus_load_factor_average`, `monthly_one_minus_load_factor_average` |
+| `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_{business_as_usual,delta_to_business_as_usual}_ratio`, `..._to_business_as_usual_ratio` | As above. | `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_signed_net_*` |
+| `district_energy_grid_shape_quality_ramping_average_{business_as_usual,delta_to_business_as_usual}_kw` | Mean upward ramp per step transition. The ratio to the BAU is unchanged. | `district_energy_grid_shape_quality_ramping_total_{business_as_usual,delta_to_business_as_usual}_kw` |
+| `*_deferrable_appliance_service_average_start_delay_hours` | Undefined when no cycle completed (was 0). | none |
+| Ratios with an undefined control or reference | Undefined (were read as 0, or 1 when both were undefined). | none |
+| `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio` with both totals zero | Undefined (was 1). | none |
+| `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Allocated from the district settlement. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostic) |
+| Portfolio EV departure rates and means, deferrable and escalator service levels, start delay and solar self-consumption (`MultiCommunityEnv`) | Pooled from their additive denominators. | none |
+| Portfolio community-market local shares, demand-response compliance and demand-response audit coverage ratios (`MultiCommunityEnv`, #285) | Pooled from local plus grid energy, valid requested energy, requested energy and active intervals. | none |
+| Portfolio stationary-battery equivalent full cycles and their BAU comparisons (`MultiCommunityEnv`, #330) | Total throughput over twice the total nominal capacity, with BAU delta and ratio derived from the two portfolio values. | none |
+
+In the legacy rows, a load-factor window whose signed peak is not positive is
+now undefined; it used to give an infinite or negative penalty, which safe
+division reported as a perfect 0.
+
+## Export
+
+| Mode | How |
+|---|---|
+| In memory | `env.evaluate_v2()` |
+| End-of-episode export | `CityLearnEnv(..., export_kpis_on_episode_end=True)` |
+| With render | `render_mode="end"` or `render_mode="during"` |
+
+The long table starts with `cost_function`, `value`, `name` and `level`, followed
+by `unit` and a short English `description` from the KPI catalogue.
+
+The long multi-community CSV includes the metadata columns. For a wide single-community
+export in CSV or Parquet, the adjacent `exported_kpis.manifest.json` holds
+`kpi_definitions` keyed by KPI name. The KPI file continues to contain one numeric column per scope.
+
+A new KPI must be added to `citylearn/misc/kpi_catalogue.yml`, which generates the [KPI catalogue](KPI_V2_TREE.md) (`python scripts/docs/kpi_catalogue.py`), and its equations to the family section of this page; `tests/test_kpi_catalogue.py` fails while an emitted name is missing from the catalogue. Changes of definition are recorded in [releases.md](releases.md).

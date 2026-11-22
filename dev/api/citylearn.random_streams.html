@@ -1,0 +1,274 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.random_streams module &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="citylearn.reward_function module" href="citylearn.reward_function.html" />
+    <link rel="prev" title="citylearn.preprocessing module" href="citylearn.preprocessing.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python_api.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">All modules</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="citylearn.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../python_api.html">Python API</a></li>
+          <li class="breadcrumb-item"><a href="modules.html">citylearn</a></li>
+          <li class="breadcrumb-item"><a href="citylearn.html">citylearn package</a></li>
+      <li class="breadcrumb-item active">citylearn.random_streams module</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/api/citylearn.random_streams.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="false"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This documentation is built from the development branch, <code>master</code> (<code>/dev/</code>). It includes
+  changes listed under <a href="../guides/releases.html">Unreleased</a> that are not yet in a PyPI release.
+  Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
+  release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="module-citylearn.random_streams">
+<span id="citylearn-random-streams-module"></span><h1>citylearn.random_streams module<a class="headerlink" href="#module-citylearn.random_streams" title="Link to this heading"></a></h1>
+<p>Versioned derivation of the simulator’s random streams.</p>
+<p>CityLearn draws random values for unspecified device parameters, the state of charge of electric
+vehicles away from their charger, occupant set-point interactions and stochastic power outages.
+<code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> selects how those streams are derived from <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">'v1'</span></code></dt><dd><p>The derivation of CityLearn 3.6.0 and earlier, kept so that an existing seed reproduces
+earlier results. Every device parameter is the first draw of a new <code class="docutils literal notranslate"><span class="pre">RandomState</span></code>, so all
+of them sit at the same quantile; the electric-vehicle drift seed is <code class="docutils literal notranslate"><span class="pre">seed</span> <span class="pre">+</span> <span class="pre">episode</span></code>, so
+seed <code class="docutils literal notranslate"><span class="pre">s</span></code> in episode 1 repeats seed <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">+</span> <span class="pre">1</span></code> in episode 0; every occupant draws
+<code class="docutils literal notranslate"><span class="pre">RandomState(seed</span> <span class="pre">+</span> <span class="pre">time_step)</span></code>, the same value in every building and episode; and
+stochastic outages skip day 0 and the partial last day and floor their durations.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">'v2'</span></code> (default)</dt><dd><p>Each stream comes from <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.SeedSequence</span></code> with the seed as entropy and the
+purpose, entity and episode as its spawn key, so streams for different purposes, objects
+and episodes are independent. Each object keeps one generator per stream.</p>
+</dd>
+</dl>
+<p>Agents follow the version of their environment. With <code class="docutils literal notranslate"><span class="pre">'v1'</span></code>, <a class="reference internal" href="citylearn.agents.q_learning.html#citylearn.agents.q_learning.TabularQLearning" title="citylearn.agents.q_learning.TabularQLearning"><code class="xref py py-class docutils literal notranslate"><span class="pre">TabularQLearning</span></code></a>
+draws its exploration decision from <code class="docutils literal notranslate"><span class="pre">RandomState(seed</span> <span class="pre">+</span> <span class="pre">time_step)</span></code> and
+<a class="reference internal" href="citylearn.agents.marlisa.html#citylearn.agents.marlisa.MARLISA" title="citylearn.agents.marlisa.MARLISA"><code class="xref py py-class docutils literal notranslate"><span class="pre">MARLISA</span></code></a> shuffles its coordination order with the same seed, so
+seed <code class="docutils literal notranslate"><span class="pre">s</span></code> at time step <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">+</span> <span class="pre">1</span></code> repeats seed <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">+</span> <span class="pre">1</span></code> at time step <code class="docutils literal notranslate"><span class="pre">t</span></code>; with <code class="docutils literal notranslate"><span class="pre">'v2'</span></code> each agent
+keeps one generator per purpose and episode. <a class="reference internal" href="citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood" title="citylearn.end_use_load_profiles.neighborhood.Neighborhood"><code class="xref py py-class docutils literal notranslate"><span class="pre">Neighborhood</span></code></a>
+takes its own <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code>: with <code class="docutils literal notranslate"><span class="pre">'v1'</span></code> partial-load simulation <code class="docutils literal notranslate"><span class="pre">i</span></code> of building
+<code class="docutils literal notranslate"><span class="pre">b</span></code> is seeded with <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">+</span> <span class="pre">i</span></code>, which repeats simulation <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">-</span> <span class="pre">1</span></code> of building <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">+</span> <span class="pre">1</span></code>; with <code class="docutils literal notranslate"><span class="pre">'v2'</span></code>
+the seed is derived from the neighborhood seed, the building and the simulation index.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.random_streams.derived_seed">
+<span class="sig-prename descclassname"><span class="pre">citylearn.random_streams.</span></span><span class="sig-name descname"><span class="pre">derived_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">purpose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/citylearn/random_streams.html#derived_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.random_streams.derived_seed" title="Link to this definition"></a></dt>
+<dd><p>32-bit integer seed for a consumer that only accepts an integer, derived like <a class="reference internal" href="#citylearn.random_streams.generator" title="citylearn.random_streams.generator"><code class="xref py py-func docutils literal notranslate"><span class="pre">generator()</span></code></a>.</p>
+<p>Use it where the stream is created by code that takes a plain seed, such as a simulator that builds
+its own <code class="docutils literal notranslate"><span class="pre">RandomState</span></code>; otherwise prefer <a class="reference internal" href="#citylearn.random_streams.generator" title="citylearn.random_streams.generator"><code class="xref py py-func docutils literal notranslate"><span class="pre">generator()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.random_streams.generator">
+<span class="sig-prename descclassname"><span class="pre">citylearn.random_streams.</span></span><span class="sig-name descname"><span class="pre">generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">purpose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span></span></span><a class="reference internal" href="../_modules/citylearn/random_streams.html#generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.random_streams.generator" title="Link to this definition"></a></dt>
+<dd><p>New <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.Generator</span></code> (PCG64) for <cite>seed</cite>, <cite>purpose</cite> and <cite>parts</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.random_streams.parse_random_stream_version">
+<span class="sig-prename descclassname"><span class="pre">citylearn.random_streams.</span></span><span class="sig-name descname"><span class="pre">parse_random_stream_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'random_stream_version'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/citylearn/random_streams.html#parse_random_stream_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.random_streams.parse_random_stream_version" title="Link to this definition"></a></dt>
+<dd><p>Return the canonical random-stream version for <cite>value</cite>; None gives the default.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.random_streams.partial_load_simulation_seed">
+<span class="sig-prename descclassname"><span class="pre">citylearn.random_streams.</span></span><span class="sig-name descname"><span class="pre">partial_load_simulation_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">building_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_stream_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/citylearn/random_streams.html#partial_load_simulation_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.random_streams.partial_load_simulation_seed" title="Link to this definition"></a></dt>
+<dd><p>Seed of partial-load simulation <cite>simulation_index</cite> of building <cite>building_id</cite> in a generated neighborhood.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">random_stream_version='v1'</span></code> it is <code class="docutils literal notranslate"><span class="pre">int(building_id)</span> <span class="pre">+</span> <span class="pre">simulation_index</span></code>, as in CityLearn 3.6.0,
+which ignores <cite>seed</cite> and repeats simulation <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">-</span> <span class="pre">1</span></code> of building <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">+</span> <span class="pre">1</span></code> in simulation <code class="docutils literal notranslate"><span class="pre">i</span></code> of building
+<code class="docutils literal notranslate"><span class="pre">b</span></code>. With <code class="docutils literal notranslate"><span class="pre">'v2'</span></code> it is derived from <cite>seed</cite>, the building and the simulation index.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.random_streams.seed_sequence">
+<span class="sig-prename descclassname"><span class="pre">citylearn.random_streams.</span></span><span class="sig-name descname"><span class="pre">seed_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">purpose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SeedSequence</span></span></span><a class="reference internal" href="../_modules/citylearn/random_streams.html#seed_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.random_streams.seed_sequence" title="Link to this definition"></a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.SeedSequence</span></code> for <cite>seed</cite>, <cite>purpose</cite> and the entity/episode <cite>parts</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.random_streams.spawn_key">
+<span class="sig-prename descclassname"><span class="pre">citylearn.random_streams.</span></span><span class="sig-name descname"><span class="pre">spawn_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">purpose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/random_streams.html#spawn_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.random_streams.spawn_key" title="Link to this definition"></a></dt>
+<dd><p>Fixed-width spawn key for a purpose and its parts.</p>
+<p>The parts are serialised as JSON before hashing, so keys such as <code class="docutils literal notranslate"><span class="pre">('a',</span> <span class="pre">'bc')</span></code> and
+<code class="docutils literal notranslate"><span class="pre">('ab',</span> <span class="pre">'c')</span></code> stay distinct. The result is eight 32-bit words of SHA-256.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citylearn.random_streams.stream_id">
+<span class="sig-prename descclassname"><span class="pre">citylearn.random_streams.</span></span><span class="sig-name descname"><span class="pre">stream_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">purpose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Hashable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/citylearn/random_streams.html#stream_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.random_streams.stream_id" title="Link to this definition"></a></dt>
+<dd><p>A 32-bit identifier of the stream, for metadata and comparisons; not a seed to draw from.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="citylearn.preprocessing.html" class="btn btn-neutral float-left" title="citylearn.preprocessing module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="citylearn.reward_function.html" class="btn btn-neutral float-right" title="citylearn.reward_function module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

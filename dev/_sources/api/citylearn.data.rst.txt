@@ -1,0 +1,7 @@
+citylearn.data module
+=====================
+
+.. automodule:: citylearn.data
+   :members:
+   :show-inheritance:
+   :undoc-members:

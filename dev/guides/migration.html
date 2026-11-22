@@ -1,0 +1,1211 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moving an existing project to CityLearn v3 &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Validation and performance" href="validation.html" />
+    <link rel="prev" title="Contributing" href="../contributing.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Moving an existing project to CityLearn v3</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#keep-the-controller-loop-explicit">Keep the controller loop explicit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#choose-the-interface-and-timestep">Choose the interface and timestep</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#consecutive-episode-splits-share-their-boundary-row">Consecutive episode splits share their boundary row</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-joining-members-storage-and-district-series">Dynamic topology: joining members, storage and district series</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#control-step-different-from-the-dataset-step">Control step different from the dataset step</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#per-building-reward-functions-and-reward-versions">Per-building reward functions and reward versions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kpi-definitions">KPI definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#physics-version">Physics version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#random-streams">Random streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optional-pytorch-and-scikit-learn">Optional PyTorch and scikit-learn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cli-evaluation-window-and-host-information">CLI evaluation window and host information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#renamed-agent-classes">Renamed agent classes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-5-0-to-3-6-0">Upgrade from 3.5.0 to 3.6.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#battery-discharge-features-during-outages">Battery discharge features during outages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#baselines-without-the-entity-core-electrical-bundle">Baselines without the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#baselines-under-the-flat-interface-with-robustness-observation-events">Baselines under the flat interface with robustness observation events</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#robustness-noise-stays-within-physical-ranges">Robustness noise stays within physical ranges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#python-3-10-or-newer">Python 3.10 or newer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vehicle-to-building-backup-during-outages">Vehicle-to-building backup during outages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#json-files-with-numpy-values">JSON files with NumPy values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bau-export-charger-exports-cli-and-file-encoding">BAU export, charger exports, CLI and file encoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#agents-and-wrappers">Agents and wrappers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-loading-edge-cases">Data loading edge cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-district-kpis">Dynamic-topology district KPIs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sub-hourly-power-and-energy-units">Sub-hourly power and energy units</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#estimates-diagnostics-and-schema-options">Estimates, diagnostics and schema options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-4-0-to-3-5-0">Upgrade from 3.4.0 to 3.5.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-3-to-3-4-0">Upgrade from 3.3 to 3.4.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-3-0-to-3-3-1">Upgrade from 3.3.0 to 3.3.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-2-0-to-3-3-0">Upgrade from 3.2.0 to 3.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-1-1-to-3-2-0">Upgrade from 3.1.1 to 3.2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-1-0-to-3-1-1">Upgrade from 3.1.0 to 3.1.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-from-3-0-2-to-3-1-0">Upgrade from 3.0.2 to 3.1.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Moving an existing project to CityLearn v3</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/migration.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="false"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This documentation is built from the development branch, <code>master</code> (<code>/dev/</code>). It includes
+  changes listed under <a href="releases.html">Unreleased</a> that are not yet in a PyPI release.
+  Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
+  release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="moving-an-existing-project-to-citylearn-v3">
+<h1>Moving an existing project to CityLearn v3<a class="headerlink" href="#moving-an-existing-project-to-citylearn-v3" title="Link to this heading"></a></h1>
+<p>Both the distribution and import name are <code class="docutils literal notranslate"><span class="pre">citylearn</span></code>. Install it from PyPI, or
+use the <a class="reference internal" href="developer_guide.html"><span class="std std-doc">developer guide</span></a> for a repository checkout.</p>
+<section id="keep-the-controller-loop-explicit">
+<h2>Keep the controller loop explicit<a class="headerlink" href="#keep-the-controller-loop-explicit" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">observations</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">observations</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stop at <code class="docutils literal notranslate"><span class="pre">terminated</span> <span class="pre">or</span> <span class="pre">truncated</span></code>. <code class="docutils literal notranslate"><span class="pre">info</span></code> is the last return value, not the third.
+The flat interface retains one observation/action vector per building, or one
+combined vector with <code class="docutils literal notranslate"><span class="pre">central_agent=True</span></code>. Read action and observation order
+from the environment rather than hard-coding positions.</p>
+</section>
+<section id="choose-the-interface-and-timestep">
+<h2>Choose the interface and timestep<a class="headerlink" href="#choose-the-interface-and-timestep" title="Link to this heading"></a></h2>
+<p>Start fixed-membership controllers with <code class="docutils literal notranslate"><span class="pre">interface=&quot;flat&quot;</span></code>. Use
+<code class="docutils literal notranslate"><span class="pre">interface=&quot;entity&quot;</span></code> for identified entity tables, relational edges and dynamic
+membership. Entity observations are an input representation; a GNN or Transformer
+policy must still be supplied by the user.</p>
+<p>Match <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> to the data cadence. Energy columns use <code class="docutils literal notranslate"><span class="pre">kWh/step</span></code>;
+power limits use <code class="docutils literal notranslate"><span class="pre">kW</span></code>. See the <a class="reference internal" href="data_unit_contract.html"><span class="std std-doc">unit contract</span></a>.</p>
+</section>
+<section id="choose-the-evaluation-api">
+<h2>Choose the evaluation API<a class="headerlink" href="#choose-the-evaluation-api" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> retains legacy cost-function names. <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> returns the
+structured KPI names used by the current exports and scorecard. The <code class="docutils literal notranslate"><span class="pre">v2</span></code> in the
+method name denotes the KPI interface, not CityLearn version 2.</p>
+<p>The <a class="reference internal" href="scorecard.html"><span class="std std-doc">scorecard</span></a> distinguishes the conventional counterfactual
+baseline from the native business-as-usual controller and explains service,
+target accuracy and requested/applied electrical-limit indicators.</p>
+</section>
+<section id="resolve-public-and-local-data-separately">
+<h2>Resolve public and local data separately<a class="headerlink" href="#resolve-public-and-local-data-separately" title="Link to this heading"></a></h2>
+<p>Public dataset names are resolved against the installed package’s release tag.
+Use <code class="docutils literal notranslate"><span class="pre">DataSet().get_dataset_names()</span></code> to see that version’s catalogue (import
+<code class="docutils literal notranslate"><span class="pre">DataSet</span></code> from <code class="docutils literal notranslate"><span class="pre">citylearn.data</span></code>). Supply your own
+local schema and files for data that are not in the public catalogue; a
+repository-relative path is not created by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code>.</p>
+<p>The <a class="reference internal" href="releases.html"><span class="std std-doc">release history</span></a> retains version-specific changes and the
+development-line history.</p>
+</section>
+<section id="unreleased">
+<h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<section id="numeric-and-configuration-hygiene">
+<h3>Numeric and configuration hygiene<a class="headerlink" href="#numeric-and-configuration-hygiene" title="Link to this heading"></a></h3>
+<p>These changes require no dataset, schema or KPI migration. Valid runs give the same results; a few silent mistakes now raise.</p>
+<ul class="simple">
+<li><p><strong>Non-finite actions raise.</strong> <code class="docutils literal notranslate"><span class="pre">env.step()</span></code> raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> for NaN or infinite actions. A training loop that used to continue with a diverged policy now stops at the first bad action; check the policy output or replace non-finite values before stepping.</p></li>
+<li><p><strong>Unknown constructor arguments raise.</strong> <code class="docutils literal notranslate"><span class="pre">CityLearnEnv(...,</span> <span class="pre">**kwargs)</span></code> raises <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> for an unknown keyword argument, with the closest valid name. Remove or correct arguments that were silently ignored before.</p></li>
+<li><p><strong>Topology events are validated at construction.</strong> An event that names a member missing from the schema, or an asset override with an unknown key or an invalid value, raises when the environment is built. Members declared in the schema but not loaded (<code class="docutils literal notranslate"><span class="pre">buildings=[...]</span></code>) are still accepted.</p></li>
+<li><p><strong>Logging.</strong> CityLearn no longer configures the root logger. Warnings still print; to see INFO messages, configure logging in your script, for example <code class="docutils literal notranslate"><span class="pre">logging.basicConfig(level=logging.INFO)</span></code>. <code class="docutils literal notranslate"><span class="pre">learn(logging_level=...)</span></code> and <code class="docutils literal notranslate"><span class="pre">DataSet(logging_level=...)</span></code> set the level of the <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> logger only when passed.</p></li>
+<li><p><strong>Export location.</strong> Exports go to <code class="docutils literal notranslate"><span class="pre">./render_logs</span></code> in the working directory by default, and relative <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> values resolve against the working directory. Pass an absolute <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> to keep the previous location.</p></li>
+<li><p><strong>Physics invariants</strong> raise <code class="docutils literal notranslate"><span class="pre">PhysicsInvariantError</span></code>, which is an <code class="docutils literal notranslate"><span class="pre">AssertionError</span></code>, so existing handlers keep working.</p></li>
+</ul>
+</section>
+<section id="consecutive-episode-splits-share-their-boundary-row">
+<h3>Consecutive episode splits share their boundary row<a class="headerlink" href="#consecutive-episode-splits-share-their-boundary-row" title="Link to this heading"></a></h3>
+<p>An episode of N data rows executes N - 1 control steps: its last row is only
+the terminal observation. Consecutive (non-rolling) splits of an integer
+<code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code> used to advance by N rows, so the interval between the
+last row of one episode and the first row of the next was never simulated in
+any episode; daily episodes on hourly data never simulated 23:00-24:00.</p>
+<p>Consecutive splits now advance by N - 1 rows (<code class="docutils literal notranslate"><span class="pre">episode_split_boundary='shared'</span></code>,
+the default): each episode starts on the terminal row of the previous one, and
+every interval up to the last complete split is simulated once. Episodes keep
+N rows and N - 1 steps. The first episode is unchanged; later episodes start
+earlier, so their results change. Rolling splits, explicit
+<code class="docutils literal notranslate"><span class="pre">[(start,</span> <span class="pre">end),</span> <span class="pre">...]</span></code> splits and whole-window episodes are unchanged.</p>
+<ul class="simple">
+<li><p>To keep day-aligned episodes that cover every hour of hourly data, use
+<code class="docutils literal notranslate"><span class="pre">episode_time_steps=25</span></code>: each episode then runs from 00:00 to the next 00:00.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">episode_time_steps=1</span></code> with more than one split now raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>; an
+episode of one row has no interval to simulate.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">episode_split_boundary='disjoint'</span></code> (constructor argument or schema key)
+restores the 3.6.0 splits.</p></li>
+</ul>
+</section>
+<section id="dynamic-topology-joining-members-storage-and-district-series">
+<h3>Dynamic topology: joining members, storage and district series<a class="headerlink" href="#dynamic-topology-joining-members-storage-and-district-series" title="Link to this heading"></a></h3>
+<p>These changes only affect <code class="docutils literal notranslate"><span class="pre">topology_mode='dynamic'</span></code>:</p>
+<ul class="simple">
+<li><p>A member file shorter than the dataset is read as starting at the member’s
+<code class="docutils literal notranslate"><span class="pre">add_member</span></code> time step. It was misaligned when <code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code>
+was not 0, which also affected the native BAU reference of every dynamic
+episode that does not start at row 0 (the BAU sidecar loads the episode
+window). A member that joins again after leaving needs a full-horizon file and
+now raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> otherwise, instead of reusing frozen rows. A file that
+ends before the member leaves still repeats its last row for the remaining
+steps, but now with a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code>.</p></li>
+<li><p>A member that joins (or rejoins) mid-episode starts its cooling, heating and
+DHW storage at <code class="docutils literal notranslate"><span class="pre">initial_soc</span></code>, as its battery already did, instead of empty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">env.non_shiftable_load</span></code>, <code class="docutils literal notranslate"><span class="pre">env.solar_generation</span></code>, <code class="docutils literal notranslate"><span class="pre">env.power_outage</span></code> and the
+other district sums of building series keep a departed member’s past values
+and count a member only from the step it joins, like
+<code class="docutils literal notranslate"><span class="pre">net_electricity_consumption</span></code>. KPIs are unchanged by this item.</p></li>
+<li><p>An event at the terminal step no longer moves the buildings onto the
+unexecuted terminal row, so their series hold executed intervals only.</p></li>
+</ul>
+</section>
+<section id="control-step-different-from-the-dataset-step">
+<h3>Control step different from the dataset step<a class="headerlink" href="#control-step-different-from-the-dataset-step" title="Link to this heading"></a></h3>
+<p>CityLearn reads one data row per control step and does not resample. A
+<code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> that differs from the dataset step therefore ran the
+calendar, prices and EV schedules at the wrong rate while scaling energies by
+<code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code>. Such a configuration now raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. Set
+<code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> to the dataset step or resample the dataset; pass
+<code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode='compress'</span></code> (constructor argument or schema key) to keep
+the 3.6.0 behaviour.</p>
+<p>The dataset step is now inferred from every row (the median interval) rather
+than from the first two rows, so one irregular row no longer rescales every
+energy. Rows that mix cadences, where fewer than 90 % of the intervals match
+that median, raise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>; declare the step with
+<code class="docutils literal notranslate"><span class="pre">dataset_seconds_per_time_step</span></code> if the calendar columns cannot be fixed. The
+<code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code> constructor argument, previously ignored, must match the
+inferred ratio. The bundled datasets all use their native step and are not
+affected.</p>
+</section>
+<section id="per-building-reward-functions-and-reward-versions">
+<h3>Per-building reward functions and reward versions<a class="headerlink" href="#per-building-reward-functions-and-reward-versions" title="Link to this heading"></a></h3>
+<p>When the schema’s <code class="docutils literal notranslate"><span class="pre">reward_function.type</span></code> maps buildings to reward functions,
+each function now reads its own building’s metadata and is paired with its
+building by name. Per-building functions that read building metadata, such as
+<code class="docutils literal notranslate"><span class="pre">SolarPenaltyReward</span></code>, used the first building’s storage capacities for every
+building, so their rewards change; functions that read only observations, such
+as <code class="docutils literal notranslate"><span class="pre">RewardFunction</span></code>, give the same rewards. Retrain policies trained with such a
+schema. No bundled dataset uses per-building reward functions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Electric_Vehicles_Reward_Function</span></code>, <code class="docutils literal notranslate"><span class="pre">ComfortReward</span></code> and
+<code class="docutils literal notranslate"><span class="pre">SolarPenaltyAndComfortReward</span></code> accept a <code class="docutils literal notranslate"><span class="pre">version</span></code> attribute, and version 2 is
+the default. Version 2 corrects the EV departure penalty, adds the base reward
+and follows the HVAC mode in the comfort term, as the reward function overview
+of the documentation describes. Every bundled schema that uses these rewards
+sets <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;:</span> <span class="pre">2</span></code>, so the rewards of <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>,
+the three-phase demos, the 2023 challenge datasets, both Quebec neighbourhoods
+and <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> differ from 3.6.0; their simulations and KPIs do not. Retrain
+policies trained on these rewards before comparing them with new runs, and
+compare policies only within one version.</p>
+<p>Version 1, the reward of 3.6.0, is deprecated and exists only to reproduce runs
+made with CityLearn 3.6.0 or earlier. Select it with <code class="docutils literal notranslate"><span class="pre">&quot;version&quot;:</span> <span class="pre">1</span></code> in the
+reward attributes (or <code class="docutils literal notranslate"><span class="pre">reward_function_kwargs={&quot;version&quot;:</span> <span class="pre">1}</span></code>); it raises a
+<code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> and will be removed in a later release. Reward objects
+pickled by 3.6.0, for example inside a saved agent or environment, keep version
+1 without a warning. The reward evidence in the environment metadata and in
+export manifests records the version.</p>
+</section>
+<section id="kpi-definitions">
+<h3>KPI definitions<a class="headerlink" href="#kpi-definitions" title="Link to this heading"></a></h3>
+<p>Several <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> KPIs change definition, and the KPI definition version
+(<code class="docutils literal notranslate"><span class="pre">kpi_definition_version</span></code>) becomes <code class="docutils literal notranslate"><span class="pre">2.0.0</span></code>. Simulations are unchanged; rerun
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> on saved environments, or rerun the episodes, before comparing
+with 3.6.0 tables. The <a class="reference internal" href="kpis_reference.html#definitions-changed-after-3-6-0"><span class="std std-ref">KPI reference</span></a>
+lists every changed row and the name that keeps its 3.6.0 value.</p>
+<ul class="simple">
+<li><p><strong>District ratios to the baseline</strong> of import, net exchange and emissions are
+ratios of the district totals instead of means of the building ratios
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/237">#237</a>). The
+3.6.0 values are published as <code class="docutils literal notranslate"><span class="pre">*_building_mean_ratio</span></code>, and the legacy
+<code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> district rows still hold them.</p></li>
+<li><p><strong>District emissions</strong> are those of the netted district import, so local
+sharing between members lowers them, consistent with district import and
+cost (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/238">#238</a>).
+The sum over members is published as <code class="docutils literal notranslate"><span class="pre">district_emissions_total_*_member_sum_kgco2</span></code>.
+Building emissions are unchanged.</p></li>
+<li><p><strong>Building demand-response settlement</strong> allocates the district credited energy
+and shortfall to buildings with the revenue and penalty weights, so building
+shortfall and compliance follow the district tolerance and cap
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/240">#240</a>). District
+KPIs and all cash flows are unchanged. The demand-response definition version
+becomes <code class="docutils literal notranslate"><span class="pre">demand-response-audit-v2</span></code>.</p></li>
+<li><p><strong>Load-factor penalties</strong> in <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> use import power, and windows
+without import are undefined instead of a perfect 0
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/241">#241</a>). The
+signed-net values are published as <code class="docutils literal notranslate"><span class="pre">*_signed_net_*</span></code>; the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code>
+rows keep the signed-net series.</p></li>
+<li><p><strong>Undefined values stay undefined</strong>: a ratio with a missing control or
+reference, the deferrable start delay without completed cycles, and each
+deferrable-appliance ratio to the BAU whose own two totals are zero (for
+example the missed-cycle ratio when neither run missed a cycle, even if cycles
+were due) are now missing instead of 0 or 1 (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/243">#243</a>).
+Code that reads these cells must handle <code class="docutils literal notranslate"><span class="pre">None</span></code>/NaN.</p></li>
+<li><p><strong>Portfolio rates</strong> of <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> (EV departure rates and means,
+service levels, start delay, self-consumption) are pooled from their additive
+denominators instead of weighted by community
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/244">#244</a>). The
+community-market local shares of demand and export and the demand-response
+compliance and audit coverage ratios are pooled the same way, from local plus
+grid energy and from requested energy; the new district rows
+<code class="docutils literal notranslate"><span class="pre">district_demand_response_valid_requested_total_kwh</span></code> and
+<code class="docutils literal notranslate"><span class="pre">district_demand_response_credited_total_kwh</span></code> are the components of the
+compliance ratio (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/285">#285</a>).
+District and building values are unchanged; rerun <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code>
+evaluations whose portfolio rows you compare.</p></li>
+<li><p><strong>BAU ramping average</strong> is the mean upward ramp per step instead of the sum
+over the episode; the sum is published as <code class="docutils literal notranslate"><span class="pre">*_ramping_total_*_kw</span></code>
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/245">#245</a>). The ratio
+to the BAU is unchanged.</p></li>
+</ul>
+</section>
+<section id="physics-version">
+<h3>Physics version<a class="headerlink" href="#physics-version" title="Link to this heading"></a></h3>
+<p>Corrections to the simulated physics are grouped into versioned physics
+definitions, selected with the <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> schema key or the
+<code class="docutils literal notranslate"><span class="pre">CityLearnEnv(physics_version=...)</span></code> argument, which takes precedence. Version
+<code class="docutils literal notranslate"><span class="pre">1</span></code> is the physics of CityLearn 3.6.0 and earlier; version <code class="docutils literal notranslate"><span class="pre">2</span></code>, the default,
+contains the corrections below. The native BAU reference of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>
+uses the version of the evaluated environment, and exports record it in the
+run metadata. To reproduce a 3.6.0 result, set <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>; to
+compare controllers, run them under the same version.</p>
+<p>Version 2 changes the following on bundled datasets:</p>
+<ul class="simple">
+<li><p><strong>Battery discharge power.</strong> <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> describes how charging
+power tapers near full charge, but version 1 applied it to discharge too, so
+a full battery could discharge at only a fraction of its nominal power
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/227">#227</a>). Version
+2 limits discharge with a separate battery attribute,
+<code class="docutils literal notranslate"><span class="pre">discharge_power_curve</span></code>, which defaults to a flat curve at <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code>
+and can derate at low state of charge. <code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code> keeps its
+<code class="docutils literal notranslate"><span class="pre">max_discharge_kw</span></code>. This changes every battery and EV battery whose
+<code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> tapers, which includes the default curve, whenever it
+discharges above the taper point: the 2022 and 2023 challenge datasets, the
+three-phase demos, the neighbourhood datasets and most <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> batteries.</p></li>
+<li><p><strong>Battery discharge during outages.</strong> Version 1 capped an islanded battery’s
+discharge with a pre-step estimate of the load that ignored the thermal
+storage discharge and the device limits, so the battery could discharge more
+than the building consumed and the surplus was reported as PV curtailment,
+even without PV (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/229">#229</a>).
+Version 2 discharges the battery after the step’s thermal demand and thermal
+storage discharges are known and caps it at the islanded load that PV leaves.
+With <code class="docutils literal notranslate"><span class="pre">physics_invariant_checks</span></code>, a discharge above that load raises
+<code class="docutils literal notranslate"><span class="pre">PhysicsInvariantError</span></code>. This changes scenarios with outages and batteries, such as
+the <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_*</span></code> datasets with stochastic outages and the
+<code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> robustness, combined and all-in scenarios.</p></li>
+<li><p><strong>Energy to full of faded batteries.</strong> Charging stops at a battery’s
+degraded capacity, which capacity fade lowers below its nominal capacity,
+but version 1 computed the entity observations of the energy a battery can
+still take from the nominal capacity, so a battery that fade had made full
+was observed with <code class="docutils literal notranslate"><span class="pre">can_charge</span></code> 1 and charge power available. Version 2 stops
+<code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_to_full_kwh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">flexible_energy_to_full_kwh</span></code> and the charge features derived from them at
+the degraded capacity (see <a class="reference internal" href="observations_reference.html#energy-to-full"><span class="std std-ref">energy to full</span></a>).
+The simulated physics is unchanged, but controllers that read these
+observations act differently: the BAU no longer reserves power for a faded EV
+that is already full, so its home battery no longer discharges for it and
+exports the energy. This changes the BAU on datasets whose EV batteries fade
+and that publish the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle:
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>, the dynamic assets and
+dynamic topology three-phase demos and the 15-second three-phase demos.
+Batteries without fade, including every <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> battery, and
+<code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo</span></code>, which does not publish
+the bundle, are unchanged.</p></li>
+<li><p><strong>Electrical-service headroom.</strong> The import limit of a building with
+<code class="docutils literal notranslate"><span class="pre">electrical_service</span></code> was shared among the EV chargers and the battery in
+proportion to their requested power, including requests that the device
+could not draw, such as a charge request to a full battery or to a charger
+without an EV, so the other devices were curtailed
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/231">#231</a>). Version
+2 first limits each request to the power the device can draw at that step
+and shares the headroom among those powers; the headroom observations and the
+requested-violation penalty use the same powers. A controller is therefore no
+longer penalised for a request that has no physical effect.</p></li>
+<li><p><strong>Thermal storage under an electrical-service limit.</strong> The headroom was
+allocated before the step’s thermal storage charging, so the import could
+exceed the limit while the recorded power, headroom and violation stayed
+within it (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/230">#230</a>).
+Version 2 allocates the headroom to the EV chargers and the battery after the
+thermal, domestic hot water and non-shiftable updates, and records the power,
+the headroom and the violation from the settled import of the step.</p></li>
+<li><p><strong>Deferrable appliance starts.</strong> Version 1 allowed a start only if the whole
+cycle fitted the realised future outage signal, load, PV and limits, which a
+controller cannot know, and reported that decision through the <code class="docutils literal notranslate"><span class="pre">can_start</span></code>
+observation, the action feedback and the simulator’s refusal of the start
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/232">#232</a>).
+Version 2 decides a start on the current step and on whether the cycle ends
+within the episode. A cycle that later meets an outage is served from the
+islanded supply that the other loads leave, after them; when that supply
+does not cover the step, the cycle stops and is reported as missed. A cycle
+that later meets a load peak under an electrical-service limit continues, and
+any excess over the limit is recorded as a violation, as for the other loads
+the controller does not set.</p></li>
+</ul>
+<p>These three changes affect the <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> datasets, where every member has an
+electrical-service limit, and <code class="docutils literal notranslate"><span class="pre">Building_15</span></code> of the three-phase demos.</p>
+<p>It also changes runs that use the following:</p>
+<ul class="simple">
+<li><p><strong>EVs with a standby loss.</strong> An EV away from its charger now keeps the
+standby loss of each step; version 1 discarded it, so a non-zero battery
+<code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code> had no effect while the EV was away
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/236">#236</a>).</p></li>
+<li><p><strong>Steps longer than one hour.</strong> The cooling and heating demand caps compared
+an energy per step with a power, which limited HVAC output to one hour of
+nominal power per step
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/235">#235</a>).</p></li>
+<li><p><strong>Autosizing at sub-hourly resolution.</strong> Storage tanks are sized to hold one
+hour of peak demand power (the <code class="docutils literal notranslate"><span class="pre">duration</span></code> autosize attribute, in hours,
+changes it) instead of the largest demand per step, so hourly data are sized
+as before and 15-minute data get the same tanks as hourly data. PV autosizing
+groups years by the dataset resolution and repeats the hourly PVWatts output
+at sub-hourly steps; at sub-hourly resolution it used to fail or to size the
+PV for a quarter of the demand
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/233">#233</a>).</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">StorageDevice.round_trip_efficiency</span></code> returned the one-way efficiency, the
+square root of <code class="docutils literal notranslate"><span class="pre">efficiency</span></code>. Use <code class="docutils literal notranslate"><span class="pre">one_way_efficiency</span></code> for that value, or
+<code class="docutils literal notranslate"><span class="pre">efficiency</span></code> for the round-trip efficiency; <code class="docutils literal notranslate"><span class="pre">round_trip_efficiency</span></code> keeps its
+value, warns with <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> and will be removed. Device metadata adds
+<code class="docutils literal notranslate"><span class="pre">one_way_efficiency</span></code> and keeps <code class="docutils literal notranslate"><span class="pre">round_trip_efficiency</span></code> with the same value. The
+entity feature <code class="docutils literal notranslate"><span class="pre">round_trip_efficiency_ratio</span></code> keeps its name and value, which is
+the one-way efficiency. <code class="docutils literal notranslate"><span class="pre">Battery.efficiency_history</span></code> now gains one entry per
+charge or discharge instead of two. No simulated value changes.</p>
+</section>
+<section id="random-streams">
+<h3>Random streams<a class="headerlink" href="#random-streams" title="Link to this heading"></a></h3>
+<p>CityLearn draws random values for unspecified device parameters (for example a
+battery’s <code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code>, <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> or
+<code class="docutils literal notranslate"><span class="pre">capacity_loss_coefficient</span></code>, or a tuple range given for a parameter), the state
+of charge of electric vehicles away from their charger, occupant set-point
+interactions and stochastic power outages. The new top-level schema key and
+constructor argument <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> selects how these streams are
+derived from <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/248">#248</a>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">v2</span></code>, the new default, derives every stream with <code class="docutils literal notranslate"><span class="pre">numpy.random.SeedSequence</span></code>,
+with the seed as entropy and the purpose, the object and the episode as spawn
+key, and keeps one generator per stream:</p>
+<ul class="simple">
+<li><p>each device draws its parameters as successive values of its own stream,
+keyed by building and device name; in 3.6.0 every draw was the first value of
+a new <code class="docutils literal notranslate"><span class="pre">RandomState</span></code>, so all parameters of a device sat at the same quantile.
+A <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> given in a device’s or an EV battery’s attributes is that
+object’s own stream, so devices given the same seed draw the same parameters,
+as a device built on its own does;</p></li>
+<li><p>each electric vehicle has its own away-from-charger drift stream per episode;
+in 3.6.0 one stream seeded with <code class="docutils literal notranslate"><span class="pre">random_seed</span> <span class="pre">+</span> <span class="pre">episode</span></code> was shared by every
+EV, so seed <code class="docutils literal notranslate"><span class="pre">s</span></code> in episode 1 repeated seed <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">+</span> <span class="pre">1</span></code> in episode 0;</p></li>
+<li><p>each occupant has its own stream per episode; in 3.6.0 every occupant drew
+<code class="docutils literal notranslate"><span class="pre">RandomState(max(random_seed,</span> <span class="pre">1)</span> <span class="pre">+</span> <span class="pre">time_step)</span></code>, the same value in every
+building and episode, and seeds 0 and 1 were identical;</p></li>
+<li><p>each building’s stochastic outages are drawn per episode, including day 0
+and a partial last day, with durations rounded to the nearest step; 3.6.0
+skipped day 0 and the partial last day, floored durations, and repeated the
+same outages in every episode with the same window. A seed given to the
+outage model is now the root of that building’s stream instead of a stream
+shared by every building that uses it.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">reset(seed=s)</span></code> repeats the first episode of an environment built with
+<code class="docutils literal notranslate"><span class="pre">random_seed=s</span></code>, and <code class="docutils literal notranslate"><span class="pre">reset(options={'episode_index':</span> <span class="pre">k})</span></code> repeats episode <code class="docutils literal notranslate"><span class="pre">k</span></code>.
+The native BAU reference uses the streams of the episode it evaluates.</p>
+<p>Runs that use none of these random features are unchanged. To reproduce results
+obtained with 3.6.0 or earlier for the same seed, set <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code>
+to <code class="docutils literal notranslate"><span class="pre">v1</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">random_stream_version</span><span class="o">=</span><span class="s1">'v1'</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or add <code class="docutils literal notranslate"><span class="pre">&quot;random_stream_version&quot;:</span> <span class="pre">&quot;v1&quot;</span></code> to the schema. The version used is
+recorded in <code class="docutils literal notranslate"><span class="pre">get_metadata()['random_stream_version']</span></code>, in the
+<code class="docutils literal notranslate"><span class="pre">temporal_reproducibility</span></code> metadata and in the experiment manifest; comparisons
+between runs with different versions report a temporal mismatch.</p>
+<p>Measured with the same pseudo-random actions and the other settings at their
+defaults, <code class="docutils literal notranslate"><span class="pre">v1</span></code> reproduces the random streams of 3.6.0 bit for bit on every run
+below; <code class="docutils literal notranslate"><span class="pre">v2</span></code> changes:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all</span></code> (168 h, random battery curves): control
+cost 1,171.0 → 1,171.1 EUR (+0.01%) and net consumption +0.1%;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code> (two 168 h episodes, random
+battery curves and EV drift): net consumption −1.6% in both episodes,
+control cost −0.2% and −0.1%;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_2_local_evaluation</span></code> (720 h): with the
+bundled SAIFI the three buildings no longer share one 15-step outage, so the
+episode has none and the normalized outage unserved energy goes from 0.72 to
+0; with SAIFI 36.5/year the outages per building change from 23/23/23 steps
+in both episodes (identical in every building and episode) to 9/9/34 and
+5/1/4;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">quebec_neighborhood_with_demand_response_set_points</span></code> (3 buildings, two
+168 h episodes): occupant draws now differ by building and episode; energy,
+temperature and comfort KPIs of these runs are unchanged.</p></li>
+</ul>
+<p>Rerun stochastic experiments, and retrain policies whose results you compare
+across seeds, with <code class="docutils literal notranslate"><span class="pre">v2</span></code>; keep <code class="docutils literal notranslate"><span class="pre">v1</span></code> only to reproduce published 3.6.0 numbers.</p>
+<p>Agents and generated neighborhoods follow the same setting
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/287">#287</a>).
+<code class="docutils literal notranslate"><span class="pre">TabularQLearning</span></code> decided between exploration and exploitation with
+<code class="docutils literal notranslate"><span class="pre">RandomState(random_seed</span> <span class="pre">+</span> <span class="pre">time_step)</span></code>, and MARLISA with information sharing
+shuffled the order in which its buildings act with the same seed, so seed <code class="docutils literal notranslate"><span class="pre">s</span></code>
+at time step <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">+</span> <span class="pre">1</span></code> repeated seed <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">+</span> <span class="pre">1</span></code> at time step <code class="docutils literal notranslate"><span class="pre">t</span></code>. With <code class="docutils literal notranslate"><span class="pre">v2</span></code>, an
+agent keeps one generator per purpose and episode, derived from its seed and
+the episode, and takes the version of its environment, so an environment built
+with <code class="docutils literal notranslate"><span class="pre">random_stream_version='v1'</span></code> gives its agents the 3.6.0 streams. The
+neighborhood generator (<code class="docutils literal notranslate"><span class="pre">citylearn.end_use_load_profiles.neighborhood.Neighborhood</span></code>)
+seeded partial-load simulation <code class="docutils literal notranslate"><span class="pre">i</span></code> of building <code class="docutils literal notranslate"><span class="pre">b</span></code> with <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">+</span> <span class="pre">i</span></code>, which ignored
+the neighborhood seed and repeated simulation <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">-</span> <span class="pre">1</span></code> of building <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">+</span> <span class="pre">1</span></code>. Its
+new <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> argument, <code class="docutils literal notranslate"><span class="pre">v2</span></code> by default, derives that seed from
+the neighborhood seed, the building and the simulation index:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Neighborhood</span><span class="p">(</span><span class="n">random_seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">random_stream_version</span><span class="o">=</span><span class="s1">'v1'</span><span class="p">)</span>  <span class="c1"># 3.6.0 partial-load seeds</span>
+</pre></div>
+</div>
+<p>These changes alter the exploration of these agents, and therefore the policies
+they learn, and newly generated datasets; simulations and the bundled datasets
+are unchanged.</p>
+</section>
+<section id="optional-pytorch-and-scikit-learn">
+<h3>Optional PyTorch and scikit-learn<a class="headerlink" href="#optional-pytorch-and-scikit-learn" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">citylearn</span></code> no longer installs PyTorch or scikit-learn. Install the
+extra that your study needs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[dynamics]&quot;</span></code> for datasets with LSTM thermal dynamics:
+the 2023 challenge datasets, both Quebec neighbourhoods, <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> and the
+EULP neighbourhood datasets (<code class="docutils literal notranslate"><span class="pre">ca_alameda_county_neighborhood</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tx_travis_county_neighborhood</span></code>, <code class="docutils literal notranslate"><span class="pre">vt_chittenden_county_neighborhood</span></code>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[rl]&quot;</span></code> for the bundled <code class="docutils literal notranslate"><span class="pre">SAC</span></code>, <code class="docutils literal notranslate"><span class="pre">SACRBC</span></code>, <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> and
+<code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code> controllers (it also covers LSTM thermal dynamics);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[end_use_load_profiles]&quot;</span></code>, which now includes both, to
+build datasets from End-Use Load Profiles.</p></li>
+</ul>
+<p>Without the extra, constructing such an environment or importing these
+controllers raises an <code class="docutils literal notranslate"><span class="pre">ImportError</span></code> that names it; it used to raise a plain
+<code class="docutils literal notranslate"><span class="pre">Exception</span></code> for the controllers. Environments that already have PyTorch and
+scikit-learn installed keep working unchanged. To avoid the CUDA libraries,
+install the CPU-only PyTorch first with
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torch</span> <span class="pre">--index-url</span> <span class="pre">https://download.pytorch.org/whl/cpu</span></code>. Stable
+Baselines3 is not an extra: install <code class="docutils literal notranslate"><span class="pre">stable-baselines3&gt;=2.4</span></code>, which supports
+gymnasium 1.x.</p>
+</section>
+<section id="cli-evaluation-window-and-host-information">
+<h3>CLI evaluation window and host information<a class="headerlink" href="#cli-evaluation-window-and-host-information" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">citylearn</span> <span class="pre">simulate</span> <span class="pre">...</span> <span class="pre">train</span> <span class="pre">--evaluate</span></code> evaluates on the first training
+episode window when <code class="docutils literal notranslate"><span class="pre">-te</span></code> is not given; it used to evaluate on the whole
+simulation window. Runs without <code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code> evaluate the same window
+as before. Pass <code class="docutils literal notranslate"><span class="pre">-te</span> <span class="pre">start</span> <span class="pre">end</span></code> to evaluate on a chosen window. The training
+summary JSON records <code class="docutils literal notranslate"><span class="pre">hostname</span></code> and <code class="docutils literal notranslate"><span class="pre">username</span></code> only with <code class="docutils literal notranslate"><span class="pre">--record_host</span></code>;
+scripts that read these keys need the flag.</p>
+</section>
+<section id="renamed-agent-classes">
+<h3>Renamed agent classes<a class="headerlink" href="#renamed-agent-classes" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">citylearn.agents.base.BaselineAgent</span></code> is now <code class="docutils literal notranslate"><span class="pre">NoControlAgent</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">citylearn.agents.baseline.ZeroActionBaselineAgent</span></code> is now <code class="docutils literal notranslate"><span class="pre">ZeroActionAgent</span></code>. In
+CityLearn, “baseline” names the KPI counterfactual, the same buildings without
+storage and with PV, which the <code class="docutils literal notranslate"><span class="pre">*_baseline_*</span></code> KPIs report; the two agents are a
+no-control and a zero-action controller, so their names now say so. The old
+names are deprecated aliases of the same classes, so existing imports, CLI
+<code class="docutils literal notranslate"><span class="pre">-a</span></code> paths, schema <code class="docutils literal notranslate"><span class="pre">agent.type</span></code> values and pickled agents keep working and only
+raise a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>. Replace the old names before a later release
+removes them:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoControlAgent</span>        <span class="c1"># was BaselineAgent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZeroActionAgent</span>  <span class="c1"># was ZeroActionBaselineAgent</span>
+</pre></div>
+</div>
+<p>The bundled EULP neighbourhood schemas and the default agent of generated EULP
+schemas use <code class="docutils literal notranslate"><span class="pre">citylearn.agents.base.NoControlAgent</span></code>. Results are unchanged.</p>
+</section>
+</section>
+<section id="upgrade-from-3-5-0-to-3-6-0">
+<span id="upgrade-from-350-to-360"></span><h2>Upgrade from 3.5.0 to 3.6.0<a class="headerlink" href="#upgrade-from-3-5-0-to-3-6-0" title="Link to this heading"></a></h2>
+<section id="battery-discharge-features-during-outages">
+<h3>Battery discharge features during outages<a class="headerlink" href="#battery-discharge-features-during-outages" title="Link to this heading"></a></h3>
+<p>During a power outage the entity <code class="docutils literal notranslate"><span class="pre">storage</span></code> features <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code> and
+<code class="docutils literal notranslate"><span class="pre">available_discharge_power_kw</span></code> now report the battery’s discharge capacity
+instead of zero. Controllers that read them, including the BAU and the
+rule-based baselines, can take different actions during outages, so the
+native BAU reference changes on scenarios with outages under the entity
+interface, such as <code class="docutils literal notranslate"><span class="pre">pt_rec_30/evaluation/rec_30_robustness.json</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rec_30_combined.json</span></code> and <code class="docutils literal notranslate"><span class="pre">pt_rec_100/evaluation/rec_100_allin.json</span></code>. This
+change belongs to the same 3.6.0 baseline definitions as the change for
+datasets without <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> (<code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v3</span></code> and the
+others). Rerun the controller and its reference on those scenarios. Agents
+trained on these features may need retraining.</p>
+</section>
+<section id="baselines-without-the-entity-core-electrical-bundle">
+<span id="baselines-without-the-entity_core_electrical-bundle"></span><h3>Baselines without the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle<a class="headerlink" href="#baselines-without-the-entity-core-electrical-bundle" title="Link to this heading"></a></h3>
+<p>On datasets whose schema does not enable <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code>, the BAU and
+the rule-based baselines take different actions: the BAU reserves only the EV
+power the EV can accept, and no baseline counts the last interval’s export as
+PV surplus. Their definition versions change to <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v3</span></code>,
+<code class="docutils literal notranslate"><span class="pre">immediate-user-target-v2</span></code>, <code class="docutils literal notranslate"><span class="pre">basic-v3</span></code>, <code class="docutils literal notranslate"><span class="pre">smart-local-v3</span></code> and <code class="docutils literal notranslate"><span class="pre">community-v3</span></code>, and
+the native BAU reference of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> changes with them. Rerun the
+controller and its reference before comparing with earlier results. Datasets
+with the bundle, including <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> and
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>, are unchanged.</p>
+</section>
+<section id="baselines-under-the-flat-interface-with-robustness-observation-events">
+<h3>Baselines under the flat interface with robustness observation events<a class="headerlink" href="#baselines-under-the-flat-interface-with-robustness-observation-events" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and
+<code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> run as controllers under the flat interface now read the
+corrupted observations, as they already did under the entity interface
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/192">#192</a>). Their
+actions and the controller KPIs of such runs can change. The native BAU
+reference of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>, runs without observation events and runs under
+the entity interface are unchanged.</p>
+</section>
+<section id="robustness-noise-stays-within-physical-ranges">
+<h3>Robustness noise stays within physical ranges<a class="headerlink" href="#robustness-noise-stays-within-physical-ranges" title="Link to this heading"></a></h3>
+<p>Runs with <code class="docutils literal notranslate"><span class="pre">noise_std</span> <span class="pre">=</span> <span class="pre">0</span></code>, which includes every bundled dataset, are unchanged.
+With <code class="docutils literal notranslate"><span class="pre">noise_std</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>, noisy solar generation and solar irradiance (and their
+forecasts) are no longer negative and stay zero at night, outdoor relative
+humidity stays within [0, 100] % and carbon intensity is no longer negative.
+The noise draws are the same, so all other values, and the series of other
+buildings and seeds, are unchanged. Runs whose solar or carbon series became
+negative under noise change; agents trained on such series may need retraining.
+See the <a class="reference internal" href="data_unit_contract.html#robustness-noise"><span class="std std-ref">data unit contract</span></a>.</p>
+</section>
+<section id="python-3-10-or-newer">
+<span id="python-310-or-newer"></span><h3>Python 3.10 or newer<a class="headerlink" href="#python-3-10-or-newer" title="Link to this heading"></a></h3>
+<p>CityLearn requires Python 3.10 or newer. Environments on Python 3.9 keep
+resolving CityLearn 3.5.0; upgrade the interpreter to use later releases.</p>
+</section>
+<section id="vehicle-to-building-backup-during-outages">
+<h3>Vehicle-to-building backup during outages<a class="headerlink" href="#vehicle-to-building-backup-during-outages" title="Link to this heading"></a></h3>
+<p>New and off by default: <code class="docutils literal notranslate"><span class="pre">power_outage.vehicle_to_building</span></code> in a building schema
+(<code class="docutils literal notranslate"><span class="pre">Building.outage_vehicle_to_building</span></code>). Without it nothing changes: an EV
+cannot discharge while the grid is down. With it, a negative EV action during an
+outage discharges the vehicle into the building, up to the islanded load that PV
+and the battery do not cover. Results change only for buildings that enable the
+option and request EV discharge during an outage.</p>
+</section>
+<section id="json-files-with-numpy-values">
+<h3>JSON files with NumPy values<a class="headerlink" href="#json-files-with-numpy-values" title="Link to this heading"></a></h3>
+<p>No dataset, schema or simulation migration is required. Simulated trajectories,
+KPIs and export manifests are unchanged.</p>
+<ul class="simple">
+<li><p><strong>JSON files with NumPy values.</strong> <code class="docutils literal notranslate"><span class="pre">FileHandler.write_json</span></code> (in <code class="docutils literal notranslate"><span class="pre">citylearn.utilities</span></code>
+and <code class="docutils literal notranslate"><span class="pre">citylearn.utils.file_handler</span></code>) writes NumPy booleans, integers and floats as
+JSON booleans and numbers, and NumPy arrays of booleans and numbers as lists. They
+used to be written as text: <code class="docutils literal notranslate"><span class="pre">np.float32(2.5)</span></code> as <code class="docutils literal notranslate"><span class="pre">&quot;2.5&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">np.bool_(True)</span></code> as
+<code class="docutils literal notranslate"><span class="pre">&quot;True&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">np.array([1.0,</span> <span class="pre">np.nan])</span></code> as <code class="docutils literal notranslate"><span class="pre">&quot;[</span> <span class="pre">1.</span> <span class="pre">nan]&quot;</span></code>; they are now <code class="docutils literal notranslate"><span class="pre">2.5</span></code>,
+<code class="docutils literal notranslate"><span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">[1.0,</span> <span class="pre">null]</span></code>. A <code class="docutils literal notranslate"><span class="pre">np.float32</span></code> is written with its exact value, so
+<code class="docutils literal notranslate"><span class="pre">np.float32(0.1)</span></code> becomes <code class="docutils literal notranslate"><span class="pre">0.10000000149011612</span></code>. Code that parsed these strings
+must read numbers instead. With <code class="docutils literal notranslate"><span class="pre">ignore_nan=False</span></code>, a NaN or infinite NumPy float
+now raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>, as a Python float already did; it used to be written as
+<code class="docutils literal notranslate"><span class="pre">&quot;nan&quot;</span></code>. namedtuples (written as objects), <code class="docutils literal notranslate"><span class="pre">Decimal</span></code> values (written as numbers
+with their exact text) and all other values are written as before.</p></li>
+</ul>
+</section>
+<section id="bau-export-charger-exports-cli-and-file-encoding">
+<h3>BAU export, charger exports, CLI and file encoding<a class="headerlink" href="#bau-export-charger-exports-cli-and-file-encoding" title="Link to this heading"></a></h3>
+<p>No dataset or schema migration is required. Simulated trajectories and KPIs are
+unchanged.</p>
+<ul class="simple">
+<li><p><strong>BAU time-series export.</strong> <code class="docutils literal notranslate"><span class="pre">exported_data_business_as_usual_ep&lt;N&gt;.csv</span></code> holds one
+row per building and one district row for each executed time step, as the
+control exports do. It used to add the terminal time step, whose values repeated
+the last executed step, so totals summed from the file counted that step twice.</p></li>
+<li><p><strong>Charger exports.</strong> A charger without a connected or incoming EV writes <code class="docutils literal notranslate"><span class="pre">-1.00</span></code>
+under <code class="docutils literal notranslate"><span class="pre">EV</span> <span class="pre">SOC-%</span></code>, the column used when an EV is present. Charger export files no
+longer have a separate <code class="docutils literal notranslate"><span class="pre">EV</span> <span class="pre">SOC</span></code> column.</p></li>
+<li><p><strong>Schema agent attributes.</strong> <code class="docutils literal notranslate"><span class="pre">CityLearnEnv.load_agent()</span></code> called without <code class="docutils literal notranslate"><span class="pre">agent</span></code>
+builds the schema’s agent from <code class="docutils literal notranslate"><span class="pre">schema['agent']['attributes']</span></code> updated by the
+keyword arguments. Any keyword argument, such as the <code class="docutils literal notranslate"><span class="pre">env=</span></code> that <code class="docutils literal notranslate"><span class="pre">Simulator</span></code>
+always passes, used to discard the schema attributes, so
+<code class="docutils literal notranslate"><span class="pre">Simulator(...,</span> <span class="pre">agent_name=None)</span></code> built the schema’s agent with its default
+parameters. Such runs now use the schema’s parameters; pass keyword arguments to
+override them. <code class="docutils literal notranslate"><span class="pre">&quot;attributes&quot;:</span> <span class="pre">null</span></code> is read as no attributes. An explicitly named
+agent, including the CLI default <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>, still takes only the
+keyword arguments.</p></li>
+<li><p><strong>CLI.</strong> <code class="docutils literal notranslate"><span class="pre">citylearn</span> <span class="pre">simulate</span> <span class="pre">...</span> <span class="pre">evaluate</span></code> and <code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code> complete and
+write the evaluation JSON, also with <code class="docutils literal notranslate"><span class="pre">-te</span></code>; <code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code> evaluates the
+trained agent instead of a new one. Evaluation time series hold one row per
+executed time step, and a variable that a building does not have is reported as
+empty instead of repeating the previous variable. The CLI runs on Python 3.9 and
+3.10.</p></li>
+<li><p><strong>Windows.</strong> <code class="docutils literal notranslate"><span class="pre">run_work_order(...,</span> <span class="pre">virtual_environment_path=...)</span></code> activates the
+environment with <code class="docutils literal notranslate"><span class="pre">Scripts\activate.bat</span></code> on Windows, detected automatically when
+<code class="docutils literal notranslate"><span class="pre">windows_system</span></code> is not given. JSON and YAML files are read and written as UTF-8
+instead of the locale’s code page.</p></li>
+</ul>
+</section>
+<section id="agents-and-wrappers">
+<h3>Agents and wrappers<a class="headerlink" href="#agents-and-wrappers" title="Link to this heading"></a></h3>
+<p>No dataset, schema or export-file migration is required. Environment trajectories
+and KPIs for a given action sequence are unchanged; the results of the agents and
+wrappers below change.</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">TabularQLearning</span></code>.</strong> A transition with <code class="docutils literal notranslate"><span class="pre">terminated=True</span></code> no longer bootstraps
+from the next state’s Q-values, as for <code class="docutils literal notranslate"><span class="pre">SAC</span></code>; truncated transitions still do.
+Q-tables and the actions learned from them change.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">MARLISARBC</span></code>.</strong> Exploration now uses the RBC passed as <code class="docutils literal notranslate"><span class="pre">rbc</span></code>. It used to discard
+the RBC’s actions and explore with random actions while still advancing the RBC,
+so its exploration and everything learned from it change.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> with <code class="docutils literal notranslate"><span class="pre">pca_compression</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>.</strong> The networks read the PCA output
+(<code class="docutils literal notranslate"><span class="pre">int(pca_compression*(observations</span> <span class="pre">+</span> <span class="pre">coordination</span> <span class="pre">variables))</span></code> features). These
+runs used to fail at the first network update; <code class="docutils literal notranslate"><span class="pre">pca_compression=1</span></code> (the default)
+is unchanged.</p></li>
+<li><p><strong>Discrete and tabular wrappers.</strong> <code class="docutils literal notranslate"><span class="pre">DiscreteObservationWrapper</span></code> puts values above
+the observation space’s upper bound into the top bin; they used to get an index
+one past the <code class="docutils literal notranslate"><span class="pre">MultiDiscrete</span></code> space. <code class="docutils literal notranslate"><span class="pre">TabularQLearningObservationWrapper</span></code> numbers
+the <code class="docutils literal notranslate"><span class="pre">prod(bins)</span></code> states of its <code class="docutils literal notranslate"><span class="pre">Discrete</span></code> space with <code class="docutils literal notranslate"><span class="pre">itertools.product</span></code> over the
+bins; it used to enumerate one extra value per observation, declare
+<code class="docutils literal notranslate"><span class="pre">prod(bins</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">-</span> <span class="pre">1</span></code> states and give the last state an index outside the space.
+Saved Q-tables are therefore indexed differently and have a different size;
+retrain them. Episodes whose observations stay within the observation space
+otherwise learn the same Q-values.</p></li>
+<li><p><strong>Wrapped spaces.</strong> <code class="docutils literal notranslate"><span class="pre">DiscreteObservationWrapper</span></code> bins the observations and
+bounds of the env it wraps, so over <code class="docutils literal notranslate"><span class="pre">NormalizedObservationWrapper</span></code> it bins the
+normalized features, including the cos and sin of periodic observations.
+<code class="docutils literal notranslate"><span class="pre">DiscreteActionWrapper</span></code> bins the action space of the env it wraps.
+<code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code> returns new lists instead of clipping the
+environment’s cached observation lists in place.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">OnehotEncoding</span></code>.</strong> A value that is not one of the classes raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>
+naming the value, instead of <code class="docutils literal notranslate"><span class="pre">IndexError</span></code>.</p></li>
+</ul>
+</section>
+<section id="data-loading-edge-cases">
+<h3>Data loading edge cases<a class="headerlink" href="#data-loading-edge-cases" title="Link to this heading"></a></h3>
+<p>No dataset, schema or export-file migration is required. The datasets shipped
+with CityLearn load and simulate as before: none of their 455 charger files is
+parsed differently, and none of their EVs uses <code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code>.</p>
+<ul class="simple">
+<li><p><strong>Charger states.</strong> <code class="docutils literal notranslate"><span class="pre">electric_vehicle_charger_state</span></code> is parsed as a number. A
+blank cell makes pandas read the whole column as floats (<code class="docutils literal notranslate"><span class="pre">1.0</span></code>, <code class="docutils literal notranslate"><span class="pre">2.0</span></code>), which
+used to turn every state of that charger into “no state”, so no EV ever
+connected. Values that are not non-negative integers remain “no state”.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code> EVs.</strong> <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> may be omitted for an EV battery of
+type <code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code>, which derives it from <code class="docutils literal notranslate"><span class="pre">max_charge_kw</span></code> and
+<code class="docutils literal notranslate"><span class="pre">max_discharge_kw</span></code>. A <code class="docutils literal notranslate"><span class="pre">Battery</span></code> still requires it.</p></li>
+<li><p><strong>Random initial SOC.</strong> An EV battery without <code class="docutils literal notranslate"><span class="pre">initial_soc</span></code> draws it uniformly
+between its <code class="docutils literal notranslate"><span class="pre">min_soc</span></code> and <code class="docutils literal notranslate"><span class="pre">max_soc</span></code> (0 and 1 when they are not declared, which
+gives the same values as before). An <code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code> with declared limits
+used to receive a draw from [0, 1], and the run failed when it fell outside them;
+where it fell inside, the initial SOC now differs.</p></li>
+<li><p><strong>Entity SOC limits.</strong> For an <code class="docutils literal notranslate"><span class="pre">InventoryBattery</span></code> with <code class="docutils literal notranslate"><span class="pre">max_soc</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>, the entity
+observations report <code class="docutils literal notranslate"><span class="pre">soc_max_ratio</span></code> as <code class="docutils literal notranslate"><span class="pre">max_soc</span></code>, and the energy and power a
+battery can still take (<code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_to_full_kwh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">flexible_energy_to_full_kwh</span></code>, charge headroom and available charge power)
+stop at <code class="docutils literal notranslate"><span class="pre">max_soc</span></code> instead of a full battery; <code class="docutils literal notranslate"><span class="pre">usable_soc_ratio</span></code> is relative to
+<code class="docutils literal notranslate"><span class="pre">max_soc</span></code>. Batteries without <code class="docutils literal notranslate"><span class="pre">max_soc</span></code> give the same values as before.</p></li>
+</ul>
+</section>
+<section id="dynamic-topology-district-kpis">
+<h3>Dynamic-topology district KPIs<a class="headerlink" href="#dynamic-topology-district-kpis" title="Link to this heading"></a></h3>
+<p>No dataset, schema or export-file migration is required. Static topology results are
+unchanged. In dynamic topology, KPIs change in two cases; rerun both the controller and
+its reference before comparing with earlier results.</p>
+<ul class="simple">
+<li><p><strong>District reference series keep departed members.</strong> The district
+<code class="docutils literal notranslate"><span class="pre">net_electricity_consumption*_without_storage*</span></code> series (the conventional baseline) summed
+only the members active when they were read, while the control series keep each
+member’s consumption for the steps at which it belonged to the district. A member that
+had left therefore dropped out of the baseline side only. The reference series now sum
+every member that has been active, each over the steps at which it was a member, so a
+member that joins late no longer adds its PV-free series before it joins either. This
+changes the district baseline and delta totals (import, export, net exchange, emissions,
+and cost without the community market), the district export ratio to baseline and the
+district ramping, load-factor and peak ratios of scenarios with membership changes.</p></li>
+<li><p><strong>Electrical-service histories survive topology events.</strong> The requested-pressure,
+total-power and per-phase power histories of a member were erased when it rejoined or
+when one of its assets was added or removed. They are now kept, so the
+<code class="docutils literal notranslate"><span class="pre">electrical_service_*</span></code> violation and requested-pressure KPIs and the phase peak and
+imbalance KPIs include the steps before the event.</p></li>
+</ul>
+</section>
+<section id="sub-hourly-power-and-energy-units">
+<h3>Sub-hourly power and energy units<a class="headerlink" href="#sub-hourly-power-and-energy-units" title="Link to this heading"></a></h3>
+<p>These fixes leave runs whose dataset and control step are both 3600 s unchanged.
+Runs with a sub-hourly <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code>, or whose dataset resolution
+differs from the control step (<code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code> other than 1), can change:</p>
+<ul class="simple">
+<li><p>Heat pumps and electric heaters no longer exceed <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> when they
+charge thermal storage at sub-hourly steps, and <code class="docutils literal notranslate"><span class="pre">available_nominal_power</span></code> is a
+power in kW at every step length.</p></li>
+<li><p>On native sub-hourly data (<code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code> 1), a device delivers at most
+<code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> x step duration per step. Previously it could deliver
+3600 / <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> times that energy. Autosized devices are not
+affected, because autosizing already converts the demand per row to power; a
+device whose <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> was set to the largest demand per row (kWh read
+as kW) is now too small.</p></li>
+<li><p>During an outage, the local supply available to devices and to the
+non-shiftable load is converted from step energy to power and to dataset
+resolution; with hourly data at a 900 s step, loads previously received a
+quarter of that supply.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cooling_demand</span></code>, <code class="docutils literal notranslate"><span class="pre">heating_demand</span></code> and <code class="docutils literal notranslate"><span class="pre">dhw_demand</span></code> observations convert the
+storage discharge to dataset resolution, the unit of the device term and of the
+observation bounds.</p></li>
+</ul>
+<p><strong>Undersized devices.</strong> A device that cannot meet the demand left after its
+storage no longer raises <code class="docutils literal notranslate"><span class="pre">AssertionError:</span> <span class="pre">demand</span> <span class="pre">is</span> <span class="pre">greater</span> <span class="pre">than</span> <span class="pre">..._device</span> <span class="pre">max</span> <span class="pre">output</span></code>. CityLearn clips the device output to its limit, as it already does
+during outages, and warns once per device and episode with a <code class="docutils literal notranslate"><span class="pre">RuntimeWarning</span></code>.
+The shortfall is unserved thermal energy: it is reported by
+<code class="docutils literal notranslate"><span class="pre">building_thermal_service_audit_unserved_service_energy_kwh</span></code> and
+<code class="docutils literal notranslate"><span class="pre">..._unserved_service_ratio</span></code> (and the district equivalents) and by
+<code class="docutils literal notranslate"><span class="pre">env.get_kpi_family_audit()</span></code>. If a dataset relabelled from hourly to sub-hourly
+rows now warns, its devices or its demand series do not match the new step:
+autosize or enlarge the devices, or rescale the demand to energy per step.</p>
+</section>
+<section id="estimates-diagnostics-and-schema-options">
+<h3>Estimates, diagnostics and schema options<a class="headerlink" href="#estimates-diagnostics-and-schema-options" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>The base-power estimate behind electrical-service headroom, deferrable start
+checks, the outage battery limit and the feasibility KPIs no longer subtracts
+thermal storage discharge twice, and it counts escalator power. A requested
+escalator state now reduces the import headroom left for EV and battery
+actions in the same step. This applies at every step length, but only to
+buildings with an electrical-service limit and thermal storage or escalators;
+no bundled dataset combines them.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clip_reason_phase_headroom</span></code> and <code class="docutils literal notranslate"><span class="pre">clip_reason_export_headroom</span></code> are set only
+for the phases that carry the asset and for the clipped direction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">observations(normalize=True,</span> <span class="pre">periodic_normalization=False)</span></code> no longer raises
+<code class="docutils literal notranslate"><span class="pre">KeyError:</span> <span class="pre">'month'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set_point_hold_time_steps</span></code> in a building schema now reaches building types
+whose constructor accepts it (<code class="docutils literal notranslate"><span class="pre">LogisticRegressionOccupantInteractionBuilding</span></code>).
+The Quebec neighbourhood datasets set it to 4: occupant set-point changes now
+revert to the schedule after 4 steps without interaction instead of holding
+for the rest of the episode, which changes their hourly results. Other
+building types ignore the key as before.</p></li>
+</ul>
+</section>
+</section>
+<section id="upgrade-from-3-4-0-to-3-5-0">
+<span id="upgrade-from-340-to-350"></span><h2>Upgrade from 3.4.0 to 3.5.0<a class="headerlink" href="#upgrade-from-3-4-0-to-3-5-0" title="Link to this heading"></a></h2>
+<p>No dataset, schema, export-file or BAU migration is required; existing datasets and
+KPIs are unchanged. 3.5.0 adds the <a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a>
+and downloads nested dataset folders. If you download several datasets within an
+hour, set <code class="docutils literal notranslate"><span class="pre">CITYLEARN_GITHUB_TOKEN</span></code> (or <code class="docutils literal notranslate"><span class="pre">GITHUB_TOKEN</span></code>) to a GitHub token to raise
+the anonymous limit of 60 API requests per hour.</p>
+</section>
+<section id="upgrade-from-3-3-to-3-4-0">
+<span id="upgrade-from-33-to-340"></span><h2>Upgrade from 3.3 to 3.4.0<a class="headerlink" href="#upgrade-from-3-3-to-3-4-0" title="Link to this heading"></a></h2>
+<p>No dataset, schema or export-file migration is required.</p>
+<ul class="simple">
+<li><p><strong>BAU.</strong> <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> still charges EVs at once to 100% by default
+(<code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v2</span></code>), but it now decides from the entity observations,
+with the battery and appliance rules of the Algorithms BAU. The native BAU
+reference added by <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> changes with it, so every
+<code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code>, <code class="docutils literal notranslate"><span class="pre">delta_to_business_as_usual</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> KPI can differ from 3.3. Rerun both the controller
+and its reference; do not mix 3.3 and 3.4 BAU values. To charge only to the
+user’s requested departure SOC, set <code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target='requested'</span></code>
+on the environment (or in the schema) and use
+<code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent(env,</span> <span class="pre">ev_charge_target='requested')</span></code>.</p></li>
+<li><p><strong>Unlimited headroom.</strong> In the entity tables, a building without an electrical
+service limit (or without a limit on a phase or direction) now publishes its
+headroom features (<code class="docutils literal notranslate"><span class="pre">charging_*headroom_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">building_*_headroom_kw</span></code>,
+<code class="docutils literal notranslate"><span class="pre">*_phase_headroom_kw</span></code>) as 1,000,000 kW, the upper bound of their observation
+space, instead of 0 kW. 0 kW read as “no capacity left”. Models trained on 3.3
+entity observations of such buildings saw 0 there; retrain or re-evaluate them.</p></li>
+<li><p><strong>BAU parameters.</strong> The 3.3 constructor arguments <code class="docutils literal notranslate"><span class="pre">ev_target_soc</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ev_follow_required_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">ev_service_margin_rate</span></code>, <code class="docutils literal notranslate"><span class="pre">ev_service_floor_rate</span></code> and
+<code class="docutils literal notranslate"><span class="pre">storage_deadband_kw</span></code> no longer exist; unknown keyword arguments raise
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. <code class="docutils literal notranslate"><span class="pre">storage_min_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">storage_max_soc</span></code> and <code class="docutils literal notranslate"><span class="pre">deferrable_start_action</span></code>
+keep their names and defaults. See the <a class="reference internal" href="baselines.html#default-parameters"><span class="std std-ref">baselines guide</span></a>.</p></li>
+<li><p><strong>Removed names.</strong> <code class="docutils literal notranslate"><span class="pre">NormalPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">NormalNoBatteryPolicy</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ServiceOnlyBaselineAgent</span></code> are removed; use <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>.
+<code class="docutils literal notranslate"><span class="pre">GridAwareBaselineAgent</span></code> and <code class="docutils literal notranslate"><span class="pre">CommunityAwareBaselineAgent</span></code> are removed; use
+<code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code>. Code importing these names must be
+updated before upgrading to 3.4.0.</p></li>
+<li><p><strong>Rule-based baselines.</strong> <code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code> and
+<code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code> are replaced by the Basic, Smart and Community baselines
+validated in the Soft-CPS Algorithms repository. Their decisions, parameters and
+results differ from 3.3. Pass parameters as keyword arguments, for example
+<code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy(env,</span> <span class="pre">community_import_threshold_kw=10.0)</span></code>.</p></li>
+<li><p><strong>Observations.</strong> All baselines now decide from the named entity observations
+rather than from simulator objects. Code that changes a building series or a
+device after loading is seen by the baselines only through the observations
+the simulator publishes for that step.</p></li>
+<li><p><strong>Experiment identity.</strong> <code class="docutils literal notranslate"><span class="pre">comparison_identity()</span></code> and the BAU reference
+metadata report <code class="docutils literal notranslate"><span class="pre">observation_access='entity_observations'</span></code> and include the
+definition version and resolved parameters.</p></li>
+</ul>
+</section>
+<section id="upgrade-from-3-3-0-to-3-3-1">
+<span id="upgrade-from-330-to-331"></span><h2>Upgrade from 3.3.0 to 3.3.1<a class="headerlink" href="#upgrade-from-3-3-0-to-3-3-1" title="Link to this heading"></a></h2>
+<p>No dataset, schema or export-file migration is required. The native BAU
+reference built by <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> now uses the entity interface whenever the
+evaluated env does, so entity schemas with static topology and robustness events
+on <code class="docutils literal notranslate"><span class="pre">ev</span></code>, <code class="docutils literal notranslate"><span class="pre">storage</span></code> or <code class="docutils literal notranslate"><span class="pre">pv</span></code> observations no longer fail. BAU actions and KPIs are
+unchanged, because the BAU agent reads simulator state rather than observations.</p>
+</section>
+<section id="upgrade-from-3-2-0-to-3-3-0">
+<span id="upgrade-from-320-to-330"></span><h2>Upgrade from 3.2.0 to 3.3.0<a class="headerlink" href="#upgrade-from-3-2-0-to-3-3-0" title="Link to this heading"></a></h2>
+<p>No dataset, schema or export-file migration is required.</p>
+<ul class="simple">
+<li><p><strong>NumPy 2 and Python 3.12+:</strong> <code class="docutils literal notranslate"><span class="pre">numpy&lt;2</span></code> and <code class="docutils literal notranslate"><span class="pre">scikit-learn&lt;=1.2.2</span></code> are no
+longer pinned. The occupant models of the Quebec datasets are read from their
+pickles without scikit-learn and evaluated with NumPy, giving predictions
+bit-identical to scikit-learn 1.2.2; loading them no longer runs code from the
+file. Arithmetic whose type NumPy 2 changed (NEP 50 promotion of float32
+scalars with Python numbers) is written to give NumPy 1’s result, so
+observations, rewards and simulated time series are identical on both
+versions. KPIs can differ in the last binary digits (relative differences of
+order 1e-15): NumPy 2.3 and later add up more than 8,192 values in a different
+order, which affects totals over episodes longer than 8,192 time steps and the
+district Gini ratio of more than 90 members, and the equity audit’s Gini ratio
+uses a BLAS dot product, whose last digit depends on the BLAS build and CPU.</p></li>
+<li><p><strong>Custom occupant models:</strong> <code class="docutils literal notranslate"><span class="pre">RandomForestClassifier</span></code> and
+<code class="docutils literal notranslate"><span class="pre">DecisionTreeClassifier</span></code> pickles are read the same way, with any pickle
+protocol (0 to 5) and when the model was fitted with a
+<code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> as <code class="docutils literal notranslate"><span class="pre">random_state</span></code>. Predictions are those of the
+scikit-learn release that saved the model. Best-split decision trees from
+1.3, random forests from 1.4 and random-split decision trees from 1.6 route
+missing (NaN) inputs using <code class="docutils literal notranslate"><span class="pre">missing_go_to_left</span></code>. Older versions of each
+estimator reject those inputs, as do models with monotonic constraints
+saved with scikit-learn 1.4 through 1.8.
+Other pickled models are unpickled with the installed
+scikit-learn. If it cannot read one saved with scikit-learn 1.2.2 or earlier,
+install <code class="docutils literal notranslate"><span class="pre">scikit-learn==1.2.2</span></code> with <code class="docutils literal notranslate"><span class="pre">numpy&lt;2</span></code> (Python 3.11 or older), or refit
+the model and save it with the installed release.</p></li>
+<li><p><strong>Experiment evidence:</strong> KPI-export manifests written on Windows record input
+files and the engine source as on Linux and macOS (file paths below the dataset
+root with <code class="docutils literal notranslate"><span class="pre">/</span></code>, engine source hashed with LF line endings), so Windows exports
+of one dataset pair across locations and their hashes can be checked against
+the committed files. Linux and macOS evidence is unchanged. Runs on different
+operating systems still do not pair: <code class="docutils literal notranslate"><span class="pre">engine.runtime_versions</span></code> records the OS.
+<a class="reference internal" href="developer_guide.html#portable-experiment-evidence"><span class="std std-ref">Portable experiment evidence</span></a>
+lists the file-reference spellings that are normalised and how to update a
+checkout made before <code class="docutils literal notranslate"><span class="pre">.gitattributes</span></code>.</p></li>
+<li><p><strong>RL agent keyword:</strong> pass <code class="docutils literal notranslate"><span class="pre">action_scaling_coefficient=</span></code> to <code class="docutils literal notranslate"><span class="pre">SAC</span></code>, <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code>
+and other <code class="docutils literal notranslate"><span class="pre">RLC</span></code> agents. The misspelled <code class="docutils literal notranslate"><span class="pre">action_scaling_coefficienct=</span></code> still
+works with a <code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code>; before, only the misspelling took effect.</p></li>
+<li><p><strong>Native BAU reference check:</strong> <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> naming
+the setting when the reference, which is rebuilt from the schema and the
+constructor arguments, differs from the evaluated env as captured at its last
+<code class="docutils literal notranslate"><span class="pre">reset()</span></code>: the building order, a building’s <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code> or active
+actions, or any parameter of its devices (heat pumps, heaters, storage tanks,
+PV, batteries, chargers, appliances and EV batteries), not only battery
+capacities. Before, the reference silently simulated the schema’s values. A
+change made after <code class="docutils literal notranslate"><span class="pre">reset()</span></code> is not detected. Evaluate with
+<code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> in that case.</p></li>
+<li><p><strong>Dataset downloads:</strong> <code class="docutils literal notranslate"><span class="pre">DataSet.get_dataset(name,</span> <span class="pre">directory=...)</span></code> copies the
+dataset into <code class="docutils literal notranslate"><span class="pre">directory/&lt;name&gt;</span></code> and returns that schema path. Failed
+downloads raise instead of being cached, and concurrent first downloads no
+longer interfere, including when they replace a cache folder missing
+<code class="docutils literal notranslate"><span class="pre">schema.json</span></code>. <code class="docutils literal notranslate"><span class="pre">filelock</span></code>, already installed with <code class="docutils literal notranslate"><span class="pre">torch</span></code>, is now a
+declared requirement.</p></li>
+<li><p><strong>SAC and MARLISA:</strong> default schedules now work on episodes shorter than the
+default batch; inconsistent given values raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> instead of
+<code class="docutils literal notranslate"><span class="pre">assert</span> <span class="pre">False</span></code>. Runs are repeatable from the environment seed. Agents saved
+with 3.2.0 resume training: the random streams they lack are derived from
+their seed. MARLISA fills in missing scikit-learn parameters using the
+installed defaults and refits its demand model on its whole buffer at the
+first update.</p></li>
+</ul>
+<p>Fixes that <strong>change results</strong> where they apply:</p>
+<ul class="simple">
+<li><p>Storage activation and EV topology: the discharge reserve limits energy
+leaving a battery. A newly activated battery uses its configured initial SOC,
+including below the reserve. Removing or moving a charger preserves EV identity.
+While the EV is away, standby losses and seeded mobility continue to apply.
+A newly activated EV starts from its configured SOC, and an explicit arrival
+estimate is accounted for as external energy. Exports identify the charger
+that actually served the EV.</p></li>
+<li><p>Stochastic power outages: built-in models without an explicit seed now
+derive one from the environment seed, episode window and building name.
+The native BAU reference uses the same seed and outage signal.</p></li>
+<li><p>Agents: MARLISA’s coordinated actions use each building’s own policy;
+<code class="docutils literal notranslate"><span class="pre">TabularQLearning</span></code> bootstraps on the best next-state value; an explicit
+<code class="docutils literal notranslate"><span class="pre">action_scaling_coefficient</span></code> now takes effect (the default stays 0.5).</p></li>
+<li><p>KPI references: the native BAU reference re-applies <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code>,
+<code class="docutils literal notranslate"><span class="pre">solar_generation</span></code> and active/inactive action and observation overrides, to
+the same buildings when <code class="docutils literal notranslate"><span class="pre">buildings=</span></code> lists them in another order than the
+schema; with the community market enabled, legacy cost and the equity audit
+settle the counterfactual too. Autosized equipment in the reference is sized
+over the same data as the evaluated env, not only the current episode:
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> no longer fails on the tx, vt and ca neighbourhood datasets
+when episodes are shorter than the data, and BAU KPIs of the 2020 and 2021
+challenge datasets change because their reference heat pumps and storage now
+match.</p></li>
+<li><p>Equipment: autosized batteries simulate their datasheet efficiency (tx, vt and
+ca neighbourhood datasets), and an EV connects to at most one charger per step,
+which affects charger clones in the dynamic-topology demos.</p></li>
+<li><p>EV datasets: each EV draws its own unspecified battery parameters
+(efficiency, curves, capacity fade) instead of all sharing one set. An
+arriving EV starts from the latest arrival state of charge on the incoming
+rows of its own session, also when only an earlier incoming row holds it, or
+else from the one on its connection row. It never takes an estimate across a
+change of <code class="docutils literal notranslate"><span class="pre">electric_vehicle_session_id</span></code>, and the KPI and departure-audit
+arrival references use the same value.</p></li>
+<li><p>SAC/MARLISA: features or rewards constant during warm-up are centred but no
+longer scaled by ~1e5; exploration, replay sampling and policy noise use
+seeded generators; MARLISA stores each transition with its own coordination
+variables and refits its demand model as data accumulates.</p></li>
+<li><p>KPIs: net-exchange and cost ratios with a negative (net-exporting or
+market-credited) reference use <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">+</span> <span class="pre">(control</span> <span class="pre">-</span> <span class="pre">reference)</span> <span class="pre">/</span> <span class="pre">|reference|</span></code>, so
+lower stays better; the counterfactual baseline exchanges no energy with the
+grid during power outages; multi-community ratios to a reference are ratios
+of summed totals.</p></li>
+<li><p>Subhourly control with hourly data: the partial-load baseline top-up is
+converted to the control step.</p></li>
+<li><p>Robustness: a PV <code class="docutils literal notranslate"><span class="pre">asset</span></code> <code class="docutils literal notranslate"><span class="pre">unavailable</span></code> event with the <code class="docutils literal notranslate"><span class="pre">control</span></code> or <code class="docutils literal notranslate"><span class="pre">both</span></code>
+part stops generation, not only its telemetry.</p></li>
+<li><p>Terminal observation: calendar, weather and prices come from the terminal
+row, and endogenous values from the last executed step, as for every other
+observation. Episode length and termination are unchanged.</p></li>
+</ul>
+<p>Changes that <strong>preserve trajectories and KPI values</strong>: the zero-size placeholders
+for absent devices, and EV chargers, are seeded, so the placeholders’ unused
+parameters are reproducible and building an env no longer advances Python’s
+global <code class="docutils literal notranslate"><span class="pre">random</span></code> stream; the native BAU cache keeps only the latest reference and
+releases it before building the next, so repeated mid-episode <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>
+calls hold at most one reference env; and the reference loads only the episode,
+not the whole data window, when the only device marked for autosizing is PV that
+<code class="docutils literal notranslate"><span class="pre">solar_generation</span></code> disables.</p>
+</section>
+<section id="upgrade-from-3-1-1-to-3-2-0">
+<span id="upgrade-from-311-to-320"></span><h2>Upgrade from 3.1.1 to 3.2.0<a class="headerlink" href="#upgrade-from-3-1-1-to-3-2-0" title="Link to this heading"></a></h2>
+<p>CityLearn supports Gymnasium from 0.28.1 up to, but excluding, 2.0. Dataset names
+now resolve against the <code class="docutils literal notranslate"><span class="pre">v3.2.0</span></code> tag. Existing dataset files and export formats
+remain compatible.</p>
+<p>Install <code class="docutils literal notranslate"><span class="pre">citylearn[end_use_load_profiles]</span></code> when generating datasets with the
+EULP/EnergyPlus tools. Standard simulations use the core installation.</p>
+<ul class="simple">
+<li><p><strong>Per-building reward functions:</strong> <code class="docutils literal notranslate"><span class="pre">MultiBuildingRewardFunction.calculate()</span></code>
+(used when the schema’s <code class="docutils literal notranslate"><span class="pre">reward_function.type</span></code> maps buildings to functions)
+now returns one float per building, e.g. <code class="docutils literal notranslate"><span class="pre">[-1.0,</span> <span class="pre">-2.0]</span></code> instead of the nested
+<code class="docutils literal notranslate"><span class="pre">[[-1.0],</span> <span class="pre">[-2.0]]</span></code>, like every other reward function. With
+<code class="docutils literal notranslate"><span class="pre">central_agent=True</span></code> it returns their sum as <code class="docutils literal notranslate"><span class="pre">[total]</span></code>. Replace indexing such
+as <code class="docutils literal notranslate"><span class="pre">reward[i][0]</span></code> with <code class="docutils literal notranslate"><span class="pre">reward[i]</span></code>.</p></li>
+<li><p><strong>KPI exports:</strong> the manifest records <code class="docutils literal notranslate"><span class="pre">energy_provenance</span></code>. With
+<code class="docutils literal notranslate"><span class="pre">energy_provenance=False</span></code> its <code class="docutils literal notranslate"><span class="pre">provenance_summary</span></code> and <code class="docutils literal notranslate"><span class="pre">source_destinations</span></code>
+are <code class="docutils literal notranslate"><span class="pre">null</span></code> instead of failing the export, and the native BAU reference uses the
+same setting.</p></li>
+</ul>
+<p>Fixes that <strong>change results</strong> where they apply:</p>
+<ul class="simple">
+<li><p>Observations: LSTM dynamics buildings report the simulated indoor temperature
+(#165); zero-based minute and second features use a 60-step cycle; occupant
+set-point deltas and EV/deferrable consumption bounds are corrected.</p></li>
+<li><p>Dynamics: LSTM dropout is disabled at inference, so Quebec-model trajectories
+are deterministic for a seed and differ from earlier, noisy runs.</p></li>
+<li><p>Subhourly control with hourly data (<code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code> other than 1): LSTM
+heating and cooling actions request the stated fraction of nominal power,
+converted to energy once; thermal-storage charging and discharge limits use the
+same conversion, and autosizing uses each building’s dataset/control ratio.</p></li>
+<li><p>Episodes: thermal-storage discharge at the first step is counted once, and
+action feedback, constraint penalties and dynamic series reset with each
+episode, which changes second and later episodes.</p></li>
+</ul>
+<p>Changes that <strong>preserve trajectories and KPI values</strong>: the <code class="docutils literal notranslate"><span class="pre">energy_provenance</span></code>
+option (default on), LSTM input trimming and scalar fast paths; gymnasium 1.x
+support; and crash fixes for <code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code> 0, partial-day outage signals and the
+CLI without stable-baselines3.</p>
+</section>
+<section id="upgrade-from-3-1-0-to-3-1-1">
+<span id="upgrade-from-310-to-311"></span><h2>Upgrade from 3.1.0 to 3.1.1<a class="headerlink" href="#upgrade-from-3-1-0-to-3-1-1" title="Link to this heading"></a></h2>
+<p>No dataset, schema or export-file migration is required. Dataset names resolve
+against the <code class="docutils literal notranslate"><span class="pre">v3.1.1</span></code> tag by default; its dataset files are unchanged from 3.1.0.</p>
+<ul class="simple">
+<li><p>Explicit <code class="docutils literal notranslate"><span class="pre">random_episode_split</span></code> constructor values now take precedence over the
+schema. Pass <code class="docutils literal notranslate"><span class="pre">None</span></code> to retain the schema’s setting.</p></li>
+<li><p>Standby loss is an hourly fraction compounded over elapsed physical time.
+Subhourly SOC trajectories and their derived KPIs can therefore differ slightly.</p></li>
+<li><p>Autosizing converts energy demand to power before sizing power-rated devices
+and batteries. Recheck automatically chosen equipment in subhourly experiments;
+explicitly configured equipment and thermal capacity in step kWh are retained.</p></li>
+<li><p>Public energy-command interfaces and native BAU control logic are unchanged.
+Compare experiments using matching versions and resolved equipment settings;
+corrected results must not be labelled identical to old subhourly references.</p></li>
+</ul>
+</section>
+<section id="upgrade-from-3-0-2-to-3-1-0">
+<span id="upgrade-from-302-to-310"></span><h2>Upgrade from 3.0.2 to 3.1.0<a class="headerlink" href="#upgrade-from-3-0-2-to-3-1-0" title="Link to this heading"></a></h2>
+<p>The distribution, import namespace and default dataset registry remain
+<code class="docutils literal notranslate"><span class="pre">citylearn</span></code>, <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> and <code class="docutils literal notranslate"><span class="pre">citylearn-project/CityLearn</span></code> at <code class="docutils literal notranslate"><span class="pre">v3.1.0</span></code>.
+All 32 public datasets are retained byte-for-byte; no CPS production datasets
+are imported, and the datasets retired in 3.0.2 remain retired.</p>
+<ul class="simple">
+<li><p><strong>BAU behavior:</strong> the native <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> now requests immediate
+maximum charging to 100% for connected EVs. Concurrent vehicles share the
+available electrical capacity proportionally. It does not schedule charging
+against PV, prices or departure targets. The existing constructor order is
+retained, but non-default EV target/deadline options are rejected explicitly;
+use the configurable RBC policies for those experiments. Saved BAU trajectories
+from 3.0.2 must not silently serve as 3.1.0 references.</p></li>
+<li><p><strong>Corrected accounting:</strong> outage dispatch shares one energy budget across
+served loads, storage reserves conserve energy, electrical limits use applied
+actions, and service/KPI denominators use executed intervals and events. Some
+previously saved KPI values can therefore change. Use version-matched runs
+when comparing experiments; keep raw energy, cost and service evidence.</p></li>
+<li><p><strong>Exports:</strong> KPI-only exports still omit episode time series but include
+manifest and deferrable-service JSON sidecars. CSV and partitioned Parquet
+output remain supported. Keep sidecars with the exported KPI file.</p></li>
+<li><p><strong>Compact histories:</strong> public market and robustness history access retains
+its legacy values and structure, reconstructed on demand. A returned market
+record is a snapshot: assign an edited record back through the history mapping
+rather than relying on nested in-place mutation. Repeatedly materializing full
+public histories can allocate substantial memory; retain compact histories
+during simulation and reconstruct them when needed.</p></li>
+<li><p><strong>Local schemas:</strong> roots are resolved from the schema location. Existing
+repository-relative roots are also accepted when found under an ancestor;
+an existing schema-relative root takes precedence. Resolution does not depend
+on the process working directory, and input files are not rewritten.</p></li>
+</ul>
+<p>The performance changes preserve trajectories and KPI values relative to the
+corrected functional implementation. They do not imply equality with all
+historical 3.0.2 results. See the <a class="reference internal" href="releases.html#v3-1-0-2026-11-02"><span class="std std-ref">3.1.0 release notes</span></a>
+for measured scope and limitations.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../contributing.html" class="btn btn-neutral float-left" title="Contributing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="validation.html" class="btn btn-neutral float-right" title="Validation and performance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

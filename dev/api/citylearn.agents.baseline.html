@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.agents.baseline module &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="citylearn.agents.marlisa module" href="citylearn.agents.marlisa.html" />
+    <link rel="prev" title="citylearn.agents.base module" href="citylearn.agents.base.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../python_api.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">All modules</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../python_api.html">Python API</a></li>
+          <li class="breadcrumb-item"><a href="modules.html">citylearn</a></li>
+          <li class="breadcrumb-item"><a href="citylearn.html">citylearn package</a></li>
+          <li class="breadcrumb-item"><a href="citylearn.agents.html">citylearn.agents package</a></li>
+      <li class="breadcrumb-item active">citylearn.agents.baseline module</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/api/citylearn.agents.baseline.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="false"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This documentation is built from the development branch, <code>master</code> (<code>/dev/</code>). It includes
+  changes listed under <a href="../guides/releases.html">Unreleased</a> that are not yet in a PyPI release.
+  Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
+  release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="module-citylearn.agents.baseline">
+<span id="citylearn-agents-baseline-module"></span><h1>citylearn.agents.baseline module<a class="headerlink" href="#module-citylearn.agents.baseline" title="Link to this heading"></a></h1>
+<p>Non-learning reference controllers: business-as-usual (BAU) and rule-based baselines.</p>
+<p>All controllers in this module read the same named, unnormalized observations,
+built from the entity observation payload (see
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.agents._entity_observations</span></code>). They work with the flat and the
+entity interface and return flat-like action vectors in
+<code class="docutils literal notranslate"><span class="pre">env.action_names</span></code> order.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Agent</p></th>
+<th class="head"><p>Behaviour</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#citylearn.agents.baseline.BusinessAsUsualAgent" title="citylearn.agents.baseline.BusinessAsUsualAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code></a></p></td>
+<td><p>Reference BAU. Charges a connected EV at once, at full
+power, to 100% (default) or up to the user’s requested
+departure SOC (<code class="docutils literal notranslate"><span class="pre">ev_charge_target='requested'</span></code>);
+starts appliances at the first admissible step; the
+home battery stores PV surplus and serves local import.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citylearn.agents.baseline.RBCBasicPolicy" title="citylearn.agents.baseline.RBCBasicPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code></a></p></td>
+<td><p>Current price and service urgency for EVs and
+appliances; battery self-consumption.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#citylearn.agents.baseline.RBCSmartPolicy" title="citylearn.agents.baseline.RBCSmartPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code></a></p></td>
+<td><p>Price and local PV-surplus forecasts schedule EVs and
+appliances; battery combines self-consumption,
+arbitrage and reserve. Uses only building-local and
+public observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citylearn.agents.baseline.RBCCommunityPolicy" title="citylearn.agents.baseline.RBCCommunityPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code></a></p></td>
+<td><p>Smart plus energy shareable between members. When the
+community market is enabled, batteries support expensive
+periods once community import reaches a trigger
+(15 kW by default). Without a market it shares no energy.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The policies are ported from the Soft-CPS Algorithms baselines and keep their
+audited defaults. Keyword arguments override the engine hyperparameters, for
+example <code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy(env,</span> <span class="pre">community_import_threshold_kw=10.0)</span></code>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.BusinessAsUsualAgent">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.agents.baseline.</span></span><span class="sig-name descname"><span class="pre">BusinessAsUsualAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev_charge_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'full'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">hyperparameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/baseline.html#BusinessAsUsualAgent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.baseline.BusinessAsUsualAgent" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_RuleBaselineAgent</span></code></p>
+<p>Reference BAU: immediate EV charging, earliest appliance start, PV self-consumption.</p>
+<p>A connected EV is charged at once and at maximum power. With
+<code class="docutils literal notranslate"><span class="pre">ev_charge_target='full'</span></code> (default, <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v3</span></code>) it charges
+to 100%, as the BAU of CityLearn 3.1–3.3 did. With
+<code class="docutils literal notranslate"><span class="pre">ev_charge_target='requested'</span></code> (<code class="docutils literal notranslate"><span class="pre">immediate-user-target-v2</span></code>) it stops at the
+user’s requested departure SOC: the last command is limited to the remaining
+energy gap, and when that command is below the charger minimum the EV stops
+slightly below the target instead of overshooting it. Appliances start at the first admissible
+step and the home battery stores local PV surplus and serves local import.</p>
+<p>Choose the BAU that <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> uses with the environment’s
+<code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target</span></code>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.BusinessAsUsualAgent.DEFINITION_VERSION">
+<span class="sig-name descname"><span class="pre">DEFINITION_VERSION</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'immediate-full-charge-v3'</span></em><a class="headerlink" href="#citylearn.agents.baseline.BusinessAsUsualAgent.DEFINITION_VERSION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.BusinessAsUsualAgent.ENGINE_CLASS">
+<span class="sig-name descname"><span class="pre">ENGINE_CLASS</span></span><a class="headerlink" href="#citylearn.agents.baseline.BusinessAsUsualAgent.ENGINE_CLASS" title="Link to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">NormalPolicy</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.BusinessAsUsualAgent.EV_CHARGE_TARGETS">
+<span class="sig-name descname"><span class="pre">EV_CHARGE_TARGETS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">type</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'full':</span> <span class="pre">(&lt;class</span> <span class="pre">'citylearn.agents._baseline_engine.NormalPolicy'&gt;,</span> <span class="pre">'immediate-full-charge-v3'),</span> <span class="pre">'requested':</span> <span class="pre">(&lt;class</span> <span class="pre">'citylearn.agents._baseline_engine.NormalTargetPolicy'&gt;,</span> <span class="pre">'immediate-user-target-v2')}</span></em><a class="headerlink" href="#citylearn.agents.baseline.BusinessAsUsualAgent.EV_CHARGE_TARGETS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.BusinessAsUsualAgent.definition">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">definition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev_charge_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">type</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/agents/baseline.html#BusinessAsUsualAgent.definition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.baseline.BusinessAsUsualAgent.definition" title="Link to this definition"></a></dt>
+<dd><p>Engine class and definition version of a BAU <code class="docutils literal notranslate"><span class="pre">ev_charge_target</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.RBCBasicPolicy">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.agents.baseline.</span></span><span class="sig-name descname"><span class="pre">RBCBasicPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">hyperparameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/baseline.html#RBCBasicPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.baseline.RBCBasicPolicy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_RuleBaselineAgent</span></code></p>
+<p>Current-price and service-urgency scheduling with battery self-consumption.</p>
+<p>EVs receive the minimum charge that meets their departure target, raised to
+<code class="docutils literal notranslate"><span class="pre">ev_price_charge_rate</span></code> when the current price is cheap. Appliances start
+when urgent or cheap. The default price thresholds
+(<code class="docutils literal notranslate"><span class="pre">basic_cheap_price_eur_kwh=0.0765</span></code>, <code class="docutils literal notranslate"><span class="pre">basic_expensive_price_eur_kwh=0.1078</span></code>)
+are the terciles of the 2023 Portuguese day-ahead price; set them for other
+tariffs, or use <code class="docutils literal notranslate"><span class="pre">basic_price_policy='forecast_relative'</span></code> to compare the
+current price with the price forecast instead.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.RBCBasicPolicy.DEFINITION_VERSION">
+<span class="sig-name descname"><span class="pre">DEFINITION_VERSION</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'basic-v3'</span></em><a class="headerlink" href="#citylearn.agents.baseline.RBCBasicPolicy.DEFINITION_VERSION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.RBCBasicPolicy.ENGINE_CLASS">
+<span class="sig-name descname"><span class="pre">ENGINE_CLASS</span></span><a class="headerlink" href="#citylearn.agents.baseline.RBCBasicPolicy.ENGINE_CLASS" title="Link to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.RBCCommunityPolicy">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.agents.baseline.</span></span><span class="sig-name descname"><span class="pre">RBCCommunityPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">hyperparameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/baseline.html#RBCCommunityPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.baseline.RBCCommunityPolicy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_RuleBaselineAgent</span></code></p>
+<p>Smart controller extended with community energy sharing.</p>
+<p>With the community market enabled, shareable surplus from other members is
+treated as discounted energy, and batteries help during expensive periods
+once community import reaches <code class="docutils literal notranslate"><span class="pre">community_import_threshold_kw</span></code> (15 kW by
+default; a trigger, not a hard cap). Without a community market it uses the
+same economic rules as <a class="reference internal" href="#citylearn.agents.baseline.RBCSmartPolicy" title="citylearn.agents.baseline.RBCSmartPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code></a>, without sharing energy, but it
+is not restricted to building-local observations.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.RBCCommunityPolicy.DEFINITION_VERSION">
+<span class="sig-name descname"><span class="pre">DEFINITION_VERSION</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'community-v3'</span></em><a class="headerlink" href="#citylearn.agents.baseline.RBCCommunityPolicy.DEFINITION_VERSION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.RBCCommunityPolicy.ENGINE_CLASS">
+<span class="sig-name descname"><span class="pre">ENGINE_CLASS</span></span><a class="headerlink" href="#citylearn.agents.baseline.RBCCommunityPolicy.ENGINE_CLASS" title="Link to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.RBCSmartPolicy">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.agents.baseline.</span></span><span class="sig-name descname"><span class="pre">RBCSmartPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">hyperparameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/baseline.html#RBCSmartPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.baseline.RBCSmartPolicy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_RuleBaselineAgent</span></code></p>
+<p>Forecast-aware, strictly building-local rule-based controller.</p>
+<p>Price and local PV-surplus forecasts schedule EV charging and appliance
+starts; the home battery combines self-consumption, price arbitrage and a
+service reserve. Community observations are ignored.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.RBCSmartPolicy.DEFINITION_VERSION">
+<span class="sig-name descname"><span class="pre">DEFINITION_VERSION</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'smart-local-v3'</span></em><a class="headerlink" href="#citylearn.agents.baseline.RBCSmartPolicy.DEFINITION_VERSION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.RBCSmartPolicy.ENGINE_CLASS">
+<span class="sig-name descname"><span class="pre">ENGINE_CLASS</span></span><a class="headerlink" href="#citylearn.agents.baseline.RBCSmartPolicy.ENGINE_CLASS" title="Link to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">RBCSmartLocalPolicy</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.ZeroActionAgent">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.agents.baseline.</span></span><span class="sig-name descname"><span class="pre">ZeroActionAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><span class="pre">CityLearnEnv</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/agents/baseline.html#ZeroActionAgent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.baseline.ZeroActionAgent" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="citylearn.agents.base.html#citylearn.agents.base.Agent" title="citylearn.agents.base.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a></p>
+<p>Agent that requests zero for every action dimension.</p>
+<p>Up to CityLearn 3.6.0 this class was called <code class="docutils literal notranslate"><span class="pre">ZeroActionBaselineAgent</span></code>. That name is a deprecated alias that
+will be removed in a later release: in CityLearn, “baseline” names the KPI counterfactual, while this agent
+requests zero actions.</p>
+<p>Under the entity interface it returns flat-like zero vectors in
+<code class="docutils literal notranslate"><span class="pre">env.action_names</span></code> order, which the entity interface accepts.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.agents.baseline.ZeroActionAgent.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/agents/baseline.html#ZeroActionAgent.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.agents.baseline.ZeroActionAgent.predict" title="Link to this definition"></a></dt>
+<dd><p>Provide actions for current time step.</p>
+<p>Return randomly sampled actions from <cite>action_space</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>observations</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>]</em>) – Environment observations</p></li>
+<li><p><strong>deterministic</strong> (<em>bool</em><em>, </em><em>default: False</em>) – Wether to return purely exploitatative deterministic actions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>actions</strong> – Action values</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[List[float]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="citylearn.agents.base.html" class="btn btn-neutral float-left" title="citylearn.agents.base module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="citylearn.agents.marlisa.html" class="btn btn-neutral float-right" title="citylearn.agents.marlisa module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

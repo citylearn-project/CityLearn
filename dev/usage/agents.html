@@ -1,0 +1,1072 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controller examples &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Train and evaluate a reinforcement learning controller" href="rl_training.html" />
+    <link rel="prev" title="Custom agents and rewards" href="custom_controller.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples and tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="load_environment.html">How to Load an Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulate.html">How to set up a simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_controller.html">Custom agents and rewards</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Controller examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#CityLearn-Control-Agents">CityLearn Control Agents</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Passive-no-control-agent">Passive no-control agent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Centralized-RBC">Centralized RBC</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Decentralized-Independent-SAC">Decentralized-Independent SAC</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Decentralized-Cooperative-MARLISA">Decentralized-Cooperative MARLISA</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Other-Standard-Reinforcement-Learning-Libraries">Other Standard Reinforcement Learning Libraries</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Stable-Baselines3-Reinforcement-Learning-Algorithms">Stable Baselines3 Reinforcement Learning Algorithms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#RLlib">RLlib</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#Neighborhood-Dataset-Generation">Neighborhood Dataset Generation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rl_training.html">Train and evaluate a reinforcement learning controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rllib_training.html">Train a controller with RLlib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples and tutorials</a></li>
+      <li class="breadcrumb-item active">Controller examples</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/usage/agents.nblink" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="false"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This documentation is built from the development branch, <code>master</code> (<code>/dev/</code>). It includes
+  changes listed under <a href="../guides/releases.html">Unreleased</a> that are not yet in a PyPI release.
+  Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
+  release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <p><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></p>
+<section id="Controller-examples">
+<h1>Controller examples<a class="headerlink" href="#Controller-examples" title="Link to this heading"></a></h1>
+<p>For a first complete v3 simulation and operational BAU, start with the <a class="reference external" href="../quickstart.html">quickstart</a>. This notebook retains the flat-interface controller, RL-wrapper and dataset-generation examples. Training runs need more time and dependencies than the first simulation.</p>
+<p>The examples below use <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_phase_2_local_evaluation</span></code>, whose buildings use LSTM thermal dynamics, and the bundled SAC and MARLISA controllers. Both need PyTorch, which the <code class="docutils literal notranslate"><span class="pre">rl</span></code> extra installs. Install CityLearn with it in the notebook environment:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "citylearn[rl]"
+</pre></div>
+</div>
+</div>
+<p>Every example simulates the first week of the dataset (168 hourly time steps), so that the notebook runs in a few minutes. Remove <code class="docutils literal notranslate"><span class="pre">simulation_start_time_step</span></code> and <code class="docutils literal notranslate"><span class="pre">simulation_end_time_step</span></code> to simulate the whole dataset, and train for many more episodes for meaningful results.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">WEEK</span> <span class="o">=</span> <span class="mi">24</span><span class="o">*</span><span class="mi">7</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># last time step of the first week</span>
+</pre></div>
+</div>
+</div>
+<section id="CityLearn-Control-Agents">
+<h2>CityLearn Control Agents<a class="headerlink" href="#CityLearn-Control-Agents" title="Link to this heading"></a></h2>
+<section id="Passive-no-control-agent">
+<h3>Passive no-control agent<a class="headerlink" href="#Passive-no-control-agent" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">NoControlAgent</span></code> (called <code class="docutils literal notranslate"><span class="pre">BaselineAgent</span></code> up to CityLearn 3.6.0) disables the active actions; it is not the operational <a class="reference external" href="../guides/baselines.html">BusinessAsUsualAgent</a>. Construct a fresh environment before changing controller type.</p>
+<p>Run the following to simulate an environment where the storage systems and heat pumps are not controlled. The storage actions prescribed will be 0.0 and the heat pump will have no action, i.e. <code class="docutils literal notranslate"><span class="pre">None</span></code>, causing it to deliver the ideal load in the building time series files:</p>
+<p>Because this agent disables the active actions, its environment no longer matches the configuration from which <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> rebuilds the native BAU reference, so the KPIs are evaluated without that reference (<code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code>).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoControlAgent</span> <span class="k">as</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+<span class="c1"># initialize</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">WEEK</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+
+<span class="c1"># step through environment and apply agent actions</span>
+<span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
+    <span class="n">observations</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+<span class="c1"># test</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:236: UserWarning: <span class="ansi-yellow-fg">WARN: Box low&#39;s precision lowered by casting to float32, current low.dtype=float64</span>
+  gym.logger.warn(
+/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:306: UserWarning: <span class="ansi-yellow-fg">WARN: Box high&#39;s precision lowered by casting to float32, current high.dtype=float64</span>
+  gym.logger.warn(
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_total_charge_kwh</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_total_discharge_kwh</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_total_throughput_kwh</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1417.095</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>561 rows × 4 columns</p>
+</div></div>
+</div>
+</section>
+<section id="Centralized-RBC">
+<h3>Centralized RBC<a class="headerlink" href="#Centralized-RBC" title="Link to this heading"></a></h3>
+<p>Run the following to simulate an environment controlled by centralized RBC agent for a single episode:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.rbc</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasicRBC</span> <span class="k">as</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+<span class="c1"># initialize</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">WEEK</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+
+<span class="c1"># step through environment and apply agent actions</span>
+<span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
+    <span class="n">observations</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+<span class="c1"># test</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>-0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
+      <td>4.969</td>
+      <td>1.130</td>
+      <td>3.821</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>5.325</td>
+      <td>5.325</td>
+      <td>3.100</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>3291.764</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>949 rows × 4 columns</p>
+</div></div>
+</div>
+</section>
+<section id="Decentralized-Independent-SAC">
+<h3>Decentralized-Independent SAC<a class="headerlink" href="#Decentralized-Independent-SAC" title="Link to this heading"></a></h3>
+<p>Run the following to simulate an environment controlled by decentralized-independent SAC agents for two episodes:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAC</span> <span class="k">as</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+<span class="c1"># initialize</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">WEEK</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+
+<span class="c1"># train</span>
+<span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">episodes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">deterministic_finish</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># test</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.00</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>-0.000</td>
+      <td>-0.00</td>
+      <td>-0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.000</td>
+      <td>0.00</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
+      <td>4.969</td>
+      <td>1.13</td>
+      <td>3.821</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>0.432</td>
+      <td>0.00</td>
+      <td>0.326</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1659.344</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>955 rows × 4 columns</p>
+</div></div>
+</div>
+</section>
+<section id="Decentralized-Cooperative-MARLISA">
+<h3>Decentralized-Cooperative MARLISA<a class="headerlink" href="#Decentralized-Cooperative-MARLISA" title="Link to this heading"></a></h3>
+<p>Run the following to simulate an environment controlled by decentralized-cooperative MARLISA agents for two episodes:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.marlisa</span><span class="w"> </span><span class="kn">import</span> <span class="n">MARLISA</span> <span class="k">as</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+<span class="c1"># initialize</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">WEEK</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+
+<span class="c1"># train</span>
+<span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">episodes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">deterministic_finish</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># test</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>-0.000</td>
+      <td>-0.000</td>
+      <td>-0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
+      <td>4.969</td>
+      <td>1.130</td>
+      <td>3.821</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>0.434</td>
+      <td>0.087</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1667.595</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>959 rows × 4 columns</p>
+</div></div>
+</div>
+</section>
+</section>
+<section id="Other-Standard-Reinforcement-Learning-Libraries">
+<h2>Other Standard Reinforcement Learning Libraries<a class="headerlink" href="#Other-Standard-Reinforcement-Learning-Libraries" title="Link to this heading"></a></h2>
+<section id="Stable-Baselines3-Reinforcement-Learning-Algorithms">
+<h3>Stable Baselines3 Reinforcement Learning Algorithms<a class="headerlink" href="#Stable-Baselines3-Reinforcement-Learning-Algorithms" title="Link to this heading"></a></h3>
+<p>Install Stable Baselines3 2.4 or newer, which supports gymnasium 1.x:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">pip</span> install "stable-baselines3&gt;=2.4"
+</pre></div>
+</div>
+</div>
+<p>Before the environment is ready for use in Stable Baselines3, it needs to be wrapped. Firstly, wrap the environment using the <code class="docutils literal notranslate"><span class="pre">NormalizedObservationWrapper</span></code> (see <a class="reference external" href="../api/citylearn.wrappers.html#citylearn.wrappers.NormalizedObservationWrapper">docs</a>) to ensure that observations served to the agent are min-max normalized between [0, 1] and cyclical observations e.g. hour, are encoded using the cosine transformation.</p>
+<p>Next, we wrap with the <code class="docutils literal notranslate"><span class="pre">StableBaselines3Wrapper</span></code> (see <a class="reference external" href="../api/citylearn.wrappers.html#citylearn.wrappers.StableBaselines3Wrapper">docs</a>) that ensures observations, actions and rewards are served in manner that is compatible with Stable Baselines3 interface.</p>
+<blockquote>
+<div><p>⚠️ <strong>NOTE</strong>: <code class="docutils literal notranslate"><span class="pre">central_agent</span></code> in the <code class="docutils literal notranslate"><span class="pre">env</span></code> must be <code class="docutils literal notranslate"><span class="pre">True</span></code> when using Stable Baselines3 as it does not support multi-agents.</p>
+</div></blockquote>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stable_baselines3.sac</span><span class="w"> </span><span class="kn">import</span> <span class="n">SAC</span> <span class="k">as</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">NormalizedObservationWrapper</span><span class="p">,</span> <span class="n">StableBaselines3Wrapper</span>
+
+<span class="c1"># initialize</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'citylearn_challenge_2023_phase_2_local_evaluation'</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulation_start_time_step</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">simulation_end_time_step</span><span class="o">=</span><span class="n">WEEK</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">NormalizedObservationWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">StableBaselines3Wrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="s1">'MlpPolicy'</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+
+<span class="c1"># train</span>
+<span class="n">episodes</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">total_timesteps</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">time_steps</span><span class="o">*</span><span class="n">episodes</span><span class="p">)</span>
+
+<span class="c1"># test</span>
+<span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
+    <span class="n">actions</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="n">deterministic</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">observations</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2026-11-22 02:58:29,579 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-22 02:58:29,707 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>name</th>
+      <th>Building_1</th>
+      <th>Building_2</th>
+      <th>Building_3</th>
+      <th>District</th>
+    </tr>
+    <tr>
+      <th>cost_function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>building_battery_health_capacity_fade_business_as_usual_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
+      <td>-0.000</td>
+      <td>-0.000</td>
+      <td>-0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_capacity_fade_ratio</th>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
+      <td>4.969</td>
+      <td>1.130</td>
+      <td>3.821</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>building_battery_health_equivalent_full_cycles_count</th>
+      <td>0.000</td>
+      <td>0.429</td>
+      <td>0.000</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_served_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>507.469</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_thermal_coverage_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unknown_outage_intervals_count</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_energy_kwh</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>district_thermal_service_audit_unserved_service_ratio</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+<p>952 rows × 4 columns</p>
+</div></div>
+</div>
+</section>
+<section id="RLlib">
+<h3>RLlib<a class="headerlink" href="#RLlib" title="Link to this heading"></a></h3>
+<p>CityLearn also provides <code class="docutils literal notranslate"><span class="pre">RLlibSingleAgentWrapper</span></code> and <code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> (see the <a class="reference external" href="../api/citylearn.wrappers.html">wrappers API</a>). They are tested with Ray 2.60 and its new API stack. The <a class="reference external" href="rllib_training.html">RLlib tutorial</a> trains single-agent and multi-agent PPO controllers with them.</p>
+</section>
+</section>
+<section id="Neighborhood-Dataset-Generation">
+<h2>Neighborhood Dataset Generation<a class="headerlink" href="#Neighborhood-Dataset-Generation" title="Link to this heading"></a></h2>
+<p>Aside the provided datasets that come with the CityLearn installation, custom single-family residential datasets can be generated in CityLearn by taking advantage of the <a class="reference external" href="https://data.openei.org/submissions/4520">End-Use Load Profiles for the U.S. Building Stock dataset</a>. The <a class="reference external" href="../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood">citylearn.end_use_load_profiles.neighborhood.Neighborhood</a> class makes this
+possible.</p>
+<p>To learn more about the methodology used in this feature, refer to the <a class="reference external" href="https://doi.org/10.1080/19401493.2024.2418813">CityLearn v2 paper</a>.</p>
+<p>Note that to make use of this feature, install <code class="docutils literal notranslate"><span class="pre">citylearn[end_use_load_profiles]</span></code> and <a class="reference external" href="https://github.com/NREL/EnergyPlus/releases/tag/v9.6.0">EnergyPlus 9.6.0</a> must be installed. Other EnergyPlus versions are not yet supported.</p>
+<p>An example of a generating a dataset and using it in simulation is:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.rbc</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasicRBC</span> <span class="k">as</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.end_use_load_profiles.neighborhood</span><span class="w"> </span><span class="kn">import</span> <span class="n">Neighborhood</span><span class="p">,</span> <span class="n">SampleMethod</span>
+
+<span class="c1"># path to version EnergyPlus 9.6.0 IDD</span>
+<span class="n">idd_filepath</span> <span class="o">=</span> <span class="s1">'/Applications/EnergyPlus-9-6-0/PreProcess/IDFVersionUpdater/V9-6-0-Energy+.idd'</span>
+
+<span class="c1"># build a neighborhood with n buildings through random sampling of single-family residential buildings in EULP dataset.</span>
+<span class="c1"># Sampling population is filtered to include specific county and building vintage.</span>
+<span class="c1"># train their LSTM thermal dynamics models and generate a CityLearn schema for the two buildings</span>
+<span class="n">neighborhood</span> <span class="o">=</span> <span class="n">Neighborhood</span><span class="p">()</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">neighborhood_build</span> <span class="o">=</span> <span class="n">neighborhood</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+    <span class="n">idd_filepath</span><span class="o">=</span><span class="n">idd_filepath</span><span class="p">,</span>
+    <span class="n">delete_energyplus_simulation_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">sample_buildings_kwargs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">sample_method</span><span class="o">=</span><span class="n">SampleMethod</span><span class="o">.</span><span class="n">RANDOM</span><span class="p">,</span>
+        <span class="n">sample_count</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+        <span class="n">filters</span><span class="o">=</span><span class="p">{</span>
+            <span class="s1">'in.resstock_county_id'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'TX, Travis County'</span><span class="p">],</span>
+            <span class="s1">'in.vintage'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'2000s'</span><span class="p">]</span>
+        <span class="p">},</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="c1"># simulate neighborhood in CityLearn</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="n">neighborhood_build</span><span class="o">.</span><span class="n">schema_filepath</span><span class="p">,</span> <span class="n">central_agent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+<span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
+    <span class="n">observations</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="custom_controller.html" class="btn btn-neutral float-left" title="Custom agents and rewards" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rl_training.html" class="btn btn-neutral float-right" title="Train and evaluate a reinforcement learning controller" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

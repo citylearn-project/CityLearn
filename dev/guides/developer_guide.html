@@ -1,0 +1,504 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer Guide &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Publishing CityLearn" href="publishing.html" />
+    <link rel="prev" title="Validation and performance" href="validation.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developer Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#local-environment">Local Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#portable-experiment-evidence">Portable experiment evidence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core-validation">Core Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#manual-simulation-scripts">Manual Simulation Scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#internal-architecture">Internal Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-and-check-the-documentation">Build and check the documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development-rules">Development rules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#verification-and-internal-modules-in-3-1">Verification and internal modules in 3.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#evaluation-progress">Evaluation progress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#market-settlement-history">Market settlement history</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#robustness-application-journal">Robustness application journal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kpi-active-populations">KPI active populations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ev-departure-replay-reuse">EV departure replay reuse</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">History</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Developer Guide</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/developer_guide.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="false"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This documentation is built from the development branch, <code>master</code> (<code>/dev/</code>). It includes
+  changes listed under <a href="releases.html">Unreleased</a> that are not yet in a PyPI release.
+  Use the version selector or <strong>Other versions</strong> in the left sidebar to switch to the latest stable
+  release or an earlier release (<code>pip show citylearn</code>), or open the <code>docs</code> folder of a tag on
+  GitHub, for example <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="developer-guide">
+<h1>Developer Guide<a class="headerlink" href="#developer-guide" title="Link to this heading"></a></h1>
+<p>Set up a development environment, run regression checks and profile the runtime.
+For simulation-level checks and published measurements, start with
+<a class="reference internal" href="validation.html"><span class="std std-doc">Validation and performance</span></a>.</p>
+<section id="local-environment">
+<h2>Local Environment<a class="headerlink" href="#local-environment" title="Link to this heading"></a></h2>
+<p>Create an isolated environment from a repository checkout:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m venv .venv</span>
+<span class="go">source .venv/bin/activate</span>
+<span class="go">python -m pip install -r requirements.txt -r test_requirements.txt</span>
+<span class="go">python -m pip install -e .</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">test_requirements.txt</span></code> installs PyTorch and scikit-learn, which the tests of
+LSTM thermal dynamics and of the SAC and MARLISA controllers need. Without a
+GPU, run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torch</span> <span class="pre">--index-url</span> <span class="pre">https://download.pytorch.org/whl/cpu</span></code>
+first to avoid several GB of CUDA libraries. Ray RLlib is not a test
+dependency: the RLlib wrappers import it only when it is installed.</p>
+<p>Optional dependencies:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Command</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Parquet datasets</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;.[parquet]&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>PV autosizing</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;.[pysam]&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Parallel tests</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">pytest-xdist</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Coverage report (<code class="docutils literal notranslate"><span class="pre">--cov=citylearn</span></code>) and the 600 s per-test timeout of <code class="docutils literal notranslate"><span class="pre">pytest.ini</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">pytest-cov</span> <span class="pre">pytest-timeout</span></code> (both are in <code class="docutils literal notranslate"><span class="pre">test_requirements.txt</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>Notebook checks</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">nbclient</span> <span class="pre">nbformat</span> <span class="pre">ipykernel</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>RLlib wrappers</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">&quot;ray[rllib]&quot;</span></code> (tested with Ray 2.60.0; <code class="docutils literal notranslate"><span class="pre">tests/test_rllib_wrappers.py</span></code> skips without it)</p></td>
+</tr>
+<tr class="row-even"><td><p>Build checks</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">build</span> <span class="pre">twine</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="portable-experiment-evidence">
+<h2>Portable experiment evidence<a class="headerlink" href="#portable-experiment-evidence" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">.gitattributes</span></code> makes every checkout byte-identical to the repository: text
+files use LF and files under <code class="docutils literal notranslate"><span class="pre">data/</span></code> and <code class="docutils literal notranslate"><span class="pre">tests/data/</span></code> are never converted, even
+with Git for Windows’ default <code class="docutils literal notranslate"><span class="pre">core.autocrlf=true</span></code>. Experiment manifests hash
+these files, so the hashes then agree on all platforms. A checkout made before
+<code class="docutils literal notranslate"><span class="pre">.gitattributes</span></code> existed may still hold CRLF copies; <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">status</span></code> lists converted
+data files as modified. Make a fresh clone and set it up as in
+<a class="reference internal" href="#local-environment"><span class="std std-ref">Local Environment</span></a>: the clone applies the new checkout
+rules and leaves the existing working copy, including uncommitted changes,
+untouched. Then clear the dataset cache, which may hold copies made from the old
+checkout:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/citylearn-project/CityLearn.git</span>
+<span class="go">python -c "from citylearn.data import DataSet; DataSet().clear_cache()"</span>
+</pre></div>
+</div>
+<p>Manifests record each input file by its path below the dataset root, with <code class="docutils literal notranslate"><span class="pre">/</span></code>
+separators, so a moved or copied dataset keeps its evidence. On Windows, where
+<code class="docutils literal notranslate"><span class="pre">\</span></code> and <code class="docutils literal notranslate"><span class="pre">/</span></code> are both separators and file names ignore case, a reference that
+differs from the file’s path only in separators or case records the file’s
+on-disk spelling: with the dataset root <code class="docutils literal notranslate"><span class="pre">C:\data\demo</span></code> and the file
+<code class="docutils literal notranslate"><span class="pre">C:\data\demo\sub\weather.csv</span></code>, the references <code class="docutils literal notranslate"><span class="pre">sub\Weather.csv</span></code>,
+<code class="docutils literal notranslate"><span class="pre">SUB/weather.csv</span></code> and <code class="docutils literal notranslate"><span class="pre">C:\Data\Demo\sub\WEATHER.csv</span></code> all record
+<code class="docutils literal notranslate"><span class="pre">sub/weather.csv</span></code>. Other spellings of an input file keep their text, with <code class="docutils literal notranslate"><span class="pre">/</span></code>
+for <code class="docutils literal notranslate"><span class="pre">\</span></code> on Windows: <code class="docutils literal notranslate"><span class="pre">.</span></code> or <code class="docutils literal notranslate"><span class="pre">..</span></code> components, repeated separators, links, 8.3
+short names and files outside the dataset root. Strings that are not hashed
+input files (see <code class="docutils literal notranslate"><span class="pre">FILE_TYPES</span></code> in <code class="docutils literal notranslate"><span class="pre">citylearn/internal/temporal.py</span></code>) keep their
+text without the dataset root. On Linux and macOS every reference keeps its
+text, without the dataset root; macOS file names ignore case by default, but the
+evidence does not. If two runs spell one file in ways that are not normalised,
+the comparison reports <code class="docutils literal notranslate"><span class="pre">incompatible</span></code> rather than a pair.</p>
+</section>
+<section id="core-validation">
+<h2>Core Validation<a class="headerlink" href="#core-validation" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Check</p></th>
+<th class="head"><p>Command</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Fast subset (about one minute)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pytest</span> <span class="pre">-q</span> <span class="pre">tests/unit</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Full test suite (several minutes; <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">4</span></code> with pytest-xdist)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pytest</span> <span class="pre">-q</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Example notebooks</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">scripts/ci/run_notebooks.py</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Lint (rules in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>, as in CI)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">-m</span> <span class="pre">ruff</span> <span class="pre">check</span> <span class="pre">citylearn</span> <span class="pre">tests</span> <span class="pre">scripts/manual</span> <span class="pre">scripts/ci</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Entity contract audit</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">scripts/audit/audit_entity_contract.py</span> <span class="pre">--strict</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Physics audit</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">scripts/audit/audit_physics.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Diff whitespace check</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span> <span class="pre">--check</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>The physics audit intentionally exercises resolution conversion paths, so unit-conversion warnings can be expected when the audit fixture forces dataset/schema mismatches.</p>
+</section>
+<section id="manual-simulation-scripts">
+<h2>Manual Simulation Scripts<a class="headerlink" href="#manual-simulation-scripts" title="Link to this heading"></a></h2>
+<p>Manual utility scripts live in <code class="docutils literal notranslate"><span class="pre">scripts/manual</span></code> and are excluded from default pytest collection.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/manual/demo_ev_rbc.py</span>
+<span class="go">.venv/bin/python scripts/manual/demo_ev_rbc_export_end.py</span>
+</pre></div>
+</div>
+<p>Runtime benchmark:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/manual/bench_runtime.py --seconds 5 60 --render-modes none end --episode-steps 1200</span>
+</pre></div>
+</div>
+<p>CI performance smoke check:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/ci/perf_smoke.py --episode-steps 600 --seconds 60 --baseline-file scripts/ci/perf_baseline.json</span>
+</pre></div>
+</div>
+<p>Step/component profiling:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/audit/profile_step_breakdown.py --episode-steps 300 --seconds 60 --agent rbc --interface flat --render-mode none --no-write --table-limit 14</span>
+</pre></div>
+</div>
+<p>Lifecycle and KPI/BAU profiling:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">.venv/bin/python scripts/audit/profile_lifecycle.py --episode-steps 300 --seconds 60 --skip-exports --no-write</span>
+</pre></div>
+</div>
+<p>Drop <code class="docutils literal notranslate"><span class="pre">--skip-exports</span></code> when the CSV export paths themselves need to be timed.</p>
+<p>For ad hoc code, pass <code class="docutils literal notranslate"><span class="pre">debug_timing=True</span></code> to <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> and inspect <code class="docutils literal notranslate"><span class="pre">info</span></code> keys such as <code class="docutils literal notranslate"><span class="pre">apply_actions_time</span></code>, <code class="docutils literal notranslate"><span class="pre">reward_observations_time</span></code>, <code class="docutils literal notranslate"><span class="pre">next_observations_time</span></code>, <code class="docutils literal notranslate"><span class="pre">terminal_export_time</span></code> and <code class="docutils literal notranslate"><span class="pre">step_total_time</span></code>.</p>
+</section>
+<section id="internal-architecture">
+<h2>Internal Architecture<a class="headerlink" href="#internal-architecture" title="Link to this heading"></a></h2>
+<p>Public APIs remain centered on <code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> and <code class="docutils literal notranslate"><span class="pre">Building</span></code>. Internal orchestration is split into service modules under <code class="docutils literal notranslate"><span class="pre">citylearn/internal</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Module</p></th>
+<th class="head"><p>Responsibility</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">loading.py</span></code></p></td>
+<td><p>Schema-driven loading and building assembly.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">runtime.py</span></code></p></td>
+<td><p>Episode runtime orchestration, <code class="docutils literal notranslate"><span class="pre">step</span></code>, action parsing, time progression and EV/charger association.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">building_ops.py</span></code></p></td>
+<td><p>Building observation/action orchestration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kpi.py</span></code></p></td>
+<td><p>KPI/evaluation pipeline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">entity_interface.py</span></code></p></td>
+<td><p>Entity tables, edges, action specs and observation bundles.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="build-and-check-the-documentation">
+<h2>Build and check the documentation<a class="headerlink" href="#build-and-check-the-documentation" title="Link to this heading"></a></h2>
+<p>The canonical English guides are <code class="docutils literal notranslate"><span class="pre">docs/*.md</span></code>. The Sphinx extension copies them
+into the generated <code class="docutils literal notranslate"><span class="pre">docs/source/guides/</span></code> directory at build time, preserving
+cross-links and publishing the same text as the repository. Do not edit the
+generated directory. The scorecard name list is generated from the runtime
+selection. Historical releases appear under Project, not in the README.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m pip install -r docs/requirements.txt</span>
+<span class="go">sphinx-apidoc citylearn -o docs/source/api -e -M</span>
+<span class="go">sphinx-build -b html docs/source docs/build/html</span>
+<span class="go">python scripts/ci/check_docs.py docs/build/html</span>
+<span class="go">python -m pytest -q tests/test_documentation_examples.py</span>
+</pre></div>
+</div>
+<p>Install Pandoc for the retained notebook tutorials. Use the <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code>
+executable: the current CLI reference detects that executable when returning
+its argument parser. Documentation examples are tested separately.</p>
+<p>The notebooks in <code class="docutils literal notranslate"><span class="pre">examples/</span></code> are stored without outputs. The Sphinx workflow
+executes them before the build (<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">scripts/ci/run_notebooks.py</span> <span class="pre">--output-dir</span> <span class="pre">examples</span></code>,
+which overwrites the sources in that checkout only) and runs
+<code class="docutils literal notranslate"><span class="pre">check_docs.py</span> <span class="pre">--require-notebook-outputs</span></code>, so the published notebook pages show
+the outputs of that run, including a short RL training run. To reproduce it
+locally, run these two commands and discard the changes in <code class="docutils literal notranslate"><span class="pre">examples/</span></code> afterwards
+(<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">examples</span></code>). Without the execution step the pages show the code only.</p>
+</section>
+<section id="development-rules">
+<h2>Development rules<a class="headerlink" href="#development-rules" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Rule</p></th>
+<th class="head"><p>Reason</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Keep schema/API changes documented in the same change.</p></td>
+<td><p>Algorithms and datasets depend on explicit contracts.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Add tests for new physics or observations.</p></td>
+<td><p>Sub-hourly and entity behavior are easy to regress silently.</p></td>
+</tr>
+<tr class="row-even"><td><p>Prefer additive observations in patch releases.</p></td>
+<td><p>Avoid breaking trained algorithms and wrappers.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Run audits before tagging.</p></td>
+<td><p>They catch contract drift outside normal unit tests.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="verification-and-internal-modules-in-3-1">
+<span id="verification-and-internal-modules-in-31"></span><h2>Verification and internal modules in 3.1<a class="headerlink" href="#verification-and-internal-modules-in-3-1" title="Link to this heading"></a></h2>
+<p>Run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">scripts/audit/run_full_audit.py</span> <span class="pre">--strict</span> <span class="pre">--output-dir</span> <span class="pre">/tmp/citylearn-audit</span></code>
+to verify physics, entity contracts, official datasets and six fixed-command
+reference trajectories. Missing dependencies/scripts, child failures and reference
+drift fail verification; ordinary runs do not rewrite snapshots. Algorithm audits
+remain explicit opt-in tools. Reference tests generate small temporary cases from
+existing fixtures; no SoftCPS production datasets are included.</p>
+<p>Public facades delegate to focused internal modules for energy/equipment/service/
+community KPIs, entity observation/layout preparation, loading inputs/components
+and robustness contracts/auditing. Electrical-service allocation is shared by
+control and runtime. Public imports, executable examples and the official registry
+retain CityLearn identity; internal modules are not stable extension APIs.</p>
+<section id="evaluation-progress">
+<h3>Evaluation progress<a class="headerlink" href="#evaluation-progress" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">env.evaluate_v2(progress_callback=callback)</span></code> optionally reports scalar stage events
+without adding timings to the KPI table or its attributes. Each event includes a
+sequence number, stage, status and elapsed seconds. Member stages and their equipment
+families also include the member ID, index and total. Completed/failed stages include
+the stage duration. Observers receive fresh dictionaries; they must avoid slow I/O
+and must not mutate the environment. A failing observer is logged and disabled;
+actual evaluation errors still propagate with failed-stage events.</p>
+<p>The long-run auditor writes <code class="docutils literal notranslate"><span class="pre">phase</span></code> in <code class="docutils literal notranslate"><span class="pre">summary.json</span></code>, the latest KPI stage in
+<code class="docutils literal notranslate"><span class="pre">evaluation-progress.json</span></code> and the event history in <code class="docutils literal notranslate"><span class="pre">evaluation-progress.jsonl</span></code>.
+It distinguishes loading, dispatch, final evaluation, KPI export, reconciliation
+and evidence export. <code class="docutils literal notranslate"><span class="pre">kpi_evaluation_seconds</span></code> excludes export/reconciliation;
+<code class="docutils literal notranslate"><span class="pre">final_kpi_and_export_seconds</span></code> retains its existing combined meaning. Progress is
+reported at stage boundaries, so a long individual family may stay active for some
+time. No background thread or per-step callback is installed by KPI reporting.</p>
+</section>
+<section id="market-settlement-history">
+<h3>Market settlement history<a class="headerlink" href="#market-settlement-history" title="Link to this heading"></a></h3>
+<p>The internal settlement history stores binary64 numeric columns and member IDs,
+with offsets for each executed interval. No rows are sampled or rounded. Indexing,
+slicing and iteration expose ordinary per-step lists of dictionaries as detached
+snapshots; assign an edited step back to persist it. Use a slice to read a window
+or iterate to stream the history, rather than materializing an entire long run.
+The current-step settlement and export schemas are unchanged. Legacy rows with
+additional/missing fields are retained in full. Market KPI totals are accumulated
+in chronological order and rebuilt after historical edits. Reset clears both
+history and totals.</p>
+</section>
+<section id="robustness-application-journal">
+<h3>Robustness application journal<a class="headerlink" href="#robustness-application-journal" title="Link to this heading"></a></h3>
+<p>The sparse robustness journal retains every recorded application and its order.
+Completed steps use integer references to shared descriptions; the current step
+keeps writable sets for identical deduplication. Summaries accumulate completed
+steps and handle unexecuted terminal telemetry separately. No numeric channel
+values, RNG state, event application rules or physical state are changed.
+<code class="docutils literal notranslate"><span class="pre">env._robustness_service.history</span></code> keeps its complete public dictionary contract.
+For bounded reads, use <code class="docutils literal notranslate"><span class="pre">history_window(start,</span> <span class="pre">stop)</span></code> or <code class="docutils literal notranslate"><span class="pre">iter_history(start,</span> <span class="pre">stop)</span></code>
+on that service; bounds are global step indices, start inclusive and stop exclusive.
+These window/stream records are detached snapshots. Reset clears journal and
+summary counters together. The bounded action-delay buffer remains unchanged.</p>
+</section>
+<section id="kpi-active-populations">
+<h3>KPI active populations<a class="headerlink" href="#kpi-active-populations" title="Link to this heading"></a></h3>
+<p>Dynamic KPI evaluation snapshots sparse membership transitions and lifecycle
+metadata once. Nested KPI families reuse read-only masks keyed by member, series
+horizon and semantics. Energy masking retains absent intervals as zero; thermal
+selection removes absent samples. Completed intervals still exclude the terminal
+observation, and historical assets continue to use their existing readers.
+The scope includes environment, episode window, executed horizon, history identity
+and topology version. It refreshes if those change and releases masks after each
+evaluation, including exceptions; no physical values or KPI results are cached.
+Public topology queries still return independent lists with their original rules.</p>
+</section>
+<section id="ev-departure-replay-reuse">
+<h3>EV departure replay reuse<a class="headerlink" href="#ev-departure-replay-reuse" title="Link to this heading"></a></h3>
+<p>Departure feasibility compares target, minimum acceptable and tolerance thresholds
+against one maximum-charge replay per departure/context. The existing single-
+threshold helper remains available. Legacy and audited batches stay separate: their
+arrival boundaries and outage rules can differ. The replay still runs through the
+whole connection interval, including losses after a target may have been reached.
+Physical charge/efficiency/taper/capacity/deadband/service-limit rules are unchanged.
+Missing-input permissive legacy results and audited unknown classifications keep
+their existing contracts. No memo or replay battery is retained between batches,
+sessions, evaluations or episodes; only the departure endpoint is shared within
+the three comparisons. Native BAU actions and real battery histories are untouched.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="validation.html" class="btn btn-neutral float-left" title="Validation and performance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="publishing.html" class="btn btn-neutral float-right" title="Publishing CityLearn" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
