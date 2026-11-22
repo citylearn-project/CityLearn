@@ -162,6 +162,7 @@ def source_sha256(source_root):
 
 def context(env, data_files):
     from citylearn import __version__
+    from citylearn.internal.electrical_limits import serialize_district_electrical_service_config
     from citylearn.internal.observation_contract import configuration
     schema = deepcopy(env.schema)
     root = str(Path(schema.get('root_directory') or '.').resolve())
@@ -173,6 +174,13 @@ def context(env, data_files):
                'chargers_shared_observations_helper', 'deferrable_appliance_observations_helper',
                'deferrable_appliance_actions_helper', 'escalator_observations_helper', 'escalator_actions_helper'}
     physical = {k: v for k, v in schema.items() if k not in ignored and not k.startswith('_')}
+    effective_feeder = serialize_district_electrical_service_config(
+        getattr(env, '_district_electrical_service_parsed', None)
+    )
+    if effective_feeder['enabled']:
+        physical['district_electrical_service'] = effective_feeder
+    else:
+        physical.pop('district_electrical_service', None)
     if isinstance(physical.get('robustness'), dict):
         physical['robustness'].pop('agent_observation_contract', None)
     observation = {k: schema.get(k) for k in ('observations', 'observation_bundles', 'derived_forecasts')}
@@ -198,7 +206,8 @@ def context(env, data_files):
                 service_tolerances=dict(ev_within=env.ev_departure_within_tolerance,
                                         ev_service=env.ev_departure_service_tolerance),
                 observation=canonical(observation, root, files),
-                market=env.get_metadata()['community_market'])
+                market=env.get_metadata()['community_market'],
+                district_electrical_service=effective_feeder)
 
 
 def native_reference(env):
@@ -260,6 +269,11 @@ def compare_manifests(left, right, mode='controller'):
                     declared.append('sharing_enabled_flags')
             elif a[key] != b[key]:
                 mismatches.append(key)
+        default_feeder = {'enabled': False, 'limits': {'import_kw': None, 'export_kw': None}}
+        feeder_a = a.get('district_electrical_service') or default_feeder
+        feeder_b = b.get('district_electrical_service') or default_feeder
+        if feeder_a != feeder_b:
+            mismatches.append('district_electrical_service')
     for manifest in (left, right):
         identity = manifest.get('controller_identity') or {}
         if not identity.get('implementation') or not identity.get('version') or identity.get('parameters') is None or not identity.get('observation_access'):

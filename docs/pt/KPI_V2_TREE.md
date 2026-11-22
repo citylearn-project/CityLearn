@@ -15,7 +15,7 @@ As linhas presentes dependem dos equipamentos e serviços do cenário.
 | Família | Nomes |
 |---|---:|
 | [Custo](#custo) | 24 |
-| [Energia da rede e forma da carga](#energia-da-rede-e-forma-da-carga) | 112 |
+| [Energia da rede e forma da carga](#energia-da-rede-e-forma-da-carga) | 130 |
 | [Emissões](#emissões) | 28 |
 | [Autoconsumo solar](#autoconsumo-solar) | 38 |
 | [Mercado comunitário](#mercado-comunitário) | 36 |
@@ -104,9 +104,12 @@ Equações e regras: [Energia da rede e forma da carga](kpis_reference.md#energi
 | `energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_to_baseline_signed_net_ratio` | district | ratio | Como o rácio de importação acima, na série líquida com sinal (definição da versão 3.6.0). |
 | `energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average{,_signed_net}_{control,business_as_usual,delta_to_business_as_usual}_ratio` | district | ratio | Penalização do fator de carga da execução controlada, da execução BAU, e controlo menos BAU, na potência de importação ou, com `_signed_net`, na potência líquida com sinal (3.6.0). |
 | `energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average{,_signed_net}_to_business_as_usual_ratio` | district | ratio | Penalização do fator de carga do controlo sobre a da execução BAU, na mesma série. |
+| `energy_grid_feeder_limit_{import,export}_exceedance_energy_total_{control,business_as_usual,delta_to_business_as_usual}_kwh` | district | kWh | Energia da importação ou exportação líquida do distrito acima do limite declarado em `district_electrical_service` (excessos até 1e-5 kW ignorados; monitorizada sem corte), na execução controlada, na execução BAU, e controlo menos BAU; só é emitida quando `district_electrical_service.enabled` é verdadeiro e fica indefinida numa direção não configurada. |
+| `energy_grid_feeder_limit_{import,export}_exceedance_peak_{control,business_as_usual,delta_to_business_as_usual}_kw` | district | kW | Maior excesso de potência de importação ou de exportação líquida do distrito acima do limite declarado em `district_electrical_service`, na execução controlada, na execução BAU, e controlo menos BAU; só é emitida quando `district_electrical_service.enabled` é verdadeiro e fica indefinida numa direção não configurada. |
+| `energy_grid_feeder_limit_{import,export}_exceedance_step_{control,business_as_usual,delta_to_business_as_usual}_count` | district | count | Número de passos executados com excesso de importação ou de exportação líquida do distrito acima de 1e-9 kWh, na execução controlada, na execução BAU, e controlo menos BAU; só é emitida quando `district_electrical_service.enabled` é verdadeiro e fica indefinida numa direção não configurada. |
 
 <details>
-<summary>Todos os 112 nomes</summary>
+<summary>Todos os 130 nomes</summary>
 
 ```text
 building_energy_grid_daily_average_export_baseline_kwh
@@ -160,6 +163,24 @@ district_energy_grid_daily_average_net_exchange_business_as_usual_kwh
 district_energy_grid_daily_average_net_exchange_control_kwh
 district_energy_grid_daily_average_net_exchange_delta_kwh
 district_energy_grid_daily_average_net_exchange_delta_to_business_as_usual_kwh
+district_energy_grid_feeder_limit_export_exceedance_energy_total_business_as_usual_kwh
+district_energy_grid_feeder_limit_export_exceedance_energy_total_control_kwh
+district_energy_grid_feeder_limit_export_exceedance_energy_total_delta_to_business_as_usual_kwh
+district_energy_grid_feeder_limit_export_exceedance_peak_business_as_usual_kw
+district_energy_grid_feeder_limit_export_exceedance_peak_control_kw
+district_energy_grid_feeder_limit_export_exceedance_peak_delta_to_business_as_usual_kw
+district_energy_grid_feeder_limit_export_exceedance_step_business_as_usual_count
+district_energy_grid_feeder_limit_export_exceedance_step_control_count
+district_energy_grid_feeder_limit_export_exceedance_step_delta_to_business_as_usual_count
+district_energy_grid_feeder_limit_import_exceedance_energy_total_business_as_usual_kwh
+district_energy_grid_feeder_limit_import_exceedance_energy_total_control_kwh
+district_energy_grid_feeder_limit_import_exceedance_energy_total_delta_to_business_as_usual_kwh
+district_energy_grid_feeder_limit_import_exceedance_peak_business_as_usual_kw
+district_energy_grid_feeder_limit_import_exceedance_peak_control_kw
+district_energy_grid_feeder_limit_import_exceedance_peak_delta_to_business_as_usual_kw
+district_energy_grid_feeder_limit_import_exceedance_step_business_as_usual_count
+district_energy_grid_feeder_limit_import_exceedance_step_control_count
+district_energy_grid_feeder_limit_import_exceedance_step_delta_to_business_as_usual_count
 district_energy_grid_ratio_to_baseline_export_total_ratio
 district_energy_grid_ratio_to_baseline_import_total_building_mean_ratio
 district_energy_grid_ratio_to_baseline_import_total_ratio

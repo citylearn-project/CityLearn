@@ -44,6 +44,7 @@ Esta pagina documenta o contrato do `schema.json`. O schema e a fonte oficial pa
 | `demand_response` | object | nao | Pedidos DSO/TSO de flexibilidade e settlement orientados por dataset. |
 | `robustness` | object | nao | Perturbacoes orientadas por dataset para observacoes, forecasts, acoes e assets. |
 | `community_market` | object | nao | Mercado local e KPIs associados. |
+| `district_electrical_service` | object | nao | Monitorizacao opt-in dos limites de import/export do alimentador do distrito; ver [Servico Eletrico do Distrito](#servico-eletrico-do-distrito). |
 | `ev_departure_within_tolerance` | float | nao | Tolerancia simetrica de accuracy do SOC no departure, default `0.05`. |
 | `ev_departure_service_tolerance` | float | nao | Tolerancia inferior de servico EV minimo no departure, default `0.05`. |
 | `render_mode` | string | nao | `none`, `during`, `end`. |
@@ -519,6 +520,28 @@ membros, os importadores podem pagar um valor diferente do que os exportadores
 recebem pela mesma energia; a diferença aparece em
 `community_operator_balance_total_eur` (positiva quando o mercado retém dinheiro) e é
 zero com uma tarifa única.
+
+## Servico Eletrico do Distrito
+
+`district_electrical_service` monitoriza os limites partilhados de potencia de importacao e exportacao do alimentador sobre a potencia liquida do distrito, sem impor cortes nem alterar o despacho dos equipamentos (ver [referencia de KPIs](kpis_reference.md#excessos-nos-limites-do-alimentador-do-distrito)). Todas as grandezas simuladas permanecem identicas a uma execucao sem `district_electrical_service`.
+
+```json
+"district_electrical_service": {
+  "enabled": true,
+  "limits": {
+    "import_kw": 50.0,
+    "export_kw": 20.0
+  }
+}
+```
+
+| Campo | Default | O que faz |
+|---|---:|---|
+| `enabled` | `false` | Ativa o registo por step dos excessos do alimentador (`env.feeder_import_exceedance_kw`, `env.feeder_export_exceedance_kw`) e os KPIs de excesso do alimentador em `evaluate_v2()`. |
+| `limits.import_kw` | `null` | Escalar nao negativo em `kW`, sequencia indexada desde o step `0` do dataset com valores `kW`/`null` cobrindo todos os steps executados (`episode_start_time_step + time_step`), ou `null` quando a importacao nao e monitorizada. |
+| `limits.export_kw` | `null` | Escalar nao negativo em `kW`, sequencia indexada desde o step `0` do dataset com valores `kW`/`null` cobrindo todos os steps executados (`episode_start_time_step + time_step`), ou `null` quando a exportacao nao e monitorizada. |
+
+`limits.total.{import_kw,export_kw}` tambem e aceite como alias equivalente ao `electrical_service` dos edificios. Quando ativo, a configuracao normalizada fica registada em `effective_schema`, `physical_configuration_sha256` e `comparison_context`, e `compare_manifests()` assinala como `incompatible` execucoes com configuracoes `district_electrical_service` diferentes.
 
 ## Combinacoes Importantes
 

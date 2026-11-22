@@ -46,6 +46,7 @@ Portuguese version: [pt/schema_reference.md](pt/schema_reference.md).
 | `demand_response` | object | no | Dataset-driven DSO/TSO flexibility requests and settlement. |
 | `robustness` | object | no | Dataset-driven observation, forecast, action and asset availability perturbations. |
 | `community_market` | object | no | Local market and market KPIs. |
+| `district_electrical_service` | object | no | Opt-in shared feeder import/export limit monitoring; see [District Electrical Service](#district-electrical-service). |
 | `ev_departure_within_tolerance` | float | no | Symmetric departure SOC accuracy tolerance, default `0.05`. |
 | `ev_departure_service_tolerance` | float | no | Lower departure SOC service tolerance for minimum acceptable EV service, default `0.05`. |
 | `render_mode` | string | no | `none`, `during` or `end`. |
@@ -585,6 +586,28 @@ Metadata is exposed under `observations["meta"]["robustness"]`.
 | `import_member_weights` | `{}` | Weights for allocating local energy among importers. |
 | `kpis.community_local_traded_enabled` | `true` | Enables local traded energy KPI. |
 | `kpis.community_self_consumption_enabled` | `true` | Enables local import-share KPI. |
+
+## District Electrical Service
+
+`district_electrical_service` monitors shared feeder import and export power limits on the settled district net power without enforcing or curtailing device dispatch (see [KPI reference](kpis_reference.md#district-feeder-limit-exceedances)). Every simulated quantity remains identical to a run without `district_electrical_service`.
+
+```json
+"district_electrical_service": {
+  "enabled": true,
+  "limits": {
+    "import_kw": 50.0,
+    "export_kw": 20.0
+  }
+}
+```
+
+| Field | Default | Purpose |
+|---|---:|---|
+| `enabled` | `false` | Enables per-step feeder exceedance tracking (`env.feeder_import_exceedance_kw`, `env.feeder_export_exceedance_kw`) and district feeder exceedance KPIs in `evaluate_v2()`. |
+| `limits.import_kw` | `null` | Non-negative scalar in `kW`, dataset-step-0 anchored sequence of `kW`/`null` values covering all executed steps (`episode_start_time_step + time_step`), or `null` when import is unmonitored. |
+| `limits.export_kw` | `null` | Non-negative scalar in `kW`, dataset-step-0 anchored sequence of `kW`/`null` values covering all executed steps (`episode_start_time_step + time_step`), or `null` when export is unmonitored. |
+
+`limits.total.{import_kw,export_kw}` is also accepted as an alias matching building `electrical_service`. When enabled, the normalized configuration is recorded in `effective_schema`, `physical_configuration_sha256`, and `comparison_context`, and `compare_manifests()` marks runs with differing `district_electrical_service` configurations as `incompatible`.
 
 ## Important Combinations
 

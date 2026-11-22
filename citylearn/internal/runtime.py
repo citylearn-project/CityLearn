@@ -260,6 +260,7 @@ class CityLearnRuntimeService:
 
         timer_start = time.perf_counter() if debug_timing else 0.0
         self.update_variables()
+        self._record_district_feeder_exceedance()
         self._record_deferrable_service_interval()
         env._provenance_service.settle()
         if debug_timing:
@@ -1386,6 +1387,51 @@ class CityLearnRuntimeService:
         if debug_timing:
             timings['district_aggregate_update_time'] = time.perf_counter() - timer_start
             env._last_update_variables_debug_timing = timings
+
+    def _record_district_feeder_exceedance(self) -> None:
+        """Record settled district feeder import and export exceedances at ``env.time_step`` without altering dispatch."""
+        env = self.env
+        if not getattr(env, 'district_electrical_service_enabled', False):
+            return
+
+        from citylearn.internal.electrical_limits import (
+            district_feeder_exceedances_kw,
+            resolve_district_feeder_limits_at,
+        )
+
+        step = int(env.time_step)
+        step_hours = float(env.seconds_per_time_step) / 3600.0
+        settled_energy_kwh = (
+            float(env.net_electricity_consumption[step])
+            if step < len(env.net_electricity_consumption)
+            else 0.0
+        )
+        settled_power_kw = settled_energy_kwh / step_hours if step_hours > 0.0 else 0.0
+        import_limit_kw, export_limit_kw = resolve_district_feeder_limits_at(
+            env._district_electrical_service_parsed,
+            step,
+            episode_start_time_step=int(getattr(env.episode_tracker, 'episode_start_time_step', 0) or 0),
+        )
+        imp_exc, exp_exc = district_feeder_exceedances_kw(
+            settled_power_kw,
+            import_limit_kw,
+            export_limit_kw,
+        )
+
+        if env._feeder_import_exceedance_kw is None or step >= env._feeder_import_exceedance_kw.size:
+            new_size = max(step + 1, 1)
+            imp_buf = np.zeros(new_size, dtype='float64')
+            exp_buf = np.zeros(new_size, dtype='float64')
+            if env._feeder_import_exceedance_kw is not None:
+                imp_buf[:env._feeder_import_exceedance_kw.size] = env._feeder_import_exceedance_kw
+            if env._feeder_export_exceedance_kw is not None:
+                exp_buf[:env._feeder_export_exceedance_kw.size] = env._feeder_export_exceedance_kw
+            env._feeder_import_exceedance_kw = imp_buf
+            env._feeder_export_exceedance_kw = exp_buf
+
+        env._feeder_import_exceedance_kw[step] = imp_exc
+        env._feeder_export_exceedance_kw[step] = exp_exc
+        env._feeder_recorded_length = max(int(getattr(env, '_feeder_recorded_length', 0)), step + 1)
 
     @staticmethod
     def _to_scalar(value, default: float = 0.0) -> float:

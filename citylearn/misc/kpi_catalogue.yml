@@ -165,6 +165,38 @@
     unit: ratio
     en: Control load-factor penalty over BAU penalty, on the same series.
     pt: Penalização do fator de carga do controlo sobre a da execução BAU, na mesma série.
+  - names: energy_grid_feeder_limit_{import,export}_exceedance_energy_total_{control,business_as_usual,delta_to_business_as_usual}_kwh
+    levels:
+    - district
+    unit: kWh
+    en: Energy of settled district net import or export above the declared `district_electrical_service` feeder limit
+      (excesses up to 1e-5 kW ignored; monitored without curtailment), for the controlled run, the BAU run, and
+      control minus BAU; emitted only when `district_electrical_service.enabled` is true and undefined for an
+      unconfigured direction.
+    pt: Energia da importação ou exportação líquida do distrito acima do limite declarado em
+      `district_electrical_service` (excessos até 1e-5 kW ignorados; monitorizada sem corte), na execução controlada,
+      na execução BAU, e controlo menos BAU; só é emitida quando `district_electrical_service.enabled` é verdadeiro
+      e fica indefinida numa direção não configurada.
+  - names: energy_grid_feeder_limit_{import,export}_exceedance_peak_{control,business_as_usual,delta_to_business_as_usual}_kw
+    levels:
+    - district
+    unit: kW
+    en: Highest per-step settled district import or export power exceedance above the declared
+      `district_electrical_service` feeder limit, for the controlled run, the BAU run, and control minus BAU; emitted
+      only when `district_electrical_service.enabled` is true and undefined for an unconfigured direction.
+    pt: Maior excesso de potência de importação ou de exportação líquida do distrito acima do limite declarado em
+      `district_electrical_service`, na execução controlada, na execução BAU, e controlo menos BAU; só é emitida
+      quando `district_electrical_service.enabled` é verdadeiro e fica indefinida numa direção não configurada.
+  - names: energy_grid_feeder_limit_{import,export}_exceedance_step_{control,business_as_usual,delta_to_business_as_usual}_count
+    levels:
+    - district
+    unit: count
+    en: Number of executed steps with settled district import or export exceedance above 1e-9 kWh, for the controlled
+      run, the BAU run, and control minus BAU; emitted only when `district_electrical_service.enabled` is true and
+      undefined for an unconfigured direction.
+    pt: Número de passos executados com excesso de importação ou de exportação líquida do distrito acima de 1e-9 kWh,
+      na execução controlada, na execução BAU, e controlo menos BAU; só é emitida quando
+      `district_electrical_service.enabled` é verdadeiro e fica indefinida numa direção não configurada.
 - id: emissions
   title:
     en: Emissions
