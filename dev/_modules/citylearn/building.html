@@ -566,6 +566,16 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_metadata</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">]</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flat_observation_order</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Active observations in the order of the flat observation vector and `observation_space`.</span>
+
+<span class="sd">        Building-level observations keep `active_observations` order; per-device observations (EV</span>
+<span class="sd">        chargers, deferrable appliances, escalators) follow, grouped by device.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_service</span><span class="o">.</span><span class="n">flat_observation_order</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">active_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Actions in `action_metadata` with True value i.e. </span>
 <span class="sd">        indicates which storage systems are to be controlled during simulation."""</span>
@@ -2368,6 +2378,16 @@
         <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">low_limit</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">),</span> <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">high_limit</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_controlled_demand_observation_high_limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Largest demand an action can set, in [kWh] per control step; 0 when actions do not set the demand."""</span>
+
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_point_observation_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Set-point limits: the range of the set-point schedule."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_bound</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">upper</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_bound</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">upper</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_ev_time_observation_high_limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">episode_steps</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span> <span class="s1">'episode_time_steps'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
@@ -2519,7 +2539,7 @@
             <span class="s1">'net_electricity_consumption_without_storage_and_partial_load'</span><span class="p">,</span>
             <span class="s1">'net_electricity_consumption_without_storage_and_partial_load_and_pv'</span>
         <span class="p">]</span>
-        <span class="n">observation_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="n">internal_limit_observations</span> <span class="k">if</span> <span class="n">include_all</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_observations</span>
+        <span class="n">observation_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">observation_metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="n">internal_limit_observations</span> <span class="k">if</span> <span class="n">include_all</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">flat_observation_order</span>
         <span class="n">periodic_normalization</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">periodic_normalization</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">periodic_normalization</span>
         <span class="n">periodic_observations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_periodic_observation_metadata</span><span class="p">()</span>
         <span class="n">low_limit</span><span class="p">,</span> <span class="n">high_limit</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
@@ -2702,6 +2722,9 @@
                 <span class="n">low_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">maximum_temperature_delta</span>
                 <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maximum_temperature_delta</span>
 
+            <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_cooling_set_point'</span><span class="p">,</span> <span class="s1">'indoor_dry_bulb_temperature_heating_set_point'</span><span class="p">]:</span>
+                <span class="n">low_limit</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_point_observation_limits</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
             <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">'comfort_band'</span><span class="p">:</span>
                 <span class="n">low_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_bound</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">upper</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -2709,7 +2732,10 @@
             <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'cooling_demand'</span><span class="p">,</span> <span class="s1">'heating_demand'</span><span class="p">,</span> <span class="s1">'dhw_demand'</span><span class="p">]:</span>
                 <span class="n">low_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
                 <span class="n">max_demand</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-                <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">as_float</span><span class="p">(</span><span class="n">max_demand</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">demand_observation_limit_factor</span>
+                <span class="n">high_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                    <span class="n">as_float</span><span class="p">(</span><span class="n">max_demand</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">demand_observation_limit_factor</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_controlled_demand_observation_high_limit</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">),</span>
+                <span class="p">)</span>
 
             <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">'cooling_electricity_consumption'</span><span class="p">:</span>
                 <span class="n">low_limit</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
@@ -2856,12 +2882,15 @@
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="k">pass</span>
 
-            <span class="k">def</span><span class="w"> </span><span class="nf">_headroom_bounds</span><span class="p">(</span><span class="n">limit</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">export</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">limit_low</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">_headroom_bounds</span><span class="p">(</span><span class="n">limit</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">export</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">limit_low</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">phase</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
                 <span class="n">limit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
                 <span class="n">limit_low</span> <span class="o">=</span> <span class="n">limit</span> <span class="k">if</span> <span class="n">limit_low</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">limit_low</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
                     <span class="n">min_total_kw</span> <span class="o">=</span> <span class="n">base_power_min_kw</span> <span class="o">-</span> <span class="n">control_margin_kw</span>
                     <span class="n">max_total_kw</span> <span class="o">=</span> <span class="n">base_power_max_kw</span> <span class="o">+</span> <span class="n">control_margin_kw</span>
+                    <span class="k">if</span> <span class="n">phase</span><span class="p">:</span>
+                        <span class="c1"># A phase carries a share of the building power, which can be none of it.</span>
+                        <span class="n">min_total_kw</span><span class="p">,</span> <span class="n">max_total_kw</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_total_kw</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_total_kw</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">export</span><span class="p">:</span>
                         <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">limit_low</span> <span class="o">+</span> <span class="n">min_total_kw</span><span class="p">,</span> <span class="n">limit</span> <span class="o">+</span> <span class="n">max_total_kw</span><span class="p">]</span>
                     <span class="k">else</span><span class="p">:</span>
@@ -2891,12 +2920,12 @@
                     <span class="n">import_limit</span> <span class="o">=</span> <span class="n">phase</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'import_kw'</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">import_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"charging_phase_</span><span class="si">{</span><span class="n">phase</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2">_headroom_kw"</span>
-                        <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_headroom_bounds</span><span class="p">(</span><span class="n">import_limit</span><span class="p">)</span>
+                        <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_headroom_bounds</span><span class="p">(</span><span class="n">import_limit</span><span class="p">,</span> <span class="n">phase</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                     <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_electrical_service_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
                         <span class="n">export_limit</span> <span class="o">=</span> <span class="n">phase</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'export_kw'</span><span class="p">)</span>
                         <span class="k">if</span> <span class="n">export_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                             <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"charging_phase_</span><span class="si">{</span><span class="n">phase</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2">_export_headroom_kw"</span>
-                            <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_headroom_bounds</span><span class="p">(</span><span class="n">export_limit</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                            <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_headroom_bounds</span><span class="p">(</span><span class="n">export_limit</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">phase</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
             <span class="n">max_violation_energy</span> <span class="o">=</span> <span class="n">power_kw_to_energy_kwh</span><span class="p">(</span><span class="n">total_charger_power_kw</span> <span class="o">+</span> <span class="n">total_storage_power_kw</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">'charging_constraint_violation_kwh'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">max_violation_energy</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
@@ -4122,6 +4151,58 @@
             <span class="p">)</span>
         <span class="p">]</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_controlled_demand_observation_high_limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Largest cooling or heating demand that `update_cooling_demand` or `update_heating_demand` can set.</span>
+
+<span class="sd">        With dynamics, the action sets the demand to the device output at up to its nominal power, which</span>
+<span class="sd">        can exceed the largest demand in the dataset.</span>
+<span class="sd">        """</span>
+
+        <span class="n">high</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_controlled_demand_observation_high_limit</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># `ignore_dynamics`, not `simulate_dynamics`: the latter is also False during the LSTM warm-up.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_dynamics</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'cooling_demand'</span><span class="p">,</span> <span class="s1">'heating_demand'</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">high</span>
+
+        <span class="n">heating</span> <span class="o">=</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">'heating_demand'</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_device</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">cooling_device</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'heating_device'</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="s1">'cooling_device'</span><span class="p">,</span> <span class="s1">'cooling_or_heating_device'</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_actions</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">high</span>
+
+        <span class="c1"># Same cap as the update methods, with the nominal power as the available power (an upper bound).</span>
+        <span class="c1"># Physics version 1 compares the step energy with the power, which caps it at one hour.</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_step_hours</span><span class="p">()</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="n">hours</span> <span class="k">if</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">electric_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="s1">'nominal_power'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">hours</span>
+
+        <span class="k">if</span> <span class="n">electric_energy</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">high</span>
+
+        <span class="c1"># The action only sets the demand in the steps whose HVAC mode allows that service.</span>
+        <span class="n">hvac_mode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'hvac_mode'</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+        <span class="n">modes</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">hvac_mode</span><span class="p">,</span> <span class="n">modes</span><span class="p">)</span> <span class="k">if</span> <span class="n">hvac_mode</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">steps</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">high</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">HeatPump</span><span class="p">):</span>
+            <span class="n">temperature</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">'outdoor_dry_bulb_temperature'</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+            <span class="n">cop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">get_cop</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">heating</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cop</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">steps</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                <span class="n">cop</span> <span class="o">=</span> <span class="n">cop</span><span class="p">[</span><span class="n">steps</span><span class="p">]</span>
+
+            <span class="n">cop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_bound</span><span class="p">(</span><span class="n">cop</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cop</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="s1">'efficiency'</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="n">electric_energy</span> <span class="o">*</span> <span class="n">cop</span>
+
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="n">as_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dataset_energy_to_control_step</span><span class="p">(</span><span class="n">output</span><span class="p">)))</span>
+
 <div class="viewcode-block" id="LSTMDynamicsBuilding.update_cooling_demand">
 <a class="viewcode-back" href="../../api/citylearn.building.html#citylearn.building.LSTMDynamicsBuilding.update_cooling_demand">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">update_cooling_demand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
@@ -4245,6 +4326,25 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ignore_occupant</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">ignore_occupant</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ignore_occupant</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_point_observation_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Set-point limits that also cover the occupant's changes.</span>
+
+<span class="sd">        Each occupant interaction moves the set point from its current value and holds it, so repeated</span>
+<span class="sd">        interactions can take it outside the schedule. The limits then cover the indoor temperature</span>
+<span class="sd">        limits, the range of temperatures the building is expected to reach.</span>
+<span class="sd">        """</span>
+
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_set_point_observation_limits</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_occupant</span> <span class="ow">or</span> <span class="s1">'indoor_dry_bulb_temperature'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span>
+
+        <span class="n">temperature</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature'</span><span class="p">]</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_bound</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">maximum_temperature_delta</span><span class="p">)</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_bound</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">maximum_temperature_delta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span>
+
     <span class="nd">@DynamicsBuilding</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">episode_tracker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_tracker</span><span class="p">:</span> <span class="n">EpisodeTracker</span><span class="p">):</span>
         <span class="n">DynamicsBuilding</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">fset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">episode_tracker</span><span class="p">)</span>

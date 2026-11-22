@@ -103,6 +103,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#district-emissions-with-local-trading-off">District emissions with local trading off</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#observation-spaces-follow-the-observations">Observation spaces follow the observations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-native-bau-uses-current-step-load-and-solar">The native BAU uses current-step load and solar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#recorded-settings">Recorded settings</a></li>
@@ -252,6 +253,78 @@ local trading on, runs without a market and every bundled dataset are
 unchanged, and the local price ratio does not affect emissions. To compare
 with an earlier run made with local trading off, re-evaluate it with the
 current release. See <a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/327">#327</a>.</p>
+</section>
+<section id="observation-spaces-follow-the-observations">
+<h3>Observation spaces follow the observations<a class="headerlink" href="#observation-spaces-follow-the-observations" title="Link to this heading"></a></h3>
+<p>The observation values, their order and <code class="docutils literal notranslate"><span class="pre">observation_names</span></code> do not change, and
+neither do simulations or KPIs, except runs with robustness faults on the flat
+interface of <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> or the three-phase electrical-service demo: those faults
+now reach the feature they name. The observation spaces change, and so does
+anything that reads bounds from them: agents trained on the datasets below
+should be retrained, and their earlier results are not comparable.</p>
+<ul class="simple">
+<li><p><strong>Flat order.</strong> <code class="docutils literal notranslate"><span class="pre">env.observation_space</span></code> now follows <code class="docutils literal notranslate"><span class="pre">env.observation_names</span></code>.
+Each building lists its own features first, in <code class="docutils literal notranslate"><span class="pre">active_observations</span></code> order,
+then the features of its EV chargers, deferrable appliances and escalators,
+grouped by device (<code class="docutils literal notranslate"><span class="pre">Building.flat_observation_order</span></code>). The space used to
+follow <code class="docutils literal notranslate"><span class="pre">active_observations</span></code>, so for buildings with EV chargers or deferrable
+appliances whose features are not already at the end of
+<code class="docutils literal notranslate"><span class="pre">active_observations</span></code>, positions carried another feature’s bounds. This
+affects the flat interface of <code class="docutils literal notranslate"><span class="pre">pt_rec_4</span></code>, <code class="docutils literal notranslate"><span class="pre">pt_rec_15</span></code>, <code class="docutils literal notranslate"><span class="pre">pt_rec_30</span></code>,
+<code class="docutils literal notranslate"><span class="pre">pt_rec_100</span></code> and one building of the three-phase electrical-service demo
+(hourly and 15 s).</p></li>
+<li><p><strong>Entity <code class="docutils literal notranslate"><span class="pre">meta</span></code>.</strong> <code class="docutils literal notranslate"><span class="pre">env.observation_space['meta']</span></code> is an <code class="docutils literal notranslate"><span class="pre">EntityMetaSpace</span></code>.
+It accepts a mapping with <code class="docutils literal notranslate"><span class="pre">time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">endogenous_time_step</span></code>,
+<code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> and <code class="docutils literal notranslate"><span class="pre">spec_version</span></code>, is not flattenable and should not
+be fed to a network. Code that iterates over <code class="docutils literal notranslate"><span class="pre">observation_space.spaces</span></code> should
+skip it, as it skips <code class="docutils literal notranslate"><span class="pre">observations['meta']</span></code>.</p></li>
+<li><p><strong>Wider estimated bounds</strong>, in both interfaces:
+per-phase charging headroom (<code class="docutils literal notranslate"><span class="pre">charging_phase_*_headroom_kw</span></code> and
+<code class="docutils literal notranslate"><span class="pre">charging_phase_*_export_headroom_kw</span></code>) on <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code>; <code class="docutils literal notranslate"><span class="pre">cooling_demand</span></code> and
+<code class="docutils literal notranslate"><span class="pre">heating_demand</span></code> of LSTM buildings whose HVAC action is active, on the 2023
+challenge datasets and both Quebec neighbourhoods; and the cooling and heating
+set points of occupant-interaction buildings, on both Quebec neighbourhoods,
+which now cover the indoor temperature limits.</p></li>
+</ul>
+<p>These bounds are still estimates where the model has no hard limit. Under
+arbitrary control, for example random actions over a full Quebec episode, the
+LSTM indoor temperature and the occupant set points that follow it can leave
+them; <code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code> keeps such values inside the space.</p>
+<p>What reads the bounds:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Consumer</p></th>
+<th class="head"><p>Uses</p></th>
+<th class="head"><p>Affected by</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RLC</span></code>, <code class="docutils literal notranslate"><span class="pre">SAC</span></code>, <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> encoders</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">observation_space</span></code> by position</p></td>
+<td><p>order and bounds</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">observation_space</span></code> by position</p></td>
+<td><p>order and bounds</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DiscreteObservationWrapper</span></code>, <code class="docutils literal notranslate"><span class="pre">TabularQLearningWrapper</span></code></p></td>
+<td><p>bins from <code class="docutils literal notranslate"><span class="pre">observation_space</span></code> by position</p></td>
+<td><p>order and bounds</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NormalizedObservationWrapper</span></code></p></td>
+<td><p>building limits by name</p></td>
+<td><p>bounds only</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StableBaselines3Wrapper</span></code>, <code class="docutils literal notranslate"><span class="pre">RLlibSingleAgentWrapper</span></code>, <code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code></p></td>
+<td><p>declare the space, do not rescale</p></td>
+<td><p>only through a normalising wrapper or the algorithm’s own use of the space</p></td>
+</tr>
+<tr class="row-odd"><td><p>Robustness faults on the flat interface</p></td>
+<td><p>feature by position</p></td>
+<td><p>order (faults now reach the named feature)</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="the-native-bau-uses-current-step-load-and-solar">
 <h3>The native BAU uses current-step load and solar<a class="headerlink" href="#the-native-bau-uses-current-step-load-and-solar" title="Link to this heading"></a></h3>

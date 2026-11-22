@@ -228,6 +228,11 @@
 <span class="n">env</span><span class="o">.</span><span class="n">action_names</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">env.observation_space</span></code> follows <code class="docutils literal notranslate"><span class="pre">env.observation_names</span></code> position by position. Each building lists
+its building-level observations first, in <code class="docutils literal notranslate"><span class="pre">active_observations</span></code> order, and then the observations of
+its EV chargers, deferrable appliances and escalators, grouped by device
+(<code class="docutils literal notranslate"><span class="pre">Building.flat_observation_order</span></code>). Normalise by position with <code class="docutils literal notranslate"><span class="pre">observation_space.low</span></code> and <code class="docutils literal notranslate"><span class="pre">high</span></code>,
+or by name with <code class="docutils literal notranslate"><span class="pre">observation_names</span></code>; both give the same bounds.</p>
 </section>
 <section id="entity-mode">
 <h2>Entity Mode<a class="headerlink" href="#entity-mode" title="Link to this heading"></a></h2>
@@ -280,6 +285,10 @@
 <span class="p">}</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">env.observation_space</span></code> declares all three keys. <code class="docutils literal notranslate"><span class="pre">meta</span></code> is an <code class="docutils literal notranslate"><span class="pre">EntityMetaSpace</span></code>: it accepts any
+mapping with <code class="docutils literal notranslate"><span class="pre">time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">endogenous_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code> and <code class="docutils literal notranslate"><span class="pre">spec_version</span></code>, so
+<code class="docutils literal notranslate"><span class="pre">observation_space.contains(observations)</span></code> holds. It carries context, not features, and is not
+flattenable; feed only <code class="docutils literal notranslate"><span class="pre">tables</span></code> and <code class="docutils literal notranslate"><span class="pre">edges</span></code> to a network.</p>
 <p><code class="docutils literal notranslate"><span class="pre">runtime_status_v1</span></code> reports simulator facts, not an RL-policy health
 classification. <code class="docutils literal notranslate"><span class="pre">fault_mode</span></code> is preserved as the original cause. In
 particular, a <code class="docutils literal notranslate"><span class="pre">stuck</span></code> event is not automatically labelled stale: a consumer

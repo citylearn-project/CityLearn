@@ -685,6 +685,14 @@ scaling this observation-variable using these bounds may result in normalized va
 assumed that devices and storage systems have been sized.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="citylearn.building.Building.flat_observation_order">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flat_observation_order</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.building.Building.flat_observation_order" title="Link to this definition"></a></dt>
+<dd><p>Active observations in the order of the flat observation vector and <cite>observation_space</cite>.</p>
+<p>Building-level observations keep <cite>active_observations</cite> order; per-device observations (EV
+chargers, deferrable appliances, escalators) follow, grouped by device.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.building.Building.get_metadata">
 <span class="sig-name descname"><span class="pre">get_metadata</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citylearn/building.html#Building.get_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.building.Building.get_metadata" title="Link to this definition"></a></dt>
