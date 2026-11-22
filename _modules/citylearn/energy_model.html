@@ -134,7 +134,8 @@
            <div itemprop="articleBody">
              
   <h1>Source code for citylearn.energy_model</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">array</span><span class="w"> </span><span class="kn">import</span> <span class="n">array</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">array</span><span class="w"> </span><span class="kn">import</span> <span class="n">array</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
@@ -148,12 +149,12 @@
 <span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - optional dependency</span>
     <span class="n">Pvwattsv8</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_streams</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">EpisodeTracker</span> <span class="k">as</span> <span class="n">EpisodeTracker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">EpisodeTracker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DataSet</span><span class="p">,</span>
     <span class="n">ZERO_DIVISION_PLACEHOLDER</span><span class="p">,</span>
     <span class="n">DeferrableApplianceSimulation</span><span class="p">,</span>
-    <span class="n">EnergySimulation</span> <span class="k">as</span> <span class="n">EnergySimulation</span><span class="p">,</span>
+    <span class="n">EnergySimulation</span><span class="p">,</span>
     <span class="n">EscalatorSimulation</span><span class="p">,</span>
     <span class="n">WashingMachineSimulation</span><span class="p">,</span>
 <span class="p">)</span>

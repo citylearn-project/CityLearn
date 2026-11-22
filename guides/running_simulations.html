@@ -790,7 +790,7 @@ requirements installed (see the <a class="reference internal" href="developer_gu
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q
 python<span class="w"> </span>scripts/audit/audit_entity_contract.py<span class="w"> </span>--strict
 python<span class="w"> </span>scripts/audit/audit_physics.py
-python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>citylearn<span class="w"> </span>tests<span class="w"> </span>scripts/manual<span class="w"> </span>scripts/ci
+python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>citylearn<span class="w"> </span>tests<span class="w"> </span>scripts/manual<span class="w"> </span>scripts/ci<span class="w"> </span>--select<span class="w"> </span>E9,F821
 </pre></div>
 </div>
 <p>KPI-only exports include a manifest and service-audit JSON sidecars. They do not

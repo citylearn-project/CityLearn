@@ -190,16 +190,13 @@ dependency: the RLlib wrappers import it only when it is installed.</p>
 <tr class="row-even"><td><p>Parallel tests</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">pytest-xdist</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Coverage report (<code class="docutils literal notranslate"><span class="pre">--cov=citylearn</span></code>) and the 600 s per-test timeout of <code class="docutils literal notranslate"><span class="pre">pytest.ini</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">pytest-cov</span> <span class="pre">pytest-timeout</span></code> (both are in <code class="docutils literal notranslate"><span class="pre">test_requirements.txt</span></code>)</p></td>
-</tr>
-<tr class="row-even"><td><p>Notebook checks</p></td>
+<tr class="row-odd"><td><p>Notebook checks</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">nbclient</span> <span class="pre">nbformat</span> <span class="pre">ipykernel</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>RLlib wrappers</p></td>
+<tr class="row-even"><td><p>RLlib wrappers</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">&quot;ray[rllib]&quot;</span></code> (a release with wheels for your Python)</p></td>
 </tr>
-<tr class="row-even"><td><p>Build checks</p></td>
+<tr class="row-odd"><td><p>Build checks</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">build</span> <span class="pre">twine</span></code></p></td>
 </tr>
 </tbody>
@@ -255,8 +252,8 @@ the comparison reports <code class="docutils literal notranslate"><span class="p
 <tr class="row-even"><td><p>Example notebooks</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">scripts/ci/run_notebooks.py</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Lint (rules in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>, as in CI)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">-m</span> <span class="pre">ruff</span> <span class="pre">check</span> <span class="pre">citylearn</span> <span class="pre">tests</span> <span class="pre">scripts/manual</span> <span class="pre">scripts/ci</span></code></p></td>
+<tr class="row-odd"><td><p>Critical lint</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">-m</span> <span class="pre">ruff</span> <span class="pre">check</span> <span class="pre">citylearn</span> <span class="pre">tests</span> <span class="pre">scripts/manual</span> <span class="pre">scripts/ci</span> <span class="pre">--select</span> <span class="pre">E9,F821</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Entity contract audit</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">scripts/audit/audit_entity_contract.py</span> <span class="pre">--strict</span></code></p></td>
