@@ -98,6 +98,8 @@ def _run_flat_zero_action_case(
         "central_agent": True,
         "episode_time_steps": episode_steps,
         "seconds_per_time_step": seconds_per_time_step,
+        # Same setting as scripts/ci/perf_smoke.py: a 60 s step on hourly data.
+        "time_step_ratio_mode": "compress",
         "random_seed": seed,
         "debug_timing": True,
         "interface": "flat",
