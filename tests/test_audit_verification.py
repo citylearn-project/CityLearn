@@ -128,3 +128,33 @@ def test_retired_rbc_and_sac_kpi_snapshots_are_gone():
     source = (ROOT / "scripts/audit/audit_performance_results.py").read_text(encoding="utf-8")
     for retired in ("--update-baselines", "--kpi-tol", "--strict-require-sac-snapshot", "kpi_baseline.json"):
         assert retired not in source
+
+
+def test_ci_runs_every_default_audit_in_its_own_strict_job():
+    """The parallel CI audit jobs (#339) must cover the default selection, each once, behind one gate."""
+    import yaml
+
+    sys.path.insert(0, str(ROOT))
+    try:
+        from scripts.audit.run_full_audit import DEFAULT_AUDITS
+    finally:
+        sys.path.remove(str(ROOT))
+
+    jobs = yaml.safe_load((ROOT / ".github/workflows/run_tests.yml").read_text(encoding="utf-8"))["jobs"]
+    audit_job = jobs["runtime-audit"]
+    entries = audit_job["strategy"]["matrix"]["include"]
+    selected = [audit for entry in entries for audit in entry["audits"].split()]
+    assert sorted(selected) == sorted(DEFAULT_AUDITS)
+    assert audit_job["strategy"]["fail-fast"] is False
+
+    run = next(step["run"] for step in audit_job["steps"] if "run_full_audit.py" in step.get("run", ""))
+    assert "--strict" in run and "--report-only" not in run
+    assert "--audits ${{ matrix.audits }}" in run
+    upload = next(step for step in audit_job["steps"] if "upload-artifact" in step.get("uses", ""))
+    assert "${{ matrix.name }}" in upload["with"]["name"]
+    assert upload["if"] == "always()"
+    assert len({entry["name"] for entry in entries}) == len(entries)
+
+    gate = jobs["runtime-audits"]
+    assert gate["needs"] == "runtime-audit" and gate["if"] == "always()"
+    assert 'test "${{ needs.runtime-audit.result }}" = "success"' in gate["steps"][0]["run"]

@@ -83,6 +83,11 @@ audits that CI runs:
 python scripts/audit/run_full_audit.py --strict --output-dir audit-output
 ```
 
+CI runs the same audits as parallel jobs (`--audits physics`, `--audits datasets`
+and `--audits entity_contract refactor_parity`), uploads each job's JSON as its own
+artifact and requires all of them through the `runtime-audits` job. To rerun only
+the audit that failed, pass the same `--audits` selection.
+
 ## Documentation
 
 The guides are Markdown files in `docs/` and the site is built with Sphinx from

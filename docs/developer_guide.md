@@ -179,6 +179,13 @@ drift fail verification; ordinary runs do not rewrite snapshots. Algorithm audit
 remain explicit opt-in tools. Reference tests generate small temporary cases from
 existing fixtures; no SoftCPS production datasets are included.
 
+CI runs the physics audit, the official dataset audit, and the entity contract and
+refactor parity audits as three parallel jobs (`audit (physics)`, `audit (datasets)`,
+`audit (entity-contract-and-refactor-parity)`), each with `--strict` and its own
+`--audits` selection. Each job uploads its JSON evidence as
+`citylearn-runtime-audits-<name>`, and the `runtime-audits` job fails unless all
+three pass.
+
 Public facades delegate to focused internal modules for energy/equipment/service/
 community KPIs, entity observation/layout preparation, loading inputs/components
 and robustness contracts/auditing. Electrical-service allocation is shared by

@@ -194,6 +194,13 @@ continuam a ser ferramentas explícitas e opcionais. Os testes de referência ge
 pequenos casos temporários a partir das fixtures existentes; não é incluído nenhum
 dataset de produção do SoftCPS.
 
+A CI corre a auditoria de física, a dos datasets oficiais e as do contrato de
+entidades e da paridade da refatoração em três jobs paralelos (`audit (physics)`,
+`audit (datasets)`, `audit (entity-contract-and-refactor-parity)`), cada um com
+`--strict` e a sua seleção `--audits`. Cada job envia a sua evidência JSON como
+`citylearn-runtime-audits-<nome>` e o job `runtime-audits` falha se algum dos três
+não passar.
+
 As fachadas públicas delegam em módulos internos especializados para os KPIs de
 energia/equipamentos/serviço/comunidade, a preparação das observações e do layout
 das entidades, as entradas e componentes do carregamento e os contratos e a
