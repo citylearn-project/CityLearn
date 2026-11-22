@@ -210,6 +210,15 @@ class CityLearnLoadingService:
 
         schema['simulation_start_time_step'] = kwargs['simulation_start_time_step'] if kwargs.get('simulation_start_time_step') is not None else schema['simulation_start_time_step']
         schema['simulation_end_time_step'] = kwargs['simulation_end_time_step'] if kwargs.get('simulation_end_time_step') is not None else schema['simulation_end_time_step']
+        if (
+            kwargs.get('episode_time_steps') is None
+            and isinstance(schema['episode_time_steps'], list)
+            and (kwargs.get('simulation_start_time_step') is not None or kwargs.get('simulation_end_time_step') is not None)
+        ):
+            schema['episode_time_steps'] = self._restrict_schema_episodes(
+                schema['episode_time_steps'], schema['simulation_start_time_step'], schema['simulation_end_time_step']
+            )
+
         episode_tracker = EpisodeTracker(schema['simulation_start_time_step'], schema['simulation_end_time_step'])
 
         pv_sizing_data = None
@@ -391,6 +400,39 @@ class CityLearnLoadingService:
             schema['shared_observations'],
             episode_tracker,
         )
+
+    @staticmethod
+    def _restrict_schema_episodes(splits, simulation_start: int, simulation_end: int) -> List[List[int]]:
+        """Clip a schema's explicit episode list to a simulation window the caller narrowed (CityLearn #308).
+
+        Only the window's rows are loaded, so a schema episode outside it would read past the data
+        or simulate rows outside the window. Each episode keeps the part that overlaps the window,
+        and episodes without an interval inside it are dropped.
+        """
+
+        simulation_start, simulation_end = int(simulation_start), int(simulation_end)
+        restricted = []
+
+        for split in splits:
+            try:
+                start, end = int(split[0]), int(split[1])
+            except (TypeError, ValueError, IndexError):
+                return splits  # malformed: let the episode tracker raise its error
+
+            clipped_start, clipped_end = max(start, simulation_start), min(end, simulation_end)
+
+            if clipped_start > clipped_end or (clipped_start == clipped_end and start < end):
+                continue
+
+            restricted.append([clipped_start, clipped_end])
+
+        if not restricted:
+            raise ValueError(
+                f'None of the schema episode_time_steps {splits} overlaps the simulation window '
+                f'({simulation_start}, {simulation_end}). Pass episode_time_steps for this window.'
+            )
+
+        return restricted
 
     @staticmethod
     def _import_object(path: str):

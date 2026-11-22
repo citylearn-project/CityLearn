@@ -152,24 +152,43 @@ class EpisodeTracker:
         )
         self.__episode_random_seed = random_seed
         
+    def validate_episode_splits(self, episode_time_steps: List[Tuple[int, int]]) -> List[List[int]]:
+        """Return explicit episode splits as ``[start, end]`` pairs, or raise `ValueError` for an invalid one.
+
+        Only the rows of the simulation window are loaded, so every split must lie inside
+        [`simulation_start_time_step`, `simulation_end_time_step`] (CityLearn #308).
+        """
+
+        splits = []
+        simulation_start, simulation_end = self.__simulation_start_time_step, self.__simulation_end_time_step
+
+        for split in episode_time_steps:
+            try:
+                start, end = (int(split[0]), int(split[1]))
+                if len(split) != 2:
+                    raise ValueError
+            except (TypeError, ValueError, IndexError):
+                raise ValueError(f'Each episode window must be a (start, end) pair of integers, got {split!r}.') from None
+            if not (0 <= start <= end):
+                raise ValueError(f'Episode window ({start}, {end}) must satisfy 0 <= start <= end.')
+            if not (simulation_start <= start and end <= simulation_end):
+                raise ValueError(
+                    f'Episode window ({start}, {end}) lies outside the simulation window '
+                    f'({simulation_start}, {simulation_end}); only the rows of the simulation window are loaded. '
+                    'Pass episode_time_steps inside the window, or widen simulation_start_time_step/'
+                    'simulation_end_time_step.'
+                )
+            splits.append([start, end])
+
+        return splits
+
     def __next_episode_time_steps(self, episode_time_steps: Union[int, List[Tuple[int, int]]], rolling_episode_split: bool, random_episode_split: bool, random_seed: int, episode_split_boundary: str = 'shared'):
         """Sets `episode_start_time_step` and `episode_end_time_step` for reading data files."""
 
         splits = None
 
         if isinstance(episode_time_steps, list):
-            splits = episode_time_steps
-            for split in splits:
-                try:
-                    start, end = (int(split[0]), int(split[1]))
-                    if len(split) != 2:
-                        raise ValueError
-                except (TypeError, ValueError, IndexError):
-                    raise ValueError(f'Each episode window must be a (start, end) pair of integers, got {split!r}.') from None
-                # Schemas may define windows beyond a simulation window narrowed by the caller; those rows still
-                # exist in the data files, so only windows that can never be valid are rejected here.
-                if not (0 <= start <= end):
-                    raise ValueError(f'Episode window ({start}, {end}) must satisfy 0 <= start <= end.')
+            splits = self.validate_episode_splits(episode_time_steps)
 
         else:
             if episode_time_steps <= 0:
