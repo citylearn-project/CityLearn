@@ -379,7 +379,9 @@ are not affected.</p></li>
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">random_stream_episode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#citylearn.base.EpisodeTracker.random_stream_episode" title="Link to this definition"></a></dt>
 <dd><p>Episode key of the per-episode random streams (<code class="docutils literal notranslate"><span class="pre">random_stream_version='v2'</span></code>).</p>
 <p>The environment sets it at reset: the episode index, or 0 after a reset with an explicit
-seed, so that <code class="docutils literal notranslate"><span class="pre">reset(seed=s)</span></code> repeats the first episode of an environment seeded with <cite>s</cite>.
+seed, so that <code class="docutils literal notranslate"><span class="pre">reset(seed=s)</span></code> uses the streams of the first episode of an environment
+built with <cite>s</cite>. Parameters drawn at construction keep their values and the episode window
+still advances, so the episode itself repeats only on a new environment built with <cite>s</cite>.
 Unset, it is the episode index.</p>
 </dd></dl>
 

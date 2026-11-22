@@ -585,9 +585,24 @@ same outages in every episode with the same window. A seed given to the
 outage model is now the root of that building’s stream instead of a stream
 shared by every building that uses it.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">reset(seed=s)</span></code> repeats the first episode of an environment built with
-<code class="docutils literal notranslate"><span class="pre">random_seed=s</span></code>, and <code class="docutils literal notranslate"><span class="pre">reset(options={'episode_index':</span> <span class="pre">k})</span></code> repeats episode <code class="docutils literal notranslate"><span class="pre">k</span></code>.
-The native BAU reference uses the streams of the episode it evaluates.</p>
+<p><code class="docutils literal notranslate"><span class="pre">reset(seed=s)</span></code> sets <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> to <code class="docutils literal notranslate"><span class="pre">s</span></code> and restarts the per-episode streams
+(EV drift, occupant interactions and stochastic outages) at episode key 0, the
+key of the first episode of an environment built with <code class="docutils literal notranslate"><span class="pre">random_seed=s</span></code>. It does
+not rebuild the environment, so it repeats that first episode only on a new
+environment built with <code class="docutils literal notranslate"><span class="pre">random_seed=s</span></code>:</p>
+<ul class="simple">
+<li><p>the episode window still advances, so a second <code class="docutils literal notranslate"><span class="pre">reset(seed=s)</span></code> simulates the
+next window; <code class="docutils literal notranslate"><span class="pre">reset(seed=s,</span> <span class="pre">options={'episode_index':</span> <span class="pre">k})</span></code> simulates window
+<code class="docutils literal notranslate"><span class="pre">k</span></code> with the streams of episode 0;</p></li>
+<li><p>device and EV battery parameters drawn at construction, and the initial EV
+state of charge, keep the values drawn with the construction seed.</p></li>
+</ul>
+<p>To repeat a run with another seed, build a new environment with that
+<code class="docutils literal notranslate"><span class="pre">random_seed</span></code>. <code class="docutils literal notranslate"><span class="pre">reset(options={'episode_index':</span> <span class="pre">k})</span></code> without a seed repeats
+episode <code class="docutils literal notranslate"><span class="pre">k</span></code> of the same environment, or of another one built with the same
+seed. As Gymnasium recommends, pass a seed to the first reset only: a seed at
+every reset gives every episode the same per-episode streams. The native BAU
+reference uses the streams of the episode it evaluates.</p>
 <p>Runs that use none of these random features are unchanged. To reproduce results
 obtained with 3.6.0 or earlier for the same seed, set <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code>
 to <code class="docutils literal notranslate"><span class="pre">v1</span></code>:</p>

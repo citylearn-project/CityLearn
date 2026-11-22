@@ -890,7 +890,11 @@ is returned where each sublist is a list of 1 building’s observation values an
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Use to updated <code class="code docutils literal notranslate"><span class="pre">citylearn.CityLearnEnv.random_seed</span></code> if value is provided.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – New <code class="code docutils literal notranslate"><span class="pre">citylearn.CityLearnEnv.random_seed</span></code>. The per-episode random streams (EV drift,
+occupant interactions, stochastic outages) restart at the key of episode 0. Parameters drawn
+when the environment was built keep their values and the episode window still advances, so
+only on a new environment built with the same seed does this repeat its first episode. Pass a
+seed to the first reset only; a seed at every reset repeats the same streams in every episode.</p></li>
 <li><p><strong>options</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – Optional <code class="docutils literal notranslate"><span class="pre">episode_index</span></code> selects a specific episode split for replay.</p></li>
 </ul>
 </dd>

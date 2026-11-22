@@ -2136,7 +2136,11 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        seed: int, optional</span>
-<span class="sd">            Use to updated :code:`citylearn.CityLearnEnv.random_seed` if value is provided.</span>
+<span class="sd">            New :code:`citylearn.CityLearnEnv.random_seed`. The per-episode random streams (EV drift,</span>
+<span class="sd">            occupant interactions, stochastic outages) restart at the key of episode 0. Parameters drawn</span>
+<span class="sd">            when the environment was built keep their values and the episode window still advances, so</span>
+<span class="sd">            only on a new environment built with the same seed does this repeat its first episode. Pass a</span>
+<span class="sd">            seed to the first reset only; a seed at every reset repeats the same streams in every episode.</span>
 <span class="sd">        options: Mapping[str, Any], optional</span>
 <span class="sd">            Optional ``episode_index`` selects a specific episode split for replay.</span>
 <span class="sd">        </span>
@@ -2176,8 +2180,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">episode_split_boundary</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="c1"># Episode key of the per-episode streams: an explicit seed repeats the first episode of an env</span>
-        <span class="c1"># built with that seed; the native BAU sidecar takes the key of the episode it evaluates.</span>
+        <span class="c1"># Episode key of the per-episode streams: an explicit seed restarts them at the key of the first</span>
+        <span class="c1"># episode of an env built with that seed (construction-time draws and the window are not reset);</span>
+        <span class="c1"># the native BAU sidecar takes the key of the episode it evaluates.</span>
         <span class="n">stream_episode</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_random_stream_episode_override'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">random_stream_episode</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">stream_episode</span> <span class="k">if</span> <span class="n">stream_episode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode</span>
