@@ -11,11 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 NAMES = ("physics", "entity_contract", "datasets", "refactor_parity")
 
 
-def _run(tmp_path, *, failure=None, code=1, missing=None, flags=()):
+def _run(tmp_path, *, failure=None, code=1, missing=None, flags=(), names=NAMES):
     checkout = tmp_path / "checkout"
     scripts = checkout / "scripts/audit"
     scripts.mkdir(parents=True)
-    for name in NAMES:
+    for name in names:
         if name == missing:
             continue
         result = code if name == failure else 0
@@ -105,3 +105,26 @@ def test_explicit_snapshot_updates_cannot_be_reported_as_verified(tmp_path):
     assert process.returncode == 0
     assert report["snapshot_updates_requested"]
     assert not report["verification_passed"]
+
+
+def test_performance_audit_receives_no_kpi_snapshot_options(tmp_path):
+    process, report = _run(
+        tmp_path,
+        names=("performance_results",),
+        flags=("--report-only", "--update-snapshots", "--audits", "performance_results"),
+    )
+    assert process.returncode == 0
+    (row,) = report["runs"]
+    assert row["status"] == "ok"
+    args = json.loads(row["stdout"])["args"]
+    assert "--update-baselines" not in args
+    assert "--episode-steps" not in args
+
+
+def test_retired_rbc_and_sac_kpi_snapshots_are_gone():
+    snapshots = ROOT / "scripts/audit/snapshots"
+    assert not (snapshots / "rbc_kpi_baseline.json").exists()
+    assert not (snapshots / "sac_kpi_baseline.json").exists()
+    source = (ROOT / "scripts/audit/audit_performance_results.py").read_text(encoding="utf-8")
+    for retired in ("--update-baselines", "--kpi-tol", "--strict-require-sac-snapshot", "kpi_baseline.json"):
+        assert retired not in source
