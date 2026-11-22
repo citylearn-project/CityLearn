@@ -48,6 +48,15 @@ development-line history.
 
 ## Unreleased
 
+### The native BAU uses current-step load and solar
+
+The native BAU now uses observed load and PV from the step being planned when
+it requests battery charging or discharging. This can change BAU-relative KPIs.
+Re-evaluate both runs with the current release and the same EV charging target
+before comparing them. To reproduce a result using the previous BAU, use the
+CityLearn release or commit recorded in its original manifest. See the
+[BAU reference](baselines.md#known-limits).
+
 ### Numeric and configuration hygiene
 
 These changes require no dataset, schema or KPI migration. Valid runs give the same results; a few silent mistakes now raise.

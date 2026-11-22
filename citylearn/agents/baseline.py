@@ -49,6 +49,7 @@ class _RuleBaselineAgent(Agent):
 
     ENGINE_CLASS: ClassVar[type] = engines.NormalTargetPolicy
     DEFINITION_VERSION: ClassVar[str] = ''
+    _use_current_step_load = False
     # Values the Algorithms configuration layer resolves for every rule policy;
     # without them the engines fall back to the BAU self-consumption threshold.
     DEFAULT_HYPERPARAMETERS: ClassVar[Mapping[str, Any]] = {
@@ -121,20 +122,23 @@ class _RuleBaselineAgent(Agent):
             self._layouts.append((controlled, np.clip(0.0, low, high)))
             engine_names.append([active[i] for i in controlled])
             engine_spaces.append(spaces.Box(low=low[idx], high=high[idx], dtype='float64'))
+        metadata = {
+            'seconds_per_time_step': env.seconds_per_time_step,
+            'building_names': [b.name for b in buildings],
+            'community_market': {
+                'enabled': bool(getattr(env, 'community_market_enabled', False)),
+                'local_price_ratio_to_grid_import': getattr(env, 'community_market_sell_ratio', 1.0),
+                'grid_export_price': getattr(env, 'community_market_grid_export_price', 0.0),
+            },
+        }
+        if self._use_current_step_load:
+            metadata['current_step_load_ratios'] = tuple(float(b.time_step_ratio) for b in buildings)
         self._engine.attach_environment(
             observation_names=names,
             action_names=engine_names,
             action_space=engine_spaces,
             observation_space=[None for _ in buildings],
-            metadata={
-                'seconds_per_time_step': env.seconds_per_time_step,
-                'building_names': [b.name for b in buildings],
-                'community_market': {
-                    'enabled': bool(getattr(env, 'community_market_enabled', False)),
-                    'local_price_ratio_to_grid_import': getattr(env, 'community_market_sell_ratio', 1.0),
-                    'grid_export_price': getattr(env, 'community_market_grid_export_price', 0.0),
-                },
-            },
+            metadata=metadata,
         )
         self._attached_topology_version = int(getattr(env, 'topology_version', 0))
 
@@ -214,24 +218,26 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
     """Reference BAU: immediate EV charging, earliest appliance start, PV self-consumption.
 
     A connected EV is charged at once and at maximum power. With
-    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v3``) it charges
+    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v4``) it charges
     to 100%, as the BAU of CityLearn 3.1–3.3 did. With
-    ``ev_charge_target='requested'`` (``immediate-user-target-v2``) it stops at the
+    ``ev_charge_target='requested'`` (``immediate-user-target-v3``) it stops at the
     user's requested departure SOC: the last command is limited to the remaining
     energy gap, and when that command is below the charger minimum the EV stops
     slightly below the target instead of overshooting it. Appliances start at the first admissible
-    step and the home battery stores local PV surplus and serves local import.
+    step and the home battery uses observed current-step demand and PV when
+    estimating local surplus or import.
 
     Choose the BAU that ``evaluate_v2()`` uses with the environment's
     ``business_as_usual_ev_charge_target``.
     """
 
     EV_CHARGE_TARGETS: ClassVar[Mapping[str, Tuple[type, str]]] = {
-        'requested': (engines.NormalTargetPolicy, 'immediate-user-target-v2'),
-        'full': (engines.NormalPolicy, 'immediate-full-charge-v3'),
+        'requested': (engines.NormalTargetPolicy, 'immediate-user-target-v3'),
+        'full': (engines.NormalPolicy, 'immediate-full-charge-v4'),
     }
     ENGINE_CLASS = engines.NormalPolicy
-    DEFINITION_VERSION = 'immediate-full-charge-v3'
+    DEFINITION_VERSION = 'immediate-full-charge-v4'
+    _use_current_step_load = True
 
     def __init__(self, env: CityLearnEnv, ev_charge_target: str = 'full', **hyperparameters: Any):
         self.ENGINE_CLASS, self.DEFINITION_VERSION = self.definition(ev_charge_target)
@@ -240,7 +246,7 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
 
     @classmethod
     def definition(cls, ev_charge_target: str) -> Tuple[type, str]:
-        """Engine class and definition version of a BAU ``ev_charge_target``."""
+        """Return the engine and the reproducible BAU definition identifier."""
 
         try:
             return cls.EV_CHARGE_TARGETS[str(ev_charge_target)]

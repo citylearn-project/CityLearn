@@ -40,7 +40,7 @@ def test_relocated_exports_pair_with_distinct_controller_identity(tmp_path):
     assert report['status']=='paired',report
     assert report['permitted_claim']=='controller_difference'
     assert report['baseline_reference']['evaluated']
-    assert report['baseline_reference']['definition_version']=='immediate-full-charge-v3'
+    assert report['baseline_reference']['definition_version']=='immediate-full-charge-v4'
     assert report['baseline_reference']['resolved_parameters']['ev_normal_target_soc']==1
     assert report['final_inventory']['left'] is not None
     assert all(r['delta_right_minus_left'] in (None,0.) for r in report['kpis'])
@@ -49,7 +49,7 @@ def test_relocated_exports_pair_with_distinct_controller_identity(tmp_path):
     assert 'random_seed' in compare_manifests(manifest,other)['mismatches']
     other=deepcopy(manifest);other['comparison_context']['initial_inventory'][0]['energy_kwh']+=1
     assert 'initial_inventory' in compare_manifests(manifest,other)['mismatches']
-    other=deepcopy(manifest);other['business_as_usual_reference']['definition_version']='legacy-deadline'
+    other=deepcopy(manifest);other['business_as_usual_reference']['definition_version']='immediate-full-charge-v3'
     assert 'business_as_usual_reference' in compare_manifests(manifest,other)['mismatches']
     other=deepcopy(manifest);other['comparison_context']['data_files_sha256']['Building_1.csv']='different'
     assert 'data_files_sha256' in compare_manifests(manifest,other)['mismatches']
@@ -139,7 +139,7 @@ def test_native_controller_export_records_actual_identity(tmp_path):
         assert identity['implementation']=='citylearn.agents.baseline.BusinessAsUsualAgent'
         assert identity['parameters']['storage_min_soc']==.25
         assert identity['observation_access']=='entity_observations'
-        assert identity['parameters']['definition_version']=='immediate-full-charge-v3'
+        assert identity['parameters']['definition_version']=='immediate-full-charge-v4'
     finally:env.close()
 
 
