@@ -108,6 +108,9 @@ class CityLearnEnv(Environment, Env):
         it is a list of episode start and end time steps between `simulation_start_time_step` and `simulation_end_time_step`. 
         Defaults to (`simulation_end_time_step` - `simulation_start_time_step`) + 1. An episode of N time steps
         (states) executes N - 1 control steps. `rolling_episode_split` is ignored when `episode_time_steps` is a list.
+        A list outside the simulation window raises `ValueError`. When `simulation_start_time_step` or
+        `simulation_end_time_step` narrows the window and this argument is not given, the schema's list is clipped
+        to the window and its episodes without an interval inside the window are dropped.
     rolling_episode_split: bool, default: False
         True if episode sequences are split such that each time step is a candidate for `episode_start_time_step` otherwise, False to split episodes in steps of `episode_time_steps`.
     random_episode_split: bool, default: False
@@ -1460,6 +1463,10 @@ class CityLearnEnv(Environment, Env):
 
     @episode_time_steps.setter
     def episode_time_steps(self, episode_time_steps: Union[int, List[Tuple[int, int]]]):
+        if isinstance(episode_time_steps, list):
+            # Fail at construction, not at the first reset or out of bounds mid-episode (CityLearn #308).
+            self.episode_tracker.validate_episode_splits(episode_time_steps)
+
         self.__episode_time_steps = self.episode_tracker.simulation_time_steps if episode_time_steps is None else episode_time_steps
 
     @rolling_episode_split.setter
