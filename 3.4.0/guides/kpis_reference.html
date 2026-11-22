@@ -1,0 +1,834 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KPIs Reference &mdash; CityLearn 3.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=b0e360d0"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="KPI v2 Naming Tree" href="KPI_V2_TREE.html" />
+    <link rel="prev" title="Default scorecard KPI names" href="scorecard_kpi_names.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">KPIs Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#units">Units</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kpi-v2-naming-contract">KPI v2 Naming Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core-equations">Core Equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kpi-families">KPI Families</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ev-kpis">EV KPIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bess-kpis">BESS KPIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deferrable-appliance-kpis">Deferrable Appliance KPIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demand-response-kpis">Demand Response KPIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#robustness-kpis">Robustness KPIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#electrical-service-and-phase-kpis">Electrical Service and Phase KPIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#community-market-kpis">Community Market KPIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#export">Export</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">KPIs Reference</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/kpis_reference.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.4.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="kpis-reference">
+<h1>KPIs Reference<a class="headerlink" href="#kpis-reference" title="Link to this heading"></a></h1>
+<p>The simulator exposes two KPI APIs.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>API</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>Format</p></th>
+<th class="head"><p>Recommended use</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code></p></td>
+<td><p>legacy</p></td>
+<td><p>DataFrame with historical cost-function names</p></td>
+<td><p>Compatibility with older workflows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></p></td>
+<td><p>primary</p></td>
+<td><p>DataFrame with structured KPI names</p></td>
+<td><p>Production, dashboards and scientific comparison.</p></td>
+</tr>
+</tbody>
+</table>
+<p>For the full v2 naming tree, see <a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">KPI_V2_TREE.md</span></a>.</p>
+<p>Start with <a class="reference internal" href="scorecard.html"><span class="std std-doc">How to read the scorecard</span></a> for a compact selection,
+baseline interpretation and an executable table-selection example. The <code class="docutils literal notranslate"><span class="pre">v2</span></code>
+method name denotes the KPI interface, not CityLearn version 2.</p>
+<p>To list the exact names available in your own configured run:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+<span class="n">catalogue</span> <span class="o">=</span> <span class="n">kpis</span><span class="p">[[</span><span class="s2">"cost_function"</span><span class="p">,</span> <span class="s2">"level"</span><span class="p">]]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"cost_function"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">catalogue</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Feature-specific KPI availability follows the schema. A missing/undefined value
+is not a zero measurement; preserve it when exporting or comparing.</p>
+<section id="units">
+<h2>Units<a class="headerlink" href="#units" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Unit suffix</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">eur</span></code></p></td>
+<td><p>Monetary cost. If the dataset uses another currency, interpret as dataset currency.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kwh</span></code></p></td>
+<td><p>Accumulated energy.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kgco2</span></code></p></td>
+<td><p>Accumulated emissions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kw</span></code></p></td>
+<td><p>Power.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ratio</span></code></p></td>
+<td><p>Dimensionless ratio.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">percent</span></code></p></td>
+<td><p>Percentage.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">count</span></code></p></td>
+<td><p>Event/cycle count.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hours</span></code></p></td>
+<td><p>Hours.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">c</span></code></p></td>
+<td><p>Celsius.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="kpi-v2-naming-contract">
+<h2>KPI v2 Naming Contract<a class="headerlink" href="#kpi-v2-naming-contract" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>level_family_subfamily_metric_variant_unit
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Part</p></th>
+<th class="head"><p>Examples</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">level</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">building</span></code>, <code class="docutils literal notranslate"><span class="pre">district</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">family</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cost</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_grid</span></code>, <code class="docutils literal notranslate"><span class="pre">emissions</span></code>, <code class="docutils literal notranslate"><span class="pre">solar_self_consumption</span></code>, <code class="docutils literal notranslate"><span class="pre">ev</span></code>, <code class="docutils literal notranslate"><span class="pre">battery</span></code>, <code class="docutils literal notranslate"><span class="pre">electrical_service_phase</span></code>, <code class="docutils literal notranslate"><span class="pre">equity</span></code>, <code class="docutils literal notranslate"><span class="pre">comfort_resilience</span></code>, <code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code>, <code class="docutils literal notranslate"><span class="pre">escalator</span></code>, <code class="docutils literal notranslate"><span class="pre">demand_response</span></code>, <code class="docutils literal notranslate"><span class="pre">robustness</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">subfamily</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">total</span></code>, <code class="docutils literal notranslate"><span class="pre">daily_average</span></code>, <code class="docutils literal notranslate"><span class="pre">ratio_to_baseline</span></code>, <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code>, <code class="docutils literal notranslate"><span class="pre">shape_quality</span></code>, <code class="docutils literal notranslate"><span class="pre">service</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metric</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">import</span></code>, <code class="docutils literal notranslate"><span class="pre">export</span></code>, <code class="docutils literal notranslate"><span class="pre">charge</span></code>, <code class="docutils literal notranslate"><span class="pre">completed_cycles</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">variant</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">control</span></code>, <code class="docutils literal notranslate"><span class="pre">baseline</span></code>, <code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code>, <code class="docutils literal notranslate"><span class="pre">delta</span></code>, <code class="docutils literal notranslate"><span class="pre">delta_to_business_as_usual</span></code>, <code class="docutils literal notranslate"><span class="pre">total</span></code>, <code class="docutils literal notranslate"><span class="pre">average</span></code>, <code class="docutils literal notranslate"><span class="pre">l1</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">eur</span></code>, <code class="docutils literal notranslate"><span class="pre">kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">ratio</span></code>, etc.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Examples:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>KPI</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">district_cost_total_control_eur</span></code></p></td>
+<td><p>Total control cost.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">district_cost_total_business_as_usual_eur</span></code></p></td>
+<td><p>Total native business-as-usual baseline cost.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">building_energy_grid_total_import_control_kwh</span></code></p></td>
+<td><p>Building import energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">building_energy_grid_ratio_to_business_as_usual_import_total_ratio</span></code></p></td>
+<td><p>Building import relative to the native business-as-usual baseline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_ramping_average_to_baseline_ratio</span></code></p></td>
+<td><p>Ramping relative to baseline.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">district_solar_self_consumption_ratio_self_consumption_ratio</span></code></p></td>
+<td><p>District/community solar self-consumption ratio after same-timestep member imports and exports are balanced.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">building_deferrable_appliance_service_completed_cycles_count</span></code></p></td>
+<td><p>Completed deferrable cycles.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">building_escalator_service_service_level_ratio</span></code></p></td>
+<td><p>Passenger demand served by escalators.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">district_demand_response_compliance_ratio</span></code></p></td>
+<td><p>Credited DR delivery divided by valid requested energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">district_robustness_action_dropout_count</span></code></p></td>
+<td><p>Number of action dropouts applied by robustness events.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="core-equations">
+<h2>Core Equations<a class="headerlink" href="#core-equations" title="Link to this heading"></a></h2>
+<p>For net energy <code class="docutils literal notranslate"><span class="pre">net_t</span></code>, where import is positive and export is negative:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>total_import_kwh = sum(max(net_t, 0))
+total_export_kwh = sum(max(-net_t, 0))
+total_net_exchange_kwh = sum(net_t)
+daily_average_x = total_x / simulated_days
+delta_x = control_x - baseline_x
+ratio_to_baseline_x = control_x / baseline_x
+delta_to_business_as_usual_x = control_x - business_as_usual_x
+ratio_to_business_as_usual_x = control_x / business_as_usual_x
+self_consumption = (solar_generation_total - export_total) / solar_generation_total
+</pre></div>
+</div>
+<p>For a denominator within the numerical zero tolerance, safe division returns
+<code class="docutils literal notranslate"><span class="pre">1.0</span></code> if the numerator is also effectively zero, and <code class="docutils literal notranslate"><span class="pre">None</span></code> otherwise.</p>
+<p>Ratios stay lower-is-better when the reference total is negative. Net exchange
+(legacy <code class="docutils literal notranslate"><span class="pre">zero_net_energy</span></code>) and cost totals can be negative, for a net exporter
+or after community-market revenue. Their ratios to the baseline and to BAU use</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ratio_x = control_x / reference_x                        if reference_x &gt; 0
+ratio_x = 1 + (control_x - reference_x) / |reference_x|  if reference_x &lt; 0
+</pre></div>
+</div>
+<p>so 1 still means no change and a higher control total gives a higher ratio.
+For a positive reference this is the plain ratio. Import, export and emission
+totals are never negative and use the plain ratio.</p>
+<p>The conventional <code class="docutils literal notranslate"><span class="pre">baseline</span></code> counterfactual follows the grid outage of the
+controlled run: at power-outage time steps the <code class="docutils literal notranslate"><span class="pre">*_without_storage*</span></code> net series,
+and their cost and emission series, are zero. Neither run exchanges energy with
+the grid while it is down.</p>
+</section>
+<section id="kpi-families">
+<h2>KPI Families<a class="headerlink" href="#kpi-families" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Family</p></th>
+<th class="head"><p>Level</p></th>
+<th class="head"><p>Measures</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cost</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Cost control/baseline/business-as-usual/delta/ratio.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">energy_grid</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Import, export, net exchange and shape quality.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">emissions</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Emissions control/baseline/business-as-usual/delta/ratio.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solar_self_consumption</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Generation, export and self-consumption. District export is PV-backed net export outside the community.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Departures, success rate, deficits, charge and V2G.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">battery</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Charge, discharge, throughput, cycles, capacity fade.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_service_phase</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Violations, imbalance and phase peaks.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">equity</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Relative benefits and benefit distribution.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_resilience</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Discomfort and outage/resilience events.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Completed/missed cycles, service level and served energy.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">escalator</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Passenger demand/service, operating-state changes and electricity use.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Flexibility requests, delivery, shortfall and settlement economics.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">robustness</span></code></p></td>
+<td><p>building, district</p></td>
+<td><p>Dataset-driven observation, forecast, action and asset perturbation counters.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ev-kpis">
+<h2>EV KPIs<a class="headerlink" href="#ev-kpis" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Concept</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>departure count</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Number of EV departures observed.</p></td>
+</tr>
+<tr class="row-odd"><td><p>departure met count</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Departures where required SOC was met.</p></td>
+</tr>
+<tr class="row-even"><td><p>departure minimum acceptable count</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Departures where SOC is at least <code class="docutils literal notranslate"><span class="pre">target_soc</span> <span class="pre">-</span> <span class="pre">ev_departure_service_tolerance</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>departure within tolerance count</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Departures within the configured symmetric target tolerance.</p></td>
+</tr>
+<tr class="row-even"><td><p>departure target feasible/infeasible count</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Departures where the strict target SOC was/was not reachable by charging at max power for the connected interval, after charger/battery efficiency and configured electrical-service headroom.</p></td>
+</tr>
+<tr class="row-odd"><td><p>departure minimum acceptable feasible/infeasible count</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Departures where the minimum acceptable SOC was/was not reachable under the same max-power, efficiency and electrical-service constraints.</p></td>
+</tr>
+<tr class="row-even"><td><p>departure within tolerance feasible/infeasible count</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Departures where the lower bound of the symmetric tolerance band was/was not reachable under the same max-power, efficiency and electrical-service constraints.</p></td>
+</tr>
+<tr class="row-odd"><td><p>departure success ratio</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">met</span> <span class="pre">/</span> <span class="pre">departures</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>departure minimum acceptable ratio</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">minimum_acceptable</span> <span class="pre">/</span> <span class="pre">departures</span></code>. This is the main user-service comfort KPI.</p></td>
+</tr>
+<tr class="row-odd"><td><p>departure within tolerance ratio</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">within_symmetric_tolerance</span> <span class="pre">/</span> <span class="pre">departures</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>departure success feasible ratio</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Strict target fulfillment over feasible strict-target departures only.</p></td>
+</tr>
+<tr class="row-odd"><td><p>departure minimum acceptable feasible ratio</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Minimum service fulfillment over feasible minimum-service departures only. This is the main controller-quality KPI.</p></td>
+</tr>
+<tr class="row-even"><td><p>departure within tolerance feasible ratio</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Symmetric target accuracy over feasible within-tolerance departures only.</p></td>
+</tr>
+<tr class="row-odd"><td><p>departure SOC deficit mean</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Mean non-negative SOC deficit over departures.</p></td>
+</tr>
+<tr class="row-even"><td><p>departure shortfall beyond tolerance mean</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Mean deficit below <code class="docutils literal notranslate"><span class="pre">target_soc</span> <span class="pre">-</span> <span class="pre">ev_departure_service_tolerance</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>departure SOC surplus mean</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Mean non-negative SOC surplus over departures.</p></td>
+</tr>
+<tr class="row-even"><td><p>departure SOC absolute error mean</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Mean absolute SOC error to the requested target.</p></td>
+</tr>
+<tr class="row-odd"><td><p>departure tolerance</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Configured service tolerance used for minimum acceptable departure SOC.</p></td>
+</tr>
+<tr class="row-even"><td><p>charge total</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Energy charged into EVs.</p></td>
+</tr>
+<tr class="row-odd"><td><p>V2G export total</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Energy exported by EVs.</p></td>
+</tr>
+</tbody>
+</table>
+<p>EV departure tolerance semantics:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ev_departure_success_rate</span></code> is strict target fulfillment: <code class="docutils literal notranslate"><span class="pre">actual_soc</span> <span class="pre">&gt;=</span> <span class="pre">target_soc</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ev_departure_min_acceptable_rate</span></code> is minimum service fulfillment: <code class="docutils literal notranslate"><span class="pre">actual_soc</span> <span class="pre">&gt;=</span> <span class="pre">target_soc</span> <span class="pre">-</span> <span class="pre">ev_departure_service_tolerance</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ev_departure_within_tolerance_rate</span></code> is symmetric target accuracy: <code class="docutils literal notranslate"><span class="pre">abs(actual_soc</span> <span class="pre">-</span> <span class="pre">target_soc)</span> <span class="pre">&lt;=</span> <span class="pre">ev_departure_within_tolerance</span></code>.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">*_feasible_rate</span></code> variants use the same numerators but exclude departures where that threshold was not physically reachable from arrival SOC by charging at maximum charger/battery power for the connected interval, capped by configured building/phase import headroom and charger/battery efficiency.</p></li>
+<li><p>Feasibility counters are scenario-quality diagnostics; missing charger, battery or arrival-SOC data is treated as feasible to preserve legacy dataset behavior.</p></li>
+<li><p>Both tolerance settings default to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
+</ul>
+</section>
+<section id="bess-kpis">
+<h2>BESS KPIs<a class="headerlink" href="#bess-kpis" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Concept</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>charge total</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Energy charged into BESS.</p></td>
+</tr>
+<tr class="row-odd"><td><p>discharge total</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Energy discharged.</p></td>
+</tr>
+<tr class="row-even"><td><p>throughput total</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Absolute charge plus discharge.</p></td>
+</tr>
+<tr class="row-odd"><td><p>equivalent full cycles</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Throughput relative to capacity.</p></td>
+</tr>
+<tr class="row-even"><td><p>capacity fade</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Relative capacity degradation.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="deferrable-appliance-kpis">
+<h2>Deferrable Appliance KPIs<a class="headerlink" href="#deferrable-appliance-kpis" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Concept</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>completed cycles</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Cycles completed successfully.</p></td>
+</tr>
+<tr class="row-odd"><td><p>missed cycles</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Cycles that missed the start window.</p></td>
+</tr>
+<tr class="row-even"><td><p>service level</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">completed</span> <span class="pre">/</span> <span class="pre">(completed</span> <span class="pre">+</span> <span class="pre">missed)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>served energy</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Energy of completed cycles.</p></td>
+</tr>
+<tr class="row-even"><td><p>unserved energy</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Energy of missed cycles.</p></td>
+</tr>
+<tr class="row-odd"><td><p>average start delay</p></td>
+<td class="text-right"><p>hours</p></td>
+<td><p>Mean <code class="docutils literal notranslate"><span class="pre">start</span> <span class="pre">-</span> <span class="pre">earliest_start</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="demand-response-kpis">
+<h2>Demand Response KPIs<a class="headerlink" href="#demand-response-kpis" title="Link to this heading"></a></h2>
+<p>Available when <code class="docutils literal notranslate"><span class="pre">demand_response.enabled=true</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>KPI suffix</p></th>
+<th class="head"><p>Level</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response_events_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Unique DR events with active settlement rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response_active_time_step_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Number of active DR timesteps.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response_requested_total_kwh</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Requested energy from <code class="docutils literal notranslate"><span class="pre">target_power_kw</span></code> over active steps.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response_delivered_total_kwh</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Signed delivery, positive when the controller moves in the requested direction.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response_shortfall_total_kwh</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Non-delivered requested energy after tolerance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response_compliance_ratio</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Credited delivery divided by valid requested energy.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response_revenue_total_eur</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>eur</p></td>
+<td><p>Credited delivery revenue.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response_penalty_total_eur</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>eur</p></td>
+<td><p>Shortfall penalty.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response_net_revenue_total_eur</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>eur</p></td>
+<td><p>Revenue minus penalty.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">demand_response_invalid_baseline_time_step_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Active steps excluded from economics because the pre-event baseline was invalid.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Names are prefixed with <code class="docutils literal notranslate"><span class="pre">district_</span></code> or <code class="docutils literal notranslate"><span class="pre">building_</span></code>, for example <code class="docutils literal notranslate"><span class="pre">district_demand_response_net_revenue_total_eur</span></code>.</p>
+</section>
+<section id="robustness-kpis">
+<h2>Robustness KPIs<a class="headerlink" href="#robustness-kpis" title="Link to this heading"></a></h2>
+<p>Available when <code class="docutils literal notranslate"><span class="pre">robustness.enabled=true</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>KPI suffix</p></th>
+<th class="head"><p>Level</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">robustness_events_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Unique robustness events that affected the target level.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">robustness_active_time_step_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Timesteps with at least one applied robustness perturbation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">robustness_observation_corruption_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Agent-facing observation corruptions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">robustness_forecast_corruption_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Agent-facing forecast corruptions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">robustness_action_corruption_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Action-channel corruptions before physical application.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">robustness_asset_unavailable_time_step_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Asset unavailable applications.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">robustness_missing_observation_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Observation or telemetry values replaced by the missing sentinel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">robustness_action_dropout_count</span></code></p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Actions forced to zero by dropout or asset-control outage.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Names are prefixed with <code class="docutils literal notranslate"><span class="pre">district_</span></code> or <code class="docutils literal notranslate"><span class="pre">building_</span></code>, for example <code class="docutils literal notranslate"><span class="pre">district_robustness_missing_observation_count</span></code>.</p>
+</section>
+<section id="electrical-service-and-phase-kpis">
+<h2>Electrical Service and Phase KPIs<a class="headerlink" href="#electrical-service-and-phase-kpis" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Concept</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>violation total</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Residual energy above service/phase limits after projection.</p></td>
+</tr>
+<tr class="row-odd"><td><p>requested pressure total</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Excess associated with the unprojected controller request.</p></td>
+</tr>
+<tr class="row-even"><td><p>violation timestep count</p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Number of timesteps with a violation.</p></td>
+</tr>
+<tr class="row-odd"><td><p>phase imbalance average</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Average phase imbalance.</p></td>
+</tr>
+<tr class="row-even"><td><p>phase import/export peak L1/L2/L3</p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Import/export peaks per phase.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="community-market-kpis">
+<h2>Community Market KPIs<a class="headerlink" href="#community-market-kpis" title="Link to this heading"></a></h2>
+<p>Available when <code class="docutils literal notranslate"><span class="pre">community_market.enabled=true</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Concept</p></th>
+<th class="head"><p>Level</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>local traded total</p></td>
+<td><p>district</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Locally traded energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p>local traded daily average</p></td>
+<td><p>district</p></td>
+<td class="text-right"><p>kWh/day</p></td>
+<td><p>Daily average local trade.</p></td>
+</tr>
+<tr class="row-even"><td><p>community import share</p></td>
+<td><p>district</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Share of demand served locally.</p></td>
+</tr>
+<tr class="row-odd"><td><p>settled cost</p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>eur</p></td>
+<td><p>Cost after local settlement.</p></td>
+</tr>
+<tr class="row-even"><td><p>counterfactual cost</p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>eur</p></td>
+<td><p>Cost without local market settlement.</p></td>
+</tr>
+<tr class="row-odd"><td><p>market savings</p></td>
+<td><p>building/district</p></td>
+<td class="text-right"><p>eur</p></td>
+<td><p>Counterfactual minus settled cost.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="export">
+<h2>Export<a class="headerlink" href="#export" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>How</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>In memory</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">env.evaluate_v2()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>End-of-episode export</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CityLearnEnv(...,</span> <span class="pre">export_kpis_on_episode_end=True)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>With render</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">render_mode=&quot;end&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">render_mode=&quot;during&quot;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>New production KPIs should be registered in <a class="reference internal" href="releases.html"><span class="std std-doc">releases.md</span></a> and, when part of the v2 naming contract, in <a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">KPI_V2_TREE.md</span></a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="scorecard_kpi_names.html" class="btn btn-neutral float-left" title="Default scorecard KPI names" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="KPI_V2_TREE.html" class="btn btn-neutral float-right" title="KPI v2 Naming Tree" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

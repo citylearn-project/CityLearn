@@ -1,0 +1,19 @@
+============================
+The CityLearn Challenge 2023
+============================
+
+.. note::
+
+    The CityLearn Challenge 2023 has now concluded! The winners and the leaderboard have been announced at the `NEURIPS 2023 Competition - The CityLearn Challenge 2023 <https://neurips.cc/virtual/2023/competition/66590>`_.
+
+.. note::
+
+    The CityLearn Challenge 2023 used The CityLearn Challenge 2023 dataset :cite:p:`T8/SXFWTI_2024` and `CityLearn v2.1b12 <https://github.com/intelligent-environments-lab/CityLearn/tree/v2.1b12>`_. To install this CityLearn version, run:
+
+    .. code-block:: bash
+
+        pip install CityLearn==v2.1b12
+
+.. note::
+
+    Please, visit the `official competition page on AIcrowd <https://www.aicrowd.com/challenges/neurips-2023-citylearn-challenge>`_ for more information!

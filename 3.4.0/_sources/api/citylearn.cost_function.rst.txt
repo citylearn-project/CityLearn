@@ -1,0 +1,7 @@
+citylearn.cost\_function module
+===============================
+
+.. automodule:: citylearn.cost_function
+   :members:
+   :show-inheritance:
+   :undoc-members:

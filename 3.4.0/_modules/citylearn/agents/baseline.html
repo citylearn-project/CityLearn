@@ -1,0 +1,491 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.agents.baseline &mdash; CityLearn 3.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=b0e360d0"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+ 
+<script src="../../../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.agents.baseline</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.4.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.agents.baseline</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Non-learning reference controllers: business-as-usual (BAU) and rule-based baselines.</span>
+
+<span class="sd">All controllers in this module read the same named, unnormalized observations,</span>
+<span class="sd">built from the entity observation payload (see</span>
+<span class="sd">:mod:`citylearn.agents._entity_observations`). They work with the flat and the</span>
+<span class="sd">entity interface and return flat-like action vectors in</span>
+<span class="sd">``env.action_names`` order.</span>
+
+<span class="sd">==========================================  ==========================================================</span>
+<span class="sd">Agent                                       Behaviour</span>
+<span class="sd">==========================================  ==========================================================</span>
+<span class="sd">:class:`BusinessAsUsualAgent`               Reference BAU. Charges a connected EV at once, at full</span>
+<span class="sd">                                            power, to 100% (default) or up to the user's requested</span>
+<span class="sd">                                            departure SOC (``ev_charge_target='requested'``);</span>
+<span class="sd">                                            starts appliances at the first admissible step; the</span>
+<span class="sd">                                            home battery stores PV surplus and serves local import.</span>
+<span class="sd">:class:`RBCBasicPolicy`                     Current price and service urgency for EVs and</span>
+<span class="sd">                                            appliances; battery self-consumption.</span>
+<span class="sd">:class:`RBCSmartPolicy`                     Price and local PV-surplus forecasts schedule EVs and</span>
+<span class="sd">                                            appliances; battery combines self-consumption,</span>
+<span class="sd">                                            arbitrage and reserve. Uses only building-local and</span>
+<span class="sd">                                            public observations.</span>
+<span class="sd">:class:`RBCCommunityPolicy`                 Smart plus energy shareable between members. When the</span>
+<span class="sd">                                            community market is enabled, batteries support expensive</span>
+<span class="sd">                                            periods once community import reaches a trigger</span>
+<span class="sd">                                            (15 kW by default). Without a market it shares no energy.</span>
+<span class="sd">==========================================  ==========================================================</span>
+
+<span class="sd">The policies are ported from the Soft-CPS Algorithms baselines and keep their</span>
+<span class="sd">audited defaults. Keyword arguments override the engine hyperparameters, for</span>
+<span class="sd">example ``RBCCommunityPolicy(env, community_import_threshold_kw=10.0)``.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">spaces</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">_baseline_engine</span> <span class="k">as</span> <span class="n">engines</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents._entity_observations</span><span class="w"> </span><span class="kn">import</span> <span class="n">EntityObservationFlattener</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_RuleBaselineAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""CityLearn agent wrapper around a rule-based baseline engine."""</span>
+
+    <span class="n">ENGINE_CLASS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">NormalTargetPolicy</span>
+    <span class="n">DEFINITION_VERSION</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s1">''</span>
+    <span class="c1"># Values the Algorithms configuration layer resolves for every rule policy;</span>
+    <span class="c1"># without them the engines fall back to the BAU self-consumption threshold.</span>
+    <span class="n">DEFAULT_HYPERPARAMETERS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">'community_surplus_threshold_kw'</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+        <span class="s1">'storage_discharge_import_threshold_kw'</span><span class="p">:</span> <span class="mf">0.25</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="o">**</span><span class="n">hyperparameters</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">hyperparameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flattener</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">EntityObservationFlattener</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layouts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attached_topology_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="c1"># Entity-interface envs also accept flat-like action payloads. Keep</span>
+        <span class="c1"># agent bookkeeping in flat space so the policy works in both modes.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">flat_observation_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">flat_action_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_engine</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hyperparameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Hyperparameters passed to the policy engine (explicit overrides only)."""</span>
+
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_engine</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">'algorithm'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'hyperparameters'</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_HYPERPARAMETERS</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="p">}},</span>
+            <span class="s1">'simulator'</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">'schema'</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">schema</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">'root_directory'</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'root_directory'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+        <span class="n">engine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENGINE_CLASS</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> got unknown hyperparameters: </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s1">.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span> <span class="o">=</span> <span class="n">engine</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attached_topology_version</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attach</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dynamic'</span><span class="p">:</span>
+            <span class="c1"># Members and assets can change between steps and episodes.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">flat_action_space</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">action_names</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">action_names</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">flat_observation_space</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observation_names</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">observation_names</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">building_metadata</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()[</span><span class="s1">'buildings'</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flattener</span> <span class="o">=</span> <span class="n">EntityObservationFlattener</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">entity_specs</span><span class="p">)</span>
+        <span class="n">names</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flattener</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_payload</span><span class="p">(</span><span class="n">payload</span><span class="p">))</span>
+        <span class="n">buildings</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span>
+        <span class="c1"># The engines control batteries, EV chargers and flexible appliances.</span>
+        <span class="c1"># Other active actions (HVAC, thermal storage, ...) receive zero,</span>
+        <span class="c1"># clipped to their bounds, as in earlier CityLearn baselines.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_layouts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">engine_names</span><span class="p">,</span> <span class="n">engine_spaces</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">buildings</span><span class="p">:</span>
+            <span class="n">active</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">active_actions</span><span class="p">)</span>
+            <span class="n">low</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+            <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+            <span class="n">controlled</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">active</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_controlled_action</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">controlled</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_layouts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">controlled</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)))</span>
+            <span class="n">engine_names</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">active</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">controlled</span><span class="p">])</span>
+            <span class="n">engine_spaces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">attach_environment</span><span class="p">(</span>
+            <span class="n">observation_names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
+            <span class="n">action_names</span><span class="o">=</span><span class="n">engine_names</span><span class="p">,</span>
+            <span class="n">action_space</span><span class="o">=</span><span class="n">engine_spaces</span><span class="p">,</span>
+            <span class="n">observation_space</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">buildings</span><span class="p">],</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">'seconds_per_time_step'</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">,</span>
+                <span class="s1">'building_names'</span><span class="p">:</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">buildings</span><span class="p">],</span>
+                <span class="s1">'community_market'</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s1">'enabled'</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
+                    <span class="s1">'local_price_ratio_to_grid_import'</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_sell_ratio'</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                    <span class="s1">'grid_export_price'</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'community_market_grid_export_price'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attached_topology_version</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_version'</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_controlled_action</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">name</span> <span class="o">==</span> <span class="s1">'electrical_storage'</span>
+            <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'electric_vehicle_storage'</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'deferrable_appliance'</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_payload</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">'tables'</span> <span class="ow">in</span> <span class="n">observations</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">observations</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">_entity_service</span><span class="o">.</span><span class="n">observation_payload</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span>
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_payload</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_version'</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attached_topology_version</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_attach</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flattener</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+        <span class="n">per_building</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">controlled</span><span class="p">,</span> <span class="n">zeros</span><span class="p">),</span> <span class="n">vector</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layouts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">values</span><span class="p">)):</span>
+            <span class="n">full</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">zeros</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">controlled</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+                <span class="n">full</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">per_building</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full</span><span class="p">)</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">[[</span><span class="n">v</span> <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">per_building</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vector</span><span class="p">]]</span> <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">central_agent</span> <span class="k">else</span> <span class="n">per_building</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actions</span> <span class="o">=</span> <span class="n">actions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">actions</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">comparison_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'definition_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'ev_charge_target'</span><span class="p">):</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="s1">'ev_charge_target'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_charge_target</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'_'</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">implementation</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span> <span class="o">+</span> <span class="s1">'.'</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__qualname__</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">__version__</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span> <span class="n">observation_access</span><span class="o">=</span><span class="s1">'entity_observations'</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_engine'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_engine</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="BusinessAsUsualAgent">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">_RuleBaselineAgent</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Reference BAU: immediate EV charging, earliest appliance start, PV self-consumption.</span>
+
+<span class="sd">    A connected EV is charged at once and at maximum power. With</span>
+<span class="sd">    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v2``) it charges</span>
+<span class="sd">    to 100%, as the BAU of CityLearn 3.1–3.3 did. With</span>
+<span class="sd">    ``ev_charge_target='requested'`` (``immediate-user-target-v1``) it stops at the</span>
+<span class="sd">    user's requested departure SOC: the last command is limited to the remaining</span>
+<span class="sd">    energy gap, and when that command is below the charger minimum the EV stops</span>
+<span class="sd">    slightly below the target instead of overshooting it. Appliances start at the first admissible</span>
+<span class="sd">    step and the home battery stores local PV surplus and serves local import.</span>
+
+<span class="sd">    Choose the BAU that ``evaluate_v2()`` uses with the environment's</span>
+<span class="sd">    ``business_as_usual_ev_charge_target``.</span>
+<span class="sd">    """</span>
+
+    <span class="n">EV_CHARGE_TARGETS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">'requested'</span><span class="p">:</span> <span class="p">(</span><span class="n">engines</span><span class="o">.</span><span class="n">NormalTargetPolicy</span><span class="p">,</span> <span class="s1">'immediate-user-target-v1'</span><span class="p">),</span>
+        <span class="s1">'full'</span><span class="p">:</span> <span class="p">(</span><span class="n">engines</span><span class="o">.</span><span class="n">NormalPolicy</span><span class="p">,</span> <span class="s1">'immediate-full-charge-v2'</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">NormalPolicy</span>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'immediate-full-charge-v2'</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">ev_charge_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'full'</span><span class="p">,</span> <span class="o">**</span><span class="n">hyperparameters</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ENGINE_CLASS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">definition</span><span class="p">(</span><span class="n">ev_charge_target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ev_charge_target</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ev_charge_target</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="o">**</span><span class="n">hyperparameters</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BusinessAsUsualAgent.definition">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent.definition">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">definition</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ev_charge_target</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Engine class and definition version of a BAU ``ev_charge_target``."""</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">EV_CHARGE_TARGETS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">ev_charge_target</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"ev_charge_target must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">EV_CHARGE_TARGETS</span><span class="p">)</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">ev_charge_target</span><span class="si">!r}</span><span class="s2">."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="RBCBasicPolicy">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.RBCBasicPolicy">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RBCBasicPolicy</span><span class="p">(</span><span class="n">_RuleBaselineAgent</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Current-price and service-urgency scheduling with battery self-consumption.</span>
+
+<span class="sd">    EVs receive the minimum charge that meets their departure target, raised to</span>
+<span class="sd">    ``ev_price_charge_rate`` when the current price is cheap. Appliances start</span>
+<span class="sd">    when urgent or cheap. The default price thresholds</span>
+<span class="sd">    (``basic_cheap_price_eur_kwh=0.0765``, ``basic_expensive_price_eur_kwh=0.1078``)</span>
+<span class="sd">    are the terciles of the 2023 Portuguese day-ahead price; set them for other</span>
+<span class="sd">    tariffs, or use ``basic_price_policy='forecast_relative'`` to compare the</span>
+<span class="sd">    current price with the price forecast instead.</span>
+<span class="sd">    """</span>
+
+    <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">RBCBasicPolicy</span>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'basic-v2'</span></div>
+
+
+
+<div class="viewcode-block" id="RBCSmartPolicy">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.RBCSmartPolicy">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RBCSmartPolicy</span><span class="p">(</span><span class="n">_RuleBaselineAgent</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Forecast-aware, strictly building-local rule-based controller.</span>
+
+<span class="sd">    Price and local PV-surplus forecasts schedule EV charging and appliance</span>
+<span class="sd">    starts; the home battery combines self-consumption, price arbitrage and a</span>
+<span class="sd">    service reserve. Community observations are ignored.</span>
+<span class="sd">    """</span>
+
+    <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">RBCSmartLocalPolicy</span>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'smart-local-v2'</span></div>
+
+
+
+<div class="viewcode-block" id="RBCCommunityPolicy">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.RBCCommunityPolicy">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RBCCommunityPolicy</span><span class="p">(</span><span class="n">_RuleBaselineAgent</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Smart controller extended with community energy sharing.</span>
+
+<span class="sd">    With the community market enabled, shareable surplus from other members is</span>
+<span class="sd">    treated as discounted energy, and batteries help during expensive periods</span>
+<span class="sd">    once community import reaches ``community_import_threshold_kw`` (15 kW by</span>
+<span class="sd">    default; a trigger, not a hard cap). Without a community market it uses the</span>
+<span class="sd">    same economic rules as :class:`RBCSmartPolicy`, without sharing energy, but it</span>
+<span class="sd">    is not restricted to building-local observations.</span>
+<span class="sd">    """</span>
+
+    <span class="n">ENGINE_CLASS</span> <span class="o">=</span> <span class="n">engines</span><span class="o">.</span><span class="n">RBCCommunityPolicy</span>
+    <span class="n">DEFINITION_VERSION</span> <span class="o">=</span> <span class="s1">'community-v2'</span></div>
+
+
+
+<div class="viewcode-block" id="ZeroActionBaselineAgent">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.ZeroActionBaselineAgent">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ZeroActionBaselineAgent</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Baseline that requests zero for every action dimension."""</span>
+
+<div class="viewcode-block" id="ZeroActionBaselineAgent.predict">
+<a class="viewcode-back" href="../../../api/citylearn.agents.baseline.html#citylearn.agents.baseline.ZeroActionBaselineAgent.predict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">deterministic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actions</span> <span class="o">=</span> <span class="n">actions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next_time_step</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">actions</span></div>
+</div>
+
+
+
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">'BusinessAsUsualAgent'</span><span class="p">,</span>
+    <span class="s1">'RBCBasicPolicy'</span><span class="p">,</span>
+    <span class="s1">'RBCSmartPolicy'</span><span class="p">,</span>
+    <span class="s1">'RBCCommunityPolicy'</span><span class="p">,</span>
+    <span class="s1">'ZeroActionBaselineAgent'</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

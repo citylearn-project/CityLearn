@@ -1,0 +1,1030 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.exporter &mdash; CityLearn 3.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=b0e360d0"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+ 
+<script src="../../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.exporter</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.4.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.exporter</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.electric_vehicle</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElectricVehicle</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="EpisodeExporter">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EpisodeExporter</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Internal helper that owns rendering/export behaviour for ``CityLearnEnv``."""</span>
+
+    <span class="n">DEFAULT_RENDER_START_DATE</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_counters</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_render_file_format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s1">'render_file_format'</span><span class="p">,</span> <span class="s1">'csv'</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">'csv'</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">'csv'</span><span class="p">,</span> <span class="s1">'parquet'</span><span class="p">}</span> <span class="k">else</span> <span class="s1">'csv'</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_render_chunk_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">,</span> <span class="s1">'render_chunk_size'</span><span class="p">,</span> <span class="mi">100_000</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">100_000</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_export_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_file_format</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">'parquet'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">filename</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">'.parquet'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">'.parquet'</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_buildings_for_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">env</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">'dynamic'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">)</span>
+
+        <span class="n">topology_service</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_topology_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">topology_service</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">)</span>
+
+        <span class="n">active_ids</span> <span class="o">=</span> <span class="n">topology_service</span><span class="o">.</span><span class="n">active_member_ids_at</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">topology_service</span><span class="o">.</span><span class="n">member_pool</span><span class="p">[</span><span class="n">member_id</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">member_id</span> <span class="ow">in</span> <span class="n">active_ids</span>
+            <span class="k">if</span> <span class="n">member_id</span> <span class="ow">in</span> <span class="n">topology_service</span><span class="o">.</span><span class="n">member_pool</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_electric_vehicles_for_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">env</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">'dynamic'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">)</span>
+
+        <span class="n">topology_service</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_topology_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">topology_service</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">)</span>
+
+        <span class="n">active_ids</span> <span class="o">=</span> <span class="n">topology_service</span><span class="o">.</span><span class="n">active_ev_ids_at</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">topology_service</span><span class="o">.</span><span class="n">ev_pool</span><span class="p">[</span><span class="n">ev_id</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">ev_id</span> <span class="ow">in</span> <span class="n">active_ids</span>
+            <span class="k">if</span> <span class="n">ev_id</span> <span class="ow">in</span> <span class="n">topology_service</span><span class="o">.</span><span class="n">ev_pool</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_chargers_for_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">env</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">'dynamic'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span> <span class="ow">or</span> <span class="p">[])</span>
+
+        <span class="n">topology_service</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_topology_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">topology_service</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span> <span class="ow">or</span> <span class="p">[])</span>
+
+        <span class="n">charger_map</span> <span class="o">=</span> <span class="n">topology_service</span><span class="o">.</span><span class="n">active_chargers_at</span><span class="p">(</span><span class="n">time_step</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">charger_map</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_electrical_storage_for_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">env</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">'dynamic'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage</span>
+
+        <span class="n">topology_service</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_topology_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">topology_service</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">building</span><span class="o">.</span><span class="n">electrical_storage</span>
+
+        <span class="k">return</span> <span class="n">topology_service</span><span class="o">.</span><span class="n">active_storage_at</span><span class="p">(</span><span class="n">time_step</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deferrable_appliances_for_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="k">if</span> <span class="n">env</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">env</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">'dynamic'</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">deferrable_appliances</span> <span class="ow">or</span> <span class="p">[])</span>
+
+        <span class="n">topology_service</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_topology_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">topology_service</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">topology_service</span><span class="p">,</span> <span class="s1">'active_deferrable_appliances_at'</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">deferrable_appliances</span> <span class="ow">or</span> <span class="p">[])</span>
+
+        <span class="n">appliance_map</span> <span class="o">=</span> <span class="n">topology_service</span><span class="o">.</span><span class="n">active_deferrable_appliances_at</span><span class="p">(</span><span class="n">time_step</span><span class="p">,</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">appliance_map</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+<div class="viewcode-block" id="EpisodeExporter.parse_render_start_date">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.parse_render_start_date">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_render_start_date</span><span class="p">(</span><span class="n">start_date</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a valid start date for rendering timestamps."""</span>
+
+        <span class="k">if</span> <span class="n">start_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EpisodeExporter</span><span class="o">.</span><span class="n">DEFAULT_RENDER_START_DATE</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">start_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">start_date</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"CityLearnEnv start_date must be in ISO format 'YYYY-MM-DD'."</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">"CityLearnEnv start_date must be a date, datetime, or ISO format string."</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EpisodeExporter.export_final_kpis">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.export_final_kpis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_final_kpis</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="s2">"Agent"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"exported_kpis.csv"</span><span class="p">,</span>
+        <span class="n">include_business_as_usual</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">export_business_as_usual_timeseries</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">kpi_round_decimals</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Export episode KPIs to csv."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_output_dir</span><span class="p">()</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">'env'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kpis</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">)</span>
+            <span class="n">export_env</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span>
+            <span class="n">identity</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">'comparison_identity'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">identity</span><span class="p">):</span>
+                <span class="n">export_env</span><span class="o">.</span><span class="n">set_experiment_identity</span><span class="p">(</span><span class="o">**</span><span class="n">identity</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="n">include_business_as_usual</span><span class="o">=</span><span class="n">include_business_as_usual</span><span class="p">)</span>
+            <span class="n">export_env</span> <span class="o">=</span> <span class="n">env</span>
+
+        <span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">'cost_function'</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">'name'</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">'value'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kpi_round_decimals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">kpi_round_decimals</span><span class="p">)</span>
+        <span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="n">kpis</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">'cost_function'</span><span class="p">:</span> <span class="s1">'KPI'</span><span class="p">})</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_file_format</span><span class="p">()</span> <span class="o">==</span> <span class="s1">'parquet'</span><span class="p">:</span>
+            <span class="n">kpis</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kpis</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s1">''</span><span class="p">)</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">'utf-8'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">include_business_as_usual</span> <span class="ow">and</span> <span class="n">export_business_as_usual_timeseries</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">export_business_as_usual_timeseries</span><span class="p">(</span><span class="n">export_env</span><span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.experiment</span><span class="w"> </span><span class="kn">import</span> <span class="n">experiment_manifest</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utils.file_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileHandler</span>
+        <span class="n">FileHandler</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">'.manifest.json'</span><span class="p">)),</span> <span class="n">experiment_manifest</span><span class="p">(</span><span class="n">export_env</span><span class="p">))</span>
+        <span class="n">FileHandler</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">'.deferrable_service.json'</span><span class="p">)),</span>
+                               <span class="n">export_env</span><span class="o">.</span><span class="n">get_deferrable_service_audit</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">export_env</span><span class="o">.</span><span class="n">_robustness_service</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="n">FileHandler</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">'.robustness.json'</span><span class="p">)),</span>
+                                   <span class="n">export_env</span><span class="o">.</span><span class="n">get_robustness_audit</span><span class="p">())</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">_final_kpis_exported</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="EpisodeExporter.export_business_as_usual_timeseries">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.export_business_as_usual_timeseries">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_business_as_usual_timeseries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Export a compact time-series audit for the business-as-usual baseline."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="n">source_env</span> <span class="o">=</span> <span class="n">env</span> <span class="k">if</span> <span class="n">source_env</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">source_env</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">source_env</span><span class="o">.</span><span class="n">run_business_as_usual_baseline</span><span class="p">()</span>
+        <span class="n">baseline_env</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">env</span>
+        <span class="n">episode_num</span> <span class="o">=</span> <span class="n">source_env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode</span>
+        <span class="n">final_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="sa">f</span><span class="s2">"exported_data_business_as_usual_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">)</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">filename</span>
+        <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">file_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_file_format</span><span class="p">()</span> <span class="o">==</span> <span class="s1">'parquet'</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">file_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file_path</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_part*.parquet"</span><span class="p">):</span>
+                <span class="n">part</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_counters</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">file_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">fieldnames</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">'time_step'</span><span class="p">,</span>
+            <span class="s1">'name'</span><span class="p">,</span>
+            <span class="s1">'level'</span><span class="p">,</span>
+            <span class="s1">'net_electricity_consumption_kwh'</span><span class="p">,</span>
+            <span class="s1">'net_electricity_consumption_cost'</span><span class="p">,</span>
+            <span class="s1">'net_electricity_consumption_emission_kgco2'</span><span class="p">,</span>
+            <span class="s1">'solar_generation_kwh'</span><span class="p">,</span>
+            <span class="s1">'bess_electricity_consumption_kwh'</span><span class="p">,</span>
+            <span class="s1">'bess_soc'</span><span class="p">,</span>
+            <span class="s1">'ev_charger_electricity_consumption_kwh'</span><span class="p">,</span>
+            <span class="s1">'deferrable_appliance_electricity_consumption_kwh'</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_file_format</span><span class="p">()</span> <span class="o">==</span> <span class="s1">'parquet'</span><span class="p">:</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">chunk_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_chunk_size</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">final_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">building_rows</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buildings_for_time_step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">):</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_business_as_usual_building_row</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">)</span>
+                    <span class="n">building_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                    <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">chunk_size</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">write_render_rows</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+                        <span class="n">rows</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_business_as_usual_district_row</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">building_rows</span><span class="p">))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">chunk_size</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write_render_rows</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+                    <span class="n">rows</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_render_rows</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">'w'</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="n">fieldnames</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">final_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">building_rows</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buildings_for_time_step</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">):</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_business_as_usual_building_row</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">)</span>
+                    <span class="n">building_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">({</span><span class="n">field</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fieldnames</span><span class="p">})</span>
+
+                <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_business_as_usual_district_row</span><span class="p">(</span><span class="n">baseline_env</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">building_rows</span><span class="p">)</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">({</span><span class="n">field</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fieldnames</span><span class="p">})</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_business_as_usual_building_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">battery</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electrical_storage_for_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">)</span>
+        <span class="n">chargers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chargers_for_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">)</span>
+        <span class="n">appliances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deferrable_appliances_for_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">'time_step'</span><span class="p">:</span> <span class="n">time_step</span><span class="p">,</span>
+            <span class="s1">'name'</span><span class="p">:</span> <span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s1">'level'</span><span class="p">:</span> <span class="s1">'building'</span><span class="p">,</span>
+            <span class="s1">'net_electricity_consumption_kwh'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">,</span> <span class="n">time_step</span><span class="p">),</span>
+            <span class="s1">'net_electricity_consumption_cost'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span><span class="p">,</span> <span class="n">time_step</span><span class="p">),</span>
+            <span class="s1">'net_electricity_consumption_emission_kgco2'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">net_electricity_consumption_emission</span><span class="p">,</span> <span class="n">time_step</span><span class="p">),</span>
+            <span class="s1">'solar_generation_kwh'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">building</span><span class="o">.</span><span class="n">solar_generation</span><span class="p">,</span> <span class="n">time_step</span><span class="p">),</span>
+            <span class="s1">'bess_electricity_consumption_kwh'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numeric_series_value</span><span class="p">(</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">battery</span><span class="p">,</span> <span class="s1">'electricity_consumption'</span><span class="p">,</span> <span class="p">[]),</span>
+                <span class="n">time_step</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s1">'bess_soc'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">battery</span><span class="p">,</span> <span class="s1">'soc'</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">time_step</span><span class="p">),</span>
+            <span class="s1">'ev_charger_electricity_consumption_kwh'</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_numeric_series_value</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="s1">'electricity_consumption'</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">time_step</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="n">chargers</span>
+            <span class="p">),</span>
+            <span class="s1">'deferrable_appliance_electricity_consumption_kwh'</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_numeric_series_value</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">appliance</span><span class="p">,</span> <span class="s1">'electricity_consumption'</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">time_step</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">appliance</span> <span class="ow">in</span> <span class="n">appliances</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_business_as_usual_district_row</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">baseline_env</span><span class="p">:</span> <span class="s2">"CityLearnEnv"</span><span class="p">,</span>
+        <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">rows</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">rows</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_business_as_usual_building_row</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buildings_for_time_step</span><span class="p">(</span><span class="n">time_step</span><span class="p">,</span> <span class="n">baseline_env</span><span class="p">)</span>
+            <span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">'time_step'</span><span class="p">:</span> <span class="n">time_step</span><span class="p">,</span>
+            <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'District'</span><span class="p">,</span>
+            <span class="s1">'level'</span><span class="p">:</span> <span class="s1">'district'</span><span class="p">,</span>
+            <span class="s1">'net_electricity_consumption_kwh'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">baseline_env</span><span class="o">.</span><span class="n">net_electricity_consumption</span><span class="p">,</span> <span class="n">time_step</span><span class="p">),</span>
+            <span class="s1">'net_electricity_consumption_cost'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">baseline_env</span><span class="o">.</span><span class="n">net_electricity_consumption_cost</span><span class="p">,</span> <span class="n">time_step</span><span class="p">),</span>
+            <span class="s1">'net_electricity_consumption_emission_kgco2'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">baseline_env</span><span class="o">.</span><span class="n">net_electricity_consumption_emission</span><span class="p">,</span> <span class="n">time_step</span><span class="p">),</span>
+            <span class="s1">'solar_generation_kwh'</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'solar_generation_kwh'</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">),</span>
+            <span class="s1">'bess_electricity_consumption_kwh'</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'bess_electricity_consumption_kwh'</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">),</span>
+            <span class="s1">'bess_soc'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
+            <span class="s1">'ev_charger_electricity_consumption_kwh'</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'ev_charger_electricity_consumption_kwh'</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">),</span>
+            <span class="s1">'deferrable_appliance_electricity_consumption_kwh'</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">'deferrable_appliance_electricity_consumption_kwh'</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_series_value</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">index</span><span class="p">),</span> <span class="mi">0</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)])</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">''</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_numeric_series_value</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_series_value</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+
+<div class="viewcode-block" id="EpisodeExporter.render">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.render">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Render one time step to configured time-series outputs."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'render_enabled'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">_should_export_current_episode</span><span class="p">():</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">render_mode</span> <span class="o">==</span> <span class="s1">'end'</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_defer_render_flush'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">render_mode</span> <span class="o">==</span> <span class="s1">'end'</span> <span class="ow">and</span> <span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">terminated</span> <span class="ow">or</span> <span class="n">env</span><span class="o">.</span><span class="n">truncated</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_output_dir</span><span class="p">()</span>
+        <span class="n">iso_timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_iso_timestamp</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">episode_num</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_to_csv</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="sa">f</span><span class="s2">"exported_data_community_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">),</span>
+            <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">iso_timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">env</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()},</span>
+        <span class="p">)</span>
+
+        <span class="n">buildings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buildings_for_time_step</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">buildings</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_to_csv</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="sa">f</span><span class="s2">"exported_data_</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">),</span>
+                <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">iso_timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">building</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()},</span>
+            <span class="p">)</span>
+
+            <span class="n">battery</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electrical_storage_for_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">battery</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">battery</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save_to_csv</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="sa">f</span><span class="s2">"exported_data_</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_battery_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">),</span>
+                    <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">iso_timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">battery</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()},</span>
+                <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chargers_for_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">):</span>
+                <span class="n">charger</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save_to_csv</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="sa">f</span><span class="s2">"exported_data_</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span><span class="si">}</span><span class="s2">_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">),</span>
+                    <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">iso_timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">charger</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()},</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buildings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_to_csv</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="sa">f</span><span class="s2">"exported_data_pricing_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">),</span>
+                <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">iso_timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">buildings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pricing</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)},</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electric_vehicles_for_time_step</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save_to_csv</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="sa">f</span><span class="s2">"exported_data_</span><span class="si">{</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">),</span>
+                <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">iso_timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">ev</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()},</span>
+            <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_charger_render_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">charger</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ev_lookup</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">"ElectricVehicle"</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">"""Restore the actual connection and the scheduled incoming vehicle for a render row."""</span>
+
+        <span class="n">sim</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">charger_simulation</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="k">if</span> <span class="n">time_step</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_charger_state</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">ev_id</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="k">if</span> <span class="n">time_step</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="o">.</span><span class="n">electric_vehicle_id</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">valid_ev_id</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ev_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ev_id</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">""</span><span class="p">,</span> <span class="s2">"nan"</span><span class="p">}</span>
+
+        <span class="n">connected_ev</span> <span class="o">=</span> <span class="n">charger</span><span class="o">.</span><span class="n">past_connected_evs</span><span class="p">[</span><span class="n">time_step</span><span class="p">]</span> <span class="k">if</span> <span class="n">time_step</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">charger</span><span class="o">.</span><span class="n">past_connected_evs</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">incoming_ev</span> <span class="o">=</span> <span class="n">ev_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ev_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">valid_ev_id</span> <span class="ow">and</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span> <span class="o">=</span> <span class="n">connected_ev</span>
+        <span class="n">charger</span><span class="o">.</span><span class="n">incoming_electric_vehicle</span> <span class="o">=</span> <span class="n">incoming_ev</span>
+
+<div class="viewcode-block" id="EpisodeExporter.export_episode_render_data">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.export_episode_render_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_episode_render_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">final_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Export full episode render rows in one pass for ``render_mode='end'``."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+
+        <span class="k">if</span> <span class="n">final_index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">_should_export_current_episode</span><span class="p">():</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_output_dir</span><span class="p">()</span>
+        <span class="n">episode_num</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode</span>
+        <span class="n">rows_by_filename</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="n">chunk_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_chunk_size</span><span class="p">()</span>
+        <span class="n">prepared_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">append_row</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">filename</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prepared_files</span><span class="p">:</span>
+                <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">filename</span>
+                <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                    <span class="n">file_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_file_format</span><span class="p">()</span> <span class="o">==</span> <span class="s1">'parquet'</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">file_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file_path</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_part*.parquet"</span><span class="p">):</span>
+                        <span class="n">part</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_counters</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">prepared_files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">rows_by_filename</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">chunk_size</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write_render_rows</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dynamic'</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_topology_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ev_lookup</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_topology_service</span><span class="o">.</span><span class="n">ev_pool</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ev_lookup</span> <span class="o">=</span> <span class="p">{</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">ev</span> <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">}</span>
+        <span class="n">original_charger_state</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">original_active_buildings</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">)</span>
+        <span class="n">original_active_evs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span><span class="p">)</span>
+        <span class="n">time_step_snapshot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">override_render_time_step</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">original_year</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">year</span>
+        <span class="n">original_day</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">current_day</span>
+        <span class="n">original_start_datetime</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_render_start_datetime'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reset_time_tracking</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">final_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">buildings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buildings_for_time_step</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="n">evs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electric_vehicles_for_time_step</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dynamic'</span><span class="p">:</span>
+                    <span class="n">env</span><span class="o">.</span><span class="n">buildings</span> <span class="o">=</span> <span class="n">buildings</span>
+                    <span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span> <span class="o">=</span> <span class="n">evs</span>
+
+                <span class="k">for</span> <span class="n">obj</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">time_step_snapshot</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">obj</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">t</span>
+                    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+                <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_iso_timestamp</span><span class="p">()</span>
+                <span class="n">append_row</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"exported_data_community_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">,</span>
+                    <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">env</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()}</span>
+                <span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">buildings</span><span class="p">:</span>
+                    <span class="n">append_row</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"exported_data_</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">building</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()}</span>
+                    <span class="p">)</span>
+                    <span class="n">battery</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_electrical_storage_for_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">battery</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">battery</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">t</span>
+                        <span class="n">append_row</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"exported_data_</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_battery_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">,</span>
+                            <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">battery</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()}</span>
+                        <span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chargers_for_time_step</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+                        <span class="n">charger</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">t</span>
+                        <span class="k">if</span> <span class="n">charger</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">original_charger_state</span><span class="p">:</span>
+                            <span class="n">original_charger_state</span><span class="p">[</span><span class="n">charger</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span><span class="p">,</span>
+                                <span class="n">charger</span><span class="o">.</span><span class="n">incoming_electric_vehicle</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_set_charger_render_state</span><span class="p">(</span><span class="n">charger</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">ev_lookup</span><span class="p">)</span>
+                        <span class="n">append_row</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"exported_data_</span><span class="si">{</span><span class="n">building</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">charger</span><span class="o">.</span><span class="n">charger_id</span><span class="si">}</span><span class="s2">_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">,</span>
+                            <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">charger</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()}</span>
+                        <span class="p">)</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buildings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">append_row</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"exported_data_pricing_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">buildings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pricing</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(</span><span class="n">t</span><span class="p">)}</span>
+                    <span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">evs</span><span class="p">:</span>
+                    <span class="n">append_row</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"exported_data_</span><span class="si">{</span><span class="n">ev</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">_ep</span><span class="si">{</span><span class="n">episode_num</span><span class="si">}</span><span class="s2">.csv"</span><span class="p">,</span>
+                        <span class="p">{</span><span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">ev</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()}</span>
+                    <span class="p">)</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">charger</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">original_charger_state</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">charger</span><span class="o">.</span><span class="n">connected_electric_vehicle</span><span class="p">,</span> <span class="n">charger</span><span class="o">.</span><span class="n">incoming_electric_vehicle</span> <span class="o">=</span> <span class="n">state</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">restore_render_time_step</span><span class="p">(</span><span class="n">time_step_snapshot</span><span class="p">)</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">buildings</span> <span class="o">=</span> <span class="n">original_active_buildings</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">electric_vehicles</span> <span class="o">=</span> <span class="n">original_active_evs</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="n">original_year</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">current_day</span> <span class="o">=</span> <span class="n">original_day</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_render_start_datetime</span> <span class="o">=</span> <span class="n">original_start_datetime</span>
+
+        <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">rows_by_filename</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_render_rows</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EpisodeExporter.save_to_csv">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.save_to_csv">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_to_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">"""Save one render row to configured output format."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_export_filename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_file_format</span><span class="p">()</span> <span class="o">==</span> <span class="s1">'parquet'</span><span class="p">:</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_render_buffer</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_render_buffer</span><span class="p">[</span><span class="n">filename</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_chunk_size</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write_render_rows</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">_render_buffer</span><span class="p">[</span><span class="n">filename</span><span class="p">])</span>
+                <span class="n">env</span><span class="o">.</span><span class="n">_render_buffer</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">_buffer_render</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_defer_render_flush'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_render_buffer</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_render_rows</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">)])</span></div>
+
+
+<div class="viewcode-block" id="EpisodeExporter.flush_render_buffer">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.flush_render_buffer">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flush_render_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Write any buffered render rows to disk."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_render_buffer'</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">_should_export_current_episode</span><span class="p">():</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_render_buffer</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="n">has_pending_rows</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_render_buffer</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_pending_rows</span><span class="p">:</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_render_buffer</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">target_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">target_dir</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">target_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Writing buffered render exports to </span><span class="si">%s</span><span class="s2"> ..."</span><span class="p">,</span> <span class="n">target_dir</span><span class="p">)</span>
+
+        <span class="n">original_defer</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_defer_render_flush</span>
+        <span class="n">original_buffer_state</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_buffer_render</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">_defer_render_flush</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">_buffer_render</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_render_buffer</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="n">rows</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write_render_rows</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_render_buffer</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_buffer_render</span> <span class="o">=</span> <span class="n">original_buffer_state</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">_defer_render_flush</span> <span class="o">=</span> <span class="n">original_defer</span></div>
+
+
+<div class="viewcode-block" id="EpisodeExporter.write_render_rows">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.write_render_rows">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_render_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
+<span class="w">        </span><span class="sd">"""Write one or more render rows to disk with minimal rewrites."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">filename</span>
+        <span class="n">file_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">buffered_fieldnames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">field</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_render_file_format</span><span class="p">()</span> <span class="o">==</span> <span class="s1">'parquet'</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_parquet_rows</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">fieldnames</span> <span class="o">=</span> <span class="n">buffered_fieldnames</span>
+            <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">'w'</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+                <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="n">fieldnames</span><span class="p">)</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">({</span><span class="n">field</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fieldnames</span><span class="p">})</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">'r'</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+            <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">csvfile</span><span class="p">)</span>
+            <span class="n">existing_fieldnames</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span> <span class="ow">or</span> <span class="p">[]</span>
+
+        <span class="n">missing_fieldnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">buffered_fieldnames</span> <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_fieldnames</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing_fieldnames</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">'r'</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+                <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">csvfile</span><span class="p">)</span>
+                <span class="n">existing_rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+            <span class="n">extended_fieldnames</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">existing_fieldnames</span><span class="p">,</span> <span class="o">*</span><span class="n">missing_fieldnames</span><span class="p">]</span>
+            <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">'w'</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+                <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="n">extended_fieldnames</span><span class="p">)</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">existing_rows</span><span class="p">:</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">({</span><span class="n">field</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">extended_fieldnames</span><span class="p">})</span>
+                <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">({</span><span class="n">field</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">extended_fieldnames</span><span class="p">})</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">file_path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">'a'</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="n">existing_fieldnames</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">({</span><span class="n">field</span><span class="p">:</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">existing_fieldnames</span><span class="p">})</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_parquet_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">filename</span>
+        <span class="n">file_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">counter_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_counters</span><span class="p">[</span><span class="n">counter_key</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_counters</span><span class="p">[</span><span class="n">counter_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">counter</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">part_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file_path</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_part</span><span class="si">{</span><span class="n">counter</span><span class="si">:</span><span class="s2">05d</span><span class="si">}{</span><span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s2">"Parquet render exports require pandas with a parquet engine such as pyarrow."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">ne</span><span class="p">(</span><span class="s1">''</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="c1"># Render dictionaries historically mix numeric strings used by the CSV</span>
+        <span class="c1"># path with NumPy scalars used while an asset is active.  PyArrow cannot</span>
+        <span class="c1"># infer a stable type for such object columns (for example charger state</span>
+        <span class="c1"># is ``"-1.00"`` while idle and ``np.float32(1)`` while occupied).</span>
+        <span class="c1"># Promote wholly numeric-like object columns to numbers before writing;</span>
+        <span class="c1"># keep genuinely textual columns textual and normalize NumPy scalars.</span>
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="s1">'object'</span><span class="p">])</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">series</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">column</span><span class="p">]</span>
+            <span class="n">non_null</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">non_null</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">numeric</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">non_null</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">'coerce'</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">numeric</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                <span class="n">dataframe</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">'coerce'</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">dataframe</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">value</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="n">value</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">dataframe</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">part_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EpisodeExporter.ensure_output_dir">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.ensure_output_dir">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ensure_output_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">ensure_exists</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Prepare the render output directory and optionally create it on disk."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="n">base_render_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'render_output_root'</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="s1">'render_logs'</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">ensure_exists</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">base_render_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">PermissionError</span><span class="p">:</span>
+                <span class="n">fallback</span> <span class="o">=</span> <span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span> <span class="o">/</span> <span class="s1">'render_logs'</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+                <span class="n">fallback</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">env</span><span class="o">.</span><span class="n">render_output_root</span> <span class="o">=</span> <span class="n">fallback</span>
+                <span class="n">base_render_path</span> <span class="o">=</span> <span class="n">fallback</span>
+
+        <span class="n">render_dir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_render_directory_path'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">needs_new_dir</span> <span class="o">=</span> <span class="n">render_dir</span> <span class="ow">is</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">needs_new_dir</span> <span class="ow">and</span> <span class="n">ensure_exists</span><span class="p">:</span>
+            <span class="n">render_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">render_dir</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">needs_new_dir</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">render_dir</span><span class="o">.</span><span class="n">is_relative_to</span><span class="p">(</span><span class="n">base_render_path</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">needs_new_dir</span> <span class="o">=</span> <span class="n">base_render_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">render_dir</span><span class="o">.</span><span class="n">parents</span> <span class="ow">and</span> <span class="n">render_dir</span> <span class="o">!=</span> <span class="n">base_render_path</span>
+
+        <span class="k">if</span> <span class="n">needs_new_dir</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">render_session_name</span><span class="p">:</span>
+                <span class="n">render_dir</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_render_path</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">render_session_name</span><span class="p">))</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_render_timestamp'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">env</span><span class="o">.</span><span class="n">_render_timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">_%H-%M-%S"</span><span class="p">)</span>
+                <span class="n">render_dir</span> <span class="o">=</span> <span class="p">(</span><span class="n">base_render_path</span> <span class="o">/</span> <span class="n">env</span><span class="o">.</span><span class="n">_render_timestamp</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+
+            <span class="n">env</span><span class="o">.</span><span class="n">_render_directory_path</span> <span class="o">=</span> <span class="n">render_dir</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">render_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_render_directory_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ensure_exists</span><span class="p">:</span>
+            <span class="n">render_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">_render_dir_initialized</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">render_session_name</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">csv_file</span> <span class="ow">in</span> <span class="n">render_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">'exported_*.csv'</span><span class="p">):</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">csv_file</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+                        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                            <span class="k">pass</span>
+                    <span class="k">for</span> <span class="n">parquet_file</span> <span class="ow">in</span> <span class="n">render_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">'exported_*.parquet'</span><span class="p">):</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">parquet_file</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+                        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                            <span class="k">pass</span>
+                <span class="n">env</span><span class="o">.</span><span class="n">_render_dir_initialized</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">render_dir</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EpisodeExporter.get_iso_timestamp">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.get_iso_timestamp">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_iso_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return current episode timestamp string in ISO format."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_render_start_datetime'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reset_time_tracking</span><span class="p">()</span>
+
+        <span class="n">axis</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_time_axis'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">axis</span><span class="o">.</span><span class="n">utc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_render_origin_overridden'</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="o">.</span><span class="n">episode_start_time_step</span><span class="o">+</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>
+            <span class="n">env</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">env</span><span class="o">.</span><span class="n">current_day</span> <span class="o">=</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">day</span>
+            <span class="k">return</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+
+        <span class="n">start_datetime</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">_render_start_datetime</span>
+        <span class="n">timestamp_dt</span> <span class="o">=</span> <span class="n">start_datetime</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">env</span><span class="o">.</span><span class="n">time_step</span> <span class="o">*</span> <span class="n">env</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="n">timestamp_dt</span><span class="o">.</span><span class="n">year</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">current_day</span> <span class="o">=</span> <span class="n">timestamp_dt</span><span class="o">.</span><span class="n">day</span>
+
+        <span class="k">return</span> <span class="n">timestamp_dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EpisodeExporter.override_render_time_step">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.override_render_time_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">override_render_time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Temporarily set time_step to `index` for the environment and descendants."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="n">snapshot</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_record</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">marker</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">marker</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">marker</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">'time_step'</span><span class="p">):</span>
+                <span class="n">snapshot</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">obj</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">time_step</span><span class="p">))</span>
+                <span class="n">obj</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">index</span>
+
+        <span class="n">_record</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'static'</span><span class="p">)</span> <span class="o">==</span> <span class="s1">'dynamic'</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'_topology_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">buildings_iterable</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_topology_service</span><span class="o">.</span><span class="n">member_pool</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">ev_iterable</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">_topology_service</span><span class="o">.</span><span class="n">ev_pool</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">buildings_iterable</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'buildings'</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="n">ev_iterable</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="s1">'electric_vehicles'</span><span class="p">,</span> <span class="p">[]))</span>
+
+        <span class="k">for</span> <span class="n">building</span> <span class="ow">in</span> <span class="n">buildings_iterable</span><span class="p">:</span>
+            <span class="n">_record</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
+            <span class="n">electrical_storage</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'electrical_storage'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">electrical_storage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_record</span><span class="p">(</span><span class="n">electrical_storage</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">charger</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'electric_vehicle_chargers'</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]:</span>
+                <span class="n">_record</span><span class="p">(</span><span class="n">charger</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">appliance</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">building</span><span class="p">,</span> <span class="s1">'deferrable_appliances'</span><span class="p">,</span> <span class="p">[])</span> <span class="ow">or</span> <span class="p">[]:</span>
+                <span class="n">_record</span><span class="p">(</span><span class="n">appliance</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">ev_iterable</span><span class="p">:</span>
+            <span class="n">_record</span><span class="p">(</span><span class="n">ev</span><span class="p">)</span>
+            <span class="n">battery</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="s1">'battery'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">battery</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_record</span><span class="p">(</span><span class="n">battery</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">snapshot</span></div>
+
+
+<div class="viewcode-block" id="EpisodeExporter.restore_render_time_step">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.restore_render_time_step">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">restore_render_time_step</span><span class="p">(</span><span class="n">snapshot</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">obj</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">snapshot</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">obj</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="EpisodeExporter.reset_time_tracking">
+<a class="viewcode-back" href="../../api/citylearn.exporter.html#citylearn.exporter.EpisodeExporter.reset_time_tracking">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_time_tracking</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Reset render timestamp tracking to episode start."""</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+        <span class="n">start_offset</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">episode_tracker</span><span class="p">,</span> <span class="s1">'episode_start_time_step'</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">base_datetime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">render_start_date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+        <span class="n">base_datetime</span> <span class="o">+=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">start_offset</span> <span class="o">*</span> <span class="n">env</span><span class="o">.</span><span class="n">seconds_per_time_step</span><span class="p">)</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">_render_start_datetime</span> <span class="o">=</span> <span class="n">base_datetime</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="n">base_datetime</span><span class="o">.</span><span class="n">year</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">current_day</span> <span class="o">=</span> <span class="n">base_datetime</span><span class="o">.</span><span class="n">day</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

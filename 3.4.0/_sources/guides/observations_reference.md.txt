@@ -1,0 +1,297 @@
+# Observations Reference
+
+This page is the observation dictionary for the simulator. It is intended as a human-readable and machine-readable contract for wrappers, Offline RL, GraphRL and Transformer policies.
+
+## Unit Contract
+
+| Name pattern | Unit | Example |
+|---|---:|---|
+| `_power_kw`, `_kw`, `headroom_kw` | kW | `generation_power_kw`, `charging_slack_kw`. |
+| `_energy_kwh_step`, `_kwh_step` | kWh/step | `net_energy_kwh_step`. |
+| `_kwh` | kWh | `capacity_kwh`, `energy_to_full_kwh`. |
+| `_soc`, `_soc_ratio`, `_ratio` | ratio | `electrical_storage_soc`, `service_level_ratio`. |
+| `_time_step` | timestep index | `deadline_time_step`. |
+| `hours_until_*` | hours | `hours_until_departure`. |
+| `*_count` | count | `active_buildings_count`. |
+| `electricity_pricing` | currency/kWh | Dataset-defined currency. |
+| `carbon_intensity` | kgCO2/kWh | Grid emissions factor. |
+| Temperatures | C | `outdoor_dry_bulb_temperature`. |
+| Irradiance | W/m2 | `direct_solar_irradiance`. |
+
+Common sentinels:
+
+| Value | Meaning |
+|---:|---|
+| `-1` | Time, ID or quantity unavailable. |
+| `-0.1` | Unknown SOC or no EV. |
+| `0` | Not applicable when zero is physically valid, or absent entity row. |
+
+## Flat Observations
+
+Flat observations are controlled by `schema["observations"]`. With `central_agent=True`, observations marked `shared_in_central_agent=true` appear only once in the central vector.
+
+### Calendar
+
+| Observation | Unit | Meaning |
+|---|---:|---|
+| `month` | 1-12 | Month. |
+| `day_type` | 1-8 | Day of week or special day. |
+| `hour` | 1-24 | Hour. |
+| `minutes` | 0-59 | Minute, only if present in the dataset. |
+| `seconds` | 0-59 | Second, needed for sub-minute datasets. |
+| `daylight_savings_status` | binary | Daylight saving status. |
+
+### Weather
+
+| Observation | Unit | Meaning |
+|---|---:|---|
+| `outdoor_dry_bulb_temperature` | C | Outdoor temperature. |
+| `outdoor_relative_humidity` | percent | Outdoor relative humidity. |
+| `diffuse_solar_irradiance` | W/m2 | Diffuse irradiance. |
+| `direct_solar_irradiance` | W/m2 | Direct irradiance. |
+| `*_predicted_1/2/3` | same unit | Forecast horizons as encoded by the dataset. |
+
+The simulator does not assume fixed forecast horizons. They are whatever the dataset provides.
+
+### Pricing and Carbon
+
+| Observation | Unit | Meaning |
+|---|---:|---|
+| `electricity_pricing` | currency/kWh | Current grid import price. |
+| `electricity_pricing_predicted_1/2/3` | currency/kWh | Price forecasts. |
+| `carbon_intensity` | kgCO2/kWh | Grid carbon intensity. |
+
+### Loads, Comfort and HVAC
+
+| Observation | Unit | Meaning |
+|---|---:|---|
+| `indoor_dry_bulb_temperature` | C | Indoor temperature. |
+| `average_unmet_cooling_setpoint_difference` | C | Average cooling setpoint violation. |
+| `indoor_relative_humidity` | percent | Indoor relative humidity. |
+| `occupant_count` | people | Occupancy. |
+| `indoor_dry_bulb_temperature_cooling_set_point` | C | Cooling setpoint. |
+| `indoor_dry_bulb_temperature_heating_set_point` | C | Heating setpoint. |
+| `indoor_dry_bulb_temperature_cooling_delta` | C | Controlled cooling delta. |
+| `indoor_dry_bulb_temperature_heating_delta` | C | Controlled heating delta. |
+| `comfort_band` | C | Comfort band. |
+| `hvac_mode` | enum | 0 off, 1 cooling, 2 heating, 3 auto. |
+| `cooling_demand` | kWh/step | Cooling thermal demand. |
+| `heating_demand` | kWh/step | Heating thermal demand. |
+| `dhw_demand` | kWh/step | Domestic hot water demand. |
+| `non_shiftable_load` | kWh/step | Non-flexible electric load. |
+| `cooling_device_efficiency` | COP/ratio | Cooling device efficiency. |
+| `heating_device_efficiency` | COP/ratio | Heating device efficiency. |
+| `dhw_device_efficiency` | COP/ratio | DHW device efficiency. |
+
+### Storage, PV and Net Energy
+
+| Observation | Unit | Meaning |
+|---|---:|---|
+| `cooling_storage_soc` | ratio | Cooling storage SOC. |
+| `heating_storage_soc` | ratio | Heating storage SOC. |
+| `dhw_storage_soc` | ratio | DHW storage SOC. |
+| `electrical_storage_soc` | ratio | BESS SOC. |
+| `*_electricity_consumption` | kWh/step | End-use electricity consumption. |
+| `electrical_storage_electricity_consumption` | kWh/step | BESS consumption, positive charge and negative discharge. |
+| `solar_generation` | kWh/step | PV generation after PV mode conversion. |
+| `net_electricity_consumption` | kWh/step | Import positive, export negative. |
+| `power_outage` | binary | Power outage state. |
+
+### EV and Charger Flat Observations
+
+Schema helper keys are expanded per charger.
+
+| Schema key | Expanded key | Unit | Meaning |
+|---|---|---:|---|
+| `electric_vehicle_charger_connected_state` | `electric_vehicle_charger_{id}_connected_state` | binary | EV connected and ready. |
+| `connected_electric_vehicle_at_charger_departure_time` | `connected_electric_vehicle_at_charger_{id}_departure_time` | steps | Steps until departure. |
+| `connected_electric_vehicle_at_charger_required_soc_departure` | `connected_electric_vehicle_at_charger_{id}_required_soc_departure` | ratio | Required SOC at departure. |
+| `connected_electric_vehicle_at_charger_soc` | `connected_electric_vehicle_at_charger_{id}_soc` | ratio | Connected EV SOC. |
+| `connected_electric_vehicle_at_charger_battery_capacity` | `connected_electric_vehicle_at_charger_{id}_battery_capacity` | kWh | Connected EV battery capacity. |
+| `electric_vehicle_charger_incoming_state` | `electric_vehicle_charger_{id}_incoming_state` | binary | Incoming EV exists. |
+| `incoming_electric_vehicle_at_charger_estimated_arrival_time` | `incoming_electric_vehicle_at_charger_{id}_estimated_arrival_time` | steps | Steps until estimated arrival. |
+| `incoming_electric_vehicle_at_charger_estimated_soc_arrival` | `incoming_electric_vehicle_at_charger_{id}_estimated_soc_arrival` | ratio | Estimated SOC at arrival. |
+
+### Deferrable Flat Observations
+
+`deferrable_appliance_*` helper keys are expanded per appliance. The same fields appear in the entity `deferrable_appliance` table.
+
+| Feature | Unit | Meaning |
+|---|---:|---|
+| `pending`, `running`, `can_start`, `deadline_missed` | binary | Cycle state flags. |
+| `earliest_start_time_step`, `latest_start_time_step`, `deadline_time_step` | global timestep | Flexibility window and deadline. |
+| `hours_until_latest_start`, `hours_until_deadline` | hours | Time remaining. |
+| `slack_steps` | steps | Remaining slack before latest start. |
+| `slack_ratio`, `urgency_ratio` | ratio | Normalized slack and urgency. |
+| `cycle_duration_steps` | steps | Cycle duration. |
+| `cycle_energy_kwh` | kWh | Total cycle energy. |
+| `remaining_energy_kwh` | kWh | Energy still to serve. |
+| `current_step_energy_kwh` | kWh/step | Cycle energy at current step. |
+| `priority` | ratio | External priority. |
+| `must_run` | binary | Mandatory service request. |
+| `cycle_average_power_kw`, `cycle_peak_power_kw` | kW | Average and peak cycle power. |
+| `cycle_load_factor_ratio`, `cycle_peak_step_offset_ratio` | ratio | Cycle profile descriptors. |
+| `remaining_duration_steps` | steps | Remaining cycle duration. |
+| `remaining_average_power_kw`, `current_step_power_kw` | kW | Remaining average and current step power. |
+
+### Escalator Flat Observations
+
+`escalator_*` helper keys are expanded per escalator in the flat interface.
+
+| Feature | Unit | Meaning |
+|---|---:|---|
+| `passengers_from_trains_15min`, `background_pedestrians_15min`, `passengers_expected_15min` | passengers/step | Aggregate demand sources and total demand. |
+| `people_detected`, `available`, `service_required`, `service_met` | binary | Demand, availability and simple service indicators. |
+| `passing_trains` | count | Passing trains; source arrival/departure duplicates are not double counted. |
+| `minutes_to_next_train` | minutes | Time until next relevant train. |
+| `state`, `requested_state` | enum `0–2` | Standby, slow or normal state. |
+| `power_kw` | kW | Applied operating power. |
+| `unserved_passengers_15min` | passengers/step | Demand left unserved in standby. |
+
+## Entity Tables
+
+Entity mode returns `tables`, `edges` and `meta`. Feature availability depends on the schema, active assets and enabled bundles.
+
+### `district`
+
+| Feature group | Bundle | Unit | Meaning |
+|---|---|---:|---|
+| Shared flat observations | legacy | varies | Shared observations from the first building. |
+| Forecasts `*_predicted_*` | `entity_forecasts_existing` | varies | Dataset forecasts. |
+| `community_*_power_kw` | `entity_community_operational` | kW | District/community power aggregates. |
+| `community_*_energy_kwh_step` | `entity_community_operational` | kWh/step | District/community step energy aggregates. |
+| `community_*_headroom_kw` | `entity_community_operational` | kW | Import/export headroom aggregates. |
+| `community_flexible_*_capacity_kw`, `community_flexible_*_capacity_kwh_step`, `community_flexible_energy_*_kwh` | `entity_community_operational` | mixed | Aggregate flexible charge/discharge power and energy slack. |
+| `active_buildings_count`, `active_chargers_count`, `active_evs_count` | `entity_community_operational` | count | Active topology counts. |
+| `topology_version` | `entity_community_operational` | count | Current topology version. |
+| `dr_active` | `entity_demand_response` | binary | Whether a demand-response request is active at this timestep. |
+| `dr_issuer_code` | `entity_demand_response` | enum | Request issuer code: `1=dso`, `2=tso`, `0=none/unknown`. |
+| `dr_direction` | `entity_demand_response` | enum | Load-perspective direction: `1=up`, `-1=down`, `0=none`. |
+| `dr_target_power_kw` | `entity_demand_response` | kW | Active district target power. |
+| `dr_baseline_power_kw` | `entity_demand_response` | kW | Frozen baseline net power for the active request when valid. |
+| `dr_time_remaining_hours` | `entity_demand_response` | hours | Time remaining in the inclusive activation window. |
+| `dr_activation_price_eur_per_kwh` | `entity_demand_response` | currency/kWh | Credited price for delivered energy. |
+| `dr_shortfall_penalty_eur_per_kwh` | `entity_demand_response` | currency/kWh | Penalty price for shortfall energy. |
+| `dr_previous_delivered_power_kw` | `entity_demand_response` | kW | Delivered power settled at the previous active DR step. |
+| `dr_previous_shortfall_power_kw` | `entity_demand_response` | kW | Shortfall power settled at the previous active DR step. |
+| `community_net_prev_1_kwh_step`, `community_net_prev_3_mean_kwh_step` | `entity_temporal_derived` | kWh/step | District lag features. |
+| `hour_sin/cos`, `day_type_sin/cos`, `month_sin/cos`, `seconds_of_day_sin/cos`, `is_weekend` | `entity_temporal_derived` | ratio/binary | Calendar features; raw `time_step` remains only in payload `meta`. |
+| `forecast_price_next_*`, `forecast_community_{load,pv,net}_next_*` | `entity_forecasts_derived` | mixed | Point forecasts at 15m/1h/3h/6h/24h; their source is declared in `meta.forecast_config`. |
+
+Demand-response `request_id` and baseline validity are exposed in `observations["meta"]["demand_response"]`, not as numeric table columns.
+
+### `building`
+
+| Feature group | Bundle | Unit | Meaning |
+|---|---|---:|---|
+| Active building flat observations | legacy | varies | Non-shared, non-asset-specific flat features. |
+| `net/import/export/load/pv/bess/ev_*_power_kw` | `entity_core_electrical` | kW | Electrical power by component. |
+| `net/import/export/load/pv/bess/ev_*_energy_kwh_step` | `entity_core_electrical` | kWh/step | Step energy by component. |
+| `electrical_storage_soc_ratio` | `entity_core_electrical` | ratio | Building BESS SOC. |
+| `charging_total_service_power_kw` | `entity_core_electrical` | kW | Total charging service power. |
+| `charging_phase_{L}_power_kw` | `entity_core_electrical` | kW | Current charging power by phase. |
+| `pv_surplus_power_kw`, `pv_surplus_energy_kwh_step` | `entity_core_electrical` | kW/kWh | Local PV surplus after non-flex load. |
+| `building_import/export_headroom_kw`, `import/export_phase_headroom_kw` | `entity_core_electrical` | kW | Current local electrical headroom. |
+| `flexible_*_capacity_kw`, `flexible_*_capacity_kwh_step`, `flexible_energy_*_kwh` | `entity_core_electrical` | mixed | Aggregate BESS and connected-EV charge/discharge capability and energy slack. |
+| `net_energy_prev_1_kwh_step`, `net_energy_prev_3_mean_kwh_step` | `entity_temporal_derived` | kWh/step | Building lag features. |
+| `import_energy_prev_1_kwh_step`, `export_energy_prev_1_kwh_step` | `entity_temporal_derived` | kWh/step | Import/export lag features. |
+| `hour_sin/cos`, `day_type_sin/cos`, `month_sin/cos`, `seconds_of_day_sin/cos`, `is_weekend` | `entity_temporal_derived` | ratio/binary | Calendar features. |
+| `forecast_{load,pv,net}_next_*` | `entity_forecasts_derived` | kW | Building point forecasts at 15m/1h/3h/6h/24h. |
+
+### `charger`
+
+| Feature | Bundle | Unit | Meaning |
+|---|---|---:|---|
+| `connected_state`, `incoming_state` | legacy | binary | Current EV connection/incoming state. |
+| `connected_ev_soc`, `connected_ev_required_soc_departure` | legacy | ratio | Connected EV SOC fields. |
+| `connected_ev_battery_capacity_kwh` | legacy | kWh | Connected EV capacity. |
+| `connected_ev_departure_time_step` | legacy | steps | Steps until departure. |
+| `incoming_ev_estimated_soc_arrival` | legacy | ratio | Incoming EV arrival SOC. |
+| `incoming_ev_estimated_arrival_time_step` | legacy | steps | Steps until incoming arrival. |
+| `last_charged_kwh` | legacy | kWh/step | Last commanded energy. |
+| `max_charging_power_kw`, `max_discharging_power_kw` | legacy | kW | Charger power limits. |
+| `min_charging_power_kw`, `min_discharging_power_kw` | `entity_base` | kW | Technical minimum powers. |
+| `charger_efficiency_ratio` | `entity_base` | ratio | Fixed/default efficiency. |
+| `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Phase connection; `all_phases` marks all phases. |
+| `commanded_power_kw`, `applied_power_kw` | `entity_core_electrical` | kW | Commanded and applied charger power. |
+| `applied_energy_kwh_step` | `entity_core_electrical` | kWh/step | Applied energy. |
+| `hours_until_departure`, `time_until_departure_ratio` | `entity_core_electrical` | hours/ratio | Connected EV time pressure. |
+| `energy_to_required_soc_kwh`, `required_average_power_kw` | `entity_core_electrical` | kWh/kW | Energy and average power required to meet departure SOC. |
+| `charging_slack_kw`, `charging_priority_ratio` | `entity_core_electrical` | kW/ratio | Charging urgency descriptors. |
+| `connected_ev_soc_min_ratio`, `connected_ev_energy_available_kwh`, `connected_ev_energy_to_full_kwh` | `entity_core_electrical` | mixed | Connected EV usable discharge energy and remaining charge headroom. |
+| `can_charge`, `can_discharge`, `available_charge/discharge_power_kw`, `available_charge/discharge_action_normalized` | `entity_core_electrical` | mixed | Current feasible charger action capacity after SOC, availability, outage and headroom limits. |
+| `max_deliverable_energy_until_departure_kwh`, `departure_energy_margin_kwh` | `entity_core_electrical` | kWh | Energy still deliverable by departure under current limits and its margin over required energy. |
+| `departure_feasibility_ratio`, `min_required_action_normalized` | `entity_core_electrical` | ratio | Deadline pressure; values above `1` indicate the target needs more than the current feasible/max action. |
+| `charge_efficiency_at_max_ratio`, `discharge_efficiency_at_max_ratio` | `entity_core_electrical` | ratio | Efficiency curve values at max power. |
+| `incoming_ev_required_soc_departure`, `incoming_ev_departure_time_step` | `entity_core_electrical` | ratio/steps | Incoming EV departure requirement when known. |
+| `incoming_ev_hours_until_departure`, `incoming_ev_time_until_departure_ratio` | `entity_core_electrical` | hours/ratio | Incoming EV time pressure. |
+| `last_requested_*`, `last_limited_*`, `last_applied_power_kw`, `last_projection_error_kw` | `entity_action_feedback` | mixed | Previous raw policy request, post-constraint command and physically applied charger power. |
+| `applied_energy_prev_15m_kwh`, `applied_power_mean_prev_15m_kw`, `time_since_last_nonzero_action_hours` | `entity_action_feedback` | mixed | Short action/application history. |
+| `clip_reason_*` | `entity_action_feedback` | binary | One-hot clipping causes: availability, power/deadband, SOC, building/phase/export headroom, outage or deferrable window. |
+
+### `ev`
+
+| Feature | Bundle | Unit | Meaning |
+|---|---|---:|---|
+| `soc` | legacy | ratio | EV SOC. |
+| `battery_capacity_kwh` | legacy | kWh | EV battery capacity. |
+| `depth_of_discharge_ratio` | legacy | ratio | Allowed depth of discharge. |
+| `soc_ratio`, `soc_min_ratio`, `soc_max_ratio` | `entity_core_electrical` | ratio | Canonical SOC bounds. |
+| `energy_available_kwh`, `energy_to_full_kwh` | `entity_core_electrical` | kWh | Usable energy and energy to full. |
+
+### `storage`
+
+| Feature | Bundle | Unit | Meaning |
+|---|---|---:|---|
+| `soc`, `capacity_kwh`, `nominal_power_kw`, `electricity_consumption_kwh` | legacy | mixed | BESS state and settled consumption. |
+| `min_charge_power_kw`, `min_discharge_power_kw` | `entity_base` | kW | Technical minimum powers. |
+| `efficiency_ratio`, `round_trip_efficiency_ratio` | `entity_base` | ratio | Base and round-trip efficiency. |
+| `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Storage phase connection. |
+| `electrical_storage_soc_ratio` | `entity_core_electrical` | ratio | Canonical BESS SOC. |
+| `max_charge_power_kw`, `max_discharge_power_kw` | `entity_core_electrical` | kW | Current max powers. |
+| `energy_to_full_kwh`, `energy_available_kwh` | `entity_core_electrical` | kWh | Energy headroom and available energy. |
+| `can_charge`, `can_discharge`, `available_charge/discharge_power_kw`, `available_charge/discharge_action_normalized` | `entity_core_electrical` | mixed | Current feasible BESS action capacity after SOC, outage and headroom limits. |
+| `available_charge_energy_kwh_step`, `available_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Feasible BESS energy this step after SOC/headroom/outage limits. |
+| `max_charge_energy_kwh_step`, `max_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Nominal BESS power limit converted to this step duration. |
+| `charge_headroom_ratio`, `discharge_available_ratio`, `usable_soc_ratio` | `entity_core_electrical` | ratio | Normalized BESS charge room, discharge energy and SOC within usable range. |
+| `current_efficiency_ratio`, `degraded_capacity_kwh`, `soc_min_ratio` | `entity_core_electrical` | mixed | Current efficiency, degraded capacity and minimum SOC. |
+| `last_requested_*`, `last_limited_*`, `last_applied_power_kw`, `last_projection_error_kw`, `clip_reason_*` | `entity_action_feedback` | mixed | Previous BESS action request, limited command, applied power and clipping causes. |
+
+### `pv`
+
+Only present when `entity_core_electrical` is enabled.
+
+| Feature | Unit | Meaning |
+|---|---:|---|
+| `generation_power_kw` | kW | PV generation as power. |
+| `generation_energy_kwh_step` | kWh/step | PV generation in current step. |
+| `installed_power_kw` | kW | Installed PV power. |
+| `generation_capacity_factor_ratio` | ratio | `generation_power_kw / installed_power_kw`. |
+
+### `deferrable_appliance`
+
+Base deferrable features are in `entity_base`; see the flat deferrable table above for definitions. Entity deferrables also include `remaining_duration_hours`, `cycle_remaining_fraction_ratio`, `hours_until_earliest_start`, `start_window_width_hours`, `start_energy_kwh_step`, `start_power_kw` and `must_start_now` for RL deadline pressure. With `entity_action_feedback`, deferrables also expose `last_start_requested`, `last_start_applied`, `start_blocked` and `clip_reason_*`.
+
+Derived forecasts default to future dataset values for backward compatibility
+(`load_pv_method = "actual_future"`). A schema can instead set
+`derived_forecasts.load_pv_method = "daily_persistence"`; load and PV then use
+only the corresponding previous-day observation, with a current-step cold
+start. Price respects the declared day-ahead publication boundary: realised
+OMIE values are exposed only after publication and otherwise use the schema's
+causal fallback (daily persistence in the annual REC suite). The exact sources
+are exposed in `meta.forecast_config`; real-world adapters should populate
+equivalent fields from operational forecasts.
+
+## Entity Edges
+
+| Edge | Shape | Links |
+|---|---:|---|
+| `district_to_building` | `(n_buildings, 2)` | District row 0 to each building. |
+| `building_to_charger` | `(n_chargers, 2)` | Building to charger. |
+| `building_to_storage` | `(n_storage, 2)` | Building to BESS. |
+| `building_to_pv` | `(n_pv, 2)` | Building to PV. |
+| `building_to_deferrable_appliance` | `(n_appliances, 2)` | Building to deferrable appliance. |
+| `charger_to_ev_connected` | `(n_chargers, 2)` | Charger to connected EV; `-1` row when absent. |
+| `charger_to_ev_connected_mask` | `(n_chargers,)` | Valid connected-edge mask. |
+| `charger_to_ev_incoming` | `(n_chargers, 2)` | Charger to incoming EV. |
+| `charger_to_ev_incoming_mask` | `(n_chargers,)` | Valid incoming-edge mask. |

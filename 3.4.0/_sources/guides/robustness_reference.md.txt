@@ -1,0 +1,67 @@
+# Robustness Reference
+
+Robustness is optional and dataset-driven. If `schema["robustness"]["enabled"]` is missing or `false`, `CityLearnEnv` behaves as before.
+
+## Schema
+
+```json
+"robustness": {
+  "enabled": true,
+  "events_file": "robustness_events.csv",
+  "random_seed": 0,
+  "missing_replacement_value": -9999.0,
+  "modules": {
+    "observations": {"enabled": true},
+    "forecasts": {"enabled": true},
+    "actions": {"enabled": true},
+    "assets": {"enabled": true}
+  }
+}
+```
+
+`events_file` may be CSV or Parquet and is resolved relative to the dataset root.
+
+## Events File
+
+| Column | Meaning |
+|---|---|
+| `event_id` | Stable event identifier used in metadata and audits. |
+| `module` | `observation`, `forecast`, `action` or `asset`. |
+| `target_type` | `district`, `building`, `storage`, `charger`, `ev`, `pv` or `deferrable_appliance`. |
+| `target_id` | Entity id/name, or `*` for compatible targets. |
+| `target_feature` | Feature/action name. For assets use `telemetry`, `control` or `both`. |
+| `start_time_step`, `end_time_step` | Inclusive global timestep window. |
+| `mode` | Module-specific perturbation mode. |
+| `value`, `std`, `min_value`, `max_value` | Optional mode parameters. |
+| `replacement_value` | Missing/telemetry sentinel; defaults to `missing_replacement_value`. |
+| `delay_steps` | Action delay horizon; defaults to `1`. |
+
+## Modes
+
+| Module | Modes |
+|---|---|
+| observation/forecast | `missing`, `noise`, `bias`, `stuck`, `clip` |
+| action | `dropout`, `noise`, `bias`, `stuck`, `delay`, `clip` |
+| asset | `unavailable` |
+
+Observation and forecast corruption is agent-facing only. Rewards, physical KPIs and demand-response settlement still use the real simulator state. Action and asset-control events change the action effectively applied, so they can change physics and normal KPIs.
+
+A PV array has no action. An `asset` event on a `pv` target with `target_feature` `control` or `both` takes the array out of service: it generates nothing during the event, so net consumption, cost, emissions, energy provenance and PV KPIs all use zero generation for those steps. The business-as-usual reference sees the same outage. With `telemetry` only the PV keeps generating and only its observations are hidden.
+
+## Entity Diagnostics
+
+Enable the diagnostic bundle when using entity observations:
+
+```json
+"observation_bundles": {
+  "entity_robustness": {"active": true}
+}
+```
+
+This adds district features for active state, previous-step corruption counts and active asset outages. Lightweight metadata is also exposed in `observations["meta"]["robustness"]`.
+
+## KPIs
+
+When robustness is enabled, `evaluate_v2()` adds district/building counters for event count, active timesteps, observation/forecast/action corruptions, asset unavailable applications, missing observations and action dropouts.
+
+In `MultiCommunityEnv`, robustness stays independent per child community. Portfolio rows aggregate robustness `_count` KPIs in the same way as other count KPIs.

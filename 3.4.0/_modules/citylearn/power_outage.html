@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.power_outage &mdash; CityLearn 3.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=b0e360d0"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+ 
+<script src="../../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.power_outage</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.4.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.power_outage</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span>
+
+<div class="viewcode-block" id="PowerOutage">
+<a class="viewcode-back" href="../../api/citylearn.power_outage.html#citylearn.power_outage.PowerOutage">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PowerOutage</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Base stochastic power outage model class.</span>
+<span class="sd">    </span>
+<span class="sd">    Randomly assigns power outage signal to time steps.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    random_seed: int, optional</span>
+<span class="sd">        Pseudorandom number generator seed for repeatable results.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="n">random_seed</span> 
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__random_seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__random_seed</span>
+
+        <span class="n">episode_seed</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_episode_seed'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">*</span><span class="n">Environment</span><span class="o">.</span><span class="n">DEFAULT_RANDOM_SEED_RANGE</span><span class="p">)</span> <span class="k">if</span> <span class="n">episode_seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">episode_seed</span>
+
+    <span class="nd">@random_seed</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__random_seed</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_episode_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">building_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Give an unseeded model a stable stream shared by the controller and BAU."""</span>
+
+        <span class="n">payload</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'power-outage:</span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s1">:</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s1">:</span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s1">:</span><span class="si">{</span><span class="n">building_name</span><span class="si">}</span><span class="s1">'</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf-8'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_episode_seed</span> <span class="o">=</span> <span class="nb">int</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">.</span><span class="n">digest</span><span class="p">()[:</span><span class="mi">4</span><span class="p">],</span> <span class="s1">'big'</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PowerOutage.get_signals">
+<a class="viewcode-back" href="../../api/citylearn.power_outage.html#citylearn.power_outage.PowerOutage.get_signals">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Returns power outage signal time series.</span>
+
+<span class="sd">        Returns time series with randomly selected time steps set as candidates for power outage.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time_steps: int</span>
+<span class="sd">            Number of time steps in returned signal time series.</span>
+<span class="sd">        </span>
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        kwargs: Any</span>
+<span class="sd">            Any other parameters specific to :py:meth:`get_signals` method for other subclasses of </span>
+<span class="sd">            :py:class:`citylearn.grid_resilience.PowerOutage`.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        signals: np.ndarray</span>
+<span class="sd">            Power outage time series signal where value of 0 indicates no power outage at time step index </span>
+<span class="sd">            whereas value of 1 indicates a power outage at said time step.</span>
+<span class="sd">        """</span>
+
+        <span class="n">nprs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="n">nprs</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="n">time_steps</span><span class="p">)</span> 
+
+        <span class="k">return</span> <span class="n">signals</span>  </div>
+</div>
+
+
+<div class="viewcode-block" id="ReliabilityMetricsPowerOutage">
+<a class="viewcode-back" href="../../api/citylearn.power_outage.html#citylearn.power_outage.ReliabilityMetricsPowerOutage">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ReliabilityMetricsPowerOutage</span><span class="p">(</span><span class="n">PowerOutage</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Power outage signal stochastic model based on Distribution System Reliability Metrics.</span>
+
+<span class="sd">    Generates time series of power outage signals based on System Average Interruption Frequency Index (SAIFI)</span>
+<span class="sd">    and Customer Average Interruption Duration Index (CAIDI). The signal is generated by sampling `n` instances </span>
+<span class="sd">    from a binomial distribution to select days that experience power outage where the probability, `p`, is the </span>
+<span class="sd">    ratio of `saifi` to number of days in a year (365). The start time step index for the outage on each day is </span>
+<span class="sd">    then randomly selected from a uniform distribution of `start_time_steps` or all valid daily time step indexes. </span>
+<span class="sd">    Finally the duration of each power outage event is set by sampling from an exponential distribution with a </span>
+<span class="sd">    scale set to `caidi`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    saifi: float, default: 1.436</span>
+<span class="sd">        Number of non-momentary electric interruptions, per year, the average customer experienced </span>
+<span class="sd">        and is used as the average number of days per year that experience power outage.</span>
+<span class="sd">    caidi: float, default: 331.2</span>
+<span class="sd">        Average number of minutes it takes to restore non-momentary electric interruptions </span>
+<span class="sd">        and is used as the average length of a power outage.</span>
+<span class="sd">    start_time_steps: List[int], optional</span>
+<span class="sd">        List of candidate daily time step indexes to randomly select from when deciding start time step of an outage.</span>
+<span class="sd">        For example, for an hourly simulation that wants to consider power outages that start during the evening peak </span>
+<span class="sd">        between 4 PM to 7 PM will set `start_time_steps` as [15, 16, 17, 18]. By default all daily time step indexes </span>
+<span class="sd">        are considered.</span>
+
+<span class="sd">    Other Parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    **kwargs : dict</span>
+<span class="sd">        Other keyword arguments used to initialize :py:class:`citylearn.grid_resilience.PowerOutage` super class.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The reliability metrics are sourced from https://www.eia.gov/electricity/annual/html/epa_11_01.html.</span>
+<span class="sd">    """</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">saifi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">caidi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">start_time_steps</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saifi</span> <span class="o">=</span> <span class="n">saifi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">caidi</span> <span class="o">=</span> <span class="n">caidi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time_steps</span> <span class="o">=</span> <span class="n">start_time_steps</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">saifi</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__saifi</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">caidi</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__caidi</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__start_time_steps</span>
+    
+    <span class="nd">@saifi</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">saifi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__saifi</span> <span class="o">=</span> <span class="mf">1.436</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+
+    <span class="nd">@caidi</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">caidi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__caidi</span> <span class="o">=</span> <span class="mf">331.2</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+
+    <span class="nd">@start_time_steps</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__start_time_steps</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="ReliabilityMetricsPowerOutage.get_signals">
+<a class="viewcode-back" href="../../api/citylearn.power_outage.html#citylearn.power_outage.ReliabilityMetricsPowerOutage.get_signals">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_signals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_steps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seconds_per_time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Returns power outage signal time series.</span>
+
+<span class="sd">        Returns time series with randomly selected time steps set as candidates for power outage.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time_steps: int</span>
+<span class="sd">            Number of time steps in returned signal time series.</span>
+<span class="sd">        seconds_per_time_step: float</span>
+<span class="sd">            Number of seconds in one `time_step`.</span>
+<span class="sd">        </span>
+<span class="sd">        Other Parameters</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        kwargs: Any</span>
+<span class="sd">            Any other parameters specific to :py:meth:`get_signals` method for other subclasses of </span>
+<span class="sd">            :py:class:`citylearn.grid_resilience.PowerOutage`.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        signals: np.ndarray</span>
+<span class="sd">            Power outage time series signal where value of 0 indicates no power outage at time step index </span>
+<span class="sd">            whereas value of 1 indicates a power outage at said time step.</span>
+<span class="sd">        """</span>
+
+        <span class="n">nprs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
+        <span class="n">days_per_year</span> <span class="o">=</span> <span class="mf">365.0</span>
+        <span class="n">seconds_per_day</span> <span class="o">=</span> <span class="mf">86400.0</span>
+        <span class="n">seconds_per_minute</span> <span class="o">=</span> <span class="mf">60.0</span>
+        <span class="n">time_steps_per_day</span> <span class="o">=</span> <span class="n">seconds_per_day</span><span class="o">/</span><span class="n">seconds_per_time_step</span>
+        <span class="n">time_steps_per_minute</span> <span class="o">=</span> <span class="n">seconds_per_minute</span><span class="o">/</span><span class="n">seconds_per_time_step</span>
+        <span class="n">day_count</span> <span class="o">=</span> <span class="n">time_steps</span><span class="o">/</span><span class="n">time_steps_per_day</span>
+        <span class="n">daily_outage_probability</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saifi</span><span class="o">/</span><span class="n">days_per_year</span>
+        <span class="n">outage_days</span> <span class="o">=</span> <span class="n">nprs</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">daily_outage_probability</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">day_count</span><span class="p">))</span>
+        <span class="c1"># One index per drawn day; a float `day_count` (partial last day) would add an extra index.</span>
+        <span class="n">outage_day_ixs</span> <span class="o">=</span> <span class="n">outage_days</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">outage_days</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">outage_day_ixs</span> <span class="o">=</span> <span class="n">outage_day_ixs</span><span class="p">[</span><span class="n">outage_day_ixs</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">outage_day_count</span> <span class="o">=</span> <span class="n">outage_days</span><span class="p">[</span><span class="n">outage_days</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">start_time_steps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">time_steps_per_day</span><span class="p">)))</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time_steps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time_steps</span>
+        <span class="n">outage_start_time_steps</span> <span class="o">=</span> <span class="n">nprs</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">start_time_steps</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">outage_day_count</span><span class="p">)</span>
+        <span class="n">outage_durations</span> <span class="o">=</span> <span class="n">nprs</span><span class="o">.</span><span class="n">exponential</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">caidi</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">outage_day_count</span><span class="p">)</span> <span class="c1"># [mins]</span>
+        <span class="n">outage_duration_time_steps</span> <span class="o">=</span> <span class="n">outage_durations</span><span class="o">*</span><span class="n">time_steps_per_minute</span>
+        <span class="n">signals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">time_steps</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">outage_day_ixs</span><span class="p">,</span> <span class="n">outage_start_time_steps</span><span class="p">,</span> <span class="n">outage_duration_time_steps</span><span class="p">):</span>
+            <span class="n">start_ix</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="n">time_steps_per_day</span> <span class="o">+</span> <span class="n">j</span>
+            <span class="n">end_ix</span> <span class="o">=</span> <span class="n">start_ix</span> <span class="o">+</span> <span class="n">k</span>
+            <span class="n">start_ix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">start_ix</span><span class="p">)</span>
+            <span class="n">end_ix</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">end_ix</span><span class="p">)</span>
+            <span class="n">signals</span><span class="p">[</span><span class="n">start_ix</span><span class="p">:</span><span class="n">end_ix</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        <span class="k">return</span> <span class="n">signals</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

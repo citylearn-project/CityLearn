@@ -1,0 +1,7 @@
+citylearn.reward\_function module
+=================================
+
+.. automodule:: citylearn.reward_function
+   :members:
+   :show-inheritance:
+   :undoc-members:

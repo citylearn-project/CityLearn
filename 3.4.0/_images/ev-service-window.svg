@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="230" viewBox="0 0 500 230" role="img" aria-labelledby="title desc">
+  <title id="title">EV connection window and departure service</title>
+  <desc id="desc">An EV arrives with an initial state of charge. It can charge or, when enabled, discharge while connected. Departure service is evaluated against its required state of charge.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#19746e"/></marker></defs>
+  <rect width="500" height="230" fill="#fff"/>
+  <g font-family="Arial, sans-serif" fill="#253641">
+    <text x="80" y="38" text-anchor="middle" font-size="20" font-weight="700">Arrival</text>
+    <text x="415" y="38" text-anchor="middle" font-size="20" font-weight="700">Departure</text>
+    <text x="250" y="68" text-anchor="middle" font-size="17" fill="#19746e">Connected</text>
+    <path d="M28 92H472" stroke="#d9e2e4" stroke-width="3"/>
+    <path d="M80 92H415" stroke="#19746e" stroke-width="4" marker-end="url(#arrow)"/>
+    <circle cx="80" cy="92" r="6" fill="#19746e"/>
+    <path d="M415 78V106" stroke="#19746e" stroke-width="3"/>
+    <text x="80" y="130" text-anchor="middle" font-size="17">Initial SOC</text>
+    <text x="415" y="130" text-anchor="middle" font-size="17">Required SOC</text>
+    <text x="250" y="165" text-anchor="middle" font-size="17">Charge · idle · V2G when enabled</text>
+    <path d="M24 188H476" stroke="#d9e2e4"/>
+    <text x="24" y="216" font-size="16" fill="#586872">Evaluate minimum service and target accuracy.</text>
+  </g>
+</svg>

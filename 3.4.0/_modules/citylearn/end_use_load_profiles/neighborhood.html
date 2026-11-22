@@ -1,0 +1,1047 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.end_use_load_profiles.neighborhood &mdash; CityLearn 3.4.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=b0e360d0"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+ 
+<script src="../../../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.end_use_load_profiles.neighborhood</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.4.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.end_use_load_profiles.neighborhood</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">concurrent.futures</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">unique</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">doe_xstock.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">VersionDatasetType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">doe_xstock.end_use_load_profiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">EndUseLoadProfiles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">doe_xstock.simulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">EndUseLoadProfilesEnergyPlusSimulator</span><span class="p">,</span> <span class="n">OpenStudioModelEditor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">mean_squared_error</span><span class="p">,</span> <span class="n">mean_absolute_percentage_error</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">BaselineAgent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_settings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.dynamics</span><span class="w"> </span><span class="kn">import</span> <span class="n">LSTMDynamics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.end_use_load_profiles.clustering</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetadataClustering</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.end_use_load_profiles.lstm_model.model_generation_wrapper</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_one_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.end_use_load_profiles.simulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">EndUseLoadProfilesEnergyPlusPartialLoadSimulator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">PeriodicNormalization</span><span class="p">,</span> <span class="n">Normalize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileHandler</span>
+
+<span class="n">BuildingSimulators</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">[</span>
+    <span class="nb">str</span><span class="p">,</span> 
+    <span class="n">Union</span><span class="p">[</span><span class="n">EndUseLoadProfilesEnergyPlusSimulator</span><span class="p">,</span> <span class="n">EndUseLoadProfilesEnergyPlusSimulator</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">EndUseLoadProfilesEnergyPlusPartialLoadSimulator</span><span class="p">]]</span>
+<span class="p">]</span>
+<span class="n">BuildingsSimulators</span> <span class="o">=</span> <span class="n">List</span><span class="p">[</span><span class="n">BuildingSimulators</span><span class="p">]</span>
+
+<div class="viewcode-block" id="SampleMethod">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.SampleMethod">[docs]</a>
+<span class="nd">@unique</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SampleMethod</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">RANDOM</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">METADATA_CLUSTER_FREQUENCY</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="NeighborhoodBuild">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.NeighborhoodBuild">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NeighborhoodBuild</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">schema_filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">citylearn_simulation_test_evaluation</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">citylearn_simulation_lstm_prediction_data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span> 
+        <span class="n">citylearn_simulation_lstm_error_data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span> <span class="n">lstm_test_data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span> <span class="n">bldg_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">sample_cluster_labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> 
+        <span class="n">sample_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">simulators</span><span class="p">:</span> <span class="n">BuildingsSimulators</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__schema_filepath</span> <span class="o">=</span> <span class="n">schema_filepath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__citylearn_simulation_test_evaluation</span> <span class="o">=</span> <span class="n">citylearn_simulation_test_evaluation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__citylearn_simulation_lstm_prediction_data</span> <span class="o">=</span> <span class="n">citylearn_simulation_lstm_prediction_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__citylearn_simulation_lstm_error_data</span> <span class="o">=</span> <span class="n">citylearn_simulation_lstm_error_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__lstm_test_data</span> <span class="o">=</span> <span class="n">lstm_test_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__bldg_ids</span> <span class="o">=</span> <span class="n">bldg_ids</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__sample_cluster_labels</span> <span class="o">=</span> <span class="n">sample_cluster_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__sample_metadata</span> <span class="o">=</span> <span class="n">sample_metadata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__simulators</span> <span class="o">=</span> <span class="n">simulators</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">schema_filepath</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__schema_filepath</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">citylearn_simulation_test_evaluation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__citylearn_simulation_test_evaluation</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">citylearn_simulation_lstm_prediction_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__citylearn_simulation_lstm_prediction_data</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">citylearn_simulation_lstm_error_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__citylearn_simulation_lstm_error_data</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lstm_test_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__lstm_test_data</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bldg_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__bldg_ids</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_cluster_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sample_cluster_labels</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__sample_metadata</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulators</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BuildingsSimulators</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__simulators</span></div>
+
+
+<div class="viewcode-block" id="Neighborhood">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Neighborhood</span><span class="p">:</span>
+    <span class="n">__BUILDING_TYPE_COLUMN</span> <span class="o">=</span> <span class="s1">'in.geometry_building_type_recs'</span>
+    <span class="n">__SINGLE_FAMILY_BUILDING_TYPE_NAME</span> <span class="o">=</span> <span class="s1">'Single-Family Detached'</span>
+    <span class="n">__COUNTY_COLUMN</span> <span class="o">=</span> <span class="s1">'in.resstock_county_id'</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">weather_data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">year_of_publication</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">release</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">energyplus_output_directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dataset_directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__end_use_load_profiles</span> <span class="o">=</span> <span class="n">EndUseLoadProfiles</span><span class="p">(</span>
+            <span class="n">dataset_type</span><span class="o">=</span><span class="n">VersionDatasetType</span><span class="o">.</span><span class="n">RESSTOCK</span><span class="p">,</span>
+            <span class="n">weather_data</span><span class="o">=</span><span class="n">weather_data</span><span class="p">,</span>
+            <span class="n">year_of_publication</span><span class="o">=</span><span class="n">year_of_publication</span><span class="p">,</span>
+            <span class="n">release</span><span class="o">=</span><span class="n">release</span><span class="p">,</span>
+            <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">energyplus_output_directory</span> <span class="o">=</span> <span class="n">energyplus_output_directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_directory</span> <span class="o">=</span> <span class="n">dataset_directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_workers</span> <span class="o">=</span> <span class="n">max_workers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="o">=</span> <span class="n">random_seed</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">end_use_load_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EndUseLoadProfiles</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__end_use_load_profiles</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">energyplus_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__energyplus_output_directory</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataset_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dataset_directory</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max_workers</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__random_seed</span>
+
+    <span class="nd">@energyplus_output_directory</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">energyplus_output_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__energyplus_output_directory</span> <span class="o">=</span> <span class="s1">'neighborhood_energyplus_output'</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+
+    <span class="nd">@dataset_directory</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dataset_directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dataset_directory</span> <span class="o">=</span> <span class="s1">'neighborhood_datasets'</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+
+    <span class="nd">@max_workers</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__max_workers</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@random_seed</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__random_seed</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="o">*</span><span class="n">Environment</span><span class="o">.</span><span class="n">DEFAULT_RANDOM_SEED_RANGE</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="Neighborhood.build">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.build">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">idd_filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">bldg_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include_lstm_models</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">test_lstm_models</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">test_citylearn_simulation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">delete_energyplus_simulation_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sample_buildings_kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">energyplus_simulation_kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">train_lstm_kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">schema_kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">test_citylearn_simulation_kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NeighborhoodBuild</span><span class="p">:</span>
+        <span class="n">sample_buildings_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">sample_buildings_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sample_buildings_kwargs</span>
+        <span class="n">energyplus_simulation_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">energyplus_simulation_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">energyplus_simulation_kwargs</span>
+        <span class="n">train_lstm_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">train_lstm_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">train_lstm_kwargs</span>
+        <span class="n">schema_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">schema_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">schema_kwargs</span>
+        <span class="n">test_citylearn_simulation_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">test_citylearn_simulation_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">test_citylearn_simulation_kwargs</span>
+        <span class="n">include_lstm_models</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">include_lstm_models</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">include_lstm_models</span>
+        <span class="n">test_citylearn_simulation</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">test_citylearn_simulation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">test_citylearn_simulation</span>
+        <span class="n">test_lstm_models</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">test_lstm_models</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">test_lstm_models</span>
+        <span class="n">delete_energyplus_simulation_output</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">delete_energyplus_simulation_output</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">delete_energyplus_simulation_output</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">sample_metadata</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">simulators</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">lstm_training_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">lstm_models</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">schema_filepath</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">citylearn_simulation_evaluation</span> <span class="o">=</span> <span class="kc">None</span> 
+        <span class="n">citylearn_simulation_lstm_prediction_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">citylearn_simulation_lstm_error_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">lstm_test_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># sample buildings</span>
+        <span class="k">if</span> <span class="n">bldg_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">bldg_ids</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">sample_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_buildings</span><span class="p">(</span><span class="o">**</span><span class="n">sample_buildings_kwargs</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+        
+        <span class="c1"># run energyplus simulations</span>
+        <span class="n">simulators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulate_energy_plus</span><span class="p">(</span><span class="n">bldg_ids</span><span class="p">,</span> <span class="n">idd_filepath</span><span class="p">,</span> <span class="o">**</span><span class="n">energyplus_simulation_kwargs</span><span class="p">)</span>
+
+        <span class="c1"># train LSTM models</span>
+        <span class="k">if</span> <span class="n">include_lstm_models</span><span class="p">:</span>
+            <span class="n">lstm_training_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_lstm_training_data</span><span class="p">(</span><span class="n">simulators</span><span class="p">)</span>
+            <span class="n">lstm_models</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_lstm</span><span class="p">(</span><span class="n">lstm_training_data</span><span class="p">,</span> <span class="o">**</span><span class="n">train_lstm_kwargs</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+        
+        <span class="c1"># generate schema</span>
+        <span class="n">schema_filepath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_schema</span><span class="p">(</span><span class="n">simulators</span><span class="p">,</span> <span class="n">bldg_ids</span><span class="p">,</span> <span class="n">lstm_models</span><span class="o">=</span><span class="n">lstm_models</span><span class="p">,</span> <span class="o">**</span><span class="n">schema_kwargs</span><span class="p">)</span>
+
+        <span class="c1"># confirm schema initializes correctly in CityLearn and simulation completes without errors</span>
+        <span class="k">if</span> <span class="n">test_citylearn_simulation</span><span class="p">:</span>
+            <span class="n">citylearn_simulation_evaluation</span><span class="p">,</span> <span class="n">citylearn_simulation_lstm_prediction_data</span><span class="p">,</span> <span class="n">citylearn_simulation_lstm_error_data</span> \
+            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_citylearn_simulation</span><span class="p">(</span><span class="n">schema_filepath</span><span class="p">,</span> <span class="o">**</span><span class="n">test_citylearn_simulation_kwargs</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+        
+        <span class="c1"># run test on generated LSTM training data for all partial load simulation references</span>
+        <span class="k">if</span> <span class="n">include_lstm_models</span> <span class="ow">and</span> <span class="n">test_lstm_models</span><span class="p">:</span>
+            <span class="n">lstm_test_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiprocess_test_lstm</span><span class="p">(</span><span class="n">lstm_training_data</span><span class="p">,</span> <span class="n">schema_filepath</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+        
+        <span class="c1"># delete energyplus output files to save space</span>
+        <span class="k">if</span> <span class="n">delete_energyplus_simulation_output</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_energyplus_simulation_output</span><span class="p">(</span><span class="n">simulators</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">NeighborhoodBuild</span><span class="p">(</span>
+            <span class="n">schema_filepath</span><span class="o">=</span><span class="n">schema_filepath</span><span class="p">,</span>
+            <span class="n">citylearn_simulation_test_evaluation</span><span class="o">=</span><span class="n">citylearn_simulation_evaluation</span><span class="p">,</span>
+            <span class="n">citylearn_simulation_lstm_prediction_data</span><span class="o">=</span><span class="n">citylearn_simulation_lstm_prediction_data</span><span class="p">,</span>
+            <span class="n">citylearn_simulation_lstm_error_data</span><span class="o">=</span><span class="n">citylearn_simulation_lstm_error_data</span><span class="p">,</span>
+            <span class="n">lstm_test_data</span><span class="o">=</span><span class="n">lstm_test_data</span><span class="p">,</span>
+            <span class="n">bldg_ids</span><span class="o">=</span><span class="n">bldg_ids</span><span class="p">,</span>
+            <span class="n">sample_cluster_labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">sample_metadata</span><span class="o">=</span><span class="n">sample_metadata</span><span class="p">,</span>
+            <span class="n">simulators</span><span class="o">=</span><span class="n">simulators</span>
+        <span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="Neighborhood.delete_energyplus_simulation_output">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.delete_energyplus_simulation_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_energyplus_simulation_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulators</span><span class="p">:</span> <span class="n">BuildingsSimulators</span><span class="p">):</span>
+        <span class="n">directories</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">'ideal'</span><span class="p">]</span><span class="o">.</span><span class="n">output_directory</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">simulators</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">directories</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Neighborhood.multiprocess_test_lstm">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.multiprocess_test_lstm">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">multiprocess_test_lstm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span> <span class="n">schema_filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="n">test_data</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">training_data</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ProcessPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">test_lstm</span><span class="p">,</span> 
+                <span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">td</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">schema_filepath</span><span class="p">)</span>
+            <span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">td</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">training_data</span><span class="p">)]</span>
+            
+            <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="n">test_data</span><span class="p">[</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">test_data</span></div>
+
+    
+<div class="viewcode-block" id="Neighborhood.test_lstm">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.test_lstm">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_lstm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bldg_ix</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">training_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">schema_filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="c1"># set data</span>
+        <span class="n">schema</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">schema_filepath</span><span class="p">)</span>
+        <span class="n">schema_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">schema_filepath</span><span class="p">)</span><span class="o">.</span><span class="n">parents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">bldg_key</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">schema</span><span class="p">[</span><span class="s1">'buildings'</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="n">bldg_ix</span><span class="p">]</span>
+        <span class="n">dynamics_model</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="s1">'buildings'</span><span class="p">][</span><span class="n">bldg_key</span><span class="p">][</span><span class="s1">'dynamics'</span><span class="p">]</span>
+        <span class="n">normalization_minimum</span> <span class="o">=</span> <span class="n">dynamics_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'input_normalization_minimum'</span><span class="p">]</span>
+        <span class="n">normalization_maximum</span> <span class="o">=</span> <span class="n">dynamics_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'input_normalization_maximum'</span><span class="p">]</span>
+        <span class="n">observation_names</span> <span class="o">=</span> <span class="n">dynamics_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'input_observation_names'</span><span class="p">]</span>
+        <span class="n">periodic_observations</span> <span class="o">=</span> <span class="n">Building</span><span class="o">.</span><span class="n">get_periodic_observation_metadata</span><span class="p">()</span>
+        <span class="n">training_data</span> <span class="o">=</span> <span class="n">training_data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s1">'reference'</span><span class="p">,</span> <span class="s1">'timestep'</span><span class="p">])</span>
+
+        <span class="c1"># type cast</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">observation_names</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">periodic_observations</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_sin'</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">c</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">'_cos'</span><span class="p">)]</span>
+        <span class="n">training_data</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span>
+
+        <span class="c1">## cyclic normalization</span>
+        <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">periodic_observations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">*</span><span class="n">PeriodicNormalization</span><span class="p">(</span><span class="n">x_max</span><span class="o">=</span><span class="n">m</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">index</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">training_data</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s1">_sin'</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">training_data</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s1">_cos'</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="n">input_columns</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># then normalize all columns between 0 and 1 including the cyclic columns</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">observation_names</span><span class="p">):</span>
+            <span class="n">input_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s1">_norm'</span><span class="p">)</span>
+            <span class="n">training_data</span><span class="p">[</span><span class="n">input_columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">*</span><span class="n">Normalize</span><span class="p">(</span><span class="n">normalization_minimum</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">normalization_maximum</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="n">training_data</span><span class="p">[</span><span class="n">input_columns</span><span class="p">]</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="n">input_columns</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span>
+        <span class="n">independent_columns</span> <span class="o">=</span> <span class="n">input_columns</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">dependent_column</span> <span class="o">=</span> <span class="n">input_columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># initialize trained model</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">LSTMDynamics</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">dynamics_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'filename'</span><span class="p">]),</span>
+            <span class="n">observation_names</span><span class="p">,</span>
+            <span class="n">normalization_minimum</span><span class="p">,</span>
+            <span class="n">normalization_maximum</span><span class="p">,</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">dynamics_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'hidden_size'</span><span class="p">],</span>
+            <span class="n">num_layers</span><span class="o">=</span><span class="n">dynamics_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'num_layers'</span><span class="p">],</span>
+            <span class="n">lookback</span><span class="o">=</span><span class="n">dynamics_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'lookback'</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># make predictions</span>
+        <span class="n">data_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">reference_data</span> <span class="ow">in</span> <span class="n">training_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'reference'</span><span class="p">):</span>
+            <span class="n">reference_data</span> <span class="o">=</span> <span class="n">reference_data</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">lookback</span><span class="p">,</span> <span class="n">reference_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">x_independent</span> <span class="o">=</span> <span class="n">reference_data</span><span class="p">[</span><span class="n">independent_columns</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">lookback</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+                <span class="n">x_dependent</span> <span class="o">=</span> <span class="n">reference_data</span><span class="p">[[</span><span class="n">dependent_column</span><span class="p">]]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">lookback</span><span class="p">:</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_independent</span><span class="p">,</span> <span class="n">x_dependent</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+                <span class="n">hidden_state</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">h</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">_hidden_state</span><span class="p">])</span>
+                <span class="n">y</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">_hidden_state</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">hidden_state</span><span class="p">)</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                <span class="n">reference_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">dependent_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span>
+
+            <span class="n">predicted_column</span> <span class="o">=</span> <span class="n">dependent_column</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'norm'</span><span class="p">,</span> <span class="s1">'predicted'</span><span class="p">)</span>
+            <span class="n">actual_column</span> <span class="o">=</span> <span class="n">dependent_column</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'_norm'</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span>
+            <span class="n">norm_min</span> <span class="o">=</span> <span class="n">normalization_minimum</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">norm_max</span> <span class="o">=</span> <span class="n">normalization_maximum</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">reference_data</span><span class="p">[</span><span class="n">predicted_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">reference_data</span><span class="p">[</span><span class="n">dependent_column</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">norm_max</span> <span class="o">-</span> <span class="n">norm_min</span><span class="p">)</span> <span class="o">+</span> <span class="n">norm_min</span>
+            <span class="n">reference_data</span> <span class="o">=</span> <span class="n">reference_data</span><span class="p">[[</span><span class="s1">'timestep'</span><span class="p">,</span> <span class="s1">'reference'</span><span class="p">,</span> <span class="s1">'reference_name'</span><span class="p">,</span> <span class="n">actual_column</span><span class="p">,</span> <span class="n">predicted_column</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">data_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reference_data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">bldg_ix</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">data_list</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Neighborhood.test_citylearn_simulation">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.test_citylearn_simulation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_citylearn_simulation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Agent</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">env_kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+          <span class="n">report_lstm_performance</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]:</span>
+        <span class="n">report_lstm_performance</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">report_lstm_performance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">report_lstm_performance</span>
+        <span class="n">env_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">env_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">env_kwargs</span>
+        <span class="n">model_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">model_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">model_kwargs</span>
+        
+        <span class="c1"># test initialization</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="o">**</span><span class="n">env_kwargs</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">BaselineAgent</span> <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">model</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span><span class="p">)</span>
+        <span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        
+        <span class="c1"># test stepping</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">terminated</span><span class="p">:</span>
+            <span class="n">actions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
+            <span class="n">observations</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+        <span class="n">evaluation</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">report_lstm_performance</span><span class="p">:</span>
+            <span class="n">lstm_prediction_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">lstm_error_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
+                <span class="n">lstm_prediction_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+                    <span class="s1">'hour'</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span>
+                    <span class="s1">'month'</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+                    <span class="s1">'indoor_dry_bulb_temperature'</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">indoor_dry_bulb_temperature_without_control</span><span class="p">,</span>
+                    <span class="s1">'indoor_dry_bulb_temperature_predicted'</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">indoor_dry_bulb_temperature</span><span class="p">,</span>
+                <span class="p">}))</span>
+                
+                <span class="n">rmse_data</span> <span class="o">=</span> <span class="n">lstm_prediction_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'month'</span><span class="p">])[[</span><span class="s1">'indoor_dry_bulb_temperature'</span><span class="p">,</span><span class="s1">'indoor_dry_bulb_temperature_predicted'</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature'</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_predicted'</span><span class="p">]</span>
+                <span class="p">))</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'rmse'</span><span class="p">)</span>
+                <span class="n">rmse_data</span><span class="p">[</span><span class="s1">'rmse'</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse_data</span><span class="p">[</span><span class="s1">'rmse'</span><span class="p">]</span><span class="o">**</span><span class="mf">0.5</span>
+                <span class="n">mape_data</span> <span class="o">=</span> <span class="n">lstm_prediction_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'month'</span><span class="p">])[[</span><span class="s1">'indoor_dry_bulb_temperature'</span><span class="p">,</span><span class="s1">'indoor_dry_bulb_temperature_predicted'</span><span class="p">]]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">mean_absolute_percentage_error</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature'</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_predicted'</span><span class="p">]</span>
+                <span class="p">))</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'mape'</span><span class="p">)</span>
+                <span class="n">mape_data</span><span class="p">[</span><span class="s1">'mape'</span><span class="p">]</span> <span class="o">=</span> <span class="n">mape_data</span><span class="p">[</span><span class="s1">'mape'</span><span class="p">]</span><span class="o">*</span><span class="mf">100.0</span>
+                <span class="n">error_data</span> <span class="o">=</span> <span class="n">rmse_data</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">mape_data</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s1">'month'</span><span class="p">])</span>
+                <span class="n">error_data</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">'bldg_name'</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">lstm_error_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error_data</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lstm_prediction_data</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">lstm_error_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+        <span class="k">return</span> <span class="n">evaluation</span><span class="p">,</span> <span class="n">lstm_prediction_data</span><span class="p">,</span> <span class="n">lstm_error_data</span></div>
+
+
+<div class="viewcode-block" id="Neighborhood.set_schema">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.set_schema">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_schema</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">simulators</span><span class="p">:</span> <span class="n">BuildingsSimulators</span><span class="p">,</span> <span class="n">bldg_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">lstm_models</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">pricing</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="n">Path</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">carbon_intensity</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">template</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">metadata</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">schema_directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">weather_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">user_customization_function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">pricing</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pricing</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">pricing</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bldg_ids</span><span class="p">),</span> \
+            <span class="s1">'There must be as many pricing as bldg_ids.'</span>
+        <span class="k">assert</span> <span class="n">carbon_intensity</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">carbon_intensity</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">carbon_intensity</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bldg_ids</span><span class="p">),</span> \
+            <span class="s1">'There must be as many carbon_intensity as bldg_ids.'</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">get_settings</span><span class="p">()[</span><span class="s1">'schema'</span><span class="p">][</span><span class="s1">'template'</span><span class="p">]</span> <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">template</span>
+        <span class="n">lstm_models</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">simulators</span><span class="p">)</span> <span class="k">if</span> <span class="n">lstm_models</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">lstm_models</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_use_load_profiles</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s1">'index'</span><span class="p">)</span> <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">metadata</span>
+        <span class="n">schema_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset_directory</span> <span class="k">if</span> <span class="n">schema_directory</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">schema_directory</span>
+        <span class="n">county</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]][</span><span class="bp">self</span><span class="o">.</span><span class="n">__COUNTY_COLUMN</span><span class="p">]</span>
+        <span class="n">county</span> <span class="o">=</span> <span class="n">county</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">','</span><span class="p">,</span> <span class="s1">''</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">' '</span><span class="p">,</span> <span class="s1">'_'</span><span class="p">)</span>
+        <span class="n">dataset_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">end_use_load_profiles</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">county</span><span class="si">}</span><span class="s1">'</span> <span class="k">if</span> <span class="n">dataset_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">dataset_name</span>
+        <span class="n">weather_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">weather_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">weather_kwargs</span>
+
+        <span class="n">building_template</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'buildings'</span><span class="p">)[</span><span class="s1">'Building_1'</span><span class="p">]</span>
+        <span class="n">template</span><span class="p">[</span><span class="s1">'buildings'</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">schema_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1"># write weather (csv and epw)</span>
+        <span class="n">reference_simulator</span> <span class="o">=</span> <span class="n">simulators</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">'partial'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">weather_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_weather_data</span><span class="p">(</span><span class="n">reference_simulator</span><span class="p">,</span> <span class="o">**</span><span class="n">weather_kwargs</span><span class="p">)</span>
+        <span class="n">weather_filename</span> <span class="o">=</span> <span class="n">building_template</span><span class="p">[</span><span class="s1">'weather'</span><span class="p">]</span> <span class="k">if</span> <span class="n">building_template</span><span class="p">[</span><span class="s1">'weather'</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">'weather.csv'</span>
+        <span class="n">weather_data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">weather_filename</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">reference_simulator</span><span class="o">.</span><span class="n">epw_filepath</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">weather_filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'.csv'</span><span class="p">,</span> <span class="s1">'.epw'</span><span class="p">)))</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">bldg_id</span><span class="p">,</span> <span class="n">building_simulators</span><span class="p">,</span> <span class="n">lstm_model</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">bldg_ids</span><span class="p">,</span> <span class="n">simulators</span><span class="p">,</span> <span class="n">lstm_models</span><span class="p">)):</span>
+            <span class="n">bldg_key</span> <span class="o">=</span> <span class="s1">'-'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">building_simulators</span><span class="p">[</span><span class="s1">'ideal'</span><span class="p">]</span><span class="o">.</span><span class="n">simulation_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'-'</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">simulator</span><span class="p">:</span> <span class="n">EndUseLoadProfilesEnergyPlusPartialLoadSimulator</span> <span class="o">=</span> <span class="n">building_simulators</span><span class="p">[</span><span class="s1">'partial'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ideal_simulator</span><span class="p">:</span> <span class="n">EndUseLoadProfilesEnergyPlusSimulator</span> <span class="o">=</span> <span class="n">building_simulators</span><span class="p">[</span><span class="s1">'ideal'</span><span class="p">]</span>
+            <span class="n">building</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">building_template</span><span class="p">)</span>
+            <span class="n">no_lstm_model</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">lstm_model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">False</span>
+
+            <span class="c1"># set building data</span>
+            <span class="n">building_data_query_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">simulator</span><span class="o">.</span><span class="n">QUERIES_DIRECTORY</span><span class="p">,</span> <span class="s1">'select_citylearn_energy_simulation.sql'</span><span class="p">)</span>
+            <span class="n">building_data</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">get_output_database</span><span class="p">()</span><span class="o">.</span><span class="n">query_table_from_file</span><span class="p">(</span><span class="n">building_data_query_filepath</span><span class="p">)</span>
+            <span class="n">building_data_ideal</span> <span class="o">=</span> <span class="n">ideal_simulator</span><span class="o">.</span><span class="n">get_output_database</span><span class="p">()</span><span class="o">.</span><span class="n">query_table_from_file</span><span class="p">(</span><span class="n">building_data_query_filepath</span><span class="p">)</span>
+            <span class="n">building_data</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_cooling_set_point'</span><span class="p">]</span> <span class="o">=</span> <span class="n">building_data_ideal</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_cooling_set_point'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">building_data</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_heating_set_point'</span><span class="p">]</span> <span class="o">=</span> <span class="n">building_data_ideal</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_heating_set_point'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+            <span class="c1"># set building-specific filepaths</span>
+            <span class="n">building</span><span class="p">[</span><span class="s1">'energy_simulation'</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">bldg_key</span><span class="si">}</span><span class="s1">.csv'</span>
+            <span class="n">building</span><span class="p">[</span><span class="s1">'pricing'</span><span class="p">],</span> <span class="n">building</span><span class="p">[</span><span class="s1">'carbon_intensity'</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_building_pricing_and_carbon_intensity</span><span class="p">(</span>
+                <span class="n">bldg_key</span><span class="p">,</span>
+                <span class="n">i</span><span class="p">,</span>
+                <span class="n">building_template</span><span class="p">,</span>
+                <span class="n">schema_directory</span><span class="p">,</span>
+                <span class="n">pricing</span><span class="p">,</span>
+                <span class="n">carbon_intensity</span><span class="p">)</span>
+            
+            <span class="c1"># as-modeled DER survey</span>
+            <span class="n">no_space_cooling</span> <span class="o">=</span> <span class="n">building_data</span><span class="p">[</span><span class="s1">'cooling_demand'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="n">no_space_heating</span> <span class="o">=</span> <span class="n">building_data</span><span class="p">[</span><span class="s1">'heating_demand'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="n">no_dhw_heating</span> <span class="o">=</span> <span class="n">building_data</span><span class="p">[</span><span class="s1">'dhw_demand'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="n">no_electric_dhw_heating</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">bldg_id</span><span class="p">][</span><span class="s1">'in.water_heater_fuel'</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">'Electricity'</span>
+            <span class="n">no_dhw_heating_storage</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">no_electric_dhw_heating</span> <span class="k">else</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="n">no_space_cooling</span><span class="p">:</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'cooling_device'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'inactive_observations'</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">template</span><span class="p">[</span><span class="s1">'observations'</span><span class="p">]</span> <span class="k">if</span> <span class="s1">'cooling'</span> <span class="ow">in</span> <span class="n">o</span><span class="p">]</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="k">if</span> <span class="n">no_space_heating</span><span class="p">:</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'heating_device'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'inactive_observations'</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">template</span><span class="p">[</span><span class="s1">'observations'</span><span class="p">]</span> <span class="k">if</span> <span class="s1">'heating'</span> <span class="ow">in</span> <span class="n">o</span><span class="p">]</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="k">if</span> <span class="n">no_dhw_heating</span><span class="p">:</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dhw_device'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dhw_storage'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'inactive_observations'</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">template</span><span class="p">[</span><span class="s1">'observations'</span><span class="p">]</span> <span class="k">if</span> <span class="s1">'dhw'</span> <span class="ow">in</span> <span class="n">o</span><span class="p">]</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'inactive_actions'</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">'dhw_storage'</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">no_dhw_heating_storage</span><span class="p">:</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dhw_storage'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'inactive_observations'</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">template</span><span class="p">[</span><span class="s1">'observations'</span><span class="p">]</span> <span class="k">if</span> <span class="s1">'dhw_storage'</span> <span class="ow">in</span> <span class="n">o</span><span class="p">]</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'inactive_actions'</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">'dhw_storage'</span><span class="p">]</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="c1"># PV autosize attributes</span>
+            <span class="n">osm</span> <span class="o">=</span> <span class="n">OpenStudioModelEditor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_use_load_profiles</span><span class="o">.</span><span class="n">get_building</span><span class="p">(</span><span class="n">bldg_id</span><span class="p">)</span><span class="o">.</span><span class="n">open_studio_model</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+            <span class="n">building</span><span class="p">[</span><span class="s1">'pv'</span><span class="p">][</span><span class="s1">'autosize_attributes'</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="o">**</span><span class="n">building</span><span class="p">[</span><span class="s1">'pv'</span><span class="p">][</span><span class="s1">'autosize_attributes'</span><span class="p">],</span>
+                <span class="s1">'roof_area'</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">osm</span><span class="o">.</span><span class="n">get_roof_area</span><span class="p">(),</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="p">}</span>
+
+            <span class="c1"># dynamics model</span>
+            <span class="k">if</span> <span class="n">no_lstm_model</span><span class="p">:</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dynamics'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'type'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'citylearn.building.Building'</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dynamics'</span><span class="p">][</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'filename'</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">bldg_key</span><span class="si">}</span><span class="s1">.pth'</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dynamics'</span><span class="p">][</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'hidden_size'</span><span class="p">]</span> <span class="o">=</span> <span class="n">lstm_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'hidden_size'</span><span class="p">]</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dynamics'</span><span class="p">][</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'num_layers'</span><span class="p">]</span> <span class="o">=</span> <span class="n">lstm_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'num_layers'</span><span class="p">]</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dynamics'</span><span class="p">][</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'lookback'</span><span class="p">]</span> <span class="o">=</span> <span class="n">lstm_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'lookback'</span><span class="p">]</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dynamics'</span><span class="p">][</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'input_observation_names'</span><span class="p">]</span> <span class="o">=</span> <span class="n">lstm_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'input_observation_names'</span><span class="p">]</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dynamics'</span><span class="p">][</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'input_normalization_minimum'</span><span class="p">]</span> <span class="o">=</span> <span class="n">lstm_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'input_normalization_minimum'</span><span class="p">]</span>
+                <span class="n">building</span><span class="p">[</span><span class="s1">'dynamics'</span><span class="p">][</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'input_normalization_maximum'</span><span class="p">]</span> <span class="o">=</span> <span class="n">lstm_model</span><span class="p">[</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'input_normalization_maximum'</span><span class="p">]</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+                    <span class="n">lstm_model</span><span class="p">[</span><span class="s1">'model'</span><span class="p">]</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> 
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">building</span><span class="p">[</span><span class="s1">'dynamics'</span><span class="p">][</span><span class="s1">'attributes'</span><span class="p">][</span><span class="s1">'filename'</span><span class="p">])</span>
+                <span class="p">)</span>
+
+            <span class="c1"># set building schema</span>
+            <span class="n">template</span><span class="p">[</span><span class="s1">'buildings'</span><span class="p">][</span><span class="n">bldg_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">building</span>
+
+            <span class="c1"># write back data file</span>
+            <span class="n">building_data</span> <span class="o">=</span> <span class="n">building_data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'hour'</span><span class="p">,</span> <span class="s1">'month'</span><span class="p">,</span> <span class="s1">'daylight_savings_status'</span><span class="p">,</span> <span class="s1">'hvac_mode'</span><span class="p">,</span> <span class="s1">'day_type'</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">building_data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="n">building_data</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">building_data</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'int32'</span><span class="p">)</span>
+                
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+            <span class="n">building_data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">building</span><span class="p">[</span><span class="s1">'energy_simulation'</span><span class="p">]),</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">schema_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'schema.json'</span><span class="p">)</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">user_customization_function</span><span class="p">(</span><span class="n">template</span><span class="p">)</span> <span class="k">if</span> <span class="n">user_customization_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">template</span>
+        <span class="n">FileHandler</span><span class="o">.</span><span class="n">write_json</span><span class="p">(</span><span class="n">schema_filepath</span><span class="p">,</span> <span class="n">template</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">schema_filepath</span></div>
+
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">__get_building_pricing_and_carbon_intensity</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">bldg_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">bldg_ix</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> 
+        <span class="n">building_template</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="n">schema_directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+        <span class="n">pricing</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="n">Path</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">carbon_intensity</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="n">Path</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">pricing</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">default_filename</span><span class="o">=</span><span class="n">building_template</span><span class="p">[</span><span class="s1">'pricing'</span><span class="p">]</span> <span class="k">if</span> <span class="n">building_template</span><span class="p">[</span><span class="s1">'pricing'</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">'pricing.csv'</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">pricing</span><span class="p">,</span>
+                <span class="n">schema_filename</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="n">carbon_intensity</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">default_filename</span><span class="o">=</span><span class="n">building_template</span><span class="p">[</span><span class="s1">'carbon_intensity'</span><span class="p">]</span> <span class="k">if</span> <span class="n">building_template</span><span class="p">[</span><span class="s1">'carbon_intensity'</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">'carbon_intensity.csv'</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">carbon_intensity</span><span class="p">,</span>
+                <span class="n">schema_filename</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s1">'data'</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="s1">'default_filename'</span><span class="p">])):</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">'schema_filename'</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">'default_filename'</span><span class="p">]</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">'data'</span><span class="p">],</span> <span class="p">(</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+                <span class="n">destination_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="s1">'default_filename'</span><span class="p">])</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">'data'</span><span class="p">],</span> <span class="n">destination_filepath</span><span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">'schema_filename'</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">'default_filename'</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">'data'</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+                <span class="n">destination_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="s1">'default_filename'</span><span class="p">])</span>
+                <span class="n">v</span><span class="p">[</span><span class="s1">'data'</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">destination_filepath</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">'schema_filename'</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">'default_filename'</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">'data'</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">destination_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">bldg_key</span><span class="si">}</span><span class="s1">-pricing.csv'</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">'schema_filename'</span><span class="p">]</span> <span class="o">=</span> <span class="n">destination_filename</span>
+                <span class="n">destination_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">schema_directory</span><span class="p">,</span> <span class="n">destination_filename</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">'data'</span><span class="p">][</span><span class="n">bldg_ix</span><span class="p">],</span> <span class="p">(</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">'data'</span><span class="p">][</span><span class="n">bldg_ix</span><span class="p">],</span> <span class="n">destination_filepath</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s1">'data'</span><span class="p">][</span><span class="n">bldg_ix</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+                    <span class="n">v</span><span class="p">[</span><span class="s1">'data'</span><span class="p">][</span><span class="n">bldg_ix</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">destination_filepath</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Invalid </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1"> value type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">"data"</span><span class="p">])</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s1">'pricing'</span><span class="p">][</span><span class="s1">'schema_filename'</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s1">'carbon_intensity'</span><span class="p">][</span><span class="s1">'schema_filename'</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Neighborhood.get_weather_data">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.get_weather_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_weather_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulator</span><span class="p">:</span> <span class="n">EndUseLoadProfilesEnergyPlusPartialLoadSimulator</span><span class="p">,</span> <span class="n">shifts</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">simulator</span><span class="o">.</span><span class="n">get_output_database</span><span class="p">()</span>
+        <span class="n">query_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">simulator</span><span class="o">.</span><span class="n">QUERIES_DIRECTORY</span><span class="p">,</span> <span class="s1">'select_citylearn_weather.sql'</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">query_table_from_file</span><span class="p">(</span><span class="n">query_filepath</span><span class="p">)</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span>
+        <span class="n">shifts</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span> <span class="k">if</span> <span class="n">shifts</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">shifts</span>
+        <span class="n">accuracy</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">,</span> <span class="mf">1.35</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">'outdoor_dry_bulb_temperature'</span> <span class="k">else</span> <span class="p">(</span><span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">}</span> \
+            <span class="k">if</span> <span class="n">accuracy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">accuracy</span>
+
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">shifts</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">[</span><span class="n">c</span><span class="p">])):</span>
+                <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">c</span><span class="p">],</span> <span class="n">shift</span><span class="o">=-</span><span class="n">s</span><span class="p">)</span>
+                <span class="n">nprs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
+                <span class="n">shift_column</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s1">_predicted_</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s1">'</span>
+
+                <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'outdoor_dry_bulb_temperature'</span><span class="p">]:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">shift_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span> <span class="o">+</span> <span class="n">nprs</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">))</span>
+
+                <span class="k">elif</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'outdoor_relative_humidity'</span><span class="p">,</span> <span class="s1">'diffuse_solar_irradiance'</span><span class="p">,</span> <span class="s1">'direct_solar_irradiance'</span><span class="p">]:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">shift_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span> <span class="o">+</span> <span class="n">arr</span><span class="o">*</span><span class="n">nprs</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">))</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Unknown field: </span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="s1">'outdoor_dry_bulb_temperature'</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">shift_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">shift_column</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">'outdoor_relative_humidity'</span><span class="p">:</span>
+                        <span class="n">data</span><span class="p">[</span><span class="n">shift_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">shift_column</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">upper</span><span class="o">=</span><span class="mf">100.0</span><span class="p">)</span>
+                    
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
+    
+<div class="viewcode-block" id="Neighborhood.train_lstm">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.train_lstm">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train_lstm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span> <span class="n">config</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">seed</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">get_settings</span><span class="p">()[</span><span class="s1">'lstm'</span><span class="p">][</span><span class="s1">'train'</span><span class="p">][</span><span class="s1">'config'</span><span class="p">]</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">run_one_model</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">seed</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
+    
+<div class="viewcode-block" id="Neighborhood.get_lstm_training_data">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.get_lstm_training_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_lstm_training_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulators</span><span class="p">:</span> <span class="n">BuildingsSimulators</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">building_simulators</span> <span class="ow">in</span> <span class="n">simulators</span><span class="p">:</span>
+            <span class="n">data_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">partial_simulator</span> <span class="ow">in</span> <span class="n">building_simulators</span><span class="p">[</span><span class="s1">'partial'</span><span class="p">]:</span>
+                <span class="n">partial_simulator</span><span class="p">:</span> <span class="n">EndUseLoadProfilesEnergyPlusPartialLoadSimulator</span>
+                <span class="n">query_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">EndUseLoadProfilesEnergyPlusPartialLoadSimulator</span><span class="o">.</span><span class="n">QUERIES_DIRECTORY</span><span class="p">,</span> <span class="s1">'select_lstm_training_data.sql'</span><span class="p">)</span>
+                <span class="n">pdata</span> <span class="o">=</span> <span class="n">partial_simulator</span><span class="o">.</span><span class="n">get_output_database</span><span class="p">()</span><span class="o">.</span><span class="n">query_table_from_file</span><span class="p">(</span><span class="n">query_filepath</span><span class="p">)</span>
+                <span class="n">pdata</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">'reference_name'</span><span class="p">,</span> <span class="n">partial_simulator</span><span class="o">.</span><span class="n">simulation_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'-'</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+                <span class="n">pdata</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">'reference'</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">partial_simulator</span><span class="o">.</span><span class="n">simulation_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'-'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">data_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pdata</span><span class="p">)</span>
+            
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">data_list</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
+    
+<div class="viewcode-block" id="Neighborhood.simulate_energy_plus">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.simulate_energy_plus">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate_energy_plus</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">bldg_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">idd_filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">simulation_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">schedules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">thermostat_setpoints</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">fixed_ideal_loads_idf</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">osm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">partial_loads_simulations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">simulate_mechanical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">delete_existing_simulation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">partial_loads_kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BuildingsSimulators</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">models</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">models</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bldg_ids</span><span class="p">),</span> <span class="s1">'There must be as many models as bldg_ids.'</span>
+        <span class="k">assert</span> <span class="n">schedules</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">schedules</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bldg_ids</span><span class="p">),</span> <span class="s1">'There must be as many schedules as bldg_ids.'</span>
+        <span class="k">assert</span> <span class="n">thermostat_setpoints</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">thermostat_setpoints</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bldg_ids</span><span class="p">),</span> <span class="s1">'There must be as many thermostat_setpoints as bldg_ids.'</span>
+        <span class="k">assert</span> <span class="n">fixed_ideal_loads_idf</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">fixed_ideal_loads_idf</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bldg_ids</span><span class="p">),</span> <span class="s1">'There must be as many fixed_ideal_loads_idf as bldg_ids.'</span>
+        <span class="k">assert</span> <span class="n">simulation_ids</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">simulation_ids</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bldg_ids</span><span class="p">),</span> <span class="s1">'There must be as many simulation_ids as bldg_ids.'</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energyplus_output_directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">partial_loads_simulations</span> <span class="o">=</span> <span class="mi">4</span> <span class="k">if</span> <span class="n">partial_loads_simulations</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">partial_loads_simulations</span>
+        <span class="n">simulate_mechanical</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">simulate_mechanical</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">simulate_mechanical</span>
+        <span class="n">delete_existing_simulation</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">delete_existing_simulation</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">delete_existing_simulation</span>
+        <span class="n">partial_loads_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">partial_loads_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">partial_loads_kwargs</span>
+        <span class="n">simulators</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">idd_filepath</span><span class="o">=</span><span class="n">idd_filepath</span><span class="p">,</span>
+            <span class="n">osm</span><span class="o">=</span><span class="n">osm</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="n">number_of_time_steps_per_hour</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'number_of_time_steps_per_hour'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">'number_of_time_steps_per_hour'</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'default_output_variables'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">'default_output_variables'</span><span class="p">]</span>
+        <span class="p">)</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'output_variables'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">'default_output_variables'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'default_output_meters'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">'default_output_meters'</span><span class="p">]</span>
+        <span class="p">)</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'output_meters'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">'default_output_meters'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bldg_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bldg_ids</span><span class="p">):</span>
+            <span class="n">bldg_id_ix</span> <span class="o">=</span> <span class="n">bldg_ids</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">bldg_id</span><span class="p">)</span>
+            <span class="n">simulation_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">end_use_load_profiles</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">bldg_id</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">bldg_id_ix</span><span class="si">}</span><span class="s1">'</span> <span class="k">if</span> <span class="n">simulation_ids</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">simulation_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">output_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energyplus_output_directory</span><span class="p">,</span> <span class="n">simulation_id</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span> <span class="ow">and</span> <span class="n">delete_existing_simulation</span><span class="p">:</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+            
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span>
+
+            <span class="n">_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                <span class="n">bldg_id</span><span class="o">=</span><span class="n">bldg_id</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="n">models</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">models</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">models</span><span class="p">,</span>
+                <span class="n">schedules</span><span class="o">=</span><span class="n">schedules</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">schedules</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">schedules</span><span class="p">,</span>
+                <span class="n">thermostat_setpoint</span><span class="o">=</span><span class="n">thermostat_setpoints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">thermostat_setpoints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">thermostat_setpoints</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># mechanical loads</span>
+            <span class="k">if</span> <span class="n">simulate_mechanical</span><span class="p">:</span>
+                <span class="n">_simulation_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">simulation_id</span><span class="si">}</span><span class="s1">-mechanical'</span>
+                <span class="n">_output_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_directory</span><span class="p">,</span> <span class="n">_simulation_id</span><span class="p">)</span>
+                <span class="n">mechanical_simulator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_use_load_profiles</span><span class="o">.</span><span class="n">simulate_building</span><span class="p">(</span>
+                    <span class="n">ideal_loads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">simulation_id</span><span class="o">=</span><span class="n">_simulation_id</span><span class="p">,</span>
+                    <span class="n">output_directory</span><span class="o">=</span><span class="n">_output_directory</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">_kwargs</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">simulator</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mechanical_simulator</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="c1"># ideal loads</span>
+            <span class="n">_ideal_kwargs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">_kwargs</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">fixed_ideal_loads_idf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_ideal_kwargs</span><span class="p">[</span><span class="s1">'model'</span><span class="p">]</span> <span class="o">=</span> <span class="n">fixed_ideal_loads_idf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">_ideal_kwargs</span><span class="p">[</span><span class="s1">'osm'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+            
+            <span class="n">_simulation_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">simulation_id</span><span class="si">}</span><span class="s1">-ideal'</span>
+            <span class="n">_output_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_directory</span><span class="p">,</span> <span class="n">_simulation_id</span><span class="p">)</span>
+            <span class="n">ideal_simulator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_use_load_profiles</span><span class="o">.</span><span class="n">simulate_building</span><span class="p">(</span>
+                <span class="n">ideal_loads</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">simulation_id</span><span class="o">=</span><span class="n">_simulation_id</span><span class="p">,</span>
+                <span class="n">output_directory</span><span class="o">=</span><span class="n">_output_directory</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">_ideal_kwargs</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">simulator</span>
+
+            <span class="c1"># partial loads</span>
+            <span class="n">partial_loads_simulators</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EndUseLoadProfilesEnergyPlusPartialLoadSimulator</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">kwargs_multiplier_minimum</span> <span class="o">=</span> <span class="n">partial_loads_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'multiplier_minimum'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">kwargs_multiplier_maximum</span> <span class="o">=</span> <span class="n">partial_loads_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'multiplier_maximum'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">kwargs_multiplier_probability</span> <span class="o">=</span> <span class="n">partial_loads_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'multiplier_probability'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">partial_loads_simulations</span> <span class="o">+</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">multiplier_minimum</span> <span class="o">=</span> <span class="n">kwargs_multiplier_minimum</span>
+                <span class="n">multiplier_maximum</span> <span class="o">=</span> <span class="n">kwargs_multiplier_maximum</span>
+                <span class="n">multiplier_probability</span> <span class="o">=</span> <span class="n">kwargs_multiplier_probability</span>
+
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">reference_name</span> <span class="o">=</span> <span class="s1">'ideal'</span>
+                    <span class="n">multiplier_probability</span> <span class="o">=</span> <span class="mi">0</span>
+                
+                <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">reference_name</span> <span class="o">=</span> <span class="s1">'free_float'</span>
+                    <span class="n">multiplier_minimum</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">multiplier_maximum</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">reference_name</span> <span class="o">=</span> <span class="s1">'undercool_overcool_underheat_overheat'</span>
+
+                <span class="n">_simulation_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">simulation_id</span><span class="si">}</span><span class="s1">-partial-</span><span class="si">{</span><span class="n">reference_name</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span>
+                <span class="n">_output_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_directory</span><span class="p">,</span> <span class="n">_simulation_id</span><span class="p">)</span>
+                <span class="n">_</span> <span class="o">=</span> <span class="n">partial_loads_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'simulation_id'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">_</span> <span class="o">=</span> <span class="n">partial_loads_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'output_directory'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">_</span> <span class="o">=</span> <span class="n">partial_loads_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'random_seed'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">partial_loads_simulators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">EndUseLoadProfilesEnergyPlusPartialLoadSimulator</span><span class="p">(</span>
+                    <span class="n">ideal_loads_simulator</span><span class="o">=</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">ideal_simulator</span><span class="p">),</span>
+                    <span class="n">multiplier_minimum</span><span class="o">=</span><span class="n">multiplier_minimum</span><span class="p">,</span>
+                    <span class="n">multiplier_maximum</span><span class="o">=</span><span class="n">multiplier_maximum</span><span class="p">,</span>
+                    <span class="n">multiplier_probability</span><span class="o">=</span><span class="n">multiplier_probability</span><span class="p">,</span>
+                    <span class="n">simulation_id</span><span class="o">=</span><span class="n">_simulation_id</span><span class="p">,</span>
+                    <span class="n">output_directory</span><span class="o">=</span><span class="n">_output_directory</span><span class="p">,</span>
+                    <span class="n">random_seed</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">bldg_id</span><span class="p">)</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">partial_loads_kwargs</span>
+                <span class="p">))</span>
+            
+            <span class="n">EndUseLoadProfilesEnergyPlusPartialLoadSimulator</span><span class="o">.</span><span class="n">multi_simulate</span><span class="p">(</span><span class="n">partial_loads_simulators</span><span class="p">,</span> <span class="n">max_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_workers</span><span class="p">)</span>
+
+            <span class="n">simulators</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">'mechanical'</span><span class="p">:</span> <span class="n">mechanical_simulator</span><span class="p">,</span>
+                <span class="s1">'ideal'</span><span class="p">:</span> <span class="n">ideal_simulator</span><span class="p">,</span>
+                <span class="s1">'partial'</span><span class="p">:</span> <span class="n">partial_loads_simulators</span>
+            <span class="p">})</span>
+        
+        <span class="k">return</span> <span class="n">simulators</span></div>
+
+
+<div class="viewcode-block" id="Neighborhood.sample_buildings">
+<a class="viewcode-back" href="../../../api/citylearn.end_use_load_profiles.neighborhood.html#citylearn.end_use_load_profiles.neighborhood.Neighborhood.sample_buildings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_buildings</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">filters</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sample_method</span><span class="p">:</span> <span class="n">SampleMethod</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sample_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">duplicate_to_count</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+        <span class="n">single_county</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">single_family_detached</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="n">sample_method</span> <span class="o">=</span> <span class="n">SampleMethod</span><span class="o">.</span><span class="n">RANDOM</span> <span class="k">if</span> <span class="n">sample_method</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sample_method</span>
+        <span class="n">valid_sample_method</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">SampleMethod</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">sample_method</span> <span class="ow">in</span> <span class="n">valid_sample_method</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'Valid sample methods are </span><span class="si">{</span><span class="n">valid_sample_method</span><span class="si">}</span><span class="s1">.'</span>
+        <span class="n">sample_count</span> <span class="o">=</span> <span class="mi">100</span> <span class="k">if</span> <span class="n">sample_count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sample_count</span>
+        <span class="n">duplicate_to_count</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">duplicate_to_count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">duplicate_to_count</span>
+        <span class="n">single_county</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">single_county</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">single_county</span>
+        <span class="n">single_family_detached</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">single_family_detached</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">single_family_detached</span>
+        
+        <span class="n">nprs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
+        <span class="n">sample_metadata</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">single_family_detached</span><span class="p">:</span>
+            <span class="n">filters</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">filters</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">filters</span>
+            <span class="n">filters</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__BUILDING_TYPE_COLUMN</span><span class="p">]</span> <span class="o">=</span>  <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__SINGLE_FAMILY_BUILDING_TYPE_NAME</span><span class="p">]</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+        
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_use_load_profiles</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">single_county</span><span class="p">:</span>
+            <span class="n">county</span> <span class="o">=</span> <span class="n">nprs</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__COUNTY_COLUMN</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">metadata</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__COUNTY_COLUMN</span><span class="p">]</span><span class="o">==</span><span class="n">county</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="n">sample_method</span> <span class="o">==</span> <span class="n">SampleMethod</span><span class="o">.</span><span class="n">RANDOM</span><span class="p">:</span>
+            <span class="n">metadata</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">elif</span> <span class="n">sample_method</span> <span class="o">==</span> <span class="n">SampleMethod</span><span class="o">.</span><span class="n">METADATA_CLUSTER_FREQUENCY</span><span class="p">:</span>
+            <span class="n">mc</span> <span class="o">=</span> <span class="n">MetadataClustering</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_use_load_profiles</span><span class="p">,</span> <span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">random_seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">optimal_clusters</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">cluster</span><span class="p">()</span>
+            <span class="n">sample_metadata</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">'optimal_clusters'</span><span class="p">:</span> <span class="n">optimal_clusters</span><span class="p">,</span>
+                <span class="s1">'scores'</span><span class="p">:</span> <span class="n">scores</span><span class="p">,</span>
+                <span class="s1">'labels'</span><span class="p">:</span> <span class="n">labels</span>
+            <span class="p">}</span>
+
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">labels</span><span class="p">[</span><span class="s1">'clusters'</span><span class="p">]</span><span class="o">==</span><span class="n">optimal_clusters</span><span class="p">]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'bldg_id'</span><span class="p">),</span> <span class="n">left_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">metadata</span><span class="p">[</span><span class="s1">'label_count'</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'label'</span><span class="p">)[</span><span class="s1">'label'</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s1">'count'</span><span class="p">)</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">sample_count</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="s1">'label_count'</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">duplicate_to_count</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">random_seed</span><span class="p">)</span>
+        <span class="n">bldg_ids</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">bldg_ids</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">sample_metadata</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
