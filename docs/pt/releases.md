@@ -5,6 +5,7 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Emissões do distrito com a troca local desligada.** Com um mercado comunitário ativo e `local_trading_enabled: false`, a liquidação, os KPIs de custo e o registo de proveniência não trocam energia localmente, mas as emissões do distrito continuavam a compensar a exportação de um membro com a importação de outro. Agora cada importação de um membro é contada com a sua intensidade carbónica, o valor `member_sum`, e as emissões são iguais a `district_energy_provenance_external_purchase_emissions_kgco2` em qualquer configuração do mercado. O rácio do preço local nunca afeta as emissões. Os resultados só mudam em execuções com a troca local desligada; nenhum dataset incluído o faz. Consulte o [guia de migração](../migration.md#district-emissions-with-local-trading-off) e o [#327](https://github.com/citylearn-project/CityLearn/issues/327).
 - **Atraso na resposta da bateria na BAU.** A referência usa a carga e a produção solar observadas no passo atual para decidir a ação da bateria estacionária. Os resultados face à BAU podem mudar, e o manifesto de exportação regista a nova definição. Consulte o [guia de migração](../migration.md#the-native-bau-uses-current-step-load-and-solar) e o [#190](https://github.com/citylearn-project/CityLearn/issues/190).
 - **Wrappers do RLlib com o Ray atual.** `RLlibSingleAgentWrapper` e
   `RLlibMultiAgentEnv` são testados com o Ray 2.60.0 (nova API stack, Python 3.10

@@ -1475,7 +1475,11 @@ class CityLearnKPIService:
         follows the weighted allocation of the provenance ledger
         (`community_market_import_member_weights`), so the totals match its
         `external_purchase_emissions`. A non-finite intensity counts as zero
-        carbon, as in the ledger. `condition` is a district evaluation
+        carbon, as in the ledger. When a community market is enabled with
+        `local_trading_enabled` false, no energy is exchanged locally (as in
+        the settlement and the ledger), so every member import is a grid
+        import charged at that member's intensity; the local price ratio never
+        enters. `condition` is a district evaluation
         condition; buildings that are not `DynamicsBuilding` use it without the
         partial-load suffix, as the district series do.
         """
@@ -1497,6 +1501,9 @@ class CityLearnKPIService:
             intensities[:carbon.size, column] = np.where(np.isfinite(carbon), carbon, 0.0)
 
         imports = np.clip(nets, 0.0, None)
+        if getattr(env, 'community_market_enabled', False) and not getattr(env, 'community_market_local_enabled', True):
+            return (imports*intensities).sum(axis=1)
+
         district_import = np.clip(nets.sum(axis=1), 0.0, None)
         importing = imports > float(ZERO_DIVISION_PLACEHOLDER)
         any_importing = importing.any(axis=1)
