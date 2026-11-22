@@ -337,7 +337,10 @@ def reference_configuration(env):
     return [dict(
         name=building.name,
         simulate_power_outage=bool(building.simulate_power_outage),
-        active_actions=sorted(building.active_actions),
+        # NoControlAgent disables every action of the evaluated env after loading; the reference keeps the loaded
+        # actions, which the agent records (CityLearn #309).
+        active_actions=sorted(building.active_actions)
+        or list(getattr(building, '_no_control_loaded_active_actions', None) or []),
     ) for building in getattr(env, '_all_buildings', None) or env.buildings]
 
 
