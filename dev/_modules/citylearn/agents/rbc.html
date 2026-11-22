@@ -286,6 +286,17 @@
         <span class="k">return</span> <span class="n">actions</span></div>
 
     
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deferrable_start_map</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Hour map that starts a deferrable appliance's pending cycle as soon as it may start.</span>
+
+<span class="sd">        The hour-based controllers schedule storage and HVAC only. A deferrable cycle that is never started is</span>
+<span class="sd">        missed (nothing starts it at its deadline), so they start it at the first step its window allows, as an</span>
+<span class="sd">        unmanaged household would.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">hour</span><span class="p">:</span> <span class="mf">1.0</span> <span class="k">for</span> <span class="n">hour</span> <span class="ow">in</span> <span class="n">Building</span><span class="o">.</span><span class="n">get_periodic_observation_metadata</span><span class="p">()[</span><span class="s1">'hour'</span><span class="p">]}</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">__verify_action_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">action_map</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">missing_actions</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">action_names</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">action_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())]</span>
         <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'Undefined maps for actions: </span><span class="si">{</span><span class="n">missing_actions</span><span class="si">}</span><span class="s1">'</span>
@@ -373,6 +384,10 @@
 
                         <span class="n">action_map</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">hour</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
                 
+                <span class="k">elif</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'deferrable_appliance'</span><span class="p">):</span>
+                    <span class="c1"># Not part of the hour schedule: start each pending cycle as soon as it may start (CityLearn #309).</span>
+                    <span class="n">action_map</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">HourRBC</span><span class="o">.</span><span class="n">_deferrable_start_map</span><span class="p">()</span>
+
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Unknown action name: </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 
@@ -485,6 +500,10 @@
 
                         <span class="n">action_map</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">hour</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
                 
+                <span class="k">elif</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'deferrable_appliance'</span><span class="p">):</span>
+                    <span class="c1"># Not part of the hour schedule: start each pending cycle as soon as it may start (CityLearn #309).</span>
+                    <span class="n">action_map</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">HourRBC</span><span class="o">.</span><span class="n">_deferrable_start_map</span><span class="p">()</span>
+
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Unknown action name: </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 
@@ -566,6 +585,10 @@
 
                         <span class="n">action_map</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="n">hour</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
                 
+                <span class="k">elif</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'deferrable_appliance'</span><span class="p">):</span>
+                    <span class="c1"># Not part of the hour schedule: start each pending cycle as soon as it may start (CityLearn #309).</span>
+                    <span class="n">action_map</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">HourRBC</span><span class="o">.</span><span class="n">_deferrable_start_map</span><span class="p">()</span>
+
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Unknown action name: </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 
