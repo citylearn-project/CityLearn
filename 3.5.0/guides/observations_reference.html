@@ -1,0 +1,1245 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Observations Reference &mdash; CityLearn 3.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c1362a89"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Actions Reference" href="actions_reference.html" />
+    <link rel="prev" title="Flat and Entity Interfaces" href="interfaces_flat_entity.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Observations Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#unit-contract">Unit Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flat-observations">Flat Observations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#calendar">Calendar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#weather">Weather</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pricing-and-carbon">Pricing and Carbon</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loads-comfort-and-hvac">Loads, Comfort and HVAC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#storage-pv-and-net-energy">Storage, PV and Net Energy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ev-and-charger-flat-observations">EV and Charger Flat Observations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deferrable-flat-observations">Deferrable Flat Observations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#escalator-flat-observations">Escalator Flat Observations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#entity-tables">Entity Tables</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#district"><code class="docutils literal notranslate"><span class="pre">district</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#building"><code class="docutils literal notranslate"><span class="pre">building</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#charger"><code class="docutils literal notranslate"><span class="pre">charger</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ev"><code class="docutils literal notranslate"><span class="pre">ev</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#storage"><code class="docutils literal notranslate"><span class="pre">storage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pv"><code class="docutils literal notranslate"><span class="pre">pv</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deferrable-appliance"><code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#entity-edges">Entity Edges</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Observations Reference</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/observations_reference.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.5.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="observations-reference">
+<h1>Observations Reference<a class="headerlink" href="#observations-reference" title="Link to this heading"></a></h1>
+<p>This page is the observation dictionary for the simulator. It is intended as a human-readable and machine-readable contract for wrappers, Offline RL, GraphRL and Transformer policies.</p>
+<section id="unit-contract">
+<h2>Unit Contract<a class="headerlink" href="#unit-contract" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name pattern</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Example</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">headroom_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">generation_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">charging_slack_kw</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">_kwh_step</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">net_energy_kwh_step</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_kwh</span></code></p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">capacity_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">_soc_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">_ratio</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">service_level_ratio</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">_time_step</span></code></p></td>
+<td class="text-right"><p>timestep index</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">deadline_time_step</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hours_until_*</span></code></p></td>
+<td class="text-right"><p>hours</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">hours_until_departure</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">*_count</span></code></p></td>
+<td class="text-right"><p>count</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">active_buildings_count</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electricity_pricing</span></code></p></td>
+<td class="text-right"><p>currency/kWh</p></td>
+<td><p>Dataset-defined currency.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">carbon_intensity</span></code></p></td>
+<td class="text-right"><p>kgCO2/kWh</p></td>
+<td><p>Grid emissions factor.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Temperatures</p></td>
+<td class="text-right"><p>C</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">outdoor_dry_bulb_temperature</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Irradiance</p></td>
+<td class="text-right"><p>W/m2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">direct_solar_irradiance</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Common sentinels:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head text-right"><p>Value</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p></td>
+<td><p>Time, ID or quantity unavailable.</p></td>
+</tr>
+<tr class="row-odd"><td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">-0.1</span></code></p></td>
+<td><p>Unknown SOC or no EV.</p></td>
+</tr>
+<tr class="row-even"><td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Not applicable when zero is physically valid, or absent entity row.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="flat-observations">
+<h2>Flat Observations<a class="headerlink" href="#flat-observations" title="Link to this heading"></a></h2>
+<p>Flat observations are controlled by <code class="docutils literal notranslate"><span class="pre">schema[&quot;observations&quot;]</span></code>. With <code class="docutils literal notranslate"><span class="pre">central_agent=True</span></code>, observations marked <code class="docutils literal notranslate"><span class="pre">shared_in_central_agent=true</span></code> appear only once in the central vector.</p>
+<section id="calendar">
+<h3>Calendar<a class="headerlink" href="#calendar" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Observation</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">month</span></code></p></td>
+<td class="text-right"><p>1-12</p></td>
+<td><p>Month.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">day_type</span></code></p></td>
+<td class="text-right"><p>1-8</p></td>
+<td><p>Day of week or special day.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hour</span></code></p></td>
+<td class="text-right"><p>1-24</p></td>
+<td><p>Hour.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">minutes</span></code></p></td>
+<td class="text-right"><p>0-59</p></td>
+<td><p>Minute, only if present in the dataset.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seconds</span></code></p></td>
+<td class="text-right"><p>0-59</p></td>
+<td><p>Second, needed for sub-minute datasets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">daylight_savings_status</span></code></p></td>
+<td class="text-right"><p>binary</p></td>
+<td><p>Daylight saving status.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="weather">
+<h3>Weather<a class="headerlink" href="#weather" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Observation</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">outdoor_dry_bulb_temperature</span></code></p></td>
+<td class="text-right"><p>C</p></td>
+<td><p>Outdoor temperature.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">outdoor_relative_humidity</span></code></p></td>
+<td class="text-right"><p>percent</p></td>
+<td><p>Outdoor relative humidity.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">diffuse_solar_irradiance</span></code></p></td>
+<td class="text-right"><p>W/m2</p></td>
+<td><p>Diffuse irradiance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">direct_solar_irradiance</span></code></p></td>
+<td class="text-right"><p>W/m2</p></td>
+<td><p>Direct irradiance.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">*_predicted_1/2/3</span></code></p></td>
+<td class="text-right"><p>same unit</p></td>
+<td><p>Forecast horizons as encoded by the dataset.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The simulator does not assume fixed forecast horizons. They are whatever the dataset provides.</p>
+</section>
+<section id="pricing-and-carbon">
+<h3>Pricing and Carbon<a class="headerlink" href="#pricing-and-carbon" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Observation</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electricity_pricing</span></code></p></td>
+<td class="text-right"><p>currency/kWh</p></td>
+<td><p>Current grid import price.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electricity_pricing_predicted_1/2/3</span></code></p></td>
+<td class="text-right"><p>currency/kWh</p></td>
+<td><p>Price forecasts.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">carbon_intensity</span></code></p></td>
+<td class="text-right"><p>kgCO2/kWh</p></td>
+<td><p>Grid carbon intensity.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="loads-comfort-and-hvac">
+<h3>Loads, Comfort and HVAC<a class="headerlink" href="#loads-comfort-and-hvac" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Observation</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">indoor_dry_bulb_temperature</span></code></p></td>
+<td class="text-right"><p>C</p></td>
+<td><p>Indoor temperature.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">average_unmet_cooling_setpoint_difference</span></code></p></td>
+<td class="text-right"><p>C</p></td>
+<td><p>Average cooling setpoint violation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">indoor_relative_humidity</span></code></p></td>
+<td class="text-right"><p>percent</p></td>
+<td><p>Indoor relative humidity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">occupant_count</span></code></p></td>
+<td class="text-right"><p>people</p></td>
+<td><p>Occupancy.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">indoor_dry_bulb_temperature_cooling_set_point</span></code></p></td>
+<td class="text-right"><p>C</p></td>
+<td><p>Cooling setpoint.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">indoor_dry_bulb_temperature_heating_set_point</span></code></p></td>
+<td class="text-right"><p>C</p></td>
+<td><p>Heating setpoint.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">indoor_dry_bulb_temperature_cooling_delta</span></code></p></td>
+<td class="text-right"><p>C</p></td>
+<td><p>Controlled cooling delta.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">indoor_dry_bulb_temperature_heating_delta</span></code></p></td>
+<td class="text-right"><p>C</p></td>
+<td><p>Controlled heating delta.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">comfort_band</span></code></p></td>
+<td class="text-right"><p>C</p></td>
+<td><p>Comfort band.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hvac_mode</span></code></p></td>
+<td class="text-right"><p>enum</p></td>
+<td><p>0 off, 1 cooling, 2 heating, 3 auto.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cooling_demand</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Cooling thermal demand.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">heating_demand</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Heating thermal demand.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dhw_demand</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Domestic hot water demand.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">non_shiftable_load</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Non-flexible electric load.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cooling_device_efficiency</span></code></p></td>
+<td class="text-right"><p>COP/ratio</p></td>
+<td><p>Cooling device efficiency.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">heating_device_efficiency</span></code></p></td>
+<td class="text-right"><p>COP/ratio</p></td>
+<td><p>Heating device efficiency.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dhw_device_efficiency</span></code></p></td>
+<td class="text-right"><p>COP/ratio</p></td>
+<td><p>DHW device efficiency.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="storage-pv-and-net-energy">
+<h3>Storage, PV and Net Energy<a class="headerlink" href="#storage-pv-and-net-energy" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Observation</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cooling_storage_soc</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Cooling storage SOC.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">heating_storage_soc</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Heating storage SOC.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dhw_storage_soc</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>DHW storage SOC.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage_soc</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>BESS SOC.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">*_electricity_consumption</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>End-use electricity consumption.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage_electricity_consumption</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>BESS consumption, positive charge and negative discharge.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solar_generation</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>PV generation after PV mode conversion.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">net_electricity_consumption</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Import positive, export negative.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">power_outage</span></code></p></td>
+<td class="text-right"><p>binary</p></td>
+<td><p>Power outage state.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ev-and-charger-flat-observations">
+<h3>EV and Charger Flat Observations<a class="headerlink" href="#ev-and-charger-flat-observations" title="Link to this heading"></a></h3>
+<p>Schema helper keys are expanded per charger.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Schema key</p></th>
+<th class="head"><p>Expanded key</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_charger_connected_state</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_charger_{id}_connected_state</span></code></p></td>
+<td class="text-right"><p>binary</p></td>
+<td><p>EV connected and ready.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">connected_electric_vehicle_at_charger_departure_time</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connected_electric_vehicle_at_charger_{id}_departure_time</span></code></p></td>
+<td class="text-right"><p>steps</p></td>
+<td><p>Steps until departure.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">connected_electric_vehicle_at_charger_required_soc_departure</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connected_electric_vehicle_at_charger_{id}_required_soc_departure</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Required SOC at departure.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">connected_electric_vehicle_at_charger_soc</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connected_electric_vehicle_at_charger_{id}_soc</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Connected EV SOC.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">connected_electric_vehicle_at_charger_battery_capacity</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">connected_electric_vehicle_at_charger_{id}_battery_capacity</span></code></p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Connected EV battery capacity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_charger_incoming_state</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_charger_{id}_incoming_state</span></code></p></td>
+<td class="text-right"><p>binary</p></td>
+<td><p>Incoming EV exists.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">incoming_electric_vehicle_at_charger_estimated_arrival_time</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">incoming_electric_vehicle_at_charger_{id}_estimated_arrival_time</span></code></p></td>
+<td class="text-right"><p>steps</p></td>
+<td><p>Steps until estimated arrival.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">incoming_electric_vehicle_at_charger_estimated_soc_arrival</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">incoming_electric_vehicle_at_charger_{id}_estimated_soc_arrival</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Estimated SOC at arrival.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="deferrable-flat-observations">
+<h3>Deferrable Flat Observations<a class="headerlink" href="#deferrable-flat-observations" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_*</span></code> helper keys are expanded per appliance. The same fields appear in the entity <code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code> table.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pending</span></code>, <code class="docutils literal notranslate"><span class="pre">running</span></code>, <code class="docutils literal notranslate"><span class="pre">can_start</span></code>, <code class="docutils literal notranslate"><span class="pre">deadline_missed</span></code></p></td>
+<td class="text-right"><p>binary</p></td>
+<td><p>Cycle state flags.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">earliest_start_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">latest_start_time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">deadline_time_step</span></code></p></td>
+<td class="text-right"><p>global timestep</p></td>
+<td><p>Flexibility window and deadline.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hours_until_latest_start</span></code>, <code class="docutils literal notranslate"><span class="pre">hours_until_deadline</span></code></p></td>
+<td class="text-right"><p>hours</p></td>
+<td><p>Time remaining.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">slack_steps</span></code></p></td>
+<td class="text-right"><p>steps</p></td>
+<td><p>Remaining slack before latest start.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">slack_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">urgency_ratio</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Normalized slack and urgency.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cycle_duration_steps</span></code></p></td>
+<td class="text-right"><p>steps</p></td>
+<td><p>Cycle duration.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cycle_energy_kwh</span></code></p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Total cycle energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">remaining_energy_kwh</span></code></p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Energy still to serve.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">current_step_energy_kwh</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Cycle energy at current step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">priority</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>External priority.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">must_run</span></code></p></td>
+<td class="text-right"><p>binary</p></td>
+<td><p>Mandatory service request.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cycle_average_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">cycle_peak_power_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Average and peak cycle power.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cycle_load_factor_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">cycle_peak_step_offset_ratio</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Cycle profile descriptors.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">remaining_duration_steps</span></code></p></td>
+<td class="text-right"><p>steps</p></td>
+<td><p>Remaining cycle duration.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">remaining_average_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">current_step_power_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Remaining average and current step power.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="escalator-flat-observations">
+<h3>Escalator Flat Observations<a class="headerlink" href="#escalator-flat-observations" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">escalator_*</span></code> helper keys are expanded per escalator in the flat interface.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">passengers_from_trains_15min</span></code>, <code class="docutils literal notranslate"><span class="pre">background_pedestrians_15min</span></code>, <code class="docutils literal notranslate"><span class="pre">passengers_expected_15min</span></code></p></td>
+<td class="text-right"><p>passengers/step</p></td>
+<td><p>Aggregate demand sources and total demand.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">people_detected</span></code>, <code class="docutils literal notranslate"><span class="pre">available</span></code>, <code class="docutils literal notranslate"><span class="pre">service_required</span></code>, <code class="docutils literal notranslate"><span class="pre">service_met</span></code></p></td>
+<td class="text-right"><p>binary</p></td>
+<td><p>Demand, availability and simple service indicators.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">passing_trains</span></code></p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Passing trains; source arrival/departure duplicates are not double counted.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">minutes_to_next_train</span></code></p></td>
+<td class="text-right"><p>minutes</p></td>
+<td><p>Time until next relevant train.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">requested_state</span></code></p></td>
+<td class="text-right"><p>enum <code class="docutils literal notranslate"><span class="pre">0–2</span></code></p></td>
+<td><p>Standby, slow or normal state.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">power_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Applied operating power.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">unserved_passengers_15min</span></code></p></td>
+<td class="text-right"><p>passengers/step</p></td>
+<td><p>Demand left unserved in standby.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="entity-tables">
+<h2>Entity Tables<a class="headerlink" href="#entity-tables" title="Link to this heading"></a></h2>
+<p>Entity mode returns <code class="docutils literal notranslate"><span class="pre">tables</span></code>, <code class="docutils literal notranslate"><span class="pre">edges</span></code> and <code class="docutils literal notranslate"><span class="pre">meta</span></code>. Feature availability depends on the schema, active assets and enabled bundles.</p>
+<section id="district">
+<h3><code class="docutils literal notranslate"><span class="pre">district</span></code><a class="headerlink" href="#district" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature group</p></th>
+<th class="head"><p>Bundle</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Shared flat observations</p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>varies</p></td>
+<td><p>Shared observations from the first building.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Forecasts <code class="docutils literal notranslate"><span class="pre">*_predicted_*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_forecasts_existing</span></code></p></td>
+<td class="text-right"><p>varies</p></td>
+<td><p>Dataset forecasts.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">community_*_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_community_operational</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>District/community power aggregates.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">community_*_energy_kwh_step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_community_operational</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>District/community step energy aggregates.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">community_*_headroom_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_community_operational</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Import/export headroom aggregates.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">community_flexible_*_capacity_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">community_flexible_*_capacity_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">community_flexible_energy_*_kwh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_community_operational</span></code></p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>Aggregate flexible charge/discharge power and energy slack.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active_buildings_count</span></code>, <code class="docutils literal notranslate"><span class="pre">active_chargers_count</span></code>, <code class="docutils literal notranslate"><span class="pre">active_evs_count</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_community_operational</span></code></p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Active topology counts.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">topology_version</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_community_operational</span></code></p></td>
+<td class="text-right"><p>count</p></td>
+<td><p>Current topology version.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dr_active</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p>binary</p></td>
+<td><p>Whether a demand-response request is active at this timestep.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dr_issuer_code</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p>enum</p></td>
+<td><p>Request issuer code: <code class="docutils literal notranslate"><span class="pre">1=dso</span></code>, <code class="docutils literal notranslate"><span class="pre">2=tso</span></code>, <code class="docutils literal notranslate"><span class="pre">0=none/unknown</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dr_direction</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p>enum</p></td>
+<td><p>Load-perspective direction: <code class="docutils literal notranslate"><span class="pre">1=up</span></code>, <code class="docutils literal notranslate"><span class="pre">-1=down</span></code>, <code class="docutils literal notranslate"><span class="pre">0=none</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dr_target_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Active district target power.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dr_baseline_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Frozen baseline net power for the active request when valid.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dr_time_remaining_hours</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p>hours</p></td>
+<td><p>Time remaining in the inclusive activation window.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dr_activation_price_eur_per_kwh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p>currency/kWh</p></td>
+<td><p>Credited price for delivered energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dr_shortfall_penalty_eur_per_kwh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p>currency/kWh</p></td>
+<td><p>Penalty price for shortfall energy.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dr_previous_delivered_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Delivered power settled at the previous active DR step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dr_previous_shortfall_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Shortfall power settled at the previous active DR step.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">community_net_prev_1_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">community_net_prev_3_mean_kwh_step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_temporal_derived</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>District lag features.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hour_sin/cos</span></code>, <code class="docutils literal notranslate"><span class="pre">day_type_sin/cos</span></code>, <code class="docutils literal notranslate"><span class="pre">month_sin/cos</span></code>, <code class="docutils literal notranslate"><span class="pre">seconds_of_day_sin/cos</span></code>, <code class="docutils literal notranslate"><span class="pre">is_weekend</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_temporal_derived</span></code></p></td>
+<td class="text-right"><p>ratio/binary</p></td>
+<td><p>Calendar features; raw <code class="docutils literal notranslate"><span class="pre">time_step</span></code> remains only in payload <code class="docutils literal notranslate"><span class="pre">meta</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_price_next_*</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_community_{load,pv,net}_next_*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code></p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>Point forecasts at 15m/1h/3h/6h/24h; their source is declared in <code class="docutils literal notranslate"><span class="pre">meta.forecast_config</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Demand-response <code class="docutils literal notranslate"><span class="pre">request_id</span></code> and baseline validity are exposed in <code class="docutils literal notranslate"><span class="pre">observations[&quot;meta&quot;][&quot;demand_response&quot;]</span></code>, not as numeric table columns.</p>
+</section>
+<section id="building">
+<h3><code class="docutils literal notranslate"><span class="pre">building</span></code><a class="headerlink" href="#building" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature group</p></th>
+<th class="head"><p>Bundle</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Active building flat observations</p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>varies</p></td>
+<td><p>Non-shared, non-asset-specific flat features.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">net/import/export/load/pv/bess/ev_*_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Electrical power by component.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">net/import/export/load/pv/bess/ev_*_energy_kwh_step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Step energy by component.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage_soc_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Building BESS SOC.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charging_total_service_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Total charging service power.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charging_phase_{L}_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Current charging power by phase.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pv_surplus_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">pv_surplus_energy_kwh_step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kW/kWh</p></td>
+<td><p>Local PV surplus after non-flex load.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">building_import/export_headroom_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">import/export_phase_headroom_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Current local electrical headroom.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">flexible_*_capacity_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">flexible_*_capacity_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">flexible_energy_*_kwh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>Aggregate BESS and connected-EV charge/discharge capability and energy slack.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">net_energy_prev_1_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">net_energy_prev_3_mean_kwh_step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_temporal_derived</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Building lag features.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">import_energy_prev_1_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">export_energy_prev_1_kwh_step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_temporal_derived</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Import/export lag features.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hour_sin/cos</span></code>, <code class="docutils literal notranslate"><span class="pre">day_type_sin/cos</span></code>, <code class="docutils literal notranslate"><span class="pre">month_sin/cos</span></code>, <code class="docutils literal notranslate"><span class="pre">seconds_of_day_sin/cos</span></code>, <code class="docutils literal notranslate"><span class="pre">is_weekend</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_temporal_derived</span></code></p></td>
+<td class="text-right"><p>ratio/binary</p></td>
+<td><p>Calendar features.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_{load,pv,net}_next_*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Building point forecasts at 15m/1h/3h/6h/24h.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="charger">
+<h3><code class="docutils literal notranslate"><span class="pre">charger</span></code><a class="headerlink" href="#charger" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Bundle</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">connected_state</span></code>, <code class="docutils literal notranslate"><span class="pre">incoming_state</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>binary</p></td>
+<td><p>Current EV connection/incoming state.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">connected_ev_soc</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_required_soc_departure</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Connected EV SOC fields.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">connected_ev_battery_capacity_kwh</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Connected EV capacity.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">connected_ev_departure_time_step</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>steps</p></td>
+<td><p>Steps until departure.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">incoming_ev_estimated_soc_arrival</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Incoming EV arrival SOC.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">incoming_ev_estimated_arrival_time_step</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>steps</p></td>
+<td><p>Steps until incoming arrival.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">last_charged_kwh</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Last commanded energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_charging_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharging_power_kw</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Charger power limits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min_charging_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">min_discharging_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Technical minimum powers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charger_efficiency_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Fixed/default efficiency.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection_L1/L2/L3</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
+<td class="text-right"><p>one-hot</p></td>
+<td><p>Phase connection; <code class="docutils literal notranslate"><span class="pre">all_phases</span></code> marks all phases.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">commanded_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">applied_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Commanded and applied charger power.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">applied_energy_kwh_step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Applied energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hours_until_departure</span></code>, <code class="docutils literal notranslate"><span class="pre">time_until_departure_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>hours/ratio</p></td>
+<td><p>Connected EV time pressure.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_to_required_soc_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">required_average_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kWh/kW</p></td>
+<td><p>Energy and average power required to meet departure SOC.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charging_slack_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">charging_priority_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kW/ratio</p></td>
+<td><p>Charging urgency descriptors.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">connected_ev_soc_min_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_available_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_to_full_kwh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>Connected EV usable discharge energy and remaining charge headroom.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>Current feasible charger action capacity after SOC, availability, outage and headroom limits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_deliverable_energy_until_departure_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">departure_energy_margin_kwh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Energy still deliverable by departure under current limits and its margin over required energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">departure_feasibility_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">min_required_action_normalized</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Deadline pressure; values above <code class="docutils literal notranslate"><span class="pre">1</span></code> indicate the target needs more than the current feasible/max action.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge_efficiency_at_max_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">discharge_efficiency_at_max_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Efficiency curve values at max power.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">incoming_ev_required_soc_departure</span></code>, <code class="docutils literal notranslate"><span class="pre">incoming_ev_departure_time_step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>ratio/steps</p></td>
+<td><p>Incoming EV departure requirement when known.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">incoming_ev_hours_until_departure</span></code>, <code class="docutils literal notranslate"><span class="pre">incoming_ev_time_until_departure_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>hours/ratio</p></td>
+<td><p>Incoming EV time pressure.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">last_requested_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_limited_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_applied_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">last_projection_error_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_action_feedback</span></code></p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>Previous raw policy request, post-constraint command and physically applied charger power.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">applied_energy_prev_15m_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">applied_power_mean_prev_15m_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">time_since_last_nonzero_action_hours</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_action_feedback</span></code></p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>Short action/application history.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">clip_reason_*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_action_feedback</span></code></p></td>
+<td class="text-right"><p>binary</p></td>
+<td><p>One-hot clipping causes: availability, power/deadband, SOC, building/phase/export headroom, outage or deferrable window.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ev">
+<h3><code class="docutils literal notranslate"><span class="pre">ev</span></code><a class="headerlink" href="#ev" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Bundle</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">soc</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>EV SOC.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">battery_capacity_kwh</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>EV battery capacity.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">depth_of_discharge_ratio</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Allowed depth of discharge.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">soc_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_min_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_max_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Canonical SOC bounds.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_available_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Usable energy and energy to full.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="storage">
+<h3><code class="docutils literal notranslate"><span class="pre">storage</span></code><a class="headerlink" href="#storage" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head"><p>Bundle</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">soc</span></code>, <code class="docutils literal notranslate"><span class="pre">capacity_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">nominal_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">electricity_consumption_kwh</span></code></p></td>
+<td><p>legacy</p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>BESS state and settled consumption.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">min_charge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">min_discharge_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Technical minimum powers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">efficiency_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">round_trip_efficiency_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Base and round-trip efficiency.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection_L1/L2/L3</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_base</span></code></p></td>
+<td class="text-right"><p>one-hot</p></td>
+<td><p>Storage phase connection.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage_soc_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Canonical BESS SOC.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_power_kw</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Current max powers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_available_kwh</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>Energy headroom and available energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>Current feasible BESS action capacity after SOC, outage and headroom limits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">available_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">available_discharge_energy_kwh_step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Feasible BESS energy this step after SOC/headroom/outage limits.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_charge_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharge_energy_kwh_step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>Nominal BESS power limit converted to this step duration.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge_headroom_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">discharge_available_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">usable_soc_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>Normalized BESS charge room, discharge energy and SOC within usable range.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">current_efficiency_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">degraded_capacity_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">soc_min_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>Current efficiency, degraded capacity and minimum SOC.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">last_requested_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_limited_*</span></code>, <code class="docutils literal notranslate"><span class="pre">last_applied_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">last_projection_error_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">clip_reason_*</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity_action_feedback</span></code></p></td>
+<td class="text-right"><p>mixed</p></td>
+<td><p>Previous BESS action request, limited command, applied power and clipping causes.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="pv">
+<h3><code class="docutils literal notranslate"><span class="pre">pv</span></code><a class="headerlink" href="#pv" title="Link to this heading"></a></h3>
+<p>Only present when <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> is enabled.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Feature</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">generation_power_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>PV generation as power.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">generation_energy_kwh_step</span></code></p></td>
+<td class="text-right"><p>kWh/step</p></td>
+<td><p>PV generation in current step.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">installed_power_kw</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Installed PV power.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">generation_capacity_factor_ratio</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">generation_power_kw</span> <span class="pre">/</span> <span class="pre">installed_power_kw</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="deferrable-appliance">
+<span id="deferrable_appliance"></span><h3><code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code><a class="headerlink" href="#deferrable-appliance" title="Link to this heading"></a></h3>
+<p>Base deferrable features are in <code class="docutils literal notranslate"><span class="pre">entity_base</span></code>; see the flat deferrable table above for definitions. Entity deferrables also include <code class="docutils literal notranslate"><span class="pre">remaining_duration_hours</span></code>, <code class="docutils literal notranslate"><span class="pre">cycle_remaining_fraction_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">hours_until_earliest_start</span></code>, <code class="docutils literal notranslate"><span class="pre">start_window_width_hours</span></code>, <code class="docutils literal notranslate"><span class="pre">start_energy_kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">start_power_kw</span></code> and <code class="docutils literal notranslate"><span class="pre">must_start_now</span></code> for RL deadline pressure. With <code class="docutils literal notranslate"><span class="pre">entity_action_feedback</span></code>, deferrables also expose <code class="docutils literal notranslate"><span class="pre">last_start_requested</span></code>, <code class="docutils literal notranslate"><span class="pre">last_start_applied</span></code>, <code class="docutils literal notranslate"><span class="pre">start_blocked</span></code> and <code class="docutils literal notranslate"><span class="pre">clip_reason_*</span></code>.</p>
+<p>Derived forecasts default to future dataset values for backward compatibility
+(<code class="docutils literal notranslate"><span class="pre">load_pv_method</span> <span class="pre">=</span> <span class="pre">&quot;actual_future&quot;</span></code>). A schema can instead set
+<code class="docutils literal notranslate"><span class="pre">derived_forecasts.load_pv_method</span> <span class="pre">=</span> <span class="pre">&quot;daily_persistence&quot;</span></code>; load and PV then use
+only the corresponding previous-day observation, with a current-step cold
+start. Price respects the declared day-ahead publication boundary: realised
+OMIE values are exposed only after publication and otherwise use the schema’s
+causal fallback (daily persistence in the annual REC suite). The exact sources
+are exposed in <code class="docutils literal notranslate"><span class="pre">meta.forecast_config</span></code>; real-world adapters should populate
+equivalent fields from operational forecasts.</p>
+</section>
+</section>
+<section id="entity-edges">
+<h2>Entity Edges<a class="headerlink" href="#entity-edges" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Edge</p></th>
+<th class="head text-right"><p>Shape</p></th>
+<th class="head"><p>Links</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">district_to_building</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">(n_buildings,</span> <span class="pre">2)</span></code></p></td>
+<td><p>District row 0 to each building.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">building_to_charger</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">(n_chargers,</span> <span class="pre">2)</span></code></p></td>
+<td><p>Building to charger.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">building_to_storage</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">(n_storage,</span> <span class="pre">2)</span></code></p></td>
+<td><p>Building to BESS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">building_to_pv</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">(n_pv,</span> <span class="pre">2)</span></code></p></td>
+<td><p>Building to PV.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">building_to_deferrable_appliance</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">(n_appliances,</span> <span class="pre">2)</span></code></p></td>
+<td><p>Building to deferrable appliance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charger_to_ev_connected</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">(n_chargers,</span> <span class="pre">2)</span></code></p></td>
+<td><p>Charger to connected EV; <code class="docutils literal notranslate"><span class="pre">-1</span></code> row when absent.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charger_to_ev_connected_mask</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">(n_chargers,)</span></code></p></td>
+<td><p>Valid connected-edge mask.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charger_to_ev_incoming</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">(n_chargers,</span> <span class="pre">2)</span></code></p></td>
+<td><p>Charger to incoming EV.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charger_to_ev_incoming_mask</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">(n_chargers,)</span></code></p></td>
+<td><p>Valid incoming-edge mask.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="interfaces_flat_entity.html" class="btn btn-neutral float-left" title="Flat and Entity Interfaces" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="actions_reference.html" class="btn btn-neutral float-right" title="Actions Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

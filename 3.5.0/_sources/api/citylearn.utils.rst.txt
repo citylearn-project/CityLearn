@@ -1,0 +1,17 @@
+citylearn.utils package
+=======================
+
+.. automodule:: citylearn.utils
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   citylearn.utils.file_handler
+   citylearn.utils.noise
+   citylearn.utils.paths

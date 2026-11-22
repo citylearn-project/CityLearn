@@ -1,0 +1,21 @@
+citylearn.agents package
+========================
+
+.. automodule:: citylearn.agents
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   citylearn.agents.base
+   citylearn.agents.baseline
+   citylearn.agents.marlisa
+   citylearn.agents.q_learning
+   citylearn.agents.rbc
+   citylearn.agents.rlc
+   citylearn.agents.sac

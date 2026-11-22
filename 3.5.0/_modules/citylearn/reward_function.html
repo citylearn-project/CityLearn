@@ -1,0 +1,849 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.reward_function &mdash; CityLearn 3.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c1362a89"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+ 
+<script src="../../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.reward_function</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.5.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.reward_function</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.scalars</span><span class="w"> </span><span class="kn">import</span> <span class="n">numpy1_scalar</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+<div class="viewcode-block" id="RewardFunction">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.RewardFunction">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RewardFunction</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Base and default reward function class.</span>
+
+<span class="sd">    The default reward is the electricity consumption from the grid at the current time step returned as a negative value.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env_metadata: Mapping[str, Any]:</span>
+<span class="sd">        General static information about the environment.</span>
+<span class="sd">    **kwargs : dict</span>
+<span class="sd">        Other keyword arguments for custom reward calculation.</span>
+<span class="sd">    """</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">exponent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">penalty_coefficient</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'charging_constraint_penalty_coefficient'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env_metadata</span> <span class="o">=</span> <span class="n">env_metadata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exponent</span> <span class="o">=</span> <span class="n">exponent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">charging_constraint_penalty_coefficient</span> <span class="o">=</span> <span class="n">penalty_coefficient</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_metadata</span>
+
+    <span class="nd">@env_metadata</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_env_metadata</span> <span class="o">=</span> <span class="n">env_metadata</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">central_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Expect 1 central agent to control all buildings."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_metadata</span><span class="p">[</span><span class="s1">'central_agent'</span><span class="p">]</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__exponent</span>
+
+    <span class="nd">@exponent</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exponent</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__exponent</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">exponent</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">exponent</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">charging_constraint_penalty_coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_charging_constraint_penalty_coefficient'</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="nd">@charging_constraint_penalty_coefficient</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">charging_constraint_penalty_coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coefficient</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">coefficient</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_charging_constraint_penalty_coefficient</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_charging_constraint_penalty_coefficient</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">coefficient</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RewardFunction.reset">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.RewardFunction.reset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Use to reset variables at the start of an episode."""</span>
+
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="RewardFunction.get_required_observation_names">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.RewardFunction.get_required_observation_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_required_observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Declare inputs of the built-in calculation; custom rewards remain unrestricted."""</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="n">RewardFunction</span> <span class="ow">and</span> <span class="s1">'calculate'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="s1">'net_electricity_consumption'</span><span class="p">,)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="RewardFunction.calculate">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.RewardFunction.calculate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Calculates reward.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        observations: List[Mapping[str, Union[int, float]]]</span>
+<span class="sd">            List of all building observations at current :py:attr:`citylearn.citylearn.CityLearnEnv.</span>
+<span class="sd">            time_step` that are got from calling :py:meth:`citylearn.building.Building.observations`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        reward: List[float]</span>
+<span class="sd">            Reward for transition to current timestep.</span>
+<span class="sd">        """</span>
+
+        <span class="n">net_electricity_consumption</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="p">[</span><span class="s1">'net_electricity_consumption'</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">observations</span><span class="p">]</span>
+        <span class="n">reward_list</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="n">numpy1_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exponent</span><span class="p">))</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">net_electricity_consumption</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">reward_list</span><span class="p">,</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="mi">0</span><span class="p">))]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="n">reward_list</span>
+
+        <span class="k">return</span> <span class="n">reward</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="MultiBuildingRewardFunction">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.MultiBuildingRewardFunction">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MultiBuildingRewardFunction</span><span class="p">(</span><span class="n">RewardFunction</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">reward_functions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">RewardFunction</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span> <span class="o">=</span> <span class="n">env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward_functions</span> <span class="o">=</span> <span class="n">reward_functions</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MultiBuildingRewardFunction.calculate">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.MultiBuildingRewardFunction.calculate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="c1"># Each building's function sees only that building, so it yields one value; collect them flat</span>
+        <span class="c1"># and aggregate for a central agent like every other reward function.</span>
+        <span class="n">rewards</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">obs</span><span class="p">,</span> <span class="p">(</span><span class="n">building_name</span><span class="p">,</span> <span class="n">rf</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_functions</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">rf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No reward function for building '</span><span class="si">{</span><span class="n">building_name</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+
+            <span class="n">rewards</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rf</span><span class="o">.</span><span class="n">calculate</span><span class="p">([</span><span class="n">obs</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">rewards</span><span class="p">)]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span> <span class="k">else</span> <span class="n">rewards</span></div>
+
+
+<div class="viewcode-block" id="MultiBuildingRewardFunction.reset">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.MultiBuildingRewardFunction.reset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">rf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">rf</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MultiBuildingRewardFunction.get_required_observation_names">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.MultiBuildingRewardFunction.get_required_observation_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_required_observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="n">required</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">rf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="n">rf</span><span class="o">.</span><span class="n">get_required_observation_names</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">required</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">required</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_env_metadata</span>
+
+    <span class="nd">@env_metadata</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_env_metadata</span> <span class="o">=</span> <span class="n">env_metadata</span>
+        <span class="k">for</span> <span class="n">rf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward_functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">rf</span><span class="o">.</span><span class="n">env_metadata</span> <span class="o">=</span> <span class="n">env_metadata</span></div>
+
+    
+
+<div class="viewcode-block" id="MARL">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.MARL">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MARL</span><span class="p">(</span><span class="n">RewardFunction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""MARL reward function class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env_metadata: Mapping[str, Any]:</span>
+<span class="sd">        General static information about the environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MARL.get_required_observation_names">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.MARL.get_required_observation_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_required_observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">'net_electricity_consumption'</span><span class="p">,)</span></div>
+
+
+<div class="viewcode-block" id="MARL.calculate">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.MARL.calculate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">net_electricity_consumption</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="p">[</span><span class="s1">'net_electricity_consumption'</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">observations</span><span class="p">]</span>
+        <span class="n">district_electricity_consumption</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">net_electricity_consumption</span><span class="p">,</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">building_electricity_consumption</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">net_electricity_consumption</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">*-</span><span class="mi">1</span>
+        <span class="n">reward_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">building_electricity_consumption</span><span class="p">)</span><span class="o">*</span><span class="mf">0.01</span><span class="o">*</span><span class="n">building_electricity_consumption</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">district_electricity_consumption</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="p">[</span><span class="n">reward_list</span><span class="o">.</span><span class="n">sum</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="n">reward_list</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="n">reward</span></div>
+</div>
+
+
+<div class="viewcode-block" id="IndependentSACReward">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.IndependentSACReward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IndependentSACReward</span><span class="p">(</span><span class="n">RewardFunction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Recommended for use with the `SAC` controllers.</span>
+<span class="sd">    </span>
+<span class="sd">    Returned reward assumes that the building-agents act independently of each other, without sharing information through the reward.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env_metadata: Mapping[str, Any]:</span>
+<span class="sd">        General static information about the environment.</span>
+<span class="sd">    """</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">)</span>
+
+<div class="viewcode-block" id="IndependentSACReward.get_required_observation_names">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.IndependentSACReward.get_required_observation_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_required_observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">'net_electricity_consumption'</span><span class="p">,)</span></div>
+
+
+<div class="viewcode-block" id="IndependentSACReward.calculate">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.IndependentSACReward.calculate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">net_electricity_consumption</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="p">[</span><span class="s1">'net_electricity_consumption'</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">observations</span><span class="p">]</span>
+        <span class="n">reward_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">v</span><span class="o">*</span><span class="n">numpy1_scalar</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">**</span><span class="mi">3</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">net_electricity_consumption</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">reward_list</span><span class="p">,</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="mi">0</span><span class="p">))]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="n">reward_list</span>
+
+        <span class="k">return</span> <span class="n">reward</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="SolarPenaltyReward">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.SolarPenaltyReward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SolarPenaltyReward</span><span class="p">(</span><span class="n">RewardFunction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The reward is designed to minimize electricity consumption and maximize solar generation to charge energy storage systems.</span>
+
+<span class="sd">    The reward is calculated for each building, i and summed to provide the agent with a reward that is representative of all the</span>
+<span class="sd">    building or buildings (in centralized case)it controls. It encourages net-zero energy use by penalizing grid load satisfaction </span>
+<span class="sd">    when there is energy in the energy storage systems as well as penalizing net export when the energy storage systems are not</span>
+<span class="sd">    fully charged through the penalty term. There is neither penalty nor reward when the energy storage systems are fully charged</span>
+<span class="sd">    during net export to the grid. Whereas, when the energy storage systems are charged to capacity and there is net import from the </span>
+<span class="sd">    grid the penalty is maximized.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env_metadata: Mapping[str, Any]:</span>
+<span class="sd">        General static information about the environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SolarPenaltyReward.get_required_observation_names">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.SolarPenaltyReward.get_required_observation_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_required_observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s1">'net_electricity_consumption'</span><span class="p">,</span>
+            <span class="s1">'cooling_storage_soc'</span><span class="p">,</span>
+            <span class="s1">'heating_storage_soc'</span><span class="p">,</span>
+            <span class="s1">'dhw_storage_soc'</span><span class="p">,</span>
+            <span class="s1">'electrical_storage_soc'</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SolarPenaltyReward.calculate">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.SolarPenaltyReward.calculate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">reward_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">o</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_metadata</span><span class="p">[</span><span class="s1">'buildings'</span><span class="p">]):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s1">'net_electricity_consumption'</span><span class="p">]</span>
+            <span class="n">cc</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="s1">'cooling_storage'</span><span class="p">][</span><span class="s1">'capacity'</span><span class="p">]</span>
+            <span class="n">hc</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="s1">'heating_storage'</span><span class="p">][</span><span class="s1">'capacity'</span><span class="p">]</span>
+            <span class="n">dc</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="s1">'dhw_storage'</span><span class="p">][</span><span class="s1">'capacity'</span><span class="p">]</span>
+            <span class="n">ec</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="s1">'electrical_storage'</span><span class="p">][</span><span class="s1">'capacity'</span><span class="p">]</span>
+            <span class="n">cs</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'cooling_storage_soc'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">hs</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'heating_storage_soc'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'dhw_storage_soc'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">es</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'electrical_storage_soc'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">reward</span> <span class="o">+=</span> <span class="o">-</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">*</span><span class="n">cs</span><span class="p">)</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">if</span> <span class="n">cc</span> <span class="o">&gt;</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="n">reward</span> <span class="o">+=</span> <span class="o">-</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">*</span><span class="n">hs</span><span class="p">)</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">if</span> <span class="n">hc</span> <span class="o">&gt;</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="n">reward</span> <span class="o">+=</span> <span class="o">-</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">*</span><span class="n">ds</span><span class="p">)</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">if</span> <span class="n">dc</span> <span class="o">&gt;</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="n">reward</span> <span class="o">+=</span> <span class="o">-</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">*</span><span class="n">es</span><span class="p">)</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">if</span> <span class="n">ec</span> <span class="o">&gt;</span> <span class="n">ZERO_DIVISION_PLACEHOLDER</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="n">reward_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">reward_list</span><span class="p">,</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="mi">0</span><span class="p">))]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="n">reward_list</span>
+        
+        <span class="k">return</span> <span class="n">reward</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="ComfortReward">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.ComfortReward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComfortReward</span><span class="p">(</span><span class="n">RewardFunction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Reward for occupant thermal comfort satisfaction.</span>
+
+<span class="sd">    The reward is calculated as the negative difference between the setpoint and indoor dry-bulb temperature raised to some exponent</span>
+<span class="sd">    if outside the comfort band. If within the comfort band, the reward is the negative difference when in cooling mode and temperature</span>
+<span class="sd">    is below the setpoint or when in heating mode and temperature is above the setpoint. The reward is 0 if within the comfort band</span>
+<span class="sd">    and above the setpoint in cooling mode or below the setpoint and in heating mode.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env_metadata: Mapping[str, Any]:</span>
+<span class="sd">        General static information about the environment.</span>
+<span class="sd">    band: float, default: 2.0</span>
+<span class="sd">        Setpoint comfort band (+/-). If not provided, the comfort band time series defined in the</span>
+<span class="sd">        building file, or the default time series value of 2.0 is used.</span>
+<span class="sd">    lower_exponent: float, default = 2.0</span>
+<span class="sd">        Penalty exponent for when in cooling mode but temperature is above setpoint upper</span>
+<span class="sd">        boundary or heating mode but temperature is below setpoint lower boundary.</span>
+<span class="sd">    higher_exponent: float, default = 2.0</span>
+<span class="sd">        Penalty exponent for when in cooling mode but temperature is below setpoint lower</span>
+<span class="sd">        boundary or heating mode but temperature is above setpoint upper boundary.</span>
+<span class="sd">    """</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">band</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">lower_exponent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">higher_exponent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="o">=</span> <span class="n">band</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_exponent</span> <span class="o">=</span> <span class="n">lower_exponent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">higher_exponent</span> <span class="o">=</span> <span class="n">higher_exponent</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">band</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__band</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lower_exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__lower_exponent</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">higher_exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__higher_exponent</span>
+    
+    <span class="nd">@band</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">band</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">band</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__band</span> <span class="o">=</span> <span class="n">band</span>
+
+    <span class="nd">@lower_exponent</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lower_exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower_exponent</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__lower_exponent</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="k">if</span> <span class="n">lower_exponent</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">lower_exponent</span>
+
+    <span class="nd">@higher_exponent</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">higher_exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">higher_exponent</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__higher_exponent</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="k">if</span> <span class="n">higher_exponent</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">higher_exponent</span>
+
+<div class="viewcode-block" id="ComfortReward.calculate">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.ComfortReward.calculate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">reward_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">observations</span><span class="p">:</span>
+            <span class="n">heating_demand</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'heating_demand'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">cooling_demand</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'cooling_demand'</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">heating</span> <span class="o">=</span> <span class="n">heating_demand</span> <span class="o">&gt;</span> <span class="n">cooling_demand</span>
+            <span class="n">hvac_mode</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s1">'hvac_mode'</span><span class="p">]</span>
+            <span class="n">indoor_dry_bulb_temperature</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature'</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">hvac_mode</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+                <span class="n">set_point</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_cooling_set_point'</span><span class="p">]</span> <span class="k">if</span> <span class="n">hvac_mode</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">o</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_heating_set_point'</span><span class="p">]</span>
+                <span class="n">band</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">o</span><span class="p">[</span><span class="s1">'comfort_band'</span><span class="p">]</span>
+                <span class="n">lower_bound_comfortable_indoor_dry_bulb_temperature</span> <span class="o">=</span> <span class="n">set_point</span> <span class="o">-</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">band</span><span class="p">)</span>
+                <span class="n">upper_bound_comfortable_indoor_dry_bulb_temperature</span> <span class="o">=</span> <span class="n">set_point</span> <span class="o">+</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">band</span><span class="p">)</span>
+                <span class="n">delta</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">indoor_dry_bulb_temperature</span> <span class="o">-</span> <span class="n">set_point</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="n">indoor_dry_bulb_temperature</span> <span class="o">&lt;</span> <span class="n">lower_bound_comfortable_indoor_dry_bulb_temperature</span><span class="p">:</span>
+                    <span class="n">exponent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_exponent</span> <span class="k">if</span> <span class="n">hvac_mode</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">higher_exponent</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">delta</span><span class="o">**</span><span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">exponent</span><span class="p">))</span>
+                
+                <span class="k">elif</span> <span class="n">lower_bound_comfortable_indoor_dry_bulb_temperature</span> <span class="o">&lt;=</span> <span class="n">indoor_dry_bulb_temperature</span> <span class="o">&lt;</span> <span class="n">set_point</span><span class="p">:</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="o">-</span><span class="n">delta</span>
+
+                <span class="k">elif</span> <span class="n">set_point</span> <span class="o">&lt;=</span> <span class="n">indoor_dry_bulb_temperature</span> <span class="o">&lt;=</span> <span class="n">upper_bound_comfortable_indoor_dry_bulb_temperature</span><span class="p">:</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="o">-</span><span class="n">delta</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">exponent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">higher_exponent</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_exponent</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">delta</span><span class="o">**</span><span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">exponent</span><span class="p">))</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cooling_set_point</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_cooling_set_point'</span><span class="p">]</span>
+                <span class="n">heating_set_point</span> <span class="o">=</span> <span class="n">o</span><span class="p">[</span><span class="s1">'indoor_dry_bulb_temperature_heating_set_point'</span><span class="p">]</span>
+                <span class="n">band</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">o</span><span class="p">[</span><span class="s1">'comfort_band'</span><span class="p">]</span>
+                <span class="n">lower_bound_comfortable_indoor_dry_bulb_temperature</span> <span class="o">=</span> <span class="n">heating_set_point</span> <span class="o">-</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">band</span><span class="p">)</span>
+                <span class="n">upper_bound_comfortable_indoor_dry_bulb_temperature</span> <span class="o">=</span> <span class="n">cooling_set_point</span> <span class="o">+</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">band</span><span class="p">)</span>
+                <span class="n">cooling_delta</span> <span class="o">=</span> <span class="n">indoor_dry_bulb_temperature</span> <span class="o">-</span> <span class="n">cooling_set_point</span>
+                <span class="n">heating_delta</span> <span class="o">=</span> <span class="n">indoor_dry_bulb_temperature</span> <span class="o">-</span> <span class="n">heating_set_point</span>
+
+                <span class="k">if</span> <span class="n">indoor_dry_bulb_temperature</span> <span class="o">&lt;</span> <span class="n">lower_bound_comfortable_indoor_dry_bulb_temperature</span><span class="p">:</span>
+                    <span class="n">exponent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">higher_exponent</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">heating</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_exponent</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">heating_delta</span><span class="p">)</span><span class="o">**</span><span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">exponent</span><span class="p">))</span>
+
+                <span class="k">elif</span> <span class="n">lower_bound_comfortable_indoor_dry_bulb_temperature</span> <span class="o">&lt;=</span> <span class="n">indoor_dry_bulb_temperature</span> <span class="o">&lt;</span> <span class="n">heating_set_point</span><span class="p">:</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">heating_delta</span><span class="p">))</span>
+
+                <span class="k">elif</span> <span class="n">heating_set_point</span> <span class="o">&lt;=</span> <span class="n">indoor_dry_bulb_temperature</span> <span class="o">&lt;=</span> <span class="n">cooling_set_point</span><span class="p">:</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+                <span class="k">elif</span> <span class="n">cooling_set_point</span> <span class="o">&lt;</span> <span class="n">indoor_dry_bulb_temperature</span> <span class="o">&lt;</span> <span class="n">upper_bound_comfortable_indoor_dry_bulb_temperature</span><span class="p">:</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">cooling_delta</span><span class="p">))</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">exponent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">higher_exponent</span> <span class="k">if</span> <span class="n">heating</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_exponent</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">cooling_delta</span><span class="p">)</span><span class="o">**</span><span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">exponent</span><span class="p">))</span>
+
+            <span class="n">reward_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">reward_list</span><span class="p">,</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="mi">0</span><span class="p">))]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reward</span> <span class="o">=</span> <span class="n">reward_list</span>
+
+        <span class="k">return</span> <span class="n">reward</span></div>
+
+
+<div class="viewcode-block" id="ComfortReward.get_required_observation_names">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.ComfortReward.get_required_observation_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_required_observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s1">'heating_demand'</span><span class="p">,</span>
+            <span class="s1">'cooling_demand'</span><span class="p">,</span>
+            <span class="s1">'hvac_mode'</span><span class="p">,</span>
+            <span class="s1">'indoor_dry_bulb_temperature'</span><span class="p">,</span>
+            <span class="s1">'indoor_dry_bulb_temperature_cooling_set_point'</span><span class="p">,</span>
+            <span class="s1">'indoor_dry_bulb_temperature_heating_set_point'</span><span class="p">,</span>
+            <span class="s1">'comfort_band'</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="SolarPenaltyAndComfortReward">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.SolarPenaltyAndComfortReward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SolarPenaltyAndComfortReward</span><span class="p">(</span><span class="n">RewardFunction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Addition of :py:class:`citylearn.reward_function.SolarPenaltyReward` and :py:class:`citylearn.reward_function.ComfortReward`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env_metadata: Mapping[str, Any]:</span>
+<span class="sd">        General static information about the environment.</span>
+<span class="sd">    band: float, default = 2.0</span>
+<span class="sd">        Setpoint comfort band (+/-). If not provided, the comfort band time series defined in the</span>
+<span class="sd">        building file, or the default time series value of 2.0 is used.</span>
+<span class="sd">    lower_exponent: float, default = 2.0</span>
+<span class="sd">        Penalty exponent for when in cooling mode but temperature is above setpoint upper</span>
+<span class="sd">        boundary or heating mode but temperature is below setpoint lower boundary.</span>
+<span class="sd">    higher_exponent: float, default = 3.0</span>
+<span class="sd">        Penalty exponent for when in cooling mode but temperature is below setpoint lower</span>
+<span class="sd">        boundary or heating mode but temperature is above setpoint upper boundary.</span>
+<span class="sd">    coefficients: Tuple, default = (1.0, 1.0)</span>
+<span class="sd">        Coefficents for `citylearn.reward_function.SolarPenaltyReward` and :py:class:`citylearn.reward_function.ComfortReward` values respectively.</span>
+<span class="sd">    """</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">band</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">lower_exponent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">higher_exponent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">:</span> <span class="n">Tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__functions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RewardFunction</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">SolarPenaltyReward</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">),</span>
+            <span class="n">ComfortReward</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">,</span> <span class="n">band</span><span class="o">=</span><span class="n">band</span><span class="p">,</span> <span class="n">lower_exponent</span><span class="o">=</span><span class="n">lower_exponent</span><span class="p">,</span> <span class="n">higher_exponent</span><span class="o">=</span><span class="n">higher_exponent</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span> <span class="o">=</span> <span class="n">coefficients</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__coefficients</span>
+    
+    <span class="nd">@RewardFunction</span><span class="o">.</span><span class="n">env_metadata</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">env_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">RewardFunction</span><span class="o">.</span><span class="n">env_metadata</span><span class="o">.</span><span class="n">fset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__functions</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">env_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_metadata</span>
+    
+    <span class="nd">@coefficients</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">):</span>
+        <span class="n">coefficients</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__functions</span><span class="p">)</span> <span class="k">if</span> <span class="n">coefficients</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">coefficients</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__functions</span><span class="p">),</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> needs </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__functions</span><span class="p">)</span><span class="si">}</span><span class="s1"> coefficients.'</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">__coefficients</span> <span class="o">=</span> <span class="n">coefficients</span>
+
+<div class="viewcode-block" id="SolarPenaltyAndComfortReward.calculate">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.SolarPenaltyAndComfortReward.calculate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__functions</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="n">reward</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">reward</span> <span class="o">=</span> <span class="n">reward</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">reward</span></div>
+
+
+<div class="viewcode-block" id="SolarPenaltyAndComfortReward.get_required_observation_names">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.SolarPenaltyAndComfortReward.get_required_observation_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_required_observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="n">required</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__functions</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="n">get_required_observation_names</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">required</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">required</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Electric_Vehicles_Reward_Function">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.Electric_Vehicles_Reward_Function">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Electric_Vehicles_Reward_Function</span><span class="p">(</span><span class="n">MARL</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Reward function for electric vehicle charging behavior in V2G settings.</span>
+<span class="sd">    Only affects EV-related behavior; other building logic comes from the superclass.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env_metadata</span><span class="p">)</span>
+
+        <span class="c1"># Default tunable weights for EV-related reward components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span> <span class="ow">or</span> <span class="p">{</span>
+            <span class="s2">"no_car_charging"</span><span class="p">:</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">,</span>
+            <span class="s2">"battery_limits"</span><span class="p">:</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">,</span>
+            <span class="s2">"soc_impossible"</span><span class="p">:</span> <span class="o">-</span><span class="mf">10.0</span><span class="p">,</span>
+            <span class="s2">"soc_under"</span><span class="p">:</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">,</span>
+            <span class="s2">"close_soc"</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">,</span>
+            <span class="s2">"self_ev_consumption"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span>
+            <span class="s2">"extra_self_production"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_base_reward_total</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_penalty_total</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_base_rewards_per_building</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_penalties_per_building</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Electric_Vehicles_Reward_Function.calculate">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.Electric_Vehicles_Reward_Function.calculate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">current_reward</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
+        <span class="n">reward_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">base_rewards</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">penalty_values</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">observations</span><span class="p">):</span>
+            <span class="n">ev_info</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"electric_vehicles_chargers_dict"</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ev_info</span><span class="p">:</span>
+                <span class="n">reward</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+                    <span class="n">reward_value</span> <span class="o">=</span> <span class="n">current_reward</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_reward</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">current_reward</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_ev_penalty</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">reward_value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">reward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_ev_penalty</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">current_reward</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+            <span class="n">base_rewards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
+            <span class="n">violation</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"charging_constraint_violation_kwh"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">penalty</span> <span class="o">=</span> <span class="n">violation</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">charging_constraint_penalty_coefficient</span> <span class="k">if</span> <span class="n">violation</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="n">penalty_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">penalty</span><span class="p">)</span>
+            <span class="n">reward</span> <span class="o">-=</span> <span class="n">penalty</span>
+
+            <span class="n">reward_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reward</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_base_rewards_per_building</span> <span class="o">=</span> <span class="n">base_rewards</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_penalties_per_building</span> <span class="o">=</span> <span class="n">penalty_values</span>
+        <span class="n">total_reward</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">reward_list</span><span class="p">,</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="mi">0</span><span class="p">))]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span> <span class="k">else</span> <span class="n">reward_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_base_reward_total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">base_rewards</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span> <span class="k">else</span> <span class="n">base_rewards</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_penalty_total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">penalty_values</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">central_agent</span> <span class="k">else</span> <span class="n">penalty_values</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Calculated EV reward: </span><span class="si">{</span><span class="n">total_reward</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">total_reward</span></div>
+
+
+<div class="viewcode-block" id="Electric_Vehicles_Reward_Function.get_required_observation_names">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.Electric_Vehicles_Reward_Function.get_required_observation_names">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_required_observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s1">'net_electricity_consumption'</span><span class="p">,</span>
+            <span class="s1">'electric_vehicles_chargers_dict'</span><span class="p">,</span>
+            <span class="s1">'charging_constraint_violation_kwh'</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Electric_Vehicles_Reward_Function.calculate_ev_penalty">
+<a class="viewcode-back" href="../../api/citylearn.reward_function.html#citylearn.reward_function.Electric_Vehicles_Reward_Function.calculate_ev_penalty">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_ev_penalty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]],</span> <span class="n">current_reward</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+
+        <span class="n">penalty_total</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">ev_chargers</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"electric_vehicles_chargers_dict"</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">net_energy_before</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"net_electricity_consumption"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Bounding the multiplier to avoid extreme scaling</span>
+        <span class="n">penalty_multiplier</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">current_reward</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">charger_id</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">ev_chargers</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">contributions</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">[</span><span class="s2">"connected"</span><span class="p">]:</span>
+                <span class="n">last_charged_kwh</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_charged_kwh"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="mf">0.0</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">last_charged_kwh</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.1</span><span class="p">:</span>
+                    <span class="n">contributions</span><span class="p">[</span><span class="s2">"no_car_charging"</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"no_car_charging"</span><span class="p">]</span> <span class="o">*</span> <span class="n">penalty_multiplier</span>
+                <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Charger </span><span class="si">{</span><span class="n">charger_id</span><span class="si">}</span><span class="s2"> | EV not connected | Contributions: </span><span class="si">{</span><span class="n">contributions</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="n">penalty_total</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">contributions</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Extract values</span>
+            <span class="n">soc_prev</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"previous_battery_soc"</span><span class="p">)</span>
+            <span class="n">soc_now</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"battery_soc"</span><span class="p">)</span>
+            <span class="n">capacity</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"battery_capacity"</span><span class="p">)</span>
+            <span class="n">min_capacity</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"min_capacity"</span><span class="p">)</span>
+            <span class="n">last_charged_kwh</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"last_charged_kwh"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">last_charged_kwh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">last_charged_kwh</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">required_soc</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"required_soc"</span><span class="p">)</span>
+            <span class="n">hours_until_departure</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hours_until_departure"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">max_charging_power</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_charging_power"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">max_discharging_power</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_discharging_power"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">soc_prev</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">soc_now</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">capacity</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Something went wrong, this values should not be none"</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="c1"># Battery limits</span>
+            <span class="n">current_energy</span> <span class="o">=</span> <span class="n">soc_prev</span> <span class="o">*</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">capacity</span><span class="p">)</span> <span class="o">+</span> <span class="n">last_charged_kwh</span>
+            <span class="k">if</span> <span class="n">current_energy</span> <span class="o">&gt;</span> <span class="n">capacity</span> <span class="ow">or</span> <span class="n">current_energy</span> <span class="o">&lt;</span> <span class="n">min_capacity</span><span class="p">:</span>
+                <span class="n">contributions</span><span class="p">[</span><span class="s2">"battery_limits"</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"battery_limits"</span><span class="p">]</span> <span class="o">*</span> <span class="n">penalty_multiplier</span>
+
+            <span class="c1"># SoC penalties/rewards</span>
+            <span class="k">if</span> <span class="n">required_soc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">hours_until_departure</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">soc_diff</span> <span class="o">=</span> <span class="n">soc_now</span> <span class="o">-</span> <span class="n">required_soc</span>
+                <span class="n">soc_diff_kWh</span> <span class="o">=</span> <span class="n">soc_diff</span> <span class="o">*</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">capacity</span><span class="p">)</span>
+
+                <span class="n">max_possible_charge</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_charging_power</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">hours_until_departure</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">max_possible_discharge</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_discharging_power</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">hours_until_departure</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+                <span class="n">soc_deficit_kwh</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">required_soc</span> <span class="o">-</span> <span class="n">soc_now</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">numpy1_scalar</span><span class="p">(</span><span class="n">capacity</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">soc_deficit_kwh</span> <span class="o">&gt;</span> <span class="n">max_possible_charge</span><span class="p">:</span>
+                    <span class="n">contributions</span><span class="p">[</span><span class="s2">"soc_impossible"</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"soc_impossible"</span><span class="p">]</span> <span class="o">*</span> <span class="n">penalty_multiplier</span>
+
+                <span class="k">if</span> <span class="n">hours_until_departure</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="o">-</span><span class="mf">0.25</span> <span class="o">&lt;</span> <span class="n">soc_diff</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="mf">0.10</span><span class="p">:</span>
+                        <span class="n">contributions</span><span class="p">[</span><span class="s2">"soc_under"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"soc_under"</span><span class="p">]</span> <span class="o">*</span> <span class="n">penalty_multiplier</span>
+                    <span class="k">elif</span> <span class="n">soc_diff</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="mf">0.25</span><span class="p">:</span>
+                        <span class="n">contributions</span><span class="p">[</span><span class="s2">"soc_under"</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"soc_under"</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">penalty_multiplier</span>
+                    <span class="k">elif</span> <span class="o">-</span><span class="mf">0.10</span> <span class="o">&lt;</span> <span class="n">soc_diff</span> <span class="o">&lt;=</span> <span class="mf">0.10</span><span class="p">:</span>
+                        <span class="n">contributions</span><span class="p">[</span><span class="s2">"close_soc"</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"close_soc"</span><span class="p">]</span> <span class="o">*</span> <span class="n">penalty_multiplier</span>
+
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">soc_diff_kWh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_possible_charge</span><span class="p">,</span> <span class="n">max_possible_discharge</span><span class="p">):</span>
+                    <span class="n">reward_multiplier</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">hours_until_departure</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">)</span>
+                    <span class="n">contributions</span><span class="p">[</span><span class="s2">"close_soc"</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"close_soc"</span><span class="p">]</span> <span class="o">*</span> <span class="n">penalty_multiplier</span> <span class="o">*</span> <span class="n">reward_multiplier</span>
+
+            <span class="c1"># Self-production reward</span>
+            <span class="k">if</span> <span class="n">last_charged_kwh</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">net_energy_before</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">contributions</span><span class="p">[</span><span class="s2">"extra_self_production"</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"extra_self_production"</span><span class="p">]</span> <span class="o">*</span> <span class="n">penalty_multiplier</span>
+            <span class="k">elif</span> <span class="n">last_charged_kwh</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">net_energy_before</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">contributions</span><span class="p">[</span><span class="s2">"extra_self_production"</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"extra_self_production"</span><span class="p">]</span> <span class="o">*</span> <span class="n">penalty_multiplier</span>
+
+            <span class="c1"># Self-consumption reward</span>
+            <span class="k">if</span> <span class="n">last_charged_kwh</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">net_energy_before</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">contributions</span><span class="p">[</span><span class="s2">"self_ev_consumption"</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"self_ev_consumption"</span><span class="p">]</span> <span class="o">*</span> <span class="n">penalty_multiplier</span>
+            <span class="k">elif</span> <span class="n">last_charged_kwh</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">net_energy_before</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">contributions</span><span class="p">[</span><span class="s2">"self_ev_consumption"</span><span class="p">]</span> <span class="o">+=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">"self_ev_consumption"</span><span class="p">]</span> <span class="o">*</span> <span class="n">penalty_multiplier</span>
+
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Charger </span><span class="si">{</span><span class="n">charger_id</span><span class="si">}</span><span class="s2"> | Contributions: </span><span class="si">{</span><span class="n">contributions</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">penalty_total</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">contributions</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">penalty_total</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

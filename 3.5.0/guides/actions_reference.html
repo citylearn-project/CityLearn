@@ -1,0 +1,408 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Actions Reference &mdash; CityLearn 3.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c1362a89"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Multi-Community Reference" href="multi_community_reference.html" />
+    <link rel="prev" title="Observations Reference" href="observations_reference.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Actions Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#general-contract">General Contract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flat-actions">Flat Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#physical-conversion">Physical Conversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deferrable-appliance-start-logic">Deferrable Appliance Start Logic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#escalator-control">Escalator Control</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#entity-actions">Entity Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-ordering">Step Ordering</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Actions Reference</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/actions_reference.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.5.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="actions-reference">
+<h1>Actions Reference<a class="headerlink" href="#actions-reference" title="Link to this heading"></a></h1>
+<p>Actions are normalized for the agent. The simulator converts them to physical power or energy using capacity, nominal power, asset limits and <code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code>.</p>
+<section id="general-contract">
+<h2>General Contract<a class="headerlink" href="#general-contract" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Rule</p></th>
+<th class="head"><p>Contract</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Bounds</p></td>
+<td><p>Read from <code class="docutils literal notranslate"><span class="pre">env.action_space</span></code> and <code class="docutils literal notranslate"><span class="pre">env.action_names</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Storage actions</p></td>
+<td><p>Positive charges, negative discharges.</p></td>
+</tr>
+<tr class="row-even"><td><p>EV charger actions</p></td>
+<td><p>Positive charges the EV, negative discharges/V2G if enabled.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Deferrable actions</p></td>
+<td><p>Binary start command. <code class="docutils literal notranslate"><span class="pre">action</span> <span class="pre">&gt;</span> <span class="pre">trigger_threshold</span></code> attempts to start the next pending cycle (<code class="docutils literal notranslate"><span class="pre">trigger_threshold</span></code> default: <code class="docutils literal notranslate"><span class="pre">0.5</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p>Escalator actions</p></td>
+<td><p>Three states: standby (<code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1/3[</span></code>), slow (<code class="docutils literal notranslate"><span class="pre">[1/3,</span> <span class="pre">2/3[</span></code>) and normal (<code class="docutils literal notranslate"><span class="pre">[2/3,</span> <span class="pre">1]</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p>Internal energy</p></td>
+<td><p>Applied step energy is <code class="docutils literal notranslate"><span class="pre">kWh/step</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Power limits</p></td>
+<td><p>Device ratings and service limits are <code class="docutils literal notranslate"><span class="pre">kW</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Constraints</p></td>
+<td><p>Charging/electrical service constraints may clip actions before application.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="flat-actions">
+<h2>Flat Actions<a class="headerlink" href="#flat-actions" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Action</p></th>
+<th class="head text-right"><p>Typical range</p></th>
+<th class="head"><p>Entity</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cooling_or_heating_device</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code></p></td>
+<td><p>building</p></td>
+<td><p>Negative controls cooling, positive controls heating. Mutually exclusive with separate cooling/heating actions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cooling_device</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code></p></td>
+<td><p>building</p></td>
+<td><p>Controls cooling demand/setpoint in dynamic buildings.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">heating_device</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code></p></td>
+<td><p>building</p></td>
+<td><p>Controls heating demand/setpoint in dynamic buildings.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cooling_storage</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[-limit,</span> <span class="pre">limit]</span></code></p></td>
+<td><p>building</p></td>
+<td><p>Charge/discharge cooling thermal storage.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">heating_storage</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[-limit,</span> <span class="pre">limit]</span></code></p></td>
+<td><p>building</p></td>
+<td><p>Charge/discharge heating thermal storage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dhw_storage</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[-limit,</span> <span class="pre">limit]</span></code></p></td>
+<td><p>building</p></td>
+<td><p>Charge/discharge domestic hot water storage.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electrical_storage</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code></p></td>
+<td><p>building</p></td>
+<td><p>Controls the building BESS.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_storage_{charger_id}</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code> or <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code></p></td>
+<td><p>charger</p></td>
+<td><p>Controls the EV connected to a charger. Negative bound depends on <code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance_{appliance_id}</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code></p></td>
+<td><p>appliance</p></td>
+<td><p>Binary start command (<code class="docutils literal notranslate"><span class="pre">0</span></code> off, <code class="docutils literal notranslate"><span class="pre">1</span></code> on) for the next feasible cycle.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">escalator_{escalator_id}</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code></p></td>
+<td><p>escalator</p></td>
+<td><p>Selects standby, slow or normal operation.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="physical-conversion">
+<h2>Physical Conversion<a class="headerlink" href="#physical-conversion" title="Link to this heading"></a></h2>
+<p>BESS action:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>energy_kwh_step = action * nominal_power_kw * seconds_per_time_step / 3600
+</pre></div>
+</div>
+<p>EV charger action:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>charge_energy_kwh_step = positive_action * max_charging_power_kw * seconds_per_time_step / 3600
+discharge_energy_kwh_step = negative_action * max_discharging_power_kw * seconds_per_time_step / 3600
+</pre></div>
+</div>
+<p>After conversion, the asset applies SOC, capacity, efficiency, power curves and service constraints.</p>
+</section>
+<section id="deferrable-appliance-start-logic">
+<h2>Deferrable Appliance Start Logic<a class="headerlink" href="#deferrable-appliance-start-logic" title="Link to this heading"></a></h2>
+<p>A cycle starts only when all conditions hold:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Condition</p></th>
+<th class="head"><p>Rule</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Pending cycle</p></td>
+<td><p>A cycle with state <code class="docutils literal notranslate"><span class="pre">pending</span></code> exists.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Action threshold</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">action</span> <span class="pre">&gt;</span> <span class="pre">trigger_threshold</span></code> (default <code class="docutils literal notranslate"><span class="pre">0.5</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p>Start window</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">earliest_start_time_step</span> <span class="pre">&lt;=</span> <span class="pre">current_global_time_step</span> <span class="pre">&lt;=</span> <span class="pre">latest_start_time_step</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Deadline</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">current</span> <span class="pre">+</span> <span class="pre">duration_steps</span> <span class="pre">-</span> <span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">deadline_time_step</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Episode window</p></td>
+<td><p>The full cycle fits inside the current episode.</p></td>
+</tr>
+</tbody>
+</table>
+<p>If the agent tries too late, the start is rejected. If <code class="docutils literal notranslate"><span class="pre">latest_start_time_step</span></code> passes with no valid start, the cycle is marked as missed.</p>
+<p>Controller recommendation: use <code class="docutils literal notranslate"><span class="pre">deferrable_appliance_can_start</span></code> as the readiness signal and emit <code class="docutils literal notranslate"><span class="pre">1.0</span></code> only when a start is intended.</p>
+</section>
+<section id="escalator-control">
+<h2>Escalator Control<a class="headerlink" href="#escalator-control" title="Link to this heading"></a></h2>
+<p>An escalator action is continuous only for agent compatibility; it is discretized
+into three operating states. <code class="docutils literal notranslate"><span class="pre">standby</span></code> consumes standby power and leaves any
+passenger demand above <code class="docutils literal notranslate"><span class="pre">service_threshold_passengers</span></code> unserved. Both <code class="docutils literal notranslate"><span class="pre">slow</span></code> and
+<code class="docutils literal notranslate"><span class="pre">normal</span></code> serve aggregate demand. <code class="docutils literal notranslate"><span class="pre">available=0</span></code> forces standby. This model does
+not simulate passenger queues or capacity limits.</p>
+</section>
+<section id="entity-actions">
+<h2>Entity Actions<a class="headerlink" href="#entity-actions" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Table</p></th>
+<th class="head"><p>Feature</p></th>
+<th class="head"><p>Maps to</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">building</span></code></p></td>
+<td><p>building action names</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cooling_storage</span></code>, <code class="docutils literal notranslate"><span class="pre">dhw_storage</span></code>, <code class="docutils literal notranslate"><span class="pre">electrical_storage</span></code>, etc.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charger</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_storage</span></code></p></td>
+<td><p>One row per active charger.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">start</span></code></p></td>
+<td><p>One row per active appliance.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Table payload:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">actions</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"tables"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"building"</span><span class="p">:</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">]],</span>
+        <span class="s2">"charger"</span><span class="p">:</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]],</span>
+        <span class="s2">"deferrable_appliance"</span><span class="p">:</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">]]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Map payload:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">actions</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"map"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"building:Building_1"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"electrical_storage"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>
+        <span class="s2">"charger:Building_1:AC001"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"electric_vehicle_storage"</span><span class="p">:</span> <span class="mf">0.7</span><span class="p">},</span>
+        <span class="s2">"deferrable_appliance:Building_1:washer_1"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"start"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="step-ordering">
+<h2>Step Ordering<a class="headerlink" href="#step-ordering" title="Link to this heading"></a></h2>
+<p>The simplified building action order is:</p>
+<ol class="arabic simple">
+<li><p>Resolve active/inactive actions.</p></li>
+<li><p>Apply charging/electrical constraints to EVs and BESS.</p></li>
+<li><p>Update dynamic demands when applicable.</p></li>
+<li><p>Update HVAC devices and thermal storage.</p></li>
+<li><p>Update non-shiftable load.</p></li>
+<li><p>Update BESS.</p></li>
+<li><p>Update EV chargers.</p></li>
+<li><p>Update deferrable appliances.</p></li>
+<li><p>Update escalators.</p></li>
+<li><p>Update net balance, rewards, KPIs and observations.</p></li>
+</ol>
+<p>When <code class="docutils literal notranslate"><span class="pre">electrical_storage_action</span> <span class="pre">&lt;</span> <span class="pre">0</span></code>, BESS discharge is prioritized before other electrical consumption.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="observations_reference.html" class="btn btn-neutral float-left" title="Observations Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="multi_community_reference.html" class="btn btn-neutral float-right" title="Multi-Community Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -10,6 +10,11 @@
     "path": "3.6.0/"
   },
   {
+    "name": "3.5.0",
+    "version": "3.5.0",
+    "path": "3.5.0/"
+  },
+  {
     "name": "dev (master)",
     "version": "dev",
     "path": "dev/"

@@ -1,0 +1,280 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dataset &mdash; CityLearn 3.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c1362a89"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Schema" href="schema.html" />
+    <link rel="prev" title="Reward Function" href="reward_function.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Core concepts</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="environment.html">Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="observations.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.html">Agents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reward_function.html">Reward Function</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Dataset</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#data-files">Data Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#building-data-file">Building Data File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#weather-data-file">Weather Data File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#carbon-intensity-data-file">Carbon Intensity Data File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pricing-data-file">Pricing Data File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lstm-model-file">LSTM Model File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#schema-data-file">Schema Data File</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html">Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cost_function.html">Cost Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="entity_v1_contract.html">Entity v1 Contract</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Core concepts</a></li>
+      <li class="breadcrumb-item active">Dataset</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/overview/dataset.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.5.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="dataset">
+<span id="dataset-page"></span><h1>Dataset<a class="headerlink" href="#dataset" title="Link to this heading"></a></h1>
+<p>A CityLearn dataset combines a JSON schema with the time series and optional
+models needed by a scenario. Load a public dataset by name, a local schema path
+or an in-memory schema dictionary; see <a class="reference internal" href="../usage/load_environment.html"><span class="doc">How to Load an Environment</span></a>.</p>
+<p>V3 supports CSV and Parquet time series with the same column contract. The CSV
+snippets below illustrate the main inputs; <a class="reference internal" href="../guides/dataset_reference.html"><span class="doc">Dataset Reference</span></a>
+also covers EV schedules, flexible-appliance cycles, topology events and
+demand-response requests. Match the timestep and energy units to
+<a class="reference internal" href="../guides/data_unit_contract.html"><span class="doc">Data Unit Contract</span></a>.</p>
+<section id="data-files">
+<span id="dataset-data-files-section"></span><h2>Data Files<a class="headerlink" href="#data-files" title="Link to this heading"></a></h2>
+<p>The schema references the input files read when
+<a class="reference internal" href="../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.citylearn.CityLearnEnv</span></code></a> is initialized. They provide exogenous
+inputs such as demand, weather and prices; device states and action-dependent
+outputs are computed during the simulation.</p>
+<section id="building-data-file">
+<h3>Building Data File<a class="headerlink" href="#building-data-file" title="Link to this heading"></a></h3>
+<p>The building file is a <code class="code docutils literal notranslate"><span class="pre">csv</span></code> file that contains a building’s temporal (calendar), end-use loads, occupancy, solar generation and indoor environment variables time series data. There are as many building files as buildings in the environment. The end-use loads, occupancy, solar generation and indoor environment data may come from simulation in energy modeling software e.g., <a class="reference external" href="https://energyplus.net">EnergyPlus</a> or from smart meter or from a Building Automation System (BAS). The file structure is shown in the snippet below:</p>
+<div class="code text highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">month</span><span class="p">,</span><span class="n">hour</span><span class="p">,</span><span class="n">day_type</span><span class="p">,</span><span class="n">daylight_savings_status</span><span class="p">,</span><span class="n">indoor_dry_bulb_temperature</span><span class="p">,</span><span class="n">average_unmet_cooling_setpoint_difference</span><span class="p">,</span><span class="n">indoor_relative_humidity</span><span class="p">,</span><span class="n">non_shiftable_load</span><span class="p">,</span><span class="n">dhw_demand</span><span class="p">,</span><span class="n">cooling_demand</span><span class="p">,</span><span class="n">heating_demand</span><span class="p">,</span><span class="n">solar_generation</span><span class="p">,</span><span class="n">occupant_count</span><span class="p">,</span><span class="n">indoor_dry_bulb_temperature_cooling_set_point</span><span class="p">,</span><span class="n">indoor_dry_bulb_temperature_heating_set_point</span><span class="p">,</span><span class="n">hvac_mode</span>
+<span class="mi">6</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">28.121962</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">49.774185</span><span class="p">,</span><span class="mf">0.5676419</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">30.0</span><span class="p">,</span><span class="mf">30.0</span><span class="p">,</span><span class="mi">0</span>
+<span class="mi">6</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">27.939466</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">49.843094</span><span class="p">,</span><span class="mf">0.5676419</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">30.0</span><span class="p">,</span><span class="mf">30.0</span><span class="p">,</span><span class="mi">0</span>
+<span class="mi">6</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">27.780298</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">49.965446</span><span class="p">,</span><span class="mf">0.5676419</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">30.0</span><span class="p">,</span><span class="mf">30.0</span><span class="p">,</span><span class="mi">0</span>
+<span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">27.642626</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">50.026028</span><span class="p">,</span><span class="mf">0.5676419</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">30.0</span><span class="p">,</span><span class="mf">30.0</span><span class="p">,</span><span class="mi">0</span>
+<span class="mi">6</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">27.526384</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">50.043957</span><span class="p">,</span><span class="mf">0.5676419</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">30.0</span><span class="p">,</span><span class="mf">30.0</span><span class="p">,</span><span class="mi">0</span>
+</pre></div>
+</div>
+</section>
+<section id="weather-data-file">
+<h3>Weather Data File<a class="headerlink" href="#weather-data-file" title="Link to this heading"></a></h3>
+<p>The weather file is a <code class="code docutils literal notranslate"><span class="pre">.csv</span></code> file that contains outdoor weather variables time series for the desired simulation geographical location. It is used as the source for <a class="reference internal" href="../api/citylearn.building.html#citylearn.building.Building.weather" title="citylearn.building.Building.weather"><code class="xref py py-attr docutils literal notranslate"><span class="pre">citylearn.building.Building.weather</span></code></a>, which is the source for weather related observations. <a class="reference external" href="https://energyplus.net/weather">Typical Meteorological Year</a> (TMY) or Actual Meteorological Year (AMY) data can be used. The file structure is shown in the snippet below:</p>
+<div class="code text highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">outdoor_dry_bulb_temperature</span><span class="p">,</span><span class="n">outdoor_relative_humidity</span><span class="p">,</span><span class="n">diffuse_solar_irradiance</span><span class="p">,</span><span class="n">direct_solar_irradiance</span><span class="p">,</span><span class="n">outdoor_dry_bulb_temperature_predicted_1</span><span class="p">,</span><span class="n">outdoor_dry_bulb_temperature_predicted_2</span><span class="p">,</span><span class="n">outdoor_dry_bulb_temperature_predicted_3</span><span class="p">,</span><span class="n">outdoor_relative_humidity_predicted_1</span><span class="p">,</span><span class="n">outdoor_relative_humidity_predicted_2</span><span class="p">,</span><span class="n">outdoor_relative_humidity_predicted_3</span><span class="p">,</span><span class="n">diffuse_solar_irradiance_predicted_1</span><span class="p">,</span><span class="n">diffuse_solar_irradiance_predicted_2</span><span class="p">,</span><span class="n">diffuse_solar_irradiance_predicted_3</span><span class="p">,</span><span class="n">direct_solar_irradiance_predicted_1</span><span class="p">,</span><span class="n">direct_solar_irradiance_predicted_2</span><span class="p">,</span><span class="n">direct_solar_irradiance_predicted_3</span>
+<span class="mf">20.0</span><span class="p">,</span><span class="mf">84.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">18.3</span><span class="p">,</span><span class="mf">22.8</span><span class="p">,</span><span class="mf">20.0</span><span class="p">,</span><span class="mf">81.0</span><span class="p">,</span><span class="mf">68.0</span><span class="p">,</span><span class="mf">81.0</span><span class="p">,</span><span class="mf">25.0</span><span class="p">,</span><span class="mf">964.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">100.0</span><span class="p">,</span><span class="mf">815.0</span><span class="p">,</span><span class="mf">0.0</span>
+<span class="mf">20.1</span><span class="p">,</span><span class="mf">79.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">19.4</span><span class="p">,</span><span class="mf">22.8</span><span class="p">,</span><span class="mf">19.4</span><span class="p">,</span><span class="mf">79.0</span><span class="p">,</span><span class="mf">71.0</span><span class="p">,</span><span class="mf">87.0</span><span class="p">,</span><span class="mf">201.0</span><span class="p">,</span><span class="mf">966.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">444.0</span><span class="p">,</span><span class="mf">747.0</span><span class="p">,</span><span class="mf">0.0</span>
+<span class="mf">19.7</span><span class="p">,</span><span class="mf">78.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">21.1</span><span class="p">,</span><span class="mf">22.2</span><span class="p">,</span><span class="mf">19.4</span><span class="p">,</span><span class="mf">73.0</span><span class="p">,</span><span class="mf">73.0</span><span class="p">,</span><span class="mf">87.0</span><span class="p">,</span><span class="mf">420.0</span><span class="p">,</span><span class="mf">683.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">592.0</span><span class="p">,</span><span class="mf">291.0</span><span class="p">,</span><span class="mf">0.0</span>
+<span class="mf">19.3</span><span class="p">,</span><span class="mf">78.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">22.2</span><span class="p">,</span><span class="mf">22.8</span><span class="p">,</span><span class="mf">19.4</span><span class="p">,</span><span class="mf">71.0</span><span class="p">,</span><span class="mf">71.0</span><span class="p">,</span><span class="mf">90.0</span><span class="p">,</span><span class="mf">554.0</span><span class="p">,</span><span class="mf">522.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">491.0</span><span class="p">,</span><span class="mf">153.0</span><span class="p">,</span><span class="mf">0.0</span>
+<span class="mf">18.9</span><span class="p">,</span><span class="mf">78.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">21.7</span><span class="p">,</span><span class="mf">22.2</span><span class="p">,</span><span class="mf">18.9</span><span class="p">,</span><span class="mf">73.0</span><span class="p">,</span><span class="mf">71.0</span><span class="p">,</span><span class="mf">90.0</span><span class="p">,</span><span class="mf">778.0</span><span class="p">,</span><span class="mf">444.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">734.0</span><span class="p">,</span><span class="mf">174.0</span><span class="p">,</span><span class="mf">0.0</span>
+</pre></div>
+</div>
+</section>
+<section id="carbon-intensity-data-file">
+<h3>Carbon Intensity Data File<a class="headerlink" href="#carbon-intensity-data-file" title="Link to this heading"></a></h3>
+<p>The carbon intensity file is a <code class="code docutils literal notranslate"><span class="pre">.csv</span></code> file that contains CO:sub:<cite>2</cite> emission rate time series. It is used as the source for <a class="reference internal" href="../api/citylearn.building.html#citylearn.building.Building.carbon_intensity" title="citylearn.building.Building.carbon_intensity"><code class="xref py py-attr docutils literal notranslate"><span class="pre">citylearn.building.Building.carbon_intensity</span></code></a>, which is the source for the <cite>carbon_intensity</cite> observation. The data can be sourced from grid operators e.g. <a class="reference external" href="https://www.ercot.com/gridinfo/generation">ERCOT</a>, <a class="reference external" href="http://mis.nyiso.com/public/P-63list.htm">NYISO</a> or third-party sources <a class="reference external" href="https://www.watttime.org">WattTime</a>. The file structure is shown in the snippet below:</p>
+<div class="code text highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">carbon_intensity</span>
+<span class="mf">0.1707244</span>
+<span class="mf">0.15731905</span>
+<span class="mf">0.15450256</span>
+<span class="mf">0.15094487</span>
+<span class="mf">0.15181987</span>
+</pre></div>
+</div>
+</section>
+<section id="pricing-data-file">
+<h3>Pricing Data File<a class="headerlink" href="#pricing-data-file" title="Link to this heading"></a></h3>
+<p>The pricing file is a <code class="code docutils literal notranslate"><span class="pre">.csv</span></code> file that contains current time-step and forecasted electricity price time series. It is used as the source for <a class="reference internal" href="../api/citylearn.building.html#citylearn.building.Building.pricing" title="citylearn.building.Building.pricing"><code class="xref py py-attr docutils literal notranslate"><span class="pre">citylearn.building.Building.pricing</span></code></a>, which is the source for pricing related observations. The data can be sourced from specific utility providers for a desired location e.g. <a class="reference external" href="https://www.sce.com/residential/rates/Time-Of-Use-Residential-Rate-Plans">Edison</a>. The file structure is shown in the snippet below:</p>
+<div class="code text highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">electricity_pricing</span><span class="p">,</span><span class="n">electricity_pricing_predicted_1</span><span class="p">,</span><span class="n">electricity_pricing_predicted_2</span><span class="p">,</span><span class="n">electricity_pricing_predicted_3</span>
+<span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span>
+<span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span>
+<span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span>
+<span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span>
+<span class="mf">0.22</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.54</span><span class="p">,</span><span class="mf">0.22</span>
+</pre></div>
+</div>
+</section>
+<section id="lstm-model-file">
+<h3>LSTM Model File<a class="headerlink" href="#lstm-model-file" title="Link to this heading"></a></h3>
+<p>The LSTM model file is an optional PyTorch state dictionary used to initialize the <code class="code docutils literal notranslate"><span class="pre">cooling_dynamics</span></code> and <code class="code docutils literal notranslate"><span class="pre">heating_dynamics</span></code> temperature dynamics model attributes in <a class="reference internal" href="../api/citylearn.building.html#citylearn.building.DynamicsBuilding" title="citylearn.building.DynamicsBuilding"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.building.DynamicsBuilding</span></code></a> and its descendant classes.</p>
+</section>
+<section id="schema-data-file">
+<h3>Schema Data File<a class="headerlink" href="#schema-data-file" title="Link to this heading"></a></h3>
+<p>The schema file is a <code class="code docutils literal notranslate"><span class="pre">.json</span></code> file that references all other data files and is used to define the simulation environment. Refer to <a class="reference internal" href="schema.html#schema-page"><span class="std std-ref">Schema</span></a> for more information.</p>
+<p>Use the column names documented in <a class="reference internal" href="../guides/dataset_reference.html"><span class="doc">Dataset Reference</span></a> and ensure
+all time-series inputs cover the requested simulation interval.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="reward_function.html" class="btn btn-neutral float-left" title="Reward Function" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="schema.html" class="btn btn-neutral float-right" title="Schema" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

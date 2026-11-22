@@ -1,0 +1,487 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baselines &mdash; CityLearn 3.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c1362a89"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="KPIs" href="../kpis.html" />
+    <link rel="prev" title="Robustness Reference" href="robustness_reference.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Baselines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#business-as-usual-the-operational-reference">Business as usual: the operational reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#choosing-the-bau-charging-target">Choosing the BAU charging target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#known-limits">Known limits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#default-parameters">Default parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#rule-based-baselines">Rule-based baselines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#automatic-bau-evaluation">Automatic BAU evaluation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#conventional-evaluation-counterfactual">Conventional evaluation counterfactual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demand-response-baseline">Demand-response baseline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#a-reference-run-selected-in-the-ui">A reference run selected in the UI</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Baselines</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/baselines.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.5.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="baselines">
+<h1>Baselines<a class="headerlink" href="#baselines" title="Link to this heading"></a></h1>
+<p>A baseline makes the reference behind a result explicit. CityLearn uses an
+operational business-as-usual controller for controller comparisons, a
+conventional counterfactual for legacy normalized KPIs, and a pre-event power
+reference for demand-response settlement. They answer different questions.</p>
+<section id="business-as-usual-the-operational-reference">
+<h2>Business as usual: the operational reference<a class="headerlink" href="#business-as-usual-the-operational-reference" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> represents day-to-day equipment operation without
+learning, forecasts or price optimization. It runs the configured community,
+including its demand, generation, devices, schedules and electrical constraints.
+It is not a scenario with all equipment switched off.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Equipment or service</p></th>
+<th class="head"><p>BAU behaviour</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>EVs</p></td>
+<td><p>Requests maximum charging power as soon as an EV is connected, until 100% SOC by default, or until the user’s requested departure SOC (see below). Ignores deadlines, prices and solar forecasts and never requests V2G. Electrical limits share the available power proportionally between simultaneous requests.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Stationary batteries</p></td>
+<td><p>Charges from local PV surplus and discharges to serve local import (self-consumption). EV charging is considered first, so the battery does not discharge into an EV that is already full.</p></td>
+</tr>
+<tr class="row-even"><td><p>Flexible appliances</p></td>
+<td><p>Requests the next pending cycle at its first feasible start opportunity.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Electrical connection</p></td>
+<td><p>The simulator applies the configured total and per-phase import/export limits; equipment and simulator constraints determine the applied energy.</p></td>
+</tr>
+<tr class="row-even"><td><p>Local sharing</p></td>
+<td><p>The scenario’s settlement rules value the resulting trajectory. BAU does not optimize the allocation or local-market price.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Demand response</p></td>
+<td><p>Runs under the scenario, but has no policy that optimizes an activation target, payment or penalty.</p></td>
+</tr>
+<tr class="row-even"><td><p>Other active actions</p></td>
+<td><p>Requests zero, clipped to the action bounds. This is not a dedicated HVAC, thermal-storage or escalator policy; the effect of zero follows each device’s action contract.</p></td>
+</tr>
+</tbody>
+</table>
+<section id="choosing-the-bau-charging-target">
+<h3>Choosing the BAU charging target<a class="headerlink" href="#choosing-the-bau-charging-target" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> has two EV charging targets:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">ev_charge_target</span></code></p></th>
+<th class="head"><p>Definition</p></th>
+<th class="head"><p>EV behaviour</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'full'</span></code> (default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v2</span></code></p></td>
+<td><p>Charges to 100%, as the BAU of CityLearn 3.1–3.3.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">'requested'</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">immediate-user-target-v1</span></code></p></td>
+<td><p>Charges up to the user’s requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger’s minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Everything else is the same. Select the BAU used as the KPI reference by
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> with the environment setting
+<code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target</span></code>, as a constructor argument or a schema key:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">business_as_usual_ev_charge_target</span><span class="o">=</span><span class="s1">'requested'</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">ev_charge_target</span><span class="o">=</span><span class="s1">'requested'</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The exported metadata records the selected definition. Compare results only
+against references with the same definition.</p>
+<p>All baselines in <code class="docutils literal notranslate"><span class="pre">citylearn.agents.baseline</span></code> read the same named, unnormalized
+entity observations (current state, schedules and the simulator’s published
+forecasts). They work with the flat and the entity interface and return flat
+action vectors in <code class="docutils literal notranslate"><span class="pre">env.action_names</span></code> order.</p>
+</section>
+<section id="known-limits">
+<h3>Known limits<a class="headerlink" href="#known-limits" title="Link to this heading"></a></h3>
+<p>The baselines decide from observations, so the battery reacts to the last
+settled step rather than reading the current step’s load and PV from the
+simulator, as the 3.1–3.3 BAU did. Without the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle
+the rules also do not see the power an EV can still accept, and reserve the
+charger’s nominal power: near the end of a full charge the battery can then
+discharge more than the EV takes. Enabling that bundle in the schema gives the
+rules the accepted power.</p>
+</section>
+<section id="default-parameters">
+<h3>Default parameters<a class="headerlink" href="#default-parameters" title="Link to this heading"></a></h3>
+<p>Keyword arguments override the policy hyperparameters. Unknown names raise a
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. The main BAU parameters are:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head text-right"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ev_normal_charge_rate</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
+<td><p>EV charge command while below the target, as a fraction of maximum charger power.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">storage_min_soc</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.20</span></code></p></td>
+<td><p>Stop requesting battery discharge below this SOC.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">storage_max_soc</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.90</span></code></p></td>
+<td><p>Stop requesting battery charge above this SOC.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">storage_charge_rate</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
+<td><p>Maximum battery charge command for PV surplus.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">storage_discharge_rate</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
+<td><p>Maximum battery discharge command for local import.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pv_surplus_threshold_kw</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
+<td><p>PV surplus that triggers battery charging.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">normal_storage_discharge_import_threshold_kw</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
+<td><p>Local import that triggers battery discharge.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deferrable_start_action</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
+<td><p>Start command for a ready flexible appliance.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The storage thresholds decide whether to request charge or discharge; they are
+not hard SOC constraints. Physical battery limits are applied by the simulator.</p>
+<p>See the <a class="reference external" href="../quickstart.html">first simulation</a> for a
+complete run using these defaults. A customized BAU is created explicitly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">BusinessAsUsualAgent</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">storage_min_soc</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span> <span class="n">storage_max_soc</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Label customized runs with their parameter values. The automatic comparison
+described below instantiates the native default BAU; it does not inherit
+parameters from a separate agent created by the user.</p>
+</section>
+</section>
+<section id="rule-based-baselines">
+<h2>Rule-based baselines<a class="headerlink" href="#rule-based-baselines" title="Link to this heading"></a></h2>
+<p>Three rule-based controllers give progressively better-informed references
+between BAU and a learned controller. Run them on the same members, files,
+windows, seeds and market conditions as the candidate.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Agent</p></th>
+<th class="head"><p>Policy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code></p></td>
+<td><p>Uses the current price and service urgency for EVs and flexible appliances. EVs receive the minimum charge that meets their departure target, raised when the price is cheap. Appliances start when urgent or cheap. The battery performs self-consumption.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RBCSmartPolicy</span></code></p></td>
+<td><p>Uses price forecasts and the forecast local PV surplus to schedule EV charging and appliance starts. The battery combines self-consumption, price arbitrage and a service reserve. It uses only building-local and public observations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RBCCommunityPolicy</span></code></p></td>
+<td><p>Adds energy shareable between community members. When the community market is enabled, the batteries can support expensive periods once community import reaches <code class="docutils literal notranslate"><span class="pre">community_import_threshold_kw</span></code> (15 kW by default). This value triggers an action; the observed peak can exceed it. Without a community market it shares no energy and follows Smart’s economic rules, but, unlike Smart, it is not restricted to building-local observations.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Smart and Community use the entity observation bundles when the schema enables
+them: <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> for measured import and export,
+<code class="docutils literal notranslate"><span class="pre">entity_forecasts_existing</span></code> and <code class="docutils literal notranslate"><span class="pre">entity_forecasts_derived</span></code> for price and PV
+forecasts, and <code class="docutils literal notranslate"><span class="pre">entity_community_operational</span></code> for community import and surplus.
+The simulator leaves them off unless the schema turns them on; some bundled
+datasets do (for example <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code> and the
+dynamic-topology demo), others do not (for example
+<code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo</span></code>). Without the community bundle, Community cannot
+observe community import or surplus; without the forecast bundles, Smart and
+Community fall back to the current price and PV.
+Enable them in the schema, for example
+<code class="docutils literal notranslate"><span class="pre">&quot;observation_bundles&quot;:</span> <span class="pre">{&quot;entity_community_operational&quot;:</span> <span class="pre">true}</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">RBCBasicPolicy</span></code> compares the current price with fixed thresholds,
+<code class="docutils literal notranslate"><span class="pre">basic_cheap_price_eur_kwh=0.0765</span></code> and <code class="docutils literal notranslate"><span class="pre">basic_expensive_price_eur_kwh=0.1078</span></code>.
+They are the terciles of the 2023 Portuguese day-ahead price used to calibrate
+the policy. For another tariff, set both thresholds in the dataset’s price unit,
+or use <code class="docutils literal notranslate"><span class="pre">basic_price_policy='forecast_relative'</span></code> to compare the current price
+with the price forecast:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">RBCBasicPolicy</span><span class="p">,</span> <span class="n">RBCCommunityPolicy</span>
+
+<span class="n">basic</span> <span class="o">=</span> <span class="n">RBCBasicPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">basic_cheap_price_eur_kwh</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span> <span class="n">basic_expensive_price_eur_kwh</span><span class="o">=</span><span class="mf">0.35</span><span class="p">)</span>
+<span class="n">community</span> <span class="o">=</span> <span class="n">RBCCommunityPolicy</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">community_import_threshold_kw</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These policies are ported from the Soft-CPS Algorithms baselines (commit
+<code class="docutils literal notranslate"><span class="pre">725a72a</span></code>). With the same defaults and observations they request the same
+actions at every step. <code class="docutils literal notranslate"><span class="pre">agent.comparison_identity()</span></code> records the class, the
+definition version and the resolved parameters for experiment manifests.</p>
+<section id="automatic-bau-evaluation">
+<h3>Automatic BAU evaluation<a class="headerlink" href="#automatic-bau-evaluation" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">env.evaluate_v2()</span></code> runs or reuses a separate BAU simulation up to the current
+evaluation timestep. That simulation is rebuilt from the source schema, selected
+members/EVs, episode window, timestep, topology mode and seed. It also re-applies
+the environment’s constructor overrides <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code>,
+<code class="docutils literal notranslate"><span class="pre">solar_generation</span></code>, <code class="docutils literal notranslate"><span class="pre">active_actions</span></code>/<code class="docutils literal notranslate"><span class="pre">inactive_actions</span></code> and
+<code class="docutils literal notranslate"><span class="pre">active_observations</span></code>/<code class="docutils literal notranslate"><span class="pre">inactive_observations</span></code>, so the reference simulates the
+same equipment, generation and outages. It loads the buildings in the evaluated
+environment’s order, so per-building override lists reach the same buildings
+when <code class="docutils literal notranslate"><span class="pre">buildings=[1,</span> <span class="pre">0]</span></code> selects them in another order than the schema. It uses
+entity mode when dynamic topology or demand response requires it. Rendering is
+disabled for this internal comparison.</p>
+<p>The reference reproduces what the schema and these constructor arguments define.
+It cannot follow buildings, devices or chargers changed after loading, for
+example a new charger <code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code> or building <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code>.
+Before it runs, it is compared with the evaluated environment as captured at its
+last <code class="docutils literal notranslate"><span class="pre">reset()</span></code>: the building order, each building’s <code class="docutils literal notranslate"><span class="pre">simulate_power_outage</span></code> and
+active actions, the sizes and parameters of every device (heat pumps, heaters,
+storage tanks, PV, batteries, chargers, appliances and EV batteries), and the
+capacity and initial energy of batteries and EVs. A difference raises a
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the setting; evaluate with
+<code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> in that case. A change made after <code class="docutils literal notranslate"><span class="pre">reset()</span></code>
+is not detected: the comparison covers the configuration captured at reset.</p>
+<p>For stochastic power outages, CityLearn uses the model’s explicit
+<code class="docutils literal notranslate"><span class="pre">random_seed</span></code> when provided. Otherwise the built-in models derive their
+seed from the environment seed, episode window and building name. The
+controller and its native BAU reference therefore face the same outages
+when they use the same model configuration.</p>
+<p>Results are cached for the current episode and timestep. The output adds
+<code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code> values, <code class="docutils literal notranslate"><span class="pre">delta_to_business_as_usual</span></code> differences and
+<code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> ratios for supported metrics:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+<span class="n">reference_rows</span> <span class="o">=</span> <span class="n">kpis</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+    <span class="p">(</span><span class="n">kpis</span><span class="p">[</span><span class="s2">"level"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"district"</span><span class="p">)</span>
+    <span class="o">&amp;</span> <span class="n">kpis</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"business_as_usual"</span><span class="p">),</span>
+    <span class="p">[</span><span class="s2">"cost_function"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">],</span>
+<span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">reference_rows</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> to evaluate only the current run and
+conventional counterfactual. <code class="docutils literal notranslate"><span class="pre">env.run_business_as_usual_baseline(force=True)</span></code>
+recomputes the cached BAU reference.</p>
+</section>
+</section>
+<section id="conventional-evaluation-counterfactual">
+<h2>Conventional evaluation counterfactual<a class="headerlink" href="#conventional-evaluation-counterfactual" title="Link to this heading"></a></h2>
+<p>Names containing <code class="docutils literal notranslate"><span class="pre">baseline</span></code> rather than <code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code> refer to the
+evaluation conditions selected through <code class="docutils literal notranslate"><span class="pre">baseline_condition</span></code>. The default uses
+the simulator’s counterfactual series without storage and, for dynamic building
+models, without partial-load control, while retaining PV.</p>
+<p>This is a counterfactual calculation, not a second <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> run.
+<code class="docutils literal notranslate"><span class="pre">EvaluationCondition</span></code> also exposes alternatives, including removing PV.
+Choose the same evaluation condition when comparing controllers. During a
+simulated power outage the counterfactual, like the controlled run, exchanges
+no energy with the grid: its net, cost and emission values are zero at those
+time steps.</p>
+<p>With the community market enabled, both the control and the counterfactual
+costs are settled with the scenario’s market rules, in the legacy, v2 and
+equity-audit KPIs alike. Savings from local trading are then not credited to
+the controller.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">district_cost_ratio_to_baseline_total_ratio</span></code> and
+<code class="docutils literal notranslate"><span class="pre">district_cost_ratio_to_business_as_usual_total_ratio</span></code> have different
+denominators. A value below one means lower cost than the named reference.</p>
+</section>
+<section id="demand-response-baseline">
+<h2>Demand-response baseline<a class="headerlink" href="#demand-response-baseline" title="Link to this heading"></a></h2>
+<p>DR delivery is measured against mean net power in the configured pre-event
+history window. The reference is frozen for each request, then used to measure
+movement in the requested direction during its activation.</p>
+<p>This reference is neither the conventional counterfactual nor a BAU rollout.
+Configure <code class="docutils literal notranslate"><span class="pre">demand_response.baseline_window_seconds</span></code> and inspect baseline
+validity alongside requested, delivered and credited response. See the
+<a class="reference internal" href="schema_reference.html#demand-response"><span class="std std-ref">DR schema</span></a> and
+<a class="reference internal" href="kpis_reference.html#demand-response-kpis"><span class="std std-ref">DR KPIs</span></a>.</p>
+</section>
+<section id="a-reference-run-selected-in-the-ui">
+<h2>A reference run selected in the UI<a class="headerlink" href="#a-reference-run-selected-in-the-ui" title="Link to this heading"></a></h2>
+<p>When comparing imported runs, the UI labels the first included simulation
+in its imported list as <strong>Compare baseline</strong>. That is a user-selected run; it need not be the native
+BAU. The <code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code> columns inside each exported KPI table retain
+their simulator-defined meaning.</p>
+<p>Read <a class="reference internal" href="scorecard.html"><span class="std std-doc">the scorecard</span></a> for matched-controller comparisons and
+<a class="reference external" href="../ui.html">the UI guide</a> for the visual workflow.</p>
+<p>From 3.4.0, the BAU is <code class="docutils literal notranslate"><span class="pre">immediate-full-charge-v2</span></code> by default: it still charges
+EVs to 100%, now decided from the entity observations like the other baselines.
+<code class="docutils literal notranslate"><span class="pre">immediate-user-target-v1</span></code> charges only to the requested departure SOC. BAU
+references computed with earlier versions are not comparable with 3.4.0
+results; rerun both the controller and its reference.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="robustness_reference.html" class="btn btn-neutral float-left" title="Robustness Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../kpis.html" class="btn btn-neutral float-right" title="KPIs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

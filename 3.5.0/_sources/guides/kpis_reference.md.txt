@@ -1,0 +1,248 @@
+# KPIs Reference
+
+The simulator exposes two KPI APIs.
+
+| API | Status | Format | Recommended use |
+|---|---|---|---|
+| `evaluate()` | legacy | DataFrame with historical cost-function names | Compatibility with older workflows. |
+| `evaluate_v2()` | primary | DataFrame with structured KPI names | Production, dashboards and scientific comparison. |
+
+For the full v2 naming tree, see [KPI_V2_TREE.md](KPI_V2_TREE.md).
+
+Start with [How to read the scorecard](scorecard.md) for a compact selection,
+baseline interpretation and an executable table-selection example. The `v2`
+method name denotes the KPI interface, not CityLearn version 2.
+
+To list the exact names available in your own configured run:
+
+```python
+kpis = env.evaluate_v2()
+catalogue = kpis[["cost_function", "level"]].drop_duplicates().sort_values("cost_function")
+print(catalogue.to_string(index=False))
+```
+
+Feature-specific KPI availability follows the schema. A missing/undefined value
+is not a zero measurement; preserve it when exporting or comparing.
+
+## Units
+
+| Unit suffix | Meaning |
+|---|---|
+| `eur` | Monetary cost. If the dataset uses another currency, interpret as dataset currency. |
+| `kwh` | Accumulated energy. |
+| `kgco2` | Accumulated emissions. |
+| `kw` | Power. |
+| `ratio` | Dimensionless ratio. |
+| `percent` | Percentage. |
+| `count` | Event/cycle count. |
+| `hours` | Hours. |
+| `c` | Celsius. |
+
+## KPI v2 Naming Contract
+
+```text
+level_family_subfamily_metric_variant_unit
+```
+
+| Part | Examples |
+|---|---|
+| `level` | `building`, `district`. |
+| `family` | `cost`, `energy_grid`, `emissions`, `solar_self_consumption`, `ev`, `battery`, `electrical_service_phase`, `equity`, `comfort_resilience`, `deferrable_appliance`, `escalator`, `demand_response`, `robustness`. |
+| `subfamily` | `total`, `daily_average`, `ratio_to_baseline`, `ratio_to_business_as_usual`, `shape_quality`, `service`. |
+| `metric` | `import`, `export`, `charge`, `completed_cycles`. |
+| `variant` | `control`, `baseline`, `business_as_usual`, `delta`, `delta_to_business_as_usual`, `total`, `average`, `l1`. |
+| `unit` | `eur`, `kwh`, `ratio`, etc. |
+
+Examples:
+
+| KPI | Meaning |
+|---|---|
+| `district_cost_total_control_eur` | Total control cost. |
+| `district_cost_total_business_as_usual_eur` | Total native business-as-usual baseline cost. |
+| `building_energy_grid_total_import_control_kwh` | Building import energy. |
+| `building_energy_grid_ratio_to_business_as_usual_import_total_ratio` | Building import relative to the native business-as-usual baseline. |
+| `district_energy_grid_shape_quality_ramping_average_to_baseline_ratio` | Ramping relative to baseline. |
+| `district_solar_self_consumption_ratio_self_consumption_ratio` | District/community solar self-consumption ratio after same-timestep member imports and exports are balanced. |
+| `building_deferrable_appliance_service_completed_cycles_count` | Completed deferrable cycles. |
+| `building_escalator_service_service_level_ratio` | Passenger demand served by escalators. |
+| `district_demand_response_compliance_ratio` | Credited DR delivery divided by valid requested energy. |
+| `district_robustness_action_dropout_count` | Number of action dropouts applied by robustness events. |
+
+## Core Equations
+
+For net energy `net_t`, where import is positive and export is negative:
+
+```text
+total_import_kwh = sum(max(net_t, 0))
+total_export_kwh = sum(max(-net_t, 0))
+total_net_exchange_kwh = sum(net_t)
+daily_average_x = total_x / simulated_days
+delta_x = control_x - baseline_x
+ratio_to_baseline_x = control_x / baseline_x
+delta_to_business_as_usual_x = control_x - business_as_usual_x
+ratio_to_business_as_usual_x = control_x / business_as_usual_x
+self_consumption = (solar_generation_total - export_total) / solar_generation_total
+```
+
+For a denominator within the numerical zero tolerance, safe division returns
+`1.0` if the numerator is also effectively zero, and `None` otherwise.
+
+Ratios stay lower-is-better when the reference total is negative. Net exchange
+(legacy `zero_net_energy`) and cost totals can be negative, for a net exporter
+or after community-market revenue. Their ratios to the baseline and to BAU use
+
+```text
+ratio_x = control_x / reference_x                        if reference_x > 0
+ratio_x = 1 + (control_x - reference_x) / |reference_x|  if reference_x < 0
+```
+
+so 1 still means no change and a higher control total gives a higher ratio.
+For a positive reference this is the plain ratio. Import, export and emission
+totals are never negative and use the plain ratio.
+
+The conventional `baseline` counterfactual follows the grid outage of the
+controlled run: at power-outage time steps the `*_without_storage*` net series,
+and their cost and emission series, are zero. Neither run exchanges energy with
+the grid while it is down.
+
+## KPI Families
+
+| Family | Level | Measures |
+|---|---|---|
+| `cost` | building, district | Cost control/baseline/business-as-usual/delta/ratio. |
+| `energy_grid` | building, district | Import, export, net exchange and shape quality. |
+| `emissions` | building, district | Emissions control/baseline/business-as-usual/delta/ratio. |
+| `solar_self_consumption` | building, district | Generation, export and self-consumption. District export is PV-backed net export outside the community. |
+| `ev` | building, district | Departures, success rate, deficits, charge and V2G. |
+| `battery` | building, district | Charge, discharge, throughput, cycles, capacity fade. |
+| `electrical_service_phase` | building, district | Violations, imbalance and phase peaks. |
+| `equity` | building, district | Relative benefits and benefit distribution. |
+| `comfort_resilience` | building, district | Discomfort and outage/resilience events. |
+| `deferrable_appliance` | building, district | Completed/missed cycles, service level and served energy. |
+| `escalator` | building, district | Passenger demand/service, operating-state changes and electricity use. |
+| `demand_response` | building, district | Flexibility requests, delivery, shortfall and settlement economics. |
+| `robustness` | building, district | Dataset-driven observation, forecast, action and asset perturbation counters. |
+
+## EV KPIs
+
+| Concept | Unit | Meaning |
+|---|---:|---|
+| departure count | count | Number of EV departures observed. |
+| departure met count | count | Departures where required SOC was met. |
+| departure minimum acceptable count | count | Departures where SOC is at least `target_soc - ev_departure_service_tolerance`. |
+| departure within tolerance count | count | Departures within the configured symmetric target tolerance. |
+| departure target feasible/infeasible count | count | Departures where the strict target SOC was/was not reachable by charging at max power for the connected interval, after charger/battery efficiency and configured electrical-service headroom. |
+| departure minimum acceptable feasible/infeasible count | count | Departures where the minimum acceptable SOC was/was not reachable under the same max-power, efficiency and electrical-service constraints. |
+| departure within tolerance feasible/infeasible count | count | Departures where the lower bound of the symmetric tolerance band was/was not reachable under the same max-power, efficiency and electrical-service constraints. |
+| departure success ratio | ratio | `met / departures`. |
+| departure minimum acceptable ratio | ratio | `minimum_acceptable / departures`. This is the main user-service comfort KPI. |
+| departure within tolerance ratio | ratio | `within_symmetric_tolerance / departures`. |
+| departure success feasible ratio | ratio | Strict target fulfillment over feasible strict-target departures only. |
+| departure minimum acceptable feasible ratio | ratio | Minimum service fulfillment over feasible minimum-service departures only. This is the main controller-quality KPI. |
+| departure within tolerance feasible ratio | ratio | Symmetric target accuracy over feasible within-tolerance departures only. |
+| departure SOC deficit mean | ratio | Mean non-negative SOC deficit over departures. |
+| departure shortfall beyond tolerance mean | ratio | Mean deficit below `target_soc - ev_departure_service_tolerance`. |
+| departure SOC surplus mean | ratio | Mean non-negative SOC surplus over departures. |
+| departure SOC absolute error mean | ratio | Mean absolute SOC error to the requested target. |
+| departure tolerance | ratio | Configured service tolerance used for minimum acceptable departure SOC. |
+| charge total | kWh | Energy charged into EVs. |
+| V2G export total | kWh | Energy exported by EVs. |
+
+EV departure tolerance semantics:
+
+- `ev_departure_success_rate` is strict target fulfillment: `actual_soc >= target_soc`.
+- `ev_departure_min_acceptable_rate` is minimum service fulfillment: `actual_soc >= target_soc - ev_departure_service_tolerance`.
+- `ev_departure_within_tolerance_rate` is symmetric target accuracy: `abs(actual_soc - target_soc) <= ev_departure_within_tolerance`.
+- The `*_feasible_rate` variants use the same numerators but exclude departures where that threshold was not physically reachable from arrival SOC by charging at maximum charger/battery power for the connected interval, capped by configured building/phase import headroom and charger/battery efficiency.
+- Feasibility counters are scenario-quality diagnostics; missing charger, battery or arrival-SOC data is treated as feasible to preserve legacy dataset behavior.
+- Both tolerance settings default to `0.05`.
+
+## BESS KPIs
+
+| Concept | Unit | Meaning |
+|---|---:|---|
+| charge total | kWh | Energy charged into BESS. |
+| discharge total | kWh | Energy discharged. |
+| throughput total | kWh | Absolute charge plus discharge. |
+| equivalent full cycles | count | Throughput relative to capacity. |
+| capacity fade | ratio | Relative capacity degradation. |
+
+## Deferrable Appliance KPIs
+
+| Concept | Unit | Meaning |
+|---|---:|---|
+| completed cycles | count | Cycles completed successfully. |
+| missed cycles | count | Cycles that missed the start window. |
+| service level | ratio | `completed / (completed + missed)`. |
+| served energy | kWh | Energy of completed cycles. |
+| unserved energy | kWh | Energy of missed cycles. |
+| average start delay | hours | Mean `start - earliest_start`. |
+
+## Demand Response KPIs
+
+Available when `demand_response.enabled=true`.
+
+| KPI suffix | Level | Unit | Meaning |
+|---|---|---:|---|
+| `demand_response_events_count` | building/district | count | Unique DR events with active settlement rows. |
+| `demand_response_active_time_step_count` | building/district | count | Number of active DR timesteps. |
+| `demand_response_requested_total_kwh` | building/district | kWh | Requested energy from `target_power_kw` over active steps. |
+| `demand_response_delivered_total_kwh` | building/district | kWh | Signed delivery, positive when the controller moves in the requested direction. |
+| `demand_response_shortfall_total_kwh` | building/district | kWh | Non-delivered requested energy after tolerance. |
+| `demand_response_compliance_ratio` | building/district | ratio | Credited delivery divided by valid requested energy. |
+| `demand_response_revenue_total_eur` | building/district | eur | Credited delivery revenue. |
+| `demand_response_penalty_total_eur` | building/district | eur | Shortfall penalty. |
+| `demand_response_net_revenue_total_eur` | building/district | eur | Revenue minus penalty. |
+| `demand_response_invalid_baseline_time_step_count` | building/district | count | Active steps excluded from economics because the pre-event baseline was invalid. |
+
+Names are prefixed with `district_` or `building_`, for example `district_demand_response_net_revenue_total_eur`.
+
+## Robustness KPIs
+
+Available when `robustness.enabled=true`.
+
+| KPI suffix | Level | Unit | Meaning |
+|---|---|---:|---|
+| `robustness_events_count` | building/district | count | Unique robustness events that affected the target level. |
+| `robustness_active_time_step_count` | building/district | count | Timesteps with at least one applied robustness perturbation. |
+| `robustness_observation_corruption_count` | building/district | count | Agent-facing observation corruptions. |
+| `robustness_forecast_corruption_count` | building/district | count | Agent-facing forecast corruptions. |
+| `robustness_action_corruption_count` | building/district | count | Action-channel corruptions before physical application. |
+| `robustness_asset_unavailable_time_step_count` | building/district | count | Asset unavailable applications. |
+| `robustness_missing_observation_count` | building/district | count | Observation or telemetry values replaced by the missing sentinel. |
+| `robustness_action_dropout_count` | building/district | count | Actions forced to zero by dropout or asset-control outage. |
+
+Names are prefixed with `district_` or `building_`, for example `district_robustness_missing_observation_count`.
+
+## Electrical Service and Phase KPIs
+
+| Concept | Unit | Meaning |
+|---|---:|---|
+| violation total | kWh | Residual energy above service/phase limits after projection. |
+| requested pressure total | kWh | Excess associated with the unprojected controller request. |
+| violation timestep count | count | Number of timesteps with a violation. |
+| phase imbalance average | ratio | Average phase imbalance. |
+| phase import/export peak L1/L2/L3 | kW | Import/export peaks per phase. |
+
+## Community Market KPIs
+
+Available when `community_market.enabled=true`.
+
+| Concept | Level | Unit | Meaning |
+|---|---|---:|---|
+| local traded total | district | kWh | Locally traded energy. |
+| local traded daily average | district | kWh/day | Daily average local trade. |
+| community import share | district | ratio | Share of demand served locally. |
+| settled cost | building/district | eur | Cost after local settlement. |
+| counterfactual cost | building/district | eur | Cost without local market settlement. |
+| market savings | building/district | eur | Counterfactual minus settled cost. |
+
+## Export
+
+| Mode | How |
+|---|---|
+| In memory | `env.evaluate_v2()` |
+| End-of-episode export | `CityLearnEnv(..., export_kpis_on_episode_end=True)` |
+| With render | `render_mode="end"` or `render_mode="during"` |
+
+New production KPIs should be registered in [releases.md](releases.md) and, when part of the v2 naming contract, in [KPI_V2_TREE.md](KPI_V2_TREE.md).

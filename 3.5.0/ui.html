@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityLearn UI &mdash; CityLearn 3.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=c1362a89"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Core concepts" href="overview/index.html" />
+    <link rel="prev" title="KPI v2 Naming Tree" href="guides/KPI_V2_TREE.html" />
+ 
+<script src="_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">CityLearn UI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#export-a-complete-run">Export a complete run</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#choose-an-export-mode">Choose an export mode</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#import-and-explore">Import and explore</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#timeseries">Timeseries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kpis-and-the-decision-scorecard">KPIs and the decision scorecard</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#compare-runs">Compare runs</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">CityLearn UI</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/ui.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.5.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="citylearn-ui">
+<h1>CityLearn UI<a class="headerlink" href="#citylearn-ui" title="Link to this heading"></a></h1>
+<p>CityLearn UI opens exported simulation folders in a browser. Use it to inspect
+time series, read the decision scorecard and compare runs at community, building
+and component level.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://citylearnui.netlify.app/">Open CityLearn UI</a></p></li>
+<li><p><a class="reference external" href="https://github.com/Soft-CPS-Research-Group/citylearn-ui">Source code and local setup</a></p></li>
+</ul>
+<p>The current interface reads the selected CSV files locally in the browser; it
+does not upload them to an application backend. Simulation setup, schemas and
+controller execution remain in Python or the CLI. For configuration, start with
+<a class="reference internal" href="guides/features.html"><span class="doc">Features and configuration</span></a> and <a class="reference internal" href="overview/schema.html"><span class="doc">Schema</span></a>.</p>
+<section id="export-a-complete-run">
+<h2>Export a complete run<a class="headerlink" href="#export-a-complete-run" title="Link to this heading"></a></h2>
+<p>This example runs 48 hourly states with the business-as-usual controller and
+exports both time series and KPIs. It uses a public dataset available through
+the installed CityLearn package.
+The initial state comes from <code class="docutils literal notranslate"><span class="pre">reset()</span></code>; the 47 subsequent transitions produce
+47 time-series rows.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""Export a complete public-data example for CityLearn UI."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">BusinessAsUsualAgent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">output_directory</span><span class="o">=</span><span class="s2">"outputs/ui_exports"</span><span class="p">,</span> <span class="n">session_name</span><span class="o">=</span><span class="s2">"bau_48h"</span><span class="p">):</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span>
+        <span class="s2">"citylearn_challenge_2022_phase_all_plus_evs"</span><span class="p">,</span>
+        <span class="n">episode_time_steps</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span>
+        <span class="n">interface</span><span class="o">=</span><span class="s2">"flat"</span><span class="p">,</span>
+        <span class="n">render_mode</span><span class="o">=</span><span class="s2">"end"</span><span class="p">,</span>
+        <span class="n">render_directory</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">output_directory</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">(),</span>
+        <span class="n">render_session_name</span><span class="o">=</span><span class="n">session_name</span><span class="p">,</span>
+        <span class="n">random_seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="n">observations</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">terminated</span> <span class="o">=</span> <span class="n">truncated</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">):</span>
+            <span class="n">actions</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
+            <span class="n">observations</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">new_folder_path</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Import this folder in CityLearn UI: </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The script prints the exact folder to import, normally
+<code class="docutils literal notranslate"><span class="pre">outputs/ui_exports/bau_48h</span></code> below the working directory. Each run should have
+its own session name: reusing a name also reuses its export folder.</p>
+<section id="choose-an-export-mode">
+<h3>Choose an export mode<a class="headerlink" href="#choose-an-export-mode" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">render_mode=&quot;end&quot;</span></code> buffers the episode and writes the histories and final
+KPIs when it finishes. This is convenient for short interactive experiments.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">render_mode=&quot;during&quot;</span></code> writes the time series as the simulation advances
+and exports the final KPIs at episode completion. Use this to avoid buffering
+a long episode’s export rows in memory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">render_mode=&quot;none&quot;</span></code> disables automatic file export. After the episode,
+<code class="docutils literal notranslate"><span class="pre">env.export_final_kpis(export_business_as_usual_timeseries=False)</span></code> writes
+a KPI-only result to the configured session folder. Import the directory
+reported by <code class="docutils literal notranslate"><span class="pre">env.new_folder_path</span></code> to use the UI’s KPIs view; there will be
+no time-series data for that run.</p></li>
+</ul>
+<p>Use an absolute <code class="docutils literal notranslate"><span class="pre">render_directory</span></code>, as in the example, to choose an explicit
+output location. The exported folder contains <code class="docutils literal notranslate"><span class="pre">exported_kpis.csv</span></code> and
+<code class="docutils literal notranslate"><span class="pre">exported_data_*_ep0.csv</span></code> files for the available buildings, devices and
+community. Keep the filenames unchanged so the UI can identify their contents.
+The UI export is a wide table with a <code class="docutils literal notranslate"><span class="pre">KPI</span></code> column and one column per scope;
+the Python <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> result is a long-form table for analysis.</p>
+</section>
+</section>
+<section id="import-and-explore">
+<h2>Import and explore<a class="headerlink" href="#import-and-explore" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Open the UI and click <strong>Choose folders</strong>.</p></li>
+<li><p>Choose the printed run directory, or a parent directory containing several
+run folders. Use <strong>Add folders</strong> to import more results later.</p></li>
+<li><p>Select a simulation in the left-hand list.</p></li>
+<li><p>Switch between <strong>Timeseries</strong> and <strong>KPIs</strong> above the results.</p></li>
+</ol>
+<section id="timeseries">
+<h3>Timeseries<a class="headerlink" href="#timeseries" title="Link to this heading"></a></h3>
+<p>Choose an episode and then <strong>Community</strong>, a building, or an available component
+in the result tree. The chart shows the columns exported for that selection.
+Use the date range and granularity controls to inspect a period, and the series
+buttons to show or hide individual signals. Ctrl/Cmd- or Shift-click buildings
+to compare them side by side.</p>
+<figure class="align-center" id="id1">
+<img alt="Current CityLearn UI displaying community electricity consumption and PV generation from the public BAU example." src="_images/v3-timeseries.png" />
+<figcaption>
+<p><span class="caption-text">Time-series exploration of the exported public example.</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="kpis-and-the-decision-scorecard">
+<h3>KPIs and the decision scorecard<a class="headerlink" href="#kpis-and-the-decision-scorecard" title="Link to this heading"></a></h3>
+<p>The <strong>KPIs</strong> tab provides a community/building scope selector, a <strong>Decision
+scorecard</strong>, a larger <strong>Selected KPIs</strong> list and an expandable <strong>All KPI
+drill-down</strong>. Start with cost, EV service, electrical violations, battery
+throughput and solar use; open the full table when a result needs closer
+inspection.</p>
+<figure class="align-center" id="id2">
+<img alt="Current CityLearn UI showing the decision scorecard and building scope selector." src="_images/v3-scorecard.png" />
+<figcaption>
+<p><span class="caption-text">Scorecard for the same business-as-usual run. Minimum EV service and target
+accuracy are separate measures: meeting a minimum does not imply ending
+inside the target tolerance band.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<p>The UI presents the exported values; KPI definitions belong to the simulator’s
+<a class="reference internal" href="kpis.html"><span class="doc">KPIs</span></a> catalogue. See <a class="reference internal" href="guides/scorecard.html"><span class="doc">How to read the scorecard</span></a> for interpretation and
+<a class="reference internal" href="guides/baselines.html"><span class="doc">Baselines</span></a> for the meaning of the native BAU reference.</p>
+</section>
+</section>
+<section id="compare-runs">
+<h2>Compare runs<a class="headerlink" href="#compare-runs" title="Link to this heading"></a></h2>
+<p>Import at least two simulations, then click <strong>Compare simulations</strong>.
+Use the imported list on the left to include or exclude runs. The first
+included run in that list becomes the <strong>Compare baseline</strong>. This is a display
+reference, distinct from the native business-as-usual comparison already
+included in a run’s exported KPIs.</p>
+<p>Compare runs with matching input data, episode, timestep and service requirements.
+Read the metric’s units and direction together with its delta: lower cost is
+desirable, while higher departure-service coverage is desirable. Some indicators,
+such as battery throughput, need to be interpreted alongside cost and service.</p>
+<p>The interface is developed in the
+<a class="reference external" href="https://github.com/Soft-CPS-Research-Group/citylearn-ui">CityLearn UI repository</a>.
+Report interface issues there; report simulation or KPI issues in the
+<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues">CityLearn repository</a>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="guides/KPI_V2_TREE.html" class="btn btn-neutral float-left" title="KPI v2 Naming Tree" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="overview/index.html" class="btn btn-neutral float-right" title="Core concepts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

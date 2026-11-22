@@ -1,0 +1,568 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portugal REC Datasets &mdash; CityLearn 3.5.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c1362a89"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Data Unit Contract" href="data_unit_contract.html" />
+    <link rel="prev" title="Dataset Reference" href="dataset_reference.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Portugal REC Datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#datasets">Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scenarios">Scenarios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loading">Loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conventions">Conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#folder-contents">Folder contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reporting-results">Reporting results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#licence-and-attribution">Licence and attribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citation">Citation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Portugal REC Datasets</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/portugal_rec_datasets.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.5.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="portugal-rec-datasets">
+<h1>Portugal REC Datasets<a class="headerlink" href="#portugal-rec-datasets" title="Link to this heading"></a></h1>
+<p>Four synthetic datasets of Portuguese renewable energy communities (RECs), with
+4, 15, 30 and 100 residential and commercial members. They cover 2023-2024 at
+15-minute resolution. Building demand and PV generation are linked to explicit
+EV charging and appliance requests, weather, prices and carbon intensity.
+Scenarios add membership changes, restricted import limits, grid interruptions,
+equipment faults and missing observations, each labelled. Comparison scenarios
+remove individual conditions; each differs from its main scenario only in the
+condition it removes. Controllers can therefore
+be tested on whether they keep delivering the requested services, on identical
+and reproducible inputs.</p>
+<p>The datasets are edition v3.4 of <em>Synthetic electricity demand and flexibility
+datasets for Portuguese energy communities</em> (Fonseca et al.), distributed with
+CityLearn from 3.5.0.</p>
+<section id="datasets">
+<h2>Datasets<a class="headerlink" href="#datasets" title="Link to this heading"></a></h2>
+<p>REC-4 and REC-15 are residential. REC-30 and REC-100 add commercial members,
+workplace charging and visiting vehicles.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head text-right"><p>REC-4</p></th>
+<th class="head text-right"><p>REC-15</p></th>
+<th class="head text-right"><p>REC-30</p></th>
+<th class="head text-right"><p>REC-100</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Dataset name</p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">pt_rec_4</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">pt_rec_15</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">pt_rec_30</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">pt_rec_100</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Residential / commercial members</p></td>
+<td class="text-right"><p>4 / 0</p></td>
+<td class="text-right"><p>15 / 0</p></td>
+<td class="text-right"><p>24 / 6</p></td>
+<td class="text-right"><p>80 / 20</p></td>
+</tr>
+<tr class="row-even"><td><p>Three-phase connections</p></td>
+<td class="text-right"><p>0</p></td>
+<td class="text-right"><p>1</p></td>
+<td class="text-right"><p>7</p></td>
+<td class="text-right"><p>28</p></td>
+</tr>
+<tr class="row-odd"><td><p>Sum of import limits (kW)</p></td>
+<td class="text-right"><p>28.8</p></td>
+<td class="text-right"><p>107.0</p></td>
+<td class="text-right"><p>324.3</p></td>
+<td class="text-right"><p>1,168.4</p></td>
+</tr>
+<tr class="row-even"><td><p>Members with PV / capacity (kWp)</p></td>
+<td class="text-right"><p>1 / 3.8</p></td>
+<td class="text-right"><p>4 / 16.8</p></td>
+<td class="text-right"><p>10 / 89.5</p></td>
+<td class="text-right"><p>36 / 312.5</p></td>
+</tr>
+<tr class="row-odd"><td><p>Members with batteries / capacity (kWh)</p></td>
+<td class="text-right"><p>1 / 10.2</p></td>
+<td class="text-right"><p>1 / 10.2</p></td>
+<td class="text-right"><p>3 / 25.6</p></td>
+<td class="text-right"><p>20 / 220.2</p></td>
+</tr>
+<tr class="row-even"><td><p>Chargers (kW)</p></td>
+<td class="text-right"><p>2 (3.7-7.4)</p></td>
+<td class="text-right"><p>6 (3.7-7.4)</p></td>
+<td class="text-right"><p>15 (3.7-22.1)</p></td>
+<td class="text-right"><p>65 (3.7-22.1)</p></td>
+</tr>
+<tr class="row-odd"><td><p>EVs: resident / visitor</p></td>
+<td class="text-right"><p>2 / 0</p></td>
+<td class="text-right"><p>6 / 0</p></td>
+<td class="text-right"><p>9 / 10</p></td>
+<td class="text-right"><p>37 / 48</p></td>
+</tr>
+<tr class="row-even"><td><p>Appliances: controlled / fixed</p></td>
+<td class="text-right"><p>2 / 5</p></td>
+<td class="text-right"><p>10 / 18</p></td>
+<td class="text-right"><p>19 / 27</p></td>
+<td class="text-right"><p>64 / 84</p></td>
+</tr>
+<tr class="row-odd"><td><p>Download size</p></td>
+<td class="text-right"><p>7 MB</p></td>
+<td class="text-right"><p>13 MB</p></td>
+<td class="text-right"><p>84 MB</p></td>
+<td class="text-right"><p>113 MB</p></td>
+</tr>
+</tbody>
+</table>
+<p>These are the fixed inventories; Topology, Combined and All-in add or remove
+members and equipment. Most members have a single-phase connection with a 6.9 kW import limit;
+some larger homes and commercial members have three-phase connections of up to 82.8 kW.</p>
+</section>
+<section id="scenarios">
+<h2>Scenarios<a class="headerlink" href="#scenarios" title="Link to this heading"></a></h2>
+<p>A scenario is a schema that selects the members, period, data files and event
+programme. Its file paths are relative to the dataset folder, so scenarios share
+the same records. Each dataset’s root <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> is an alias of its Normal scenario.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Scenario</p></th>
+<th class="head"><p>Dataset</p></th>
+<th class="head"><p>Schema in <code class="docutils literal notranslate"><span class="pre">evaluation/</span></code></p></th>
+<th class="head"><p>Conditions</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>REC-4 Normal</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_4</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rec_4.json</span></code></p></td>
+<td><p>Ordinary conditions</p></td>
+</tr>
+<tr class="row-odd"><td><p>REC-15 Normal</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_15</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rec_15.json</span></code></p></td>
+<td><p>Ordinary conditions</p></td>
+</tr>
+<tr class="row-even"><td><p>REC-30 Normal</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_30</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rec_30_normal.json</span></code></p></td>
+<td><p>Ordinary conditions</p></td>
+</tr>
+<tr class="row-odd"><td><p>REC-30 Topology</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_30</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rec_30_topology.json</span></code></p></td>
+<td><p>Membership and equipment changes</p></td>
+</tr>
+<tr class="row-even"><td><p>REC-30 Safety</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_30</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rec_30_safety.json</span></code></p></td>
+<td><p>Restricted import limits for selected members</p></td>
+</tr>
+<tr class="row-odd"><td><p>REC-30 Robustness</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_30</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rec_30_robustness.json</span></code></p></td>
+<td><p>Disturbances and grid interruptions</p></td>
+</tr>
+<tr class="row-even"><td><p>REC-30 Combined</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_30</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rec_30_combined.json</span></code></p></td>
+<td><p>Topology, Safety and Robustness together</p></td>
+</tr>
+<tr class="row-odd"><td><p>REC-100 Normal</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_100</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rec_100_normal.json</span></code></p></td>
+<td><p>Ordinary conditions</p></td>
+</tr>
+<tr class="row-even"><td><p>REC-100 All-in</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pt_rec_100</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rec_100_allin.json</span></code></p></td>
+<td><p>Membership changes, disturbances, grid interruptions and demand response</p></td>
+</tr>
+</tbody>
+</table>
+<p>Six comparison scenarios in <code class="docutils literal notranslate"><span class="pre">evaluation/references/</span></code> remove individual conditions.
+Each differs from its main scenario only in the condition it removes; every other
+input file, including every service request, is shared. No disturbances removes the
+disturbances and the grid interruptions together.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Comparison</p></th>
+<th class="head"><p>Of</p></th>
+<th class="head"><p>Change</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rec_30_combined_no_disturbances</span></code>, <code class="docutils literal notranslate"><span class="pre">rec_100_allin_no_disturbances</span></code></p></td>
+<td><p>Combined, All-in</p></td>
+<td><p>Removes disturbances and grid interruptions</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rec_30_combined_nominal_limits</span></code></p></td>
+<td><p>Combined</p></td>
+<td><p>Restores the import limits of the three restricted members</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rec_100_allin_no_dr</span></code></p></td>
+<td><p>All-in</p></td>
+<td><p>Removes the demand-response requests</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rec_30_topology_frozen_2024</span></code>, <code class="docutils literal notranslate"><span class="pre">rec_100_allin_frozen_2024</span></code></p></td>
+<td><p>Topology, All-in</p></td>
+<td><p>Keeps the 2023 membership changes and suppresses those of 2024</p></td>
+</tr>
+</tbody>
+</table>
+<p>To tune on 2023 and evaluate on 2024, end the simulation window at step 35039,
+the last interval of 2023 UTC.</p>
+<p>The Safety scenario restricts import limits only; it does not model voltage,
+protection or phase-level network safety. The Robustness, Combined and All-in
+scenarios label their disturbances; withhold these labels from controllers in
+fault-detection studies.</p>
+</section>
+<section id="loading">
+<h2>Loading<a class="headerlink" href="#loading" title="Link to this heading"></a></h2>
+<p>Pass a dataset name for its Normal scenario. The first call downloads the dataset
+into the CityLearn cache:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="s1">'pt_rec_30'</span><span class="p">,</span> <span class="n">episode_time_steps</span><span class="o">=</span><span class="mi">96</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Load another scenario from the cached dataset folder:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataSet</span>
+
+<span class="n">root</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">DataSet</span><span class="p">()</span><span class="o">.</span><span class="n">get_dataset</span><span class="p">(</span><span class="s1">'pt_rec_30'</span><span class="p">))</span><span class="o">.</span><span class="n">parent</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="o">/</span><span class="s1">'evaluation'</span><span class="o">/</span><span class="s1">'rec_30_combined.json'</span><span class="p">),</span> <span class="n">episode_time_steps</span><span class="o">=</span><span class="mi">96</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All scenarios use the entity interface, and the community market is enabled.
+Begin with a short window: full two-year runs without the BAU reference took
+6 to 127 minutes, from REC-4 to REC-100, on CityLearn 3.3.0. A window with <em>n</em> stored states supports <em>n</em> - 1 transitions.</p>
+</section>
+<section id="conventions">
+<h2>Conventions<a class="headerlink" href="#conventions" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Calendar:</strong> 70,176 interval-start timestamps from 1 January 2023 00:00 UTC to
+31 December 2024 23:45 UTC. Lisbon civil days have 92 or 100 intervals at
+daylight-saving transitions.</p></li>
+<li><p><strong>Units:</strong> demand, PV and programme profiles in kWh per interval (multiply by four
+for average kW); battery capacity in kWh; power limits in kW; prices in EUR/kWh;
+carbon intensity in kg CO2e/kWh; SOC as a fraction. Missing observations use -9999.</p></li>
+<li><p><strong>Annual fields:</strong> annual summary fields in the catalogues refer to 2023; the series cover both years.</p></li>
+<li><p><strong>Charging sessions:</strong> a charging session runs from its arrival interval up to,
+but excluding, its departure interval. Sessions still connected at the end of
+the record are right-censored; the end of the file is not a deadline.</p></li>
+<li><p><strong>Advance information:</strong> by default each charger announces an arriving vehicle
+one hour (four intervals) ahead, with its expected arrival time and SOC; at
+connection, each session gives its departure time and target SOC.</p></li>
+<li><p><strong>Prices:</strong> grid purchase is <code class="docutils literal notranslate"><span class="pre">max(Portuguese</span> <span class="pre">OMIE</span> <span class="pre">day-ahead</span> <span class="pre">price</span> <span class="pre">/</span> <span class="pre">1000,</span> <span class="pre">0)</span></code>
+EUR/kWh, without network tariffs, taxes or retail margins. Local exchanges settle
+at 80 % of it and grid export is valued at zero.</p></li>
+<li><p><strong>Identifiers:</strong> member and equipment identifiers are unique within a dataset only.</p></li>
+</ul>
+</section>
+<section id="folder-contents">
+<h2>Folder contents<a class="headerlink" href="#folder-contents" title="Link to this heading"></a></h2>
+<p>CityLearn ships only the files the schemas read:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Path</p></th>
+<th class="head"><p>Contents</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">schema.json</span></code></p></td>
+<td><p>Alias of the Normal scenario</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation/*.json</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluation/references/*.json</span></code></p></td>
+<td><p>Main and comparison scenarios</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation/native_inputs/&lt;scenario&gt;/</span></code></p></td>
+<td><p>Member time series, chargers and events of each scenario</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation/campaign_2024/</span></code></p></td>
+<td><p>Inputs for the 2024 campaign</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">shared/</span></code></p></td>
+<td><p>Weather, OMIE price and carbon intensity</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">catalogs/</span></code>, <code class="docutils literal notranslate"><span class="pre">deferrables/</span></code></p></td>
+<td><p>Electrical services and appliance profiles read by the schemas</p></td>
+</tr>
+</tbody>
+</table>
+<p>The data tables described in the article (member end uses, charging sessions,
+appliance requests, catalogues), provenance records, checksums and documentation
+are in the dataset deposit, not in CityLearn. The <code class="docutils literal notranslate"><span class="pre">2023</span></code> in some internal paths is inherited
+from the generator.</p>
+</section>
+<section id="reporting-results">
+<h2>Reporting results<a class="headerlink" href="#reporting-results" title="Link to this heading"></a></h2>
+<p>Report energy, cost and carbon together with service delivery: lower consumption
+can come from a vehicle that left below its target or an appliance that never ran.
+Evaluate service per request, comparing delivered with requested EV energy and each
+appliance start with its window and deadline.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Limitation</p></th>
+<th class="head"><p>Consequence</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Designed inventories; members shared between datasets</p></td>
+<td><p>Suitable for controlled comparisons; not representative of Portuguese RECs, and the datasets are not independent samples.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Prescribed charging targets and appliance windows</p></td>
+<td><p>Service requirements are modelling assumptions, not measured user preferences.</p></td>
+</tr>
+<tr class="row-even"><td><p>Residential demand 30-36 % above SHEERM measurements</p></td>
+<td><p>Self-sufficiency is likely lower than for the measured homes; normalise or test sensitivity where absolute levels matter.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Longer EV connections than in measured sessions</p></td>
+<td><p>May favour scheduling-based controllers.</p></td>
+</tr>
+<tr class="row-even"><td><p>Arrival SOC prescribed for each charging session</p></td>
+<td><p>Travel continuity over consecutive days is not tested.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Experimental price rules; average carbon intensity</p></td>
+<td><p>Results are not savings under a real tariff or marginal emission reductions.</p></td>
+</tr>
+<tr class="row-even"><td><p>Event rates derived from pilot communities</p></td>
+<td><p>Robustness studies should also vary them.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="licence-and-attribution">
+<h2>Licence and attribution<a class="headerlink" href="#licence-and-attribution" title="Link to this heading"></a></h2>
+<p>The authors’ original data and documentation are licensed under
+<a class="reference external" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Give appropriate credit,
+link to the licence and indicate changes. CC BY 4.0 is not a blanket licence for
+the collection: material derived from third-party sources keeps its own terms.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Source</p></th>
+<th class="head"><p>Use</p></th>
+<th class="head"><p>Terms</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://www.omie.es/">OMIE</a> Portuguese day-ahead prices</p></td>
+<td><p>Transformed price benchmark (converted, floored at zero); not original OMIE observations</p></td>
+<td><p>OMIE public-information terms; credit the source</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://datahub.ren.pt/en/api-instructions">REN</a>, <a class="reference external" href="https://www.ree.es/en/datos/apidata">REE</a> and <a class="reference external" href="https://apambiente.pt/clima/fator-de-emissao-de-gases-de-efeito-de-estufa-para-eletricidade-produzida-em-portugal">APA</a></p></td>
+<td><p>Calculated carbon-intensity series</p></td>
+<td><p>Provider terms; raw responses not included</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://joint-research-centre.ec.europa.eu/photovoltaic-geographical-information-system-pvgis_en">PVGIS</a>, European Commission JRC</p></td>
+<td><p>Irradiance and weather inputs</p></td>
+<td><p>JRC free-use terms; acknowledgement requested</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://doi.org/10.24381/cds.adbb2d47">ERA5</a> via <a class="reference external" href="https://open-meteo.com/">Open-Meteo</a></p></td>
+<td><p>Humidity and weather</p></td>
+<td><p>CC BY 4.0; credit Copernicus C3S and Open-Meteo</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://www.e-redes.pt/">E-REDES</a> standard consumption profiles</p></td>
+<td><p>Historical household prior</p></td>
+<td><p>Provider terms; source workbooks not included</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://doi.org/10.5281/zenodo.13972210">SHEERM</a></p></td>
+<td><p>Calibration and comparison of household load</p></td>
+<td><p>CC BY 4.0</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://doi.org/10.5281/zenodo.5063428">REFIT</a>, Murray and Stankovic</p></td>
+<td><p>Domestic appliance programmes</p></td>
+<td><p>CC BY 4.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://doi.org/10.1038/s41597-020-00712-x">Building Data Genome 2</a></p></td>
+<td><p>Commercial calibration statistics only</p></td>
+<td><p>Upstream BDG2 licence; no hourly extracts included</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://doi.org/10.5281/zenodo.13896176">SINTEF residential EV charging</a>, <a class="reference external" href="https://doi.org/10.1038/s41597-023-02698-8">FIKElectricity</a></p></td>
+<td><p>Comparison</p></td>
+<td><p>CC BY 4.0</p></td>
+</tr>
+</tbody>
+</table>
+<p>The dataset deposit holds the per-file licence map, full attribution, generator and
+reconstruction tools, data dictionary and validation reports.</p>
+</section>
+<section id="citation">
+<h2>Citation<a class="headerlink" href="#citation" title="Link to this heading"></a></h2>
+<p>When you use the data, cite the dataset and its article:</p>
+<ul class="simple">
+<li><p>Fonseca et al., <em>Synthetic electricity demand and flexibility datasets for
+Portuguese energy communities</em>, dataset edition v3.4. Zenodo, DOI
+<a class="reference external" href="https://doi.org/10.5281/zenodo.24182353">10.5281/zenodo.24182353</a> (reserved;
+registered on publication).</p></li>
+<li><p>Fonseca et al., “Synthetic electricity demand and flexibility datasets for
+Portuguese energy communities”, <em>Scientific Data</em> (under review).</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dataset_reference.html" class="btn btn-neutral float-left" title="Dataset Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="data_unit_contract.html" class="btn btn-neutral float-right" title="Data Unit Contract" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
