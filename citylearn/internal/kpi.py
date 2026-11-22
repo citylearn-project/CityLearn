@@ -2418,6 +2418,18 @@ class CityLearnKPIService:
                 bau('district', 'District', member_sum_key))
 
         self._add_business_as_usual_shape_records(records, result.env, v2, simulated_days)
+        if getattr(env, 'evaluation_window_enabled', False):
+            for level, names in names_by_level.items():
+                control_win_key = f'{level}_energy_grid_window_average_power_control_kw'
+                bau_win_key = f'{level}_energy_grid_window_average_power_business_as_usual_kw'
+                delta_win_key = f'{level}_energy_grid_window_average_power_delta_to_business_as_usual_kw'
+                for name in names:
+                    if (level, name, control_win_key) not in records:
+                        continue
+                    c_val = current(level, name, control_win_key)
+                    b_val = bau(level, name, control_win_key)
+                    put(level, name, bau_win_key, b_val)
+                    put(level, name, delta_win_key, finite_delta(c_val, b_val))
         return bau_df.attrs.get(BATTERY_NOMINAL_CAPACITY_ATTR, {}).get('control')
 
     def _add_business_as_usual_shape_records(
@@ -3059,6 +3071,15 @@ class CityLearnKPIService:
                     put('building', name, f'building_energy_provenance_{metric}', value)
             for metric, value in district.items():
                 put('district', 'District', f'district_energy_provenance_{metric}', value)
+
+        if getattr(env, 'evaluation_window_enabled', False):
+            from citylearn.internal.evaluation_window import compute_evaluation_window_control_records
+            for row in compute_evaluation_window_control_records(
+                self,
+                kpi_buildings=kpi_buildings,
+                building_windows=building_windows,
+            ):
+                put(str(row['level']), str(row['name']), str(row['cost_function']), row['value'])
 
         capacities = all_metrics.attrs[BATTERY_NOMINAL_CAPACITY_ATTR]
         if include_business_as_usual and not bool(getattr(env, '_business_as_usual_sidecar', False)):

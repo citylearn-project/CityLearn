@@ -117,6 +117,7 @@ All child environments must use:
 | Same effective episode length | Keeps training batches rectangular. |
 | Same `interface` | Keeps observation/action payload contracts stable. |
 | Same `central_agent` mode | Avoids mixing centralized and decentralized reward/action semantics. |
+| Same `evaluation_window` when enabled | Keeps recurring window KPIs aligned across communities. |
 
 The wrapper validates these conditions at construction and again after reset.
 
@@ -148,7 +149,8 @@ Only district-level child KPIs are aggregated:
 | `_ratio` of a control total to a reference total | Ratio of the summed totals, e.g. `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
 | Rates and means with additive denominators | Pooled: mean weighted by the denominator, e.g. `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
 | Other `_ratio`, `_percent` | Weighted mean using community `weight`. |
-| `_kw`, `_c`, other `_hours` and other point metrics | Not aggregated in v1. |
+| `energy_grid_window_average_power_*_kw` | Signed sum across communities sharing `evaluation_window` (`NaN` if any community value is undefined). |
+| Other `_kw`, `_c`, other `_hours` and other point metrics | Not aggregated in v1. |
 
 Ratios rebuilt from summed totals are the `ratio_to_baseline` and
 `ratio_to_business_as_usual` ratios of cost, emissions, grid import, export and

@@ -44,6 +44,7 @@ Esta pagina documenta o contrato do `schema.json`. O schema e a fonte oficial pa
 | `demand_response` | object | nao | Pedidos DSO/TSO de flexibilidade e settlement orientados por dataset. |
 | `robustness` | object | nao | Perturbacoes orientadas por dataset para observacoes, forecasts, acoes e assets. |
 | `community_market` | object | nao | Mercado local e KPIs associados. |
+| `evaluation_window` | bool/object | nao | Janela local recorrente opt-in para `evaluate_v2()` e exportacao de KPIs; ver [Janela de Avaliacao](#janela-de-avaliacao). |
 | `ev_departure_within_tolerance` | float | nao | Tolerancia simetrica de accuracy do SOC no departure, default `0.05`. |
 | `ev_departure_service_tolerance` | float | nao | Tolerancia inferior de servico EV minimo no departure, default `0.05`. |
 | `render_mode` | string | nao | `none`, `during`, `end`. |
@@ -519,6 +520,28 @@ membros, os importadores podem pagar um valor diferente do que os exportadores
 recebem pela mesma energia; a diferença aparece em
 `community_operator_balance_total_eur` (positiva quando o mercado retém dinheiro) e é
 zero com uma tarifa única.
+
+## Janela de Avaliacao
+
+`evaluation_window` ativa KPIs opt-in numa janela local recorrente (`*_energy_grid_window_average_power_*_kw` e `*_ev_window_net_exchange_control_kwh`; ver [referencia de KPIs](kpis_reference.md#janela-de-avaliação-recorrente)) sem alterar a fisica da simulacao nem os nomes dos KPIs quando os limites mudam.
+
+```json
+"evaluation_window": {
+  "enabled": true,
+  "start": "16:00",
+  "end": "19:00",
+  "timezone": "scenario_local"
+}
+```
+
+| Campo | Default | O que faz |
+|---|---:|---|
+| `enabled` | `false` (`true` quando `start` ou `end` e definido) | Ativa os KPIs da janela recorrente em `evaluate_v2()` e nos exports. Passar `"evaluation_window": true` ativa a janela inicial `16:00:00` a `19:00:00`. |
+| `start` | `"16:00:00"` | Inicio da janela em formato 24h `"HH:MM"` ou `"HH:MM:SS"`, incluindo fronteiras sub-horarias. |
+| `end` | `"19:00:00"` | Fim da janela em formato 24h `"HH:MM"` ou `"HH:MM:SS"`. Quando `start > end` (por exemplo `"22:00"` a `"06:00"`), a janela atravessa a meia-noite. |
+| `timezone` | `schema.timezone` ou `"scenario_local"` | Fuso horario IANA usado ao converter um calendario UTC `TimeAxis`, ou `"scenario_local"` para colunas de calendario locais do dataset. |
+
+Os valores resolvidos de `start`, `end` e `timezone` ficam registados em `exported_kpis.manifest.json`. Quando ambas as execucoes ativam `evaluation_window` com limites ou fusos horarios diferentes, `compare_manifests()` adiciona `'evaluation_window'` a `mismatches` (`status='incompatible'`). Quando apenas uma execucao ativa `evaluation_window`, `compare_manifests()` mantem `status='paired'` para todos os KPIs partilhados, regista `'evaluation_window_one_sided'` em `declared_differences` (`evaluation_window.status == 'one_sided'`), e `compare_exports()` assinala apenas as linhas da janela em `unpaired_window_kpis`.
 
 ## Combinacoes Importantes
 

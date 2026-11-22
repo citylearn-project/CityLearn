@@ -15,13 +15,13 @@ As linhas presentes dependem dos equipamentos e serviços do cenário.
 | Família | Nomes |
 |---|---:|
 | [Custo](#custo) | 24 |
-| [Energia da rede e forma da carga](#energia-da-rede-e-forma-da-carga) | 112 |
+| [Energia da rede e forma da carga](#energia-da-rede-e-forma-da-carga) | 118 |
 | [Emissões](#emissões) | 28 |
 | [Autoconsumo solar](#autoconsumo-solar) | 38 |
 | [Mercado comunitário](#mercado-comunitário) | 36 |
 | [Baterias](#baterias) | 40 |
 | [Serviço elétrico e fases](#serviço-elétrico-e-fases) | 22 |
-| [Veículos elétricos](#veículos-elétricos) | 62 |
+| [Veículos elétricos](#veículos-elétricos) | 64 |
 | [Auditoria das partidas dos VE](#auditoria-das-partidas-dos-ve) | 128 |
 | [Equipamentos flexíveis](#equipamentos-flexíveis) | 48 |
 | [Auditoria dos equipamentos flexíveis](#auditoria-dos-equipamentos-flexíveis) | 68 |
@@ -104,9 +104,10 @@ Equações e regras: [Energia da rede e forma da carga](kpis_reference.md#energi
 | `energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average_to_baseline_signed_net_ratio` | district | ratio | Como o rácio de importação acima, na série líquida com sinal (definição da versão 3.6.0). |
 | `energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average{,_signed_net}_{control,business_as_usual,delta_to_business_as_usual}_ratio` | district | ratio | Penalização do fator de carga da execução controlada, da execução BAU, e controlo menos BAU, na potência de importação ou, com `_signed_net`, na potência líquida com sinal (3.6.0). |
 | `energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average{,_signed_net}_to_business_as_usual_ratio` | district | ratio | Penalização do fator de carga do controlo sobre a da execução BAU, na mesma série. |
+| `energy_grid_window_average_power_{control,business_as_usual,delta_to_business_as_usual}_kw` | building, district | kW | Potência líquida média com sinal na rede dentro da janela local recorrente `evaluation_window` na execução controlada, na execução BAU, e controlo menos BAU; só é emitida quando `evaluation_window.enabled` é verdadeiro. |
 
 <details>
-<summary>Todos os 112 nomes</summary>
+<summary>Todos os 118 nomes</summary>
 
 ```text
 building_energy_grid_daily_average_export_baseline_kwh
@@ -145,6 +146,9 @@ building_energy_grid_total_net_exchange_business_as_usual_kwh
 building_energy_grid_total_net_exchange_control_kwh
 building_energy_grid_total_net_exchange_delta_kwh
 building_energy_grid_total_net_exchange_delta_to_business_as_usual_kwh
+building_energy_grid_window_average_power_business_as_usual_kw
+building_energy_grid_window_average_power_control_kw
+building_energy_grid_window_average_power_delta_to_business_as_usual_kw
 district_energy_grid_daily_average_export_baseline_kwh
 district_energy_grid_daily_average_export_business_as_usual_kwh
 district_energy_grid_daily_average_export_control_kwh
@@ -221,6 +225,9 @@ district_energy_grid_total_net_exchange_business_as_usual_kwh
 district_energy_grid_total_net_exchange_control_kwh
 district_energy_grid_total_net_exchange_delta_kwh
 district_energy_grid_total_net_exchange_delta_to_business_as_usual_kwh
+district_energy_grid_window_average_power_business_as_usual_kw
+district_energy_grid_window_average_power_control_kw
+district_energy_grid_window_average_power_delta_to_business_as_usual_kw
 ```
 
 </details>
@@ -524,9 +531,10 @@ Equações e regras: [Veículos elétricos](kpis_reference.md#veículos-elétric
 | `ev_ratio_to_business_as_usual_{charge,v2g_export}_total_ratio` | building, district | ratio | Total de carga ou de V2G do controlo sobre o do BAU, conforme as regras comuns; como o BAU nunca usa V2G, o ratio V2G fica indefinido sempre que o controlador descarrega. |
 | `ev_energy_accounting_connected_soc_gain_kwh` | building, district | kWh | Soma, sobre as partidas contadas, de max(SOC à partida − SOC à chegada, 0) vezes a capacidade nominal da bateria. |
 | `ev_energy_accounting_shortfall_kwh` | building, district | kWh | Por membro, max(ganho de SOC − total de carga, 0): ganho de SOC não explicado pela carga medida; o valor do distrito é a soma dos valores dos membros. |
+| `ev_window_net_exchange_control_kwh` | building, district | kWh | Energia AC líquida com sinal nos carregadores de VE dentro da janela local recorrente `evaluation_window` (positiva no carregamento, negativa na entrega V2X); só é emitida quando `evaluation_window.enabled` é verdadeiro. |
 
 <details>
-<summary>Todos os 62 nomes</summary>
+<summary>Todos os 64 nomes</summary>
 
 ```text
 building_ev_energy_accounting_connected_soc_gain_kwh
@@ -560,6 +568,7 @@ building_ev_total_charge_kwh
 building_ev_total_v2g_export_business_as_usual_kwh
 building_ev_total_v2g_export_delta_to_business_as_usual_kwh
 building_ev_total_v2g_export_kwh
+building_ev_window_net_exchange_control_kwh
 district_ev_energy_accounting_connected_soc_gain_kwh
 district_ev_energy_accounting_shortfall_kwh
 district_ev_events_departure_count
@@ -591,6 +600,7 @@ district_ev_total_charge_kwh
 district_ev_total_v2g_export_business_as_usual_kwh
 district_ev_total_v2g_export_delta_to_business_as_usual_kwh
 district_ev_total_v2g_export_kwh
+district_ev_window_net_exchange_control_kwh
 ```
 
 </details>

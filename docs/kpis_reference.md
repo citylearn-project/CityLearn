@@ -74,7 +74,8 @@ aggregated by the first rule that applies:
 4. **Other `_ratio` and `_percent` names** are means weighted by the community
    `weight`.
 5. **Everything else** (`_kw`, `_c`, `_hours` and other point values) has no
-   portfolio row.
+   portfolio row, except `energy_grid_window_average_power_*_kw`, which sums the
+   synchronized community window averages when `evaluation_window` is enabled.
 
 A pooled rate keeps its portfolio row whatever its unit, so the pooled
 flexible-appliance start delay (`_hours`) has one. The
@@ -274,7 +275,63 @@ Two sets of rows use different series:
 
 Note the word order of the signed-net names: `load_factor_penalty_daily_average_to_baseline_signed_net_ratio`, but `load_factor_penalty_daily_average_signed_net_to_business_as_usual_ratio`.
 
-**Portfolio.** Energy totals and daily averages are summed over communities. Import, export and net-exchange ratios are ratios of the summed totals (signed for net exchange). The shape ratios and the `building_mean` ratios are means weighted by community `weight`. The shape rows in kW are not carried over.
+### Recurring evaluation window
+
+When `evaluation_window.enabled` is true (see the [schema reference](schema_reference.md#evaluation-window)), `evaluate_v2()` and KPI exports include recurring local-window power rows at building, district and portfolio levels:
+
+```text
+w_t = τ_t / Δt                                overlap fraction of step t in [0, 1]
+H_W = Σ_t w_t · Δh                            effective window hours over finite steps
+energy_grid_window_average_power_control_kw            = (Σ_t w_t · net_t) / H_W
+energy_grid_window_average_power_business_as_usual_kw  = (Σ_t w_t · net_bau,t) / H_W
+energy_grid_window_average_power_delta_to_business_as_usual_kw = control − business_as_usual
+```
+
+`τ_t` is the overlap in seconds between executed step `[s_t, s_t + Δt)` in local time and the configured daily window (`16:00:00` to `19:00:00` when enabled without explicit bounds). With a canonical `time_axis` calendar, `s_t` is converted from `timestamp_utc` to `evaluation_window.timezone`; without a calendar file, dataset `hour` runs from `1` to `24` and `s_t` uses `(hour − 1) mod 24` (`hour = 1, minutes = 0` starts at `00:00:00`), matching the entity temporal features. Windows with `start > end` wrap across midnight into `[start, 24:00)` and `[00:00, end)`. Steps straddling a boundary receive partial weight `0 < w_t < 1`. When `H_W = 0`, all window rows are undefined (`NaN`). When `evaluate_v2(include_business_as_usual=False)` is called, only `_control_kw` is emitted.
+
+To inspect additional post-run windows without rerunning the simulation, weight the exported step series from a rendered session (`exported_data_community_ep0.csv` writes `timestamp` from `time_axis`, or from `start_date` `00:00:00` when the episode starts at midnight):
+
+```python
+from pathlib import Path
+import json
+import numpy as np
+import pandas as pd
+
+
+def step_weight(t0: float, dt: float, segments: list[tuple[float, float]]) -> float:
+    parts = [(t0, min(t0 + dt, 86400.0))] + ([(0.0, t0 + dt - 86400.0)] if t0 + dt > 86400.0 else [])
+    return sum(max(0.0, min(s1, w1) - max(s0, w0)) for s0, s1 in parts for w0, w1 in segments) / dt
+
+
+export_dir = Path("render_logs/my_session")
+manifest = json.loads((export_dir / "exported_kpis.manifest.json").read_text(encoding="utf-8"))
+dt = float(manifest["effective_schema"]["seconds_per_time_step"])
+
+community = pd.read_csv(export_dir / "exported_data_community_ep0.csv")
+ts = pd.to_datetime(community["timestamp"])
+sec_of_day = (ts.dt.hour * 3600 + ts.dt.minute * 60 + ts.dt.second).to_numpy(dtype=float)
+
+start_s, end_s = 16 * 3600, 19 * 3600
+segments = [(start_s, end_s)] if start_s < end_s else [(start_s, 86400.0), (0.0, end_s)]
+weights = np.array([step_weight(float(t0), dt, segments) for t0 in sec_of_day], dtype=float)
+hours = float(weights.sum() * (dt / 3600.0))
+
+control_kw = float((weights * community["Net Electricity Consumption-kWh"]).sum() / hours)
+bau = pd.read_csv(export_dir / "exported_data_business_as_usual_ep0.csv")
+bau_net = bau.loc[bau["level"] == "district", "net_electricity_consumption_kwh"].to_numpy(dtype=float)
+bau_kw = float((weights * bau_net).sum() / hours)
+delta_kw = control_kw - bau_kw
+
+ev_net_kwh = 0.0
+for path in sorted(export_dir.glob("exported_data_*_ep0.csv")):
+    cols = pd.read_csv(path, nrows=0).columns
+    if {"Charger Consumption-kWh", "Charger Production-kWh"} <= set(cols):
+        df = pd.read_csv(path)
+        ac = np.maximum(df["Charger Consumption-kWh"], 0.0) - np.maximum(df["Charger Production-kWh"], 0.0)
+        ev_net_kwh += float((weights * ac).sum())
+```
+
+**Portfolio.** Energy totals and daily averages are summed over communities. Import, export and net-exchange ratios are ratios of the summed totals (signed for net exchange). The shape ratios and the `building_mean` ratios are means weighted by community `weight`. The shape rows in kW are not carried over. When `evaluation_window` is enabled, `energy_grid_window_average_power_*_kw` is summed signed across communities sharing that window and is undefined when any community value is undefined.
 
 **Which KPI.**
 - Use the district ratio `ratio_to_baseline_import_total_ratio`. `*_building_mean_ratio` is the mean of the building ratios, kept only to compare with results up to 3.6.0.
@@ -585,6 +642,16 @@ ev_total_v2g_export_kwh = sum_t max(-ac_t, 0)
 - **Losses:** the charge total includes the charger losses.
 - **Not grid export:** the V2G total is the energy the EVs deliver through the charger, wherever it is used. It is not grid export: a member can use V2G energy itself, and only the member's net exchange shows what crosses the grid boundary.
 - **Fallback:** a charger without gross records uses the positive and negative parts of its electricity consumption instead.
+
+### Window net exchange
+
+When `evaluation_window.enabled` is true, `ev_window_net_exchange_control_kwh` reports the signed net AC energy across the chargers inside the recurring local window:
+
+```text
+ev_window_net_exchange_control_kwh = Σ_t w_t · ac_net,t
+```
+
+`w_t` is the step overlap weight from [Grid energy and load shape](kpis_reference.md#recurring-evaluation-window), and `ac_net,t` is the signed AC electricity consumption of the active chargers at step `t` (positive when charging EVs, negative when delivering V2X energy to the building or grid). Members without EV chargers report `0.0` when `H_W > 0`. When `H_W = 0`, the value is undefined (`NaN`). District and portfolio values sum the signed member and community values, and the portfolio value is undefined if any community value is undefined.
 
 ### Energy accounting
 

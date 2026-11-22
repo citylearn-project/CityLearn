@@ -115,6 +115,7 @@ Todas as comunidades filhas tem de usar:
 | Mesmo episode length efetivo | Mantem batches de treino retangulares. |
 | Mesmo `interface` | Mantem estavel o contrato action/observation. |
 | Mesmo modo `central_agent` | Evita misturar semanticas centralizadas e descentralizadas. |
+| Mesmo `evaluation_window` quando ativo | Mantem alinhados os KPIs da janela recorrente entre comunidades. |
 
 O wrapper valida isto no constructor e depois de cada reset.
 
@@ -142,7 +143,8 @@ So KPIs district sao agregados:
 | `_ratio` de um total control sobre um total de referencia | Ratio dos totais somados, por exemplo `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
 | Taxas e medias com denominadores aditivos | Agregadas (pooled): media ponderada pelo denominador, por exemplo `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
 | Outros `_ratio`, `_percent` | Media ponderada por `weight`. |
-| `_kw`, `_c`, outros `_hours` e outros point metrics | Nao agregados na v1. |
+| `energy_grid_window_average_power_*_kw` | Soma com sinal entre comunidades que partilham `evaluation_window` (`NaN` se alguma comunidade for indefinida). |
+| Outros `_kw`, `_c`, outros `_hours` e outros point metrics | Nao agregados na v1. |
 
 Os ratios reconstruidos a partir dos totais somados sao os ratios `ratio_to_baseline` e `ratio_to_business_as_usual` de custo, emissoes, import, export e net exchange da rede, e os ratios `ratio_to_business_as_usual` de geracao e export solar, carga EV e export V2G, carga, descarga e throughput da bateria, e contagens de ciclos e energia dos deferrable appliances. Usam apenas comunidades que reportam os dois totais, ignoram `weight` como os totais somados, e mantem a regra lower-is-better da [referencia de KPIs](kpis_reference.md#regras-comuns) para totais negativos de net exchange e custo. O ratio de um portfolio com uma comunidade e igual ao ratio district.
 
