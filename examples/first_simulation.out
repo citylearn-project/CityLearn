@@ -1,5 +1,5 @@
                                                   cost_function      value
-                                district_cost_total_control_eur 124.753948
+                                district_cost_total_control_eur 124.753286
   district_electrical_service_phase_violations_energy_total_kwh   0.000000
-                  district_energy_grid_total_import_control_kwh 739.822226
+                  district_energy_grid_total_import_control_kwh 739.823959
 district_ev_performance_departure_min_acceptable_feasible_ratio   1.000000
