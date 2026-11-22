@@ -221,8 +221,11 @@ then keeps that PyTorch:</p>
 <p>A dataset or controller that needs a missing extra raises an <code class="docutils literal notranslate"><span class="pre">ImportError</span></code>
 that names the command to install it. Stable Baselines3 and RLlib are not
 extras: install Stable Baselines3 2.4 or newer to use
-<code class="docutils literal notranslate"><span class="pre">StableBaselines3Wrapper</span></code> (see <a class="reference internal" href="usage/rl_training.html"><span class="doc">Train and evaluate a reinforcement learning controller</span></a>), and a Ray release
-that supports your Python version to use the RLlib wrappers.</p>
+<code class="docutils literal notranslate"><span class="pre">StableBaselines3Wrapper</span></code> (see <a class="reference internal" href="usage/rl_training.html"><span class="doc">Train and evaluate a reinforcement learning controller</span></a>), and <code class="docutils literal notranslate"><span class="pre">ray[rllib]</span></code> to
+use the RLlib wrappers (see <a class="reference internal" href="usage/rllib_training.html"><span class="doc">Train a controller with RLlib</span></a>). The RLlib wrappers are
+tested with Ray 2.60.0 (requiring a checkout of <code class="docutils literal notranslate"><span class="pre">master</span></code> or a release newer than
+3.6.0), which supports Python 3.10 to 3.14 and pins gymnasium
+1.2.2; other Ray releases pin other gymnasium versions.</p>
 </section>
 <section id="datasets-cache-and-offline-use">
 <h2>Datasets, cache and offline use<a class="headerlink" href="#datasets-cache-and-offline-use" title="Link to this heading"></a></h2>

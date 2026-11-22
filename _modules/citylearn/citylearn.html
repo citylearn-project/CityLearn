@@ -137,7 +137,6 @@
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -148,14 +147,23 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">difflib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_streams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">EpisodeTracker</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span><span class="p">,</span> <span class="n">DynamicsBuilding</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.cost_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">CostFunction</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">_parse_env_bool</span><span class="p">,</span> <span class="n">CarbonIntensity</span><span class="p">,</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">OfflineDataError</span><span class="p">,</span> <span class="n">ChargerSimulation</span><span class="p">,</span> <span class="n">EnergySimulation</span><span class="p">,</span> <span class="n">LogisticRegressionOccupantParameters</span><span class="p">,</span> <span class="n">Pricing</span><span class="p">,</span> <span class="n">Weather</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.cost_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">CostFunction</span> <span class="k">as</span> <span class="n">CostFunction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.data</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_parse_env_bool</span><span class="p">,</span>
+    <span class="n">CarbonIntensity</span> <span class="k">as</span> <span class="n">CarbonIntensity</span><span class="p">,</span>
+    <span class="n">ChargerSimulation</span> <span class="k">as</span> <span class="n">ChargerSimulation</span><span class="p">,</span>
+    <span class="n">DataSet</span><span class="p">,</span>
+    <span class="n">EnergySimulation</span><span class="p">,</span>
+    <span class="n">LogisticRegressionOccupantParameters</span> <span class="k">as</span> <span class="n">LogisticRegressionOccupantParameters</span><span class="p">,</span>
+    <span class="n">OfflineDataError</span><span class="p">,</span>
+    <span class="n">Pricing</span> <span class="k">as</span> <span class="n">Pricing</span><span class="p">,</span>
+    <span class="n">Weather</span> <span class="k">as</span> <span class="n">Weather</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.electric_vehicle</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElectricVehicle</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Battery</span><span class="p">,</span> <span class="n">DeferrableAppliance</span><span class="p">,</span> <span class="n">PV</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.energy_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Battery</span> <span class="k">as</span> <span class="n">Battery</span><span class="p">,</span> <span class="n">DeferrableAppliance</span><span class="p">,</span> <span class="n">PV</span> <span class="k">as</span> <span class="n">PV</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.exporter</span><span class="w"> </span><span class="kn">import</span> <span class="n">EpisodeExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.market_history</span><span class="w"> </span><span class="kn">import</span> <span class="n">MarketSettlementHistory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnKPIService</span>
@@ -171,7 +179,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.robustness</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnRobustnessService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_bool</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.reward_function</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">MultiBuildingRewardFunction</span><span class="p">,</span>
+    <span class="n">MultiBuildingRewardFunction</span> <span class="k">as</span> <span class="n">MultiBuildingRewardFunction</span><span class="p">,</span>
     <span class="n">RewardFunction</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileHandler</span>

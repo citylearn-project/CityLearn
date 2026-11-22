@@ -107,6 +107,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="rl_training.html">Train and evaluate a reinforcement learning controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rllib_training.html">Train a controller with RLlib</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cli.html">Command-line examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 </ul>
@@ -224,9 +225,9 @@
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:297: UserWarning: <span class="ansi-yellow-fg">WARN: Box low&#39;s precision lowered by casting to float32, current low.dtype=float64</span>
+/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:236: UserWarning: <span class="ansi-yellow-fg">WARN: Box low&#39;s precision lowered by casting to float32, current low.dtype=float64</span>
   gym.logger.warn(
-/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:364: UserWarning: <span class="ansi-yellow-fg">WARN: Box high&#39;s precision lowered by casting to float32, current high.dtype=float64</span>
+/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gymnasium/spaces/box.py:306: UserWarning: <span class="ansi-yellow-fg">WARN: Box high&#39;s precision lowered by casting to float32, current high.dtype=float64</span>
   gym.logger.warn(
 </pre></div></div>
 </div>
@@ -836,6 +837,15 @@
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2026-11-22 01:54:37,174 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-22 01:54:37,395 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
@@ -904,7 +914,7 @@
       <th>building_battery_health_equivalent_full_cycles_count</th>
       <td>0.000</td>
       <td>0.429</td>
-      <td>0.000</td>
+      <td>0.553</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -919,7 +929,7 @@
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>1823.219</td>
+      <td>1851.386</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
@@ -957,8 +967,7 @@
 </section>
 <section id="RLlib">
 <h3>RLlib<a class="headerlink" href="#RLlib" title="Link to this heading"></a></h3>
-<p>CityLearn also provides <code class="docutils literal notranslate"><span class="pre">RLlibSingleAgentWrapper</span></code> and <code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> (see the <a class="reference external" href="../api/citylearn.wrappers.html">wrappers API</a>). Recent Ray releases pin their own gymnasium version and publish wheels only for some Python versions, and these wrappers are not tested against a current Ray release, so this notebook no longer runs an RLlib example. Install a Ray release that supports your Python version (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;ray[rllib]&quot;</span></code>) and wrap the environment with
-<code class="docutils literal notranslate"><span class="pre">NormalizedObservationWrapper</span></code> and <code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code> before the RLlib wrapper.</p>
+<p>CityLearn also provides <code class="docutils literal notranslate"><span class="pre">RLlibSingleAgentWrapper</span></code> and <code class="docutils literal notranslate"><span class="pre">RLlibMultiAgentEnv</span></code> (see the <a class="reference external" href="../api/citylearn.wrappers.html">wrappers API</a>). They are tested with Ray 2.60 and its new API stack. The <a class="reference external" href="rllib_training.html">RLlib tutorial</a> trains single-agent and multi-agent PPO controllers with them.</p>
 </section>
 </section>
 <section id="Neighborhood-Dataset-Generation">
