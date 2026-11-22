@@ -1,0 +1,932 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schema &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Cost Function" href="cost_function.html" />
+    <link rel="prev" title="Dataset" href="dataset.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Core concepts</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="environment.html">Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="observations.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.html">Agents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reward_function.html">Reward Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">Dataset</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Schema</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#example-structure">Example structure</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cost_function.html">Cost Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="entity_v1_contract.html">Entity v1 Contract</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Core concepts</a></li>
+      <li class="breadcrumb-item active">Schema</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/overview/schema.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="schema">
+<span id="schema-page"></span><h1>Schema<a class="headerlink" href="#schema" title="Link to this heading"></a></h1>
+<p>A schema is the JSON configuration used to construct
+<a class="reference internal" href="../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv" title="citylearn.citylearn.CityLearnEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.citylearn.CityLearnEnv</span></code></a>. It selects members, data files,
+equipment, observations, actions, reward and optional services.</p>
+<p>Start from a public dataset’s schema, then change the sections required for
+your experiment. File paths are resolved against the dataset root. The
+<a class="reference internal" href="../guides/schema_reference.html"><span class="doc">Schema Reference</span></a> gives the supported fields and defaults;
+<a class="reference internal" href="../guides/dataset_reference.html"><span class="doc">Dataset Reference</span></a> describes the referenced data.</p>
+<p>Load a schema by dataset name, local path or a Python dictionary as shown in
+<a class="reference internal" href="../usage/load_environment.html"><span class="doc">How to Load an Environment</span></a>. Configuration is part of the simulator’s
+Python/JSON workflow. CityLearn UI is for exploring exported results.</p>
+<section id="example-structure">
+<h2>Example structure<a class="headerlink" href="#example-structure" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>schema.json
+├── simulation window and timestep
+├── observations and actions
+├── reward_function
+├── buildings: data files, devices and electrical_service
+├── electric_vehicles_def
+└── optional community_market, demand_response, topology and robustness
+</pre></div>
+</div>
+<p>A complete existing schema is provided below:</p>
+<div class="code json highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">"random_seed"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s2">"root_directory"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+  <span class="s2">"central_agent"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">"simulation_start_time_step"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s2">"simulation_end_time_step"</span><span class="p">:</span> <span class="mi">2927</span><span class="p">,</span>
+  <span class="s2">"episode_time_steps"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+  <span class="s2">"rolling_episode_split"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">"random_episode_split"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">"seconds_per_time_step"</span><span class="p">:</span> <span class="mf">3600.0</span><span class="p">,</span>
+  <span class="s2">"observations"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"month"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"day_type"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"hour"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"daylight_savings_status"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"outdoor_dry_bulb_temperature"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"outdoor_dry_bulb_temperature_predicted_1"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"outdoor_dry_bulb_temperature_predicted_2"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"outdoor_dry_bulb_temperature_predicted_3"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"outdoor_relative_humidity"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"outdoor_relative_humidity_predicted_1"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"outdoor_relative_humidity_predicted_2"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"outdoor_relative_humidity_predicted_3"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"diffuse_solar_irradiance"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"diffuse_solar_irradiance_predicted_1"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"diffuse_solar_irradiance_predicted_2"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"diffuse_solar_irradiance_predicted_3"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"direct_solar_irradiance"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"direct_solar_irradiance_predicted_1"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"direct_solar_irradiance_predicted_2"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"direct_solar_irradiance_predicted_3"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"carbon_intensity"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"indoor_dry_bulb_temperature"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"average_unmet_cooling_setpoint_difference"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"indoor_relative_humidity"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"non_shiftable_load"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"solar_generation"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"cooling_storage_soc"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"heating_storage_soc"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"dhw_storage_soc"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"electrical_storage_soc"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"net_electricity_consumption"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"electricity_pricing"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"electricity_pricing_predicted_1"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"electricity_pricing_predicted_2"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"electricity_pricing_predicted_3"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"cooling_device_efficiency"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"heating_device_efficiency"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"cooling_demand"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"heating_demand"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"occupant_count"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"power_outage"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"hvac_mode"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"comfort_band"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"indoor_dry_bulb_temperature_cooling_set_point"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"indoor_dry_bulb_temperature_heating_set_point"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"indoor_dry_bulb_temperature_cooling_delta"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"indoor_dry_bulb_temperature_heating_delta"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">"shared_in_central_agent"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="s2">"actions"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"cooling_storage"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"heating_storage"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"dhw_storage"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"electrical_storage"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"cooling_device"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">true</span>
+    <span class="p">},</span>
+    <span class="s2">"heating_device"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">},</span>
+    <span class="s2">"cooling_or_heating_device"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"active"</span><span class="p">:</span> <span class="n">false</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="s2">"agent"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.agents.sac.SAC"</span><span class="p">,</span>
+    <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"hidden_dimension"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="mi">256</span><span class="p">,</span>
+        <span class="mi">256</span>
+      <span class="p">],</span>
+      <span class="s2">"discount"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+      <span class="s2">"tau"</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>
+      <span class="s2">"lr"</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">,</span>
+      <span class="s2">"batch_size"</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span>
+      <span class="s2">"replay_buffer_capacity"</span><span class="p">:</span> <span class="mf">100000.0</span><span class="p">,</span>
+      <span class="s2">"standardize_start_time_step"</span><span class="p">:</span> <span class="mi">2928</span><span class="p">,</span>
+      <span class="s2">"end_exploration_time_step"</span><span class="p">:</span> <span class="mi">2929</span><span class="p">,</span>
+      <span class="s2">"action_scaling_coef"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+      <span class="s2">"reward_scaling"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span>
+      <span class="s2">"update_per_time_step"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+      <span class="s2">"alpha"</span><span class="p">:</span> <span class="mf">1.0</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="s2">"reward_function"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.reward_function.ComfortReward"</span><span class="p">,</span>
+    <span class="s2">"attributes"</span><span class="p">:</span> <span class="n">null</span>
+  <span class="p">},</span>
+  <span class="s2">"buildings"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"Building_1"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"include"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"energy_simulation"</span><span class="p">:</span> <span class="s2">"Building_1.csv"</span><span class="p">,</span>
+      <span class="s2">"weather"</span><span class="p">:</span> <span class="s2">"weather.csv"</span><span class="p">,</span>
+      <span class="s2">"carbon_intensity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s2">"pricing"</span><span class="p">:</span> <span class="s2">"pricing.csv"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.building.LSTMDynamicsBuilding"</span><span class="p">,</span>
+      <span class="s2">"cooling_device"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.HeatPump"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">1.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"nominal_power"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"efficiency"</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+          <span class="s2">"target_cooling_temperature"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+          <span class="s2">"target_heating_temperature"</span><span class="p">:</span> <span class="mi">45</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"dhw_device"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.ElectricHeater"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"nominal_power"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"efficiency"</span><span class="p">:</span> <span class="mf">0.9</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"cooling_storage"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.StorageTank"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">3.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"capacity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"loss_coefficient"</span><span class="p">:</span> <span class="mf">0.006</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"inactive_observations"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"dhw_storage_soc"</span><span class="p">,</span>
+        <span class="s2">"solar_generation"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance_predicted_1"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance_predicted_2"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance_predicted_3"</span><span class="p">,</span>
+        <span class="s2">"direct_solar_irradiance_predicted_1"</span><span class="p">,</span>
+        <span class="s2">"direct_solar_irradiance_predicted_2"</span><span class="p">,</span>
+        <span class="s2">"direct_solar_irradiance_predicted_3"</span><span class="p">,</span>
+        <span class="s2">"heating_storage_soc"</span><span class="p">,</span>
+        <span class="s2">"electrical_storage_soc"</span><span class="p">,</span>
+        <span class="s2">"carbon_intensity"</span>
+      <span class="p">],</span>
+      <span class="s2">"inactive_actions"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"dhw_storage"</span><span class="p">,</span>
+        <span class="s2">"heating_storage"</span><span class="p">,</span>
+        <span class="s2">"electrical_storage"</span>
+      <span class="p">],</span>
+      <span class="s2">"dynamics"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.dynamics.LSTMDynamics"</span><span class="p">,</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"input_size"</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+          <span class="s2">"hidden_size"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+          <span class="s2">"num_layers"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+          <span class="s2">"lookback"</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+          <span class="s2">"filename"</span><span class="p">:</span> <span class="s2">"Building_1.pth"</span><span class="p">,</span>
+          <span class="s2">"input_normalization_minimum"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">10.80833</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">0.97493</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">0.90097</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">18.12067</span>
+          <span class="p">],</span>
+          <span class="s2">"input_normalization_maximum"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="mf">1037.6663</span><span class="p">,</span>
+            <span class="mf">36.90833</span><span class="p">,</span>
+            <span class="mf">30.81475</span><span class="p">,</span>
+            <span class="mf">24.73536719</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">0.97493</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">29.89854</span>
+          <span class="p">],</span>
+          <span class="s2">"input_observation_names"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"direct_solar_irradiance"</span><span class="p">,</span>
+            <span class="s2">"outdoor_dry_bulb_temperature"</span><span class="p">,</span>
+            <span class="s2">"occupant_count"</span><span class="p">,</span>
+            <span class="s2">"cooling_demand"</span><span class="p">,</span>
+            <span class="s2">"hour_sin"</span><span class="p">,</span>
+            <span class="s2">"hour_cos"</span><span class="p">,</span>
+            <span class="s2">"day_type_sin"</span><span class="p">,</span>
+            <span class="s2">"day_type_cos"</span><span class="p">,</span>
+            <span class="s2">"month_sin"</span><span class="p">,</span>
+            <span class="s2">"month_cos"</span><span class="p">,</span>
+            <span class="s2">"indoor_dry_bulb_temperature"</span>
+          <span class="p">]</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="s2">"Building_2"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"include"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"energy_simulation"</span><span class="p">:</span> <span class="s2">"Building_2.csv"</span><span class="p">,</span>
+      <span class="s2">"weather"</span><span class="p">:</span> <span class="s2">"weather.csv"</span><span class="p">,</span>
+      <span class="s2">"carbon_intensity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s2">"pricing"</span><span class="p">:</span> <span class="s2">"pricing.csv"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.building.LSTMDynamicsBuilding"</span><span class="p">,</span>
+      <span class="s2">"cooling_device"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.HeatPump"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">1.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"nominal_power"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"efficiency"</span><span class="p">:</span> <span class="mf">0.21</span><span class="p">,</span>
+          <span class="s2">"target_cooling_temperature"</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+          <span class="s2">"target_heating_temperature"</span><span class="p">:</span> <span class="mi">45</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"dhw_device"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.ElectricHeater"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"nominal_power"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"efficiency"</span><span class="p">:</span> <span class="mf">0.92</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"cooling_storage"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.StorageTank"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">3.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"capacity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"loss_coefficient"</span><span class="p">:</span> <span class="mf">0.006</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"dhw_storage"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.StorageTank"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">3.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"capacity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"loss_coefficient"</span><span class="p">:</span> <span class="mf">0.008</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"inactive_observations"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"solar_generation"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance_predicted_1"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance_predicted_2"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance_predicted_3"</span><span class="p">,</span>
+        <span class="s2">"direct_solar_irradiance_predicted_1"</span><span class="p">,</span>
+        <span class="s2">"direct_solar_irradiance_predicted_2"</span><span class="p">,</span>
+        <span class="s2">"direct_solar_irradiance_predicted_3"</span><span class="p">,</span>
+        <span class="s2">"heating_storage_soc"</span><span class="p">,</span>
+        <span class="s2">"electrical_storage_soc"</span><span class="p">,</span>
+        <span class="s2">"carbon_intensity"</span>
+      <span class="p">],</span>
+      <span class="s2">"inactive_actions"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"heating_storage"</span><span class="p">,</span>
+        <span class="s2">"electrical_storage"</span>
+      <span class="p">],</span>
+      <span class="s2">"dynamics"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.dynamics.LSTMDynamics"</span><span class="p">,</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"input_size"</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+          <span class="s2">"hidden_size"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+          <span class="s2">"num_layers"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+          <span class="s2">"lookback"</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+          <span class="s2">"filename"</span><span class="p">:</span> <span class="s2">"Building_2.pth"</span><span class="p">,</span>
+          <span class="s2">"input_normalization_minimum"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">10.80833</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">0.97493</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">0.90097</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">22.63211</span>
+          <span class="p">],</span>
+          <span class="s2">"input_normalization_maximum"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="mf">1037.6663</span><span class="p">,</span>
+            <span class="mf">36.90833</span><span class="p">,</span>
+            <span class="mf">296.33365</span><span class="p">,</span>
+            <span class="mf">109.74094531</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">0.97493</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">27.65767</span>
+          <span class="p">],</span>
+          <span class="s2">"input_observation_names"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"direct_solar_irradiance"</span><span class="p">,</span>
+            <span class="s2">"outdoor_dry_bulb_temperature"</span><span class="p">,</span>
+            <span class="s2">"occupant_count"</span><span class="p">,</span>
+            <span class="s2">"cooling_demand"</span><span class="p">,</span>
+            <span class="s2">"hour_sin"</span><span class="p">,</span>
+            <span class="s2">"hour_cos"</span><span class="p">,</span>
+            <span class="s2">"day_type_sin"</span><span class="p">,</span>
+            <span class="s2">"day_type_cos"</span><span class="p">,</span>
+            <span class="s2">"month_sin"</span><span class="p">,</span>
+            <span class="s2">"month_cos"</span><span class="p">,</span>
+            <span class="s2">"indoor_dry_bulb_temperature"</span>
+          <span class="p">]</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="s2">"Building_3"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"include"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"energy_simulation"</span><span class="p">:</span> <span class="s2">"Building_3.csv"</span><span class="p">,</span>
+      <span class="s2">"weather"</span><span class="p">:</span> <span class="s2">"weather.csv"</span><span class="p">,</span>
+      <span class="s2">"carbon_intensity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s2">"pricing"</span><span class="p">:</span> <span class="s2">"pricing.csv"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.building.LSTMDynamicsBuilding"</span><span class="p">,</span>
+      <span class="s2">"cooling_device"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.HeatPump"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">1.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"nominal_power"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"efficiency"</span><span class="p">:</span> <span class="mf">0.23</span><span class="p">,</span>
+          <span class="s2">"target_cooling_temperature"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+          <span class="s2">"target_heating_temperature"</span><span class="p">:</span> <span class="mi">45</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"dhw_device"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.ElectricHeater"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"nominal_power"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"efficiency"</span><span class="p">:</span> <span class="mf">0.87</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"cooling_storage"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.StorageTank"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">3.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"capacity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"loss_coefficient"</span><span class="p">:</span> <span class="mf">0.006</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"dhw_storage"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.StorageTank"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">3.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"capacity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"loss_coefficient"</span><span class="p">:</span> <span class="mf">0.008</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"inactive_observations"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"solar_generation"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance_predicted_1"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance_predicted_2"</span><span class="p">,</span>
+        <span class="s2">"diffuse_solar_irradiance_predicted_3"</span><span class="p">,</span>
+        <span class="s2">"direct_solar_irradiance_predicted_1"</span><span class="p">,</span>
+        <span class="s2">"direct_solar_irradiance_predicted_2"</span><span class="p">,</span>
+        <span class="s2">"direct_solar_irradiance_predicted_3"</span><span class="p">,</span>
+        <span class="s2">"heating_storage_soc"</span><span class="p">,</span>
+        <span class="s2">"electrical_storage_soc"</span><span class="p">,</span>
+        <span class="s2">"carbon_intensity"</span>
+      <span class="p">],</span>
+      <span class="s2">"inactive_actions"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"heating_storage"</span><span class="p">,</span>
+        <span class="s2">"electrical_storage"</span>
+      <span class="p">],</span>
+      <span class="s2">"dynamics"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.dynamics.LSTMDynamics"</span><span class="p">,</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"input_size"</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+          <span class="s2">"hidden_size"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+          <span class="s2">"num_layers"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+          <span class="s2">"lookback"</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+          <span class="s2">"filename"</span><span class="p">:</span> <span class="s2">"Building_3.pth"</span><span class="p">,</span>
+          <span class="s2">"input_normalization_minimum"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">10.80833</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">0.97493</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">0.90097</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">18.22155</span>
+          <span class="p">],</span>
+          <span class="s2">"input_normalization_maximum"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="mf">1037.6663</span><span class="p">,</span>
+            <span class="mf">36.90833</span><span class="p">,</span>
+            <span class="mf">258.90265</span><span class="p">,</span>
+            <span class="mf">72.14350781</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">0.97493</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">30.50947</span>
+          <span class="p">],</span>
+          <span class="s2">"input_observation_names"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"direct_solar_irradiance"</span><span class="p">,</span>
+            <span class="s2">"outdoor_dry_bulb_temperature"</span><span class="p">,</span>
+            <span class="s2">"occupant_count"</span><span class="p">,</span>
+            <span class="s2">"cooling_demand"</span><span class="p">,</span>
+            <span class="s2">"hour_sin"</span><span class="p">,</span>
+            <span class="s2">"hour_cos"</span><span class="p">,</span>
+            <span class="s2">"day_type_sin"</span><span class="p">,</span>
+            <span class="s2">"day_type_cos"</span><span class="p">,</span>
+            <span class="s2">"month_sin"</span><span class="p">,</span>
+            <span class="s2">"month_cos"</span><span class="p">,</span>
+            <span class="s2">"indoor_dry_bulb_temperature"</span>
+          <span class="p">]</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="s2">"Building_4"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"include"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">"energy_simulation"</span><span class="p">:</span> <span class="s2">"Building_4.csv"</span><span class="p">,</span>
+      <span class="s2">"weather"</span><span class="p">:</span> <span class="s2">"weather.csv"</span><span class="p">,</span>
+      <span class="s2">"carbon_intensity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s2">"pricing"</span><span class="p">:</span> <span class="s2">"pricing.csv"</span><span class="p">,</span>
+      <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.building.LSTMDynamicsBuilding"</span><span class="p">,</span>
+      <span class="s2">"cooling_device"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.HeatPump"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">1.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"nominal_power"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"efficiency"</span><span class="p">:</span> <span class="mf">0.22</span><span class="p">,</span>
+          <span class="s2">"target_cooling_temperature"</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+          <span class="s2">"target_heating_temperature"</span><span class="p">:</span> <span class="mi">45</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"dhw_device"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.ElectricHeater"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"nominal_power"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"efficiency"</span><span class="p">:</span> <span class="mf">0.9</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"cooling_storage"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.StorageTank"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">3.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"capacity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"loss_coefficient"</span><span class="p">:</span> <span class="mf">0.006</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"dhw_storage"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.StorageTank"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+        <span class="s2">"autosize_attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"safety_factor"</span><span class="p">:</span> <span class="mf">3.0</span>
+        <span class="p">},</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"capacity"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+          <span class="s2">"loss_coefficient"</span><span class="p">:</span> <span class="mf">0.008</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"pv"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.energy_model.PV"</span><span class="p">,</span>
+        <span class="s2">"autosize"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"nominal_power"</span><span class="p">:</span> <span class="mi">120</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="s2">"inactive_observations"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"heating_storage_soc"</span><span class="p">,</span>
+        <span class="s2">"electrical_storage_soc"</span><span class="p">,</span>
+        <span class="s2">"carbon_intensity"</span>
+      <span class="p">],</span>
+      <span class="s2">"inactive_actions"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"heating_storage"</span><span class="p">,</span>
+        <span class="s2">"electrical_storage"</span>
+      <span class="p">],</span>
+      <span class="s2">"dynamics"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"citylearn.dynamics.LSTMDynamics"</span><span class="p">,</span>
+        <span class="s2">"attributes"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">"input_size"</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+          <span class="s2">"hidden_size"</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+          <span class="s2">"num_layers"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+          <span class="s2">"lookback"</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+          <span class="s2">"filename"</span><span class="p">:</span> <span class="s2">"Building_4.pth"</span><span class="p">,</span>
+          <span class="s2">"input_normalization_minimum"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">10.80833</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">0.97493</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">0.90097</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">23.36176</span>
+          <span class="p">],</span>
+          <span class="s2">"input_normalization_maximum"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="mf">1037.6663</span><span class="p">,</span>
+            <span class="mf">36.90833</span><span class="p">,</span>
+            <span class="mf">254.76593</span><span class="p">,</span>
+            <span class="mf">245.52803125</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">0.97493</span><span class="p">,</span>
+            <span class="mf">1.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">0.0</span><span class="p">,</span>
+            <span class="mf">30.95352</span>
+          <span class="p">],</span>
+          <span class="s2">"input_observation_names"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"direct_solar_irradiance"</span><span class="p">,</span>
+            <span class="s2">"outdoor_dry_bulb_temperature"</span><span class="p">,</span>
+            <span class="s2">"occupant_count"</span><span class="p">,</span>
+            <span class="s2">"cooling_demand"</span><span class="p">,</span>
+            <span class="s2">"hour_sin"</span><span class="p">,</span>
+            <span class="s2">"hour_cos"</span><span class="p">,</span>
+            <span class="s2">"day_type_sin"</span><span class="p">,</span>
+            <span class="s2">"day_type_cos"</span><span class="p">,</span>
+            <span class="s2">"month_sin"</span><span class="p">,</span>
+            <span class="s2">"month_cos"</span><span class="p">,</span>
+            <span class="s2">"indoor_dry_bulb_temperature"</span>
+          <span class="p">]</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dataset.html" class="btn btn-neutral float-left" title="Dataset" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cost_function.html" class="btn btn-neutral float-right" title="Cost Function" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

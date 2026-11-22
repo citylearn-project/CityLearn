@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -27,8 +27,11 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Dataset catalogue" href="dataset_catalogue.html" />
-    <link rel="prev" title="Features and configuration" href="features.html" /> 
+    <link rel="next" title="Schema Reference" href="schema_reference.html" />
+    <link rel="prev" title="Moving an existing project to CityLearn v3" href="migration.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,37 +53,30 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
               <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Running Simulations</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#episode-loop-without-a-controller">Episode Loop Without a Controller</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#entity-interface-example">Entity Interface Example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#multi-community-example">Multi-Community Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#python-quickstart">Python Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#entity-interface-quickstart">Entity Interface Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multi-community-quickstart">Multi-Community Quickstart</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citylearnenv-parameters"><code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> Parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#extra-kwargs">Extra <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reward-observation-payloads">Reward Observation Payloads</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#macro-steps-action-repeat">Macro-Steps / Action Repeat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#stable-baselines3-agent">Stable Baselines3 agent</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#evaluation-window">Evaluation window</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#host-information">Host information</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#cli">CLI</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#render-and-export">Render and Export</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#smoke-test-a-large-dataset">Smoke-Test a Large Dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#validation-from-a-source-checkout">Validation from a Source Checkout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#recommended-validation">Recommended Validation</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
@@ -95,33 +91,39 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">History</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
-</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
 
         </div>
       </div>
@@ -147,11 +149,12 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
 <div class="admonition note citylearn-version-note" role="note">
-  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
-  listed under <a href="releases.html">Unreleased</a>, which the latest release,
-  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
-  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
-  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
 </div>
 
            <div itemprop="articleBody">
@@ -173,21 +176,13 @@
 <td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">citylearn</span></code></p></td>
 <td><p>The Python import path is <code class="docutils literal notranslate"><span class="pre">citylearn</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p>LSTM thermal dynamics</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[dynamics]&quot;</span></code></p></td>
-<td><p>Adds PyTorch; required by the 2023 challenge, Quebec, <code class="docutils literal notranslate"><span class="pre">baeda_3dem</span></code> and EULP neighbourhood datasets.</p></td>
-</tr>
-<tr class="row-even"><td><p>SAC and MARLISA</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[rl]&quot;</span></code></p></td>
-<td><p>Adds PyTorch and scikit-learn. For a CPU-only PyTorch, first run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torch</span> <span class="pre">--index-url</span> <span class="pre">https://download.pytorch.org/whl/cpu</span></code>.</p></td>
-</tr>
 <tr class="row-odd"><td><p>Parquet datasets</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[parquet]&quot;</span></code></p></td>
 <td><p>Required when schemas or exports use Parquet.</p></td>
 </tr>
-<tr class="row-even"><td><p>Stable Baselines3</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;stable-baselines3&gt;=2.4&quot;</span></code></p></td>
-<td><p>Required only for Stable Baselines3 agents, in Python or in the CLI.</p></td>
+<tr class="row-even"><td><p>CLI and Stable Baselines3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;stable-baselines3==2.3.2&quot;</span></code></p></td>
+<td><p>The current CLI imports this library; use Python 3.11+ for CLI train/evaluate.</p></td>
 </tr>
 <tr class="row-odd"><td><p>PV autosizing</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;citylearn[pysam]&quot;</span></code></p></td>
@@ -200,13 +195,8 @@
 </tbody>
 </table>
 </section>
-<section id="episode-loop-without-a-controller">
-<h2>Episode Loop Without a Controller<a class="headerlink" href="#episode-loop-without-a-controller" title="Link to this heading"></a></h2>
-<p>For a first run with its expected output, and a comparison with the
-business-as-usual controller, follow the
-<a class="reference external" href="../quickstart.html">quickstart</a>. The loop below is the
-smallest possible episode: it sends zero for every action, whose effect
-follows each device’s action contract.</p>
+<section id="python-quickstart">
+<h2>Python Quickstart<a class="headerlink" href="#python-quickstart" title="Link to this heading"></a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
@@ -224,8 +214,8 @@ follows each device’s action contract.</p>
 </pre></div>
 </div>
 </section>
-<section id="entity-interface-example">
-<h2>Entity Interface Example<a class="headerlink" href="#entity-interface-example" title="Link to this heading"></a></h2>
+<section id="entity-interface-quickstart">
+<h2>Entity Interface Quickstart<a class="headerlink" href="#entity-interface-quickstart" title="Link to this heading"></a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
 
 <span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span>
@@ -249,8 +239,8 @@ follows each device’s action contract.</p>
 </pre></div>
 </div>
 </section>
-<section id="multi-community-example">
-<h2>Multi-Community Example<a class="headerlink" href="#multi-community-example" title="Link to this heading"></a></h2>
+<section id="multi-community-quickstart">
+<h2>Multi-Community Quickstart<a class="headerlink" href="#multi-community-quickstart" title="Link to this heading"></a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> when one training loop should step several independent communities in lockstep. Each child keeps its own physics, KPIs and demand-response files.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.multi_community</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiCommunityEnv</span>
 
@@ -342,29 +332,17 @@ follows each device’s action contract.</p>
 <td><p>Random window episodes.</p></td>
 <td><p>Uses <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">episode_split_boundary</span></code></p></td>
-<td class="text-right"><p>str</p></td>
-<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">shared</span></code></p></td>
-<td><p>How consecutive (non-rolling) splits meet.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">shared</span></code> shares the boundary row so every interval is simulated; <code class="docutils literal notranslate"><span class="pre">disjoint</span></code> restores the 3.6.0 splits.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seconds_per_time_step</span></code></p></td>
 <td class="text-right"><p>float</p></td>
 <td class="text-right"><p>schema</p></td>
 <td><p>Physical duration of each step.</p></td>
 <td><p>Examples: 15, 60, 300, 900, 3600.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio</span></code></p></td>
 <td class="text-right"><p>int/float</p></td>
 <td class="text-right"><p>inferred</p></td>
 <td><p>Ratio between control step and dataset spacing.</p></td>
-<td><p>Inferred from the data; a value passed here must match it.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode</span></code></p></td>
-<td class="text-right"><p>str</p></td>
-<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">reject</span></code></p></td>
-<td><p>What to do when the control step differs from the dataset step.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">reject</span></code> raises an error; <code class="docutils literal notranslate"><span class="pre">compress</span></code> keeps the 3.6.0 behaviour (one data row per step, energies scaled).</p></td>
+<td><p>Normally dataset and schema should match.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reward_function</span></code></p></td>
 <td class="text-right"><p>class/path</p></td>
@@ -490,8 +468,8 @@ follows each device’s action contract.</p>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">render_directory</span></code></p></td>
 <td class="text-right"><p>path</p></td>
-<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">./render_logs</span></code></p></td>
-<td><p>Base export folder; relative paths resolve against the working directory.</p></td>
+<td class="text-right"><p>internal output</p></td>
+<td><p>Base export folder.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">render_directory_name</span></code></p></td>
 <td class="text-right"><p>string</p></td>
@@ -558,11 +536,9 @@ follows each device’s action contract.</p>
 </section>
 <section id="cli">
 <h2>CLI<a class="headerlink" href="#cli" title="Link to this heading"></a></h2>
-<p>The CLI needs only CityLearn for its listing commands and for the default
-agent, the business-as-usual <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>. Training or evaluating a
-Stable Baselines3 agent also needs <code class="docutils literal notranslate"><span class="pre">stable-baselines3&gt;=2.4</span></code>, and the bundled
-<code class="docutils literal notranslate"><span class="pre">SAC</span></code> and <code class="docutils literal notranslate"><span class="pre">MARLISA</span></code> agents need the <code class="docutils literal notranslate"><span class="pre">rl</span></code> extra. Every command works on Python
-3.10 or newer.</p>
+<p>The current CLI requires Stable Baselines3 even for its listing commands:
+install <code class="docutils literal notranslate"><span class="pre">stable-baselines3==2.3.2</span></code> alongside CityLearn. The Python simulation
+loop above works without Stable Baselines3.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>citylearn<span class="w"> </span>--version
 citylearn<span class="w"> </span>list_datasets
 citylearn<span class="w"> </span>list_default_time_series_variables
@@ -570,37 +546,6 @@ citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/m
 citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/my_dataset/schema.json<span class="w"> </span>evaluate
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">simulate</span></code> writes a training summary (<code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-train.json</span></code>), an
-evaluation (<code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-evaluation.json</span></code>) and, with <code class="docutils literal notranslate"><span class="pre">--save_agent</span></code>, the
-agent to the output directory, and prints the path of each file it writes.</p>
-<section id="stable-baselines3-agent">
-<h3>Stable Baselines3 agent<a class="headerlink" href="#stable-baselines3-agent" title="Link to this heading"></a></h3>
-<p>A Stable Baselines3 agent needs its policy in the agent arguments and the
-environment wrapped into one flat observation and action vector, which requires
-a central agent. This command trains SAC for five daily episodes on the first
-week and evaluates it on the first training episode:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>citylearn<span class="w"> </span>simulate<span class="w"> </span>citylearn_challenge_2022_phase_all_plus_evs<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-a<span class="w"> </span>stable_baselines3.SAC<span class="w"> </span>-ka<span class="w"> </span><span class="s1">'{"policy": "MlpPolicy"}'</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-w<span class="w"> </span>citylearn.wrappers.NormalizedObservationWrapper<span class="w"> </span>citylearn.wrappers.StableBaselines3Wrapper<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-ke<span class="w"> </span><span class="s1">'{"central_agent": true, "episode_time_steps": 24, "simulation_end_time_step": 167}'</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-rs<span class="w"> </span><span class="m">0</span><span class="w"> </span>-d<span class="w"> </span>outputs/sb3_sac<span class="w"> </span>-sid<span class="w"> </span>sb3_sac<span class="w"> </span>train<span class="w"> </span>-e<span class="w"> </span><span class="m">5</span><span class="w"> </span>--evaluate<span class="w"> </span>--save_agent
-</pre></div>
-</div>
-<p>Without <code class="docutils literal notranslate"><span class="pre">&quot;policy&quot;</span></code>, the CLI raises a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code> that shows the argument to add.
-Use <code class="docutils literal notranslate"><span class="pre">-te</span> <span class="pre">start</span> <span class="pre">end</span></code> to evaluate on other windows, such as unseen days.</p>
-</section>
-<section id="evaluation-window">
-<h3>Evaluation window<a class="headerlink" href="#evaluation-window" title="Link to this heading"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code> runs one episode of the environment’s episode windows, or the
-windows that <code class="docutils literal notranslate"><span class="pre">-te</span></code> gives. <code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code> evaluates on the first training
-episode window: with <code class="docutils literal notranslate"><span class="pre">-ke</span> <span class="pre">'{&quot;episode_time_steps&quot;:</span> <span class="pre">24}'</span></code> it evaluates 24 time
-steps, not the whole dataset. Without <code class="docutils literal notranslate"><span class="pre">episode_time_steps</span></code>, the episode, and so
-the evaluation, covers the whole simulation window.</p>
-</section>
-<section id="host-information">
-<h3>Host information<a class="headerlink" href="#host-information" title="Link to this heading"></a></h3>
-<p>The training summary records the machine host name and the user name only with
-<code class="docutils literal notranslate"><span class="pre">--record_host</span></code>, so results can be shared without them.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Option</p></th>
@@ -661,29 +606,24 @@ the evaluation, covers the whole simulation window.</p>
 <td><p>flag</p></td>
 <td><p>Require local files.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--record_host</span></code></p></td>
-<td><p>flag</p></td>
-<td><p>Record the host and user names in the training summary.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span> <span class="pre">10</span></code></p></td>
 <td><p>Number of training episodes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--save_agent</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--save_agent</span></code></p></td>
 <td><p>flag</p></td>
 <td><p>Save agent at the end.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code></p></td>
 <td><p>flag</p></td>
-<td><p>Evaluate after training, on the first training episode window unless <code class="docutils literal notranslate"><span class="pre">-te</span></code> is given.</p></td>
+<td><p>Evaluate after training.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code></p></td>
 <td><p>subcommand</p></td>
 <td><p>Deterministic evaluation.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
 </section>
 <section id="render-and-export">
 <h2>Render and Export<a class="headerlink" href="#render-and-export" title="Link to this heading"></a></h2>
@@ -749,10 +689,16 @@ the evaluation, covers the whole simulation window.</p>
 <p>Normal episode time series are controlled by <code class="docutils literal notranslate"><span class="pre">render_mode</span></code>/<code class="docutils literal notranslate"><span class="pre">render_enabled</span></code>, not by <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code>.</p>
 <p>For exact final-episode choices, keep <code class="docutils literal notranslate"><span class="pre">export_kpis_on_episode_end=False</span></code> and call <code class="docutils literal notranslate"><span class="pre">export_final_kpis()</span></code> yourself after the episode terminates.</p>
 </section>
-<section id="smoke-test-a-large-dataset">
-<h2>Smoke-Test a Large Dataset<a class="headerlink" href="#smoke-test-a-large-dataset" title="Link to this heading"></a></h2>
-<p>For large 15s datasets, always run a short window first:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
+<section id="recommended-validation">
+<h2>Recommended Validation<a class="headerlink" href="#recommended-validation" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>.venv/bin/pytest<span class="w"> </span>-q
+.venv/bin/python<span class="w"> </span>scripts/audit/audit_entity_contract.py<span class="w"> </span>--strict
+.venv/bin/python<span class="w"> </span>scripts/audit/audit_physics.py
+.venv/bin/python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>citylearn<span class="w"> </span>tests<span class="w"> </span>scripts/manual<span class="w"> </span>scripts/ci<span class="w"> </span>--select<span class="w"> </span>E9,F821
+</pre></div>
+</div>
+<p>For large 15s datasets, always smoke-test a short window first:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>.venv/bin/python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
 <span class="s">import numpy as np</span>
 <span class="s">from citylearn.citylearn import CityLearnEnv</span>
 
@@ -780,19 +726,6 @@ the evaluation, covers the whole simulation window.</p>
 <span class="s">PY</span>
 </pre></div>
 </div>
-</section>
-<section id="validation-from-a-source-checkout">
-<h2>Validation from a Source Checkout<a class="headerlink" href="#validation-from-a-source-checkout" title="Link to this heading"></a></h2>
-<p>The test suite and the audit scripts are in the repository, not in the package
-that <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">citylearn</span></code> installs. Run them from a clone, with the test
-requirements installed (see the <a class="reference internal" href="developer_guide.html"><span class="std std-doc">developer guide</span></a> and the
-<a class="reference internal" href="validation.html"><span class="std std-doc">validation guide</span></a>):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q
-python<span class="w"> </span>scripts/audit/audit_entity_contract.py<span class="w"> </span>--strict
-python<span class="w"> </span>scripts/audit/audit_physics.py
-python<span class="w"> </span>-m<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>citylearn<span class="w"> </span>tests<span class="w"> </span>scripts/manual<span class="w"> </span>scripts/ci
-</pre></div>
-</div>
 <p>KPI-only exports include a manifest and service-audit JSON sidecars. They do not
 enable episode time-series output; CityLearn UI can load the folder as before.
 The manifest identifies input files by their path below the dataset root;
@@ -806,8 +739,8 @@ lists which spellings of a file reference record the same evidence.</p>
           </div>
 
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="features.html" class="btn btn-neutral float-left" title="Features and configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="dataset_catalogue.html" class="btn btn-neutral float-right" title="Dataset catalogue" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="migration.html" class="btn btn-neutral float-left" title="Moving an existing project to CityLearn v3" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="schema_reference.html" class="btn btn-neutral float-right" title="Schema Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

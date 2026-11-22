@@ -1,0 +1,7 @@
+citylearn.dynamics module
+=========================
+
+.. automodule:: citylearn.dynamics
+   :members:
+   :show-inheritance:
+   :undoc-members:

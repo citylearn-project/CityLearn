@@ -1,0 +1,7 @@
+citylearn.energy\_model module
+==============================
+
+.. automodule:: citylearn.energy_model
+   :members:
+   :show-inheritance:
+   :undoc-members:

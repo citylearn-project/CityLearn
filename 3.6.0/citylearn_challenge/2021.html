@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The CityLearn Challenge 2021 &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The CityLearn Challenge 2020" href="2020.html" />
+    <link rel="prev" title="The CityLearn Challenge 2022" href="2022.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">The CityLearn Challenge</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#editions">Editions</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="2023.html">The CityLearn Challenge 2023</a></li>
+<li class="toctree-l3"><a class="reference internal" href="2022.html">The CityLearn Challenge 2022</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">The CityLearn Challenge 2021</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#objective">Objective</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#submission">Submission</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rules">Rules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#scoring">Scoring</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#winner">Winner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#prizes">Prizes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#leaderboard">Leaderboard</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sponsors">Sponsors</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="2020.html">The CityLearn Challenge 2020</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">The CityLearn Challenge</a></li>
+      <li class="breadcrumb-item active">The CityLearn Challenge 2021</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/citylearn_challenge/2021.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="the-citylearn-challenge-2021">
+<h1>The CityLearn Challenge 2021<a class="headerlink" href="#the-citylearn-challenge-2021" title="Link to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The CityLearn Challenge 2021 has now concluded! The winners and the leaderboard have been announced at the <a class="reference external" href="https://rlem-workshop.net/editions/2021/">RLEM Workshop 2021</a>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The CityLearn Challenge 2021 <span class="bibtex-citation" id="id1">[<a class="reference internal" href="../references.html#id24" title="Zoltan Nagy, José R. Vázquez-Canteli, Sourav Dey, and Gregor Henze. The citylearn challenge 2021. In Proceedings of the 8th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation, BuildSys '21, 218–219. New York, NY, USA, 2021. Association for Computing Machinery. URL: https://doi.org/10.1145/3486611.3492226, doi:10.1145/3486611.3492226.">10</a>]</span> used The CityLearn Challenge 2021 dataset <span class="bibtex-citation" id="id2">[<a class="reference internal" href="../references.html#id19" title="Gyorgy Zoltan Nagy. The CityLearn Challenge 2021. 2021. URL: https://doi.org/10.18738/T8/Q2EIQC, doi:10.18738/T8/Q2EIQC.">9</a>]</span> and <a class="reference external" href="https://github.com/intelligent-environments-lab/CityLearn/tree/v1.0.0">CityLearn v1.0.0</a>. To install this CityLearn version, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>-b<span class="w"> </span>v1.0.0<span class="w"> </span>https://github.com/intelligent-environments-lab/CityLearn.git
+</pre></div>
+</div>
+</div>
+<section id="objective">
+<h2>Objective<a class="headerlink" href="#objective" title="Link to this heading"></a></h2>
+<p>The increase of distributed energy storage systems (i.e. batteries, EVs, water heaters, e.t.c.) and of distributed energy generation resources (i.e. PV panels) constitutes an opportunity to better coordinate all these systems and achieve grid-interactive energy efficient connected buildings.</p>
+<p>We introduce a multi-agent control challenge in which the participating teams must coordinate the energy consumed by each of the buildings within a simulated micro-grid. There are different objectives or evaluation metrics, which are described in the Scoring section.</p>
+<p>Coordinate the buildings to minimize the cost metrics for the whole district by flattening and smoothing the overall annual curve of electricity consumption on an hourly basis.</p>
+<p>The environment allows creating one agent for each building or controlling multiple buildings with the same agent. Agents can easily be programmed to act simultaneously, sequentially, greedily, or sharing information.</p>
+<section id="what-does-the-simulation-look-like">
+<h3>What does the simulation look like?<a class="headerlink" href="#what-does-the-simulation-look-like" title="Link to this heading"></a></h3>
+<p>The agents must control the energy stored by a micro-grid of 9 buildings in real-time for a period of 4 simulated years, on an hourly time-scale. Each building has up to 3 action-variables (domestic hot water storage, chilled water storage, and electrical storage). This is a coordination challenge, so most of objectives of this control problem depend on the joint actions of all the buildings combined.</p>
+<p>In contrast to other traditional reinforcement learning problems, where there are multiple episodes, the CityLearn Challenge only has one episode of 4 years. Your agents will need to explore and exploit the best control policy they can learn within those 4 years.</p>
+<p>Your team should design the agents based on <code class="file docutils literal notranslate"><span class="pre">Climate</span> <span class="pre">Zone</span> <span class="pre">5</span></code>, which contains the 4 years of data. Feel free to modify the building attributes that are located in the file <code class="file docutils literal notranslate"><span class="pre">data/Climate_Zone_5/building_attributes.json</span></code> if you want. This file will not be submitted, but modifying it could give you a better understanding of the robustness of your control agents with respect to the baseline RBC controller. When we evaluate your submission, we will modify the building attributes in the building_attributes.json file.</p>
+</section>
+</section>
+<section id="submission">
+<h2>Submission<a class="headerlink" href="#submission" title="Link to this heading"></a></h2>
+<p>First, you must have registered your team <a class="reference external" href="https://docs.google.com/forms/d/1cOzwf2vSG8GL0klz9TjAq3hl7Q2fiu95Ili065zWLm4/edit">here</a>. All the teams must submit at least 3 files (4 files if you submit both a RL and a non-RL agent):</p>
+<ol class="arabic simple">
+<li><p><code class="file docutils literal notranslate"><span class="pre">agent.py</span></code> and/or <code class="file docutils literal notranslate"><span class="pre">agent_non_rl.py</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">reward_function.py</span></code></p></li>
+<li><p><code class="file docutils literal notranslate"><span class="pre">buildings_state_action_space.json</span></code></p></li>
+</ol>
+<p>They all can be found in the folder <a class="reference external" href="https://github.com/intelligent-environments-lab/CityLearn/tree/v1.0.0/submission_files">submission_files</a>. If you are submitting an agent that is not based on reinforcement learning, you can change the name of the file <code class="file docutils literal notranslate"><span class="pre">agent.py</span></code> to <code class="file docutils literal notranslate"><span class="pre">agent_non_rl.py</span></code> and submit it with the rest of your files. You can send both a <code class="file docutils literal notranslate"><span class="pre">agent.py</span></code> and a <code class="file docutils literal notranslate"><span class="pre">agent_non_rl.py</span></code> file.</p>
+<section id="how-do-we-evaluate-your-submission">
+<h3>How do we evaluate your submission?<a class="headerlink" href="#how-do-we-evaluate-your-submission" title="Link to this heading"></a></h3>
+<p>To evaluate your submission we will add your files to the root directory of the <a class="reference external" href="https://github.com/intelligent-environments-lab/CityLearn/tree/v1.0.0">CityLearn repository</a> and run the file <code class="file docutils literal notranslate"><span class="pre">main.py</span></code> to get your scores. Therefore, you must make sure that your files will work properly when we run the <code class="file docutils literal notranslate"><span class="pre">main.py</span></code> file.</p>
+<p>If you submit the file <code class="file docutils literal notranslate"><span class="pre">agent_non_rl.py</span></code>, we will import it within the <code class="file docutils literal notranslate"><span class="pre">main.py`</span></code> file (adding the line “from agent_non_rl import Agent” at the beginning of the <code class="file docutils literal notranslate"><span class="pre">main.py</span></code> file). Just make sure your class <code class="xref py py-class docutils literal notranslate"><span class="pre">Agent`</span></code> will run properly when we import it.</p>
+<p>We will run the agents on a different set of 9 buildings than the one we provide in the Github repository, so make sure your agent can adapt to new environments and does not over-fit the one we provide.</p>
+</section>
+<section id="deadline-where-to-submit">
+<h3>Deadline &amp; Where to Submit<a class="headerlink" href="#deadline-where-to-submit" title="Link to this heading"></a></h3>
+<p>We will be accepting submissions  until <strong>August 8th, 11.59pm AoE</strong>. To submit, compress your submission files as a <cite>.zip</cite> file with the name of your team: <code class="file docutils literal notranslate"><span class="pre">your_team_name.zip</span></code>, and <a class="reference external" href="https://utexas.app.box.com/f/8f782f418a7c4754b9b563c3394ea863">submit to the Box folder</a>.</p>
+</section>
+</section>
+<section id="rules">
+<h2>Rules<a class="headerlink" href="#rules" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>The agents submitted must be based on reinforcement learning, unless your team specifically submits a non-RL agent to the non-RL category.</p></li>
+<li><p>Mixed control approaches that are based on RL, but that combine RL with some other type of controller (such as MPC, rule-based controller, etc), are valid and can be submitted as RL agents instead of as non-RL agents.</p></li>
+<li><p>None of the agents you submit, or any of the classes in your files, is allowed to directly read the files that are in the directory “data”</p></li>
+<li><p>The submission of pre-trained RL agents is not allowed.</p></li>
+<li><p>Your agent must take less than 10 hours to run in a free Google Colab notebook, using GPU acceleration, or a comparable MS Azure notebook.</p></li>
+<li><p>The main file must be used as it is provided. This may make the use of RL libraries and packages more difficult, but will give you more flexibility to implement decentralized RL agents that can potentially share information with each other.</p></li>
+<li><p>In order to receive a prize, your team must give us permission to make its solution to the challenge publicly available, and provide a list of all the authors for reference.</p></li>
+<li><p>Any teams from The University of Texas at Austin, the University of Colorado Boulder, NREL, or Onboard Data cannot receive prize money or appear on the main leader board to avoid conflict of interest with the organizers. However, they can still submit their solutions and score, in which case we may create a separate table that shows their scores.</p></li>
+</ol>
+</section>
+<section id="scoring">
+<h2>Scoring<a class="headerlink" href="#scoring" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Objective/Points</p></th>
+<th class="head"><p>1st (RL)</p></th>
+<th class="head"><p>2nd (RL)</p></th>
+<th class="head"><p>3rd (RL)</p></th>
+<th class="head"><p>1st (Non-RL)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Total</p></td>
+<td><p>440</p></td>
+<td><p>200</p></td>
+<td><p>90</p></td>
+<td><p>50</p></td>
+</tr>
+<tr class="row-odd"><td><p>Total Last Year</p></td>
+<td><p>400</p></td>
+<td><p>175</p></td>
+<td><p>80</p></td>
+<td><p>45</p></td>
+</tr>
+<tr class="row-even"><td><p>Coordination Score</p></td>
+<td><p>330</p></td>
+<td><p>150</p></td>
+<td><p>70</p></td>
+<td><p>40</p></td>
+</tr>
+<tr class="row-odd"><td><p>Coordination Score Last Year</p></td>
+<td><p>300</p></td>
+<td><p>135</p></td>
+<td><p>60</p></td>
+<td><p>35</p></td>
+</tr>
+<tr class="row-even"><td><p>Carbon Emissions</p></td>
+<td><p>240</p></td>
+<td><p>110</p></td>
+<td><p>50</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The submission of every team will be evaluated on each of the 5 objectives on the table above. The submissions will be ranked for each of the 5 objectives, and the points will be assigned to each team based on their rank (1st, 2nd or 3rd). Any team can collect the points from several categories. i.e. if a team’s submission is 1st on objective 1 “Total”, and 2nd on objective 5 “Carbon Emissions”, the team will receive 440 + 110 pts.</p>
+<p>There is a special category, “Non-RL”, reserved for any teams that want to submit a control agent that is not based on Reinforcement Learning. The submissions in this category will be independent from the rest of the categories and will have their own ranking. Teams that submit a RL agent, are also allowed to submit a non-RL agent. It is possible to obtain points from both non-RL and RL categories (i.e. a team could be 1st on both a RL and a non-RL objective and receive points from both). If we do not receive any submissions for the non-RL category, we will add its points to each of the rows, 1 through 4, in the column “1st (RL)”.</p>
+<section id="metrics">
+<h3>Metrics<a class="headerlink" href="#metrics" title="Link to this heading"></a></h3>
+<p>When you run a simulation in <code class="file docutils literal notranslate"><span class="pre">CityLearn</span> <span class="pre">v1.0.0</span></code>, it will return a set of metrics and scores once the simulation is over:</p>
+<ol class="arabic simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">ramping</span></code>: the net non-negative electricity consumption every time-step.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">1-load_factor</span></code>: the load factor is the average net electricity load divided by the maximum electricity load.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">average_daily_peak</span></code>: average daily peak net demand.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">peak_demand</span></code>: maximum peak electricity demand</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">net_electricity_consumption</span></code>: total amount of electricity consumed.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">carbon_emissions</span></code>: total amount of carbon emissions.</p></li>
+</ol>
+<p>Where with respect to the scoring table;</p>
+<ul class="simple">
+<li><p><strong>Total</strong> - Average of the metrics 1, 2, 3, 4, 5, and 6 for the full simulated period (4 years)</p></li>
+<li><p><strong>Total Last Year</strong> - Average of the metrics 1, 2, 3, 4, 5, and 6 for the last year of the simulation</p></li>
+<li><p><strong>Coordination Score</strong> - Average of the metrics 1, 2, 3, and 4 for the full simulated period (4 years)</p></li>
+<li><p><strong>Coordination Score Last Year</strong> - Average of the metrics 1, 2, 3, and 4 for the last year of the simulation.</p></li>
+<li><p><strong>Carbon Emissions</strong> - Metric 6</p></li>
+</ul>
+</section>
+</section>
+<section id="winner">
+<h2>Winner<a class="headerlink" href="#winner" title="Link to this heading"></a></h2>
+<p>We will rank all the teams on a leader board based on the total number of points received. The team with the highest number of points wins.</p>
+</section>
+<section id="prizes">
+<h2>Prizes<a class="headerlink" href="#prizes" title="Link to this heading"></a></h2>
+<p>Each team will receive a cash prize following the conversion 1 point = 1 USD.</p>
+</section>
+<section id="leaderboard">
+<h2>Leaderboard<a class="headerlink" href="#leaderboard" title="Link to this heading"></a></h2>
+<img alt="The CityLearn Challenge 2021 leaderboard" class="align-center" src="../_images/citylearn_challenge_2021_leaderboard.png" />
+</section>
+<section id="sponsors">
+<h2>Sponsors<a class="headerlink" href="#sponsors" title="Link to this heading"></a></h2>
+<a class="reference external image-reference" href="https://www.onboarddata.io"><img alt="OnBoard logo" src="../_images/onboard_logo.png" style="width: 16%;" />
+</a>
+<a class="reference external image-reference" href="https://ml.utexas.edu"><img alt="Machine Learning Laboratory, The University of Texas at Austin logo" src="../_images/ut_mll_logo.png" style="width: 30%;" />
+</a>
+<a class="reference external image-reference" href="https://energy.utexas.edu"><img alt="Energy Institute, The University of Texas at Austin logo" src="../_images/ut_energy_institute_logo.png" style="width: 30%;" />
+</a>
+<a class="reference external image-reference" href="https://www.colorado.edu/rasei/"><img alt="Renewable and Sustainable Energy Institute, University of Colorado Boulder logo" src="../_images/cub_rasei_logo.jpg" style="width: 20%;" />
+</a>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="2022.html" class="btn btn-neutral float-left" title="The CityLearn Challenge 2022" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="2020.html" class="btn btn-neutral float-right" title="The CityLearn Challenge 2020" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -67,11 +67,7 @@ step length, computed as the simulator computes that observation. Neither
 includes the EV battery's capacity-power curve, so at steps of a few seconds
 near 100% SOC the battery can still discharge more than the EV takes. The
 estimate also omits the electrical-service import limit, which the bundle
-includes, and capacity fade: under physics version 2 the observation stops at
-the EV battery's degraded capacity, where charging stops, but without the bundle
-no observation shows the fade, so the estimate stops at the nominal capacity and
-can reserve power for a faded EV that is already full. The rule-based baselines
-reserve the EV power they command.
+includes. The rule-based baselines reserve the EV power they command.
 
 Without that bundle the baselines also do not observe the building's import and
 export, so they take PV generation above the observed load as the surplus the
@@ -154,26 +150,6 @@ These policies are ported from the Soft-CPS Algorithms baselines (commit
 `725a72a`). With the same defaults and observations they request the same
 actions at every step. `agent.comparison_identity()` records the class, the
 definition version and the resolved parameters for experiment manifests.
-
-The rule baselines can also guide the exploration of `SACRBC` and
-`MARLISARBC`. Pass an instance built on the same environment, the class or its
-import path as `rbc`. With a class or an import path, the learner's own
-hyperparameters stay with the learner, and the remaining keyword arguments go to
-the baseline:
-
-```python
-from citylearn.agents.baseline import RBCBasicPolicy
-from citylearn.agents.sac import SACRBC
-
-agent = SACRBC(env, rbc=RBCBasicPolicy, lr=3e-4, batch_size=256, basic_price_policy='forecast_relative')
-agent = SACRBC(env, rbc=RBCBasicPolicy(env, basic_price_policy='forecast_relative'), lr=3e-4)
-```
-
-The reinforcement learning controllers (`SAC`, `SACRBC`, `MARLISA`,
-`MARLISARBC`, `TabularQLearning`) read flat observation vectors and require
-`interface='flat'`; on the entity interface they raise a `ValueError`. The rule
-baselines, `ZeroActionAgent` and the random `Agent` work with both
-interfaces.
 
 ### Automatic BAU evaluation
 
@@ -258,7 +234,7 @@ This reference is neither the conventional counterfactual nor a BAU rollout.
 Configure `demand_response.baseline_window_seconds` and inspect baseline
 validity alongside requested, delivered and credited response. See the
 [DR schema](schema_reference.md#demand-response) and
-[DR KPIs](kpis_reference.md#demand-response).
+[DR KPIs](kpis_reference.md#demand-response-kpis).
 
 ## A reference run selected in the UI
 

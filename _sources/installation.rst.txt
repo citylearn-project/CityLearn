@@ -5,9 +5,14 @@ Installation
 ============
 
 CityLearn v3 is distributed as ``citylearn`` on PyPI and requires Python 3.10 or
-newer. The core installation runs every simulation that needs neither LSTM
-thermal dynamics nor the bundled reinforcement learning controllers, and takes
-about 200 MB with its dependencies.
+newer; CityLearn 3.5.0 and older also install on Python 3.9. It supports NumPy 1.x and 2.x: observations, rewards and simulated time
+series are bit-identical on both. KPIs can differ in the last binary digits
+(relative differences of order 1e-15), for two reasons. NumPy 2.3 and later add
+up more than 8,192 values in a different order, which affects totals over
+episodes longer than 8,192 time steps, such as a full year of hourly steps, and
+the district Gini ratio of more than 90 members. The equity audit's Gini ratio
+uses a BLAS dot product, whose last digit depends on the BLAS build and the
+CPU, and NumPy 1 and 2 wheels ship different OpenBLAS releases.
 
 Use a virtual environment to keep its dependencies separate.
 
@@ -41,126 +46,31 @@ Continue with :doc:`quickstart`. Both the package and Python import name are
 Optional dependencies
 *********************
 
-Extras add the dependencies of features that not every study needs. Install
-several at once by separating them with commas, for example
-``"citylearn[rl,parquet]"``.
-
-.. list-table::
-   :header-rows: 1
-
-   * - Extra
-     - Adds
-     - Needed for
-   * - ``dynamics``
-     - PyTorch
-     - LSTM thermal dynamics, used by the 2023 challenge, Quebec, ``baeda_3dem`` and
-       EULP neighbourhood datasets
-   * - ``rl``
-     - PyTorch and scikit-learn
-     - the bundled ``SAC`` and ``MARLISA`` controllers, and LSTM thermal dynamics
-   * - ``parquet``
-     - pyarrow
-     - Parquet datasets (for example ``pt_rec_*`` and the 15 s demos) and Parquet exports
-   * - ``pysam``
-     - NREL-PySAM
-     - PV autosizing from EPW weather
-   * - ``end_use_load_profiles``
-     - ``doe_xstock``, OpenStudio, eppy, PyTorch and scikit-learn
-     - building new datasets with ``citylearn.end_use_load_profiles``
+For Parquet datasets or exports:
 
 .. code-block:: console
 
-   python -m pip install "citylearn[rl]"
+   python -m pip install "citylearn[parquet]"
 
-The default PyTorch wheels for Linux include the CUDA libraries, about 5 GB in
-all. Without a GPU, install the CPU-only PyTorch first, then the extra, which
-then keeps that PyTorch:
+For PV autosizing from EPW weather using PySAM:
 
 .. code-block:: console
 
-   python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
-   python -m pip install "citylearn[rl]"
+   python -m pip install "citylearn[pysam]"
 
-A dataset or controller that needs a missing extra raises an ``ImportError``
-that names the command to install it. Stable Baselines3 and RLlib are not
-extras: install Stable Baselines3 2.4 or newer to use
-``StableBaselines3Wrapper`` (see :doc:`usage/rl_training`), and ``ray[rllib]`` to
-use the RLlib wrappers (see :doc:`usage/rllib_training`). The RLlib wrappers are
-tested with Ray 2.60.0 (requiring a checkout of ``master`` or a release newer than
-3.6.0), which supports Python 3.10 to 3.14 and pins gymnasium
-1.2.2; other Ray releases pin other gymnasium versions.
+For building new datasets from End-Use Load Profiles with
+``citylearn.end_use_load_profiles`` (installs ``doe_xstock`` and OpenStudio):
 
-Datasets, cache and offline use
-*******************************
+.. code-block:: console
 
-Public datasets are downloaded from the official repository on first use and
-cached locally, so the first download needs internet access. List the available
-names in Python, or with ``citylearn list_datasets``:
-
-.. code-block:: python
-
-   from citylearn.data import DataSet
-   print(DataSet().get_dataset_names())
-
-The cache is a ``citylearn`` folder in the user cache directory, with one
-subfolder per dataset release, for example ``~/.cache/citylearn/v3.6.0`` on
-Linux; ``DataSet().cache_directory`` returns it and ``DataSet().clear_cache()``
-empties it. For your own data, pass a local ``schema.json`` path instead of a
-dataset name. See :doc:`guides/dataset_reference` for files and units.
-
-These environment variables change where CityLearn looks for data:
-
-.. list-table::
-   :header-rows: 1
-
-   * - Variable
-     - Effect
-   * - ``CITYLEARN_OFFLINE``
-     - ``1`` makes offline mode the default: nothing is downloaded, and data
-       must be in the cache or in a local root.
-   * - ``CITYLEARN_LOCAL_DATASETS_PATH``
-     - Folders (separated by ``:``, or ``;`` on Windows) searched for dataset
-       folders before downloading; each dataset folder holds its
-       ``schema.json``.
-   * - ``CITYLEARN_LOCAL_MISC_PATH``
-     - Folders searched for the shared files (such as sizing data) before
-       downloading.
-   * - ``CITYLEARN_DATASET_GITHUB_ACCOUNT``, ``CITYLEARN_DATASET_REPOSITORY``, ``CITYLEARN_DATASET_TAG``
-     - Repository and tag that datasets are downloaded from; the tag also names
-       the cache subfolder.
-   * - ``CITYLEARN_GITHUB_TOKEN`` (or ``GITHUB_TOKEN``)
-     - GitHub token that raises the anonymous limit of 60 API requests per hour.
-
-To work offline, run once online so that the cache holds the datasets you need,
-or point ``CITYLEARN_LOCAL_DATASETS_PATH`` at a folder of dataset folders, then
-set ``CITYLEARN_OFFLINE=1`` or pass ``offline=True`` to ``CityLearnEnv``.
-
-Existing projects and development
-*********************************
-
-Record the installed version with the command above and pin that version
-in your project dependencies. Read :doc:`guides/migration` when updating a project.
-To work on CityLearn itself, follow :doc:`guides/developer_guide`.
-
-Reproducibility and older releases
-**********************************
-
-CityLearn supports NumPy 1.x and 2.x: observations, rewards and simulated time
-series are bit-identical on both. KPIs can differ in the last binary digits
-(relative differences of order 1e-15), for two reasons. NumPy 2.3 and later add
-up more than 8,192 values in a different order, which affects totals over
-episodes longer than 8,192 time steps, such as a full year of hourly steps, and
-the district Gini ratio of more than 90 members. The equity audit's Gini ratio
-uses a BLAS dot product, whose last digit depends on the BLAS build and the
-CPU, and NumPy 1 and 2 wheels ship different OpenBLAS releases.
+   python -m pip install "citylearn[end_use_load_profiles]"
 
 Version compatibility
-=====================
+*********************
 
 The base requirements of each release, from its ``requirements.txt`` and
 ``python_requires``; "any" means the release does not constrain the version.
-The first row is the latest release; changes on ``master`` since then are listed
-under "Unreleased" in the release notes.
+The first row is the source on ``master``, which the next release will ship.
 The last column gives the Python versions for which the pinned requirements
 publish wheels on PyPI. It is derived from those pins, not tested, and names
 the pin that sets the limit. CityLearn 2.4.0 to 2.4.2 were withdrawn from PyPI.
@@ -185,7 +95,7 @@ in October 2026; CityLearn keeps it as the minimum while downstream users still
 run it.
 
 Troubleshooting installation
-============================
+****************************
 
 ``No matching distribution found for openstudio<=3.3.0``
    CityLearn 2.2.0 to 2.5.0 required OpenStudio 3.3.0 or older, which PyPI does
@@ -202,10 +112,6 @@ scikit-learn fails to compile, for example with an OpenMP error on macOS
 ``TypeError: 'staticmethod' object is not callable`` when importing CityLearn
    Reported for CityLearn 2.3.0 on Python 3.9. Install a current release.
 
-``ImportError`` naming ``citylearn[dynamics]`` or ``citylearn[rl]``
-   Since the release after 3.6.0, PyTorch and scikit-learn are optional. Install
-   the extra that the message names; see `Optional dependencies`_.
-
 An old release is required to reproduce earlier results
    Install it without dependencies and then the dependencies that the table
    above lists for it, with versions available for your Python:
@@ -214,3 +120,23 @@ An old release is required to reproduce earlier results
 
       python -m pip install --no-deps citylearn==2.3.1
 
+Datasets
+********
+
+Public datasets are downloaded from the official repository and cached locally.
+The first download needs internet access. List the available names in Python:
+
+.. code-block:: python
+
+   from citylearn.data import DataSet
+   print(DataSet().get_dataset_names())
+
+For your own data, pass a local ``schema.json`` path instead of a dataset name.
+See :doc:`guides/dataset_reference` for files, units and offline use.
+
+Existing projects and development
+*********************************
+
+Record the installed version with the command above and pin that version
+in your project dependencies. Read :doc:`guides/migration` when updating a project.
+To work on CityLearn itself, follow :doc:`guides/developer_guide`.

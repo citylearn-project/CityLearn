@@ -1,0 +1,1213 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citylearn.wrappers &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+ 
+<script src="../../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citylearn.wrappers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citylearn.wrappers</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActionWrapper</span><span class="p">,</span> <span class="n">Env</span><span class="p">,</span> <span class="n">ObservationWrapper</span><span class="p">,</span> <span class="n">RewardWrapper</span><span class="p">,</span> <span class="n">spaces</span><span class="p">,</span> <span class="n">Wrapper</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ray.rllib.env</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiAgentEnv</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ModuleNotFoundError</span><span class="p">,</span> <span class="ne">ImportError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">Env</span> <span class="k">as</span> <span class="n">MultiAgentEnv</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.building</span><span class="w"> </span><span class="kn">import</span> <span class="n">Building</span>
+
+<div class="viewcode-block" id="ClippedObservationWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.ClippedObservationWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClippedObservationWrapper</span><span class="p">(</span><span class="n">ObservationWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for observations min-max and periodic normalization.</span>
+<span class="sd">    </span>
+<span class="sd">    Observations are clipped to be within the observation space limits.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+
+<div class="viewcode-block" id="ClippedObservationWrapper.observation">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.ClippedObservationWrapper.observation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Returns clipped observations.</span>
+
+<span class="sd">        Returns new lists: the environment caches the observation lists it returns, so clipping them in place</span>
+<span class="sd">        would change what `env.observations` returns for the rest of the time step.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">o_</span><span class="p">,</span> <span class="n">l</span><span class="p">),</span> <span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">o_</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">high</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">o</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="p">)</span>
+        <span class="p">]</span></div>
+</div>
+
+
+<div class="viewcode-block" id="NormalizedObservationWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.NormalizedObservationWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NormalizedObservationWrapper</span><span class="p">(</span><span class="n">ObservationWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for observations min-max and periodic normalization.</span>
+<span class="sd">    </span>
+<span class="sd">    Temporal observations including `hour`, `day_type` and `month` are periodically normalized using sine/cosine </span>
+<span class="sd">    transformations and then all observations are min-max normalized between 0 and 1.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shared_observations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Names of common observations across all buildings i.e. observations that have the same value irrespective of the building.</span>
+<span class="sd">        </span>
+<span class="sd">        Includes extra three observations added during cyclic transformation of :code:`hour`, :code:`day_type` and :code:`month`.</span>
+<span class="sd">        """</span>
+
+        <span class="n">shared_observations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">periodic_observation_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Building</span><span class="o">.</span><span class="n">get_periodic_observation_metadata</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">shared_observations</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">periodic_observation_names</span><span class="p">:</span>
+                <span class="n">shared_observations</span> <span class="o">+=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s1">_cos'</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s1">_sin'</span><span class="p">]</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shared_observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">shared_observations</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Names of returned observations.</span>
+
+<span class="sd">        Includes extra three observations added during cyclic transformation of :code:`hour`, :code:`day_type` and :code:`month`.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If `central_agent` is True, a list of 1 sublist containing all building observation names is returned in the same order as `buildings`. </span>
+<span class="sd">        The `shared_observations` names are only included in the first building's observation names. If `central_agent` is False, a list of sublists </span>
+<span class="sd">        is returned where each sublist is a list of 1 building's observation names and the sublist in the same order as `buildings`.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">observation_names</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">observations</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic_normalization</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_observations</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">observation_names</span><span class="p">:</span>
+                        <span class="n">observation_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                    
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+            <span class="n">observation_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">observation_names</span><span class="p">]</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">observation_names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">observations</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic_normalization</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">observation_names</span>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Returns observation space for normalized observations."""</span>
+
+        <span class="n">low_limit</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">high_limit</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">shared_observations</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">estimate_observation_space</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">o</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">observations</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic_normalization</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">lv</span><span class="p">,</span> <span class="n">hv</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">high</span><span class="p">):</span>                    
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_observations</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shared_observations</span><span class="p">:</span>
+                        <span class="n">low_limit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lv</span><span class="p">)</span>
+                        <span class="n">high_limit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hv</span><span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_observations</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shared_observations</span><span class="p">:</span>
+                        <span class="n">shared_observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+                    
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">pass</span>
+            
+            <span class="n">observation_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">low_limit</span><span class="p">),</span> <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">high_limit</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">observation_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">estimate_observation_space</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">observation_space</span>
+
+<div class="viewcode-block" id="NormalizedObservationWrapper.observation">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.NormalizedObservationWrapper.observation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Returns normalized observations.</span>
+
+<span class="sd">        Normalizes the values received from the wrapped environment, so changes made upstream (robustness</span>
+<span class="sd">        sensor faults, other wrappers) reach the agent instead of being replaced by fresh building values.</span>
+<span class="sd">        """</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span>
+        <span class="n">buildings</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span>
+        <span class="n">raw_names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">observations</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">periodic_normalization</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">buildings</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">observations</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">env_shared_observations</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">shared_observations</span><span class="p">)</span>
+            <span class="n">shared_values</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">building_observations</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Mirror CityLearnEnv.observations: shared values appear once, in the first building that has them.</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">names</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">raw_names</span><span class="p">):</span>
+                <span class="n">building_values</span> <span class="o">=</span> <span class="p">{}</span>
+
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">env_shared_observations</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shared_values</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">cursor</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Observation vector is shorter than the environment observation names.'</span><span class="p">)</span>
+
+                        <span class="n">building_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">cursor</span><span class="p">]</span>
+                        <span class="n">cursor</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">env_shared_observations</span><span class="p">:</span>
+                            <span class="n">shared_values</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">building_values</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">building_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">shared_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+                <span class="n">building_observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">building_values</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">cursor</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'Observation vector is longer than the environment observation names.'</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">building_observations</span> <span class="o">=</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span> <span class="k">for</span> <span class="n">names</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">raw_names</span><span class="p">,</span> <span class="n">observations</span><span class="p">)]</span>
+
+        <span class="n">normalized</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">transform_observations</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic_normalization</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">buildings</span><span class="p">,</span> <span class="n">building_observations</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">norm_observations</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">shared_observations</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">building_values</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">normalized</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">building_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_observations</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shared_observations</span><span class="p">:</span>
+                        <span class="n">norm_observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_observations</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shared_observations</span><span class="p">:</span>
+                        <span class="n">shared_observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+            <span class="n">norm_observations</span> <span class="o">=</span> <span class="p">[</span><span class="n">norm_observations</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">norm_observations</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">building_values</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="k">for</span> <span class="n">building_values</span> <span class="ow">in</span> <span class="n">normalized</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">norm_observations</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="NormalizedActionWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.NormalizedActionWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NormalizedActionWrapper</span><span class="p">(</span><span class="n">ActionWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for action min-max normalization.</span>
+<span class="sd">    </span>
+<span class="sd">    All observations are min-max normalized between 0 and 1.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Returns action space for normalized actions."""</span>
+
+        <span class="n">low_limit</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">high_limit</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">:</span>
+                <span class="n">low_limit</span> <span class="o">+=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">low</span><span class="o">.</span><span class="n">size</span>
+                <span class="n">high_limit</span> <span class="o">+=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">high</span><span class="o">.</span><span class="n">size</span>
+            
+            <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">low_limit</span><span class="p">),</span> <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">high_limit</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span>
+                <span class="n">low</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">]</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">low</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> 
+                <span class="n">high</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">action_space</span><span class="o">.</span><span class="n">high</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> 
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> 
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">action_space</span>
+
+<div class="viewcode-block" id="NormalizedActionWrapper.action">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.NormalizedActionWrapper.action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Returns denormalized actions."""</span>
+
+        <span class="n">transformed_actions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">action_space</span><span class="p">):</span>
+            <span class="n">transformed_actions_</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">high</span><span class="p">)):</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">actions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">h</span> <span class="o">-</span> <span class="n">l</span><span class="p">)</span> <span class="o">+</span> <span class="n">l</span>
+                <span class="n">transformed_actions_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            
+            <span class="n">transformed_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transformed_actions_</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">transformed_actions</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="NormalizedSpaceWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.NormalizedSpaceWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NormalizedSpaceWrapper</span><span class="p">(</span><span class="n">Wrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for normalized observation and action spaces.</span>
+
+<span class="sd">    Wraps `env` in :py:class:`citylearn.wrappers.NormalizedObservationWrapper` and :py:class:`citylearn.wrappers.NormalizedActionWrapper`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">NormalizedObservationWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">NormalizedActionWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span></div>
+
+    
+<div class="viewcode-block" id="DiscreteObservationWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteObservationWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DiscreteObservationWrapper</span><span class="p">(</span><span class="n">ObservationWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for observation space discretization.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    bin_sizes: List[Mapping[str, int]], optional</span>
+<span class="sd">        Then number of bins for each active observation in each building.</span>
+<span class="sd">    default_bin_size: int, default = 10</span>
+<span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building observation.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+        <span class="k">assert</span> <span class="n">bin_sizes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">),</span> <span class="s1">'length of bin_size must equal number of buildings.'</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">]</span> <span class="k">if</span> <span class="n">bin_sizes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">bin_sizes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_bin_size</span> <span class="o">=</span> <span class="mi">10</span> <span class="k">if</span> <span class="n">default_bin_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">default_bin_size</span>
+        <span class="n">building_observation_names</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shared_observations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_wrapped_observation_names</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span><span class="n">o</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_bin_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}</span> 
+            <span class="k">for</span> <span class="n">names</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">building_observation_names</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__get_wrapped_observation_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="c1"># Bin the observations the wrapped env returns: NormalizedObservationWrapper replaces each periodic</span>
+        <span class="c1"># observation with its cos and sin.</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span>
+
+        <span class="k">while</span> <span class="n">env</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">NormalizedObservationWrapper</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">[</span>
+                    <span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">observations</span><span class="p">(</span><span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">periodic_normalization</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span>
+                <span class="p">],</span> <span class="n">env</span><span class="o">.</span><span class="n">shared_observations</span>
+
+            <span class="n">env</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">env</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">active_observations</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">env</span><span class="o">.</span><span class="n">buildings</span><span class="p">],</span> <span class="n">env</span><span class="o">.</span><span class="n">shared_observations</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Returns observation space for discretized observations."""</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">shared_observations</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shared_observations</span> <span class="ow">or</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shared_observations</span><span class="p">:</span>
+                        <span class="n">bin_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__shared_observations</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shared_observations</span><span class="p">:</span>
+                        <span class="n">shared_observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">pass</span>
+            
+            <span class="n">observation_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">)]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">observation_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">observation_space</span>
+    
+<div class="viewcode-block" id="DiscreteObservationWrapper.observation">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteObservationWrapper.observation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Returns discretized observations."""</span>
+
+        <span class="n">transformed_observations</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">cs</span><span class="p">,</span> <span class="n">ds</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="p">)):</span>
+            <span class="n">transformed_observations_</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">cs</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">cs</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">ds</span><span class="p">)):</span>
+                <span class="c1"># Values above the space's high would get bin b.n, outside MultiDiscrete(b.n): use the top bin.</span>
+                <span class="n">o</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">digitize</span><span class="p">(</span><span class="n">observations</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">n</span><span class="p">),</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">transformed_observations_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+
+            <span class="n">transformed_observations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transformed_observations_</span><span class="p">)</span>
+                
+        <span class="k">return</span> <span class="n">transformed_observations</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="DiscreteActionWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteActionWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DiscreteActionWrapper</span><span class="p">(</span><span class="n">ActionWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for action space discretization.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    bin_sizes: List[Mapping[str, int]], optional</span>
+<span class="sd">        Then number of bins for each active action in each building.</span>
+<span class="sd">    default_bin_size: int, default = 10</span>
+<span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building action.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+        <span class="k">assert</span> <span class="n">bin_sizes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">),</span> <span class="s1">'length of bin_size must equal number of buildings.'</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">]</span> <span class="k">if</span> <span class="n">bin_sizes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">bin_sizes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_bin_size</span> <span class="o">=</span> <span class="mi">10</span> <span class="k">if</span> <span class="n">default_bin_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">default_bin_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_bin_size</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">active_actions</span><span class="p">}</span> 
+            <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">)</span>
+        <span class="p">]</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Returns action space for discretized actions."""</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">:</span>
+            <span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">bin_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            
+            <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">)]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">action_space</span> <span class="o">=</span> <span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">MultiDiscrete</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_sizes</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">action_space</span>
+
+<div class="viewcode-block" id="DiscreteActionWrapper.action">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteActionWrapper.action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Returns undiscretized actions."""</span>
+
+        <span class="n">transformed_actions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">cs</span><span class="p">,</span> <span class="n">ds</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">)):</span>
+            <span class="n">transformed_actions_</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">cs</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">cs</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">ds</span><span class="p">)):</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="n">hl</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">n</span><span class="p">)[</span><span class="n">actions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]]</span>
+                <span class="n">transformed_actions_</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            
+            <span class="n">transformed_actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transformed_actions_</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">transformed_actions</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="DiscreteSpaceWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteSpaceWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DiscreteSpaceWrapper</span><span class="p">(</span><span class="n">Wrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for observation and action spaces discretization.</span>
+
+<span class="sd">    Wraps `env` in :py:class:`citylearn.wrappers.DiscreteObservationWrapper` and :py:class:`citylearn.wrappers.DiscreteActionWrapper`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    observation_bin_sizes: List[Mapping[str, int]], optional</span>
+<span class="sd">        Then number of bins for each active observation in each building.</span>
+<span class="sd">    action_bin_sizes: List[Mapping[str, int]], optional</span>
+<span class="sd">        Then number of bins for each active action in each building.</span>
+<span class="sd">    default_observation_bin_size: int, default = 10</span>
+<span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building observation.</span>
+<span class="sd">    default_action_bin_size: int, default = 10</span>
+<span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building action.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">observation_bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">action_bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_observation_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_action_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">DiscreteObservationWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="o">=</span><span class="n">observation_bin_sizes</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="o">=</span><span class="n">default_observation_bin_size</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">DiscreteActionWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="o">=</span><span class="n">action_bin_sizes</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="o">=</span><span class="n">default_action_bin_size</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span></div>
+
+
+<div class="viewcode-block" id="TabularQLearningObservationWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.TabularQLearningObservationWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TabularQLearningObservationWrapper</span><span class="p">(</span><span class="n">ObservationWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Observation wrapper for :py:class:`citylearn.agents.q_learning.TabularQLearning` agent.</span>
+
+<span class="sd">    Wraps `env` in :py:class:`citylearn.wrappers.DiscreteObservationWrapper`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    bin_sizes: List[Mapping[str, int]], optional</span>
+<span class="sd">        Then number of bins for each active observation in each building.</span>
+<span class="sd">    default_bin_size: int, default = 10</span>
+<span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building observation.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">DiscreteObservationWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="o">=</span><span class="n">bin_sizes</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="o">=</span><span class="n">default_bin_size</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combinations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_combinations</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Returns observation space for discretized observations."""</span>
+
+        <span class="n">observation_space</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">combinations</span><span class="p">:</span>
+            <span class="n">observation_space</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)))</span>
+        
+        <span class="k">return</span> <span class="n">observation_space</span>
+    
+<div class="viewcode-block" id="TabularQLearningObservationWrapper.observation">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.TabularQLearningObservationWrapper.observation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Returns discretized observations."""</span>
+
+        <span class="k">return</span> <span class="p">[[</span><span class="n">c</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">o</span><span class="p">))]</span> <span class="k">for</span> <span class="n">o</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">observations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">combinations</span><span class="p">)]</span></div>
+
+    
+<div class="viewcode-block" id="TabularQLearningObservationWrapper.set_combinations">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.TabularQLearningObservationWrapper.set_combinations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Returns all combinations of discrete observations."""</span>
+
+        <span class="n">combs_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+            <span class="n">combs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">options</span><span class="p">))</span>
+            <span class="n">combs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">combs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">combs_list</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="TabularQLearningActionWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.TabularQLearningActionWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TabularQLearningActionWrapper</span><span class="p">(</span><span class="n">ActionWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Action wrapper for :py:class:`citylearn.agents.q_learning.TabularQLearning` agent.</span>
+
+<span class="sd">    Wraps `env` in :py:class:`citylearn.wrappers.DiscreteActionWrapper`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    bin_sizes: List[Mapping[str, int]], optional</span>
+<span class="sd">        Then number of bins for each active action in each building.</span>
+<span class="sd">    default_bin_size: int, default = 10</span>
+<span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building action.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">DiscreteActionWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="o">=</span><span class="n">bin_sizes</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="o">=</span><span class="n">default_bin_size</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combinations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_combinations</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Returns action space for discretized actions."""</span>
+
+        <span class="n">action_space</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">combinations</span><span class="p">:</span>
+            <span class="n">action_space</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)))</span>
+        
+        <span class="k">return</span> <span class="n">action_space</span>
+    
+<div class="viewcode-block" id="TabularQLearningActionWrapper.action">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.TabularQLearningActionWrapper.action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Returns discretized actions."""</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">actions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">combinations</span><span class="p">)]</span></div>
+
+    
+<div class="viewcode-block" id="TabularQLearningActionWrapper.set_combinations">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.TabularQLearningActionWrapper.set_combinations">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Returns all combinations of discrete actions."""</span>
+
+        <span class="n">combs_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+            <span class="n">combs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">options</span><span class="p">))</span>
+            <span class="n">combs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">combs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">combs_list</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="TabularQLearningWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.TabularQLearningWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TabularQLearningWrapper</span><span class="p">(</span><span class="n">Wrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for :py:class:`citylearn.agents.q_learning.TabularQLearning` agent.</span>
+
+<span class="sd">    Discretizes observation and action spaces.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    observation_bin_sizes: List[Mapping[str, int]], optional</span>
+<span class="sd">        Then number of bins for each active observation in each building.</span>
+<span class="sd">    action_bin_sizes: List[Mapping[str, int]], optional</span>
+<span class="sd">        Then number of bins for each active action in each building.</span>
+<span class="sd">    default_observation_bin_size: int, default = 10</span>
+<span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building observation.</span>
+<span class="sd">    default_action_bin_size: int, default = 10</span>
+<span class="sd">        The default number of bins if `bin_sizes` is unspecified for any active building action.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">observation_bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">action_bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_observation_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_action_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">TabularQLearningObservationWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="o">=</span><span class="n">observation_bin_sizes</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="o">=</span><span class="n">default_observation_bin_size</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">TabularQLearningActionWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="o">=</span><span class="n">action_bin_sizes</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="o">=</span><span class="n">default_action_bin_size</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span></div>
+
+
+<div class="viewcode-block" id="StableBaselines3ObservationWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.StableBaselines3ObservationWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StableBaselines3ObservationWrapper</span><span class="p">(</span><span class="n">ObservationWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Observation wrapper for :code:`stable-baselines3` algorithms.</span>
+
+<span class="sd">    Wraps observations so that they are returned in a 1-dimensional numpy array.</span>
+<span class="sd">    This wrapper is only compatible when the environment is controlled by a central agent</span>
+<span class="sd">    i.e., :py:attr:`citylearn.citylearn.CityLearnEnv.central_agent` = True.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'StableBaselines3ObservationWrapper is compatible only when env.central_agent = True.'</span>\
+            <span class="s1">' First set env.central_agent = True to use this wrapper.'</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Returns single spaces Box object."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+<div class="viewcode-block" id="StableBaselines3ObservationWrapper.observation">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.StableBaselines3ObservationWrapper.observation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Returns observations as 1-dimensional numpy array."""</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">observations</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="StableBaselines3ActionWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.StableBaselines3ActionWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StableBaselines3ActionWrapper</span><span class="p">(</span><span class="n">ActionWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Action wrapper for :code:`stable-baselines3` algorithms.</span>
+
+<span class="sd">    Wraps actions so that they are returned in a 1-dimensional numpy array.</span>
+<span class="sd">    This wrapper is only compatible when the environment is controlled by a central agent</span>
+<span class="sd">    i.e., :py:attr:`citylearn.citylearn.CityLearnEnv.central_agent` = True.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'StableBaselines3ActionWrapper is compatible only when env.central_agent = True.'</span>\
+            <span class="s1">' First set env.central_agent = True to use this wrapper.'</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Returns single spaces Box object."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="StableBaselines3ActionWrapper.action">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.StableBaselines3ActionWrapper.action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Returns actions as 1-dimensional numpy array."""</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">actions</span><span class="p">]</span></div>
+</div>
+
+    
+<div class="viewcode-block" id="StableBaselines3RewardWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.StableBaselines3RewardWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StableBaselines3RewardWrapper</span><span class="p">(</span><span class="n">RewardWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Reward wrapper for :code:`stable-baselines3` algorithms.</span>
+
+<span class="sd">    Wraps rewards so that it is returned as float value.</span>
+<span class="sd">    This wrapper is only compatible when the environment is controlled by a central agent</span>
+<span class="sd">    i.e., :py:attr:`citylearn.citylearn.CityLearnEnv.central_agent` = True.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'StableBaselines3RewardWrapper is compatible only when env.central_agent = True.'</span>\
+            <span class="s1">' First set env.central_agent = True to use this wrapper.'</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+
+<div class="viewcode-block" id="StableBaselines3RewardWrapper.reward">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.StableBaselines3RewardWrapper.reward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reward</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Returns reward as float value."""</span>
+
+        <span class="k">return</span> <span class="n">reward</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+</div>
+
+
+<div class="viewcode-block" id="StableBaselines3Wrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.StableBaselines3Wrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StableBaselines3Wrapper</span><span class="p">(</span><span class="n">Wrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for :code:`stable-baselines3` algorithms.</span>
+
+<span class="sd">    Wraps observations so that they are returned in a 1-dimensional numpy array.</span>
+<span class="sd">    Wraps actions so that they are returned in a 1-dimensional numpy array.</span>
+<span class="sd">    Wraps rewards so that it is returned as float value.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">StableBaselines3ActionWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">StableBaselines3RewardWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">StableBaselines3ObservationWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span></div>
+
+
+<div class="viewcode-block" id="RLlibSingleAgentWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibSingleAgentWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RLlibSingleAgentWrapper</span><span class="p">(</span><span class="n">StableBaselines3Wrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for :code:`RLlib` single-agent algorithms.</span>
+
+<span class="sd">    Uses the same wrapper as :code:`stable-baselines3` by wrapping</span>
+<span class="sd">    `env` in :py:class:`citylearn.wrappers.StableBaselines3Wrapper`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env_config: Mapping[str, Any]</span>
+<span class="sd">        Dictionary providing initialization parameters for the environment.</span>
+<span class="sd">        Must contain `env_kwargs` as a key where `env_kwargs` is a `dict` used to </span>
+<span class="sd">        initialize :py:class:`citylearn.citylearn.CityLearnEnv`. Thus it must </span>
+<span class="sd">        contain all with positional arguments needed for intialization and </span>
+<span class="sd">        optionally contain optional  intialization arguments. `env_config` can also </span>
+<span class="sd">        contain a `wrappers` key that is a list of :py:mod:`citylearn.wrappers` </span>
+<span class="sd">        classes to wrap :py:class:`citylearn.citylearn.CityLearnEnv` with. Wrapping</span>
+<span class="sd">        with :py:class:`citylearn.wrappers.ClippedObservationWrapper` is recommended</span>
+<span class="sd">        to avoid having the simulation terminating prematurely with an error due to</span>
+<span class="sd">        out of bound observations relative to the observation space.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This wrapper is only compatible with an environment where </span>
+<span class="sd">    :py:attr:`citylearn.citylearn.central_agent`=`True` and will initialize the </span>
+<span class="sd">    environment as such, overriding any value for `central_agent` in `env_kwargs`.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_config</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="n">env_kwargs</span> <span class="o">=</span> <span class="n">env_config</span><span class="p">[</span><span class="s1">'env_kwargs'</span><span class="p">]</span>
+        <span class="n">env_kwargs</span><span class="p">[</span><span class="s1">'central_agent'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">assert</span> <span class="s1">'schema'</span> <span class="ow">in</span> <span class="n">env_kwargs</span><span class="p">,</span> <span class="s1">'missing schema key in env_kwargs.'</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="o">**</span><span class="n">env_kwargs</span><span class="p">)</span>
+
+        <span class="n">wrappers</span> <span class="o">=</span> <span class="n">env_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'wrappers'</span><span class="p">)</span>
+        <span class="n">wrappers</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">wrappers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">wrappers</span>
+
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">wrappers</span><span class="p">:</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">w</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RLlibMultiAgentObservationWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentObservationWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RLlibMultiAgentObservationWrapper</span><span class="p">(</span><span class="n">ObservationWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Observation wrapper for :code:`RLlib` multi-agent algorithms.</span>
+
+<span class="sd">    Wraps observation space and observations so that they are returned </span>
+<span class="sd">    as :py:class:`gymnasium.spaces.Dict` and `dict` objects respectively.</span>
+<span class="sd">    The keys in these objects correspond to the agent IDs i.e., </span>
+<span class="sd">    policy IDs in the multi-agent.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'RLlibMultiAgentObservationWrapper is'</span>\
+            <span class="s1">' compatible only when env.central_agent = False.'</span>\
+                <span class="s1">' First set env.central_agent = False to use this wrapper.'</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Parses observation space into a :py:class:`gymnasium.spaces.Dict`."""</span>
+
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">({</span><span class="sa">f</span><span class="s1">'agent_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span><span class="p">)})</span>
+
+<div class="viewcode-block" id="RLlibMultiAgentObservationWrapper.observation">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentObservationWrapper.observation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">observation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">observations</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Parses observation into a dictionary."""</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'agent_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">observations</span><span class="p">)}</span></div>
+</div>
+
+
+<div class="viewcode-block" id="RLlibMultiAgentActionWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentActionWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RLlibMultiAgentActionWrapper</span><span class="p">(</span><span class="n">ActionWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Action wrapper for :code:`RLlib` multi-agent algorithms.</span>
+
+<span class="sd">    Wraps action space so that it is returned as :py:class:`gymnasium.spaces.Dict`. </span>
+<span class="sd">    The keys correspond to the agent IDs i.e., policy IDs in the multi-agent. </span>
+<span class="sd">    Also converts agent actions from `dict` to  data structure need by </span>
+<span class="sd">    :py:meth:`citylearn.citylearn.CityLearnEnv.step`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'RLlibMultiAgentActionWrapper is'</span>\
+            <span class="s1">' compatible only when env.central_agent = False.'</span>\
+                <span class="s1">' First set env.central_agent = False to use this wrapper.'</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action_space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Parses action space into a :py:class:`gymnasium.spaces.Dict`."""</span>
+
+        <span class="k">return</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">({</span><span class="sa">f</span><span class="s1">'agent_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="n">s</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span><span class="p">)})</span>
+
+<div class="viewcode-block" id="RLlibMultiAgentActionWrapper.action">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentActionWrapper.action">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Parses actions into data structure for :py:meth:`citylearn.citylearn.CityLearnEnv.step`."""</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">actions</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span></div>
+</div>
+
+
+<div class="viewcode-block" id="RLlibMultiAgentRewardWrapper">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentRewardWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RLlibMultiAgentRewardWrapper</span><span class="p">(</span><span class="n">RewardWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Action wrapper for :code:`RLlib` multi-agent algorithms.</span>
+
+<span class="sd">    Wraps action space so that it is returned as a `dict` mapping agent IDs to reward values.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env: CityLearnEnv</span>
+<span class="sd">        CityLearn environment.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'RLlibMultiAgentRewardWrapper is'</span>\
+            <span class="s1">' compatible only when env.central_agent = False.'</span>\
+                <span class="s1">' First set env.central_agent = False to use this wrapper.'</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
+
+<div class="viewcode-block" id="RLlibMultiAgentRewardWrapper.reward">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentRewardWrapper.reward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reward</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Parses reward into a `dict`."""</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'agent_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="n">r</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reward</span><span class="p">)}</span></div>
+</div>
+
+
+<div class="viewcode-block" id="RLlibMultiAgentEnv">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentEnv">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RLlibMultiAgentEnv</span><span class="p">(</span><span class="n">MultiAgentEnv</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Wrapper for :code:`RLlib` multi-agent algorithms.</span>
+
+<span class="sd">    Converts, observation and action spaces to :py:class:`gymnasium.spaces.Dict`.</span>
+<span class="sd">    Also converts `observations`, `actions`, `rewards`, `terminated`, and `truncated`</span>
+<span class="sd">    to dictionaries where necessary. The dictionary keys correspond to the agent IDs i.e., </span>
+<span class="sd">    policy IDs in the multi-agent. Agent IDs are accessible through the `_agent_ids` property. </span>
+<span class="sd">    The initialized environment is a :py:class:`ray.rllib.env.MultiAgentEnv` object </span>
+<span class="sd">    and has an `env` attribute that is :py:class:`citylearn.citylearn.CityLearnEnv` object.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    env_config: Mapping[str, Any]</span>
+<span class="sd">        Dictionary providing initialization parameters for the environment.</span>
+<span class="sd">        Must contain `env_kwargs` as a key where `env_kwargs` is a `dict` used to </span>
+<span class="sd">        initialize :py:class:`citylearn.citylearn.CityLearnEnv`. Thus it must </span>
+<span class="sd">        contain all with positional arguments needed for intialization and </span>
+<span class="sd">        optionally contain optional  intialization arguments. `env_config` can also </span>
+<span class="sd">        contain a `wrappers` key that is a list of :py:mod:`citylearn.wrappers` </span>
+<span class="sd">        classes to wrap :py:class:`citylearn.citylearn.CityLearnEnv` with. Wrapping</span>
+<span class="sd">        with :py:class:`citylearn.wrappers.ClippedObservationWrapper` is recommended</span>
+<span class="sd">        to avoid having the simulation terminating prematurely with an error due to</span>
+<span class="sd">        out of bound observations relative to the observation space.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This wrapper is only compatible with an environment where </span>
+<span class="sd">    :py:attr:`citylearn.citylearn.central_agent`=`False` and will initialize the </span>
+<span class="sd">    environment as such, overriding any value for `central_agent` in `env_kwargs`.</span>
+<span class="sd">    """</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_config</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">MultiAgentEnv</span> <span class="o">==</span> <span class="n">Env</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">'This functionality requires you to install RLlib.'</span>\
+                <span class="s1">'You can install RLlib from pip: pip install "ray[rllib]", '</span>\
+                    <span class="s1">'or for more detailed instructions please visit https://docs.ray.io/en/latest/rllib/index.html.'</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">env_kwargs</span> <span class="o">=</span> <span class="n">env_config</span><span class="p">[</span><span class="s1">'env_kwargs'</span><span class="p">]</span>
+        <span class="n">env_kwargs</span><span class="p">[</span><span class="s1">'central_agent'</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">assert</span> <span class="s1">'schema'</span> <span class="ow">in</span> <span class="n">env_kwargs</span><span class="p">,</span> <span class="s1">'missing schema key in env_kwargs.'</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="o">**</span><span class="n">env_kwargs</span><span class="p">)</span>
+
+        <span class="n">wrappers</span> <span class="o">=</span> <span class="n">env_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'wrappers'</span><span class="p">)</span>
+        <span class="n">wrappers</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">wrappers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">wrappers</span>
+
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">wrappers</span><span class="p">:</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">w</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+
+        <span class="n">env</span> <span class="o">=</span> <span class="n">RLlibMultiAgentActionWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">RLlibMultiAgentObservationWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">RLlibMultiAgentRewardWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span> <span class="o">=</span> <span class="n">env</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agent_ids</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">'agent_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buildings</span><span class="p">))]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">observation_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span><span class="p">:</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">action_space</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Convenience property for :py:meth:`citylearn.citylearn.CityLearnEnv.time_step`."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">time_step</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">buildings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Building</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Convenience property for :py:meth:`citylearn.citylearn.CityLearnEnv.buildings`."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">terminated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Convenience property for :py:meth:`citylearn.citylearn.CityLearnEnv.terminated`."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">terminated</span>
+
+<div class="viewcode-block" id="RLlibMultiAgentEnv.step">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentEnv.step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">action_dict</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Calls :py:meth:`citylearn.citylearn.CityLearnEnv.step` and parses returned values into dictionaries."""</span>
+
+        <span class="n">observations</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">action_dict</span><span class="p">)</span>
+        <span class="n">terminated</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'__all__'</span><span class="p">:</span> <span class="n">terminated</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">terminated</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_ids</span><span class="p">}}</span>
+        <span class="n">truncated</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'__all__'</span><span class="p">:</span> <span class="n">truncated</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">truncated</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_ids</span><span class="p">}}</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">info</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_ids</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">observations</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span></div>
+
+
+<div class="viewcode-block" id="RLlibMultiAgentEnv.evaluate">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentEnv.evaluate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Convenience method for :py:meth:`citylearn.citylearn.CityLearnEnv.evaluate`."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RLlibMultiAgentEnv.evaluate_v2">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentEnv.evaluate_v2">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_v2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Convenience method for :py:meth:`citylearn.citylearn.CityLearnEnv.evaluate_v2`."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RLlibMultiAgentEnv.reset">
+<a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.RLlibMultiAgentEnv.reset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Calls :py:meth:`citylearn.citylearn.CityLearnEnv.reset` and parses returned values into dictionaries."""</span>
+
+        <span class="n">observations</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">info</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_ids</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">observations</span><span class="p">,</span> <span class="n">info</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+/* Preserve the theme while allowing reference tables and figures to fit. */
+.wy-table-responsive table td,
+.wy-table-responsive table th { white-space: normal; }
+.wy-table-responsive table { table-layout: auto; }
+.wy-table-responsive { overflow-x: auto; }
+.rst-content code.literal { overflow-wrap: anywhere; }
+.rst-content img.citylearn-overview { max-width: 100%; height: auto; }

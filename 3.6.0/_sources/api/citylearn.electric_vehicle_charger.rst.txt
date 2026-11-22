@@ -1,0 +1,7 @@
+citylearn.electric\_vehicle\_charger module
+===========================================
+
+.. automodule:: citylearn.electric_vehicle_charger
+   :members:
+   :show-inheritance:
+   :undoc-members:

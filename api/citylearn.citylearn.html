@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -28,7 +28,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="citylearn.community_dataset module" href="citylearn.community_dataset.html" />
-    <link rel="prev" title="citylearn.building module" href="citylearn.building.html" /> 
+    <link rel="prev" title="citylearn.building module" href="citylearn.building.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,18 +53,17 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
               <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
@@ -76,43 +78,67 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../python_api.html">Python API</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="modules.html">All modules</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a></li>
-<li class="toctree-l4 current"><a class="reference internal" href="citylearn.html#submodules">Submodules</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="citylearn.html">citylearn package</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="citylearn.html#subpackages">Subpackages</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="citylearn.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="citylearn.base.html">citylearn.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.building.html">citylearn.building module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">citylearn.citylearn module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.community_dataset.html">citylearn.community_dataset module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.cost_function.html">citylearn.cost_function module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.data.html">citylearn.data module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.dynamics.html">citylearn.dynamics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.electric_vehicle.html">citylearn.electric_vehicle module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.electric_vehicle_charger.html">citylearn.electric_vehicle_charger module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.energy_model.html">citylearn.energy_model module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.exporter.html">citylearn.exporter module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.multi_community.html">citylearn.multi_community module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.occupant.html">citylearn.occupant module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.power_outage.html">citylearn.power_outage module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.preprocessing.html">citylearn.preprocessing module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.reward_function.html">citylearn.reward_function module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.rl.html">citylearn.rl module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.utilities.html">citylearn.utilities module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="citylearn.wrappers.html">citylearn.wrappers module</a></li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">History</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
-</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
 
         </div>
       </div>
@@ -128,7 +154,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../python_api.html">Python API</a></li>
           <li class="breadcrumb-item"><a href="modules.html">citylearn</a></li>
           <li class="breadcrumb-item"><a href="citylearn.html">citylearn package</a></li>
       <li class="breadcrumb-item active">citylearn.citylearn module</li>
@@ -140,11 +165,12 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
 <div class="admonition note citylearn-version-note" role="note">
-  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
-  listed under <a href="../guides/releases.html">Unreleased</a>, which the latest release,
-  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
-  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
-  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
 </div>
 
            <div itemprop="articleBody">
@@ -155,44 +181,24 @@
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citylearn.citylearn.</span></span><span class="sig-name descname"><span class="pre">CityLearnEnv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buildings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="citylearn.building.html#citylearn.building.Building" title="citylearn.building.Building"><span class="pre">Building</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">electric_vehicles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="citylearn.electric_vehicle.html#citylearn.electric_vehicle.ElectricVehicle" title="citylearn.electric_vehicle.ElectricVehicle"><span class="pre">ElectricVehicle</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_start_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_end_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episode_time_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rolling_episode_split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_episode_split</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds_per_time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citylearn.reward_function.html#citylearn.reward_function.RewardFunction" title="citylearn.reward_function.RewardFunction"><span class="pre">RewardFunction</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_function_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">central_agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shared_observations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_observations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inactive_observations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_actions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inactive_actions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulate_power_outage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solar_generation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interface</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topology_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">date</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render_session_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_kpis_on_episode_end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/citylearn.html#CityLearnEnv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="citylearn.base.html#citylearn.base.Environment" title="citylearn.base.Environment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Environment</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Env</span></code></p>
-<p>CityLearn environment: a Gymnasium environment that simulates a community of buildings.</p>
-<p>Each step applies the controller’s actions to the buildings’ storage, EV chargers and flexible
-loads for one control interval and returns the next observations and rewards. After an episode,
-<a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.evaluate_v2" title="citylearn.citylearn.CityLearnEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a> returns the KPI table and <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.scorecard" title="citylearn.citylearn.CityLearnEnv.scorecard"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scorecard()</span></code></a> its default selection.</p>
+<p>CityLearn nvironment class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>schema</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>, </em><em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – Name of CityLearn data set, filepath to JSON representation or <code class="code docutils literal notranslate"><span class="pre">dict</span></code> object of a CityLearn schema.
-Call <a class="reference internal" href="citylearn.data.html#citylearn.data.DataSet.get_dataset_names" title="citylearn.data.DataSet.get_dataset_names"><code class="xref py py-meth docutils literal notranslate"><span class="pre">citylearn.data.DataSet.get_dataset_names()</span></code></a> for the list of public CityLearn data sets.</p></li>
+Call <code class="xref py py-meth docutils literal notranslate"><span class="pre">citylearn.data.DataSet.get_names()</span></code> for list of available CityLearn data sets.</p></li>
 <li><p><strong>root_directory</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – Absolute path to directory that contains the data files including the schema.</p></li>
 <li><p><strong>buildings</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference internal" href="citylearn.building.html#citylearn.building.Building" title="citylearn.building.Building"><em>Building</em></a><em>]</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Buildings to include in environment. If list of <code class="code docutils literal notranslate"><span class="pre">citylearn.building.Building</span></code> is provided, will override <code class="code docutils literal notranslate"><span class="pre">buildings</span></code> definition in schema.
 If list of :str: is provided will include only schema <code class="code docutils literal notranslate"><span class="pre">buildings</span></code> keys that are contained in provided list of <code class="code docutils literal notranslate"><span class="pre">str</span></code>.
 If list of :int: is provided will include only schema <code class="code docutils literal notranslate"><span class="pre">buildings</span></code> whose index is contained in provided list of <code class="code docutils literal notranslate"><span class="pre">int</span></code>.</p></li>
-<li><p><strong>electric_vehicles</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference internal" href="citylearn.electric_vehicle.html#citylearn.electric_vehicle.ElectricVehicle" title="citylearn.electric_vehicle.ElectricVehicle"><em>ElectricVehicle</em></a><em>]</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Electric vehicles to include, selected from the schema’s <code class="code docutils literal notranslate"><span class="pre">electric_vehicles_def</span></code> in the same way as
-<code class="code docutils literal notranslate"><span class="pre">buildings</span></code>: instances, names or indices. Defaults to every EV in the schema.</p></li>
 <li><p><strong>simulation_start_time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Time step to start reading data files contents.</p></li>
 <li><p><strong>simulation_end_time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Time step to end reading from data files contents.</p></li>
 <li><p><strong>episode_time_steps</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – If type is <cite>int</cite>, it is the number of time steps in an episode. If type is <cite>List[Tuple[int, int]]]</cite> is provided,
 it is a list of episode start and end time steps between <cite>simulation_start_time_step</cite> and <cite>simulation_end_time_step</cite>.
-Defaults to (<cite>simulation_end_time_step</cite> - <cite>simulation_start_time_step</cite>) + 1. An episode of N time steps
-(states) executes N - 1 control steps. <cite>rolling_episode_split</cite> is ignored when <cite>episode_time_steps</cite> is a list.</p></li>
+Defaults to (<cite>simulation_end_time_step</cite> - <cite>simulation_start_time_step</cite>) + 1. Will ignore <cite>rolling_episode_split</cite> if <cite>episode_splits</cite> is of type <cite>List[Tuple[int, int]]]</cite>.</p></li>
 <li><p><strong>rolling_episode_split</strong> (<em>bool</em><em>, </em><em>default: False</em>) – True if episode sequences are split such that each time step is a candidate for <cite>episode_start_time_step</cite> otherwise, False to split episodes in steps of <cite>episode_time_steps</cite>.</p></li>
 <li><p><strong>random_episode_split</strong> (<em>bool</em><em>, </em><em>default: False</em>) – True if episode splits are to be selected at random during training otherwise, False to select sequentially.</p></li>
-<li><p><strong>time_step_ratio_mode</strong> (<em>str</em><em>, </em><em>default: 'reject'</em>) – What to do when <cite>seconds_per_time_step</cite> differs from the dataset step, i.e. <cite>time_step_ratio</cite> != 1. CityLearn
-does not resample the data: each control step reads one data row. <cite>‘reject’</cite> raises a <cite>ValueError</cite>, so
-that a run never simulates distorted time. <cite>‘compress’</cite> keeps the CityLearn 3.6.0 behaviour: each control
-step still reads one row, so the calendar, prices and EV schedules advance one row per step, while
-energies are scaled by the ratio. Can also be set with the schema key of the same name.</p></li>
-<li><p><strong>episode_split_boundary</strong> (<em>str</em><em>, </em><em>default: 'shared'</em>) – How consecutive (non-rolling) splits of an integer <cite>episode_time_steps</cite> meet. An episode of N data rows executes
-N - 1 control steps, because its last row is only the terminal observation. <cite>‘shared’</cite> advances consecutive episodes
-by N - 1 rows, so the terminal row of one episode is the first row of the next and every interval is simulated
-(N must be at least 2). <cite>‘disjoint’</cite> advances them by N rows, as CityLearn 3.6.0 and earlier did, so the interval
-between two consecutive episodes is never simulated. Can also be set with the schema key of the same name. Rolling
-and explicit list splits are not affected.</p></li>
-<li><p><strong>seconds_per_time_step</strong> (<em>float</em>) – Number of seconds in 1 <cite>time_step</cite> and must be set to &gt;= 1. It must equal the dataset step unless
-<cite>time_step_ratio_mode=’compress’</cite>.</p></li>
-<li><p><strong>time_step_ratio</strong> (<em>int</em><em>, </em><em>optional</em>) – Ratio of the control step to the dataset step. It is inferred from the data; a value passed here must
-match the inferred ratio, otherwise a <cite>ValueError</cite> is raised.</p></li>
+<li><p><strong>seconds_per_time_step</strong> (<em>float</em>) – Number of seconds in 1 <cite>time_step</cite> and must be set to &gt;= 1.</p></li>
 <li><p><strong>reward_function</strong> (<em>Union</em><em>[</em><a class="reference internal" href="citylearn.reward_function.html#citylearn.reward_function.RewardFunction" title="citylearn.reward_function.RewardFunction"><em>RewardFunction</em></a><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Reward function class instance or path to function class e.g. ‘citylearn.reward_function.IndependentSACReward’.
 If provided, will override <code class="code docutils literal notranslate"><span class="pre">reward_function</span></code> definition in schema.</p></li>
 <li><p><strong>reward_function_kwargs</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – Parameters to be parsed to <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.reward_function" title="citylearn.citylearn.CityLearnEnv.reward_function"><code class="xref py py-attr docutils literal notranslate"><span class="pre">reward_function</span></code></a> at intialization.</p></li>
@@ -211,31 +217,14 @@ each building independently in a <code class="code docutils literal notranslate"
 <li><p><strong>solar_generation</strong> (<em>Union</em><em>[</em><em>bool</em><em>, </em><em>List</em><em>[</em><em>bool</em><em>]</em><em>]</em>) – Wehther to allow solar generation. Can be specified for all buildings as single <code class="code docutils literal notranslate"><span class="pre">bool</span></code> or for
 each building independently in a <code class="code docutils literal notranslate"><span class="pre">List[bool]</span></code>. Will override <code class="code docutils literal notranslate"><span class="pre">pv</span></code> defined in the <code class="code docutils literal notranslate"><span class="pre">schema</span></code>.</p></li>
 <li><p><strong>random_seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Pseudorandom number generator seed for repeatable results.</p></li>
-<li><p><strong>random_stream_version</strong> (<em>str</em><em>, </em><em>optional</em>) – Keyword argument. How the random streams for unspecified device parameters, away-from-charger EV
-state of charge, occupant set-point interactions and stochastic power outages are derived from
-<cite>random_seed</cite>: <code class="docutils literal notranslate"><span class="pre">'v2'</span></code> (default) derives one independent stream per purpose, object and episode
-with <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.SeedSequence</span></code>; <code class="docutils literal notranslate"><span class="pre">'v1'</span></code> reproduces CityLearn 3.6.0 and earlier. Overrides
-<code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> in the schema. Agents built on the environment use the same version for
-their own random streams. See <a class="reference internal" href="citylearn.random_streams.html#module-citylearn.random_streams" title="citylearn.random_streams"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.random_streams</span></code></a>.</p></li>
 <li><p><strong>offline</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, disables all network fallbacks for datasets and misc sizing data. Initialization fails with a clear
 error when required files are not available locally. Defaults to the <code class="docutils literal notranslate"><span class="pre">CITYLEARN_OFFLINE</span></code> environment
 variable, read at initialization, or False when it is unset.</p></li>
-<li><p><strong>interface</strong> (<em>str</em><em>, </em><em>optional</em>) – Observation and action contract: <code class="docutils literal notranslate"><span class="pre">'flat'</span></code> (default) returns one vector per agent; <code class="docutils literal notranslate"><span class="pre">'entity'</span></code> returns
-tables of buildings, chargers, EVs and other assets with their edges. Overrides the schema key.
-See the flat and entity interfaces guide.</p></li>
-<li><p><strong>topology_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – <code class="docutils literal notranslate"><span class="pre">'static'</span></code> (default) keeps the members and assets of the schema for the whole episode; <code class="docutils literal notranslate"><span class="pre">'dynamic'</span></code>
-applies the schema’s <code class="docutils literal notranslate"><span class="pre">topology_events</span></code> (members and assets joining or leaving) and requires
-<code class="docutils literal notranslate"><span class="pre">interface='entity'</span></code>. Overrides the schema key.</p></li>
-<li><p><strong>start_date</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>datetime.date</em><em>]</em><em>, </em><em>optional</em>) – Date of the first time step in rendered and exported timestamps, e.g. <code class="docutils literal notranslate"><span class="pre">'2024-01-01'</span></code>. Defaults to the
-schema’s <code class="docutils literal notranslate"><span class="pre">start_date</span></code>, else 2024-01-01. It does not change the simulation.</p></li>
-<li><p><strong>render_directory</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Base directory where rendering and export artifacts are stored. Relative paths are resolved from the current working directory.</p></li>
-<li><p><strong>render_directory_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Folder name created in the current working directory for rendering and export artifacts when <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> is not provided.
+<li><p><strong>render_directory</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>, </em><em>optional</em>) – Base directory where rendering and export artifacts are stored. Relative paths are resolved from the project root.</p></li>
+<li><p><strong>render_directory_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Folder name created inside the project root for rendering and export artifacts when <code class="docutils literal notranslate"><span class="pre">render_directory</span></code> is not provided.
 Defaults to <code class="docutils literal notranslate"><span class="pre">render_logs</span></code>.</p></li>
 <li><p><strong>render_session_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the subfolder created under <code class="docutils literal notranslate"><span class="pre">render_directory</span></code>/<code class="docutils literal notranslate"><span class="pre">render_directory_name</span></code> for export artifacts. When omitted,
 a timestamp is used.</p></li>
-<li><p><strong>render</strong> (<em>bool</em><em>, </em><em>optional</em>) – Legacy render switch. Prefer <cite>render_mode</cite>.</p></li>
-<li><p><strong>render_file_format</strong> (<em>str</em><em>, </em><em>optional</em>) – Format of rendered and exported series: <code class="docutils literal notranslate"><span class="pre">'csv'</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">'parquet'</span></code>, which needs <code class="docutils literal notranslate"><span class="pre">pyarrow</span></code>.</p></li>
-<li><p><strong>render_chunk_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of rows buffered before a rendered file is written. Defaults to 100,000 for CSV and 50,000 for Parquet.</p></li>
 <li><p><strong>render_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Rendering strategy. Accepted values are <code class="docutils literal notranslate"><span class="pre">'none'</span></code> (default), <code class="docutils literal notranslate"><span class="pre">'during'</span></code> for streaming exports each step, and
 <code class="docutils literal notranslate"><span class="pre">'end'</span></code> for exports performed at episode completion while still allowing manual snapshots via <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.render" title="citylearn.citylearn.CityLearnEnv.render"><code class="xref py py-meth docutils literal notranslate"><span class="pre">render()</span></code></a>.</p></li>
 <li><p><strong>export_kpis_on_episode_end</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to automatically export <code class="docutils literal notranslate"><span class="pre">exported_kpis.csv</span></code> when an episode terminates.
@@ -245,17 +234,10 @@ If not provided, defaults to the effective rendering setting (enabled when rende
 <li><p><strong>ev_departure_service_tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Lower SOC service tolerance used by EV departure minimum-acceptable KPIs. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
 <li><p><strong>business_as_usual_ev_charge_target</strong> (<em>str</em><em>, </em><em>optional</em>) – EV charging of the native BAU reference built by <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>: <code class="docutils literal notranslate"><span class="pre">'full'</span></code> charges to 100%,
 <code class="docutils literal notranslate"><span class="pre">'requested'</span></code> to the user’s requested departure SOC. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">'full'</span></code>.</p></li>
-<li><p><strong>physics_version</strong> (<em>int</em><em>, </em><em>optional</em>) – Physics definitions: <code class="docutils literal notranslate"><span class="pre">2</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">1</span></code>, which reproduces the physics of CityLearn 3.6.0. Overrides the
-schema key. The migration guide lists the corrections of version 2.</p></li>
-<li><p><strong>debug_timing</strong> (<em>bool</em><em>, </em><em>optional</em>) – Log runtime timings. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>check_observation_limits</strong> (<em>bool</em><em>, </em><em>optional</em>) – Check observations against their estimated bounds. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>physics_invariant_checks</strong> (<em>bool</em><em>, </em><em>optional</em>) – Check physical invariants at runtime. Defaults to the schema value, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>metrics_log_interval</strong> (<em>int</em><em>, </em><em>optional</em>) – Log runtime metrics every this many steps; <code class="docutils literal notranslate"><span class="pre">0</span></code> (default) disables them.</p></li>
 <li><p><strong>energy_provenance</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to keep the per-step electricity provenance ledger (<code class="docutils literal notranslate"><span class="pre">*_energy_provenance_*</span></code> KPIs and
 provenance audits). Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>. Disabling it does not change any simulated quantity and
 makes <code class="docutils literal notranslate"><span class="pre">step()</span></code> substantially faster, e.g. for training runs that do not report provenance KPIs.</p></li>
-<li><p><strong>**kwargs</strong> (<em>dict</em>) – Only the options listed above are accepted; any other keyword argument raises a <cite>TypeError</cite> that suggests
-the closest valid name.</p></li>
+<li><p><strong>**kwargs</strong> (<em>dict</em>) – Other keyword arguments used to initialize super classes.</p></li>
 </ul>
 </dd>
 </dl>
@@ -264,17 +246,6 @@ the closest valid name.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.DEFAULT_RENDER_START_DATE">
 <span class="sig-name descname"><span class="pre">DEFAULT_RENDER_START_DATE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.date(2024,</span> <span class="pre">1,</span> <span class="pre">1)</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.DEFAULT_RENDER_START_DATE" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.SCORECARD_DEFAULT_KPIS">
-<span class="sig-name descname"><span class="pre">SCORECARD_DEFAULT_KPIS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('district_thermal_service_audit_discomfort_ratio',</span> <span class="pre">'district_thermal_service_audit_thermal_coverage_ratio',</span> <span class="pre">'district_thermal_service_audit_outage_discomfort_ratio',</span> <span class="pre">'district_thermal_service_audit_unserved_service_ratio',</span> <span class="pre">'district_thermal_service_audit_outage_unserved_service_ratio',</span> <span class="pre">'district_thermal_service_audit_energy_coverage_ratio',</span> <span class="pre">'district_equity_audit_coverage_ratio',</span> <span class="pre">'district_energy_provenance_pv_useful_building_ratio',</span> <span class="pre">'district_energy_provenance_pv_useful_with_mobility_ratio',</span> <span class="pre">'district_energy_provenance_pv_stored_kwh',</span> <span class="pre">'district_energy_provenance_pv_grid_export_kwh',</span> <span class="pre">'district_energy_provenance_external_purchase_emissions_kgco2',</span> <span class="pre">'district_energy_provenance_external_purchase_emissions_business_as_usual_kgco2',</span> <span class="pre">'district_cost_total_control_eur',</span> <span class="pre">'district_cost_total_business_as_usual_eur',</span> <span class="pre">'district_cost_total_delta_to_business_as_usual_eur',</span> <span class="pre">'building_cost_total_control_eur',</span> <span class="pre">'building_cost_total_business_as_usual_eur',</span> <span class="pre">'building_cost_total_delta_to_business_as_usual_eur',</span> <span class="pre">'district_ev_departure_audit_min_acceptable_service_feasible_ratio',</span> <span class="pre">'district_ev_departure_audit_within_tolerance_service_feasible_ratio',</span> <span class="pre">'district_ev_departure_audit_target_coverage_ratio',</span> <span class="pre">'district_ev_departure_audit_service_coverage_ratio',</span> <span class="pre">'district_ev_departure_audit_target_unknown_count',</span> <span class="pre">'district_electrical_service_phase_violations_energy_total_kwh',</span> <span class="pre">'district_electrical_service_phase_requested_pressure_energy_total_kwh',</span> <span class="pre">'building_ev_departure_audit_min_acceptable_service_feasible_ratio',</span> <span class="pre">'building_ev_departure_audit_within_tolerance_service_feasible_ratio',</span> <span class="pre">'building_ev_departure_audit_target_coverage_ratio',</span> <span class="pre">'building_ev_departure_audit_service_coverage_ratio',</span> <span class="pre">'building_ev_departure_audit_target_unknown_count',</span> <span class="pre">'building_electrical_service_phase_violations_energy_total_kwh',</span> <span class="pre">'building_electrical_service_phase_requested_pressure_energy_total_kwh',</span> <span class="pre">'district_battery_total_throughput_kwh',</span> <span class="pre">'district_battery_total_throughput_business_as_usual_kwh',</span> <span class="pre">'district_battery_total_throughput_delta_to_business_as_usual_kwh',</span> <span class="pre">'district_ev_total_v2g_export_kwh',</span> <span class="pre">'district_ev_total_v2g_export_business_as_usual_kwh',</span> <span class="pre">'district_ev_total_v2g_export_delta_to_business_as_usual_kwh',</span> <span class="pre">'building_battery_total_throughput_kwh',</span> <span class="pre">'building_battery_total_throughput_business_as_usual_kwh',</span> <span class="pre">'building_battery_total_throughput_delta_to_business_as_usual_kwh',</span> <span class="pre">'building_ev_total_v2g_export_kwh',</span> <span class="pre">'building_ev_total_v2g_export_business_as_usual_kwh',</span> <span class="pre">'building_ev_total_v2g_export_delta_to_business_as_usual_kwh',</span> <span class="pre">'district_solar_self_consumption_ratio_self_consumption_ratio',</span> <span class="pre">'district_solar_self_consumption_ratio_self_consumption_business_as_usual_ratio',</span> <span class="pre">'district_solar_self_consumption_ratio_self_consumption_delta_to_business_as_usual_ratio',</span> <span class="pre">'building_solar_self_consumption_ratio_self_consumption_ratio',</span> <span class="pre">'building_solar_self_consumption_ratio_self_consumption_business_as_usual_ratio',</span> <span class="pre">'building_solar_self_consumption_ratio_self_consumption_delta_to_business_as_usual_ratio',</span> <span class="pre">'district_energy_grid_total_import_control_kwh',</span> <span class="pre">'district_energy_grid_total_import_business_as_usual_kwh',</span> <span class="pre">'district_energy_grid_total_import_delta_to_business_as_usual_kwh',</span> <span class="pre">'district_energy_grid_total_export_control_kwh',</span> <span class="pre">'district_energy_grid_total_export_business_as_usual_kwh',</span> <span class="pre">'district_energy_grid_total_export_delta_to_business_as_usual_kwh',</span> <span class="pre">'district_energy_grid_total_net_exchange_control_kwh',</span> <span class="pre">'district_energy_grid_total_net_exchange_business_as_usual_kwh',</span> <span class="pre">'district_energy_grid_total_net_exchange_delta_to_business_as_usual_kwh',</span> <span class="pre">'building_energy_grid_total_import_control_kwh',</span> <span class="pre">'building_energy_grid_total_import_business_as_usual_kwh',</span> <span class="pre">'building_energy_grid_total_import_delta_to_business_as_usual_kwh',</span> <span class="pre">'building_energy_grid_total_export_control_kwh',</span> <span class="pre">'building_energy_grid_total_export_business_as_usual_kwh',</span> <span class="pre">'building_energy_grid_total_export_delta_to_business_as_usual_kwh',</span> <span class="pre">'building_energy_grid_total_net_exchange_control_kwh',</span> <span class="pre">'building_energy_grid_total_net_exchange_business_as_usual_kwh',</span> <span class="pre">'building_energy_grid_total_net_exchange_delta_to_business_as_usual_kwh',</span> <span class="pre">'district_energy_grid_shape_quality_peak_daily_average_to_business_as_usual_ratio',</span> <span class="pre">'district_energy_grid_shape_quality_peak_all_time_average_to_business_as_usual_ratio',</span> <span class="pre">'district_energy_grid_shape_quality_load_factor_penalty_daily_average_to_business_as_usual_ratio')</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.SCORECARD_DEFAULT_KPIS" title="Link to this definition"></a></dt>
-<dd><p>KPI names of the default scorecard, in display order. <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.scorecard" title="citylearn.citylearn.CityLearnEnv.scorecard"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scorecard()</span></code></a> selects these rows.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.TIME_STEP_RATIO_MODES">
-<span class="sig-name descname"><span class="pre">TIME_STEP_RATIO_MODES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('reject',</span> <span class="pre">'compress')</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.TIME_STEP_RATIO_MODES" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -483,18 +454,6 @@ and electricity pricing at the current time step.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.episode_split_boundary">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode_split_boundary</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.episode_split_boundary" title="Link to this definition"></a></dt>
-<dd><p><cite>‘shared’</cite> (boundary row shared, every interval simulated) or
-<cite>‘disjoint’</cite> (CityLearn 3.6.0 splits, which never simulate the interval between two episodes).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>How consecutive episode splits meet</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.episode_time_steps">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">episode_time_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.episode_time_steps" title="Link to this definition"></a></dt>
 <dd><p>If type is <cite>int</cite>, it is the number of time steps in an episode. If type is <cite>List[Tuple[int, int]]]</cite> is provided, it is a list of
@@ -518,48 +477,12 @@ current episode time steps for reading observations from data files.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.evaluate_v2">
 <span class="sig-name descname"><span class="pre">evaluate_v2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">control_condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citylearn.citylearn.EvaluationCondition" title="citylearn.citylearn.EvaluationCondition"><span class="pre">EvaluationCondition</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseline_condition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citylearn.citylearn.EvaluationCondition" title="citylearn.citylearn.EvaluationCondition"><span class="pre">EvaluationCondition</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comfort_band</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_business_as_usual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/citylearn/citylearn.html#CityLearnEnv.evaluate_v2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.evaluate_v2" title="Link to this definition"></a></dt>
-<dd><p>Return the KPI table of the simulation so far, normally called at the end of an episode.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>control_condition</strong> (<a class="reference internal" href="#citylearn.citylearn.EvaluationCondition" title="citylearn.citylearn.EvaluationCondition"><em>EvaluationCondition</em></a><em>, </em><em>optional</em>) – Which series of each building are evaluated as the controlled run. Defaults to the simulated series:
-<code class="docutils literal notranslate"><span class="pre">EvaluationCondition.WITH_STORAGE_AND_PV</span></code>, or <code class="docutils literal notranslate"><span class="pre">WITH_STORAGE_AND_PARTIAL_LOAD_AND_PV</span></code> for buildings
-with LSTM thermal dynamics.</p></li>
-<li><p><strong>baseline_condition</strong> (<a class="reference internal" href="#citylearn.citylearn.EvaluationCondition" title="citylearn.citylearn.EvaluationCondition"><em>EvaluationCondition</em></a><em>, </em><em>optional</em>) – Which counterfactual series the <code class="docutils literal notranslate"><span class="pre">*_baseline_*</span></code> and <code class="docutils literal notranslate"><span class="pre">*_ratio_to_baseline_*</span></code> KPIs use. Defaults to
-<code class="docutils literal notranslate"><span class="pre">EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV</span></code>, or <code class="docutils literal notranslate"><span class="pre">WITHOUT_STORAGE_AND_PARTIAL_LOAD_BUT_WITH_PV</span></code>
-for buildings with LSTM thermal dynamics: the same buildings without storage, PV retained.</p></li>
-<li><p><strong>comfort_band</strong> (<em>float</em><em>, </em><em>optional</em>) – Comfort band in degrees Celsius around the set point used by the thermal comfort KPIs. Defaults to each
-building’s <code class="docutils literal notranslate"><span class="pre">comfort_band</span></code> series.</p></li>
-<li><p><strong>include_business_as_usual</strong> (<em>bool</em><em>, </em><em>default: True</em>) – Also run, or reuse, the native business-as-usual rollout (<a class="reference internal" href="citylearn.agents.baseline.html#citylearn.agents.baseline.BusinessAsUsualAgent" title="citylearn.agents.baseline.BusinessAsUsualAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.agents.baseline.BusinessAsUsualAgent</span></code></a>
-on the same scenario and window) and add the <code class="docutils literal notranslate"><span class="pre">*_business_as_usual_*</span></code> values, deltas and ratios.
-The reference is rebuilt from the schema and the constructor arguments; a <cite>ValueError</cite> names the
-setting when it differs from this environment as captured at its last <cite>reset()</cite>. See the baselines
-guide for the settings that are compared.</p></li>
-<li><p><strong>progress_callback</strong> (<em>callable</em><em>, </em><em>optional</em>) – Keyword-only. Receives scalar stage events while the table is computed. A callback that raises is
-logged and disabled; the table is unaffected, and no events or timings are added to it.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>One row per KPI and scope, with the columns:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">cost_function</span></code> (str): the KPI name, <code class="docutils literal notranslate"><span class="pre">level_family_subfamily_metric_variant_unit</span></code>. The last part
-is the unit, e.g. <code class="docutils literal notranslate"><span class="pre">kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">kw</span></code>, <code class="docutils literal notranslate"><span class="pre">eur</span></code>, <code class="docutils literal notranslate"><span class="pre">kgco2</span></code>, <code class="docutils literal notranslate"><span class="pre">hours</span></code> or <code class="docutils literal notranslate"><span class="pre">ratio</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">value</span></code> (float): the value; NaN when the KPI is undefined for this run, for example a service
-ratio without any event to serve.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> (str): the building name for building rows, <code class="docutils literal notranslate"><span class="pre">'District'</span></code> for district rows.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">level</span></code> (str): <code class="docutils literal notranslate"><span class="pre">'building'</span></code> or <code class="docutils literal notranslate"><span class="pre">'district'</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">unit</span></code> (str) and <code class="docutils literal notranslate"><span class="pre">description</span></code> (str): the unit and English description from the KPI catalogue.</p></li>
-</ul>
-<p>Which KPIs appear depends on the scenario’s assets and services. <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.scorecard" title="citylearn.citylearn.CityLearnEnv.scorecard"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scorecard()</span></code></a> selects the
-default subset. The KPI catalogue lists every name and the KPI reference guide defines every family.
-<a class="reference internal" href="citylearn.multi_community.html#citylearn.multi_community.MultiCommunityEnv.evaluate_v2" title="citylearn.multi_community.MultiCommunityEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">citylearn.multi_community.MultiCommunityEnv.evaluate_v2()</span></code></a> returns these rows for each
-community, with a <code class="docutils literal notranslate"><span class="pre">community_id</span></code> column, plus <code class="docutils literal notranslate"><span class="pre">'portfolio'</span></code> rows aggregated from the district rows.</p>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pandas.DataFrame</p>
-</dd>
-</dl>
+<dd><p>Evaluate v2 KPIs; optional progress callback receives scalar stage events.</p>
+<p>Callback failures are logged and disable reporting, preserving evaluation.
+No progress events or timings are added to the returned KPI table.</p>
+<p>With <cite>include_business_as_usual</cite>, the native BAU reference is rebuilt from the schema and
+the constructor arguments. A <cite>ValueError</cite> names the setting when it differs from this env as
+captured at its last <cite>reset()</cite>; see the baselines guide for the settings that are compared.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -661,7 +584,7 @@ community, with a <code class="docutils literal notranslate"><span class="pre">c
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>agent</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>'citylearn.agents.base.Agent</em><em>]</em><em>, </em><em>optional</em>) – Agent class or string describing path to agent class, e.g. ‘citylearn.agents.base.NoControlAgent’.
+<li><p><strong>agent</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>'citylearn.agents.base.Agent</em><em>]</em><em>, </em><em>optional</em>) – Agent class or string describing path to agent class, e.g. ‘citylearn.agents.base.BaselineAgent’.
 If a value is not provided, defaults to the agent defined in the schema:agent:type.</p></li>
 <li><p><strong>**kwargs</strong> (<em>dict</em>) – Agent initialization attributes. For most agents e.g. CityLearn and Stable-Baselines3 agents,
 an intialized <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> must be parsed to the agent <code class="xref py py-meth docutils literal notranslate"><span class="pre">init()</span></code> function.
@@ -932,29 +855,6 @@ False to split episodes in steps of <cite>episode_time_steps</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.scorecard">
-<span class="sig-name descname"><span class="pre">scorecard</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kpis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">evaluate_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/citylearn/citylearn.html#CityLearnEnv.scorecard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.scorecard" title="Link to this definition"></a></dt>
-<dd><p>Return the default scorecard: the rows of <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.evaluate_v2" title="citylearn.citylearn.CityLearnEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a> named in <cite>SCORECARD_DEFAULT_KPIS</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>kpis</strong> (<em>pandas.DataFrame</em><em>, </em><em>optional</em>) – A table returned by <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.evaluate_v2" title="citylearn.citylearn.CityLearnEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a>. When omitted, <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.evaluate_v2" title="citylearn.citylearn.CityLearnEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a> is called with
-<cite>evaluate_kwargs</cite>.</p></li>
-<li><p><strong>level</strong> (<em>str</em><em>, </em><em>optional</em>) – Keep only <code class="docutils literal notranslate"><span class="pre">'district'</span></code> or <code class="docutils literal notranslate"><span class="pre">'building'</span></code> rows.</p></li>
-<li><p><strong>**evaluate_kwargs</strong> (<em>Any</em>) – Arguments of <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.evaluate_v2" title="citylearn.citylearn.CityLearnEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a>, used only when <cite>kpis</cite> is omitted.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The selected rows, with the columns of <a class="reference internal" href="#citylearn.citylearn.CityLearnEnv.evaluate_v2" title="citylearn.citylearn.CityLearnEnv.evaluate_v2"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_v2()</span></code></a>, in the order of
-<cite>SCORECARD_DEFAULT_KPIS</cite> and then by building name. KPIs that do not apply to the scenario are absent.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pandas.DataFrame</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.set_experiment_identity">
 <span class="sig-name descname"><span class="pre">set_experiment_identity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">implementation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observation_access</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'agent_payload'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/citylearn.html#CityLearnEnv.set_experiment_identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.set_experiment_identity" title="Link to this definition"></a></dt>
 <dd><p>Declare the controller used for exported paired comparisons.</p>
@@ -1001,13 +901,6 @@ False to split episodes in steps of <cite>episode_time_steps</cite>.</p>
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.time_step_ratio" title="Link to this definition"></a></dt>
 <dd><p><a class="reference internal" href="citylearn.base.html#citylearn.base.EpisodeTracker" title="citylearn.base.EpisodeTracker"><code class="xref py py-class docutils literal notranslate"><span class="pre">citylearn.base.EpisodeTracker</span></code></a> object used to keep track of
 current episode time steps for reading observations from data files.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="citylearn.citylearn.CityLearnEnv.time_step_ratio_mode">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step_ratio_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#citylearn.citylearn.CityLearnEnv.time_step_ratio_mode" title="Link to this definition"></a></dt>
-<dd><p><cite>‘reject’</cite> (default) refuses a control step that differs from the dataset step; <cite>‘compress’</cite> keeps
-the CityLearn 3.6.0 behaviour of reading one data row per control step and scaling energies.</p>
 </dd></dl>
 
 <dl class="py property">

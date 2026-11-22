@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -28,7 +28,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Default scorecard KPI names" href="scorecard_kpi_names.html" />
-    <link rel="prev" title="KPIs" href="../kpis.html" /> 
+    <link rel="prev" title="KPIs" href="../kpis.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,18 +53,17 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
               <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
@@ -75,53 +77,47 @@
 <p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../kpis.html">KPIs</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../kpis.html#choose-what-to-read">Choose what to read</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">How to read the scorecard</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#start-with-these-questions">Start with these questions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#build-a-compact-scorecard">Build a compact scorecard</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#two-different-baselines">Two different baselines</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#ev-service-versus-target-accuracy">EV service versus target accuracy</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#extend-the-scorecard-for-your-experiment">Extend the scorecard for your experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How to read the scorecard</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#start-with-these-questions">Start with these questions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-a-compact-scorecard">Build a compact scorecard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#two-different-baselines">Two different baselines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ev-service-versus-target-accuracy">EV service versus target accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#extend-the-scorecard-for-your-experiment">Extend the scorecard for your experiment</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l3"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="KPI_V2_TREE.html">KPI catalogue</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../kpis.html#list-the-kpis-in-your-run">List the KPIs in your run</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../kpis.html#families">Families</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../kpis.html#which-kpi-to-use">Which KPI to use</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">History</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
-</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
 
         </div>
       </div>
@@ -137,7 +133,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../kpis.html">KPIs</a></li>
       <li class="breadcrumb-item active">How to read the scorecard</li>
       <li class="wy-breadcrumbs-aside">
               <!-- User defined GitHub URL -->
@@ -148,11 +143,12 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
 <div class="admonition note citylearn-version-note" role="note">
-  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
-  listed under <a href="releases.html">Unreleased</a>, which the latest release,
-  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
-  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
-  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
 </div>
 
            <div itemprop="articleBody">
@@ -206,13 +202,12 @@ weighted score. Keep the full KPI export so each headline result can be traced.<
 </tr>
 <tr class="row-even"><td><p>How demanding was the import profile?</p></td>
 <td><p>Peak and load-factor-penalty ratios to BAU</p></td>
-<td><p>Below 1 is lower than BAU and above 1 is higher. Load-factor penalties use import power; peaks use signed net power, so a community that exports at every step has a zero or negative peak (see <a class="reference internal" href="kpis_reference.html#grid-energy-and-load-shape"><span class="std std-ref">grid energy and load shape</span></a>).</p></td>
+<td><p>For these non-negative penalty/peak ratios, below 1 is lower than BAU and above 1 is higher.</p></td>
 </tr>
 </tbody>
 </table>
-<p>The simulator defines a default selection for both building and district rows,
-which <code class="docutils literal notranslate"><span class="pre">env.scorecard()</span></code> returns. The
-<a class="reference external" href="scorecard_kpi_names.html">exact default names</a>
+<p>The simulator defines a default selection for both building and district rows.
+The <a class="reference external" href="scorecard_kpi_names.html">exact default names</a>
 are generated from that selection when the documentation is built.</p>
 </section>
 <section id="build-a-compact-scorecard">
@@ -256,10 +251,7 @@ for PV self-consumption. <code class="docutils literal notranslate"><span class=
 <p>Do not mix <code class="docutils literal notranslate"><span class="pre">ratio_to_baseline</span></code> and <code class="docutils literal notranslate"><span class="pre">ratio_to_business_as_usual</span></code> columns in a
 comparison without identifying the reference. A ratio is dimensionless.
 For a zero denominator the safe division rule returns 1 when both values are
-effectively zero, and a missing value when the numerator is non-zero. The
-flexible-appliance ratios to the BAU are the exception: they are missing when
-both of their totals are zero (see
-<a class="reference internal" href="kpis_reference.html#shared-rules"><span class="std std-ref">shared rules</span></a>).</p>
+effectively zero, and a missing value when the numerator is non-zero.</p>
 </section>
 <section id="ev-service-versus-target-accuracy">
 <h2>EV service versus target accuracy<a class="headerlink" href="#ev-service-versus-target-accuracy" title="Link to this heading"></a></h2>
@@ -306,14 +298,12 @@ complement the default selection:</p>
 </tr>
 </tbody>
 </table>
-<p>The absolute peaks are <code class="docutils literal notranslate"><span class="pre">district_energy_grid_shape_quality_peak_all_time_average_control_kw</span></code>
-and its <code class="docutils literal notranslate"><span class="pre">_business_as_usual_kw</span></code> counterpart; do not label a peak ratio as kW.
+<p>An absolute peak in kW can be calculated from the recorded step energy divided
+by the timestep duration in hours. Do not label a normalized peak ratio as kW.
 For DR experiments add request, delivery, compliance, shortfall and net revenue;
-for thermal studies add <code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_discomfort_ratio</span></code>, the
-canonical discomfort KPI, with its coverage counts; for failure studies add the
-robustness counters.</p>
+for thermal studies add comfort; for failure studies add the robustness counters.</p>
 <p>Use the <a class="reference internal" href="kpis_reference.html"><span class="std std-doc">KPI reference</span></a> for units and definitions, the
-<a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">KPI catalogue</span></a> for every other name and the
+<a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">naming catalogue</span></a> for further names and the
 <a class="reference external" href="../ui.html">UI guide</a> for visual comparisons.</p>
 </section>
 </section>

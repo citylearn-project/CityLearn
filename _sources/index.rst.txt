@@ -17,11 +17,9 @@ Start here
 **********
 
 * :doc:`installation`: install the package and optional dependencies.
-* :doc:`quickstart`: run your first complete simulation and compare a controller with the BAU.
-* :doc:`glossary` and :doc:`overview/index`: the terms and the model behind them.
-* :doc:`guides/dataset_catalogue`: choose a public dataset.
+* :doc:`quickstart`: run your first complete simulation.
 * :doc:`guides/features`: choose and configure available features.
-* :doc:`kpis`: read and compare the results.
+* :doc:`guides/scorecard`: interpret costs, energy and service together.
 
 .. figure:: ../../assets/images/citylearn-v3-overview.png
    :width: 680px
@@ -68,12 +66,11 @@ for the bibliography.
    :hidden:
    :maxdepth: 2
    :caption: Getting started
-
+   
    installation
    quickstart
-   glossary
-   overview/index
    guides/features
+   guides/migration
 
 .. toctree::
    :hidden:
@@ -81,7 +78,6 @@ for the bibliography.
    :caption: Configure and run
 
    guides/running_simulations
-   guides/dataset_catalogue
    guides/schema_reference
    guides/dataset_reference
    guides/portugal_rec_datasets
@@ -94,11 +90,15 @@ for the bibliography.
 
 .. toctree::
    :hidden:
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Evaluate
 
    guides/baselines
    kpis
+   guides/scorecard
+   guides/scorecard_kpi_names
+   guides/kpis_reference
+   guides/KPI_V2_TREE
 
 .. toctree::
    :hidden:
@@ -110,11 +110,13 @@ for the bibliography.
 .. toctree::
    :hidden:
    :maxdepth: 1
-   :caption: Tutorials and reference
+   :caption: Concepts and tutorials
 
+   overview/index
    usage/index
    cli
-   python_api
+   Python API <api/modules>
+   citylearn_challenge/index
 
 .. toctree::
    :hidden:
@@ -124,19 +126,11 @@ for the bibliography.
    publications
    references
    contributing
-   guides/migration
    guides/validation
    guides/developer_guide
    guides/publishing
    guides/releases
    Earlier releases <guides/releases_archive>
-
-.. toctree::
-   :hidden:
-   :maxdepth: 1
-   :caption: History
-
-   citylearn_challenge/index
 
 .. _cite-citylearn:
 

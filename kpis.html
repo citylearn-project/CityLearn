@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="_static/citylearn.css?v=cc618840" />
+      <link rel="stylesheet" type="text/css" href="_static/citylearn.css?v=867a8231" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
@@ -28,7 +28,10 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="How to read the scorecard" href="guides/scorecard.html" />
-    <link rel="prev" title="Baselines" href="guides/baselines.html" /> 
+    <link rel="prev" title="Baselines" href="guides/baselines.html" />
+ 
+<script src="_static/version_switcher.js" defer></script>
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,18 +53,17 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
               <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Your first simulation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="guides/running_simulations.html">Running Simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guides/dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
@@ -76,45 +78,44 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="guides/baselines.html">Baselines</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">KPIs</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#choose-what-to-read">Choose what to read</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="guides/scorecard.html">How to read the scorecard</a></li>
-<li class="toctree-l3"><a class="reference internal" href="guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
-<li class="toctree-l3"><a class="reference internal" href="guides/kpis_reference.html">KPIs Reference</a></li>
-<li class="toctree-l3"><a class="reference internal" href="guides/KPI_V2_TREE.html">KPI catalogue</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#choose-what-to-read">Choose what to read</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#list-the-kpis-in-your-run">List the KPIs in your run</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#families">Families</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#which-kpi-to-use">Which KPI to use</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#main-families">Main families</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="guides/migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/validation.html">Validation and performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/developer_guide.html">Developer Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/publishing.html">Publishing CityLearn</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides/releases_archive.html">Earlier releases</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">History</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="citylearn_challenge/index.html">The CityLearn Challenge</a></li>
-</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
 
         </div>
       </div>
@@ -139,11 +140,12 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
 <div class="admonition note citylearn-version-note" role="note">
-  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
-  listed under <a href="guides/releases.html">Unreleased</a>, which the latest release,
-  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
-  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
-  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
 </div>
 
            <div itemprop="articleBody">
@@ -152,56 +154,32 @@
 <h1>KPIs<a class="headerlink" href="#kpis" title="Link to this heading"></a></h1>
 <p>KPIs measure the completed simulation: energy, cost, emissions, service,
 comfort and electrical performance. They are available from Python and CSV
-exports; using the UI is optional. This page is the entry point to every KPI
-page.</p>
+exports; using the UI is optional.</p>
 <section id="choose-what-to-read">
 <h2>Choose what to read<a class="headerlink" href="#choose-what-to-read" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="guides/scorecard.html"><span class="doc">How to read the scorecard</span></a> — start here: how to read a compact set of KPIs and
-compare controllers.</p></li>
-<li><p><a class="reference internal" href="guides/scorecard_kpi_names.html"><span class="doc">Default scorecard KPI names</span></a> — the default selection, returned by
-<code class="docutils literal notranslate"><span class="pre">env.scorecard()</span></code>.</p></li>
-<li><p><a class="reference internal" href="guides/kpis_reference.html"><span class="doc">KPIs Reference</span></a> — what each family measures, its equations,
-district and portfolio aggregation, and undefined values.</p></li>
-<li><p><a class="reference internal" href="guides/KPI_V2_TREE.html"><span class="doc">KPI catalogue</span></a> — the KPI catalogue: every name the simulator emits,
-with its meaning, grouped by family. A test fails when an emitted name is
-missing from it.</p></li>
-<li><p><a class="reference internal" href="guides/baselines.html"><span class="doc">Baselines</span></a> — the references behind <code class="docutils literal notranslate"><span class="pre">baseline</span></code> and
-<code class="docutils literal notranslate"><span class="pre">business_as_usual</span></code> values.</p></li>
-<li><p><a class="reference internal" href="overview/cost_function.html"><span class="doc">Cost Function</span></a> — the legacy cost functions of <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code>.</p></li>
+<li><p><a class="reference internal" href="guides/kpis_reference.html"><span class="doc">KPIs Reference</span></a> — definitions, units, equations and metric families.</p></li>
+<li><p><a class="reference internal" href="guides/KPI_V2_TREE.html"><span class="doc">KPI v2 Naming Tree</span></a> — names grouped by district/building and family.</p></li>
+<li><p><a class="reference internal" href="guides/baselines.html"><span class="doc">Baselines</span></a> — the reference behind normalized results.</p></li>
+<li><p><a class="reference internal" href="guides/scorecard.html"><span class="doc">How to read the scorecard</span></a> — a compact set for comparing controllers.</p></li>
+<li><p><a class="reference internal" href="guides/scorecard_kpi_names.html"><span class="doc">Default scorecard KPI names</span></a> — the simulator’s exact default selection.</p></li>
 </ul>
-<div class="toctree-wrapper compound">
-</div>
 </section>
 <section id="list-the-kpis-in-your-run">
 <h2>List the KPIs in your run<a class="headerlink" href="#list-the-kpis-in-your-run" title="Link to this heading"></a></h2>
 <p>After completing an episode:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
-<span class="n">names</span> <span class="o">=</span> <span class="n">kpis</span><span class="p">[[</span><span class="s2">"cost_function"</span><span class="p">,</span> <span class="s2">"level"</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">,</span> <span class="s2">"description"</span><span class="p">]]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+<span class="n">names</span> <span class="o">=</span> <span class="n">kpis</span><span class="p">[[</span><span class="s2">"cost_function"</span><span class="p">,</span> <span class="s2">"level"</span><span class="p">]]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">names</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"cost_function"</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
 <span class="n">kpis</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"kpis.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The table starts with <code class="docutils literal notranslate"><span class="pre">cost_function</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code> and <code class="docutils literal notranslate"><span class="pre">level</span></code>,
-followed by <code class="docutils literal notranslate"><span class="pre">unit</span></code> and a short English <code class="docutils literal notranslate"><span class="pre">description</span></code> from the catalogue.
-<code class="docutils literal notranslate"><span class="pre">level</span></code> is <code class="docutils literal notranslate"><span class="pre">building</span></code> (one row per member, <code class="docutils literal notranslate"><span class="pre">name</span></code> is the building) or
-<code class="docutils literal notranslate"><span class="pre">district</span></code> (one row for the community, <code class="docutils literal notranslate"><span class="pre">name</span></code> is <code class="docutils literal notranslate"><span class="pre">District</span></code>).
-<code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv.evaluate_v2()</span></code> adds a <code class="docutils literal notranslate"><span class="pre">community_id</span></code> column and
-<code class="docutils literal notranslate"><span class="pre">portfolio</span></code> rows that aggregate the communities’ district rows; the
-<a class="reference internal" href="guides/kpis_reference.html"><span class="doc">KPIs Reference</span></a> gives the aggregation rules.
-Most KPI names end in a unit token such as <code class="docutils literal notranslate"><span class="pre">kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">kw</span></code> or <code class="docutils literal notranslate"><span class="pre">ratio</span></code>.
-Use the <code class="docutils literal notranslate"><span class="pre">unit</span></code> column for the display unit. Feature-specific rows follow the scenario configuration, and a
-KPI that is undefined for the run, such as a service ratio without any event to
-serve, is missing (NaN) rather than 0 or 1.</p>
-<p>To keep only the default scorecard rows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">scorecard</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">scorecard</span><span class="p">(</span><span class="n">kpis</span><span class="p">)</span>
-</pre></div>
-</div>
+<p>The table contains <code class="docutils literal notranslate"><span class="pre">cost_function</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code> and <code class="docutils literal notranslate"><span class="pre">level</span></code>.
+<code class="docutils literal notranslate"><span class="pre">name</span></code> identifies the building or district; <code class="docutils literal notranslate"><span class="pre">level</span></code> identifies the scope.
+Feature-specific rows follow the scenario configuration.</p>
 </section>
-<section id="families">
-<h2>Families<a class="headerlink" href="#families" title="Link to this heading"></a></h2>
-<p>Every KPI belongs to one of these families. The <a class="reference internal" href="guides/KPI_V2_TREE.html"><span class="doc">KPI catalogue</span></a> lists
-their names and the <a class="reference internal" href="guides/kpis_reference.html"><span class="doc">KPIs Reference</span></a> explains each one.</p>
+<section id="main-families">
+<h2>Main families<a class="headerlink" href="#main-families" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 30.0%" />
@@ -213,91 +191,35 @@ their names and the <a class="reference internal" href="guides/kpis_reference.ht
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Cost</p></td>
-<td><p>Operating cost, against the conventional baseline and the BAU.</p></td>
+<tr class="row-even"><td><p>Cost and grid energy</p></td>
+<td><p>Operating cost, imports, exports, net exchange, peaks and ramping.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Grid energy and load shape</p></td>
-<td><p>Imports, exports, net exchange, peaks, load factor and ramping.</p></td>
+<tr class="row-odd"><td><p>Emissions and PV</p></td>
+<td><p>Carbon emissions, generation and local solar self-consumption.</p></td>
 </tr>
-<tr class="row-even"><td><p>Emissions</p></td>
-<td><p>Carbon emissions of the grid import.</p></td>
+<tr class="row-even"><td><p>EVs and batteries</p></td>
+<td><p>Departure service, target accuracy, charging, V2G, throughput and degradation.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Solar self-consumption</p></td>
-<td><p>PV generation, export, curtailment and the share used locally.</p></td>
+<tr class="row-odd"><td><p>Electrical service</p></td>
+<td><p>Residual violations, requested pressure and phase indicators.</p></td>
 </tr>
-<tr class="row-even"><td><p>Community market</p></td>
-<td><p>Local trading, settled and counterfactual costs, savings and local shares.</p></td>
+<tr class="row-even"><td><p>Flexible loads and escalators</p></td>
+<td><p>Completed/missed cycles, delays, energy and passenger service.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Batteries</p></td>
-<td><p>Charge, discharge, throughput, equivalent full cycles and capacity fade.</p></td>
+<tr class="row-odd"><td><p>Comfort and resilience</p></td>
+<td><p>Thermal discomfort and service during outages.</p></td>
 </tr>
-<tr class="row-even"><td><p>Electrical service and phases</p></td>
-<td><p>Limit violations, requested pressure, phase imbalance and phase peaks.</p></td>
+<tr class="row-even"><td><p>Community market and equity</p></td>
+<td><p>Local exchange, settlement costs, savings and their distribution.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Electric vehicles</p></td>
-<td><p>Departure service, target accuracy, charging and V2G.</p></td>
-</tr>
-<tr class="row-even"><td><p>EV departure audit</p></td>
-<td><p>Departure service by feasibility class, with population and coverage counts.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Flexible appliances</p></td>
-<td><p>Completed and missed cycles, start delay and served energy.</p></td>
-</tr>
-<tr class="row-even"><td><p>Flexible-appliance audit</p></td>
-<td><p>Cycle service from metered energy, with admissibility and coverage counts.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Escalators</p></td>
-<td><p>Passenger service, operating-state changes and electricity use.</p></td>
-</tr>
-<tr class="row-even"><td><p>Comfort and resilience</p></td>
-<td><p>Thermal discomfort and service during outages, per building.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Thermal-service audit</p></td>
-<td><p>Discomfort and unserved thermal energy pooled over occupied steps.</p></td>
-</tr>
-<tr class="row-even"><td><p>Equity</p></td>
-<td><p>The distribution of cost benefits between members.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Equity audit</p></td>
-<td><p>The same distribution, with population and coverage counts.</p></td>
-</tr>
-<tr class="row-even"><td><p>Demand response</p></td>
+<tr class="row-odd"><td><p>Demand response</p></td>
 <td><p>Requested, delivered and credited response, shortfall and settlement.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Demand-response audit</p></td>
-<td><p>Request service and baseline coverage by request purpose.</p></td>
-</tr>
 <tr class="row-even"><td><p>Robustness</p></td>
-<td><p>Observation, forecast, action and asset perturbation counters.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Energy provenance</p></td>
-<td><p>Where PV, grid and stored energy went, and the carbon it carried.</p></td>
-</tr>
-<tr class="row-even"><td><p>Dynamic topology</p></td>
-<td><p>A placeholder row for members that never joined.</p></td>
+<td><p>Measurement, action and availability perturbation counters.</p></td>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="which-kpi-to-use">
-<h2>Which KPI to use<a class="headerlink" href="#which-kpi-to-use" title="Link to this heading"></a></h2>
-<p>Some quantities have more than one row. Use these for comparisons:</p>
-<ul class="simple">
-<li><p><strong>Discomfort:</strong> <code class="docutils literal notranslate"><span class="pre">district_thermal_service_audit_discomfort_ratio</span></code>, which pools
-occupied steps over the members. <code class="docutils literal notranslate"><span class="pre">district_comfort_resilience_*</span></code> rows are
-plain means of the building values.</p></li>
-<li><p><strong>Benefit inequality:</strong> <code class="docutils literal notranslate"><span class="pre">district_equity_audit_positive_benefit_gini_ratio</span></code>.
-It has the same value as <code class="docutils literal notranslate"><span class="pre">district_equity_distribution_gini_benefit_ratio</span></code>, but its name
-states that negative benefits are clipped, and its coverage counts are reported
-with it.</p></li>
-<li><p><strong>Local share of demand:</strong> <code class="docutils literal notranslate"><span class="pre">district_solar_self_consumption_community_market_import_share_ratio</span></code>.
-<code class="docutils literal notranslate"><span class="pre">district_solar_self_consumption_community_market_local_share_of_demand_ratio</span></code>
-has the same formula and is kept as an alias; at building level,
-<code class="docutils literal notranslate"><span class="pre">local_share_of_demand</span></code> is the only demand-share row.</p></li>
-<li><p><strong>EV and flexible-appliance service:</strong> the audit rows count every departure or
-cycle and classify its feasibility; the <a class="reference internal" href="guides/kpis_reference.html"><span class="doc">KPIs Reference</span></a> explains
-when to read the service rows instead.</p></li>
-</ul>
 <p><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> retains historical cost-function names. <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> is the
 structured KPI API used by CityLearn v3; its method name is not a software
 version number.</p>

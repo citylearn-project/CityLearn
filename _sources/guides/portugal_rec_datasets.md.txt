@@ -13,8 +13,7 @@ and reproducible inputs.
 
 The datasets are edition v3.4 of *Synthetic electricity demand and flexibility
 datasets for Portuguese energy communities* (Fonseca et al.), distributed with
-CityLearn from 3.5.0. Their time series are Parquet files, so install CityLearn
-with the `parquet` extra, `pip install "citylearn[parquet]"`, which adds pyarrow.
+CityLearn from 3.5.0.
 
 ## Datasets
 
@@ -184,7 +183,7 @@ When you use the data, cite the dataset and its article:
 
 - Fonseca et al., *Synthetic electricity demand and flexibility datasets for
   Portuguese energy communities*, dataset edition v3.4. Zenodo, DOI
-  10.5281/zenodo.24182353 (reserved; it resolves once the record is published,
-  so it is not linked yet).
+  [10.5281/zenodo.24182353](https://doi.org/10.5281/zenodo.24182353) (reserved;
+  registered on publication).
 - Fonseca et al., "Synthetic electricity demand and flexibility datasets for
   Portuguese energy communities", *Scientific Data* (under review).

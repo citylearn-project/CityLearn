@@ -1,0 +1,380 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Features and configuration &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Moving an existing project to CityLearn v3" href="migration.html" />
+    <link rel="prev" title="Your first simulation" href="../quickstart.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Features and configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#buildings-thermal-systems-and-storage">Buildings, thermal systems and storage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#photovoltaics-and-batteries">Photovoltaics and batteries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#electric-vehicles-and-chargers">Electric vehicles and chargers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flexible-appliances">Flexible appliances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#escalators">Escalators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#electrical-service-and-phase-limits">Electrical-service and phase limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#local-energy-sharing-and-settlement">Local energy sharing and settlement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demand-response-requests">Demand-response requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#changing-members-and-assets">Changing members and assets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-and-equipment-failures">Data and equipment failures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#time-resolution-and-dataset-formats">Time resolution and dataset formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flat-vectors-and-entity-tables">Flat vectors and entity tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multiple-communities">Multiple communities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#controllers-rewards-and-repeated-actions">Controllers, rewards and repeated actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#evaluation-exports-and-performance">Evaluation, exports and performance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Features and configuration</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/features.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="features-and-configuration">
+<h1>Features and configuration<a class="headerlink" href="#features-and-configuration" title="Link to this heading"></a></h1>
+<p>Start with the <a class="reference external" href="../quickstart.html">first simulation</a>,
+then choose the conditions your controller should handle. Features are configured
+in the schema or environment arguments; the same simulation loop runs the episode.</p>
+<section id="buildings-thermal-systems-and-storage">
+<h2>Buildings, thermal systems and storage<a class="headerlink" href="#buildings-thermal-systems-and-storage" title="Link to this heading"></a></h2>
+<p>A community contains buildings with electricity demand and optional cooling,
+heating and domestic-hot-water systems. Thermal storage shifts when energy is
+supplied; dynamic-temperature building models allow HVAC control to affect indoor
+temperature. Comfort and outage indicators report the resulting service.</p>
+<p>Choose devices under each building’s schema entry and enable their actions.
+<a class="reference internal" href="schema_reference.html#device-sections"><span class="std std-ref">Device configuration</span></a>,
+<a class="reference internal" href="actions_reference.html#flat-actions"><span class="std std-ref">action meanings</span></a> and
+<a class="reference internal" href="kpis_reference.html#kpi-families"><span class="std std-ref">comfort KPIs</span></a> provide the details.</p>
+</section>
+<section id="photovoltaics-and-batteries">
+<h2>Photovoltaics and batteries<a class="headerlink" href="#photovoltaics-and-batteries" title="Link to this heading"></a></h2>
+<p><img alt="PV generation, battery charge/discharge, building demand and grid exchange share the building connection." src="../_images/pv-storage-flow.svg" /></p>
+<p>PV can use a normalized per-kW generation profile or measured generation in
+<code class="docutils literal notranslate"><span class="pre">kWh/step</span></code> with <code class="docutils literal notranslate"><span class="pre">generation_mode=&quot;absolute&quot;</span></code>. Stationary batteries have capacity,
+SOC, charging/discharging power, efficiency and degradation parameters. Positive
+storage actions charge and negative actions discharge; physical and connection
+limits determine the applied energy.</p>
+<p>See <a class="reference internal" href="schema_reference.html#pv"><span class="std std-ref">PV configuration</span></a>, the
+<a class="reference internal" href="data_unit_contract.html"><span class="std std-doc">unit contract</span></a> and <a class="reference internal" href="actions_reference.html#physical-conversion"><span class="std std-ref">storage actions</span></a>.</p>
+</section>
+<section id="electric-vehicles-and-chargers">
+<h2>Electric vehicles and chargers<a class="headerlink" href="#electric-vehicles-and-chargers" title="Link to this heading"></a></h2>
+<p><img alt="An EV's connection window runs from arrival SOC to a required departure SOC, with charging actions while connected." src="../_images/ev-service-window.svg" /></p>
+<p>Charger schedules identify connected and incoming EVs, arrival/departure times
+and required departure SOC. Charger-centric actions control the connected EV;
+negative actions permit V2G when discharging power is available. EV and charger
+identities remain separate so different vehicles can use the same charger.</p>
+<p>Configure <a class="reference internal" href="schema_reference.html#chargers"><span class="std std-ref">chargers</span></a> and
+<a class="reference internal" href="schema_reference.html#ev-definitions"><span class="std std-ref">EV definitions</span></a>. Read minimum departure
+service and symmetric target accuracy separately in the <a class="reference internal" href="scorecard.html"><span class="std std-doc">scorecard</span></a>.
+A runnable public example is <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>.</p>
+</section>
+<section id="flexible-appliances">
+<h2>Flexible appliances<a class="headerlink" href="#flexible-appliances" title="Link to this heading"></a></h2>
+<p>A normalized cycle catalogue describes consumption over a cycle. A separate
+schedule gives the earliest start, latest start and completion deadline.
+The action requests a start; the simulator checks that the complete cycle fits
+the window and episode before applying it. Completion, missed cycles and delay
+are recorded as service indicators.</p>
+<p>See <a class="reference internal" href="schema_reference.html#deferrable-appliances"><span class="std std-ref">configuration</span></a> and
+<a class="reference internal" href="actions_reference.html#deferrable-appliance-start-logic"><span class="std std-ref">start logic</span></a>.
+The public EV example above includes flexible-appliance configuration.</p>
+</section>
+<section id="escalators">
+<h2>Escalators<a class="headerlink" href="#escalators" title="Link to this heading"></a></h2>
+<p>The flat interface supports an aggregate standby/slow/normal escalator model.
+A normalized action selects one of those states; demand and availability inputs
+determine passenger-service indicators and energy use. This is a state-and-demand
+model, not an individual passenger or queue simulation.</p>
+<p>Provide your own schedule using the <a class="reference internal" href="schema_reference.html#escalators-flat-interface"><span class="std std-ref">escalator schema</span></a>.
+The <a class="reference internal" href="actions_reference.html#escalator-control"><span class="std std-ref">actions guide</span></a> explains state
+thresholds.</p>
+</section>
+<section id="electrical-service-and-phase-limits">
+<h2>Electrical-service and phase limits<a class="headerlink" href="#electrical-service-and-phase-limits" title="Link to this heading"></a></h2>
+<p>Buildings can have total and per-phase active-power import/export limits.
+Storage and chargers can be assigned phase connections. The simulator records
+requested, limited and applied actions alongside headroom and phase power,
+allowing a study to distinguish an excessive request from a residual exceedance
+after constraint handling.</p>
+<p>Configure <code class="docutils literal notranslate"><span class="pre">buildings.&lt;name&gt;.electrical_service</span></code> using the
+<a class="reference internal" href="schema_reference.html#buildings"><span class="std std-ref">schema reference</span></a>. Start with
+<code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo</span></code>. These are active-power
+connection constraints; they do not calculate feeder voltage or AC power flow.
+See <a class="reference internal" href="kpis_reference.html#electrical-service-and-phase-kpis"><span class="std std-ref">electrical KPIs</span></a>.</p>
+<p>The import limit can also vary in time. An <a class="reference internal" href="schema_reference.html#available-grid-power"><span class="std std-ref">available grid power</span></a>
+series lowers it below the connection capacity per step, for example when a distribution system
+operator dims controllable devices or reduces capacity during grid stress. Controllers can
+observe the limit for the coming interval as <code class="docutils literal notranslate"><span class="pre">available_grid_power</span></code>.</p>
+</section>
+<section id="local-energy-sharing-and-settlement">
+<h2>Local energy sharing and settlement<a class="headerlink" href="#local-energy-sharing-and-settlement" title="Link to this heading"></a></h2>
+<p>Enable <code class="docutils literal notranslate"><span class="pre">community_market.enabled</span></code> to match same-timestep surplus and demand
+among members. Local prices and importer weights determine financial allocation;
+exports expose settled costs, the grid-only counterfactual and savings for each
+member and the community. Settlement values the recorded physical trajectory.</p>
+<p>Configure the <a class="reference internal" href="schema_reference.html#community-market"><span class="std std-ref">community market</span></a>.
+Residual grid exports currently receive zero remuneration. Local settlement
+is within a community; multi-community reporting is described below.</p>
+</section>
+<section id="demand-response-requests">
+<h2>Demand-response requests<a class="headerlink" href="#demand-response-requests" title="Link to this heading"></a></h2>
+<p>A requests file supplies DSO/TSO activation windows, direction, target power,
+payment, tolerance and shortfall penalty. Use entity mode and enable the
+<code class="docutils literal notranslate"><span class="pre">entity_demand_response</span></code> observation bundle to expose active requests.
+Controllers respond through the existing storage, EV and flexible-load actions.</p>
+<p>The baseline is the mean net power over the configured pre-event history window,
+frozen for that request. Delivered energy, credited response and penalized
+shortfall are separate quantities. See the <a class="reference internal" href="schema_reference.html#demand-response"><span class="std std-ref">request format and baseline</span></a>
+and <a class="reference internal" href="kpis_reference.html#demand-response-kpis"><span class="std std-ref">settlement KPIs</span></a>.
+Use <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_demand_response</span></code> for a public example.</p>
+</section>
+<section id="changing-members-and-assets">
+<h2>Changing members and assets<a class="headerlink" href="#changing-members-and-assets" title="Link to this heading"></a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">interface=&quot;entity&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">topology_mode=&quot;dynamic&quot;</span></code>, scheduled events add or
+remove members, chargers, PV, storage and flexible appliances. Stable identifiers,
+lifecycle metadata and refreshed spaces/specifications let controllers track
+these changes. Reset reconstructs the initial scenario for the next episode.</p>
+<p>See <a class="reference internal" href="schema_reference.html#dynamic-topology"><span class="std std-ref">topology events</span></a> and
+<a class="reference internal" href="interfaces_flat_entity.html"><span class="std std-doc">entity specifications</span></a>.
+Public examples include <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_topology_demo</span></code> and
+<code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet</span></code>.</p>
+</section>
+<section id="data-and-equipment-failures">
+<h2>Data and equipment failures<a class="headerlink" href="#data-and-equipment-failures" title="Link to this heading"></a></h2>
+<p>Optional robustness events alter controller-visible measurements or forecasts,
+drop/delay/corrupt actions, or make asset channels unavailable. The event file
+sets targets, time windows and perturbations. Measurement corruption leaves the
+physical state intact; action-channel changes can affect actual consumption.</p>
+<p>See the <a class="reference internal" href="robustness_reference.html"><span class="std std-doc">robustness guide</span></a> for all supported modes and
+the distinction between missing values and physical zero. The public example is
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_robustness</span></code>.</p>
+</section>
+<section id="time-resolution-and-dataset-formats">
+<h2>Time resolution and dataset formats<a class="headerlink" href="#time-resolution-and-dataset-formats" title="Link to this heading"></a></h2>
+<p>Use hourly or sub-hourly scenarios, including 15-minute, 5-minute, 1-minute and
+15-second data. Match the schema timestep to the input cadence and supply energy
+columns in <code class="docutils literal notranslate"><span class="pre">kWh/step</span></code>. Changing the timestep alone does not create measured
+high-frequency detail from hourly data.</p>
+<p>CSV and Parquet use the same column contract; Parquet is useful for large
+datasets. See the <a class="reference internal" href="dataset_reference.html"><span class="std std-doc">dataset guide</span></a> and
+<a class="reference internal" href="data_unit_contract.html"><span class="std std-doc">unit contract</span></a>. Begin large simulations with a short window.</p>
+<p>The <a class="reference internal" href="portugal_rec_datasets.html"><span class="std std-doc">Portugal REC datasets</span></a> are 15-minute Parquet
+communities of 4, 15, 30 and 100 members over 2023-2024. Their evaluation
+scenarios add topology changes, electrical limits, asset failures, outages and
+demand response.</p>
+</section>
+<section id="flat-vectors-and-entity-tables">
+<h2>Flat vectors and entity tables<a class="headerlink" href="#flat-vectors-and-entity-tables" title="Link to this heading"></a></h2>
+<p>Flat mode provides vectors per building, or a combined vector in central-agent
+mode. Entity mode provides identified tables, features, masks and relational
+edges. Observation bundles select forecasts, electrical headroom, service
+deadlines and action feedback. These inputs can be used by graph or
+Transformer controllers supplied by the researcher.</p>
+<p>The <a class="reference internal" href="interfaces_flat_entity.html"><span class="std std-doc">interface guide</span></a>,
+<a class="reference internal" href="observations_reference.html"><span class="std std-doc">observation reference</span></a> and
+<a class="reference internal" href="actions_reference.html"><span class="std std-doc">action reference</span></a> define the contracts.</p>
+</section>
+<section id="multiple-communities">
+<h2>Multiple communities<a class="headerlink" href="#multiple-communities" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> steps independent communities in lockstep and reports local
+and portfolio results. Children share timestep, episode length, interface and
+central-agent mode. Each keeps its own physical state, DR requests and settlement.
+The wrapper aggregates results; it does not physically transfer energy between
+communities or optimize inter-community dispatch.</p>
+<p>The <a class="reference internal" href="multi_community_reference.html"><span class="std std-doc">multi-community guide</span></a> includes a complete
+example using available public datasets.</p>
+</section>
+<section id="controllers-rewards-and-repeated-actions">
+<h2>Controllers, rewards and repeated actions<a class="headerlink" href="#controllers-rewards-and-repeated-actions" title="Link to this heading"></a></h2>
+<p>Use the built-in business-as-usual and rule-based agents, implement a custom
+controller, or integrate a learning algorithm. A reward guides training; KPIs
+evaluate the completed run. They need not optimize the same quantity.
+Check each controller/wrapper’s supported interface; classic RBC and standard
+RL wrappers use flat mode.</p>
+<p><code class="docutils literal notranslate"><span class="pre">step_many()</span></code> repeats an action while still advancing physics and services at
+every internal timestep. It returns accumulated rewards and the executed step
+count. See <a class="reference internal" href="running_simulations.html"><span class="std std-doc">simulation options</span></a> and the
+<a class="reference external" href="../usage/agents.html">controller tutorials</a>.</p>
+</section>
+<section id="evaluation-exports-and-performance">
+<h2>Evaluation, exports and performance<a class="headerlink" href="#evaluation-exports-and-performance" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> provides structured building/community KPIs. The
+<a class="reference internal" href="scorecard.html"><span class="std std-doc">scorecard</span></a> introduces a compact selection; the
+<a class="reference internal" href="kpis_reference.html"><span class="std std-doc">KPI reference</span></a> and <a class="reference internal" href="KPI_V2_TREE.html"><span class="std std-doc">naming catalogue</span></a>
+cover the wider output. Normalized ratios accompany raw energy, cost and service
+quantities rather than replacing them.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">render_mode=&quot;none&quot;</span></code> during training, or <code class="docutils literal notranslate"><span class="pre">&quot;end&quot;</span></code> for episode-end exports.
+Windowed loading, shared input caches, Parquet and selectable observation bundles
+help control runtime and memory costs. See <a class="reference internal" href="running_simulations.html#render-and-export"><span class="std std-ref">export options</span></a>,
+<a class="reference external" href="../ui.html">CityLearn UI</a> and the
+<a class="reference internal" href="developer_guide.html"><span class="std std-doc">developer guide</span></a> for validation and profiling.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../quickstart.html" class="btn btn-neutral float-left" title="Your first simulation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="migration.html" class="btn btn-neutral float-right" title="Moving an existing project to CityLearn v3" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

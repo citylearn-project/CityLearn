@@ -1,0 +1,269 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your first simulation &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5349f462"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Features and configuration" href="guides/features.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+ 
+<script src="_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Your first simulation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-happens-in-this-example">What happens in this example?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#read-the-results">Read the results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#next-steps">Next steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview/index.html">Core concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Your first simulation</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/quickstart.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="your-first-simulation">
+<h1>Your first simulation<a class="headerlink" href="#your-first-simulation" title="Link to this heading"></a></h1>
+<p>Install CityLearn as described in <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a>, save the following
+code as <code class="docutils literal notranslate"><span class="pre">first_simulation.py</span></code>, and run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">first_simulation.py</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.agents.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">BusinessAsUsualAgent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.citylearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnEnv</span>
+
+<span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span>
+    <span class="s2">"citylearn_challenge_2022_phase_all_plus_evs"</span><span class="p">,</span>
+    <span class="n">episode_time_steps</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+    <span class="n">interface</span><span class="o">=</span><span class="s2">"flat"</span><span class="p">,</span>
+    <span class="n">render_mode</span><span class="o">=</span><span class="s2">"none"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">BusinessAsUsualAgent</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
+<span class="n">observations</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">terminated</span> <span class="o">=</span> <span class="n">truncated</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="k">while</span> <span class="ow">not</span> <span class="p">(</span><span class="n">terminated</span> <span class="ow">or</span> <span class="n">truncated</span><span class="p">):</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">observations</span><span class="p">)</span>
+    <span class="n">observations</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
+
+<span class="n">kpis</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">evaluate_v2</span><span class="p">()</span>
+<span class="n">selected</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"district_cost_total_control_eur"</span><span class="p">,</span>
+    <span class="s2">"district_energy_grid_total_import_control_kwh"</span><span class="p">,</span>
+    <span class="s2">"district_ev_performance_departure_min_acceptable_feasible_ratio"</span><span class="p">,</span>
+    <span class="s2">"district_electrical_service_phase_violations_energy_total_kwh"</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">kpis</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+    <span class="p">(</span><span class="n">kpis</span><span class="p">[</span><span class="s2">"level"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"district"</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">kpis</span><span class="p">[</span><span class="s2">"cost_function"</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">selected</span><span class="p">),</span>
+    <span class="p">[</span><span class="s2">"cost_function"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">],</span>
+<span class="p">]</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">env</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="what-happens-in-this-example">
+<h2>What happens in this example?<a class="headerlink" href="#what-happens-in-this-example" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>The environment resolves a public dataset by name. On first use it downloads
+the data from the official repository at the installed package’s version tag
+and caches it locally. Internet access is needed for that download;
+no repository clone or private dataset is required.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reset(seed=0)</span></code> starts the episode and returns observations plus information.</p></li>
+<li><p>The built-in <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> selects actions. It charges connected EVs
+at once up to the user’s requested departure SOC, starts ready flexible
+appliances and uses stationary storage for PV self-consumption.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span></code> returns observations, rewards, termination, truncation and information,
+in that order. The loop stops when either termination flag is true.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> returns a table with <code class="docutils literal notranslate"><span class="pre">cost_function</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code> and
+<code class="docutils literal notranslate"><span class="pre">level</span></code> columns. The example prints four district/community indicators: cost, imported energy,
+feasible EV minimum service and residual phase-limit violation energy.</p></li>
+</ol>
+<p>This dataset uses hourly timesteps. The 24-state episode has 23 control
+transitions: the final state is the observation after the last action.
+Increase the episode window for a study covering more EV departures or service
+events.</p>
+</section>
+<section id="read-the-results">
+<h2>Read the results<a class="headerlink" href="#read-the-results" title="Link to this heading"></a></h2>
+<p>Start with total cost, imported energy, minimum EV departure service and
+electrical-limit violations. The <a class="reference internal" href="guides/scorecard.html"><span class="doc">How to read the scorecard</span></a> explains these together,
+including the distinction between service and target-SOC accuracy. The
+<a class="reference internal" href="guides/kpis_reference.html"><span class="doc">KPIs Reference</span></a> explains KPI families, units and baselines.</p>
+<p>To save the full KPI table:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">kpis</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"kpis.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> includes a native business-as-usual comparison by default.
+Use <code class="docutils literal notranslate"><span class="pre">include_business_as_usual=False</span></code> when you only need the current run and
+the conventional baseline; see <a class="reference internal" href="guides/scorecard.html"><span class="doc">How to read the scorecard</span></a> for the difference.</p>
+</section>
+<section id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="guides/features.html"><span class="doc">Features and configuration</span></a>: choose assets and services.</p></li>
+<li><p><a class="reference internal" href="guides/baselines.html"><span class="doc">Baselines</span></a>: understand the default controller and references.</p></li>
+<li><p><a class="reference internal" href="guides/running_simulations.html"><span class="doc">Running Simulations</span></a>: use a local schema, the CLI or result exports.</p></li>
+<li><p><a class="reference internal" href="guides/interfaces_flat_entity.html"><span class="doc">Flat and Entity Interfaces</span></a>: choose flat vectors or entity tables.</p></li>
+<li><p><a class="reference internal" href="usage/agents.html"><span class="doc">Controller examples</span></a>: explore RBC and reinforcement-learning tutorials.</p></li>
+<li><p><a class="reference internal" href="ui.html"><span class="doc">CityLearn UI</span></a>: inspect exported simulation data in CityLearn UI.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="guides/features.html" class="btn btn-neutral float-right" title="Features and configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

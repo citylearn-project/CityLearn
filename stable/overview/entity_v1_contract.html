@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entity v1 Contract &mdash; CityLearn 3.6.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+      <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5349f462"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Examples and tutorials" href="../usage/index.html" />
+    <link rel="prev" title="Cost Function" href="cost_function.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CityLearn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
+              <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/migration.html">Moving an existing project to CityLearn v3</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/running_simulations.html">Running Simulations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/schema_reference.html">Schema Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/dataset_reference.html">Dataset Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/portugal_rec_datasets.html">Portugal REC Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/data_unit_contract.html">Data Unit Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/interfaces_flat_entity.html">Flat and Entity Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/observations_reference.html">Observations Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/actions_reference.html">Actions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/multi_community_reference.html">Multi-Community Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/robustness_reference.html">Robustness Reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Evaluate</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../guides/baselines.html">Baselines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Core concepts</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="environment.html">Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="observations.html">Observations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="actions.html">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agents.html">Agents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reward_function.html">Reward Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schema.html">Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cost_function.html">Cost Function</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Entity v1 Contract</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#entity-mode-contract">Entity mode contract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#runtime-status-and-fault-evidence">Runtime status and fault evidence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#action-execution-evidence">Action execution evidence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#temporal-semantics">Temporal semantics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-notes">Dynamic topology notes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Project</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/validation.html">Validation and performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/developer_guide.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/publishing.html">Publishing CityLearn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases.html">Releases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides/releases_archive.html">Earlier releases</a></li>
+</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CityLearn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Core concepts</a></li>
+      <li class="breadcrumb-item active">Entity v1 Contract</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/citylearn-project/CityLearn/blob/master/docs/source/overview/entity_v1_contract.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+<div class="admonition note citylearn-version-note" role="note">
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
+</div>
+
+           <div itemprop="articleBody">
+             
+  <section id="entity-v1-contract">
+<h1>Entity v1 Contract<a class="headerlink" href="#entity-v1-contract" title="Link to this heading"></a></h1>
+<p>CityLearn provides two interfaces:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">interface=&quot;flat&quot;</span></code>: legacy fixed-size vectors (backward compatible).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interface=&quot;entity&quot;</span></code>: canonical table/edge payload for graph, hierarchical and transformer agents.</p></li>
+</ul>
+<section id="entity-mode-contract">
+<h2>Entity mode contract<a class="headerlink" href="#entity-mode-contract" title="Link to this heading"></a></h2>
+<p>At each step, <code class="docutils literal notranslate"><span class="pre">reset()</span></code> and <code class="docutils literal notranslate"><span class="pre">step()</span></code> return:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">"tables"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"district"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>  <span class="c1"># [n_district, n_features]</span>
+        <span class="s2">"building"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>  <span class="c1"># [n_buildings, n_features]</span>
+        <span class="s2">"charger"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>   <span class="c1"># [n_chargers, n_features]</span>
+        <span class="s2">"ev"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>        <span class="c1"># [n_evs, n_features]</span>
+        <span class="s2">"storage"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>   <span class="c1"># [n_storage, n_features]</span>
+        <span class="s2">"pv"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>        <span class="c1"># [n_pv, n_features]</span>
+    <span class="p">},</span>
+    <span class="s2">"edges"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"district_to_building"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>      <span class="c1"># [n_buildings, 2]</span>
+        <span class="s2">"building_to_charger"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>       <span class="c1"># [n_chargers, 2]</span>
+        <span class="s2">"building_to_storage"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>       <span class="c1"># [n_storage, 2]</span>
+        <span class="s2">"building_to_pv"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>            <span class="c1"># [n_pv, 2]</span>
+        <span class="s2">"charger_to_ev_connected"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>   <span class="c1"># [n_chargers, 2]</span>
+        <span class="s2">"charger_to_ev_connected_mask"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="s2">"charger_to_ev_incoming"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>    <span class="c1"># [n_chargers, 2]</span>
+        <span class="s2">"charger_to_ev_incoming_mask"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="s2">"meta"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"time_step"</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="s2">"endogenous_time_step"</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="s2">"spec_version"</span><span class="p">:</span> <span class="s2">"entity_v1"</span><span class="p">,</span>
+        <span class="s2">"temporal_semantics"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"exogenous"</span><span class="p">:</span> <span class="s2">"t"</span><span class="p">,</span>
+            <span class="s2">"endogenous"</span><span class="p">:</span> <span class="s2">"t_minus_1_settled"</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">"topology_version"</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="s2">"runtime_status"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"runtime_status_v1"</span><span class="p">,</span>
+            <span class="s2">"emits_health_state"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"active_events"</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+            <span class="s2">"asset_connections"</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+            <span class="s2">"asset_availability"</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+            <span class="s2">"sensor_channels"</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+            <span class="s2">"actuator_channels"</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+            <span class="s2">"communication_links"</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+            <span class="s2">"value_quality"</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">entity_specs</span></code> provides stable metadata for tooling/model builders:</p>
+<ul class="simple">
+<li><p>table IDs and feature names,</p></li>
+<li><p>per-feature unit/bundle/legacy tags,</p></li>
+<li><p>action schemas,</p></li>
+<li><p>edge schemas,</p></li>
+<li><p>topology metadata,</p></li>
+<li><p>normalization/encoding policy.</p></li>
+<li><p>the optional runtime-status and action-execution subcontracts.</p></li>
+</ul>
+</section>
+<section id="runtime-status-and-fault-evidence">
+<h2>Runtime status and fault evidence<a class="headerlink" href="#runtime-status-and-fault-evidence" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">runtime_status_v1</span></code> is an additive facts-only extension. It reports current
+entity connections, availability, channel quality, event duration, freshness
+and the original <code class="docutils literal notranslate"><span class="pre">fault_mode</span></code>. It does not emit policy health states such as
+<code class="docutils literal notranslate"><span class="pre">HEALTHY</span></code>, <code class="docutils literal notranslate"><span class="pre">STALE</span></code> or <code class="docutils literal notranslate"><span class="pre">FAILED</span></code>.</p>
+<p>Fault cause and health classification are intentionally separate. For
+example, <code class="docutils literal notranslate"><span class="pre">fault_mode=&quot;stuck&quot;</span></code> says that a value is frozen; the consumer must
+use its age, semantic type and criticality to decide whether it is degraded or
+stale.</p>
+<p>The contract keeps these domains separate:</p>
+<ul class="simple">
+<li><p>asset connection (from actual entity relations),</p></li>
+<li><p>asset availability,</p></li>
+<li><p>sensor channels,</p></li>
+<li><p>actuator channels,</p></li>
+<li><p>community/cloud communication links, and</p></li>
+<li><p>value-quality perturbations.</p></li>
+</ul>
+<p>Normal charger/EV disconnection is a relation state, not an equipment failure.
+Sparse status collections use the defaults declared by
+<code class="docutils literal notranslate"><span class="pre">entity_specs[&quot;runtime_status_contract&quot;]</span></code>.</p>
+</section>
+<section id="action-execution-evidence">
+<h2>Action execution evidence<a class="headerlink" href="#action-execution-evidence" title="Link to this heading"></a></h2>
+<p>In entity mode, <code class="docutils literal notranslate"><span class="pre">step()</span></code> adds <code class="docutils literal notranslate"><span class="pre">info[&quot;entity_action_execution&quot;]</span></code> with the
+<code class="docutils literal notranslate"><span class="pre">entity_action_execution_v1</span></code> contract. Each entry preserves, where
+observable, the requested, post-channel, equipment-limited and physically
+applied command. Unobservable values are <code class="docutils literal notranslate"><span class="pre">None</span></code> rather than inferred.</p>
+<p><code class="docutils literal notranslate"><span class="pre">info[&quot;topology_events_applied&quot;]</span></code> lists topology events applied between the
+current action and returned observation.</p>
+</section>
+<section id="temporal-semantics">
+<h2>Temporal semantics<a class="headerlink" href="#temporal-semantics" title="Link to this heading"></a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">entity_v1</span></code>:</p>
+<ul class="simple">
+<li><p>Exogenous observations are read at current control index <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
+<li><p>Endogenous observations are read from settled transition <code class="docutils literal notranslate"><span class="pre">t-1</span></code> (clamped at 0 on reset).</p></li>
+<li><p>In dynamic topology mode, events at <code class="docutils literal notranslate"><span class="pre">time_step=k</span></code> apply after transition <code class="docutils literal notranslate"><span class="pre">k-1</span> <span class="pre">-&gt;</span> <span class="pre">k</span></code> and before observation <code class="docutils literal notranslate"><span class="pre">k</span></code>.</p></li>
+</ul>
+</section>
+<section id="dynamic-topology-notes">
+<h2>Dynamic topology notes<a class="headerlink" href="#dynamic-topology-notes" title="Link to this heading"></a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">topology_mode=&quot;dynamic&quot;</span></code> (entity mode only), table sizes can grow/shrink during the episode.</p>
+<ul class="simple">
+<li><p>IDs are canonical and stable while entities are active.</p></li>
+<li><p>Relation masks identify valid EV-charger relations each step.</p></li>
+<li><p>Simulator outputs raw values; normalization should be handled externally (running stats per feature).</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cost_function.html" class="btn btn-neutral float-left" title="Cost Function" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../usage/index.html" class="btn btn-neutral float-right" title="Examples and tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Jose Ramon Vazquez-Canteli, Kingsley Nweye, Zoltan Nagy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

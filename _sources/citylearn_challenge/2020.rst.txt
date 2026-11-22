@@ -58,7 +58,7 @@ Some basic information about the characteristics of the buildings is provided to
 Team Members
 ************
 
-Each team could consist of at most three members. Registration closed with the challenge, and its sign-up form is no longer available.
+Each team can consist of maximum three members. The sign up link is `here <https://docs.google.com/forms/d/e/1FAIpQLSf8PeqKqw9lzI7xSmjXqdTzzqbYdl3GrgOb7hpPtXETjQVlSg/viewform>`_. 
 
 Submission Deadlines
 ********************

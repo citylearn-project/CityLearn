@@ -13,7 +13,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
       <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
       <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
-      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=cc618840" />
+      <link rel="stylesheet" type="text/css" href="../_static/citylearn.css?v=867a8231" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
@@ -28,7 +28,10 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Publishing CityLearn" href="publishing.html" />
-    <link rel="prev" title="Validation and performance" href="validation.html" /> 
+    <link rel="prev" title="Validation and performance" href="validation.html" />
+ 
+<script src="../_static/version_switcher.js" defer></script>
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -50,18 +53,17 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+
               <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Your first simulation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Configure and run</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="running_simulations.html">Running Simulations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="dataset_catalogue.html">Dataset catalogue</a></li>
 <li class="toctree-l1"><a class="reference internal" href="schema_reference.html">Schema Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_reference.html">Dataset Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="portugal_rec_datasets.html">Portugal REC Datasets</a></li>
@@ -76,23 +78,28 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="baselines.html">Baselines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../kpis.html">KPIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard.html">How to read the scorecard</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scorecard_kpi_names.html">Default scorecard KPI names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kpis_reference.html">KPIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="KPI_V2_TREE.html">KPI v2 Naming Tree</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Visualize</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../ui.html">CityLearn UI</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Tutorials and reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">Concepts and tutorials</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Core concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Examples and tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../cli.html">Command Line Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../python_api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Project</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../publications.html">Publications and applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Moving an existing project to CityLearn v3</a></li>
 <li class="toctree-l1"><a class="reference internal" href="validation.html">Validation and performance</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Developer Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#local-environment">Local Environment</a></li>
@@ -116,10 +123,11 @@
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Releases</a></li>
 <li class="toctree-l1"><a class="reference internal" href="releases_archive.html">Earlier releases</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">History</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../citylearn_challenge/index.html">The CityLearn Challenge</a></li>
-</ul>
+
+<div id="citylearn-sidebar-versions" class="citylearn-sidebar-versions" hidden>
+  <p class="caption" role="heading"><span class="caption-text">Other versions</span></p>
+  <ul id="citylearn-version-list"></ul>
+</div>
 
         </div>
       </div>
@@ -145,11 +153,12 @@
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
 <div class="admonition note citylearn-version-note" role="note">
-  <p>This documentation is built from the development branch, <code>master</code>. It includes the changes
-  listed under <a href="releases.html">Unreleased</a>, which the latest release,
-  CityLearn 3.6.0, does not have. To read the documentation of the version you installed
-  (<code>pip show citylearn</code>), open the <code>docs</code> folder at its tag on GitHub, for example
-  <a href="https://github.com/citylearn-project/CityLearn/tree/v3.6.0/docs">v3.6.0</a>.</p>
+  <p><span class="citylearn-version-switcher" hidden>Version:
+  <select id="citylearn-version-select" data-release="true"
+          aria-label="Documentation version" style="margin-right: 1em;"></select></span>
+  This is the documentation of CityLearn 3.6.0<span id="citylearn-version-badge"></span>. Use the version
+  selector or <strong>Other versions</strong> in the left sidebar to switch to an earlier release or to the
+  development documentation (<code>dev</code>).</p>
 </div>
 
            <div itemprop="articleBody">
@@ -168,11 +177,6 @@ For simulation-level checks and published measurements, start with
 <span class="go">python -m pip install -e .</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">test_requirements.txt</span></code> installs PyTorch and scikit-learn, which the tests of
-LSTM thermal dynamics and of the SAC and MARLISA controllers need. Without a
-GPU, run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">torch</span> <span class="pre">--index-url</span> <span class="pre">https://download.pytorch.org/whl/cpu</span></code>
-first to avoid several GB of CUDA libraries. Ray RLlib is not a test
-dependency: the RLlib wrappers import it only when it is installed.</p>
 <p>Optional dependencies:</p>
 <table class="docutils align-default">
 <thead>
@@ -182,22 +186,10 @@ dependency: the RLlib wrappers import it only when it is installed.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Parquet datasets</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;.[parquet]&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">pyarrow</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p>PV autosizing</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;.[pysam]&quot;</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p>Parallel tests</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">pytest-xdist</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Coverage report (<code class="docutils literal notranslate"><span class="pre">--cov=citylearn</span></code>) and the 600 s per-test timeout of <code class="docutils literal notranslate"><span class="pre">pytest.ini</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">pytest-cov</span> <span class="pre">pytest-timeout</span></code> (both are in <code class="docutils literal notranslate"><span class="pre">test_requirements.txt</span></code>)</p></td>
-</tr>
-<tr class="row-even"><td><p>Notebook checks</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">nbclient</span> <span class="pre">nbformat</span> <span class="pre">ipykernel</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>RLlib wrappers</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">&quot;ray[rllib]&quot;</span></code> (tested with Ray 2.60.0; <code class="docutils literal notranslate"><span class="pre">tests/test_rllib_wrappers.py</span></code> skips without it)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">&quot;.[pysam]&quot;</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Build checks</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">build</span> <span class="pre">twine</span></code></p></td>
@@ -246,17 +238,11 @@ the comparison reports <code class="docutils literal notranslate"><span class="p
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Fast subset (about one minute)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pytest</span> <span class="pre">-q</span> <span class="pre">tests/unit</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Full test suite (several minutes; <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">4</span></code> with pytest-xdist)</p></td>
+<tr class="row-even"><td><p>Full test suite</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pytest</span> <span class="pre">-q</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>Example notebooks</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">scripts/ci/run_notebooks.py</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Lint (rules in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>, as in CI)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">-m</span> <span class="pre">ruff</span> <span class="pre">check</span> <span class="pre">citylearn</span> <span class="pre">tests</span> <span class="pre">scripts/manual</span> <span class="pre">scripts/ci</span></code></p></td>
+<tr class="row-odd"><td><p>Critical lint</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">-m</span> <span class="pre">ruff</span> <span class="pre">check</span> <span class="pre">citylearn</span> <span class="pre">tests</span> <span class="pre">scripts/manual</span> <span class="pre">scripts/ci</span> <span class="pre">--select</span> <span class="pre">E9,F821</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>Entity contract audit</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span> <span class="pre">scripts/audit/audit_entity_contract.py</span> <span class="pre">--strict</span></code></p></td>
@@ -341,14 +327,8 @@ selection. Historical releases appear under Project, not in the README.</p>
 </div>
 <p>Install Pandoc for the retained notebook tutorials. Use the <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code>
 executable: the current CLI reference detects that executable when returning
-its argument parser. Documentation examples are tested separately.</p>
-<p>The notebooks in <code class="docutils literal notranslate"><span class="pre">examples/</span></code> are stored without outputs. The Sphinx workflow
-executes them before the build (<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">scripts/ci/run_notebooks.py</span> <span class="pre">--output-dir</span> <span class="pre">examples</span></code>,
-which overwrites the sources in that checkout only) and runs
-<code class="docutils literal notranslate"><span class="pre">check_docs.py</span> <span class="pre">--require-notebook-outputs</span></code>, so the published notebook pages show
-the outputs of that run, including a short RL training run. To reproduce it
-locally, run these two commands and discard the changes in <code class="docutils literal notranslate"><span class="pre">examples/</span></code> afterwards
-(<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">examples</span></code>). Without the execution step the pages show the code only.</p>
+its argument parser. Documentation examples are tested separately; the site
+build does not train learning agents.</p>
 </section>
 <section id="development-rules">
 <h2>Development rules<a class="headerlink" href="#development-rules" title="Link to this heading"></a></h2>

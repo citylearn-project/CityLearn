@@ -36,7 +36,7 @@ The building file is a :code:`csv` file that contains a building's temporal (cal
 Weather Data File
 =================
 
-The weather file is a :code:`.csv` file that contains outdoor weather variables time series for the desired simulation geographical location. It is used as the source for :py:attr:`citylearn.building.Building.weather`, which is the source for weather related observations. Typical Meteorological Year (TMY) files such as those of `Climate.OneBuilding.Org <https://climate.onebuilding.org/>`_, which hosts the EnergyPlus weather data, or Actual Meteorological Year (AMY) data can be used. The file structure is shown in the snippet below:
+The weather file is a :code:`.csv` file that contains outdoor weather variables time series for the desired simulation geographical location. It is used as the source for :py:attr:`citylearn.building.Building.weather`, which is the source for weather related observations. `Typical Meteorological Year <https://energyplus.net/weather>`_ (TMY) or Actual Meteorological Year (AMY) data can be used. The file structure is shown in the snippet below:
 
 .. include:: ../../../data/datasets/citylearn_challenge_2022_phase_1/weather.csv
     :code: text

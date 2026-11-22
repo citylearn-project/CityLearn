@@ -1,0 +1,7 @@
+citylearn.agents.q\_learning module
+===================================
+
+.. automodule:: citylearn.agents.q_learning
+   :members:
+   :show-inheritance:
+   :undoc-members:

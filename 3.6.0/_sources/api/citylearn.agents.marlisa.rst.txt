@@ -1,0 +1,7 @@
+citylearn.agents.marlisa module
+===============================
+
+.. automodule:: citylearn.agents.marlisa
+   :members:
+   :show-inheritance:
+   :undoc-members:

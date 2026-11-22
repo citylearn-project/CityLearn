@@ -1,0 +1,7 @@
+citylearn.agents.baseline module
+================================
+
+.. automodule:: citylearn.agents.baseline
+   :members:
+   :show-inheritance:
+   :undoc-members:

@@ -1,5 +1,15 @@
 [
   {
+    "name": "stable (3.6.0)",
+    "version": "stable",
+    "path": ""
+  },
+  {
+    "name": "3.6.0",
+    "version": "3.6.0",
+    "path": "3.6.0/"
+  },
+  {
     "name": "dev (master)",
     "version": "dev",
     "path": "dev/"
