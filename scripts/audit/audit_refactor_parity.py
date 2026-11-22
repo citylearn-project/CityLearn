@@ -211,6 +211,9 @@ def run_case(name, directory, physics_version=1):
                 return [space_data(item) for item in space]
             if isinstance(space, spaces.Dict):
                 return {key: space_data(value) for key, value in space.spaces.items()}
+            if not isinstance(space, spaces.Box):
+                # e.g. the entity `meta` space, which has no shape or bounds.
+                return dict(type=type(space).__name__, repr=repr(space))
             return dict(dtype=str(space.dtype), shape=list(space.shape), low=space.low, high=space.high)
         def layout_index():
             specs = (normalize_entity_specs(env.entity_specs) if env.interface == "entity"

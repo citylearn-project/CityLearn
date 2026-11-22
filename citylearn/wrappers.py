@@ -436,7 +436,7 @@ class DiscreteObservationWrapper(ObservationWrapper):
 
             env = env.env
 
-        return [list(b.active_observations) for b in env.buildings], env.shared_observations
+        return [list(b.flat_observation_order) for b in env.buildings], env.shared_observations
         
     @property
     def observation_space(self) -> List[spaces.MultiDiscrete]:
