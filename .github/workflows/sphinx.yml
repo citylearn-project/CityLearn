@@ -44,7 +44,7 @@ jobs:
       # overwrite the sources in this checkout, so the pages show what CI ran. Artifacts cannot be shared between
       # the two workflows without extra permissions, so the notebooks run again here (about one minute).
       run: |
-        python -m pip install nbclient nbformat ipykernel "stable-baselines3>=2.4" scikit-learn
+        python -m pip install nbclient nbformat ipykernel "stable-baselines3>=2.4" "ray[rllib]" scikit-learn
         python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
         python -m ipykernel install --user --name python3
         python scripts/ci/run_notebooks.py --output-dir examples

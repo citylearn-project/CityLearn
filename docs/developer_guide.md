@@ -32,7 +32,7 @@ Optional dependencies:
 | Parallel tests | `.venv/bin/pip install pytest-xdist` |
 | Coverage report (`--cov=citylearn`) and the 600 s per-test timeout of `pytest.ini` | `.venv/bin/pip install pytest-cov pytest-timeout` (both are in `test_requirements.txt`) |
 | Notebook checks | `.venv/bin/pip install nbclient nbformat ipykernel` |
-| RLlib wrappers | `.venv/bin/pip install "ray[rllib]"` (a release with wheels for your Python) |
+| RLlib wrappers | `.venv/bin/pip install "ray[rllib]"` (tested with Ray 2.60.0; `tests/test_rllib_wrappers.py` skips without it) |
 | Build checks | `.venv/bin/pip install build twine` |
 
 ## Portable experiment evidence
