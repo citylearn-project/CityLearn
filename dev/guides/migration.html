@@ -584,6 +584,12 @@ skipped day 0 and the partial last day, floored durations, and repeated the
 same outages in every episode with the same window. A seed given to the
 outage model is now the root of that building’s stream instead of a stream
 shared by every building that uses it.</p></li>
+<li><p>a member that a dynamic topology clones from <code class="docutils literal notranslate"><span class="pre">source_member_id</span></code> is keyed by
+its own name, so it draws its own occupant and device streams; it used to keep
+its source’s keys and draw exactly what its source drew
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/304">#304</a>). No
+bundled dataset clones a member. <code class="docutils literal notranslate"><span class="pre">v1</span></code> does not key its streams by object and
+is unchanged.</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">reset(seed=s)</span></code> sets <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> to <code class="docutils literal notranslate"><span class="pre">s</span></code> and restarts the per-episode streams
 (EV drift, occupant interactions and stochastic outages) at episode key 0, the

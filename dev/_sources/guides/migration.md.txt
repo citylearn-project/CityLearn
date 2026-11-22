@@ -397,6 +397,12 @@ key, and keeps one generator per stream:
   same outages in every episode with the same window. A seed given to the
   outage model is now the root of that building's stream instead of a stream
   shared by every building that uses it.
+- a member that a dynamic topology clones from `source_member_id` is keyed by
+  its own name, so it draws its own occupant and device streams; it used to keep
+  its source's keys and draw exactly what its source drew
+  ([#304](https://github.com/citylearn-project/CityLearn/issues/304)). No
+  bundled dataset clones a member. `v1` does not key its streams by object and
+  is unchanged.
 
 `reset(seed=s)` sets `random_seed` to `s` and restarts the per-episode streams
 (EV drift, occupant interactions and stochastic outages) at episode key 0, the
