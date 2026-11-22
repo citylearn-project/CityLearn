@@ -441,16 +441,38 @@ class NoControlAgent(Agent):
         Agent.env.fset(self, self.__deactivate_actions(env))
 
     def __deactivate_actions(self, env: CityLearnEnv) -> CityLearnEnv:
-        for b in env.unwrapped.buildings:
+        unwrapped = env.unwrapped
+        buildings = {id(b): b for b in list(getattr(unwrapped, '_all_buildings', None) or []) + list(unwrapped.buildings)}
+        changed = False
+
+        for b in buildings.values():
+            if not b.active_actions:
+                continue
+
+            # The native BAU reference is rebuilt with the loaded actions; its configuration check compares them.
+            if getattr(b, '_no_control_loaded_active_actions', None) is None:
+                b._no_control_loaded_active_actions = sorted(b.active_actions)
+
             for a in b.action_metadata:
                 b.action_metadata[a] = False
 
             b.action_space = b.estimate_action_space()
             b.observation_space = b.estimate_observation_space()
+            changed = True
+
+        if changed and hasattr(unwrapped, '_refresh_action_cache'):
+            unwrapped._refresh_action_cache()
+
+            if getattr(unwrapped, '_entity_service', None) is not None:
+                unwrapped._entity_service.invalidate()
 
         return env
 
     def predict(self, observations: List[List[float]], deterministic: bool = None) -> List[List[float]]:
+        # A dynamic topology restores the schema's actions at reset and enables those of members and assets that
+        # join; disable them again before acting (CityLearn #309).
+        self.__deactivate_actions(self.env)
+        self._follow_entity_topology()
         actions = [[] for _ in self.action_names]
         self.actions = actions
         self.next_time_step()

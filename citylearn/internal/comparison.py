@@ -184,6 +184,7 @@ def context(env, data_files):
     axis = axis_metadata(env)
     temporal = {key:axis[key] for key in ('definition_version','initialization_seed','clock_source','dataset_seconds_per_time_step','control_seconds_per_time_step','terminal_padding','data_noise_generator','episode_split_rng','random_stream_version')}
     return dict(temporal=temporal,definition_version=DEFINITION_VERSION,
+                physics_version=getattr(env, 'physics_version', None),
                 engine=dict(version=__version__, source_sha256=source_sha256(Path(__file__).resolve().parents[1]),
                             runtime_versions=runtime_versions()),
                 physical_configuration_sha256=digest(canonical(physical, root, files)),
@@ -242,7 +243,7 @@ def compare_manifests(left, right, mode='controller'):
         if a.get('temporal') != b.get('temporal'):
             if 'temporal' not in a or 'temporal' not in b:missing.append('temporal')
             else:mismatches.append('temporal')
-        required = ('engine', 'physical_configuration_sha256', 'data_files_sha256', 'episode_start_time_step',
+        required = ('physics_version', 'engine', 'physical_configuration_sha256', 'data_files_sha256', 'episode_start_time_step',
                     'episode_end_time_step', 'completed_intervals', 'seconds_per_time_step', 'time_step_ratio',
                     'random_seed', 'ev_drift_seed', 'initial_inventory', 'service_tolerances', 'observation', 'market')
         for key in required:
@@ -337,7 +338,10 @@ def reference_configuration(env):
     return [dict(
         name=building.name,
         simulate_power_outage=bool(building.simulate_power_outage),
-        active_actions=sorted(building.active_actions),
+        # NoControlAgent disables every action of the evaluated env after loading; the reference keeps the loaded
+        # actions, which the agent records (CityLearn #309).
+        active_actions=sorted(building.active_actions)
+        or list(getattr(building, '_no_control_loaded_active_actions', None) or []),
     ) for building in getattr(env, '_all_buildings', None) or env.buildings]
 
 

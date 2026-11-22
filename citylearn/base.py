@@ -52,7 +52,9 @@ class EpisodeTracker:
         """Episode key of the per-episode random streams (``random_stream_version='v2'``).
 
         The environment sets it at reset: the episode index, or 0 after a reset with an explicit
-        seed, so that ``reset(seed=s)`` repeats the first episode of an environment seeded with `s`.
+        seed, so that ``reset(seed=s)`` uses the streams of the first episode of an environment
+        built with `s`. Parameters drawn at construction keep their values and the episode window
+        still advances, so the episode itself repeats only on a new environment built with `s`.
         Unset, it is the episode index.
         """
 

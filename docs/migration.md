@@ -129,6 +129,21 @@ These changes require no dataset, schema or KPI migration. Valid runs give the s
 - **Export location.** Exports go to `./render_logs` in the working directory by default, and relative `render_directory` values resolve against the working directory. Pass an absolute `render_directory` to keep the previous location.
 - **Physics invariants** raise `PhysicsInvariantError`, which is an `AssertionError`, so existing handlers keep working.
 
+### Recorded settings
+
+The settings added since 3.6.0 are recorded with each run. `env.get_metadata()`,
+its `temporal_reproducibility` block and the export manifest hold
+`physics_version`, `episode_split_boundary` and `time_step_ratio_mode`; the
+manifest also keeps `random_stream_version`. With per-building reward
+functions, the reward evidence lists each building's reward class and
+parameters, including `version`, under `per_building`, because the
+`MultiBuildingRewardFunction` that combines them has no version of its own.
+Invalid values of these settings raise `ValueError` that names the accepted
+values, whether set in the schema or as a constructor argument, and a
+misspelled `physics_version` argument gets a suggestion. Simulation results do
+not change ([#301](https://github.com/citylearn-project/CityLearn/issues/301),
+[#302](https://github.com/citylearn-project/CityLearn/issues/302)).
+
 ### Consecutive episode splits share their boundary row
 
 An episode of N data rows executes N - 1 control steps: its last row is only
@@ -279,9 +294,20 @@ definitions, selected with the `physics_version` schema key or the
 `CityLearnEnv(physics_version=...)` argument, which takes precedence. Version
 `1` is the physics of CityLearn 3.6.0 and earlier; version `2`, the default,
 contains the corrections below. The native BAU reference of `evaluate_v2()`
-uses the version of the evaluated environment, and exports record it in the
-run metadata. To reproduce a 3.6.0 result, set `physics_version` to `1`; to
-compare controllers, run them under the same version.
+uses the version of the evaluated environment. The resolved version is in
+`env.get_metadata()`, its temporal block, and the export manifest, both at top
+level and in `comparison_context`. `compare_manifests()` and `compare_exports()`
+report two runs under different physics versions as `incompatible`, with
+`physics_version` among the mismatches, and a manifest written before the
+version was recorded as `unknown`, with `physics_version` among the missing
+evidence; export such runs again to pair them. To reproduce a 3.6.0 result, set
+`physics_version` to `1`; to compare controllers, run them under the same
+version.
+
+`MultiCommunityEnv` requires every community to use the same
+`physics_version` and `random_stream_version`, because portfolio KPIs add up
+the communities' totals; mixed versions raise `ValueError` at construction.
+Its `get_metadata()` records both.
 
 Version 2 changes the following on bundled datasets:
 
@@ -419,10 +445,31 @@ key, and keeps one generator per stream:
   same outages in every episode with the same window. A seed given to the
   outage model is now the root of that building's stream instead of a stream
   shared by every building that uses it.
+- a member that a dynamic topology clones from `source_member_id` is keyed by
+  its own name, so it draws its own occupant and device streams; it used to keep
+  its source's keys and draw exactly what its source drew
+  ([#304](https://github.com/citylearn-project/CityLearn/issues/304)). No
+  bundled dataset clones a member. `v1` does not key its streams by object and
+  is unchanged.
 
-`reset(seed=s)` repeats the first episode of an environment built with
-`random_seed=s`, and `reset(options={'episode_index': k})` repeats episode `k`.
-The native BAU reference uses the streams of the episode it evaluates.
+`reset(seed=s)` sets `random_seed` to `s` and restarts the per-episode streams
+(EV drift, occupant interactions and stochastic outages) at episode key 0, the
+key of the first episode of an environment built with `random_seed=s`. It does
+not rebuild the environment, so it repeats that first episode only on a new
+environment built with `random_seed=s`:
+
+- the episode window still advances, so a second `reset(seed=s)` simulates the
+  next window; `reset(seed=s, options={'episode_index': k})` simulates window
+  `k` with the streams of episode 0;
+- device and EV battery parameters drawn at construction, and the initial EV
+  state of charge, keep the values drawn with the construction seed.
+
+To repeat a run with another seed, build a new environment with that
+`random_seed`. `reset(options={'episode_index': k})` without a seed repeats
+episode `k` of the same environment, or of another one built with the same
+seed. As Gymnasium recommends, pass a seed to the first reset only: a seed at
+every reset gives every episode the same per-episode streams. The native BAU
+reference uses the streams of the episode it evaluates.
 
 Runs that use none of these random features are unchanged. To reproduce results
 obtained with 3.6.0 or earlier for the same seed, set `random_stream_version`
