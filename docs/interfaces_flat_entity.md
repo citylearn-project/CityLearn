@@ -54,6 +54,12 @@ env.observation_names
 env.action_names
 ```
 
+`env.observation_space` follows `env.observation_names` position by position. Each building lists
+its building-level observations first, in `active_observations` order, and then the observations of
+its EV chargers, deferrable appliances and escalators, grouped by device
+(`Building.flat_observation_order`). Normalise by position with `observation_space.low` and `high`,
+or by name with `observation_names`; both give the same bounds.
+
 ## Entity Mode
 
 ```python
@@ -109,6 +115,11 @@ Entity observations have this structure:
   }
 }
 ```
+
+`env.observation_space` declares all three keys. `meta` is an `EntityMetaSpace`: it accepts any
+mapping with `time_step`, `endogenous_time_step`, `seconds_per_time_step` and `spec_version`, so
+`observation_space.contains(observations)` holds. It carries context, not features, and is not
+flattenable; feed only `tables` and `edges` to a network.
 
 `runtime_status_v1` reports simulator facts, not an RL-policy health
 classification. `fault_mode` is preserved as the original cause. In

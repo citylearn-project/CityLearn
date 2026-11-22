@@ -413,6 +413,16 @@ class Building(Environment):
         return [k for k, v in self.observation_metadata.items() if v]
 
     @property
+    def flat_observation_order(self) -> List[str]:
+        """Active observations in the order of the flat observation vector and `observation_space`.
+
+        Building-level observations keep `active_observations` order; per-device observations (EV
+        chargers, deferrable appliances, escalators) follow, grouped by device.
+        """
+
+        return self._ops_service.flat_observation_order()
+
+    @property
     def active_actions(self) -> List[str]:
         """Actions in `action_metadata` with True value i.e. 
         indicates which storage systems are to be controlled during simulation."""
@@ -2143,6 +2153,16 @@ class Building(Environment):
 
         return spaces.Box(low=np.array(low_limit, dtype='float32'), high=np.array(high_limit, dtype='float32'), dtype='float32')
 
+    def _controlled_demand_observation_high_limit(self, key: str, data: Mapping[str, Any]) -> float:
+        """Largest demand an action can set, in [kWh] per control step; 0 when actions do not set the demand."""
+
+        return 0.0
+
+    def _set_point_observation_limits(self, key: str, data: Mapping[str, Any]) -> Tuple[float, float]:
+        """Set-point limits: the range of the set-point schedule."""
+
+        return self._series_bound(data[key], upper=False), self._series_bound(data[key], upper=True)
+
     def _ev_time_observation_high_limit(self, key: str) -> float:
         try:
             episode_steps = float(getattr(self.episode_tracker, 'episode_time_steps', 0) or 0)
@@ -2292,7 +2312,7 @@ class Building(Environment):
             'net_electricity_consumption_without_storage_and_partial_load',
             'net_electricity_consumption_without_storage_and_partial_load_and_pv'
         ]
-        observation_names = list(self.observation_metadata.keys()) + internal_limit_observations if include_all else self.active_observations
+        observation_names = list(self.observation_metadata.keys()) + internal_limit_observations if include_all else self.flat_observation_order
         periodic_normalization = False if periodic_normalization is None else periodic_normalization
         periodic_observations = self.get_periodic_observation_metadata()
         low_limit, high_limit = {}, {}
@@ -2475,6 +2495,9 @@ class Building(Environment):
                 low_limit[key] = -self.maximum_temperature_delta
                 high_limit[key] = self.maximum_temperature_delta
 
+            elif key in ['indoor_dry_bulb_temperature_cooling_set_point', 'indoor_dry_bulb_temperature_heating_set_point']:
+                low_limit[key], high_limit[key] = self._set_point_observation_limits(key, data)
+
             elif key == 'comfort_band':
                 low_limit[key] = 0
                 high_limit[key] = self._series_bound(data[key], upper=True)
@@ -2482,7 +2505,10 @@ class Building(Environment):
             elif key in ['cooling_demand', 'heating_demand', 'dhw_demand']:
                 low_limit[key] = 0.0
                 max_demand = data[key].max()
-                high_limit[key] = as_float(max_demand) * self.demand_observation_limit_factor
+                high_limit[key] = max(
+                    as_float(max_demand) * self.demand_observation_limit_factor,
+                    self._controlled_demand_observation_high_limit(key, data),
+                )
 
             elif key == 'cooling_electricity_consumption':
                 low_limit[key] = 0.0
@@ -2628,12 +2654,15 @@ class Building(Environment):
             except Exception:
                 pass
 
-            def _headroom_bounds(limit, *, export: bool = False, limit_low=None):
+            def _headroom_bounds(limit, *, export: bool = False, limit_low=None, phase: bool = False):
                 limit = float(limit)
                 limit_low = limit if limit_low is None else float(limit_low)
                 if getattr(self, '_electrical_service_enabled', False):
                     min_total_kw = base_power_min_kw - control_margin_kw
                     max_total_kw = base_power_max_kw + control_margin_kw
+                    if phase:
+                        # A phase carries a share of the building power, which can be none of it.
+                        min_total_kw, max_total_kw = min(min_total_kw, 0.0), max(max_total_kw, 0.0)
                     if export:
                         bounds = [limit_low + min_total_kw, limit + max_total_kw]
                     else:
@@ -2663,12 +2692,12 @@ class Building(Environment):
                     import_limit = phase.get('import_kw')
                     if import_limit is not None:
                         key = f"charging_phase_{phase['name']}_headroom_kw"
-                        data[key] = _headroom_bounds(import_limit)
+                        data[key] = _headroom_bounds(import_limit, phase=True)
                     if getattr(self, '_electrical_service_enabled', False):
                         export_limit = phase.get('export_kw')
                         if export_limit is not None:
                             key = f"charging_phase_{phase['name']}_export_headroom_kw"
-                            data[key] = _headroom_bounds(export_limit, export=True)
+                            data[key] = _headroom_bounds(export_limit, export=True, phase=True)
 
             max_violation_energy = power_kw_to_energy_kwh(total_charger_power_kw + total_storage_power_kw, self.seconds_per_time_step)
             data['charging_constraint_violation_kwh'] = np.array([0.0, max_violation_energy], dtype='float32')
@@ -3810,6 +3839,58 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
             )
         ]
 
+    def _controlled_demand_observation_high_limit(self, key: str, data: Mapping[str, Any]) -> float:
+        """Largest cooling or heating demand that `update_cooling_demand` or `update_heating_demand` can set.
+
+        With dynamics, the action sets the demand to the device output at up to its nominal power, which
+        can exceed the largest demand in the dataset.
+        """
+
+        high = super()._controlled_demand_observation_high_limit(key, data)
+
+        # `ignore_dynamics`, not `simulate_dynamics`: the latter is also False during the LSTM warm-up.
+        if self.ignore_dynamics or key not in ('cooling_demand', 'heating_demand'):
+            return high
+
+        heating = key == 'heating_demand'
+        device = self.heating_device if heating else self.cooling_device
+        actions = ('heating_device' if heating else 'cooling_device', 'cooling_or_heating_device')
+
+        if device is None or not any(a in self.active_actions for a in actions):
+            return high
+
+        # Same cap as the update methods, with the nominal power as the available power (an upper bound).
+        # Physics version 1 compares the step energy with the power, which caps it at one hour.
+        hours = self._dataset_step_hours()
+        hours = hours if physics_version_of(self) >= 2 else min(hours, 1.0)
+        electric_energy = float(getattr(device, 'nominal_power', 0.0) or 0.0) * hours
+
+        if electric_energy <= 0.0:
+            return high
+
+        # The action only sets the demand in the steps whose HVAC mode allows that service.
+        hvac_mode = np.asarray(data.get('hvac_mode', []), dtype='float64')
+        modes = (2, 3) if heating else (1, 3)
+        steps = np.isin(hvac_mode, modes) if hvac_mode.size > 0 else None
+
+        if steps is not None and not steps.any():
+            return high
+
+        if isinstance(device, HeatPump):
+            temperature = np.asarray(data['outdoor_dry_bulb_temperature'], dtype='float64')
+            cop = np.atleast_1d(np.asarray(device.get_cop(temperature, heating), dtype='float64'))
+
+            if steps is not None and cop.size == steps.size:
+                cop = cop[steps]
+
+            cop = self._series_bound(cop, upper=True)
+        else:
+            cop = float(getattr(device, 'efficiency', 1.0) or 1.0)
+
+        output = electric_energy * cop
+
+        return max(high, as_float(self._dataset_energy_to_control_step(output)))
+
     def update_cooling_demand(self, action: float):
         """Update space cooling demand for current time step.
 
@@ -3924,6 +4005,25 @@ class OccupantInteractionBuilding(DynamicsBuilding):
         self.ignore_occupant = False if ignore_occupant is None else ignore_occupant
         super().__init__(*args, **kwargs)
     
+    def _set_point_observation_limits(self, key: str, data: Mapping[str, Any]) -> Tuple[float, float]:
+        """Set-point limits that also cover the occupant's changes.
+
+        Each occupant interaction moves the set point from its current value and holds it, so repeated
+        interactions can take it outside the schedule. The limits then cover the indoor temperature
+        limits, the range of temperatures the building is expected to reach.
+        """
+
+        low, high = super()._set_point_observation_limits(key, data)
+
+        if self.ignore_occupant or 'indoor_dry_bulb_temperature' not in data:
+            return low, high
+
+        temperature = data['indoor_dry_bulb_temperature']
+        low = min(low, self._series_bound(temperature, upper=False) - self.maximum_temperature_delta)
+        high = max(high, self._series_bound(temperature, upper=True) + self.maximum_temperature_delta)
+
+        return low, high
+
     @DynamicsBuilding.episode_tracker.setter
     def episode_tracker(self, episode_tracker: EpisodeTracker):
         DynamicsBuilding.episode_tracker.fset(self, episode_tracker)

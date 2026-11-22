@@ -803,7 +803,7 @@ class CityLearnEnv(Environment, Env):
             shared_observations = []
 
             for i, b in enumerate(self.buildings):
-                for l, h, s in zip(b.observation_space.low, b.observation_space.high, b.active_observations):
+                for l, h, s in zip(b.observation_space.low, b.observation_space.high, b.flat_observation_order):
                     if i == 0 or s not in self.shared_observations or s not in shared_observations:
                         low_limit.append(l)
                         high_limit.append(h)

@@ -66,6 +66,12 @@ env.action_names
 env.observation_names
 ```
 
+`env.observation_space` segue `env.observation_names` posicao a posicao. Cada edificio lista primeiro
+as observacoes do edificio, na ordem de `active_observations`, e depois as observacoes dos seus
+carregadores de VE, equipamentos diferiveis e escadas rolantes, agrupadas por equipamento
+(`Building.flat_observation_order`). Normalizar por posicao com `observation_space.low` e `high`, ou
+por nome com `observation_names`, da os mesmos limites.
+
 ## Entity Mode
 
 Ativacao:
@@ -114,6 +120,11 @@ env = CityLearnEnv(schema, interface="entity", topology_mode="dynamic")
   }
 }
 ```
+
+`env.observation_space` declara as tres chaves. `meta` e um `EntityMetaSpace`: aceita qualquer
+mapping com `time_step`, `endogenous_time_step`, `seconds_per_time_step` e `spec_version`, por isso
+`observation_space.contains(observations)` e verdadeiro. Leva contexto, nao features, e nao e
+flattenable; uma rede deve receber apenas `tables` e `edges`.
 
 ### `entity_specs`
 

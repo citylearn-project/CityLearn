@@ -48,6 +48,52 @@ development-line history.
 
 ## Unreleased
 
+### Observation spaces follow the observations
+
+The observation values, their order and `observation_names` do not change, and
+neither do simulations or KPIs. The observation spaces change, and so does
+anything that reads bounds from them: agents trained on the datasets below
+should be retrained, and their earlier results are not comparable.
+
+- **Flat order.** `env.observation_space` now follows `env.observation_names`.
+  Each building lists its own features first, in `active_observations` order,
+  then the features of its EV chargers, deferrable appliances and escalators,
+  grouped by device (`Building.flat_observation_order`). The space used to
+  follow `active_observations`, so for buildings with EV chargers or deferrable
+  appliances whose features are not already at the end of
+  `active_observations`, positions carried another feature's bounds. This
+  affects the flat interface of `pt_rec_4`, `pt_rec_15`, `pt_rec_30`,
+  `pt_rec_100` and one building of the three-phase electrical-service demo
+  (hourly and 15 s).
+- **Entity `meta`.** `env.observation_space['meta']` is an `EntityMetaSpace`.
+  It accepts a mapping with `time_step`, `endogenous_time_step`,
+  `seconds_per_time_step` and `spec_version`, is not flattenable and should not
+  be fed to a network. Code that iterates over `observation_space.spaces` should
+  skip it, as it skips `observations['meta']`.
+- **Wider estimated bounds**, in both interfaces:
+  per-phase charging headroom (`charging_phase_*_headroom_kw` and
+  `charging_phase_*_export_headroom_kw`) on `pt_rec_*`; `cooling_demand` and
+  `heating_demand` of LSTM buildings whose HVAC action is active, on the 2023
+  challenge datasets and both Quebec neighbourhoods; and the cooling and heating
+  set points of occupant-interaction buildings, on both Quebec neighbourhoods,
+  which now cover the indoor temperature limits.
+
+These bounds are still estimates where the model has no hard limit. Under
+arbitrary control, for example random actions over a full Quebec episode, the
+LSTM indoor temperature and the occupant set points that follow it can leave
+them; `ClippedObservationWrapper` keeps such values inside the space.
+
+What reads the bounds:
+
+| Consumer | Uses | Affected by |
+|---|---|---|
+| `RLC`, `SAC`, `MARLISA` encoders | `observation_space` by position | order and bounds |
+| `ClippedObservationWrapper` | `observation_space` by position | order and bounds |
+| `DiscreteObservationWrapper`, `TabularQLearningWrapper` | bins from `observation_space` by position | order and bounds |
+| `NormalizedObservationWrapper` | building limits by name | bounds only |
+| `StableBaselines3Wrapper`, `RLlibSingleAgentWrapper`, `RLlibMultiAgentEnv` | declare the space, do not rescale | only through a normalising wrapper or the algorithm's own use of the space |
+| Robustness faults on the flat interface | feature by position | order (faults now reach the named feature) |
+
 ### The native BAU uses current-step load and solar
 
 The native BAU now uses observed load and PV from the step being planned when
