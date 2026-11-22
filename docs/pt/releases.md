@@ -37,6 +37,13 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   e `district_energy_grid_shape_quality_load_factor_penalty_{daily,monthly}_average{,_signed_net}_control_ratio`.
   As linhas existentes não mudam.
   ([#326](https://github.com/citylearn-project/CityLearn/issues/326))
+- **Documentação por versão.** A raiz do site (`/` e `/stable/`) abre por omissão a última versão final,
+  preservando as ligações existentes para páginas partilhadas e redirecionando para `/dev/<página>` os URLs na raiz
+  que existem apenas em `master`; cada tag `v*` é publicada em `/<versão>/` e o ramo `master` em `/dev/`. Cada página
+  inclui um seletor no topo e a secção **Other versions** na barra lateral esquerda a partir de `/versions.json`,
+  mantendo a página equivalente aberta ao mudar de versão ou abrindo a página inicial dessa versão quando a página não
+  existe nela ([`docs/pt/publishing.md`](publishing.md),
+  [#296](https://github.com/citylearn-project/CityLearn/issues/296)).
 - **Lint e CI (engenharia, sem alteração de resultados).** O `ruff` usa as
   regras de `pyproject.toml`: F401 (imports não usados removidos mantendo
   reexportações explícitas `as` nos módulos públicos), F841 (variáveis não
