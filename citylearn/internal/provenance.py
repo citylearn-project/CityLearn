@@ -58,6 +58,13 @@ class CityLearnProvenanceService:
         if not self.enabled:
             raise RuntimeError('Energy provenance is disabled; construct CityLearnEnv with energy_provenance=True.')
 
+    def __setstate__(self, state):
+        # Stocks are keyed by the battery's object id. A deepcopy or pickle round trip gives every battery a new id,
+        # so re-key them here; otherwise the next synchronisation books all stored energy as asset_exit or mobility
+        # and opens new unknown stocks (CityLearn #307).
+        self.__dict__.update(state)
+        self.stocks = {id(stock.battery): stock for stock in self.stocks.values()}
+
     def reset(self, empty=False):
         self.stocks = {}
         self.sources = defaultdict(dict)
