@@ -86,6 +86,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#charger"><code class="docutils literal notranslate"><span class="pre">charger</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ev"><code class="docutils literal notranslate"><span class="pre">ev</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#storage"><code class="docutils literal notranslate"><span class="pre">storage</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#energy-to-full">Energy to full</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pv"><code class="docutils literal notranslate"><span class="pre">pv</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#deferrable-appliance"><code class="docutils literal notranslate"><span class="pre">deferrable_appliance</span></code></a></li>
 </ul>
@@ -946,7 +947,7 @@
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">connected_ev_soc_min_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_available_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_to_full_kwh</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>mixed</p></td>
-<td><p>Connected EV usable discharge energy and remaining charge headroom.</p></td>
+<td><p>Connected EV usable discharge energy and remaining charge headroom (<a class="reference internal" href="#energy-to-full"><span class="std std-ref">energy to full</span></a>).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
@@ -1030,7 +1031,7 @@
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energy_available_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh</p></td>
-<td><p>Usable energy and energy to full.</p></td>
+<td><p>Usable energy and <a class="reference internal" href="#energy-to-full"><span class="std std-ref">energy to full</span></a>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1084,7 +1085,7 @@
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">energy_available_kwh</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
 <td class="text-right"><p>kWh</p></td>
-<td><p>Energy headroom and available energy.</p></td>
+<td><p>Energy headroom (<a class="reference internal" href="#energy-to-full"><span class="std std-ref">energy to full</span></a>) and available energy.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">can_discharge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_power_kw</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge/discharge_action_normalized</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code></p></td>
@@ -1118,6 +1119,24 @@
 </tr>
 </tbody>
 </table>
+</section>
+<section id="energy-to-full">
+<h3>Energy to full<a class="headerlink" href="#energy-to-full" title="Link to this heading"></a></h3>
+<p>SOC is relative to the nominal capacity (<code class="docutils literal notranslate"><span class="pre">capacity_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">battery_capacity_kwh</span></code>).
+Capacity fade lowers a battery’s degraded capacity (<code class="docutils literal notranslate"><span class="pre">degraded_capacity_kwh</span></code> for
+storage), where <code class="docutils literal notranslate"><span class="pre">Battery.charge</span></code> stops, so a faded battery is full below an SOC
+of 1. Under physics version 2, the default, <code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">connected_ev_energy_to_full_kwh</span></code> and <code class="docutils literal notranslate"><span class="pre">flexible_energy_to_full_kwh</span></code> are the
+energy the battery still accepts: the lower of <code class="docutils literal notranslate"><span class="pre">soc_max_ratio</span></code> times the
+capacity and the degraded capacity, minus the stored energy. The charge
+features derived from them (<code class="docutils literal notranslate"><span class="pre">can_charge</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge_power_kw</span></code>,
+<code class="docutils literal notranslate"><span class="pre">available_charge_action_normalized</span></code>, <code class="docutils literal notranslate"><span class="pre">available_charge_energy_kwh_step</span></code>,
+<code class="docutils literal notranslate"><span class="pre">charge_headroom_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">max_deliverable_energy_until_departure_kwh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">departure_energy_margin_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">departure_feasibility_ratio</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">flexible_charge_*</span></code> and <code class="docutils literal notranslate"><span class="pre">community_flexible_*</span></code> sums) follow. Under physics
+version 1 they are computed from the nominal capacity, as in CityLearn 3.6.0,
+and report a full faded battery as able to charge. Batteries without fade
+(<code class="docutils literal notranslate"><span class="pre">capacity_loss_coefficient</span></code> 0) give the same values in both versions.</p>
 </section>
 <section id="pv">
 <h3><code class="docutils literal notranslate"><span class="pre">pv</span></code><a class="headerlink" href="#pv" title="Link to this heading"></a></h3>

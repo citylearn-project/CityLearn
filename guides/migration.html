@@ -413,6 +413,24 @@ With <code class="docutils literal notranslate"><span class="pre">physics_invari
 <code class="docutils literal notranslate"><span class="pre">PhysicsInvariantError</span></code>. This changes scenarios with outages and batteries, such as
 the <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2023_*</span></code> datasets with stochastic outages and the
 <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> robustness, combined and all-in scenarios.</p></li>
+<li><p><strong>Energy to full of faded batteries.</strong> Charging stops at a battery’s
+degraded capacity, which capacity fade lowers below its nominal capacity,
+but version 1 computed the entity observations of the energy a battery can
+still take from the nominal capacity, so a battery that fade had made full
+was observed with <code class="docutils literal notranslate"><span class="pre">can_charge</span></code> 1 and charge power available. Version 2 stops
+<code class="docutils literal notranslate"><span class="pre">energy_to_full_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">connected_ev_energy_to_full_kwh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">flexible_energy_to_full_kwh</span></code> and the charge features derived from them at
+the degraded capacity (see <a class="reference internal" href="observations_reference.html#energy-to-full"><span class="std std-ref">energy to full</span></a>).
+The simulated physics is unchanged, but controllers that read these
+observations act differently: the BAU no longer reserves power for a faded EV
+that is already full, so its home battery no longer discharges for it and
+exports the energy. This changes the BAU on datasets whose EV batteries fade
+and that publish the <code class="docutils literal notranslate"><span class="pre">entity_core_electrical</span></code> bundle:
+<code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>, the dynamic assets and
+dynamic topology three-phase demos and the 15-second three-phase demos.
+Batteries without fade, including every <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> battery, and
+<code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo</span></code>, which does not publish
+the bundle, are unchanged.</p></li>
 <li><p><strong>Electrical-service headroom.</strong> The import limit of a building with
 <code class="docutils literal notranslate"><span class="pre">electrical_service</span></code> was shared among the EV chargers and the battery in
 proportion to their requested power, including requests that the device

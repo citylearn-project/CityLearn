@@ -67,7 +67,11 @@ step length, computed as the simulator computes that observation. Neither
 includes the EV battery's capacity-power curve, so at steps of a few seconds
 near 100% SOC the battery can still discharge more than the EV takes. The
 estimate also omits the electrical-service import limit, which the bundle
-includes. The rule-based baselines reserve the EV power they command.
+includes, and capacity fade: under physics version 2 the observation stops at
+the EV battery's degraded capacity, where charging stops, but without the bundle
+no observation shows the fade, so the estimate stops at the nominal capacity and
+can reserve power for a faded EV that is already full. The rule-based baselines
+reserve the EV power they command.
 
 Without that bundle the baselines also do not observe the building's import and
 export, so they take PV generation above the observed load as the surplus the
