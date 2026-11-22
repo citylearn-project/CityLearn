@@ -16,17 +16,18 @@ import pandas as pd
 import pytest
 
 from citylearn.citylearn import CityLearnEnv
+from citylearn.internal.physics_invariants import PhysicsInvariantError
 
 MINUTE_DATASET = Path(__file__).resolve().parent / 'data' / 'minute_ev_demo'
 STEP_HOURS = 0.25  # the dataset and the control step are 900 s
 
 
 def _env(tmp_path: Path, vehicle_to_building, non_shiftable_load=2.0, solar_generation=0.0,
-         cooling_demand=0.0, interface='flat') -> CityLearnEnv:
+         cooling_demand=0.0, interface='flat', *, outage_signal=1.0, physics_version=None) -> CityLearnEnv:
     dataset = tmp_path / 'v2b'
     shutil.copytree(MINUTE_DATASET, dataset)
     frame = pd.read_csv(dataset / 'Building_1.csv')
-    frame['power_outage'] = 1
+    frame['power_outage'] = outage_signal
     frame['non_shiftable_load'] = non_shiftable_load  # kWh per 900 s row
     frame['solar_generation'] = solar_generation
     frame['cooling_demand'] = cooling_demand
@@ -54,9 +55,11 @@ def _env(tmp_path: Path, vehicle_to_building, non_shiftable_load=2.0, solar_gene
     path = dataset / 'schema.json'
     path.write_text(json.dumps(schema), encoding='utf-8')
     if interface == 'entity':
-        env = CityLearnEnv(str(path), interface='entity', episode_time_steps=4, random_seed=0)
+        env = CityLearnEnv(str(path), interface='entity', episode_time_steps=4, random_seed=0,
+                           physics_version=physics_version)
     else:
-        env = CityLearnEnv(str(path), central_agent=True, episode_time_steps=4, random_seed=0)
+        env = CityLearnEnv(str(path), central_agent=True, episode_time_steps=4, random_seed=0,
+                           physics_version=physics_version)
     env.reset(seed=0)
     return env
 
@@ -78,6 +81,33 @@ def test_vehicle_to_building_is_off_by_default(tmp_path):
         assert charger.electricity_consumption[0] == 0.0
         # Without local supply the non-shiftable load is not served.
         assert building.non_shiftable_load_device.electricity_consumption[0] == 0.0
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize('net_kwh', [-1.5, 1.5], ids=['export', 'import'])
+@pytest.mark.parametrize('outage_signal', [1.0, 0.5, -0.5])
+@pytest.mark.parametrize('physics_version', [1, 2])
+def test_physics_checks_reject_grid_exchange_during_outage(tmp_path, monkeypatch, net_kwh, outage_signal,
+                                                          physics_version):
+    env = _env(tmp_path, vehicle_to_building=False, outage_signal=outage_signal, physics_version=physics_version)
+    env.physics_invariant_checks = True
+
+    try:
+        building = env.buildings[0]
+        assert building.power_outage
+        _step(env, 0.0)
+        assert building.net_electricity_consumption[0] == 0.0
+
+        update_variables = building.update_variables
+
+        def record_grid_exchange():
+            update_variables()
+            building._Building__net_electricity_consumption[building.time_step] = net_kwh
+
+        monkeypatch.setattr(building, 'update_variables', record_grid_exchange)
+        with pytest.raises(PhysicsInvariantError, match=r"Non-zero grid exchange during outage for 'Building_1' at t=1"):
+            _step(env, 0.0)
     finally:
         env.close()
 
