@@ -23,25 +23,49 @@ def metadata():
     )
 
 
-def reward_metadata(env):
-    reward = getattr(env, "reward_function", None)
-    configured = dict((env.schema.get("reward_function") or {}).get("attributes") or {})
+_REWARD_PARAMETERS = ("exponent", "charging_constraint_penalty_coefficient", "version")
+
+
+def _reward_class(reward):
+    return None if reward is None else type(reward).__module__ + "." + type(reward).__qualname__
+
+
+def _reward_parameters(reward, names):
     effective = {}
-    for name in sorted(set(configured) | {
-        "exponent",
-        "charging_constraint_penalty_coefficient",
-        "version",
-    }):
+    for name in sorted(set(names) | set(_REWARD_PARAMETERS)):
         value = getattr(reward, name, None)
         if isinstance(value, (str, bool, int, float)):
             effective[name] = value
+    return effective
+
+
+def reward_metadata(env):
+    reward = getattr(env, "reward_function", None)
+    configured = dict((env.schema.get("reward_function") or {}).get("attributes") or {})
+    members = getattr(reward, "reward_functions", None)
+    per_building = None
+    if isinstance(members, dict):
+        # A per-building schema resolves to a MultiBuildingRewardFunction, which has no version of
+        # its own; each building's function carries its class and version.
+        default = configured.get("default")
+        if default is None and configured:
+            default = next(iter(configured.values()))
+        per_building = {}
+        for name, member in members.items():
+            attributes = configured.get(name, default)
+            attributes = attributes if isinstance(attributes, dict) else {}
+            per_building[str(name)] = dict(
+                resolved_class=_reward_class(member),
+                effective_public_parameters=_reward_parameters(member, attributes),
+            )
     return dict(
         definition_version="reward-evidence-v1",
-        resolved_class=None
-        if reward is None
-        else type(reward).__module__ + "." + type(reward).__qualname__,
+        resolved_class=_reward_class(reward),
         configured_attributes=configured,
-        effective_public_parameters=effective,
+        effective_public_parameters=_reward_parameters(
+            reward, () if per_building is not None else configured
+        ),
+        per_building=per_building,
         dr_settlement_added_by_core=False,
         custom_reward_semantics="require explicit inspection; no automatic inference",
     )
