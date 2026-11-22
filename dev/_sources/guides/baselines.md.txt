@@ -15,7 +15,7 @@ It is not a scenario with all equipment switched off.
 | Equipment or service | BAU behaviour |
 |---|---|
 | EVs | Requests maximum charging power as soon as an EV is connected, until 100% SOC by default, or until the user's requested departure SOC (see below). Ignores deadlines, prices and solar forecasts and never requests V2G. Electrical limits share the available power proportionally between simultaneous requests. |
-| Stationary batteries | Charges from local PV surplus and discharges to serve local import (self-consumption). EV charging is considered first, so the battery does not discharge into an EV that is already full. |
+| Stationary batteries | Requests charging from estimated local PV surplus and discharging to cover estimated local demand. The dispatch budget accounts for EV charging and appliance starts before the stationary battery. |
 | Flexible appliances | Requests the next pending cycle at its first feasible start opportunity. |
 | Electrical connection | The simulator applies the configured total and per-phase import/export limits; equipment and simulator constraints determine the applied energy. |
 | Local sharing | The scenario's settlement rules value the resulting trajectory. BAU does not optimize the allocation or local-market price. |
@@ -28,8 +28,8 @@ It is not a scenario with all equipment switched off.
 
 | `ev_charge_target` | Definition | EV behaviour |
 |---|---|---|
-| `'full'` (default) | `immediate-full-charge-v3` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. |
-| `'requested'` | `immediate-user-target-v2` | Charges up to the user's requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger's minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC. |
+| `'full'` (default) | `immediate-full-charge-v4` | Charges to 100%, as the BAU of CityLearn 3.1–3.3. |
+| `'requested'` | `immediate-user-target-v3` | Charges up to the user's requested departure SOC. The last command is limited to the remaining energy gap; if that command would fall below the charger's minimum power, the EV stops slightly below the target rather than overshooting it. Its difference from the default excludes the extra energy delivered above the requested SOC. |
 
 Everything else is the same. Select the BAU used as the KPI reference by
 `evaluate_v2()` with the environment setting
@@ -57,9 +57,16 @@ reference of `evaluate_v2()` uses, reads them uncorrupted.
 
 ### Known limits
 
-The baselines decide from observations, so the battery reacts to the last
-settled step rather than reading the current step's load and PV from the
-simulator, as the 3.1–3.3 BAU did. The BAU battery serves only the EV power the
+The BAU estimates the battery's starting dispatch budget using the observed
+non-shiftable demand, PV and already-running appliance load for the step being
+planned. If a required input is unavailable, it uses the existing estimate
+based on settled observations. Thermal device electricity is determined as the
+step is applied. Using the previous thermal load as current demand would
+introduce another time lag. Actual PV surplus can therefore be smaller than
+the estimate on a step with thermal demand, and a charge request can increase
+grid import. The simulator still enforces the configured electrical limits.
+
+The BAU battery serves only the EV power the
 EV can still accept: the `available_charge_power_kw` observation of the
 `entity_core_electrical` bundle, or, without that bundle, an estimate from the
 observed SOC, battery capacity, charger power and charger efficiency and the

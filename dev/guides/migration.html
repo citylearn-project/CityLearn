@@ -102,6 +102,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-native-bau-uses-current-step-load-and-solar">The native BAU uses current-step load and solar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#consecutive-episode-splits-share-their-boundary-row">Consecutive episode splits share their boundary row</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-joining-members-storage-and-district-series">Dynamic topology: joining members, storage and district series</a></li>
@@ -237,6 +238,15 @@ development-line history.</p>
 </section>
 <section id="unreleased">
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<section id="the-native-bau-uses-current-step-load-and-solar">
+<h3>The native BAU uses current-step load and solar<a class="headerlink" href="#the-native-bau-uses-current-step-load-and-solar" title="Link to this heading"></a></h3>
+<p>The native BAU now uses observed load and PV from the step being planned when
+it requests battery charging or discharging. This can change BAU-relative KPIs.
+Re-evaluate both runs with the current release and the same EV charging target
+before comparing them. To reproduce a result using the previous BAU, use the
+CityLearn release or commit recorded in its original manifest. See the
+<a class="reference internal" href="baselines.html#known-limits"><span class="std std-ref">BAU reference</span></a>.</p>
+</section>
 <section id="numeric-and-configuration-hygiene">
 <h3>Numeric and configuration hygiene<a class="headerlink" href="#numeric-and-configuration-hygiene" title="Link to this heading"></a></h3>
 <p>These changes require no dataset, schema or KPI migration. Valid runs give the same results; a few silent mistakes now raise.</p>

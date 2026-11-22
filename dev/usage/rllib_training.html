@@ -221,8 +221,8 @@ the workflow; the policies are not expected to beat the business-as-usual operat
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-22 02:58:48,882 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
-2026-11-22 02:58:50,265 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-22 03:31:34,624 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
+2026-11-22 03:31:36,168 INFO util.py:155 -- Missing packages: [&#39;ipywidgets&#39;]. Run `pip install -U ipywidgets`, then restart the notebook server for rich notebook output.
 </pre></div></div>
 </div>
 </section>
@@ -253,7 +253,7 @@ the workflow; the policies are not expected to beat the business-as-usual operat
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-2026-11-22 02:58:52,809 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
+2026-11-22 03:31:38,727 WARNING algorithm_config.py:5160 -- You are running PPO on the new API stack! This is the new default behavior for this algorithm. If you don&#39;t want to use the new API stack, set `config.api_stack(enable_rl_module_and_learner=False,enable_env_runner_and_connector_v2=False)`. For a detailed migration guide, see here: https://docs.ray.io/en/master/rllib/new-api-stack-migration-guide.html
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -353,7 +353,7 @@ environment steps sampled: 96.0
     <tr>
       <th>building_battery_health_capacity_fade_delta_to_business_as_usual_ratio</th>
       <td>-0.000</td>
-      <td>0.000</td>
+      <td>-0.000</td>
       <td>-0.000</td>
       <td>NaN</td>
     </tr>
@@ -366,16 +366,16 @@ environment steps sampled: 96.0
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
-      <td>0.646</td>
-      <td>0.197</td>
       <td>0.700</td>
+      <td>0.197</td>
+      <td>0.705</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_count</th>
-      <td>0.084</td>
-      <td>0.633</td>
-      <td>0.009</td>
+      <td>0.427</td>
+      <td>0.000</td>
+      <td>0.133</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -390,7 +390,7 @@ environment steps sampled: 96.0
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>223.582</td>
+      <td>213.899</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
@@ -422,7 +422,7 @@ environment steps sampled: 96.0
     </tr>
   </tbody>
 </table>
-<p>955 rows × 4 columns</p>
+<p>959 rows × 4 columns</p>
 </div></div>
 </div>
 </section>
@@ -524,16 +524,16 @@ environment steps sampled: 96.0
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_business_as_usual_count</th>
-      <td>0.646</td>
-      <td>0.197</td>
       <td>0.700</td>
+      <td>0.197</td>
+      <td>0.705</td>
       <td>NaN</td>
     </tr>
     <tr>
       <th>building_battery_health_equivalent_full_cycles_count</th>
-      <td>0.462</td>
-      <td>0.429</td>
-      <td>0.436</td>
+      <td>0.205</td>
+      <td>0.411</td>
+      <td>0.254</td>
       <td>NaN</td>
     </tr>
     <tr>
@@ -548,7 +548,7 @@ environment steps sampled: 96.0
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>221.521</td>
+      <td>225.047</td>
     </tr>
     <tr>
       <th>district_thermal_service_audit_thermal_coverage_ratio</th>
