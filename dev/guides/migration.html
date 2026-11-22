@@ -105,6 +105,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#district-emissions-with-local-trading-off">District emissions with local trading off</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-native-bau-uses-current-step-load-and-solar">The native BAU uses current-step load and solar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#recorded-settings">Recorded settings</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#consecutive-episode-splits-share-their-boundary-row">Consecutive episode splits share their boundary row</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dynamic-topology-joining-members-storage-and-district-series">Dynamic topology: joining members, storage and district series</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#control-step-different-from-the-dataset-step">Control step different from the dataset step</a></li>
@@ -273,6 +274,21 @@ CityLearn release or commit recorded in its original manifest. See the
 <li><p><strong>Physics invariants</strong> raise <code class="docutils literal notranslate"><span class="pre">PhysicsInvariantError</span></code>, which is an <code class="docutils literal notranslate"><span class="pre">AssertionError</span></code>, so existing handlers keep working.</p></li>
 </ul>
 </section>
+<section id="recorded-settings">
+<h3>Recorded settings<a class="headerlink" href="#recorded-settings" title="Link to this heading"></a></h3>
+<p>The settings added since 3.6.0 are recorded with each run. <code class="docutils literal notranslate"><span class="pre">env.get_metadata()</span></code>,
+its <code class="docutils literal notranslate"><span class="pre">temporal_reproducibility</span></code> block and the export manifest hold
+<code class="docutils literal notranslate"><span class="pre">physics_version</span></code>, <code class="docutils literal notranslate"><span class="pre">episode_split_boundary</span></code> and <code class="docutils literal notranslate"><span class="pre">time_step_ratio_mode</span></code>; the
+manifest also keeps <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code>. With per-building reward
+functions, the reward evidence lists each building’s reward class and
+parameters, including <code class="docutils literal notranslate"><span class="pre">version</span></code>, under <code class="docutils literal notranslate"><span class="pre">per_building</span></code>, because the
+<code class="docutils literal notranslate"><span class="pre">MultiBuildingRewardFunction</span></code> that combines them has no version of its own.
+Invalid values of these settings raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the accepted
+values, whether set in the schema or as a constructor argument, and a
+misspelled <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> argument gets a suggestion. Simulation results do
+not change (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/301">#301</a>,
+<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/302">#302</a>).</p>
+</section>
 <section id="consecutive-episode-splits-share-their-boundary-row">
 <h3>Consecutive episode splits share their boundary row<a class="headerlink" href="#consecutive-episode-splits-share-their-boundary-row" title="Link to this heading"></a></h3>
 <p>An episode of N data rows executes N - 1 control steps: its last row is only
@@ -422,9 +438,19 @@ definitions, selected with the <code class="docutils literal notranslate"><span 
 <code class="docutils literal notranslate"><span class="pre">CityLearnEnv(physics_version=...)</span></code> argument, which takes precedence. Version
 <code class="docutils literal notranslate"><span class="pre">1</span></code> is the physics of CityLearn 3.6.0 and earlier; version <code class="docutils literal notranslate"><span class="pre">2</span></code>, the default,
 contains the corrections below. The native BAU reference of <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code>
-uses the version of the evaluated environment, and exports record it in the
-run metadata. To reproduce a 3.6.0 result, set <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>; to
-compare controllers, run them under the same version.</p>
+uses the version of the evaluated environment. The resolved version is in
+<code class="docutils literal notranslate"><span class="pre">env.get_metadata()</span></code>, its temporal block, and the export manifest, both at top
+level and in <code class="docutils literal notranslate"><span class="pre">comparison_context</span></code>. <code class="docutils literal notranslate"><span class="pre">compare_manifests()</span></code> and <code class="docutils literal notranslate"><span class="pre">compare_exports()</span></code>
+report two runs under different physics versions as <code class="docutils literal notranslate"><span class="pre">incompatible</span></code>, with
+<code class="docutils literal notranslate"><span class="pre">physics_version</span></code> among the mismatches, and a manifest written before the
+version was recorded as <code class="docutils literal notranslate"><span class="pre">unknown</span></code>, with <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> among the missing
+evidence; export such runs again to pair them. To reproduce a 3.6.0 result, set
+<code class="docutils literal notranslate"><span class="pre">physics_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>; to compare controllers, run them under the same
+version.</p>
+<p><code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> requires every community to use the same
+<code class="docutils literal notranslate"><span class="pre">physics_version</span></code> and <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code>, because portfolio KPIs add up
+the communities’ totals; mixed versions raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> at construction.
+Its <code class="docutils literal notranslate"><span class="pre">get_metadata()</span></code> records both.</p>
 <p>Version 2 changes the following on bundled datasets:</p>
 <ul class="simple">
 <li><p><strong>Battery discharge power.</strong> <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> describes how charging
