@@ -403,3 +403,50 @@ def test_portfolio_community_market_shares_are_pooled_from_energy():
     ]
     assert shares[0] != pytest.approx(shares[1])
     assert demand_share != pytest.approx((shares[0] + 3.0*shares[1])/4.0)
+
+
+def _residual_market_kpis(tmp_path, *, local_trading, ratio=0.8):
+    from test_market_phase_invariants import _rollout_zero_actions, _write_residual_market_schema
+
+    path = _write_residual_market_schema(tmp_path)
+    schema = json.loads(path.read_text(encoding="utf-8"))
+    schema["root_directory"] = str(path.parent)
+    schema["community_market"].update(local_trading_enabled=local_trading, intra_community_sell_ratio=ratio)
+    env = CityLearnEnv(schema, central_agent=True, random_seed=0)
+    try:
+        _rollout_zero_actions(env)
+        imports = [
+            sum(max(float(b.net_electricity_consumption[t]), 0.0)*float(b.carbon_intensity.carbon_intensity[t])
+                for b in env.buildings)
+            for t in range(env.time_step)
+        ]
+        return env.evaluate_v2(include_business_as_usual=False), float(sum(imports))
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("local_trading", [True, False])
+def test_district_emissions_follow_the_local_exchange_switch(tmp_path, local_trading):
+    """#327: with local trading off, no energy is shared, so district emissions are the member imports'."""
+    kpis, member_imports = _residual_market_kpis(tmp_path, local_trading=local_trading)
+    emissions = _value(kpis, "district_emissions_total_control_kgco2")
+    assert emissions == pytest.approx(
+        _value(kpis, "district_energy_provenance_external_purchase_emissions_kgco2"), rel=1.0e-6, abs=1.0e-9)
+    if local_trading:
+        assert emissions < member_imports - 0.1
+    else:
+        assert emissions == pytest.approx(member_imports, rel=1.0e-9)
+        assert emissions == pytest.approx(_value(kpis, "district_emissions_total_control_member_sum_kgco2"), rel=1.0e-9)
+
+
+@pytest.mark.parametrize("local_trading", [True, False])
+def test_district_emissions_do_not_depend_on_the_local_price_ratio(tmp_path, local_trading):
+    """#327: the local price ratio only prices the exchange; it never changes the emissions."""
+    values = []
+    for ratio in (0.5, 0.8, 1.0):
+        kpis, _ = _residual_market_kpis(tmp_path / str(ratio), local_trading=local_trading, ratio=ratio)
+        values.append((
+            _value(kpis, "district_emissions_total_control_kgco2"),
+            _value(kpis, "district_energy_provenance_external_purchase_emissions_kgco2"),
+        ))
+    assert all(v == pytest.approx(values[0], rel=1.0e-12) for v in values[1:])

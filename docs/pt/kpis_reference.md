@@ -314,7 +314,9 @@ l_b = parte da energia trocada localmente min(Σ_b i_b, Σ_b max(−net_b, 0)) a
 E_distrito = Σ_t e_t
 ```
 
-Um valor líquido ou uma intensidade carbónica não finitos contam como zero. O total do controlo é igual a `energy_provenance_external_purchase_emissions_kgco2`, exceto quando um mercado comunitário está configurado com a troca local desativada (#327).
+Quando um mercado comunitário está ativo com `local_trading_enabled` falso, não há troca local de energia, pelo que toda a importação de cada membro vem da rede e `e_t = Σ_b i_b · CI_b`, a soma dos membros. O rácio do preço local só define o preço da troca e nunca entra nas emissões ([#327](https://github.com/citylearn-project/CityLearn/issues/327)).
+
+Um valor líquido ou uma intensidade carbónica não finitos contam como zero. O total do controlo é igual a `energy_provenance_external_purchase_emissions_kgco2` em qualquer configuração do mercado.
 
 Por causa da compensação, o total do distrito é menor ou igual à soma dos totais dos edifícios. A definição do distrito da versão 3.6.0, a soma das emissões próprias dos membros, é mantida em `emissions_total_{control,baseline,business_as_usual}_member_sum_kgco2`.
 
@@ -326,7 +328,6 @@ Os rácios usam o rácio simples (as emissões nunca são negativas). O rácio d
 
 **Limitações conhecidas.**
 - As emissões do contrafactual de um edifício são postas a 0 quando a intensidade carbónica soma 0 na sua janela; as do controlo não são.
-- A igualdade com o registo de proveniência não se verifica quando um mercado comunitário está configurado com a troca local desativada (#327).
 
 ## Autoconsumo solar
 
@@ -1517,7 +1518,7 @@ O scorecard por omissão inclui seis linhas de proveniência:
 
 ### Que linha usar
 
-- **Emissões do distrito.** Para o total de emissões, use-se a família [Emissões](#emissões). O total de controlo dessa família no distrito é igual a `district_energy_provenance_external_purchase_emissions_kgco2`, exceto quando um mercado comunitário está configurado com a troca local desativada (#327). Nesse caso, o registo não conta partilha local, enquanto as emissões do distrito continuam a compensar as importações e exportações dos membros. Use-se a linha de proveniência quando é preciso saber para onde foi esse carbono.
+- **Emissões do distrito.** Para o total de emissões, use-se a família [Emissões](#emissões). O total de controlo dessa família no distrito é igual a `district_energy_provenance_external_purchase_emissions_kgco2`, também quando um mercado comunitário está configurado com a troca local desativada. Use-se a linha de proveniência quando é preciso saber para onde foi esse carbono.
 - **Emissões dos edifícios.** Ao nível do edifício, `external_purchase_emissions` conta a importação após a partilha local, enquanto as emissões do edifício contam a importação própria de cada membro. As duas diferem sempre que os membros partilham energia.
 - **Autoconsumo solar ou FV útil.** O autoconsumo solar conta toda a energia FV que não foi exportada nem cortada, incluindo a perdida no armazenamento ou ainda armazenada. `pv_useful_building_ratio` conta apenas a energia FV que chegou a um consumo. Use-se este último quando a pergunta é quanta energia FV serviu a procura.
 - **FV no consumo.** `pv_load` é o total de energia FV no consumo de um membro. `pv_load_direct` e `pv_load_after_storage` dividem-no em energia FV usada sem armazenamento e energia FV usada depois de armazenada. Use-se a divisão apenas para avaliar o contributo do armazenamento.
@@ -1528,7 +1529,6 @@ O scorecard por omissão inclui seis linhas de proveniência:
 - A energia de um VE no momento da ligação, e qualquer estado de carga imposto, é desconhecida e sem carbono no registo. As linhas `carbon_*` ficam, por isso, por defeito; as linhas `carbon_unknown_*` mostram em quanta energia.
 - As linhas dos edifícios são contadas pelo membro que recebe e não fecham por membro. Só o distrito fecha.
 - O registo não tem janela de avaliação: abrange todos os intervalos simulados desde o reset.
-- As emissões do distrito e `external_purchase_emissions` diferem quando um mercado comunitário está configurado com a troca local desativada (#327).
 - Ao nível do portefólio, os rácios `pv_useful_*` são médias ponderadas pelo `weight` das comunidades, e os dois diagnósticos de resíduo máximo são somas dos máximos das comunidades.
 
 ## Topologia dinâmica

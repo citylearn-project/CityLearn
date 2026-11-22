@@ -337,6 +337,8 @@ class MultiCommunityEnv(Env):
             "central_agent": self.central_agent,
             "seconds_per_time_step": self.seconds_per_time_step,
             "episode_time_steps": self.episode_time_steps,
+            "physics_version": next(iter(self.envs.values())).physics_version,
+            "random_stream_version": next(iter(self.envs.values())).random_stream_version,
             "time_step": self.time_step,
             "render_directory": str(self.render_output_root),
             "render_session_name": self.render_session_name,
@@ -468,6 +470,14 @@ class MultiCommunityEnv(Env):
         episode_lengths = {int(env.episode_tracker.episode_time_steps) for env in self.envs.values()}
         if len(episode_lengths) != 1:
             raise ValueError("MultiCommunityEnv requires all communities to share the same effective episode length.")
+
+        # Portfolio KPIs add up district totals, so every community must use the same definitions.
+        for setting in ("physics_version", "random_stream_version"):
+            values = {community_id: getattr(env, setting) for community_id, env in self.envs.items()}
+            if len(set(values.values())) != 1:
+                raise ValueError(
+                    f"MultiCommunityEnv requires all communities to share {setting}, got {values}."
+                )
 
     def _validate_reset_synchronization(self):
         self._validate_constructor_homogeneity()
