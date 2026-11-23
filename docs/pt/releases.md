@@ -61,6 +61,19 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   sem bloquear) fora dos checks de pull request e o `pytest.ini` define um
   limite de 600 s por teste (`pytest-timeout`). Os resultados das simulações não
   mudam ([#289](https://github.com/citylearn-project/CityLearn/issues/289)).
+- **Fotografias de KPIs do RBC e do SAC retiradas.**
+  `scripts/audit/audit_performance_results.py` deixa de comparar corridas longas
+  do RBC e do SAC com `scripts/audit/snapshots/rbc_kpi_baseline.json` e
+  `sac_kpi_baseline.json`. Ambas foram escritas na 3.0.0 a partir de outro
+  checkout, nenhuma verificação as lia e as definições dos KPIs mudaram desde
+  então. Os ficheiros e as opções `--update-baselines`, `--kpi-tol`,
+  `--episode-steps`, `--snapshot-dir` e `--strict-require-sac-snapshot` são
+  removidos; `run_full_audit.py` deixa de ter `--episode-steps`. O script mantém
+  as verificações de tempo por passo e de custo das verificações de invariantes,
+  que passam a usar o mesmo `time_step_ratio_mode="compress"` de
+  `scripts/ci/perf_smoke.py`. Os resultados são verificados pela auditoria de
+  paridade da refatoração e pelas referências congeladas dos testes
+  ([#314](https://github.com/citylearn-project/CityLearn/issues/314)).
 - **Agentes genéricos na interface de entidades.** Na interface de entidades os
   espaços de ações e de observações são dicionários de tabelas de entidades, pelo
   que `Agent` e `ZeroActionBaselineAgent` falhavam com `AttributeError` no
