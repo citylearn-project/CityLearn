@@ -10,6 +10,7 @@ import hashlib
 import importlib
 import inspect
 import os
+import warnings
 from typing import TYPE_CHECKING
 
 import pandas as pd
@@ -17,7 +18,7 @@ import pandas as pd
 from citylearn import random_streams
 from citylearn.data import ChargerSimulation, LogisticRegressionOccupantParameters
 from citylearn.energy_model import PV, Battery
-from citylearn.internal.physics_version import physics_version_of
+from citylearn.internal.physics_version import physics_version_of, resolve_physics_version
 from citylearn.utilities import parse_bool
 
 if TYPE_CHECKING:
@@ -167,6 +168,17 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
                     f"Charger simulation '{charger_simulation_filepath}' is missing "
                     f"required columns: {missing_charger_columns}."
                 )
+            # One SOC unit per file (#368): the loader reads only the simulation window, so the unit
+            # is decided from the whole file unless the schema declares it. Physics version 1 keeps
+            # the old value-by-value rule.
+            soc_unit = ChargerSimulation.resolve_soc_unit(
+                charger_config.get('soc_unit'), path=f'buildings.{building_name}.chargers.{charger_name}.soc_unit',
+            )
+            if soc_unit is None:
+                soc_unit = (
+                    'per_value' if resolve_physics_version(schema.get('physics_version')) < 2
+                    else loader._charger_soc_unit(charger_simulation_filepath)
+                )
             charger_simulation = ChargerSimulation(
                 *(charger_simulation_file[column].to_numpy() for column in charger_columns),
                 electric_vehicle_session_id=(
@@ -177,6 +189,7 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
                 noise_std=noise_std,
                 noise_seed=loader._noise_seed(schema, 'charger:'+building_name+':'+charger_name),
                 noise_start_index=schema['simulation_start_time_step'],
+                soc_unit=soc_unit,
             )
             loader._set_time_step_offset(charger_simulation, schema['simulation_start_time_step'])
             if 'electric_vehicle_current_soc' in charger_simulation_file.columns:
@@ -185,11 +198,17 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
                     current_soc_raw,
                     default_soc_value=-0.1,
                     noise_std=0.0,
+                    unit=soc_unit,
                 )
 
             charger_type = charger_config['type']
             charger_class = component_constructor(charger_type, f'buildings.{building_name}.chargers.{charger_name}.type')
             charger_attributes = dict(charger_config.get('attributes', {}) or {})
+            charger_path = f'buildings.{building_name}.chargers.{charger_name}'
+            charger_attributes = charger_power_attributes(
+                charger_class, charger_attributes, charger_path,
+                resolve_physics_version(schema.get('physics_version')),
+            )
             charger_attributes['episode_tracker'] = episode_tracker
             # Chargers draw no random values, but an unseeded one draws its seed from Python's global `random`.
             charger_attributes.setdefault('random_seed', schema['random_seed'])
@@ -202,6 +221,53 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
             )
             chargers_list.append(charger_object)
     return chargers_list
+
+
+def charger_power_attributes(charger_class, attributes: dict, path: str, physics_version: int) -> dict:
+    """Validate a charger's schema `attributes` and resolve its omitted power limits (#369).
+
+    A name the charger class does not accept raises `ValueError` instead of being dropped. Under
+    physics version 2 an omitted `max_discharging_power` is 0 (no V2G) and an omitted
+    `max_charging_power` is `nominal_power`; physics version 1 keeps the 50 kW of 3.6.0 for both.
+    A warning names the limits that fall back to an assumed value.
+    """
+
+    validate = getattr(charger_class, 'validate_attributes', None)
+
+    if validate is not None:
+        validate(attributes, path=f'{path}.attributes')
+
+    attributes = dict(attributes)
+    assumed = []
+
+    if physics_version < 2:
+        legacy = getattr(charger_class, 'LEGACY_DEFAULT_POWER', 50.0)
+
+        for key in ('max_charging_power', 'max_discharging_power'):
+            if attributes.get(key) is None:
+                attributes[key] = legacy
+                assumed.append(f'{key}={legacy:g} kW')
+
+    else:
+        if attributes.get('max_charging_power') is None and attributes.get('nominal_power') is None:
+            default = getattr(charger_class, 'DEFAULT_MAX_CHARGING_POWER', 50.0)
+            assumed.append(f'max_charging_power={default:g} kW')
+
+        if attributes.get('max_discharging_power') is None:
+            assumed.append('max_discharging_power=0 kW (no V2G)')
+
+    if attributes.get('efficiency') is None:
+        assumed.append('efficiency=1.0')
+
+    if assumed:
+        warnings.warn(
+            f"{path} does not set {', '.join(a.split('=')[0] for a in assumed)}; using {', '.join(assumed)}. "
+            'Set them in the charger attributes to silence this warning.',
+            UserWarning,
+            stacklevel=2,
+        )
+
+    return attributes
 
 
 def solar_generation_enabled(solar_generation, index: int) -> bool:
