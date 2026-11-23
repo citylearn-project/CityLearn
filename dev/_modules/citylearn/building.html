@@ -148,7 +148,7 @@
   <h1>Source code for citylearn.building</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="kn">import</span> <span class="n">spaces</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.scalars</span><span class="w"> </span><span class="kn">import</span> <span class="n">as_float</span><span class="p">,</span> <span class="n">clip_scalar</span>
@@ -165,6 +165,7 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal</span><span class="w"> </span><span class="kn">import</span> <span class="n">grid_availability</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.building_ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">BuildingOpsService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">baseline_version_of</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.physics_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">physics_version_of</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.service_energy</span><span class="w"> </span><span class="kn">import</span> <span class="n">SERVICE_ENERGY_COMPONENTS</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.units</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -271,6 +272,14 @@
     <span class="c1">#: Physics version of the building, see :py:mod:`citylearn.internal.physics_version`. Set by the</span>
     <span class="c1">#: environment; ``None`` selects the default version.</span>
     <span class="n">physics_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">#: KPI baseline version of the building, see :py:mod:`citylearn.internal.baseline_version`. Set by the</span>
+    <span class="c1">#: environment; ``None`` selects the default version.</span>
+    <span class="n">baseline_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">#: Supplies the EV charging that the version 2 KPI baseline keeps: a callable that takes the building and</span>
+    <span class="c1">#: returns its charger consumption in the native BAU with the ``'full'`` target. Set by the environment.</span>
+    <span class="n">_baseline_ev_charging_source</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s1">'Building'</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">energy_simulation</span><span class="p">:</span> <span class="n">EnergySimulation</span><span class="p">,</span> <span class="n">weather</span><span class="p">:</span> <span class="n">Weather</span><span class="p">,</span> <span class="n">observation_metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">],</span>
@@ -647,29 +656,66 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">net_electricity_consumption_without_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""net electricity consumption in the absence of flexibility provided by storage devices time series, in [kWh]. </span>
-<span class="sd">        </span>
+<span class="w">        </span><span class="sd">"""Net electricity consumption in the absence of flexibility provided by storage devices time series, in [kWh].</span>
+
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
+<span class="sd">        The default KPI baseline. It removes the storage devices from the controlled run and replaces the EV</span>
+<span class="sd">        charging of the controlled run with the EV charging of the native business-as-usual (BAU) run:</span>
+
 <span class="sd">        net_electricity_consumption_without_storage = `net_electricity_consumption` - (`cooling_storage_electricity_consumption`</span>
-<span class="sd">        + `heating_storage_electricity_consumption` + `dhw_storage_electricity_consumption` + `electrical_storage_electricity_consumption` + `charger_electricity_consumption`)</span>
+<span class="sd">        + `heating_storage_electricity_consumption` + `dhw_storage_electricity_consumption`</span>
+<span class="sd">        + `electrical_storage_electricity_consumption` + `chargers_electricity_consumption`)</span>
+<span class="sd">        + BAU `chargers_electricity_consumption`</span>
 
-<span class="sd">        Regarding electric vehicles there is:</span>
-<span class="sd">        chargers_electricity_consumption -&gt; Sum of the electricity consumption of all electric_vehicle_chargers in the building</span>
+<span class="sd">        The BAU charges each car on arrival at maximum power until it is full, and never discharges it, so the</span>
+<span class="sd">        cars get the energy they need, without V2G, and the baseline is the same whatever the controller does with</span>
+<span class="sd">        the cars. The BAU charging comes from the native BAU sidecar of the same scenario</span>
+<span class="sd">        (:py:meth:`citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline` with the ``'full'`` target,</span>
+<span class="sd">        whatever `business_as_usual_ev_charge_target` is), so it is run when a building has EV chargers.</span>
+<span class="sd">        Buildings without chargers need no sidecar. The deferrable appliances and the HVAC stay as the</span>
+<span class="sd">        controller ran them.</span>
 
-<span class="sd">        So, the first one is subtracted from the net_electricity_consumption, obtaining the energy consumption as if the cars were not used at all.</span>
-<span class="sd">        However, if there are chargers and EVs, they need to charge per usual, so that consumption is added</span>
-<span class="sd">        This is what allows to check if the control mechanism affects the grid balancing scheme for EVs for example.</span>
+<span class="sd">        With `baseline_version` 1 (CityLearn 3.6.0 and earlier) no charging is added back, so on EV datasets the</span>
+<span class="sd">        baseline is a community whose cars never charge. See :py:mod:`citylearn.internal.baseline_version`.</span>
 
 <span class="sd">        Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_without_grid_during_outage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_electricity_consumption</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cooling_storage_electricity_consumption</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">heating_storage_electricity_consumption</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dhw_storage_electricity_consumption</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">electrical_storage_electricity_consumption</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">chargers_electricity_consumption</span><span class="p">,</span>
-        <span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">baseline_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_vehicle_chargers</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_ev_charging</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_without_grid_during_outage</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_baseline_ev_charging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""EV charging that the version 2 baseline keeps: the building's BAU charger consumption, `length` steps."""</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_ev_charging_source</span>
+
+        <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">'Building </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s1"> has EV chargers, and the version 2 KPI baseline adds back their charging in '</span>
+                <span class="s1">'the native BAU run, which only an environment can supply. Evaluate the building through its '</span>
+                <span class="s1">'CityLearnEnv, or set baseline_version=1.'</span>
+            <span class="p">)</span>
+
+        <span class="n">charging</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">source</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">charging</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">'The native BAU run supplies </span><span class="si">{</span><span class="n">charging</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> EV charging time steps for building </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s1">, '</span>
+                <span class="sa">f</span><span class="s1">'fewer than the </span><span class="si">{</span><span class="n">length</span><span class="si">}</span><span class="s1"> the baseline needs.'</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">charging</span><span class="p">[:</span><span class="n">length</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">net_electricity_consumption_emission</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>

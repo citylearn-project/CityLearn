@@ -340,6 +340,13 @@ LBNL’s Tracking The Sun dataset.</p>
 <cite>electrical_service.available_grid_power</cite> series value at the current time step.</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citylearn.building.Building.baseline_version">
+<span class="sig-name descname"><span class="pre">baseline_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#citylearn.building.Building.baseline_version" title="Link to this definition"></a></dt>
+<dd><p>KPI baseline version of the building, see <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.baseline_version</span></code>. Set by the
+environment; <code class="docutils literal notranslate"><span class="pre">None</span></code> selects the default version.</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.building.Building.carbon_intensity">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">carbon_intensity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="citylearn.data.html#citylearn.data.CarbonIntensity" title="citylearn.data.CarbonIntensity"><span class="pre">CarbonIntensity</span></a></em><a class="headerlink" href="#citylearn.building.Building.carbon_intensity" title="Link to this definition"></a></dt>
@@ -827,15 +834,23 @@ electricity consumption by discharging <cite>heating_storage</cite> to meet <cit
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.building.Building.net_electricity_consumption_without_storage">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">net_electricity_consumption_without_storage</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#citylearn.building.Building.net_electricity_consumption_without_storage" title="Link to this definition"></a></dt>
-<dd><p>net electricity consumption in the absence of flexibility provided by storage devices time series, in [kWh].</p>
+<dd><p>Net electricity consumption in the absence of flexibility provided by storage devices time series, in [kWh].</p>
 <p class="rubric">Notes</p>
+<p>The default KPI baseline. It removes the storage devices from the controlled run and replaces the EV
+charging of the controlled run with the EV charging of the native business-as-usual (BAU) run:</p>
 <p>net_electricity_consumption_without_storage = <cite>net_electricity_consumption</cite> - (<cite>cooling_storage_electricity_consumption</cite>
-+ <cite>heating_storage_electricity_consumption</cite> + <cite>dhw_storage_electricity_consumption</cite> + <cite>electrical_storage_electricity_consumption</cite> + <cite>charger_electricity_consumption</cite>)</p>
-<p>Regarding electric vehicles there is:
-chargers_electricity_consumption -&gt; Sum of the electricity consumption of all electric_vehicle_chargers in the building</p>
-<p>So, the first one is subtracted from the net_electricity_consumption, obtaining the energy consumption as if the cars were not used at all.
-However, if there are chargers and EVs, they need to charge per usual, so that consumption is added
-This is what allows to check if the control mechanism affects the grid balancing scheme for EVs for example.</p>
++ <cite>heating_storage_electricity_consumption</cite> + <cite>dhw_storage_electricity_consumption</cite>
++ <cite>electrical_storage_electricity_consumption</cite> + <cite>chargers_electricity_consumption</cite>)
++ BAU <cite>chargers_electricity_consumption</cite></p>
+<p>The BAU charges each car on arrival at maximum power until it is full, and never discharges it, so the
+cars get the energy they need, without V2G, and the baseline is the same whatever the controller does with
+the cars. The BAU charging comes from the native BAU sidecar of the same scenario
+(<a class="reference internal" href="citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline" title="citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline()</span></code></a> with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target,
+whatever <cite>business_as_usual_ev_charge_target</cite> is), so it is run when a building has EV chargers.
+Buildings without chargers need no sidecar. The deferrable appliances and the HVAC stay as the
+controller ran them.</p>
+<p>With <cite>baseline_version</cite> 1 (CityLearn 3.6.0 and earlier) no charging is added back, so on EV datasets the
+baseline is a community whose cars never charge. See <code class="xref py py-mod docutils literal notranslate"><span class="pre">citylearn.internal.baseline_version</span></code>.</p>
 <p>Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.</p>
 </dd></dl>
 

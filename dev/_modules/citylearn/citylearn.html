@@ -181,7 +181,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnKPIService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.kpi_population</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActivePopulation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.loading</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnLoadingService</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnBusinessAsUsualBaselineService</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaselineEVChargingSource</span><span class="p">,</span> <span class="n">CityLearnBusinessAsUsualBaselineService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.physics_invariants</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnPhysicsInvariantService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.provenance</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnProvenanceService</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">CityLearnRuntimeService</span>
@@ -373,6 +373,11 @@
 <span class="sd">    physics_version: int, optional</span>
 <span class="sd">        Physics definitions: ``2`` (default) or ``1``, which reproduces the physics of CityLearn 3.6.0. Overrides the</span>
 <span class="sd">        schema key. The migration guide lists the corrections of version 2.</span>
+<span class="sd">    baseline_version: int, optional</span>
+<span class="sd">        Definition of the default KPI baseline (the ``*_without_storage`` series): ``2`` (default) removes the battery,</span>
+<span class="sd">        the thermal storage and the EV charging of the controlled run, and adds back the EV charging of the native BAU</span>
+<span class="sd">        with the ``'full'`` target, so it is the same for every controller and has no V2G; ``1`` adds nothing back, as</span>
+<span class="sd">        in CityLearn 3.6.0. Overrides the schema key. See :py:mod:`citylearn.internal.baseline_version`.</span>
 <span class="sd">    debug_timing: bool, optional</span>
 <span class="sd">        Log runtime timings. Defaults to the schema value, else ``False``.</span>
 <span class="sd">    check_observation_limits: bool, optional</span>
@@ -408,6 +413,7 @@
         <span class="s1">'inactive_observations'</span><span class="p">,</span> <span class="s1">'active_actions'</span><span class="p">,</span> <span class="s1">'inactive_actions'</span><span class="p">,</span> <span class="s1">'simulate_power_outage'</span><span class="p">,</span> <span class="s1">'solar_generation'</span><span class="p">,</span>
         <span class="s1">'random_seed'</span><span class="p">,</span> <span class="s1">'offline'</span><span class="p">,</span> <span class="s1">'time_step_ratio'</span><span class="p">,</span> <span class="s1">'interface'</span><span class="p">,</span> <span class="s1">'topology_mode'</span><span class="p">,</span> <span class="s1">'start_date'</span><span class="p">,</span>
         <span class="s1">'episode_split_boundary'</span><span class="p">,</span> <span class="s1">'time_step_ratio_mode'</span><span class="p">,</span> <span class="s1">'random_stream_version'</span><span class="p">,</span> <span class="s1">'physics_version'</span><span class="p">,</span>
+        <span class="s1">'baseline_version'</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -438,6 +444,7 @@
         <span class="n">check_observation_limits</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'check_observation_limits'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">physics_invariant_checks</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">physics_version</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'physics_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">baseline_version</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'baseline_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">energy_provenance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'energy_provenance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">metrics_log_interval</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'metrics_log_interval'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">ev_departure_within_tolerance</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">'ev_departure_within_tolerance'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -530,6 +537,10 @@
         <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.physics_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_physics_version</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">physics_version</span> <span class="o">=</span> <span class="n">resolve_physics_version</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'physics_version'</span><span class="p">)</span> <span class="k">if</span> <span class="n">physics_version</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">physics_version</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_baseline_version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_version</span> <span class="o">=</span> <span class="n">resolve_baseline_version</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'baseline_version'</span><span class="p">)</span> <span class="k">if</span> <span class="n">baseline_version</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">baseline_version</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">energy_provenance</span> <span class="o">=</span> <span class="n">parse_bool</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'energy_provenance'</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">energy_provenance</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">energy_provenance</span><span class="p">,</span>
@@ -785,6 +796,23 @@
 <span class="w">        </span><span class="sd">"""Buildings in CityLearn environment."""</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__buildings</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">baseline_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Definition of the default KPI baseline, see :py:mod:`citylearn.internal.baseline_version`."""</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">baseline_version_of</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_baseline_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">baseline_version_of</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="nd">@baseline_version</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">baseline_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citylearn.internal.baseline_version</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_baseline_version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_version</span> <span class="o">=</span> <span class="n">resolve_baseline_version</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="c1"># Departed and not yet joined members too: the KPIs read their series.</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_topology_service'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s1">'member_pool'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buildings</span> <span class="ow">or</span> <span class="p">[]),</span> <span class="o">*</span><span class="n">pool</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="o">*</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_all_buildings'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[])]:</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">baseline_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baseline_version</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">electric_vehicles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ElectricVehicle</span><span class="p">]:</span>
@@ -1602,6 +1630,11 @@
     <span class="nd">@buildings</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">buildings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buildings</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Building</span><span class="p">]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__buildings</span> <span class="o">=</span> <span class="n">buildings</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'_baseline_version'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">buildings</span> <span class="ow">or</span> <span class="p">[]:</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">baseline_version</span> <span class="o">=</span> <span class="n">version</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">_baseline_ev_charging_source</span> <span class="o">=</span> <span class="n">BaselineEVChargingSource</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="nd">@electric_vehicles</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">electric_vehicles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">electric_vehicles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ElectricVehicle</span><span class="p">]):</span>
@@ -1728,6 +1761,7 @@
             <span class="s1">'topology_event_log'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">topology_event_log</span><span class="p">,</span>
             <span class="s1">'physics_invariant_checks'</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'physics_invariant_checks'</span><span class="p">,</span> <span class="kc">False</span><span class="p">)),</span>
             <span class="s1">'physics_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">physics_version</span><span class="p">,</span>
+            <span class="s1">'baseline_version'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_version</span><span class="p">,</span>
             <span class="s1">'episode_split_boundary'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">episode_split_boundary</span><span class="p">,</span>
             <span class="s1">'time_step_ratio_mode'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step_ratio_mode</span><span class="p">,</span>
             <span class="s1">'energy_accounting'</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_provenance_service</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">(),</span>
@@ -1988,6 +2022,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kpi_service</span><span class="o">.</span><span class="n">family_audit</span><span class="p">(</span><span class="n">comfort_band</span><span class="o">=</span><span class="n">comfort_band</span><span class="p">,</span>
             <span class="n">control_condition</span><span class="o">=</span><span class="n">control_condition</span><span class="p">,</span> <span class="n">baseline_condition</span><span class="o">=</span><span class="n">baseline_condition</span><span class="p">)</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_baseline_ev_charging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">building</span><span class="p">:</span> <span class="n">Building</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""EV charging that the version 2 KPI baseline keeps for `building`: its charging in the ``'full'`` BAU."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_business_as_usual_baseline_service</span><span class="o">.</span><span class="n">ev_charging</span><span class="p">(</span><span class="n">building</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CityLearnEnv.run_business_as_usual_baseline">
 <a class="viewcode-back" href="../../api/citylearn.citylearn.html#citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline">[docs]</a>

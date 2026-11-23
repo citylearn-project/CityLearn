@@ -456,7 +456,24 @@ recomputes the cached BAU reference.</p>
 evaluation conditions selected through <code class="docutils literal notranslate"><span class="pre">baseline_condition</span></code>. The default uses
 the simulator’s counterfactual series without storage and, for dynamic building
 models, without partial-load control, while retaining PV.</p>
-<p>This is a counterfactual calculation, not a second <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> run.
+<p>“Without storage” removes the battery, the thermal storage and the EV charging
+of the controlled run, and adds back the EV charging of the native BAU with the
+<code class="docutils literal notranslate"><span class="pre">'full'</span></code> target: each car is charged on arrival at maximum power until it is
+full, and never discharged. The cars get the energy they need, without V2G, and
+the baseline does not depend on how the controller charged them, so a controller
+that leaves the cars short does not lower its own baseline. The deferrable
+appliances and the HVAC stay as the controller ran them. The <code class="docutils literal notranslate"><span class="pre">baseline</span></code> rows
+therefore credit the controller with its storage dispatch, its EV charging and
+its V2G against charging on arrival. With <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> nothing is added
+back, as in CityLearn 3.6.0, so on EV datasets the baseline is a community whose
+cars never charge.</p>
+<p>Apart from that EV charging, this is a counterfactual calculation from the run’s
+own series, not a second <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> run. On datasets with EV
+chargers the charging comes from the BAU sidecar, which every evaluation then
+runs, also the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> and <code class="docutils literal notranslate"><span class="pre">evaluate_v2(include_business_as_usual=False)</span></code>,
+with the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target whatever <code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target</span></code> is. Like
+the BAU rows, it cannot be built when inputs, buildings or devices changed after
+loading; evaluate such runs with <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code>.
 <code class="docutils literal notranslate"><span class="pre">EvaluationCondition</span></code> also exposes alternatives, including removing PV.
 Choose the same evaluation condition when comparing controllers. During a
 simulated power outage the counterfactual, like the controlled run, exchanges

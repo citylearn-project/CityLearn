@@ -102,6 +102,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#choose-the-evaluation-api">Choose the evaluation API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ev-charging-in-the-default-baseline">EV charging in the default baseline</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#district-emissions-with-local-trading-off">District emissions with local trading off</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#occupant-set-point-limits">Occupant set-point limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#observation-spaces-follow-the-observations">Observation spaces follow the observations</a></li>
@@ -242,6 +243,42 @@ development-line history.</p>
 </section>
 <section id="unreleased">
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Link to this heading"></a></h2>
+<section id="ev-charging-in-the-default-baseline">
+<h3>EV charging in the default baseline<a class="headerlink" href="#ev-charging-in-the-default-baseline" title="Link to this heading"></a></h3>
+<p>The default KPI baseline (<code class="docutils literal notranslate"><span class="pre">EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV</span></code>,
+the <code class="docutils literal notranslate"><span class="pre">*_without_storage</span></code> series) subtracted the EV charger consumption with the
+battery and the thermal storage and added nothing back, so on EV datasets the
+<code class="docutils literal notranslate"><span class="pre">*_baseline_*</span></code>, <code class="docutils literal notranslate"><span class="pre">*_delta_*</span></code> and <code class="docutils literal notranslate"><span class="pre">*_ratio_to_baseline_*</span></code> rows, and every value of
+the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> table, compared the run with a community whose cars
+never charge: any controller that charged the cars looked worse than the
+baseline (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/365">#365</a>).</p>
+<ul class="simple">
+<li><p>The baseline now adds back the EV charging of the native BAU with the
+<code class="docutils literal notranslate"><span class="pre">'full'</span></code> target: each car is charged on arrival at maximum power until it is
+full, and never discharged. The cars get the energy they need, without V2G,
+and the baseline is the same for every controller, so the <code class="docutils literal notranslate"><span class="pre">baseline</span></code> rows
+credit a controller with its storage dispatch, its EV charging and its V2G
+against charging on arrival. The deferrable appliances and the HVAC stay as
+the controller ran them.</p></li>
+<li><p>On datasets with EV chargers, every evaluation runs the BAU sidecar for that
+charging, also the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">evaluate_v2(include_business_as_usual=False)</span></code>, and uses the <code class="docutils literal notranslate"><span class="pre">'full'</span></code> target
+whatever <code class="docutils literal notranslate"><span class="pre">business_as_usual_ev_charge_target</span></code> is. Where the sidecar cannot
+run, because inputs, buildings or devices changed after loading, evaluating
+raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>; use <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> there. The manifest of such a
+run records the BAU reference as evaluated.</p></li>
+<li><p>Only datasets with EV chargers change: <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>,
+the <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> datasets and the three-phase demos. The simulation, the
+control rows, the BAU rows and the rewards do not change. The equity KPIs,
+which are built from each member’s benefit against the baseline, change with it.</p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code> (constructor argument or schema key) to
+reproduce the baseline of CityLearn 3.6.0. The version is in
+<code class="docutils literal notranslate"><span class="pre">env.get_metadata()</span></code> and the export manifest, at top level and in
+<code class="docutils literal notranslate"><span class="pre">comparison_context</span></code>; <code class="docutils literal notranslate"><span class="pre">compare_exports()</span></code> reports two runs under different
+versions as <code class="docutils literal notranslate"><span class="pre">incompatible</span></code>. <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> requires every community to
+use the same version.</p></li>
+</ul>
+</section>
 <section id="district-emissions-with-local-trading-off">
 <h3>District emissions with local trading off<a class="headerlink" href="#district-emissions-with-local-trading-off" title="Link to this heading"></a></h3>
 <p>With a community market enabled and <code class="docutils literal notranslate"><span class="pre">community_market.local_trading_enabled</span></code>
@@ -508,7 +545,8 @@ lists every changed row and the name that keeps its 3.6.0 value.</p>
 ratios of the district totals instead of means of the building ratios
 (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/237">#237</a>). The
 3.6.0 values are published as <code class="docutils literal notranslate"><span class="pre">*_building_mean_ratio</span></code>, and the legacy
-<code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> district rows still hold them.</p></li>
+<code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> district rows still hold them; on datasets with EV chargers,
+with <code class="docutils literal notranslate"><span class="pre">baseline_version=1</span></code> (see <a class="reference internal" href="#ev-charging-in-the-default-baseline"><span class="std std-ref">EV charging in the default baseline</span></a>).</p></li>
 <li><p><strong>District emissions</strong> are those of the netted district import, so local
 sharing between members lowers them, consistent with district import and
 cost (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/238">#238</a>).
@@ -563,8 +601,9 @@ report two runs under different physics versions as <code class="docutils litera
 <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> among the mismatches, and a manifest written before the
 version was recorded as <code class="docutils literal notranslate"><span class="pre">unknown</span></code>, with <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> among the missing
 evidence; export such runs again to pair them. To reproduce a 3.6.0 result, set
-<code class="docutils literal notranslate"><span class="pre">physics_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>; to compare controllers, run them under the same
-version.</p>
+<code class="docutils literal notranslate"><span class="pre">physics_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>, and also <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code> for the KPIs of
+datasets with EV chargers; to compare controllers, run them under the same
+versions.</p>
 <p><code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> requires every community to use the same
 <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> and <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code>, because portfolio KPIs add up
 the communities’ totals; mixed versions raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> at construction.
