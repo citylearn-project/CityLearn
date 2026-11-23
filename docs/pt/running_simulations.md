@@ -197,8 +197,24 @@ citylearn simulate data/datasets/my_dataset/schema.json evaluate
 ```
 
 O `simulate` escreve na pasta de saída um resumo do treino
-(`<simulation_id>-train.json`), uma avaliação (`<simulation_id>-evaluation.json`)
-e, com `--save_agent`, o agente, e mostra o caminho de cada ficheiro que escreve.
+(`<simulation_id>-train.json`), os ficheiros de avaliação e, com `--save_agent`,
+o agente, e mostra o caminho de cada ficheiro que escreve. O `evaluate` e o
+`train --evaluate` escrevem dois ficheiros de avaliação:
+
+- `<simulation_id>-evaluation_v2.csv`: a tabela do `evaluate_v2()`, com as
+  colunas `cost_function`, `value`, `name`, `level`, `unit` e `description`, uma
+  linha por KPI e âmbito. Inclui as linhas do mercado comunitário quando o
+  cenário tem mercado e as linhas `*_business_as_usual_*`. É a tabela que a
+  [referência dos KPIs](kpis_reference.md) e o scorecard descrevem; leia-a com
+  `pandas.read_csv`.
+- `<simulation_id>-evaluation.json`: a janela e as horas da avaliação, as
+  recompensas, as ações e as séries temporais, e os KPIs antigos do `evaluate()`
+  em `evaluation`. O formato não muda, por isso os parsers existentes continuam
+  a funcionar, mas compare controladores com o ficheiro do `evaluate_v2()`.
+
+As linhas business-as-usual exigem uma segunda execução do `BusinessAsUsualAgent`
+na janela de avaliação, tal como o `evaluate_v2()` em Python. A opção
+`--no_business_as_usual` dispensa-a e escreve a tabela sem essas linhas.
 
 ### Agente Stable Baselines3
 
@@ -280,6 +296,7 @@ O resumo do treino só regista o nome da máquina e o nome do utilizador com
 | `-rs`, `--random_seed` | `42` | Semente. |
 | `--offline` | flag | Exige ficheiros locais. |
 | `--record_host` | flag | Regista o nome da máquina e do utilizador no resumo do treino. |
+| `--no_business_as_usual` | flag | Escreve a tabela do `evaluate_v2()` sem as linhas business-as-usual. |
 | `train -e` | `train -e 10` | Número de episódios de treino. |
 | `train --save_agent` | flag | Guarda o agente no fim. |
 | `train --evaluate` | flag | Avalia depois do treino, na janela do primeiro episódio de treino, salvo se for indicado `-te`. |

@@ -121,8 +121,11 @@ def _exit_code(result: Any) -> int:
 class Simulator:
     def __init__(self, schema: str, agent_name: str = None, env_kwargs: Mapping[str, Any] = None, agent_kwargs: Mapping[str, Any] = None, wrappers: List[str] = None,
      time_series_variables: List[str] = None, simulation_id: str = None, output_directory: Union[Path, str] = None, agent_filepath: Union[Path, str] = None,
-     random_seed: int = None, offline: bool = None, overwrite: bool = None, record_host: bool = None
+     random_seed: int = None, offline: bool = None, overwrite: bool = None, record_host: bool = None,
+     business_as_usual: bool = None
     ) -> None:
+        # The evaluate_v2() table includes the business-as-usual comparison unless it is turned off, as in Python.
+        self.business_as_usual = True if business_as_usual is None else bool(business_as_usual)
         # The machine and user names are personal data in shared results, so they are recorded only on request.
         self.record_host = False if record_host is None else bool(record_host)
         self.schema = schema
@@ -284,6 +287,30 @@ class Simulator:
             'time_series': self.__get_time_series().to_dict('list'),
             'actions': self.__actions_list,
         }
+
+    def __write_evaluation(self):
+        # The JSON keeps its format, with the legacy evaluate() table under 'evaluation', for existing parsers.
+        filepath = os.path.join(self.output_directory, f'{self.simulation_id}-evaluation.json')
+        FileHandler.write_json(filepath, self.__get_evaluation_summary())
+        print(f'Wrote the evaluation to {filepath}')
+
+        # The evaluate_v2() table, the one the KPI reference and the scorecard use: one row per KPI and scope,
+        # with the community market and business-as-usual rows when the scenario has them.
+        try:
+            kpis = self.env.unwrapped.evaluate_v2(include_business_as_usual=self.business_as_usual)
+
+        except ValueError as error:
+            if not self.business_as_usual:
+                raise
+
+            raise ValueError(
+                f'{error} The evaluate_v2() table compares the run with a business-as-usual rollout rebuilt from the '
+                'schema and -ke; pass --no_business_as_usual to write the table without it.'
+            ) from error
+
+        filepath = os.path.join(self.output_directory, f'{self.simulation_id}-evaluation_v2.csv')
+        kpis.to_csv(filepath, index=False)
+        print(f'Wrote the evaluate_v2() KPIs to {filepath}')
 
     def __get_time_series(self) -> pd.DataFrame:
         data_list = []
@@ -470,9 +497,7 @@ class Simulator:
 
         simulator = cls(**kwargs)
         simulator.__evaluate()
-        filepath = os.path.join(simulator.output_directory, f'{simulator.simulation_id}-evaluation.json')
-        FileHandler.write_json(filepath, simulator.__get_evaluation_summary())
-        print(f'Wrote the evaluation to {filepath}')
+        simulator.__write_evaluation()
 
     @classmethod
     def train(cls, episodes: int = None, evaluate: bool = None, evaluation_episode_time_steps: Union[Tuple[int, int], List[Tuple[int, int]]] = None, save_agent: bool = None, **kwargs):
@@ -497,9 +522,7 @@ class Simulator:
                 else cls.__episode_time_steps(evaluation_episode_time_steps)
             )
             simulator.__evaluate()
-            filepath = os.path.join(simulator.output_directory, f'{simulator.simulation_id}-evaluation.json')
-            FileHandler.write_json(filepath, simulator.__get_evaluation_summary())
-            print(f'Wrote the evaluation to {filepath}')
+            simulator.__write_evaluation()
 
         else:
             pass
@@ -618,6 +641,9 @@ def main():
         'Disable network access and require datasets/misc files to be available locally.'))
     subparser_simulate.add_argument('--record_host', dest='record_host', action='store_true', help=(
         'Record the machine host name and the user name in the training summary JSON.'))
+    subparser_simulate.add_argument('--no_business_as_usual', dest='business_as_usual', action='store_false', help=(
+        'Write the evaluate_v2() KPI table (`<simulation_id>-evaluation_v2.csv`) without the business-as-usual '
+        'rows, which need a second rollout of BusinessAsUsualAgent on the evaluation window.'))
     simulation_subparsers = subparser_simulate.add_subparsers(title='simulate subcommands', required=True, dest='subcommands')
 
     # -> train an agent
