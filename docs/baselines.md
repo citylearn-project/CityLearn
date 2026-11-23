@@ -5,6 +5,8 @@ operational business-as-usual controller for controller comparisons, a
 conventional counterfactual for legacy normalized KPIs, and a pre-event power
 reference for demand-response settlement. They answer different questions.
 
+Portuguese version: [pt/baselines.md](pt/baselines.md).
+
 ## Business as usual: the operational reference
 
 `BusinessAsUsualAgent` represents day-to-day equipment operation without

@@ -3,6 +3,8 @@
 Both the distribution and import name are `citylearn`. Install it from PyPI, or
 use the [developer guide](developer_guide.md) for a repository checkout.
 
+Portuguese version: [pt/migration.md](pt/migration.md).
+
 ## Keep the controller loop explicit
 
 ```python

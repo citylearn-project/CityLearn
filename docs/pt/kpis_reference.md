@@ -79,7 +79,7 @@ portefólio substitui o prefixo `district_` por `portfolio_`. Cada KPI de distri
 
 Uma taxa agregada mantém a linha de portefólio qualquer que seja a unidade, pelo
 que o atraso de arranque agregado dos equipamentos flexíveis (`_hours`) tem uma.
-A [referência multi-comunidade](multi_community_reference.md#kpis) explica o
+A [referência multi-comunidade](multi_community_reference.md#agregação-dos-kpis) explica o
 portefólio.
 
 ## Contrato de nomes
@@ -151,7 +151,7 @@ um step. Com topologia dinâmica, um membro só conta enquanto está ativo.
 |---|---|
 | `control` | A execução avaliada. |
 | `baseline` | O contrafactual convencional da mesma execução: os membros sem armazenamento (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
-| `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](../baselines.md)). |
+| `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](baselines.md)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
 

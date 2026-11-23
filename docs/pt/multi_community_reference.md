@@ -1,8 +1,10 @@
-# Referencia Multi-Comunidade
+# Referência multicomunidade
 
-`MultiCommunityEnv` orquestra varias instancias independentes de `CityLearnEnv`, uma por comunidade. A v1 e apenas sincronizacao e reporting de portfolio: nao ha fisica global, mercado entre comunidades, coordenacao DSO/TSO global ou mistura de buildings entre comunidades.
+`MultiCommunityEnv` orquestra várias instâncias independentes de `CityLearnEnv`, com um ambiente filho por comunidade. A v1 faz apenas sincronização e relatórios do portefólio: não há camada física global, mercado entre comunidades, coordenação DSO/TSO global nem mistura de edifícios entre comunidades.
 
-## Quickstart
+Versão em inglês: [../multi_community_reference.md](../multi_community_reference.md).
+
+## Início rápido
 
 ```python
 import numpy as np
@@ -47,7 +49,7 @@ print(kpis.loc[kpis["level"] == "portfolio"].head())
 env.close()
 ```
 
-## Constructor
+## Construtor
 
 ```python
 MultiCommunityEnv(
@@ -64,20 +66,20 @@ MultiCommunityEnv(
 )
 ```
 
-`community_id` tem de ser unico, nao vazio e seguro como componente de path relativo. Pode conter letras, numeros, `_`, `-` e `.`. `weight` tem default `1.0`, tem de ser finito e nao negativo, e pelo menos uma comunidade tem de ter peso positivo.
+`community_id` tem de ser único, não vazio e seguro como componente de um caminho relativo. Só pode conter letras, números, `_`, `-` e `.`. `weight` tem o valor predefinido `1.0`, tem de ser finito e não negativo, e pelo menos uma comunidade tem de ter um peso positivo.
 
-`env_kwargs` sao passados para o `CityLearnEnv` filho. O wrapper poe os exports de cada filho em `<render_session_name>/<community_id>` para separar ficheiros por comunidade.
+`env_kwargs` são passados ao `CityLearnEnv` filho. O wrapper define a sessão de exportação de cada filho como `<render_session_name>/<community_id>`, para que os ficheiros de render e de KPIs fiquem separados por comunidade.
 
-## Reset E Step
+## Reset e step
 
-`reset()` devolve observacoes por comunidade e info do wrapper:
+`reset()` devolve as observações dos filhos por comunidade, mais a info do wrapper:
 
 ```python
 observations = {"community_a": child_observations, "community_b": child_observations}
 info = {"communities": {...}, "time_step": 0}
 ```
 
-`step(actions)` espera uma action payload por comunidade:
+`step(actions)` espera um payload de ações do filho por comunidade:
 
 ```python
 actions = {"community_a": child_actions, "community_b": child_actions}
@@ -95,38 +97,43 @@ info
 
 `info` inclui:
 
-| Key | Significado |
+| Chave | Significado |
 |---|---|
-| `community_rewards_scalar` | Soma finita do reward de cada comunidade. |
+| `community_rewards_scalar` | Soma finita do payload de recompensa de cada filho. |
 | `reward_total` | `sum(weight * community_reward_scalar)`. |
 | `reward_mean_weighted` | `reward_total / sum(weights)`. |
-| `terminated_by_community` | Flags de terminacao por comunidade. |
-| `truncated_by_community` | Flags de truncation por comunidade. |
+| `terminated_by_community` | Flags de terminação dos filhos. |
+| `truncated_by_community` | Flags de truncagem dos filhos. |
 
-Se uma comunidade terminar ou truncar, o wrapper tambem termina ou trunca. Isto evita dessicronizacao temporal entre comunidades.
+Se algum filho terminar ou truncar, o wrapper também termina ou trunca. Isto impede que as comunidades derivem para posições diferentes do episódio.
 
-## Contrato Temporal
+## Contrato de sincronização
 
-Todas as comunidades filhas tem de usar:
+Todos os ambientes filhos têm de usar:
 
 | Requisito | Motivo |
 |---|---|
-| Mesmo `seconds_per_time_step` | Mantem o tempo de cada step alinhado. |
-| Mesmo episode length efetivo | Mantem batches de treino retangulares. |
-| Mesmo `interface` | Mantem estavel o contrato action/observation. |
-| Mesmo modo `central_agent` | Evita misturar semanticas centralizadas e descentralizadas. |
+| O mesmo `seconds_per_time_step` | Mantém o tempo de cada passo alinhado. |
+| A mesma duração efetiva do episódio | Mantém os lotes de treino retangulares. |
+| A mesma `interface` | Mantém estáveis os contratos dos payloads de observação/ação. |
+| O mesmo modo `central_agent` | Evita misturar semânticas de recompensa/ação centralizadas e descentralizadas. |
 
-O wrapper valida isto no constructor e depois de cada reset.
+O wrapper valida estas condições na construção e novamente depois do reset.
 
-As janelas de calendario nao fazem parte do contrato. Cada filho escolhe o seu episode split a partir da sua propria janela de simulacao, do `random_episode_split` e do `random_seed`, por isso as comunidades podem simular datas diferentes no mesmo step. Para partilhar janelas, de aos filhos as mesmas definicoes de janela e o mesmo `random_seed`, ou passe uma seed a `reset(seed=...)`, que chega a todos os filhos.
+As janelas de calendário não fazem parte do contrato. Cada filho seleciona a
+divisão do seu episódio a partir da sua própria janela de simulação, da definição
+`random_episode_split` e da `random_seed`, pelo que as comunidades podem simular
+datas diferentes no mesmo passo. Para partilhar janelas, dê aos filhos as mesmas
+definições de janela e a mesma `random_seed`, ou passe uma semente a
+`reset(seed=...)`, que chega a todos os filhos.
 
-## Demand Response
+## Resposta à procura
 
-Demand response continua local a cada comunidade. Se o schema filho tiver `demand_response.enabled=true`, esse filho le o seu proprio `requests_file`, expoe o seu proprio pedido nas observations entity e calcula settlement/KPIs locais. A v1 do `MultiCommunityEnv` nao coordena pedidos DSO/TSO entre comunidades.
+A resposta à procura continua local a cada comunidade. Se o schema de um filho tiver `demand_response.enabled=true`, esse filho carrega o seu próprio `requests_file`, expõe os seus próprios metadados de pedidos nas observações entity e calcula a liquidação e os KPIs locais. Na v1, `MultiCommunityEnv` não coordena pedidos DSO/TSO entre comunidades.
 
-## KPIs
+## Agregação dos KPIs
 
-`evaluate_v2()` concatena as tabelas KPI dos filhos e adiciona a coluna `community_id`. Tambem cria linhas de portfolio:
+`evaluate_v2()` concatena as tabelas de KPIs dos filhos e adiciona uma coluna `community_id`. Também adiciona linhas do portefólio:
 
 ```text
 level = "portfolio"
@@ -134,53 +141,67 @@ name = "Portfolio"
 community_id = "__portfolio__"
 ```
 
-So KPIs district sao agregados:
+Só os KPIs de distrito dos filhos são agregados:
 
-| Sufixo KPI | Regra no portfolio |
+| Sufixo do KPI | Regra do portefólio |
 |---|---|
 | `_kwh`, `_eur`, `_kgco2`, outros `_count` | Soma entre comunidades. |
-| `_ratio` de um total control sobre um total de referencia | Ratio dos totais somados, por exemplo `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
-| Taxas e medias com denominadores aditivos | Agregadas (pooled): media ponderada pelo denominador, por exemplo `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
-| Outros `_ratio`, `_percent` | Media ponderada por `weight`. |
-| `_kw`, `_c`, outros `_hours` e outros point metrics | Nao agregados na v1. |
+| `_ratio` de um total de controlo sobre um total de referência | Rácio dos totais somados, por exemplo `portfolio_cost_total_control_eur / portfolio_cost_total_baseline_eur`. |
+| Taxas e médias com denominadores aditivos | Agregadas: média ponderada pelo denominador, por exemplo `portfolio_ev_events_departure_met_count / portfolio_ev_events_departure_count`. |
+| Outros `_ratio`, `_percent` | Média ponderada pelo `weight` da comunidade. |
+| `_kw`, `_c`, outros `_hours` e outras métricas pontuais | Não agregados na v1. |
 
-Os ratios reconstruidos a partir dos totais somados sao os ratios `ratio_to_baseline` e `ratio_to_business_as_usual` de custo, emissoes, import, export e net exchange da rede, e os ratios `ratio_to_business_as_usual` de geracao e export solar, carga EV e export V2G, carga, descarga e throughput da bateria, e contagens de ciclos e energia dos deferrable appliances. Usam apenas comunidades que reportam os dois totais, ignoram `weight` como os totais somados, e mantem a regra lower-is-better da [referencia de KPIs](kpis_reference.md#regras-comuns) para totais negativos de net exchange e custo. O ratio de um portfolio com uma comunidade e igual ao ratio district.
+Os rácios reconstruídos a partir dos totais somados são os rácios
+`ratio_to_baseline` e `ratio_to_business_as_usual` do custo, das emissões e da
+importação, exportação e troca líquida com a rede, e os rácios
+`ratio_to_business_as_usual` da produção e exportação solar, do carregamento dos
+VE e da exportação V2G, do carregamento, descarga e energia movimentada das
+baterias, e das contagens de ciclos e de energia dos aparelhos diferíveis. Usam
+apenas as comunidades que reportam os dois totais, ignoram o `weight` tal como os
+totais somados, e mantêm a regra "mais baixo é melhor" da
+[referência de KPIs](kpis_reference.md#regras-comuns) para totais negativos de
+troca líquida e de custo. O rácio de um portefólio com uma só comunidade é igual
+ao rácio do distrito.
 
-As taxas e medias agregadas sao ponderadas pelos seus denominadores aditivos, por isso igualam o ratio entre o numerador e o denominador agregados e ignoram `weight`:
+As taxas e médias agregadas são ponderadas pelos seus denominadores aditivos,
+pelo que igualam o rácio entre o numerador e o denominador agregados e ignoram o
+`weight`:
 
-| Taxa ou media | Peso |
+| Taxa ou média | Peso |
 |---|---|
-| Taxas EV de departure success, minimum acceptable e within tolerance; medias de SOC deficit, shortfall, surplus e absolute error | `ev_events_departure_count` |
-| Taxas EV `*_feasible` | O `ev_events_departure_*_feasible_count` correspondente |
-| Service level dos deferrable appliances (control e BAU) | Ciclos completed mais missed |
-| Average start delay dos deferrable appliances (control e BAU) | Ciclos completed |
-| Service level das escadas rolantes | Passageiros pedidos |
-| Self-consumption solar (control e BAU) | Geracao solar |
-| Share local da procura do mercado comunitario (`*_local_share_of_demand_ratio`, `*_import_share_ratio`) | Import local mais import da rede depois das trocas locais |
-| Share local do export do mercado comunitario | Export local mais export para a rede depois das trocas locais |
-| Compliance de demand response | `demand_response_valid_requested_total_kwh` |
-| Compliance, cobertura da energia pedida e cobertura da baseline das auditorias de demand response, por objetivo | Energia pedida valida, energia pedida e intervalos ativos da auditoria |
+| Taxas de sucesso, de mínimo aceitável e dentro da tolerância nas partidas dos VE; médias de défice, falta, excedente e erro absoluto do SOC | `ev_events_departure_count` |
+| Taxas de partida `*_feasible` dos VE | O `ev_events_departure_*_feasible_count` correspondente |
+| Nível de serviço dos aparelhos diferíveis (controlo e BAU) | Ciclos concluídos mais ciclos falhados |
+| Atraso médio no arranque dos aparelhos diferíveis (controlo e BAU) | Ciclos concluídos |
+| Nível de serviço das escadas rolantes | Passageiros pedidos |
+| Autoconsumo solar (controlo e BAU) | Produção solar |
+| Quota local da procura no mercado comunitário (`*_local_share_of_demand_ratio`, `*_import_share_ratio`) | Importação local mais importação da rede depois das trocas locais |
+| Quota local da exportação no mercado comunitário | Exportação local mais exportação para a rede depois das trocas locais |
+| Cumprimento da resposta à procura | `demand_response_valid_requested_total_kwh` |
+| Cumprimento da auditoria da resposta à procura, cobertura da energia pedida e cobertura da referência, por finalidade | A energia pedida válida, a energia pedida e os intervalos ativos da auditoria |
 | Ciclos completos equivalentes das baterias estacionárias (controlo e BAU) | Capacidade nominal das baterias estacionárias |
 
-As diferenças e os rácios ao BAU do nível de serviço, atraso no arranque,
-autoconsumo e ciclos completos equivalentes comparam os valores agregados do
-controlo e da execução BAU. As comunidades cujo valor é indefinido não têm peso.
+As diferenças e os rácios face ao BAU do nível de serviço dos aparelhos
+diferíveis, do atraso no arranque, do autoconsumo e dos ciclos completos
+equivalentes agregados comparam os valores agregados de controlo e BAU. As
+comunidades cujo valor é indefinido não têm peso.
 
-Os ciclos completos equivalentes do portefólio resultam da divisão da energia
-movimentada total pelo dobro da capacidade nominal total. As baterias instaladas
-contribuem com a sua capacidade mesmo quando estão inativas. O valor é indefinido
-quando a capacidade total é zero.
+Para as baterias estacionárias, a contagem de ciclos do portefólio é a energia
+movimentada total dividida pelo dobro da capacidade nominal total. As baterias
+instaladas contribuem com a sua capacidade mesmo quando estão inativas. O
+resultado é indefinido quando a capacidade total é zero.
 
-Os rácios de forma da rede (picos, rampas e penalidades do fator de carga), as
-proporções de conforto e resiliência, os rácios de equidade e de auditoria, a
-perda de capacidade da bateria e o seu rácio face à execução BAU mantêm a média
-ponderada pelo `weight` das comunidades.
+Os rácios sem totais aditivos continuam a ser médias ponderadas: rácios de forma
+da rede (picos, rampas e penalizações do fator de carga), proporções de conforto
+e de resiliência, equidade, os rácios de serviço térmico, de partidas dos VE e de
+outras auditorias, a perda de capacidade das baterias e o rácio entre a perda de
+capacidade das baterias e o seu valor BAU.
 
-Os nomes de portfolio substituem o prefixo `district_` por `portfolio_`, por exemplo `district_demand_response_revenue_total_eur` vira `portfolio_demand_response_revenue_total_eur`.
+Os nomes dos KPIs do portefólio substituem um prefixo inicial `district_` por `portfolio_`; por exemplo, `district_demand_response_revenue_total_eur` passa a `portfolio_demand_response_revenue_total_eur`.
 
-## Export
+## Exportação
 
-`export_final_kpis()` escreve os exports locais em subpastas e um CSV global na pasta da sessao do wrapper:
+`export_final_kpis()` escreve a exportação de cada filho na sua própria subpasta e escreve um CSV global na pasta da sessão do wrapper:
 
 ```text
 <render_directory>/<render_session_name>/
@@ -189,7 +210,7 @@ Os nomes de portfolio substituem o prefixo `district_` por `portfolio_`, por exe
   community_b/exported_kpis.csv
 ```
 
-O CSV global usa o formato longo de `evaluate_v2()`, com linhas locais e do
-portefólio e as colunas `unit` e `description`. Cada comunidade mantém a sua
-tabela numérica em formato largo e guarda as definições dos KPIs no ficheiro
+O CSV global mantém o formato longo de `evaluate_v2()`, com linhas locais e do
+portefólio e as colunas `unit` e `description`. Cada filho mantém a sua tabela
+numérica em formato largo e guarda as definições dos seus KPIs em
 `exported_kpis.manifest.json`.
