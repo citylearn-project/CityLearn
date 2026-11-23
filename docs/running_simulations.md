@@ -196,9 +196,25 @@ citylearn simulate data/datasets/my_dataset/schema.json train -e 3
 citylearn simulate data/datasets/my_dataset/schema.json evaluate
 ```
 
-`simulate` writes a training summary (`<simulation_id>-train.json`), an
-evaluation (`<simulation_id>-evaluation.json`) and, with `--save_agent`, the
-agent to the output directory, and prints the path of each file it writes.
+`simulate` writes a training summary (`<simulation_id>-train.json`), the
+evaluation files and, with `--save_agent`, the agent to the output directory,
+and prints the path of each file it writes. `evaluate` and `train --evaluate`
+write two evaluation files:
+
+- `<simulation_id>-evaluation_v2.csv`: the `evaluate_v2()` table, with the
+  columns `cost_function`, `value`, `name`, `level`, `unit` and `description`,
+  one row per KPI and scope. It holds the community market rows when the
+  scenario has a market, and the `*_business_as_usual_*` rows. This is the table
+  that the [KPI reference](kpis_reference.md) and the scorecard describe; read
+  it with `pandas.read_csv`.
+- `<simulation_id>-evaluation.json`: the evaluation window and timestamps, the
+  rewards, the actions and the time series, plus the legacy `evaluate()` KPIs
+  under `evaluation`. Its format does not change, so existing parsers keep
+  working, but compare controllers with the `evaluate_v2()` file.
+
+The business-as-usual rows need a second rollout of `BusinessAsUsualAgent` on the
+evaluation window, as `evaluate_v2()` does in Python. `--no_business_as_usual`
+skips it and writes the table without those rows.
 
 ### Stable Baselines3 agent
 
@@ -278,6 +294,7 @@ The training summary records the machine host name and the user name only with
 | `-rs`, `--random_seed` | `42` | Seed. |
 | `--offline` | flag | Require local files. |
 | `--record_host` | flag | Record the host and user names in the training summary. |
+| `--no_business_as_usual` | flag | Write the `evaluate_v2()` table without the business-as-usual rows. |
 | `train -e` | `train -e 10` | Number of training episodes. |
 | `train --save_agent` | flag | Save agent at the end. |
 | `train --evaluate` | flag | Evaluate after training, on the first training episode window unless `-te` is given. |
