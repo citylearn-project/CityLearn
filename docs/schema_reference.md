@@ -253,10 +253,75 @@ Common classes:
 
 | `generation_mode` | Aliases | Interprets `energy_simulation.solar_generation` as | Formula |
 |---|---|---|---|
-| `per_kw` | `profile`, `w_per_kw` | Normalized profile per installed kW in `W/kW`. | `generation_kwh = nominal_power * value / 1000`. |
+| `per_kw` | `profile`, `w_per_kw` | Normalized profile per installed kW in `W/kW`. | `generation_kwh = nominal_power * value / 1000 * seconds_per_time_step / 3600`. |
 | `absolute` | `absolute_kwh`, `kwh`, `kwh_step`, `energy` | Absolute generation already in `kWh/step`. | `generation_kwh = value`. |
 
 Use `absolute` for real measured generation or converter-generated energy series. Use `per_kw` for normalized PV profiles.
+
+For example, `nominal_power=4.0` and a value of 1000 W/kW give 4.0 kWh per hourly step and
+1.0 kWh per 900 s step.
+
+## Battery
+
+```json
+"electrical_storage": {
+  "type": "citylearn.energy_model.Battery",
+  "attributes": {
+    "capacity": 6.4,
+    "nominal_power": 5.0,
+    "efficiency": 0.9,
+    "depth_of_discharge": 0.9,
+    "initial_soc": 0.1,
+    "capacity_loss_coefficient": 1e-5,
+    "loss_coefficient": 0.0,
+    "power_efficiency_curve": [[0, 0.83], [0.3, 0.83], [0.7, 0.9], [0.8, 0.9], [1, 0.85]],
+    "capacity_power_curve": [[0.0, 1.0], [0.8, 1.0], [1.0, 0.2]]
+  }
+}
+```
+
+The stationary battery model works on energy per control step at the battery terminals, the
+building side of the battery. The state of charge (SOC) is a fraction of `capacity`.
+
+| Attribute | Unit | Default | Meaning |
+|---|---:|---|---|
+| `capacity` | kWh | 0 | Rated storage capacity, before fade. |
+| `nominal_power` | kW | 0 | Power that the curves scale. |
+| `efficiency` | ratio | drawn in [0.90, 0.98] | Round-trip efficiency. A generated `power_efficiency_curve` is built around it; during the simulation the curve gives the efficiency at each step. |
+| `power_efficiency_curve` | `[[x, y], ...]` | drawn, see below | Round-trip efficiency `y` against terminal power divided by `nominal_power` (`x` in [0, 1]). |
+| `capacity_power_curve` | `[[x, y], ...]` | drawn, see below | Maximum charging power as a fraction of `nominal_power` (`y`) against SOC (`x`). |
+| `discharge_power_curve` | `[[x, y], ...]` | `[[0, 1], [1, 1]]` | Maximum discharging power as a fraction of `nominal_power` against SOC. Physics version 1 uses `capacity_power_curve` instead. |
+| `depth_of_discharge` | ratio | 1.0 | Fraction of `capacity` that may be discharged. |
+| `initial_soc` | ratio | `1 - depth_of_discharge` | SOC at the start of the episode, in [0, 1]. |
+| `capacity_loss_coefficient` | ratio | drawn in [1e-5, 1e-4] | Fraction of `capacity` lost per equivalent full cycle. |
+| `loss_coefficient` | ratio per hour | drawn in [0.001, 0.009] | Standby loss of the stored energy, see [EV definitions](#ev-definitions) for the per-step formula. |
+
+A default shown as "drawn" is taken from the environment's random stream when the attribute is
+omitted, so it depends on the seed and on `random_stream_version`. The 2022 challenge datasets
+omit both curves, so each seed gets different curves. Set the attributes explicitly to fix them.
+
+- **Efficiency.** `efficiency` and every value of `power_efficiency_curve` are round-trip
+  efficiencies: energy charged and later discharged keeps `efficiency` of its value. Each
+  conversion uses the square root. Charging `E` kWh at the terminals stores `E * sqrt(eta)`,
+  and delivering `E` kWh takes `E / sqrt(eta)` from storage, where `eta` is read from
+  `power_efficiency_curve` at the applied terminal power. A datasheet one-way efficiency of
+  0.95 must be entered as 0.95² = 0.9025; entered as 0.95, it gives a one-way efficiency of
+  about 0.975.
+- **Power curves.** `capacity_power_curve` and `discharge_power_curve` are evaluated at the SOC
+  at the start of the step, and their values are multiplied by `nominal_power`. Between points
+  the curves are interpolated linearly.
+- **Depth of discharge.** Discharging stops at a SOC of `1 - depth_of_discharge`, a floor
+  measured on the rated `capacity`. Charging stops at the degraded capacity.
+- **Capacity fade.** After each charge or discharge the capacity falls by
+  `capacity_loss_coefficient * capacity * |terminal energy| / (2 * degraded capacity)`. A full
+  charge and discharge of the degraded capacity is one equivalent full cycle and loses
+  `capacity_loss_coefficient * capacity`.
+- **Generated curves.** Without `power_efficiency_curve`, five points are drawn at `x` near 0,
+  0.3, 0.7, 0.8 and 1, with values between 0.85 and 1.0 times `efficiency` (the point near 0.8
+  equals `efficiency`). Without `capacity_power_curve`, three points are drawn: 0.95 to 1.0 at
+  SOC 0, 0.90 to 0.95 at a SOC near 0.8, and 0.20 to 0.30 at SOC 1.
+- With the default `initial_soc`, a battery starts at its reserve: empty when
+  `depth_of_discharge` is 1. Set `initial_soc` to start elsewhere.
 
 ## Electrical Service
 
@@ -379,7 +444,7 @@ EV battery standby loss is intentionally isolated from stationary storage defaul
 
 - Missing or `null` `battery.attributes.loss_coefficient` defaults to `0.0` for EVs.
 - Explicit EV `loss_coefficient` values are interpreted as hourly loss ratios.
-- All `StorageDevice` implementations, including stationary `Battery` and `StorageTank`, convert hourly `loss_coefficient` values to effective per-step loss with `loss_coefficient * seconds_per_time_step / 3600`.
+- All `StorageDevice` implementations, including stationary `Battery` and `StorageTank`, convert hourly `loss_coefficient` values to an effective per-step loss compounded over the step: `1 - (1 - loss_coefficient) ** (seconds_per_time_step / 3600)`.
 - Stationary storage default parameter ranges are unchanged.
 
 ## Deferrable Appliances
