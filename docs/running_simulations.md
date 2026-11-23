@@ -218,6 +218,37 @@ citylearn simulate citylearn_challenge_2022_phase_all_plus_evs \
 Without `"policy"`, the CLI raises a `TypeError` that shows the argument to add.
 Use `-te start end` to evaluate on other windows, such as unseen days.
 
+To evaluate or keep training a saved model, pass it with `-fa` and name the
+algorithm that saved it with `-a`, for example `-a stable_baselines3.SAC -fa
+outputs/sb3_sac/sb3_sac-agent.zip`. Write to another directory with `-d`:
+`simulate` empties its output directory first, so it refuses to run when that
+directory holds the model to load.
+
+What the Stable Baselines3 integration supports:
+
+- **Central agent, flat interface.** `StableBaselines3Wrapper` turns the central
+  agent's observation and action vectors into one `Box` each. With
+  `central_agent=False` there is one vector per building, and the wrapper raises
+  an error; for one policy per building, use `RLlibMultiAgentEnv`.
+- **No entity interface.** The entity observations are dictionaries of tables
+  whose sizes can change, which the SB3 policies cannot take. The `pt_rec_*`,
+  three-phase, demand-response and robustness datasets default to the entity
+  interface, so pass `"interface": "flat"` in `-ke` (or `interface="flat"` in
+  Python). Dynamic topology and demand response need the entity interface and
+  cannot be used with SB3.
+- **Action bounds.** The action space keeps each device's bounds, for example
+  [-1, 1] for storage and EV chargers and [0, 1] for others, so `check_env`
+  warns that it is not symmetric. SAC rescales its actions to the bounds and PPO
+  clips them, so both work as they are.
+- **Robustness faults.** A missing sensor reading is replaced by
+  `missing_replacement_value` (-9999 in `citylearn_challenge_2022_phase_all_robustness`),
+  which normalises far outside [0, 1]. SB3 does not check observation bounds,
+  but the policy sees that value as it is.
+
+`tests/test_stable_baselines3_integration.py` runs `check_env`, a few SAC and PPO
+updates, `predict` over one episode with every observation inside its space,
+`evaluate_v2()`, and the CLI saving and loading a model.
+
 ### Evaluation window
 
 `evaluate` runs one episode of the environment's episode windows, or the

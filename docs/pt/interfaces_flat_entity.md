@@ -21,6 +21,14 @@ Versão em inglês: [../interfaces_flat_entity.md](../interfaces_flat_entity.md)
 env = CityLearnEnv(schema, interface="flat")
 ```
 
+Os wrappers de `citylearn.wrappers` (normalização, discretização, Stable
+Baselines3 e RLlib) leem e devolvem estes vetores flat, por isso precisam de
+`interface="flat"` e lançam um `ValueError` num ambiente entity. Os datasets
+`pt_rec_*`, trifásicos, de resposta à procura e de robustez usam por omissão a
+interface entity: passe `interface="flat"` para os usar com os wrappers. A
+topologia dinâmica e a resposta à procura precisam da interface entity, por isso
+os wrappers não podem ser usados com elas.
+
 Com `central_agent=False`, as observações são um vetor por edifício:
 
 ```python
