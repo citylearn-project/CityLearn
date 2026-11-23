@@ -241,6 +241,15 @@ evaluation conditions selected through `baseline_condition`. The default uses
 the simulator's counterfactual series without storage and, for dynamic building
 models, without partial-load control, while retaining PV.
 
+"Without storage" removes the battery and the thermal storage. Every load of the
+controlled run stays, including the EV charging (and any V2G) and the deferrable
+appliances: the cars still need the energy they took. The `baseline` rows
+therefore measure what the storage dispatch changes for the same EV schedule.
+To measure smart charging or V2G, read the `*_delta_to_business_as_usual_*`
+rows: the native BAU charges each car on arrival. With `baseline_version=1`
+the baseline also removes the EV charging, as in CityLearn 3.6.0, so on EV
+datasets it is a community whose cars never charge.
+
 This is a counterfactual calculation, not a second `BusinessAsUsualAgent` run.
 `EvaluationCondition` also exposes alternatives, including removing PV.
 Choose the same evaluation condition when comparing controllers. During a

@@ -338,6 +338,7 @@ class MultiCommunityEnv(Env):
             "seconds_per_time_step": self.seconds_per_time_step,
             "episode_time_steps": self.episode_time_steps,
             "physics_version": next(iter(self.envs.values())).physics_version,
+            "baseline_version": next(iter(self.envs.values())).baseline_version,
             "random_stream_version": next(iter(self.envs.values())).random_stream_version,
             "time_step": self.time_step,
             "render_directory": str(self.render_output_root),
@@ -472,7 +473,7 @@ class MultiCommunityEnv(Env):
             raise ValueError("MultiCommunityEnv requires all communities to share the same effective episode length.")
 
         # Portfolio KPIs add up district totals, so every community must use the same definitions.
-        for setting in ("physics_version", "random_stream_version"):
+        for setting in ("physics_version", "random_stream_version", "baseline_version"):
             values = {community_id: getattr(env, setting) for community_id, env in self.envs.items()}
             if len(set(values.values())) != 1:
                 raise ValueError(

@@ -530,6 +530,7 @@ class CityLearnLoadingService:
         building._declared_inactive_actions = set(inactive_actions)
         # Before the devices are configured: autosizing depends on the physics version.
         building.physics_version = getattr(self.env, 'physics_version', schema.get('physics_version'))
+        building.baseline_version = getattr(self.env, 'baseline_version', schema.get('baseline_version'))
         loading_components.configure_devices(
             building, building_name, building_type, building_schema, schema, index, kwargs,
             pv_sizing_data, battery_sizing_data,

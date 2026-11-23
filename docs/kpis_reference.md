@@ -149,7 +149,7 @@ a step. With dynamic topology a member counts only while it is active.
 | Variant | Meaning |
 |---|---|
 | `control` | The run being evaluated. |
-| `baseline` | The conventional counterfactual of the same run: the members without storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
+| `baseline` | The conventional counterfactual of the same run: the members without their battery and thermal storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. Every load of the run stays, the EV charging (and any V2G) and the deferrable appliances included, so the baseline measures the storage dispatch for the same EV schedule; `baseline_version=1` also removes the EV charging, as in CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
 | `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |

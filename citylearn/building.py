@@ -17,6 +17,7 @@ from citylearn.energy_model import (
 )
 from citylearn.internal import grid_availability
 from citylearn.internal.building_ops import BuildingOpsService
+from citylearn.internal.baseline_version import baseline_version_of
 from citylearn.internal.physics_version import physics_version_of
 from citylearn.internal.service_energy import SERVICE_ENERGY_COMPONENTS
 from citylearn.internal.units import (
@@ -121,6 +122,10 @@ class Building(Environment):
     #: Physics version of the building, see :py:mod:`citylearn.internal.physics_version`. Set by the
     #: environment; ``None`` selects the default version.
     physics_version: Optional[int] = None
+
+    #: KPI baseline version of the building, see :py:mod:`citylearn.internal.baseline_version`. Set by the
+    #: environment; ``None`` selects the default version.
+    baseline_version: Optional[int] = None
 
     def __init__(
         self, energy_simulation: EnergySimulation, weather: Weather, observation_metadata: Mapping[str, bool],
@@ -494,29 +499,39 @@ class Building(Environment):
 
     @property
     def net_electricity_consumption_without_storage(self) -> np.ndarray:
-        """net electricity consumption in the absence of flexibility provided by storage devices time series, in [kWh]. 
-        
+        """Net electricity consumption in the absence of flexibility provided by storage devices time series, in [kWh].
+
         Notes
         -----
+        The default KPI baseline. It removes the electricity of the storage devices from the controlled run:
+
         net_electricity_consumption_without_storage = `net_electricity_consumption` - (`cooling_storage_electricity_consumption`
-        + `heating_storage_electricity_consumption` + `dhw_storage_electricity_consumption` + `electrical_storage_electricity_consumption` + `charger_electricity_consumption`)
+        + `heating_storage_electricity_consumption` + `dhw_storage_electricity_consumption`
+        + `electrical_storage_electricity_consumption`)
 
-        Regarding electric vehicles there is:
-        chargers_electricity_consumption -> Sum of the electricity consumption of all electric_vehicle_chargers in the building
+        Every load of the controlled run stays, the EV charging (`chargers_electricity_consumption`, V2G included)
+        and the deferrable appliances too: the cars still need the energy they took, so the baseline is the same
+        community, with the same EV schedule, without its battery and thermal storage. The value of EV smart
+        charging and V2G is measured against the native BAU, which charges each car on arrival.
 
-        So, the first one is subtracted from the net_electricity_consumption, obtaining the energy consumption as if the cars were not used at all.
-        However, if there are chargers and EVs, they need to charge per usual, so that consumption is added
-        This is what allows to check if the control mechanism affects the grid balancing scheme for EVs for example.
+        With `baseline_version` 1 (CityLearn 3.6.0 and earlier) `chargers_electricity_consumption` is subtracted
+        too, so on EV datasets the baseline is a community whose cars never charge. See
+        :py:mod:`citylearn.internal.baseline_version`.
 
         Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.
         """
-        return self._without_grid_during_outage(self.net_electricity_consumption - np.sum([
+
+        storage = [
             self.cooling_storage_electricity_consumption,
             self.heating_storage_electricity_consumption,
             self.dhw_storage_electricity_consumption,
             self.electrical_storage_electricity_consumption,
-            self.chargers_electricity_consumption,
-        ], axis=0))
+        ]
+
+        if baseline_version_of(self) < 2:
+            storage.append(self.chargers_electricity_consumption)
+
+        return self._without_grid_during_outage(self.net_electricity_consumption - np.sum(storage, axis=0))
 
     @property
     def net_electricity_consumption_emission(self) -> np.ndarray:

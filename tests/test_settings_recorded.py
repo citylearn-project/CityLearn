@@ -60,6 +60,25 @@ def test_exports_under_different_physics_versions_are_incompatible(tmp_path):
     assert report['status'] == 'unknown' and 'physics_version' in report['missing_evidence']
 
 
+def test_exports_under_different_baseline_versions_are_incompatible(tmp_path):
+    path = _schema_with_deferrable_appliance(tmp_path/'source')
+    a = _export(path, tmp_path/'a', baseline_version=1)
+    b = _export(path, tmp_path/'b')
+    left, right = (json.loads(p.with_suffix('.manifest.json').read_text()) for p in (a, b))
+
+    assert (left['baseline_version'], right['baseline_version']) == (1, 2)
+    assert left['comparison_context']['baseline_version'] == 1
+
+    report = compare_exports(a, b)
+    assert report['status'] == 'incompatible'
+    assert report['mismatches'] == ['baseline_version']
+
+    other = deepcopy(left)
+    del other['comparison_context']['baseline_version']
+    report = compare_manifests(left, other)
+    assert report['status'] == 'unknown' and 'baseline_version' in report['missing_evidence']
+
+
 def test_metadata_and_manifest_record_split_boundary_and_ratio_mode(tmp_path):
     path = _schema_with_deferrable_appliance(tmp_path)
     env = CityLearnEnv(str(path), episode_time_steps=4, random_seed=0, episode_split_boundary='disjoint',
@@ -80,6 +99,8 @@ def test_metadata_and_manifest_record_split_boundary_and_ratio_mode(tmp_path):
     ('time_step_ratio_mode', 'squash', 'time_step_ratio_mode must be one of'),
     ('physics_version', 3, r'physics_version must be one of \[1, 2\]'),
     ('physics_version', True, r'physics_version must be one of \[1, 2\]'),
+    ('baseline_version', 3, r'baseline_version must be one of \[1, 2\]'),
+    ('baseline_version', 1.5, r'baseline_version must be one of \[1, 2\]'),
     ('random_stream_version', 'v9', 'random_stream_version'),
 ])
 def test_invalid_setting_values_are_rejected(tmp_path, option, value, match):
@@ -110,7 +131,7 @@ def _kwargs_read_by_constructor():
 
 def test_every_constructor_kwarg_is_a_known_option():
     names = _kwargs_read_by_constructor()
-    assert {'physics_version', 'random_stream_version', 'episode_split_boundary'} <= names
+    assert {'physics_version', 'random_stream_version', 'episode_split_boundary', 'baseline_version'} <= names
     assert names <= set(CityLearnEnv._KNOWN_CONSTRUCTOR_OPTIONS)
 
 
@@ -161,6 +182,7 @@ def _community(community_id, **env_kwargs):
 @pytest.mark.parametrize('setting,values', [
     ('physics_version', (1, 2)),
     ('random_stream_version', ('v1', 'v2')),
+    ('baseline_version', (1, 2)),
 ])
 def test_multi_community_rejects_mixed_definition_versions(setting, values):
     with warnings.catch_warnings():

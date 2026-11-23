@@ -150,7 +150,7 @@ um step. Com topologia dinâmica, um membro só conta enquanto está ativo.
 | Variante | Significado |
 |---|---|
 | `control` | A execução avaliada. |
-| `baseline` | O contrafactual convencional da mesma execução: os membros sem armazenamento (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
+| `baseline` | O contrafactual convencional da mesma execução: os membros sem a bateria e o armazenamento térmico (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. Todas as cargas da execução ficam, incluindo o carregamento dos VE (e o V2G, se houver) e os aparelhos diferíveis, pelo que a baseline mede o despacho do armazenamento para o mesmo calendário de VE; `baseline_version=1` retira também o carregamento dos VE, como no CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
 | `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](baselines.md)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |

@@ -52,6 +52,34 @@ versão e o histórico da linha de desenvolvimento.
 
 ## Por publicar
 
+### Carregamento dos VE na baseline por omissão
+
+A baseline por omissão dos KPIs (`EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV`,
+as séries `*_without_storage`) passa a retirar da execução controlada só a
+bateria e o armazenamento térmico. Antes subtraía também o consumo dos
+carregadores de VE, pelo que nos datasets com VE as linhas `*_baseline_*`,
+`*_delta_*` e `*_ratio_to_baseline_*`, e todos os valores da tabela do
+`evaluate()` antigo, comparavam a execução com uma comunidade cujos carros
+nunca carregam: qualquer controlador que carregasse os carros parecia pior do
+que a baseline
+([#365](https://github.com/citylearn-project/CityLearn/issues/365)).
+
+- A baseline mantém todas as cargas da execução: o carregamento dos VE (com o
+  V2G), os aparelhos diferíveis e o AVAC. Mede o que o despacho do
+  armazenamento muda para o mesmo calendário de VE. Para medir o carregamento
+  inteligente ou o V2G, leia as linhas `*_delta_to_business_as_usual_*`: o BAU
+  nativo carrega cada carro quando chega.
+- Só mudam os datasets com carregadores de VE: `citylearn_challenge_2022_phase_all_plus_evs`,
+  os datasets `pt_rec_*` e os demos trifásicos. A simulação, as linhas do
+  controlo, as linhas do BAU e as recompensas não mudam. Os KPIs de equidade,
+  calculados a partir do benefício de cada membro face à baseline, mudam com ela.
+- Defina `baseline_version` como `1` (argumento do construtor ou chave do
+  schema) para reproduzir a baseline do CityLearn 3.6.0. A versão fica em
+  `env.get_metadata()` e no manifesto de exportação, no nível de topo e em
+  `comparison_context`; `compare_exports()` dá como `incompatible` duas
+  execuções com versões diferentes. O `MultiCommunityEnv` exige que todas as
+  comunidades usem a mesma versão.
+
 ### Emissões do distrito com a troca local desligada
 
 Com um mercado comunitário ativo e `community_market.local_trading_enabled`

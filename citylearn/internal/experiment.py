@@ -72,6 +72,7 @@ def experiment_manifest(env):
                 input_file_changes=changed, temporal_reproducibility=metadata['temporal_reproducibility'],
                 random_seed=env.random_seed, random_stream_version=env.random_stream_version,
                 physics_version=env.physics_version,
+                baseline_version=env.baseline_version,
                 episode_split_boundary=env.episode_split_boundary,
                 time_step_ratio_mode=env.time_step_ratio_mode,
                 seconds_per_time_step=env.seconds_per_time_step,

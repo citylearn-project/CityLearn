@@ -50,6 +50,33 @@ development-line history.
 
 ## Unreleased
 
+### EV charging in the default baseline
+
+The default KPI baseline (`EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV`,
+the `*_without_storage` series) now removes only the battery and the thermal
+storage from the controlled run. It used to subtract the EV charger
+consumption too, so on EV datasets the `*_baseline_*`, `*_delta_*` and
+`*_ratio_to_baseline_*` rows, and every value of the legacy `evaluate()` table,
+compared the run with a community whose cars never charge: any controller that
+charged the cars looked worse than the baseline
+([#365](https://github.com/citylearn-project/CityLearn/issues/365)).
+
+- The baseline keeps every load of the run: EV charging (V2G included), the
+  deferrable appliances and the HVAC. It measures what the storage dispatch
+  changes for the same EV schedule. To measure smart charging or V2G, read the
+  `*_delta_to_business_as_usual_*` rows: the native BAU charges each car on
+  arrival.
+- Only datasets with EV chargers change: `citylearn_challenge_2022_phase_all_plus_evs`,
+  the `pt_rec_*` datasets and the three-phase demos. The simulation, the
+  control rows, the BAU rows and the rewards do not change. The equity KPIs,
+  which are built from each member's benefit against the baseline, change with it.
+- Set `baseline_version` to `1` (constructor argument or schema key) to
+  reproduce the baseline of CityLearn 3.6.0. The version is in
+  `env.get_metadata()` and the export manifest, at top level and in
+  `comparison_context`; `compare_exports()` reports two runs under different
+  versions as `incompatible`. `MultiCommunityEnv` requires every community to
+  use the same version.
+
 ### District emissions with local trading off
 
 With a community market enabled and `community_market.local_trading_enabled`

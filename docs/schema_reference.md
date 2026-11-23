@@ -57,6 +57,7 @@ Portuguese version: [pt/schema_reference.md](pt/schema_reference.md).
 | `check_observation_limits` | bool | no | Validate observation bounds. |
 | `physics_invariant_checks` | bool | no | Runtime physical invariant checks. |
 | `physics_version` | int | no | Physics version, `1` or `2` (default). `1` reproduces the physics of CityLearn 3.6.0; see the [migration guide](migration.md#physics-version). The `physics_version` argument of `CityLearnEnv` takes precedence. |
+| `baseline_version` | int | no | Definition of the default KPI baseline, `1` or `2` (default). `2` removes the battery and thermal storage and keeps the EV charging of the controlled run; `1` also removes the EV charging, as in CityLearn 3.6.0; see the [migration guide](migration.md#ev-charging-in-the-default-baseline). The `baseline_version` argument of `CityLearnEnv` takes precedence. |
 | `metrics_log_interval` | int | no | Runtime metric log cadence. |
 
 ### Calendar and dataset metadata keys

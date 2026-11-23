@@ -253,6 +253,16 @@ condições de avaliação selecionadas através de `baseline_condition`. Por
 omissão, usa as séries contrafactuais do simulador sem armazenamento e, nos
 modelos de edifício dinâmicos, sem controlo de carga parcial, mantendo o FV.
 
+"Sem armazenamento" retira a bateria e o armazenamento térmico. Todas as cargas
+da execução controlada ficam, incluindo o carregamento dos VE (e o V2G, se
+houver) e os aparelhos diferíveis: os carros continuam a precisar da energia
+que receberam. As linhas `baseline` medem assim o que o despacho do
+armazenamento muda para o mesmo calendário de VE. Para medir o carregamento
+inteligente ou o V2G, leia as linhas `*_delta_to_business_as_usual_*`: o BAU
+nativo carrega cada carro quando chega. Com `baseline_version=1` a baseline
+retira também o carregamento dos VE, como no CityLearn 3.6.0, pelo que nos
+datasets com VE é uma comunidade cujos carros nunca carregam.
+
 Trata-se de um cálculo contrafactual, não de uma segunda execução de
 `BusinessAsUsualAgent`. `EvaluationCondition` expõe também alternativas,
 incluindo a remoção do FV. Escolha a mesma condição de avaliação ao comparar

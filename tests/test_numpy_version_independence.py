@@ -32,6 +32,8 @@ RANDOM_STREAMS = {1: 'v1', 2: 'v2'}
 # The frozen 3.6.0 reference also records the 3.6.0 rewards, which reward version 1 keeps (#278). Both datasets use
 # Electric_Vehicles_Reward_Function, whose schema attributes hold only the version.
 REWARD_VERSIONS = {1: 1, 2: 2}
+# The frozen 3.6.0 reference also records the 3.6.0 baseline ratios, which baseline version 1 keeps (#365).
+BASELINE_VERSIONS = {1: 1, 2: 2}
 STEPS = 48
 # Far above cross-platform rounding noise, far below the float32 drift NumPy 2 introduced.
 RTOL = 1.0e-9
@@ -57,6 +59,7 @@ def _rollout(name: str, physics_version: int) -> dict:
         env = CityLearnEnv(str(ROOT/'data'/'datasets'/name/'schema.json'), central_agent=True,
                            episode_time_steps=STEPS + 1, random_seed=0, physics_version=physics_version,
                            random_stream_version=RANDOM_STREAMS[physics_version],
+                           baseline_version=BASELINE_VERSIONS[physics_version],
                            reward_function_kwargs={'version': REWARD_VERSIONS[physics_version]})
     env.reset(seed=0)
     rewards = []

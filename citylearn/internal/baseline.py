@@ -206,6 +206,7 @@ class CityLearnBusinessAsUsualBaselineService:
             check_observation_limits=False,
             physics_invariant_checks=bool(getattr(env, 'physics_invariant_checks', False)),
             physics_version=getattr(env, 'physics_version', None),
+            baseline_version=getattr(env, 'baseline_version', None),
             # The effective setting, which a constructor override may have changed from the schema's.
             energy_provenance=bool(getattr(env, 'energy_provenance', True)),
             **deepcopy(getattr(env, '_constructor_overrides', {})),
