@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 from gymnasium import spaces
 import numpy as np
 from citylearn.internal.scalars import as_float, clip_scalar
@@ -17,6 +17,7 @@ from citylearn.energy_model import (
 )
 from citylearn.internal import grid_availability
 from citylearn.internal.building_ops import BuildingOpsService
+from citylearn.internal.baseline_version import baseline_version_of
 from citylearn.internal.physics_version import physics_version_of
 from citylearn.internal.service_energy import SERVICE_ENERGY_COMPONENTS
 from citylearn.internal.units import (
@@ -121,6 +122,14 @@ class Building(Environment):
     #: Physics version of the building, see :py:mod:`citylearn.internal.physics_version`. Set by the
     #: environment; ``None`` selects the default version.
     physics_version: Optional[int] = None
+
+    #: KPI baseline version of the building, see :py:mod:`citylearn.internal.baseline_version`. Set by the
+    #: environment; ``None`` selects the default version.
+    baseline_version: Optional[int] = None
+
+    #: Supplies the EV charging that the version 2 KPI baseline keeps: a callable that takes the building and
+    #: returns its charger consumption in the native BAU with the ``'full'`` target. Set by the environment.
+    _baseline_ev_charging_source: Optional[Callable[['Building'], np.ndarray]] = None
 
     def __init__(
         self, energy_simulation: EnergySimulation, weather: Weather, observation_metadata: Mapping[str, bool],
@@ -494,29 +503,66 @@ class Building(Environment):
 
     @property
     def net_electricity_consumption_without_storage(self) -> np.ndarray:
-        """net electricity consumption in the absence of flexibility provided by storage devices time series, in [kWh]. 
-        
+        """Net electricity consumption in the absence of flexibility provided by storage devices time series, in [kWh].
+
         Notes
         -----
+        The default KPI baseline. It removes the storage devices from the controlled run and replaces the EV
+        charging of the controlled run with the EV charging of the native business-as-usual (BAU) run:
+
         net_electricity_consumption_without_storage = `net_electricity_consumption` - (`cooling_storage_electricity_consumption`
-        + `heating_storage_electricity_consumption` + `dhw_storage_electricity_consumption` + `electrical_storage_electricity_consumption` + `charger_electricity_consumption`)
+        + `heating_storage_electricity_consumption` + `dhw_storage_electricity_consumption`
+        + `electrical_storage_electricity_consumption` + `chargers_electricity_consumption`)
+        + BAU `chargers_electricity_consumption`
 
-        Regarding electric vehicles there is:
-        chargers_electricity_consumption -> Sum of the electricity consumption of all electric_vehicle_chargers in the building
+        The BAU charges each car on arrival at maximum power until it is full, and never discharges it, so the
+        cars get the energy they need, without V2G, and the baseline is the same whatever the controller does with
+        the cars. The BAU charging comes from the native BAU sidecar of the same scenario
+        (:py:meth:`citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline` with the ``'full'`` target,
+        whatever `business_as_usual_ev_charge_target` is), so it is run when a building has EV chargers.
+        Buildings without chargers need no sidecar. The deferrable appliances and the HVAC stay as the
+        controller ran them.
 
-        So, the first one is subtracted from the net_electricity_consumption, obtaining the energy consumption as if the cars were not used at all.
-        However, if there are chargers and EVs, they need to charge per usual, so that consumption is added
-        This is what allows to check if the control mechanism affects the grid balancing scheme for EVs for example.
+        With `baseline_version` 1 (CityLearn 3.6.0 and earlier) no charging is added back, so on EV datasets the
+        baseline is a community whose cars never charge. See :py:mod:`citylearn.internal.baseline_version`.
 
         Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.
         """
-        return self._without_grid_during_outage(self.net_electricity_consumption - np.sum([
+
+        values = self.net_electricity_consumption - np.sum([
             self.cooling_storage_electricity_consumption,
             self.heating_storage_electricity_consumption,
             self.dhw_storage_electricity_consumption,
             self.electrical_storage_electricity_consumption,
             self.chargers_electricity_consumption,
-        ], axis=0))
+        ], axis=0)
+
+        if baseline_version_of(self) >= 2 and self.electric_vehicle_chargers:
+            values = values + self._baseline_ev_charging(len(values))
+
+        return self._without_grid_during_outage(values)
+
+    def _baseline_ev_charging(self, length: int) -> np.ndarray:
+        """EV charging that the version 2 baseline keeps: the building's BAU charger consumption, `length` steps."""
+
+        source = self._baseline_ev_charging_source
+
+        if source is None:
+            raise ValueError(
+                f'Building {self.name!r} has EV chargers, and the version 2 KPI baseline adds back their charging in '
+                'the native BAU run, which only an environment can supply. Evaluate the building through its '
+                'CityLearnEnv, or set baseline_version=1.'
+            )
+
+        charging = np.asarray(source(self))
+
+        if charging.shape[0] < length:
+            raise ValueError(
+                f'The native BAU run supplies {charging.shape[0]} EV charging time steps for building {self.name!r}, '
+                f'fewer than the {length} the baseline needs.'
+            )
+
+        return charging[:length]
 
     @property
     def net_electricity_consumption_emission(self) -> np.ndarray:

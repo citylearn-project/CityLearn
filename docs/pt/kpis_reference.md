@@ -150,7 +150,7 @@ um step. Com topologia dinâmica, um membro só conta enquanto está ativo.
 | Variante | Significado |
 |---|---|
 | `control` | A execução avaliada. |
-| `baseline` | O contrafactual convencional da mesma execução: os membros sem armazenamento (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
+| `baseline` | O contrafactual convencional da mesma execução: os membros sem a bateria e o armazenamento térmico (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. O carregamento dos VE da execução é substituído pelo do BAU nativo com o alvo `'full'` (carregados à chegada até ficarem cheios, sem V2G), igual para todos os controladores; os aparelhos diferíveis e o AVAC ficam como o controlador os operou. `baseline_version=1` não volta a somar carregamento dos VE, como no CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
 | `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](baselines.md)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
@@ -419,6 +419,7 @@ Distrito e portefólio:
 - As quotas do portefólio são agregadas (#312), o que dá a quota dos totais somados:
   - `import_share` e `local_share_of_demand` são ponderadas pela importação local mais a importação da rede depois da troca local;
   - `local_share_of_export` pela exportação local mais a exportação para a rede depois da troca local.
+- Portefólio com e sem mercados (#373): quando umas comunidades têm mercado comunitário e outras não, uma comunidade sem mercado entra nas linhas de mercado do portefólio com a sua liquidação simples com a rede. Não troca nada localmente; a sua importação e exportação da rede depois da troca local são a importação e a exportação dos seus próprios membros, as somas dos seus consumos líquidos positivos e negativos; os seus custos liquidado e contrafactual são o seu `cost_total_control_eur`, porque sem mercado os membros pagam à rede; a sua poupança e o saldo do operador são 0. As suas quotas contam por isso como 0, agregadas pelos seus fluxos com a rede. O custo liquidado do portefólio fica então igual ao `cost_total_control_eur` do portefólio, porque o custo de controlo de cada comunidade com mercado é o seu custo liquidado, e as quotas descrevem todo o portefólio. As linhas de distrito da própria comunidade mantêm os seus zeros. Quando nenhuma comunidade tem mercado, as linhas do portefólio são as somas desses zeros.
 
 Que KPI usar:
 - Para a parte da procura coberta localmente, use `district_solar_self_consumption_community_market_import_share_ratio`.
@@ -427,7 +428,7 @@ Que KPI usar:
 - Nenhuma destas quotas é o rácio de autoconsumo solar da família `solar_self_consumption`.
 
 Limitações conhecidas:
-- As linhas existem com o mercado desativado: os zeros não medem troca local.
+- As linhas existem com o mercado desativado: os zeros não medem troca local. Num portefólio que junta comunidades com e sem mercado, esses zeros são substituídos pela liquidação simples com a rede (ver acima).
 - O nome `local_share_of_demand` refere a procura, mas o seu denominador é a importação bruta dos membros.
 - As quotas e o saldo do operador não têm variante BAU.
 
@@ -1546,7 +1547,7 @@ Limitações conhecidas: o marcador não contém qualquer medição; use as colu
 
 ## Definicoes alteradas depois da 3.6.0
 
-A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_accounting` de `evaluate_v2()`) e `2.0.0`. Estas linhas de `evaluate_v2()` mudaram de definicao. Onde um valor da 3.6.0 pode ter sido usado em comparacoes publicadas, fica com um nome proprio, e as linhas legacy de `evaluate()` mantem as suas definicoes da 3.6.0.
+A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_accounting` de `evaluate_v2()`) e `2.0.0`. Estas linhas de `evaluate_v2()` mudaram de definicao. Onde um valor da 3.6.0 pode ter sido usado em comparacoes publicadas, fica com um nome proprio, e as linhas legacy de `evaluate()` mantem as suas definicoes da 3.6.0, exceto a baseline dos datasets com carregadores de VE (ultima linha), que `baseline_version=1` repoe.
 
 | KPI | Nova definicao | Valor da 3.6.0 mantido como |
 |---|---|---|
@@ -1564,6 +1565,7 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 | Taxas e medias EV de departure, service levels dos deferrable appliances e das escadas rolantes, start delay e self-consumption solar do portefólio (`MultiCommunityEnv`) | Agregadas a partir dos seus denominadores aditivos. | nenhum |
 | Shares locais do mercado comunitário, compliance de demand response e ratios de cobertura das auditorias de demand response do portefólio (`MultiCommunityEnv`, #285) | Agregados a partir da energia local mais a da rede, da energia pedida válida, da energia pedida e dos intervalos ativos. | nenhum |
 | Ciclos completos equivalentes das baterias estacionárias do portefólio e comparações com a execução BAU (`MultiCommunityEnv`, #330) | Energia movimentada total sobre o dobro da capacidade nominal total. A diferença e o rácio face à execução BAU usam os dois valores do portefólio. | nenhum |
+| Nos datasets com carregadores de VE: todas as linhas `*_baseline_*`, `*_delta_*` (exceto `*_delta_to_business_as_usual_*`) e `*_ratio_to_baseline_*`, os KPIs de equidade calculados a partir delas, e toda a tabela legacy de `evaluate()` (#365) | A baseline carrega os VE como o BAU nativo com o alvo `'full'`, em vez de nao os carregar (`baseline_version=2`). | `baseline_version=1` |
 
 Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo passa a ser indefinida; antes dava uma penalizacao infinita ou negativa, que a safe division reportava como um 0 perfeito.
 

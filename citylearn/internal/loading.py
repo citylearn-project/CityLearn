@@ -26,6 +26,7 @@ from citylearn.reward_function import MultiBuildingRewardFunction, RewardFunctio
 from citylearn.utilities import parse_bool
 from citylearn.internal import grid_availability, loading_inputs, loading_components
 from citylearn.internal.physics_version import resolve_physics_version
+from citylearn.internal.baseline import BaselineEVChargingSource
 
 LOGGER = logging.getLogger(__name__)
 
@@ -530,6 +531,8 @@ class CityLearnLoadingService:
         building._declared_inactive_actions = set(inactive_actions)
         # Before the devices are configured: autosizing depends on the physics version.
         building.physics_version = getattr(self.env, 'physics_version', schema.get('physics_version'))
+        building.baseline_version = getattr(self.env, 'baseline_version', schema.get('baseline_version'))
+        building._baseline_ev_charging_source = BaselineEVChargingSource(self.env)
         loading_components.configure_devices(
             building, building_name, building_type, building_schema, schema, index, kwargs,
             pv_sizing_data, battery_sizing_data,

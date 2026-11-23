@@ -253,8 +253,28 @@ condições de avaliação selecionadas através de `baseline_condition`. Por
 omissão, usa as séries contrafactuais do simulador sem armazenamento e, nos
 modelos de edifício dinâmicos, sem controlo de carga parcial, mantendo o FV.
 
-Trata-se de um cálculo contrafactual, não de uma segunda execução de
-`BusinessAsUsualAgent`. `EvaluationCondition` expõe também alternativas,
+"Sem armazenamento" retira a bateria, o armazenamento térmico e o carregamento
+dos VE da execução controlada, e volta a somar o carregamento dos VE do BAU
+nativo com o alvo `'full'`: cada carro é carregado quando chega, à potência
+máxima, até ficar cheio, e nunca é descarregado. Os carros recebem a energia de
+que precisam, sem V2G, e a baseline não depende de como o controlador os
+carregou, pelo que um controlador que deixa os carros com menos carga não baixa
+a sua própria baseline. Os aparelhos diferíveis e o AVAC ficam como o
+controlador os operou. As linhas `baseline` creditam assim ao controlador o
+despacho do armazenamento, o carregamento dos VE e o V2G, face a carregar à
+chegada. Com `baseline_version=1` nada é somado, como no CityLearn 3.6.0, pelo
+que nos datasets com VE a baseline é uma comunidade cujos carros nunca
+carregam.
+
+Fora esse carregamento dos VE, trata-se de um cálculo contrafactual a partir
+das séries da própria execução, não de uma segunda execução de
+`BusinessAsUsualAgent`. Nos datasets com carregadores de VE o carregamento vem
+do sidecar do BAU, que cada avaliação passa então a executar, também o
+`evaluate()` antigo e `evaluate_v2(include_business_as_usual=False)`, com o alvo
+`'full'` qualquer que seja `business_as_usual_ev_charge_target`. Tal como as
+linhas do BAU, não pode ser construído quando as entradas, os edifícios ou os
+equipamentos mudam depois do carregamento; avalie essas execuções com
+`baseline_version=1`. `EvaluationCondition` expõe também alternativas,
 incluindo a remoção do FV. Escolha a mesma condição de avaliação ao comparar
 controladores. Durante um corte de energia simulado, o contrafactual, tal como a
 execução controlada, não troca energia com a rede: os seus valores de net, custo

@@ -149,7 +149,7 @@ a step. With dynamic topology a member counts only while it is active.
 | Variant | Meaning |
 |---|---|
 | `control` | The run being evaluated. |
-| `baseline` | The conventional counterfactual of the same run: the members without storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
+| `baseline` | The conventional counterfactual of the same run: the members without their battery and thermal storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. The EV charging of the run is replaced by that of the native BAU with the `'full'` target (charged on arrival until full, no V2G), the same for every controller; the deferrable appliances and the HVAC stay as the controller ran them. `baseline_version=1` adds no EV charging back, as in CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
 | `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
@@ -415,6 +415,7 @@ District and portfolio:
 - Portfolio shares are pooled (#312), which gives the share of the summed totals:
   - `import_share` and `local_share_of_demand` are weighted by local import plus grid import after local;
   - `local_share_of_export` by local export plus grid export after local.
+- Portfolio with and without markets (#373): when some communities have a community market and others do not, a community without a market enters the portfolio market rows with its plain grid settlement. It trades nothing locally; its grid import and export after local are its members' own grid import and export, the sums of their positive and negative nets; its settled and counterfactual costs are its `cost_total_control_eur`, because without a market the members pay the grid; its savings and operator balance are 0. Its shares therefore count as 0, pooled by its grid flows. The portfolio settled cost then equals the portfolio `cost_total_control_eur`, as each market community's control cost is its settled cost, and the shares describe the whole portfolio. The community's own district rows keep their zeros. When no community has a market, the portfolio rows are the sums of those zeros.
 
 Which KPI to use:
 - For the share of demand covered locally, use `district_solar_self_consumption_community_market_import_share_ratio`.
@@ -423,7 +424,7 @@ Which KPI to use:
 - None of these shares is the solar self-consumption ratio of the `solar_self_consumption` family.
 
 Known limits:
-- The rows exist when the market is disabled: zeros are not a measurement of local trading.
+- The rows exist when the market is disabled: zeros are not a measurement of local trading. In a portfolio that mixes communities with and without a market, those zeros are replaced by the plain grid settlement (see above).
 - The name `local_share_of_demand` says demand, but its denominator is gross member import.
 - Shares and the operator balance have no business-as-usual variant.
 
@@ -1539,7 +1540,8 @@ The KPI definition version (`kpi_definition_version` in the
 `energy_accounting` metadata of `evaluate_v2()`) is `2.0.0`. These rows of
 `evaluate_v2()` changed definition. Where a 3.6.0 value may have been used in
 published comparisons, it is kept under a distinct name, and the legacy
-`evaluate()` rows keep their own 3.6.0 definitions.
+`evaluate()` rows keep their own 3.6.0 definitions, apart from the baseline of
+datasets with EV chargers (last row), which `baseline_version=1` restores.
 
 | KPI | New definition | 3.6.0 value kept as |
 |---|---|---|
@@ -1557,6 +1559,7 @@ published comparisons, it is kept under a distinct name, and the legacy
 | Portfolio EV departure rates and means, deferrable and escalator service levels, start delay and solar self-consumption (`MultiCommunityEnv`) | Pooled from their additive denominators. | none |
 | Portfolio community-market local shares, demand-response compliance and demand-response audit coverage ratios (`MultiCommunityEnv`, #285) | Pooled from local plus grid energy, valid requested energy, requested energy and active intervals. | none |
 | Portfolio stationary-battery equivalent full cycles and their BAU comparisons (`MultiCommunityEnv`, #330) | Total throughput over twice the total nominal capacity, with BAU delta and ratio derived from the two portfolio values. | none |
+| On datasets with EV chargers: every `*_baseline_*`, `*_delta_*` (not `*_delta_to_business_as_usual_*`) and `*_ratio_to_baseline_*` row, the equity KPIs built on them, and the whole legacy `evaluate()` table (#365) | The baseline charges the EVs as the native BAU with the `'full'` target does, instead of not charging them (`baseline_version=2`). | `baseline_version=1` |
 
 In the legacy rows, a load-factor window whose signed peak is not positive is
 now undefined; it used to give an infinite or negative penalty, which safe
