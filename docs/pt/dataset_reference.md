@@ -42,7 +42,7 @@ comunidades a 15 minutos, de 4 a 100 membros, cada uma com cenários de avaliaç
 | FV com `generation_mode="absolute"` | kWh/passo |
 | FV com `generation_mode="per_kw"` | W/kW |
 | Limites de potência de BESS e carregadores | kW |
-| SOC requerido/estimado dos VE nos ficheiros de carregadores | percentagem no ficheiro original, convertida internamente para rácio |
+| SOC requerido/estimado dos VE nos ficheiros de carregadores | percentagem ou rácio, uma unidade por coluna (ver [unidade do SOC](#unidade-do-soc)), convertida internamente para rácio |
 | Preços | moeda/kWh |
 | Potência alvo dos pedidos de DR | kW |
 | Preços e penalizações dos pedidos de DR | moeda/kWh |
@@ -106,12 +106,29 @@ A procura de arrefecimento e a de aquecimento não podem ser ambas positivas no 
 | `electric_vehicle_id` | string | ID do VE. |
 | `electric_vehicle_session_id` | string | ID opcional da sessão de carregamento. Uma mudança separa duas sessões do mesmo VE, incluindo sessões consecutivas. Valores em falta ou vazios não contam como mudança. |
 | `electric_vehicle_departure_time` | passos | Passos até à partida. Valor interno predefinido `-1`. |
-| `electric_vehicle_required_soc_departure` | percentagem | SOC requerido à partida. Convertido para rácio. |
+| `electric_vehicle_required_soc_departure` | percentagem ou rácio | SOC requerido à partida. Convertido para rácio. |
 | `electric_vehicle_estimated_arrival_time` | passos | Passos até à chegada. Valor interno predefinido `-1`. |
-| `electric_vehicle_estimated_soc_arrival` | percentagem | SOC estimado à chegada nas linhas a chegar (estado 2). Convertido para rácio. Na ligação, o VE parte da estimativa mais recente na linha imediatamente anterior e nas linhas a chegar contíguas do mesmo VE e da mesma sessão antes dessa linha, normalmente a última linha a chegar. A procura não atravessa uma linha ausente (estado 3), outro VE nem uma mudança de `electric_vehicle_session_id`. Sem essa estimativa, o VE parte da estimativa na sua linha de ligação, se existir, e caso contrário mantém o SOC simulado. As referências de chegada do KPI e da auditoria de partidas usam o mesmo valor. |
+| `electric_vehicle_estimated_soc_arrival` | percentagem ou rácio | SOC estimado à chegada nas linhas a chegar (estado 2). Convertido para rácio. Na ligação, o VE parte da estimativa mais recente na linha imediatamente anterior e nas linhas a chegar contíguas do mesmo VE e da mesma sessão antes dessa linha, normalmente a última linha a chegar. A procura não atravessa uma linha ausente (estado 3), outro VE nem uma mudança de `electric_vehicle_session_id`. Sem essa estimativa, o VE parte da estimativa na sua linha de ligação, se existir, e caso contrário mantém o SOC simulado. As referências de chegada do KPI e da auditoria de partidas usam o mesmo valor. |
 | `electric_vehicle_current_soc` | percentagem ou rácio | Telemetria opcional do SOC atual. Na suite REC anual é uma referência neutra de inicialização de fronteira a taxa constante, usada apenas quando um episódio começa dentro de uma sessão ocupada; não substitui o SOC durante uma execução ininterrupta. |
 
 Em datasets abaixo da hora, os campos de contagem decrescente têm de ser expressos em passos de tempo da resolução do dataset. Exemplo: 1 hora a 15s são 240 passos.
+
+### Unidade do SOC
+
+Cada coluna de SOC de um ficheiro de carregador tem uma unidade. Com a versão de física 2, é decidida
+uma vez a partir da coluna inteira do ficheiro, e não apenas da janela de simulação: a coluna está em
+percentagem se algum dos seus valores for superior a 1 (com uma margem de arredondamento de 1e-6, para
+que `1.0000000000000013` numa coluna em rácio continue a ser rácio), e em rácio caso contrário. Numa
+coluna em percentagem, o valor 1 é portanto 1 %. Valores negativos e células vazias são valores em
+falta. As colunas são decididas em separado, pelo que `electric_vehicle_current_soc` pode estar em
+rácio e as metas em percentagem. Uma coluna com todos os valores entre 0 e 1 é lida como rácio; declare
+`"soc_unit": "percent"` no carregador do esquema se esse ficheiro estiver em percentagem (a unidade
+declarada aplica-se a todas as suas colunas de SOC). Uma coluna lida em percentagem que também
+tem valores entre 0 e 1 dá um aviso, porque um valor perdido acima de 1 numa coluna em rácio
+transformaria 0,3 em 0,3 %. A versão de física 1 mantém a regra
+do CityLearn 3.6.0, valor a valor: um valor em [0, 1] é um rácio e um valor acima de 1 uma
+percentagem, pelo que 1 (1 %) num ficheiro em percentagem era lido como 100 %, exceto se o carregador declarar `soc_unit`
+([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
 
 ## Bundles de observação de entidades nos datasets incluídos
 

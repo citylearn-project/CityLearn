@@ -188,6 +188,75 @@ ação AVAC define o aquecimento fornecido seja qual for o set point. Essa
 temperatura está fora do intervalo com que os modelos LSTM foram treinados, por
 isso trate essas execuções com cuidado.
 
+### Unidade do SOC dos VE nos ficheiros de carregadores
+
+Na versão 2 da física, as colunas de SOC de um ficheiro de carregador
+(`electric_vehicle_required_soc_departure`, `electric_vehicle_estimated_soc_arrival`
+e `electric_vehicle_current_soc`) têm cada uma uma unidade, decidida uma vez a partir
+da coluna inteira do ficheiro: percentagem se algum valor for superior a 1, rácio caso
+contrário. Antes, a unidade era adivinhada valor a valor, pelo que um SOC de
+chegada de 1 (1 %) num ficheiro em percentagem era lido como 100 %: o VE chegava
+cheio e não era carregado
+([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
+
+- Dados incluídos: os ficheiros dos carregadores de
+  `citylearn_challenge_2022_phase_all_plus_evs`, das três demos trifásicas horárias
+  e das demos a 15 segundos `citylearn_three_phase_electrical_service_demo_15s_parquet`
+  e `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` estão em
+  percentagem e têm essas linhas. No ano simulado, 8 de cerca de 2800 chegadas
+  dos datasets horários e 8 chegadas de cada uma dessas duas demos a 15 segundos
+  partem de uma dessas linhas. `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet`
+  não tem nenhuma e não muda.
+  Os ficheiros `pt_rec_*` estão em rácio e não mudam.
+- Os resultados desses datasets mudam. Com o `BusinessAsUsualAgent`, no ano
+  completo de `citylearn_challenge_2022_phase_all_plus_evs`, o carregamento dos
+  VE sobe 534 kWh (0,58 %), a importação do distrito 0,31 % e o custo 0,33 %
+  (de 31 412,62 para 31 515,25 EUR); nas três demos trifásicas horárias a
+  importação sobe entre 0,31 e 0,34 % e o custo entre 0,35 e 0,38 %. Na demo a
+  15 segundos `citylearn_three_phase_electrical_service_demo_15s_parquet`, o
+  dia em torno de uma dessas chegadas (passos 79 200 a 84 959) carrega 474 kWh
+  em vez de 377 kWh. Os KPIs de partida dos VE quase não mudam (a média do
+  excedente muda na quinta casa decimal), porque esses VE chegavam cheios.
+- Uma coluna com todos os valores entre 0 e 1 é lida como rácio. Se estiver em
+  percentagem, declare `"soc_unit": "percent"` no carregador, ao lado de
+  `charger_simulation`; `"fraction"` força o rácio. Uma chave de carregador mal
+  escrita, como `soc_units`, é indicada com um aviso.
+- Uma coluna lida em percentagem que também tem valores entre 0 e 1 dá um aviso:
+  um valor perdido acima de 1 (1,00001, por exemplo) numa coluna em rácio torna
+  toda a coluna em percentagem, e 0,3 passaria a 0,3 %. Corrija esse valor ou
+  declare `"soc_unit": "fraction"`.
+- Defina `physics_version` como `1` para reproduzir a regra valor a valor do
+  CityLearn 3.6.0.
+
+### Valores predefinidos e nomes dos atributos dos carregadores
+
+Os `attributes` dos carregadores são verificados pelo nome: um nome que o
+carregador não aceita lança um `ValueError` que indica o carregador e sugere o
+nome válido mais próximo. Antes, um nome mal escrito como `max_discharge_power`
+era descartado e o limite caía no valor predefinido. `nominal_power` e
+`charger_type`, que os schemas incluídos definem, passam a ser aceites
+explicitamente: `nominal_power` é o valor predefinido de `max_charging_power`, e
+`charger_type` é uma etiqueta sem efeito
+([#369](https://github.com/citylearn-project/CityLearn/issues/369)).
+
+Na versão 2 da física, um limite omitido deixa de dar um carregador
+bidirecional de 50 kW:
+
+- um `max_discharging_power` omitido vale 0, pelo que o carregador não pode
+  descarregar (V2G desligado) e o seu espaço de ações começa em 0 em vez de -1.
+  Defina `max_discharging_power` para permitir V2G;
+- um `max_charging_power` omitido vale `nominal_power`, ou 50 kW quando este
+  também falta;
+- um aviso indica cada limite que cai num valor assumido
+  (`max_charging_power`, `max_discharging_power`, `efficiency`); `efficiency`
+  só quando é usado, isto é, quando nenhuma curva de eficiência o substitui.
+
+Todos os carregadores incluídos definem todos os seus limites, pelo que os
+resultados incluídos não mudam. Um schema que omite `max_discharging_power` e
+contava com os 50 kW de V2G tem de o definir explicitamente, ou usar
+`physics_version=1`, que mantém os 50 kW do CityLearn 3.6.0 (a verificação dos
+nomes aplica-se às duas versões).
+
 ### Os espaços de observação seguem as observações
 
 Os valores das observações, a sua ordem e `observation_names` não mudam, nem as
@@ -542,6 +611,14 @@ um limite de serviço elétrico, e o `Building_15` das demos trifásicas.
 
 Altera também as execuções que usam o seguinte:
 
+- **Ficheiros de carregadores em percentagem.** A unidade do SOC é decidida uma
+  vez por coluna, pelo que um SOC de 1 num ficheiro em percentagem é 1 % e não
+  100 % ([#368](https://github.com/citylearn-project/CityLearn/issues/368), ver
+  [unidade do SOC dos VE nos ficheiros de carregadores](#unidade-do-soc-dos-ve-nos-ficheiros-de-carregadores)).
+- **Carregadores sem `max_discharging_power`.** Não podem descarregar; a versão 1
+  dava-lhes 50 kW de V2G
+  ([#369](https://github.com/citylearn-project/CityLearn/issues/369), ver
+  [valores predefinidos e nomes dos atributos dos carregadores](#valores-predefinidos-e-nomes-dos-atributos-dos-carregadores)).
 - **Set points dos ocupantes sob controlo arbitrário.** Uma alteração do ocupante
   para em `set_point_limits`, [15, 30] °C por omissão; a versão 1 não tinha limite
   ([#352](https://github.com/citylearn-project/CityLearn/issues/352), ver

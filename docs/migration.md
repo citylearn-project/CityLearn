@@ -180,6 +180,71 @@ HVAC action sets the heating supplied whatever the set point. That temperature
 is outside the range the LSTM models were trained on, so treat such runs with
 care.
 
+### EV SOC unit of charger files
+
+Under physics version 2 the SOC columns of a charger file
+(`electric_vehicle_required_soc_departure`, `electric_vehicle_estimated_soc_arrival`
+and `electric_vehicle_current_soc`) each have one unit, decided once from the
+whole column of the file: percent if any value is above 1, ratio otherwise. Before, the unit was
+guessed value by value, so an arrival SOC of 1 (1 %) in a percent file was read
+as 100 %: the EV arrived full and was not charged
+([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
+
+- Bundled data: the EV charger files of `citylearn_challenge_2022_phase_all_plus_evs`,
+  the three hourly three-phase demos and the 15-second
+  `citylearn_three_phase_electrical_service_demo_15s_parquet` and
+  `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` are in percent
+  and contain such rows. Over the simulated year, 8 of about 2,800 arrivals of
+  the hourly datasets and 8 arrivals of each of those two 15-second demos start
+  from such a row. `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet`
+  has none and does not change. The `pt_rec_*` files are ratios and do not change.
+- Results change for those datasets. With `BusinessAsUsualAgent` over the full
+  year of `citylearn_challenge_2022_phase_all_plus_evs`, EV charging rises by
+  534 kWh (0.58 %), district import by 0.31 % and cost by 0.33 % (31,412.62 to
+  31,515.25 EUR); the three hourly three-phase demos change by 0.31 to 0.34 %
+  in import and 0.35 to 0.38 % in cost. On the 15-second
+  `citylearn_three_phase_electrical_service_demo_15s_parquet`, the day around
+  such an arrival (steps 79,200 to 84,959) charges 474 instead of 377 kWh.
+  The EV departure KPIs barely move (the surplus mean changes in the fifth
+  decimal), because those EVs used to arrive full.
+- A column whose values are all between 0 and 1 is read as ratio. If it is in
+  percent, declare `"soc_unit": "percent"` on the charger, next to
+  `charger_simulation`; `"fraction"` forces ratio. A misspelt charger key,
+  such as `soc_units`, is reported with a warning.
+- A column read as percent that also holds values between 0 and 1 gives a
+  warning: one stray value above 1 (1.00001, say) in a ratio column makes the
+  whole column percent, so 0.3 would become 0.3 %. Fix the stray value or
+  declare `"soc_unit": "fraction"`.
+- Set `physics_version` to `1` to reproduce the value-by-value rule of
+  CityLearn 3.6.0.
+
+### Charger defaults and attribute names
+
+Charger `attributes` are checked by name: a name the charger does not accept
+raises a `ValueError` that names the charger and suggests the closest valid
+name. Before, a misspelt name such as `max_discharge_power` was dropped and the
+limit fell back to its default. `nominal_power` and `charger_type`, which the
+bundled schemas set, are now accepted explicitly: `nominal_power` is the
+default of `max_charging_power`, and `charger_type` is a label without effect
+([#369](https://github.com/citylearn-project/CityLearn/issues/369)).
+
+Under physics version 2 an omitted limit no longer gives a 50 kW
+bidirectional charger:
+
+- an omitted `max_discharging_power` is 0, so the charger cannot discharge
+  (V2G off) and its action space starts at 0 instead of -1. Set
+  `max_discharging_power` to allow V2G;
+- an omitted `max_charging_power` is `nominal_power`, or 50 kW when that is
+  missing too;
+- a warning names every limit that falls back to an assumed value
+  (`max_charging_power`, `max_discharging_power`, `efficiency`); `efficiency`
+  only when it is used, that is when an efficiency curve does not replace it.
+
+Every bundled charger sets all its limits, so bundled results do not change.
+A schema that omits `max_discharging_power` and relied on the 50 kW of V2G
+needs it set explicitly, or `physics_version=1`, which keeps the 50 kW defaults
+of CityLearn 3.6.0 (the name check applies to both versions).
+
 ### Observation spaces follow the observations
 
 The observation values, their order and `observation_names` do not change, and
@@ -510,6 +575,14 @@ electrical-service limit, and `Building_15` of the three-phase demos.
 
 It also changes runs that use the following:
 
+- **Charger files in percent.** The SOC unit is decided once per column, so an
+  SOC of 1 in a percent file is 1 % instead of 100 %
+  ([#368](https://github.com/citylearn-project/CityLearn/issues/368), see
+  [EV SOC unit of charger files](#ev-soc-unit-of-charger-files)).
+- **Chargers without `max_discharging_power`.** They cannot discharge; version
+  1 gave them 50 kW of V2G
+  ([#369](https://github.com/citylearn-project/CityLearn/issues/369), see
+  [charger defaults and attribute names](#charger-defaults-and-attribute-names)).
 - **Occupant set points under arbitrary control.** An occupant change stops at
   `set_point_limits`, [15, 30] °C by default; version 1 had no limit
   ([#352](https://github.com/citylearn-project/CityLearn/issues/352), see

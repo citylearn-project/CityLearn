@@ -1349,6 +1349,11 @@ class ChargerSimulation(TimeSeriesData):
         Estimated SOC percentage at the time of arrival to the charger (only for state 2),
         normalized to the [0, 1] range and with optional Gaussian noise.
         Defaults to -0.1 when not present.
+    soc_unit : str or Mapping[str, str]
+        Unit of the SOC columns, ``'percent'`` or ``'fraction'``, for both columns or per column
+        name. ``None`` (default) infers it once per column: percent if any valid value is above 1.
+        ``'per_value'`` is the value-by-value rule of physics version 1. The schema loader infers it
+        from the whole column of the file.
     """
 
     def __init__(
@@ -1365,6 +1370,7 @@ class ChargerSimulation(TimeSeriesData):
         noise_std: float = 1.0,
         noise_seed=None,
         noise_start_index=0,
+        soc_unit: Union[str, Mapping[str, str]] = None,
     ):
         """Initialize ChargerSchedule from charger-centric EV CSV input."""
         super().__init__(start_time_step=start_time_step, end_time_step=end_time_step)
@@ -1375,6 +1381,21 @@ class ChargerSimulation(TimeSeriesData):
 
         default_time_value = -1
         default_soc_value = -0.1
+
+        # One unit per SOC column (#368), not per value. 'per_value' is the rule of physics version 1.
+        soc_columns = {
+            'electric_vehicle_required_soc_departure': electric_vehicle_required_soc_departure,
+            'electric_vehicle_estimated_soc_arrival': electric_vehicle_estimated_soc_arrival,
+        }
+        declared = dict(soc_unit) if isinstance(soc_unit, Mapping) else {c: soc_unit for c in soc_columns}
+        self._soc_units = {}
+
+        for column, values in soc_columns.items():
+            unit = declared.get(column)
+            unit = unit if unit == 'per_value' else self._resolve_soc_unit(unit, path=f'soc_unit[{column!r}]')
+            self._soc_units[column] = (
+                self._soc_series_unit(values, default_soc_value=default_soc_value) if unit is None else unit
+            )
 
         # A blank cell makes pandas read the column as floats (1.0, 2.0, NaN), so parse numbers, not digit
         # strings. Anything that is not a non-negative integer is no state (NaN).
@@ -1401,18 +1422,20 @@ class ChargerSimulation(TimeSeriesData):
             np.isnan(arrival_time_arr), default_time_value, arrival_time_arr
         ).astype('int32')
 
-        self.electric_vehicle_required_soc_departure = self.normalize_soc_series(
+        self.electric_vehicle_required_soc_departure = self._normalize_soc_series(
             electric_vehicle_required_soc_departure,
             default_soc_value=default_soc_value,
             noise_std=self.noise_std,
             random_state=noise_random_state,
+            unit=self._soc_units['electric_vehicle_required_soc_departure'],
         )
 
-        self.electric_vehicle_estimated_soc_arrival = self.normalize_soc_series(
+        self.electric_vehicle_estimated_soc_arrival = self._normalize_soc_series(
             electric_vehicle_estimated_soc_arrival,
             default_soc_value=default_soc_value,
             noise_std=self.noise_std,
             random_state=noise_random_state,
+            unit=self._soc_units['electric_vehicle_estimated_soc_arrival'],
         )
 
     @staticmethod
@@ -1493,22 +1516,118 @@ class ChargerSimulation(TimeSeriesData):
 
             index -= 1
 
-    @staticmethod
+    # Units of the SOC columns of a charger file, see `_soc_series_unit`.
+    _SOC_UNITS = ('percent', 'fraction')
+
+    # SOC columns of a charger file; each has one unit.
+    _SOC_COLUMNS = (
+        'electric_vehicle_required_soc_departure',
+        'electric_vehicle_estimated_soc_arrival',
+        'electric_vehicle_current_soc',
+    )
+
+    # Margin above 1 still read as a fraction when the unit is inferred. It absorbs floating-point
+    # rounding such as 1.0000000000000013 in a file written as fractions.
+    _SOC_FRACTION_TOLERANCE = 1.0e-6
+
+    @classmethod
+    def _soc_series_unit(cls, *series: Iterable[float], default_soc_value: float = -0.1) -> str:
+        """Unit of SOC values: ``'percent'`` if any valid value is above 1, else ``'fraction'``.
+
+        Missing values (NaN, `default_soc_value` and negative sentinels) are ignored. The unit is
+        decided once for all the values together, so a single value such as 1 (1 %) in a column written
+        in percent is not read as 1.0 (100 %).
+        """
+
+        for values in series:
+            if values is None:
+                continue
+
+            raw = pd.to_numeric(pd.Series(np.ravel(np.asarray(values, dtype=object))), errors='coerce')
+            raw = raw.to_numpy(dtype='float64')
+            valid = np.isfinite(raw) & (raw >= 0.0) & (raw != default_soc_value)
+
+            if np.any(raw[valid] > 1.0 + cls._SOC_FRACTION_TOLERANCE):
+                return 'percent'
+
+        return 'fraction'
+
+    @classmethod
+    def _soc_fraction_values_in_percent(cls, values: Iterable[float], default_soc_value: float = -0.1) -> np.ndarray:
+        """Valid values strictly between 0 and 1 of a series read as percent.
+
+        A percent column normally has none: 1 (1 %) is its smallest non-zero value. Values such as 0.3
+        suggest a fraction column that one stray value above 1 turned into percent.
+        """
+
+        raw = pd.to_numeric(pd.Series(np.ravel(np.asarray(values, dtype=object))), errors='coerce')
+        raw = raw.to_numpy(dtype='float64')
+        valid = np.isfinite(raw) & (raw != default_soc_value)
+        return raw[valid & (raw > 0.0) & (raw < 1.0)]
+
+    @classmethod
+    def _resolve_soc_unit(cls, value: str = None, path: str = 'soc_unit') -> Union[str, None]:
+        """Validate a declared SOC unit; ``None`` means the unit is inferred."""
+
+        if value is None:
+            return None
+
+        unit = str(value).strip().lower()
+
+        if unit not in cls._SOC_UNITS:
+            raise ValueError(f'{path} must be one of {list(cls._SOC_UNITS)}, got {value!r}.')
+
+        return unit
+
+    @classmethod
     def normalize_soc_series(
+        cls,
         values: Iterable[float],
         default_soc_value: float = -0.1,
         noise_std: float = 0.0,
         random_state=None,
     ) -> np.ndarray:
-        """Normalize SOC inputs that may be fractions or percentages."""
+        """Normalize SOC inputs given as fractions or percentages to the [0, 1] range.
+
+        The unit is decided once for the whole series: percent if any valid value is above 1, else
+        fraction, so 1 in a percent series is 1 % and not 100 % (#368). NaN, `default_soc_value` and
+        negative values are missing and become `default_soc_value`.
+        """
+
+        return cls._normalize_soc_series(
+            values, default_soc_value=default_soc_value, noise_std=noise_std, random_state=random_state,
+        )
+
+    @classmethod
+    def _normalize_soc_series(
+        cls,
+        values: Iterable[float],
+        default_soc_value: float = -0.1,
+        noise_std: float = 0.0,
+        random_state=None,
+        unit: str = None,
+    ) -> np.ndarray:
+        """:py:meth:`normalize_soc_series` with an explicit `unit`.
+
+        ``'percent'`` divides every value by 100 and ``'fraction'`` keeps it. ``None`` infers the
+        unit once for the whole series with :py:meth:`_soc_series_unit`. ``'per_value'`` is the rule
+        of physics version 1: a value in [0, 1] is a fraction and a value above 1 a percentage, value
+        by value, so 1 (1 %) in a percent file is read as 100 %.
+        """
 
         raw = np.array(values, dtype='float32')
         raw = np.where(np.isnan(raw), default_soc_value, raw)
         normalized = np.full(raw.shape, float(default_soc_value), dtype='float32')
-
         valid = (raw != default_soc_value) & (raw >= 0.0)
-        fraction = valid & (raw >= 0.0) & (raw <= 1.0)
-        percent = valid & (raw > 1.0)
+
+        if unit == 'per_value':
+            fraction = valid & (raw <= 1.0)
+            percent = valid & (raw > 1.0)
+        else:
+            unit = cls._soc_series_unit(values, default_soc_value=default_soc_value) \
+                if unit is None else cls._resolve_soc_unit(unit, path='unit')
+            percent = valid if unit == 'percent' else np.zeros(raw.shape, dtype=bool)
+            fraction = valid & ~percent
 
         normalized[fraction] = raw[fraction]
         normalized[percent] = raw[percent] / 100.0
