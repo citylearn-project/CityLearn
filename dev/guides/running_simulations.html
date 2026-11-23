@@ -582,9 +582,25 @@ citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/m
 citylearn<span class="w"> </span>simulate<span class="w"> </span>data/datasets/my_dataset/schema.json<span class="w"> </span>evaluate
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">simulate</span></code> writes a training summary (<code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-train.json</span></code>), an
-evaluation (<code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-evaluation.json</span></code>) and, with <code class="docutils literal notranslate"><span class="pre">--save_agent</span></code>, the
-agent to the output directory, and prints the path of each file it writes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">simulate</span></code> writes a training summary (<code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-train.json</span></code>), the
+evaluation files and, with <code class="docutils literal notranslate"><span class="pre">--save_agent</span></code>, the agent to the output directory,
+and prints the path of each file it writes. <code class="docutils literal notranslate"><span class="pre">evaluate</span></code> and <code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code>
+write two evaluation files:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-evaluation_v2.csv</span></code>: the <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> table, with the
+columns <code class="docutils literal notranslate"><span class="pre">cost_function</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">level</span></code>, <code class="docutils literal notranslate"><span class="pre">unit</span></code> and <code class="docutils literal notranslate"><span class="pre">description</span></code>,
+one row per KPI and scope. It holds the community market rows when the
+scenario has a market, and the <code class="docutils literal notranslate"><span class="pre">*_business_as_usual_*</span></code> rows. This is the table
+that the <a class="reference internal" href="kpis_reference.html"><span class="std std-doc">KPI reference</span></a> and the scorecard describe; read
+it with <code class="docutils literal notranslate"><span class="pre">pandas.read_csv</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;simulation_id&gt;-evaluation.json</span></code>: the evaluation window and timestamps, the
+rewards, the actions and the time series, plus the legacy <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> KPIs
+under <code class="docutils literal notranslate"><span class="pre">evaluation</span></code>. Its format does not change, so existing parsers keep
+working, but compare controllers with the <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> file.</p></li>
+</ul>
+<p>The business-as-usual rows need a second rollout of <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> on the
+evaluation window, as <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> does in Python. <code class="docutils literal notranslate"><span class="pre">--no_business_as_usual</span></code>
+skips it and writes the table without those rows.</p>
 <section id="stable-baselines3-agent">
 <h3>Stable Baselines3 agent<a class="headerlink" href="#stable-baselines3-agent" title="Link to this heading"></a></h3>
 <p>A Stable Baselines3 agent needs its policy in the agent arguments and the
@@ -705,19 +721,23 @@ the evaluation, covers the whole simulation window.</p>
 <td><p>flag</p></td>
 <td><p>Record the host and user names in the training summary.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--no_business_as_usual</span></code></p></td>
+<td><p>flag</p></td>
+<td><p>Write the <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> table without the business-as-usual rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">-e</span> <span class="pre">10</span></code></p></td>
 <td><p>Number of training episodes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--save_agent</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--save_agent</span></code></p></td>
 <td><p>flag</p></td>
 <td><p>Save agent at the end.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">--evaluate</span></code></p></td>
 <td><p>flag</p></td>
 <td><p>Evaluate after training, on the first training episode window unless <code class="docutils literal notranslate"><span class="pre">-te</span></code> is given.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate</span></code></p></td>
 <td><p>subcommand</p></td>
 <td><p>Deterministic evaluation.</p></td>
 </tr>

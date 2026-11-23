@@ -257,6 +257,7 @@ Baselines3 example, the evaluation window and the output files.</p>
                    <span class="p">[</span><span class="o">-</span><span class="n">d</span> <span class="n">OUTPUT_DIRECTORY</span><span class="p">]</span>
                    <span class="p">[</span><span class="o">-</span><span class="n">te</span> <span class="n">EVALUATION_EPISODE_TIME_STEPS</span> <span class="n">EVALUATION_EPISODE_TIME_STEPS</span><span class="p">]</span>
                    <span class="p">[</span><span class="o">-</span><span class="n">p</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">rs</span> <span class="n">RANDOM_SEED</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">offline</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">record_host</span><span class="p">]</span>
+                   <span class="p">[</span><span class="o">--</span><span class="n">no_business_as_usual</span><span class="p">]</span>
                    <span class="n">schema</span> <span class="p">{</span><span class="n">train</span><span class="p">,</span><span class="n">evaluate</span><span class="p">}</span> <span class="o">...</span>
 </pre></div>
 </div>
@@ -313,6 +314,10 @@ Baselines3 example, the evaluation window and the output files.</p>
 <dt><kbd>--record_host</kbd></dt>
 <dd><p>Record the machine host name and the user name in the training summary JSON.</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+<dt><kbd>--no_business_as_usual</kbd></dt>
+<dd><p>Write the evaluate_v2() KPI table (<cite>&lt;simulation_id&gt;-evaluation_v2.csv</cite>) without the business-as-usual rows, which need a second rollout of BusinessAsUsualAgent on the evaluation window.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 </dd>
 </dl>
 </section>

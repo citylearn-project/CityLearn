@@ -244,6 +244,7 @@ usage: citylearn simulate [-h] [-a AGENT_NAME] [-ke ENV_KWARGS]
                           [-d OUTPUT_DIRECTORY]
                           [-te EVALUATION_EPISODE_TIME_STEPS EVALUATION_EPISODE_TIME_STEPS]
                           [-p] [-rs RANDOM_SEED] [--offline] [--record_host]
+                          [--no_business_as_usual]
                           schema {train,evaluate} ...
 
 positional arguments:
@@ -301,6 +302,12 @@ options:
                         to be available locally. (default: False)
   --record_host         Record the machine host name and the user name in the
                         training summary JSON. (default: False)
+  --no_business_as_usual
+                        Write the evaluate_v2() KPI table
+                        (`&lt;simulation_id&gt;-evaluation_v2.csv`) without the
+                        business-as-usual rows, which need a second rollout of
+                        BusinessAsUsualAgent on the evaluation window.
+                        (default: True)
 
 simulate subcommands:
   {train,evaluate}
