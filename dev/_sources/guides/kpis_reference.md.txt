@@ -413,6 +413,7 @@ District and portfolio:
 - Portfolio shares are pooled (#312), which gives the share of the summed totals:
   - `import_share` and `local_share_of_demand` are weighted by local import plus grid import after local;
   - `local_share_of_export` by local export plus grid export after local.
+- Portfolio with and without markets (#373): when some communities have a community market and others do not, a community without a market enters the portfolio market rows with its plain grid settlement. It trades nothing locally; its grid import and export after local are its members' own grid import and export, the sums of their positive and negative nets; its settled and counterfactual costs are its `cost_total_control_eur`, because without a market the members pay the grid; its savings and operator balance are 0. Its shares therefore count as 0, pooled by its grid flows. The portfolio settled cost then equals the portfolio `cost_total_control_eur`, as each market community's control cost is its settled cost, and the shares describe the whole portfolio. The community's own district rows keep their zeros. When no community has a market, the portfolio rows are the sums of those zeros.
 
 Which KPI to use:
 - For the share of demand covered locally, use `district_solar_self_consumption_community_market_import_share_ratio`.
@@ -421,7 +422,7 @@ Which KPI to use:
 - None of these shares is the solar self-consumption ratio of the `solar_self_consumption` family.
 
 Known limits:
-- The rows exist when the market is disabled: zeros are not a measurement of local trading.
+- The rows exist when the market is disabled: zeros are not a measurement of local trading. In a portfolio that mixes communities with and without a market, those zeros are replaced by the plain grid settlement (see above).
 - The name `local_share_of_demand` says demand, but its denominator is gross member import.
 - Shares and the operator balance have no business-as-usual variant.
 

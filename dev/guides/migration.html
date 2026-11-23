@@ -104,6 +104,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#ev-charging-in-the-default-baseline">EV charging in the default baseline</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#district-emissions-with-local-trading-off">District emissions with local trading off</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#portfolio-market-rows-with-and-without-markets">Portfolio market rows with and without markets</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#occupant-set-point-limits">Occupant set-point limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#observation-spaces-follow-the-observations">Observation spaces follow the observations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-native-bau-uses-current-step-load-and-solar">The native BAU uses current-step load and solar</a></li>
@@ -291,6 +292,21 @@ local trading on, runs without a market and every bundled dataset are
 unchanged, and the local price ratio does not affect emissions. To compare
 with an earlier run made with local trading off, re-evaluate it with the
 current release. See <a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/327">#327</a>.</p>
+</section>
+<section id="portfolio-market-rows-with-and-without-markets">
+<h3>Portfolio market rows with and without markets<a class="headerlink" href="#portfolio-market-rows-with-and-without-markets" title="Link to this heading"></a></h3>
+<p>In a <code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> where some communities have a community market and
+others do not, the <code class="docutils literal notranslate"><span class="pre">portfolio_*_community_market_*</span></code> rows now include the
+communities without a market with their plain grid settlement: no local trade,
+their members’ grid import and export as grid import and export after local
+trading, their <code class="docutils literal notranslate"><span class="pre">cost_total_control_eur</span></code> as settled and counterfactual cost, and
+zero savings and operator balance. These rows used to add the zeros those
+communities report, so they described only the market communities. Their
+values, and the pooled local-trade shares, change for such portfolios only.
+District rows, simulations, KPI names and portfolios where every community has
+a market, or none has, are unchanged. Re-evaluate earlier mixed portfolios with
+the current release before comparing their portfolio market rows. See
+<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/373">#373</a>.</p>
 </section>
 <section id="occupant-set-point-limits">
 <h3>Occupant set-point limits<a class="headerlink" href="#occupant-set-point-limits" title="Link to this heading"></a></h3>

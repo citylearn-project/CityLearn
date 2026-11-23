@@ -228,7 +228,11 @@ own <code class="docutils literal notranslate"><span class="pre">community_id</s
 rates and stationary-battery equivalent full cycles are pooled by their denominators,
 other <code class="docutils literal notranslate"><span class="pre">_kwh</span></code>/<code class="docutils literal notranslate"><span class="pre">_eur</span></code>/<code class="docutils literal notranslate"><span class="pre">_kgco2</span></code>/<code class="docutils literal notranslate"><span class="pre">_count</span></code> rows are summed,
 other ratios and percentages are means weighted by the community <code class="docutils literal notranslate"><span class="pre">weight</span></code>, and other rows (<code class="docutils literal notranslate"><span class="pre">_kw</span></code>,
-<code class="docutils literal notranslate"><span class="pre">_c</span></code>, <code class="docutils literal notranslate"><span class="pre">_hours</span></code>) have no portfolio row. The KPI reference guide gives the rule of each family.</p>
+<code class="docutils literal notranslate"><span class="pre">_c</span></code>, <code class="docutils literal notranslate"><span class="pre">_hours</span></code>) have no portfolio row. When some communities have a community market and others do
+not, a community without a market enters the portfolio community-market rows with its plain grid
+settlement: no local trade, its members’ grid import and export, and its control cost as settled and
+counterfactual cost. Its own district rows are unchanged. The KPI reference guide gives the rule of each
+family.</p>
 </dd></dl>
 
 <dl class="py method">

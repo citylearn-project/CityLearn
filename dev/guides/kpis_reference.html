@@ -657,6 +657,7 @@ local_share_of_export = sum le / (sum le + sum ge)        undefined if the denom
 <li><p><code class="docutils literal notranslate"><span class="pre">local_share_of_export</span></code> by local export plus grid export after local.</p></li>
 </ul>
 </li>
+<li><p>Portfolio with and without markets (#373): when some communities have a community market and others do not, a community without a market enters the portfolio market rows with its plain grid settlement. It trades nothing locally; its grid import and export after local are its members’ own grid import and export, the sums of their positive and negative nets; its settled and counterfactual costs are its <code class="docutils literal notranslate"><span class="pre">cost_total_control_eur</span></code>, because without a market the members pay the grid; its savings and operator balance are 0. Its shares therefore count as 0, pooled by its grid flows. The portfolio settled cost then equals the portfolio <code class="docutils literal notranslate"><span class="pre">cost_total_control_eur</span></code>, as each market community’s control cost is its settled cost, and the shares describe the whole portfolio. The community’s own district rows keep their zeros. When no community has a market, the portfolio rows are the sums of those zeros.</p></li>
 </ul>
 <p>Which KPI to use:</p>
 <ul class="simple">
@@ -667,7 +668,7 @@ local_share_of_export = sum le / (sum le + sum ge)        undefined if the denom
 </ul>
 <p>Known limits:</p>
 <ul class="simple">
-<li><p>The rows exist when the market is disabled: zeros are not a measurement of local trading.</p></li>
+<li><p>The rows exist when the market is disabled: zeros are not a measurement of local trading. In a portfolio that mixes communities with and without a market, those zeros are replaced by the plain grid settlement (see above).</p></li>
 <li><p>The name <code class="docutils literal notranslate"><span class="pre">local_share_of_demand</span></code> says demand, but its denominator is gross member import.</p></li>
 <li><p>Shares and the operator balance have no business-as-usual variant.</p></li>
 </ul>
