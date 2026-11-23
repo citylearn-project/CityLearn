@@ -105,10 +105,12 @@ determinam a repartição financeira; os exports expõem os custos liquidados, o
 contrafactual só com a rede e as poupanças de cada membro e da comunidade. A
 liquidação valoriza a trajetória física registada.
 
-Configure o [mercado comunitário](schema_reference.md#mercado-comunitário). As
-exportações residuais para a rede recebem atualmente remuneração nula. A
-liquidação local é feita dentro de uma comunidade; os resultados de várias
-comunidades são descritos abaixo.
+Configure o [mercado comunitário](schema_reference.md#mercado-comunitário). Por
+omissão, as exportações residuais para a rede não são remuneradas; com
+`"settlement_version": 2` recebem `grid_export_price`, e `tariff_files` dá a
+cada membro os seus próprios preços. Definições inválidas do mercado dão erro
+quando o env é construído. A liquidação local é feita dentro de uma comunidade;
+os resultados de várias comunidades são descritos abaixo.
 
 ## Pedidos de resposta à procura
 

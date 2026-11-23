@@ -168,7 +168,8 @@ def _write_residual_market_schema(tmp_path: Path) -> Path:
         "community_market": {
             "enabled": True,
             "intra_community_sell_ratio": 0.8,
-            "grid_export_price": 0.05,
+            # Settlement version 1 pays nothing for exports, so the price is 0 (#366).
+            "grid_export_price": 0.0,
         },
         "buildings": {
             "Building_A": {"include": True, "energy_simulation": "Building_A.csv", **common_building},

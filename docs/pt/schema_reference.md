@@ -581,20 +581,35 @@ Os metadados ficam expostos em `observations["meta"]["robustness"]`.
 | Campo | Predefinido | Finalidade |
 |---|---:|---|
 | `enabled` | `false` | Ativa a liquidação local. |
-| `local_price_ratio_to_grid_import` | `0.8` | Preço local relativo ao preço de importação da rede. |
-| `intra_community_sell_ratio` | alias | Nome antigo do mesmo rácio. |
-| `settlement_version` | `1` | `2` ativa `grid_export_price`; com `1`, as exportações residuais para a rede não são remuneradas. |
-| `grid_export_price` | `0.0` | EUR/kWh pagos pelas exportações residuais para a rede quando `settlement_version` é `2`. Tem de ser finito. |
+| `local_price_ratio_to_grid_import` | `0.8` | Preço local relativo ao preço de importação da rede. Um número de 0 a 1. |
+| `intra_community_sell_ratio` | alias | Nome antigo do mesmo rácio. Se as duas chaves estiverem definidas, têm de ser iguais. |
+| `settlement_version` | `1` | O inteiro `1` ou `2`. `2` ativa `grid_export_price`; com `1`, as exportações residuais para a rede não são remuneradas. |
+| `grid_export_price` | `0.0` | EUR/kWh pagos pelas exportações residuais para a rede. Um número finito; um valor diferente de zero exige `"settlement_version": 2`. |
 | `tariff_files` | `{}` | Tarifas CSV por membro, `{"<building>": "<file inside the dataset>"}`. Cada ficheiro tem uma linha por passo de tempo global com `grid_export_price`, `community_buy_price` e `community_sell_price` (EUR/kWh) e tem de cobrir o episódio. Um membro com ficheiro usa estes preços em vez do rácio e de `grid_export_price`. |
 | `local_trading_enabled` | `true` | `false` mantém a liquidação e os KPIs do mercado, mas não troca energia localmente. Aceita booleanos ou `"true"`/`"false"`. |
-| `import_member_weights` | `{}` | Pesos para repartir a energia local entre os importadores. |
+| `import_member_weights` | `{}` | Pesos para repartir a energia local entre os importadores, `{"<building>": peso}`. Cada edifício tem de estar no schema e cada peso tem de ser um número finito maior ou igual a 0. |
 | `kpis.community_local_traded_enabled` | `true` | Ativa o KPI de energia transacionada localmente. |
 | `kpis.community_self_consumption_enabled` | `true` | Ativa o KPI da quota de importação local. |
+| `matching_granularity` | `"aggregate_building"` | O único valor suportado; fica registado nos metadados. |
 
 ## Combinações importantes
 
-O rácio do preço local é limitado a `[0, 1]`. A chave antiga
-`intra_community_sell_ratio` é um alias. A liquidação local valoriza as
+As definições são verificadas quando o env é construído, mesmo com
+`enabled: false`. Uma chave desconhecida (por exemplo `enable`), um rácio que
+não é um número ou está fora de `[0, 1]`, um `settlement_version` que não seja o
+inteiro `1` ou `2` (incluindo a string `"2"`), um `grid_export_price` diferente
+de zero sem `"settlement_version": 2`, e um peso ou ficheiro de tarifa de um
+edifício que não está no schema dão `ValueError`. As versões anteriores
+ignoravam estas definições ou substituíam-nas por valores predefinidos. A chave
+antiga `intra_community_sell_ratio` é um alias.
+
+As definições são lidas do schema na construção. Alterar depois os atributos do
+mercado no env (`community_market_sell_ratio`,
+`community_market_grid_export_price`, `community_market_import_member_weights`,
+`community_market_local_enabled`, `community_tariffs`) não é suportado: a
+referência BAU nativa é reconstruída a partir do schema, por isso
+`evaluate_v2()` com a comparação BAU dá `ValueError` quando diferem. Para mudar
+o mercado, altere `schema['community_market']` e construa um novo env. A liquidação local valoriza as
 importações e exportações dos membros no mesmo passo de tempo; não altera o
 despacho físico dos dispositivos.
 

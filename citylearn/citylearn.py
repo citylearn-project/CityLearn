@@ -1998,6 +1998,8 @@ class CityLearnEnv(Environment, Env):
         self._comparison_initial_configuration = reference_configuration(self)
         # Taken here because the dynamic topology adds and removes devices during the episode.
         self._comparison_initial_equipment = equipment(self)
+        from citylearn.internal.market_config import market_configuration
+        self._comparison_initial_market = market_configuration(self)
 
         # reset reward function (does nothing by default)
         self.reward_function.reset()
@@ -2043,36 +2045,21 @@ class CityLearnEnv(Environment, Env):
         if isinstance(self.schema, dict):
             config = self.schema.get('community_market', {}) or {}
 
+        # Invalid settings raise instead of being ignored or replaced by defaults (#366).
+        from citylearn.internal.market_config import parse_community_market
+        buildings = self.schema.get('buildings') if isinstance(self.schema, dict) else None
+        parsed = parse_community_market(config, list(buildings) if isinstance(buildings, Mapping) else None)
         self.community_market_enabled = parse_bool(
             config.get('enabled', False),
             default=False,
             path='community_market.enabled',
         )
-        ratio = config.get('local_price_ratio_to_grid_import', config.get('intra_community_sell_ratio', 0.8))
-
-        try:
-            ratio = float(ratio)
-        except (TypeError, ValueError):
-            ratio = 0.8
-
-        self.community_market_sell_ratio = min(max(ratio, 0.0), 1.0)
-        export_price = float(config.get('grid_export_price', 0.0)) if config.get('settlement_version') == 2 else 0.0
-        if not np.isfinite(export_price):
-            raise ValueError('grid_export_price must be finite')
-        self.community_market_grid_export_price = export_price
+        self.community_market_sell_ratio = parsed['local_price_ratio_to_grid_import']
+        self.community_market_grid_export_price = parsed['grid_export_price']
         from citylearn.community_dataset import configure_tariffs
         configure_tariffs(self, config)
-        weights = config.get('import_member_weights', {}) or {}
-        parsed_weights = {}
-        if isinstance(weights, Mapping):
-            for key, value in weights.items():
-                try:
-                    parsed_weights[str(key)] = max(float(value), 0.0)
-                except (TypeError, ValueError):
-                    continue
-
-        self.community_market_import_member_weights = parsed_weights
-        kpis_config = config.get('kpis', {}) or {}
+        self.community_market_import_member_weights = parsed['import_member_weights']
+        kpis_config = parsed['kpis']
         self.community_market_kpi_local_traded_enabled = parse_bool(
             kpis_config.get('community_local_traded_enabled', True),
             default=True,

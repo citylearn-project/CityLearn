@@ -95,8 +95,10 @@ exports expose settled costs, the grid-only counterfactual and savings for each
 member and the community. Settlement values the recorded physical trajectory.
 
 Configure the [community market](schema_reference.md#community-market).
-Residual grid exports currently receive zero remuneration. Local settlement
-is within a community; multi-community reporting is described below.
+Residual grid exports earn nothing by default; with `"settlement_version": 2`
+they are paid `grid_export_price`, and `tariff_files` give each member its own
+prices. Invalid market settings raise an error when the env is built. Local
+settlement is within a community; multi-community reporting is described below.
 
 ## Demand-response requests
 
