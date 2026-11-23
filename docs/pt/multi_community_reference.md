@@ -197,6 +197,20 @@ e de resiliência, equidade, os rácios de serviço térmico, de partidas dos VE
 outras auditorias, a perda de capacidade das baterias e o rácio entre a perda de
 capacidade das baterias e o seu valor BAU.
 
+As comunidades sem mercado comunitário reportam zeros nas suas linhas de mercado.
+Num portefólio em que umas comunidades têm mercado e outras não, uma comunidade
+sem mercado entra nas linhas de mercado do portefólio
+(`portfolio_energy_grid_community_market_*`, `portfolio_cost_community_market_*`
+e `portfolio_solar_self_consumption_community_market_*`) com a sua liquidação
+simples com a rede: sem troca local, a importação e a exportação dos seus
+membros como importação e exportação da rede depois da troca local, o seu
+`cost_total_control_eur` como custo liquidado e contrafactual, e poupança e
+saldo do operador nulos. As linhas de mercado do portefólio cobrem então todas
+as comunidades, e as quotas são as de todo o portefólio. As linhas de distrito
+da própria comunidade não mudam, nem os portefólios em que todas as comunidades
+têm mercado ou nenhuma tem
+([#373](https://github.com/citylearn-project/CityLearn/issues/373)).
+
 Os nomes dos KPIs do portefólio substituem um prefixo inicial `district_` por `portfolio_`; por exemplo, `district_demand_response_revenue_total_eur` passa a `portfolio_demand_response_revenue_total_eur`.
 
 ## Exportação
