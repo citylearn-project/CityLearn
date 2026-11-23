@@ -33,7 +33,7 @@ from citylearn.internal.market_history import MarketSettlementHistory
 from citylearn.internal.kpi import CityLearnKPIService
 from citylearn.internal.kpi_population import ActivePopulation
 from citylearn.internal.loading import CityLearnLoadingService
-from citylearn.internal.baseline import CityLearnBusinessAsUsualBaselineService
+from citylearn.internal.baseline import BaselineEVChargingSource, CityLearnBusinessAsUsualBaselineService
 from citylearn.internal.physics_invariants import CityLearnPhysicsInvariantService
 from citylearn.internal.provenance import CityLearnProvenanceService
 from citylearn.internal.runtime import CityLearnRuntimeService
@@ -655,8 +655,10 @@ class CityLearnEnv(Environment, Env):
     def baseline_version(self, value: Union[int, str]):
         from citylearn.internal.baseline_version import resolve_baseline_version
         self._baseline_version = resolve_baseline_version(value)
+        # Departed and not yet joined members too: the KPIs read their series.
+        pool = getattr(getattr(self, '_topology_service', None), 'member_pool', None) or {}
 
-        for b in self.buildings or []:
+        for b in [*(self.buildings or []), *pool.values(), *(getattr(self, '_all_buildings', None) or [])]:
             b.baseline_version = self._baseline_version
 
     @property
@@ -1479,7 +1481,7 @@ class CityLearnEnv(Environment, Env):
 
         for b in buildings or []:
             b.baseline_version = version
-            b._baseline_ev_charging_source = self._baseline_ev_charging
+            b._baseline_ev_charging_source = BaselineEVChargingSource(self)
 
     @electric_vehicles.setter
     def electric_vehicles(self, electric_vehicles: List[ElectricVehicle]):

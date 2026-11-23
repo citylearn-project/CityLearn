@@ -39,6 +39,24 @@ def validate_business_as_usual_ev_charge_target(value) -> str:
     return value
 
 
+class BaselineEVChargingSource:
+    """Gives a building the EV charging that the version 2 KPI baseline adds back, from its environment.
+
+    Copying one building (a member cloned by a topology event) keeps the same environment; copying the whole
+    environment points the copy's buildings at the copied environment.
+    """
+
+    def __init__(self, env: "CityLearnEnv"):
+        self.env = env
+
+    def __call__(self, building) -> np.ndarray:
+        return self.env._baseline_ev_charging(building)
+
+    def __deepcopy__(self, memo):
+        env = memo.get(id(self.env))
+        return self if env is None else BaselineEVChargingSource(env)
+
+
 class CityLearnBusinessAsUsualBaselineService:
     """Runs and caches the native business-as-usual baseline for an env."""
 
@@ -175,7 +193,10 @@ class CityLearnBusinessAsUsualBaselineService:
             ) from error
 
         reference = result.env
-        candidates = list(getattr(reference, '_all_buildings', None) or reference.buildings)
+        # Active members first, then every member the reference loaded: departed members and members cloned by
+        # topology events are only in the topology member pool.
+        pool = getattr(getattr(reference, '_topology_service', None), 'member_pool', None) or {}
+        candidates = [*reference.buildings, *pool.values(), *(getattr(reference, '_all_buildings', None) or [])]
         matches = [b for b in candidates if b.name == building.name]
 
         if not matches:

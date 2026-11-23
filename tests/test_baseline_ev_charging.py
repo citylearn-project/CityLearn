@@ -1,6 +1,7 @@
 """The default KPI baseline charges the EVs as the native BAU does, whatever the controller (#365)."""
 
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -186,6 +187,25 @@ def test_a_building_with_chargers_needs_its_environment_for_the_version_2_baseli
             building.net_electricity_consumption_without_storage
     finally:
         building._baseline_ev_charging_source = source
+
+
+def test_copies_take_the_ev_charging_from_the_right_environment(runs):
+    envs, _ = runs
+    env = envs['rbc']
+    building = env.buildings[0]
+
+    # A building copied on its own (a member cloned by a topology event) keeps its environment.
+    assert deepcopy(building)._baseline_ev_charging_source.env is env
+
+    # A copied environment gives the same baseline from its own BAU run.
+    copied = deepcopy(env)
+    try:
+        assert copied.buildings[0]._baseline_ev_charging_source.env is copied
+        np.testing.assert_array_equal(
+            copied.buildings[0].net_electricity_consumption_without_storage, building.net_electricity_consumption_without_storage
+        )
+    finally:
+        copied.close()
 
 
 def test_schema_key_selects_the_version_and_the_argument_wins():
