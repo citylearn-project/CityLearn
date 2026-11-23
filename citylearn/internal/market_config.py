@@ -16,10 +16,13 @@ SETTLEMENT_VERSIONS = (1, 2)
 KNOWN_KEYS = (
     'enabled', 'local_price_ratio_to_grid_import', 'intra_community_sell_ratio', 'settlement_version',
     'grid_export_price', 'tariff_files', 'local_trading_enabled', 'import_member_weights', 'kpis',
-    'matching_granularity',
+    'matching_granularity', 'counterfactual',
 )
 KNOWN_KPI_KEYS = ('community_local_traded_enabled', 'community_self_consumption_enabled')
 MATCHING_GRANULARITIES = ('aggregate_building',)
+# The settlement compares each member with buying and selling on the grid alone; the generated
+# annual suites record this as `counterfactual`.
+COUNTERFACTUALS = ('grid_only',)
 
 
 def _unknown(keys: Iterable[Any], known: Iterable[str], path: str):
@@ -94,10 +97,11 @@ def parse_community_market(config: Any, building_names=None) -> dict:
         )
 
     version = config.get('settlement_version', 1)
-    if isinstance(version, (bool, np.bool_)) or not isinstance(version, (int, np.integer)) \
-            or int(version) not in SETTLEMENT_VERSIONS:
+    # 2.0 selected version 2 before validation (the check was `== 2`), so integral floats are kept.
+    if isinstance(version, (bool, np.bool_)) or not isinstance(version, (Real, np.integer, np.floating)) \
+            or version not in SETTLEMENT_VERSIONS:
         raise ValueError(
-            f'community_market.settlement_version must be the integer 1 or 2, got {version!r}.'
+            f'community_market.settlement_version must be 1 or 2, got {version!r}.'
         )
     version = int(version)
 
@@ -121,12 +125,10 @@ def parse_community_market(config: Any, building_names=None) -> dict:
     kpis = _mapping(config.get('kpis'), 'community_market.kpis')
     _unknown(kpis, KNOWN_KPI_KEYS, 'community_market.kpis')
 
-    granularity = config.get('matching_granularity', MATCHING_GRANULARITIES[0])
-    if granularity not in MATCHING_GRANULARITIES:
-        raise ValueError(
-            f"community_market.matching_granularity must be one of {', '.join(MATCHING_GRANULARITIES)}, "
-            f'got {granularity!r}.'
-        )
+    for key, accepted in (('matching_granularity', MATCHING_GRANULARITIES), ('counterfactual', COUNTERFACTUALS)):
+        value = config.get(key, accepted[0])
+        if value not in accepted:
+            raise ValueError(f"community_market.{key} must be one of {', '.join(accepted)}, got {value!r}.")
 
     return dict(
         local_price_ratio_to_grid_import=ratio, settlement_version=version, grid_export_price=export_price if

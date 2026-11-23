@@ -579,7 +579,7 @@ Metadata is exposed under `observations["meta"]["robustness"]`.
 | `enabled` | `false` | Enables local settlement. |
 | `local_price_ratio_to_grid_import` | `0.8` | Local price relative to grid import price. A number from 0 to 1. |
 | `intra_community_sell_ratio` | alias | Legacy name for the same ratio. If both keys are set, they must be equal. |
-| `settlement_version` | `1` | The integer `1` or `2`. `2` enables `grid_export_price`; with `1`, residual grid exports earn nothing. |
+| `settlement_version` | `1` | `1` or `2`, as a number (`2.0` is accepted, the string `"2"` is not). `2` enables `grid_export_price`; with `1`, residual grid exports earn nothing. |
 | `grid_export_price` | `0.0` | EUR/kWh paid for residual grid exports. A finite number; a non-zero value requires `"settlement_version": 2`. |
 | `tariff_files` | `{}` | Per-member CSV tariffs, `{"<building>": "<file inside the dataset>"}`. Each file has one row per global time step with `grid_export_price`, `community_buy_price` and `community_sell_price` (EUR/kWh) and must cover the episode. A member with a file uses these prices instead of the ratio and `grid_export_price`. |
 | `local_trading_enabled` | `true` | `false` keeps the market's settlement and KPIs but trades no energy locally. Booleans or `"true"`/`"false"`. |
@@ -587,12 +587,13 @@ Metadata is exposed under `observations["meta"]["robustness"]`.
 | `kpis.community_local_traded_enabled` | `true` | Enables local traded energy KPI. |
 | `kpis.community_self_consumption_enabled` | `true` | Enables local import-share KPI. |
 | `matching_granularity` | `"aggregate_building"` | The only supported value; recorded in the metadata. |
+| `counterfactual` | `"grid_only"` | The only supported value: savings compare each member with buying and selling on the grid alone. Written by the annual REC suite generator. |
 
 ## Important Combinations
 
 The settings are checked when the env is built, even with `enabled: false`.
 An unknown key (for example `enable`), a ratio that is not a number or is
-outside `[0, 1]`, a `settlement_version` other than the integer `1` or `2`
+outside `[0, 1]`, a `settlement_version` other than `1` or `2`
 (the string `"2"` included), a non-zero `grid_export_price` without
 `"settlement_version": 2`, and a member weight or tariff file for a building
 that is not in the schema raise a `ValueError`. Earlier releases ignored these
@@ -600,7 +601,8 @@ settings or replaced them with defaults. The legacy
 `intra_community_sell_ratio` key is an alias.
 
 The settings are read from the schema at construction. Setting the market
-attributes on the env afterwards (`community_market_sell_ratio`,
+attributes on the env afterwards (`community_market_enabled`,
+`community_market_sell_ratio`,
 `community_market_grid_export_price`, `community_market_import_member_weights`,
 `community_market_local_enabled`, `community_tariffs`) is not supported: the
 native BAU reference is rebuilt from the schema, so `evaluate_v2()` with the

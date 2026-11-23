@@ -69,7 +69,7 @@ current release. See [#327](https://github.com/citylearn-project/CityLearn/issue
 raises a `ValueError` for settings that earlier releases ignored or replaced:
 unknown keys (`enable` instead of `enabled`), a ratio that is not a number or
 is outside `[0, 1]`, ratio aliases with different values, a
-`settlement_version` other than the integer `1` or `2`, a non-zero
+`settlement_version` other than `1` or `2` (a string such as `"2"` included), a non-zero
 `grid_export_price` without `"settlement_version": 2`, and member weights or
 tariff files for buildings that are not in the schema. The message names the
 key and the fix. A schema that loaded before and now raises was not simulating
@@ -80,7 +80,8 @@ or fix the setting to get what was intended. Every bundled dataset is valid and
 its results do not change.
 
 Market attributes set on the env after construction
-(`community_market_sell_ratio`, `community_market_grid_export_price`,
+(`community_market_enabled`, `community_market_sell_ratio`,
+`community_market_grid_export_price`,
 `community_market_import_member_weights`, `community_market_local_enabled`,
 `community_tariffs`) are not supported. The native BAU reference is rebuilt
 from the schema, so `evaluate_v2()` with the BAU comparison now raises when they

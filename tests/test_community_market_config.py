@@ -38,10 +38,10 @@ def _schema(tmp_path, **market):
         ({"intra_community_sell_ratio": 0.5}, "disagree"),
         ({"grid_export_price": 0.05}, "settlement_version\": 2"),
         ({"grid_export_price": 0.05, "settlement_version": 1}, "settlement_version\": 2"),
-        ({"grid_export_price": 0.05, "settlement_version": "2"}, "integer 1 or 2"),
-        ({"settlement_version": 2.0}, "integer 1 or 2"),
-        ({"settlement_version": 3}, "integer 1 or 2"),
-        ({"settlement_version": True}, "integer 1 or 2"),
+        ({"grid_export_price": 0.05, "settlement_version": "2"}, "must be 1 or 2"),
+        ({"settlement_version": 2.5}, "must be 1 or 2"),
+        ({"settlement_version": 3}, "must be 1 or 2"),
+        ({"settlement_version": True}, "must be 1 or 2"),
         ({"grid_export_price": "0.05", "settlement_version": 2}, "grid_export_price must be a number"),
         ({"grid_export_price": float("inf"), "settlement_version": 2}, "grid_export_price must be finite"),
         ({"import_member_weights": {"Building_Z": 1.0}}, "not in the schema: 'Building_Z'"),
@@ -51,6 +51,7 @@ def _schema(tmp_path, **market):
         ({"tariff_files": {"Building_Z": "tariff.csv"}}, "tariff_files names building"),
         ({"kpis": {"community_local_trade_enabled": False}}, r"did you mean 'community_local_traded_enabled'"),
         ({"matching_granularity": "per_device"}, "matching_granularity"),
+        ({"counterfactual": "grid_only_without_local_matching"}, "counterfactual must be one of grid_only"),
     ],
 )
 def test_invalid_market_settings_fail_at_construction(tmp_path, market, message):
@@ -74,6 +75,9 @@ def test_market_section_must_be_a_mapping(tmp_path):
         ({"local_price_ratio_to_grid_import": 0}, 0.0, 0.0, {}),
         ({"grid_export_price": 0.0, "settlement_version": 1}, 0.8, 0.0, {}),
         ({"grid_export_price": 0.05, "settlement_version": 2}, 0.8, 0.05, {}),
+        # 2.0 selected version 2 before validation.
+        ({"grid_export_price": 0.05, "settlement_version": 2.0}, 0.8, 0.05, {}),
+        ({"counterfactual": "grid_only", "matching_granularity": "aggregate_building"}, 0.8, 0.0, {}),
         ({"import_member_weights": {"Building_A": 2, "Building_B": 0.0}}, 0.8, 0.0, {"Building_A": 2.0, "Building_B": 0.0}),
         ({"import_member_weights": None, "kpis": None, "tariff_files": None}, 0.8, 0.0, {}),
     ],
@@ -141,5 +145,21 @@ def test_bau_reference_follows_market_changed_through_the_schema(tmp_path):
         env._configure_community_market()
         _rollout_zero_actions(env)
         env.evaluate_v2(include_business_as_usual=True)
+    finally:
+        env.close()
+
+
+def test_annual_rec_generator_market_block_loads(tmp_path):
+    """The annual REC suite generator writes `counterfactual`; its schemas must still load."""
+    from scripts.generate_annual_rec_suite import community_market_config
+
+    market = community_market_config(BUILDINGS)
+    assert market["counterfactual"] == "grid_only"
+    schema = _schema(tmp_path)
+    schema["community_market"] = market
+    env = CityLearnEnv(schema, central_agent=True, random_seed=0)
+    try:
+        assert env.community_market_enabled
+        assert env.community_market_import_member_weights == {name: 1.0 for name in BUILDINGS}
     finally:
         env.close()

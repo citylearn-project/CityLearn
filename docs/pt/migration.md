@@ -72,7 +72,7 @@ O `CityLearnEnv` verifica agora a secção `community_market` quando é constru�
 e dá `ValueError` para definições que as versões anteriores ignoravam ou
 substituíam: chaves desconhecidas (`enable` em vez de `enabled`), um rácio que
 não é um número ou está fora de `[0, 1]`, aliases do rácio com valores
-diferentes, um `settlement_version` que não seja o inteiro `1` ou `2`, um
+diferentes, um `settlement_version` que não seja `1` ou `2` (incluindo uma string como `"2"`), um
 `grid_export_price` diferente de zero sem `"settlement_version": 2`, e pesos ou
 ficheiros de tarifa de edifícios que não estão no schema. A mensagem nomeia a
 chave e a correção. Um schema que carregava antes e agora dá erro não simulava o
@@ -83,7 +83,8 @@ resultados anteriores, ou corrija a definição para obter o que era pretendido.
 Todos os datasets incluídos são válidos e os seus resultados não mudam.
 
 Alterar os atributos do mercado no env depois da construção
-(`community_market_sell_ratio`, `community_market_grid_export_price`,
+(`community_market_enabled`, `community_market_sell_ratio`,
+`community_market_grid_export_price`,
 `community_market_import_member_weights`, `community_market_local_enabled`,
 `community_tariffs`) não é suportado. A referência BAU nativa é reconstruída a
 partir do schema, por isso `evaluate_v2()` com a comparação BAU dá agora erro
