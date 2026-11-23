@@ -66,6 +66,51 @@ mudam, e o rácio de preço local não afeta as emissões. Para comparar com uma
 execução anterior feita com a troca local desligada, reavalie-a com a versão
 atual. Consulte [#327](https://github.com/citylearn-project/CityLearn/issues/327).
 
+### Limites dos set points dos ocupantes
+
+Na versão 2 da física, um ocupante de um
+`LogisticRegressionOccupantInteractionBuilding` deixa de poder mover um set point
+de aquecimento ou de arrefecimento para lá de `set_point_limits`, uma chave do
+schema do edifício (e argumento do construtor) que por omissão vale `[15, 30]` °C.
+Antes, cada alteração do ocupante era somada ao set point atual sem limite, e com
+um controlo AVAC arbitrário o ocupante continuava a interagir: no primeiro
+episódio do Quebec o set point de aquecimento chegava a -2323 °C com ações
+aleatórias e a 3230 °C com o `BusinessAsUsualAgent`, muito fora dos limites da
+sua observação
+([#352](https://github.com/citylearn-project/CityLearn/issues/352),
+[#357](https://github.com/citylearn-project/CityLearn/issues/357)).
+
+- Uma alteração para no limite que atravessaria. Um valor do horário que já está
+  fora do intervalo mantém-se, e o ocupante pode ainda trazer o set point de volta
+  em direção ao intervalo.
+- `occupant_interaction_indoor_dry_bulb_temperature_set_point_delta` continua a
+  indicar a alteração que o ocupante pediu, também quando o limite a parou.
+- Os limites das observações dos set points de arrefecimento e de aquecimento
+  destes edifícios passam a ser o intervalo do horário alargado a
+  `set_point_limits`, de onde os set points já não podem sair. Nos dois bairros do
+  Quebec passam a ser [15, 30] °C em vez dos limites da temperatura interior
+  (cerca de -1 a 42 °C), por isso a normalização destas features pelos limites
+  muda: os agentes treinados aí com a versão 2 da física devem ser treinados de
+  novo.
+- Com o `NoControlAgent` nada muda: os set points do Quebec ficam entre 16,6 e
+  26,6 °C no primeiro episódio. Com o `BusinessAsUsualAgent` a simulação e os KPIs
+  do `evaluate()` não mudam, porque os set points muito altos caem em passos sem
+  ocupantes, mas mudam as observações dos set points e as recompensas que as leem
+  (como a `ComfortReward`). Com ações aleatórias mudam também os KPIs de
+  desconforto; a energia, o custo e as emissões não, porque é a ação AVAC, e não o
+  set point, que define o aquecimento fornecido.
+- `set_point_limits` aplica-se apenas na versão 2 da física e seguintes. Defina
+  `physics_version` como `1` para reproduzir os set points sem limite do
+  CityLearn 3.6.0. Para alargar ou estreitar o intervalo, defina
+  `set_point_limits` em cada edifício do schema, por exemplo
+  `"set_point_limits": [16, 28]`.
+
+Os limites não limitam a temperatura interior LSTM: com ações de aquecimento
+aleatórias a temperatura interior do Quebec chega ainda a cerca de 60 °C, porque a
+ação AVAC define o aquecimento fornecido seja qual for o set point. Essa
+temperatura está fora do intervalo com que os modelos LSTM foram treinados, por
+isso trate essas execuções com cuidado.
+
 ### Os espaços de observação seguem as observações
 
 Os valores das observações, a sua ordem e `observation_names` não mudam, nem as
@@ -100,9 +145,11 @@ devem ser retreinados, e os seus resultados anteriores não são comparáveis.
 
 Estes limites continuam a ser estimativas onde o modelo não tem um limite rígido.
 Sob um controlo arbitrário, por exemplo ações aleatórias ao longo de um episódio
-completo do Quebec, a temperatura interior LSTM e os setpoints dos ocupantes que a
-seguem podem sair deles; `ClippedObservationWrapper` mantém esses valores dentro
-do espaço.
+completo do Quebec, a temperatura interior LSTM e, na versão 1 da física, os setpoints dos
+ocupantes podem sair deles; `ClippedObservationWrapper` mantém esses valores
+dentro do espaço. Na versão 2 da física os set points dos ocupantes ficam dentro
+de `set_point_limits` (ver
+[limites dos set points dos ocupantes](#limites-dos-set-points-dos-ocupantes)).
 
 O que lê os limites:
 
@@ -416,6 +463,10 @@ um limite de serviço elétrico, e o `Building_15` das demos trifásicas.
 
 Altera também as execuções que usam o seguinte:
 
+- **Set points dos ocupantes sob controlo arbitrário.** Uma alteração do ocupante
+  para em `set_point_limits`, [15, 30] °C por omissão; a versão 1 não tinha limite
+  ([#352](https://github.com/citylearn-project/CityLearn/issues/352), ver
+  [limites dos set points dos ocupantes](#limites-dos-set-points-dos-ocupantes)).
 - **VE com perda em repouso.** Um VE longe do seu carregador mantém agora a perda
   em repouso de cada passo; a versão 1 descartava-a, pelo que um
   `loss_coefficient` da bateria não nulo não tinha efeito enquanto o VE estava
