@@ -66,7 +66,7 @@ MultiCommunityEnv(
 )
 ```
 
-`community_id` tem de ser único, não vazio e seguro como componente de um caminho relativo. Só pode conter letras, números, `_`, `-` e `.`. `weight` tem o valor predefinido `1.0`, tem de ser finito e não negativo, e pelo menos uma comunidade tem de ter um peso positivo.
+`community_id` tem de ser único, não vazio e seguro como componente de um caminho relativo. Só pode conter letras, números, `_`, `-` e `.`. `weight` tem o valor predefinido `1.0`, tem de ser finito e não negativo, e pelo menos uma comunidade tem de ter um peso positivo. Cada entrada só aceita `community_id`, `schema`, `env_kwargs` e `weight`: qualquer outra chave levanta um `ValueError` que a nomeia, e `weight` não pode ser um booleano.
 
 `env_kwargs` são passados ao `CityLearnEnv` filho. O wrapper define a sessão de exportação de cada filho como `<render_session_name>/<community_id>`, para que os ficheiros de render e de KPIs fiquem separados por comunidade.
 
