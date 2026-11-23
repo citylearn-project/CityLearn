@@ -194,6 +194,7 @@ algoritmos causais que não podem expor os valores futuros reais da carga ou do 
 | `occupant` | object | não | Modelo de interação dos ocupantes. |
 | `power_outage` | object | não | Configuração das falhas de energia. |
 | `set_point_hold_time_steps` | int | não | Tempo de manutenção para a interação dos ocupantes. |
+| `set_point_limits` | [float, float] | não | Intervalo, em °C, para onde um ocupante pode mover um set point de aquecimento ou arrefecimento; por omissão `[15, 30]`. Versão 2 da física e seguintes; ver o [guia de migração](../migration.md#occupant-set-point-limits). |
 
 Chaves de `power_outage`:
 

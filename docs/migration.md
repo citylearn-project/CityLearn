@@ -63,6 +63,43 @@ unchanged, and the local price ratio does not affect emissions. To compare
 with an earlier run made with local trading off, re-evaluate it with the
 current release. See [#327](https://github.com/citylearn-project/CityLearn/issues/327).
 
+### Occupant set-point limits
+
+Under physics version 2, an occupant of a
+`LogisticRegressionOccupantInteractionBuilding` can no longer move a heating or
+cooling set point past `set_point_limits`, a building schema key (and
+constructor argument) that defaults to `[15, 30]` °C. Before, each occupant
+change was added to the current set point with no limit, and under arbitrary
+HVAC control, such as random actions over a full Quebec episode, the heating
+set point random-walked to thousands of degrees below zero
+([#352](https://github.com/citylearn-project/CityLearn/issues/352)).
+
+- A change stops at the limit it would cross. A schedule value already outside
+  the range is kept, and an occupant can still move the set point back towards
+  the range.
+- `occupant_interaction_indoor_dry_bulb_temperature_set_point_delta` still
+  reports the change the occupant asked for, also when the limit stopped it.
+- The cooling and heating set-point observation bounds of these buildings are
+  the schedule range widened to `set_point_limits`, which the set points can
+  no longer leave. On both Quebec neighbourhoods they become [15, 30] °C
+  instead of the indoor temperature limits (about -1 to 42 °C), so
+  bound-based normalisation of these features changes: agents trained there
+  under physics version 2 should be retrained.
+- Runs without control are unchanged: with `NoControlAgent` the Quebec set
+  points stay within 16.6 to 26.6 °C over the first episode. Runs whose
+  control drives the occupant past the limits change, including their comfort
+  KPIs and rewards.
+- `set_point_limits` applies under physics version 2 and later only. Set
+  `physics_version` to `1` to reproduce the unbounded set points of
+  CityLearn 3.6.0. To widen or narrow the range, set `set_point_limits` in each
+  building of the schema, for example `"set_point_limits": [16, 28]`.
+
+The limits do not bound the LSTM indoor temperature: under random heating
+actions the Quebec indoor temperature still reaches about 60 °C, because the
+HVAC action sets the heating supplied whatever the set point. That temperature
+is outside the range the LSTM models were trained on, so treat such runs with
+care.
+
 ### Observation spaces follow the observations
 
 The observation values, their order and `observation_names` do not change, and
@@ -97,8 +134,10 @@ should be retrained, and their earlier results are not comparable.
 
 These bounds are still estimates where the model has no hard limit. Under
 arbitrary control, for example random actions over a full Quebec episode, the
-LSTM indoor temperature and the occupant set points that follow it can leave
-them; `ClippedObservationWrapper` keeps such values inside the space.
+LSTM indoor temperature, and under physics version 1 the occupant set points,
+can leave them; `ClippedObservationWrapper` keeps such values inside the space.
+Under physics version 2 the occupant set points stay within `set_point_limits`
+(see [occupant set-point limits](#occupant-set-point-limits)).
 
 What reads the bounds:
 
@@ -389,6 +428,10 @@ electrical-service limit, and `Building_15` of the three-phase demos.
 
 It also changes runs that use the following:
 
+- **Occupant set points under arbitrary control.** An occupant change stops at
+  `set_point_limits`, [15, 30] °C by default; version 1 had no limit
+  ([#352](https://github.com/citylearn-project/CityLearn/issues/352), see
+  [occupant set-point limits](#occupant-set-point-limits)).
 - **EVs with a standby loss.** An EV away from its charger now keeps the
   standby loss of each step; version 1 discarded it, so a non-zero battery
   `loss_coefficient` had no effect while the EV was away

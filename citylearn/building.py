@@ -4077,12 +4077,92 @@ class OccupantInteractionBuilding(DynamicsBuilding):
         self.occupant.reset()
 
 class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding, LSTMDynamicsBuilding):
-    def __init__(self, *args, occupant: LogisticRegressionOccupant = None, set_point_hold_time_steps: int = None, **kwargs):
+    r"""Building whose occupants adjust the HVAC set point with a logistic regression model.
+
+    Parameters
+    ----------
+    *args : Any
+        Positional arguments of :py:class:`citylearn.building.OccupantInteractionBuilding`.
+    occupant : LogisticRegressionOccupant
+        Occupant interaction model.
+    set_point_hold_time_steps : int, optional
+        Time steps without interaction after which the set points return to the schedule. Holds for the
+        rest of the episode when ``None``.
+    set_point_limits : Tuple[float, float], optional
+        Range, in [C], an occupant can move a heating or cooling set point to; defaults to
+        :py:data:`DEFAULT_OCCUPANT_SET_POINT_LIMITS`. A change never goes past a limit, and a schedule
+        value outside the range is not moved into it. Applies under physics version 2 and later only:
+        physics version 1 keeps the unbounded set points of CityLearn 3.6.0 (CityLearn #352).
+    **kwargs : Any
+        Other keyword arguments of :py:class:`citylearn.building.OccupantInteractionBuilding`.
+    """
+
+    #: Default occupant set-point range in [C]: covers the residential heating and cooling set points of
+    #: ResStock (12.8 to 26.7 C) and the bundled Quebec schedules (18.5 to 21.6 C) with margin.
+    DEFAULT_OCCUPANT_SET_POINT_LIMITS = (15.0, 30.0)
+
+    def __init__(
+        self, *args, occupant: LogisticRegressionOccupant = None, set_point_hold_time_steps: int = None,
+        set_point_limits: Tuple[float, float] = None, **kwargs
+    ):
+        self.set_point_limits = set_point_limits
         super().__init__(*args, occupant=occupant, **kwargs)
         self.occupant: LogisticRegressionOccupant
         self.__set_point_hold_time_step_counter = None
         self.set_point_hold_time_steps = set_point_hold_time_steps
         self.occupant_interaction_indoor_dry_bulb_temperature_set_point_delta_summary = []
+
+    @property
+    def set_point_limits(self) -> Optional[Tuple[float, float]]:
+        """Range, in [C], an occupant can move a set point to; ``None`` under physics version 1, which
+        does not limit it."""
+
+        return None if physics_version_of(self) < 2 else self.__set_point_limits
+
+    @set_point_limits.setter
+    def set_point_limits(self, value: Tuple[float, float]):
+        value = self.DEFAULT_OCCUPANT_SET_POINT_LIMITS if value is None else value
+
+        try:
+            low, high = (float(v) for v in value)
+        except (TypeError, ValueError):
+            raise ValueError(f'set_point_limits must be a pair of numbers [low, high], got {value!r}.') from None
+
+        if not (np.isfinite(low) and np.isfinite(high) and low < high):
+            raise ValueError(f'set_point_limits must be finite with low < high, got {value!r}.')
+
+        self.__set_point_limits = (low, high)
+
+    def _occupant_set_point(self, current_set_point: float, setpoint_delta: float) -> float:
+        """Set point after an occupant change, kept within `set_point_limits` when they apply."""
+
+        set_point = as_float(current_set_point) + setpoint_delta
+        limits = self.set_point_limits
+
+        if limits is None:
+            return set_point
+
+        # Never past a limit, and never pulled into the range when the schedule is already outside it.
+        current_set_point = as_float(current_set_point)
+        low, high = min(limits[0], current_set_point), max(limits[1], current_set_point)
+
+        return min(max(set_point, low), high)
+
+    def _set_point_observation_limits(self, key: str, data: Mapping[str, Any]) -> Tuple[float, float]:
+        """Set-point limits: the schedule range widened to `set_point_limits` when they apply.
+
+        Occupants move the set point from the schedule or from an earlier change, and never past
+        `set_point_limits`, so these limits are exact.
+        """
+
+        limits = self.set_point_limits
+
+        if limits is None or self.ignore_occupant:
+            return super()._set_point_observation_limits(key, data)
+
+        low, high = super(OccupantInteractionBuilding, self)._set_point_observation_limits(key, data)
+
+        return min(low, limits[0]), max(high, limits[1])
         
     @property
     def set_point_hold_time_steps(self) -> int:
@@ -4133,10 +4213,10 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
 
         if abs(setpoint_delta) > 0.0 and not self.ignore_occupant:
             if hvac_mode == 1:
-                self.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[self.time_step:] = as_float(current_set_point) + setpoint_delta
+                self.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[self.time_step:] = self._occupant_set_point(current_set_point, setpoint_delta)
 
             elif hvac_mode == 2:
-                self.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[self.time_step:] = as_float(current_set_point) + setpoint_delta
+                self.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[self.time_step:] = self._occupant_set_point(current_set_point, setpoint_delta)
             
             else:
                 pass

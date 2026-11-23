@@ -28,7 +28,9 @@ Versions
     * a deferrable cycle starts on the current step's information only, and an outage that later
       cuts its supply stops it (#232);
     * the entity observations of a battery's energy to full and charge headroom stop at its degraded
-      capacity, where `Battery.charge` stops, instead of at its nominal capacity.
+      capacity, where `Battery.charge` stops, instead of at its nominal capacity;
+    * occupant set-point changes stop at
+      `LogisticRegressionOccupantInteractionBuilding.set_point_limits`, [15, 30] C by default (#352).
 """
 
 from typing import Any

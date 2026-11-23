@@ -100,6 +100,11 @@ def add_model_options(building_kwargs, building_name, building_schema, schema, e
     if hold_time_steps is not None and accepts_keyword(constructor, 'set_point_hold_time_steps'):
         building_kwargs['set_point_hold_time_steps'] = hold_time_steps
 
+    # Occupant set-point range (physics version 2 and later, CityLearn #352).
+    set_point_limits = building_schema.get('set_point_limits')
+    if set_point_limits is not None and accepts_keyword(constructor, 'set_point_limits'):
+        building_kwargs['set_point_limits'] = set_point_limits
+
 
 def outage_options(index, building_name, building_schema, kwargs):
     building_schema_power_outage = building_schema.get('power_outage', {})
