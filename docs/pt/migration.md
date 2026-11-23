@@ -52,6 +52,42 @@ versão e o histórico da linha de desenvolvimento.
 
 ## Por publicar
 
+### Carregamento dos VE na baseline por omissão
+
+A baseline por omissão dos KPIs (`EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV`,
+as séries `*_without_storage`) subtraía o consumo dos carregadores de VE
+juntamente com a bateria e o armazenamento térmico e não voltava a somar nada,
+pelo que nos datasets com VE as linhas `*_baseline_*`, `*_delta_*` e
+`*_ratio_to_baseline_*`, e todos os valores da tabela do `evaluate()` antigo,
+comparavam a execução com uma comunidade cujos carros nunca carregam: qualquer
+controlador que carregasse os carros parecia pior do que a baseline
+([#365](https://github.com/citylearn-project/CityLearn/issues/365)).
+
+- A baseline passa a somar o carregamento dos VE do BAU nativo com o alvo
+  `'full'`: cada carro é carregado quando chega, à potência máxima, até ficar
+  cheio, e nunca é descarregado. Os carros recebem a energia de que precisam,
+  sem V2G, e a baseline é a mesma para todos os controladores, pelo que as
+  linhas `baseline` creditam ao controlador o despacho do armazenamento, o
+  carregamento dos VE e o V2G, face a carregar à chegada. Os aparelhos
+  diferíveis e o AVAC ficam como o controlador os operou.
+- Nos datasets com carregadores de VE, cada avaliação executa o sidecar do BAU
+  para obter esse carregamento, também o `evaluate()` antigo e
+  `evaluate_v2(include_business_as_usual=False)`, e usa o alvo `'full'` qualquer
+  que seja `business_as_usual_ev_charge_target`. Quando o sidecar não pode ser
+  executado, porque as entradas, os edifícios ou os equipamentos mudaram depois
+  do carregamento, a avaliação lança `ValueError`; use aí `baseline_version=1`.
+  O manifesto dessa execução regista a referência do BAU como avaliada.
+- Só mudam os datasets com carregadores de VE: `citylearn_challenge_2022_phase_all_plus_evs`,
+  os datasets `pt_rec_*` e os demos trifásicos. A simulação, as linhas do
+  controlo, as linhas do BAU e as recompensas não mudam. Os KPIs de equidade,
+  calculados a partir do benefício de cada membro face à baseline, mudam com ela.
+- Defina `baseline_version` como `1` (argumento do construtor ou chave do
+  schema) para reproduzir a baseline do CityLearn 3.6.0. A versão fica em
+  `env.get_metadata()` e no manifesto de exportação, no nível de topo e em
+  `comparison_context`; `compare_exports()` dá como `incompatible` duas
+  execuções com versões diferentes. O `MultiCommunityEnv` exige que todas as
+  comunidades usem a mesma versão.
+
 ### Emissões do distrito com a troca local desligada
 
 Com um mercado comunitário ativo e `community_market.local_trading_enabled`
@@ -310,7 +346,8 @@ todas as linhas alteradas e o nome que mantém o seu valor da 3.6.0.
   emissões são rácios dos totais do distrito em vez de médias dos rácios dos
   edifícios ([#237](https://github.com/citylearn-project/CityLearn/issues/237)).
   Os valores da 3.6.0 são publicados como `*_building_mean_ratio`, e as linhas de
-  distrito do `evaluate()` legado continuam a guardá-los.
+  distrito do `evaluate()` legado continuam a guardá-los; nos datasets com
+  carregadores de VE, com `baseline_version=1` (ver [Carregamento dos VE na baseline por omissão](#carregamento-dos-ve-na-baseline-por-omissão)).
 - **As emissões do distrito** são as da importação líquida do distrito, pelo que
   a partilha local entre membros as reduz, de forma coerente com a importação e
   o custo do distrito
@@ -370,8 +407,9 @@ da física diferentes como `incompatible`, com `physics_version` entre as
 divergências, e um manifesto escrito antes de a versão ser registada como
 `unknown`, com `physics_version` entre a evidência em falta; exporte de novo
 essas execuções para as emparelhar. Para reproduzir um resultado da 3.6.0, defina
-`physics_version` como `1`; para comparar controladores, execute-os com a mesma
-versão.
+`physics_version` como `1`, e também `baseline_version` como `1` para os KPIs dos
+datasets com carregadores de VE; para comparar controladores, execute-os com as
+mesmas versões.
 
 `MultiCommunityEnv` exige que todas as comunidades usem a mesma
 `physics_version` e a mesma `random_stream_version`, porque os KPIs de portefólio

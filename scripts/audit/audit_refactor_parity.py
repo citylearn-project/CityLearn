@@ -28,6 +28,8 @@ REFERENCES = {
     2: ROOT / "scripts/audit/snapshots/refactor_parity_physics_v2.json",
 }
 DEFAULT_REFERENCE = REFERENCES[1]
+# Physics version 1 is the frozen CityLearn 3.6.0 reference, so it keeps the 3.6.0 KPI baseline too (#365).
+BASELINE_VERSIONS = {1: 1, 2: 2}
 CASES = {
     "flat_900s": dict(seconds=900, interface="flat"),
     "entity_60s": dict(seconds=60, interface="entity"),
@@ -199,7 +201,7 @@ def run_case(name, directory, physics_version=1):
     env = CityLearnEnv(schema, random_seed=7, offline=True, central_agent=True,
                        render_mode="none", render_directory=directory / "exports", render_session_name="parity",
                        physics_invariant_checks=True, export_kpis_on_episode_end=False,
-                       physics_version=physics_version)
+                       physics_version=physics_version, baseline_version=BASELINE_VERSIONS[physics_version])
     try:
         observation, _ = env.reset(seed=7)
         result = dict(input_fingerprint=fingerprint, configuration=config,

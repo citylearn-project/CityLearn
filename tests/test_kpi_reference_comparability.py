@@ -23,8 +23,10 @@ def _value(kpis, level, name, cost_function):
     return float(rows["value"].iloc[0])
 
 
-def _market_rollout(tmp_path, *, outage=False):
+def _market_rollout(tmp_path, *, outage=False, baseline_version=None):
     env = scenario(tmp_path, outage=outage)
+    if baseline_version is not None:
+        env.baseline_version = baseline_version
     env.reset()
     while not env.terminated:
         env.step(commands(env, [-0.5, -0.5]))
@@ -48,7 +50,10 @@ def test_signed_ratio_is_lower_is_better_for_a_net_exporting_baseline():
 
 
 def test_net_exchange_and_cost_ratios_do_not_flip_for_net_exporting_baselines(tmp_path):
-    env = _market_rollout(tmp_path)
+    # The version 1 baseline leaves out the EV charging, which makes both members net exporters in it. The
+    # version 2 baseline charges the EVs at full power as the BAU does, so no member exports in it, and the
+    # signed ratios would not be exercised.
+    env = _market_rollout(tmp_path, baseline_version=1)
 
     try:
         kpis = env.evaluate_v2()
@@ -98,7 +103,9 @@ def test_counterfactual_series_exchange_no_energy_while_the_grid_is_down(tmp_pat
 
     try:
         kpis = env.evaluate_v2(include_business_as_usual=False)
+        bau_buildings = {b.name: b for b in env.run_business_as_usual_baseline().env.buildings}
         exchanged_before_fix = False
+        charged_in_bau = False
 
         for building in env.buildings:
             outage = np.asarray(building.power_outage_signal) > 0
@@ -113,7 +120,11 @@ def test_counterfactual_series_exchange_no_energy_while_the_grid_is_down(tmp_pat
                 building.electrical_storage_electricity_consumption,
                 building.chargers_electricity_consumption,
             ], axis=0)
+            # The version 2 baseline adds back the EV charging of the 'full' BAU run, which has the same outages.
             unrestricted = building.net_electricity_consumption - storage
+            if building.electric_vehicle_chargers:
+                charged_in_bau |= True
+                unrestricted = unrestricted + np.asarray(bau_buildings[building.name].chargers_electricity_consumption)
             exchanged_before_fix |= bool(np.any(np.abs(unrestricted[outage]) > 1.0e-6))
 
             counterfactual = building.net_electricity_consumption_without_storage
@@ -134,6 +145,7 @@ def test_counterfactual_series_exchange_no_energy_while_the_grid_is_down(tmp_pat
             )
 
         assert exchanged_before_fix
+        assert charged_in_bau
         outage = np.asarray(env.buildings[0].power_outage_signal) > 0
         assert np.all(np.asarray(env.net_electricity_consumption_without_storage)[outage] == 0.0)
     finally:

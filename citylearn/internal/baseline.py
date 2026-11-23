@@ -5,6 +5,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
+import numpy as np
 import pandas as pd
 
 from citylearn import random_streams
@@ -38,40 +39,65 @@ def validate_business_as_usual_ev_charge_target(value) -> str:
     return value
 
 
+class BaselineEVChargingSource:
+    """Gives a building the EV charging that the version 2 KPI baseline adds back, from its environment.
+
+    Copying one building (a member cloned by a topology event) keeps the same environment; copying the whole
+    environment points the copy's buildings at the copied environment.
+    """
+
+    def __init__(self, env: "CityLearnEnv"):
+        self.env = env
+
+    def __call__(self, building) -> np.ndarray:
+        return self.env._baseline_ev_charging(building)
+
+    def __deepcopy__(self, memo):
+        env = memo.get(id(self.env))
+        return self if env is None else BaselineEVChargingSource(env)
+
+
 class CityLearnBusinessAsUsualBaselineService:
     """Runs and caches the native business-as-usual baseline for an env."""
 
     def __init__(self, env: "CityLearnEnv"):
         self.env = env
 
-    def run(self, force: bool = False) -> BusinessAsUsualBaselineResult:
+    #: Cache of the BAU run with the ``'full'`` target when the env's own BAU uses another target. The version 2
+    #: KPI baseline takes its EV charging from that run.
+    FULL_CHARGING_CACHE = '_business_as_usual_full_charging_cache'
+
+    def run(self, force: bool = False, ev_charge_target: str = None) -> BusinessAsUsualBaselineResult:
+        """Run or return the cached BAU sidecar, with the env's EV charge target unless `ev_charge_target` is given."""
+
         from citylearn.agents.baseline import BusinessAsUsualAgent
 
         env = self.env
+        own_target = getattr(env, 'business_as_usual_ev_charge_target', 'full')
+        ev_charge_target = own_target if ev_charge_target is None else validate_business_as_usual_ev_charge_target(
+            ev_charge_target)
+        # The env's own target keeps the cache that the comparison metadata reads; another target has its own,
+        # so that evaluating both does not rebuild each sidecar in turn.
+        cache_name = '_business_as_usual_baseline_cache' if ev_charge_target == own_target else self.FULL_CHARGING_CACHE
         from citylearn.internal.temporal import input_changes
         if input_changes(getattr(env, '_input_snapshot', {})):
             raise ValueError('Native BAU inputs changed since loading; restore inputs or evaluate without the native reference')
         target_time_step = int(getattr(env, 'time_step', 0))
         episode = int(getattr(env.episode_tracker, 'episode', 0))
         cache_key = (episode, target_time_step)
-        cache: Dict[Tuple[int, int], BusinessAsUsualBaselineResult] = getattr(
-            env,
-            '_business_as_usual_baseline_cache',
-            {},
-        )
+        cache: Dict[Tuple[int, int], BusinessAsUsualBaselineResult] = getattr(env, cache_name, {})
 
-        ev_charge_target = getattr(env, 'business_as_usual_ev_charge_target', 'full')
         if not force and cache_key in cache and cache[cache_key].ev_charge_target == ev_charge_target:
             return cache[cache_key]
 
         # Keep only the latest result. Within an episode the time step only moves forward and reset
         # clears the cache, so an earlier entry is never read again, yet each holds a whole sidecar
         # env. Release it before building the next one, this frame's handle on the cache included,
-        # so at most one sidecar is alive. An env holds reference cycles, so dropping the last
+        # so at most one sidecar per target is alive. An env holds reference cycles, so dropping the last
         # reference does not free it; collect now rather than when the collector next runs.
         released = bool(cache)
         del cache
-        self.clear()
+        setattr(env, cache_name, {})
         if released:
             gc.collect()
         baseline_env = self._new_sidecar_env()
@@ -79,12 +105,15 @@ class CityLearnBusinessAsUsualBaselineService:
         # A freshly constructed sidecar has a different episode index: take the episode key of the
         # evaluated episode, so its occupant, outage and away-EV streams are the same.
         baseline_env._random_stream_episode_override = env.episode_tracker.random_stream_episode
+        baseline_env._business_as_usual_sidecar_ev_charge_target = ev_charge_target
+        if ev_charge_target != 'full':
+            # Its own baseline takes the EV charging from this env's 'full' run (`ev_charging`).
+            baseline_env._baseline_ev_charging_parent = env
         agent = BusinessAsUsualAgent(baseline_env, ev_charge_target=ev_charge_target)
         baseline_env.reset()
 
         if env.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
             # Pair the away-EV stochastic stream with the source episode, including repeated resets.
-            import numpy as np
             baseline_env._ev_drift_seed = env._ev_drift_seed
             baseline_env._ev_drift_random_state = np.random.RandomState(env._ev_drift_seed)
         from citylearn import __version__
@@ -132,11 +161,52 @@ class CityLearnBusinessAsUsualBaselineService:
             time_step=target_time_step,
             ev_charge_target=ev_charge_target,
         )
-        env._business_as_usual_baseline_cache = {cache_key: result}
+        setattr(env, cache_name, {cache_key: result})
         return result
+
+    def ev_charging(self, building) -> np.ndarray:
+        """Charger consumption of `building` in the BAU with the ``'full'`` target, the version 2 baseline's EV charging.
+
+        In a sidecar that already charges to full it is the building's own charging; a sidecar with another
+        target asks the env it was built for. Otherwise the ``'full'`` sidecar is run (or read from its cache) up
+        to the env's current time step.
+        """
+
+        env = self.env
+
+        if getattr(env, '_business_as_usual_sidecar', False):
+            if getattr(env, '_business_as_usual_sidecar_ev_charge_target', 'full') == 'full':
+                return np.asarray(building.chargers_electricity_consumption)
+
+            parent = getattr(env, '_baseline_ev_charging_parent', None)
+
+            if parent is not None:
+                return parent._business_as_usual_baseline_service.ev_charging(building)
+
+        try:
+            result = self.run(ev_charge_target='full')
+        except ValueError as error:
+            message = str(error).rstrip('.')
+            raise ValueError(
+                f'{message}. The version 2 KPI baseline takes the EV charging of buildings with chargers from this BAU '
+                'run; set baseline_version=1 to evaluate with the 3.6.0 baseline, which needs no BAU run.'
+            ) from error
+
+        reference = result.env
+        # Active members first, then every member the reference loaded: departed members and members cloned by
+        # topology events are only in the topology member pool.
+        pool = getattr(getattr(reference, '_topology_service', None), 'member_pool', None) or {}
+        candidates = [*reference.buildings, *pool.values(), *(getattr(reference, '_all_buildings', None) or [])]
+        matches = [b for b in candidates if b.name == building.name]
+
+        if not matches:
+            raise ValueError(f'The native BAU run has no building {building.name!r} to take the baseline EV charging from.')
+
+        return np.asarray(matches[0].chargers_electricity_consumption)
 
     def clear(self):
         self.env._business_as_usual_baseline_cache = {}
+        setattr(self.env, self.FULL_CHARGING_CACHE, {})
 
     def _new_sidecar_env(self) -> "CityLearnEnv":
         env = self.env
@@ -206,6 +276,7 @@ class CityLearnBusinessAsUsualBaselineService:
             check_observation_limits=False,
             physics_invariant_checks=bool(getattr(env, 'physics_invariant_checks', False)),
             physics_version=getattr(env, 'physics_version', None),
+            baseline_version=getattr(env, 'baseline_version', None),
             # The effective setting, which a constructor override may have changed from the schema's.
             energy_provenance=bool(getattr(env, 'energy_provenance', True)),
             **deepcopy(getattr(env, '_constructor_overrides', {})),

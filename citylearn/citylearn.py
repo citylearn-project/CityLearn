@@ -33,7 +33,7 @@ from citylearn.internal.market_history import MarketSettlementHistory
 from citylearn.internal.kpi import CityLearnKPIService
 from citylearn.internal.kpi_population import ActivePopulation
 from citylearn.internal.loading import CityLearnLoadingService
-from citylearn.internal.baseline import CityLearnBusinessAsUsualBaselineService
+from citylearn.internal.baseline import BaselineEVChargingSource, CityLearnBusinessAsUsualBaselineService
 from citylearn.internal.physics_invariants import CityLearnPhysicsInvariantService
 from citylearn.internal.provenance import CityLearnProvenanceService
 from citylearn.internal.runtime import CityLearnRuntimeService
@@ -220,6 +220,11 @@ class CityLearnEnv(Environment, Env):
     physics_version: int, optional
         Physics definitions: ``2`` (default) or ``1``, which reproduces the physics of CityLearn 3.6.0. Overrides the
         schema key. The migration guide lists the corrections of version 2.
+    baseline_version: int, optional
+        Definition of the default KPI baseline (the ``*_without_storage`` series): ``2`` (default) removes the battery,
+        the thermal storage and the EV charging of the controlled run, and adds back the EV charging of the native BAU
+        with the ``'full'`` target, so it is the same for every controller and has no V2G; ``1`` adds nothing back, as
+        in CityLearn 3.6.0. Overrides the schema key. See :py:mod:`citylearn.internal.baseline_version`.
     debug_timing: bool, optional
         Log runtime timings. Defaults to the schema value, else ``False``.
     check_observation_limits: bool, optional
@@ -255,6 +260,7 @@ class CityLearnEnv(Environment, Env):
         'inactive_observations', 'active_actions', 'inactive_actions', 'simulate_power_outage', 'solar_generation',
         'random_seed', 'offline', 'time_step_ratio', 'interface', 'topology_mode', 'start_date',
         'episode_split_boundary', 'time_step_ratio_mode', 'random_stream_version', 'physics_version',
+        'baseline_version',
     )
 
     def __init__(self,
@@ -285,6 +291,7 @@ class CityLearnEnv(Environment, Env):
         check_observation_limits = kwargs.pop('check_observation_limits', None)
         physics_invariant_checks = kwargs.pop('physics_invariant_checks', None)
         physics_version = kwargs.pop('physics_version', None)
+        baseline_version = kwargs.pop('baseline_version', None)
         energy_provenance = kwargs.pop('energy_provenance', None)
         metrics_log_interval = kwargs.pop('metrics_log_interval', None)
         ev_departure_within_tolerance = kwargs.pop('ev_departure_within_tolerance', None)
@@ -377,6 +384,10 @@ class CityLearnEnv(Environment, Env):
         from citylearn.internal.physics_version import resolve_physics_version
         self.physics_version = resolve_physics_version(
             self.schema.get('physics_version') if physics_version is None else physics_version,
+        )
+        from citylearn.internal.baseline_version import resolve_baseline_version
+        self._baseline_version = resolve_baseline_version(
+            self.schema.get('baseline_version') if baseline_version is None else baseline_version,
         )
         self.energy_provenance = parse_bool(
             self.schema.get('energy_provenance', True) if energy_provenance is None else energy_provenance,
@@ -632,6 +643,23 @@ class CityLearnEnv(Environment, Env):
         """Buildings in CityLearn environment."""
 
         return self.__buildings
+
+    @property
+    def baseline_version(self) -> int:
+        """Definition of the default KPI baseline, see :py:mod:`citylearn.internal.baseline_version`."""
+
+        from citylearn.internal.baseline_version import baseline_version_of
+        return getattr(self, '_baseline_version', None) or baseline_version_of(None)
+
+    @baseline_version.setter
+    def baseline_version(self, value: Union[int, str]):
+        from citylearn.internal.baseline_version import resolve_baseline_version
+        self._baseline_version = resolve_baseline_version(value)
+        # Departed and not yet joined members too: the KPIs read their series.
+        pool = getattr(getattr(self, '_topology_service', None), 'member_pool', None) or {}
+
+        for b in [*(self.buildings or []), *pool.values(), *(getattr(self, '_all_buildings', None) or [])]:
+            b.baseline_version = self._baseline_version
 
     @property
     def electric_vehicles(self) -> List[ElectricVehicle]:
@@ -1449,6 +1477,11 @@ class CityLearnEnv(Environment, Env):
     @buildings.setter
     def buildings(self, buildings: List[Building]):
         self.__buildings = buildings
+        version = getattr(self, '_baseline_version', None)
+
+        for b in buildings or []:
+            b.baseline_version = version
+            b._baseline_ev_charging_source = BaselineEVChargingSource(self)
 
     @electric_vehicles.setter
     def electric_vehicles(self, electric_vehicles: List[ElectricVehicle]):
@@ -1564,6 +1597,7 @@ class CityLearnEnv(Environment, Env):
             'topology_event_log': self.topology_event_log,
             'physics_invariant_checks': bool(getattr(self, 'physics_invariant_checks', False)),
             'physics_version': self.physics_version,
+            'baseline_version': self.baseline_version,
             'episode_split_boundary': self.episode_split_boundary,
             'time_step_ratio_mode': self.time_step_ratio_mode,
             'energy_accounting': self._provenance_service.get_metadata(),
@@ -1799,6 +1833,11 @@ class CityLearnEnv(Environment, Env):
         """Return observed populations, thermal service and equity audit evidence."""
         return self._kpi_service.family_audit(comfort_band=comfort_band,
             control_condition=control_condition, baseline_condition=baseline_condition)
+
+    def _baseline_ev_charging(self, building: Building) -> np.ndarray:
+        """EV charging that the version 2 KPI baseline keeps for `building`: its charging in the ``'full'`` BAU."""
+
+        return self._business_as_usual_baseline_service.ev_charging(building)
 
     def run_business_as_usual_baseline(self, force: bool = False):
         """Run or return the cached native business-as-usual baseline."""
