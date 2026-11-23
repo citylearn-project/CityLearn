@@ -4413,12 +4413,92 @@
 <div class="viewcode-block" id="LogisticRegressionOccupantInteractionBuilding">
 <a class="viewcode-back" href="../../api/citylearn.building.html#citylearn.building.LogisticRegressionOccupantInteractionBuilding">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LogisticRegressionOccupantInteractionBuilding</span><span class="p">(</span><span class="n">OccupantInteractionBuilding</span><span class="p">,</span> <span class="n">LSTMDynamicsBuilding</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">occupant</span><span class="p">:</span> <span class="n">LogisticRegressionOccupant</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">set_point_hold_time_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Building whose occupants adjust the HVAC set point with a logistic regression model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    *args : Any</span>
+<span class="sd">        Positional arguments of :py:class:`citylearn.building.OccupantInteractionBuilding`.</span>
+<span class="sd">    occupant : LogisticRegressionOccupant</span>
+<span class="sd">        Occupant interaction model.</span>
+<span class="sd">    set_point_hold_time_steps : int, optional</span>
+<span class="sd">        Time steps without interaction after which the set points return to the schedule. Holds for the</span>
+<span class="sd">        rest of the episode when ``None``.</span>
+<span class="sd">    set_point_limits : Tuple[float, float], optional</span>
+<span class="sd">        Range, in [C], an occupant can move a heating or cooling set point to; defaults to</span>
+<span class="sd">        :py:data:`DEFAULT_OCCUPANT_SET_POINT_LIMITS`. A change never goes past a limit, and a schedule</span>
+<span class="sd">        value outside the range is not moved into it. Applies under physics version 2 and later only:</span>
+<span class="sd">        physics version 1 keeps the unbounded set points of CityLearn 3.6.0 (CityLearn #352).</span>
+<span class="sd">    **kwargs : Any</span>
+<span class="sd">        Other keyword arguments of :py:class:`citylearn.building.OccupantInteractionBuilding`.</span>
+<span class="sd">    """</span>
+
+    <span class="c1">#: Default occupant set-point range in [C]: covers the residential heating and cooling set points of</span>
+    <span class="c1">#: ResStock (12.8 to 26.7 C) and the bundled Quebec schedules (18.5 to 21.6 C) with margin.</span>
+    <span class="n">DEFAULT_OCCUPANT_SET_POINT_LIMITS</span> <span class="o">=</span> <span class="p">(</span><span class="mf">15.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">occupant</span><span class="p">:</span> <span class="n">LogisticRegressionOccupant</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">set_point_hold_time_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">set_point_limits</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_point_limits</span> <span class="o">=</span> <span class="n">set_point_limits</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">occupant</span><span class="o">=</span><span class="n">occupant</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">occupant</span><span class="p">:</span> <span class="n">LogisticRegressionOccupant</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__set_point_hold_time_step_counter</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_point_hold_time_steps</span> <span class="o">=</span> <span class="n">set_point_hold_time_steps</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">occupant_interaction_indoor_dry_bulb_temperature_set_point_delta_summary</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_point_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Range, in [C], an occupant can move a set point to; ``None`` under physics version 1, which</span>
+<span class="sd">        does not limit it."""</span>
+
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">physics_version_of</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__set_point_limits</span>
+
+    <span class="nd">@set_point_limits</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_point_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_OCCUPANT_SET_POINT_LIMITS</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">value</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'set_point_limits must be a pair of numbers [low, high], got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">low</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">high</span><span class="p">)</span> <span class="ow">and</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="n">high</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'set_point_limits must be finite with low &lt; high, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__set_point_limits</span> <span class="o">=</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_occupant_set_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_set_point</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">setpoint_delta</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Set point after an occupant change, kept within `set_point_limits` when they apply."""</span>
+
+        <span class="n">set_point</span> <span class="o">=</span> <span class="n">as_float</span><span class="p">(</span><span class="n">current_set_point</span><span class="p">)</span> <span class="o">+</span> <span class="n">setpoint_delta</span>
+        <span class="n">limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_point_limits</span>
+
+        <span class="k">if</span> <span class="n">limits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">set_point</span>
+
+        <span class="c1"># Never past a limit, and never pulled into the range when the schedule is already outside it.</span>
+        <span class="n">current_set_point</span> <span class="o">=</span> <span class="n">as_float</span><span class="p">(</span><span class="n">current_set_point</span><span class="p">)</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">current_set_point</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">current_set_point</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">set_point</span><span class="p">,</span> <span class="n">low</span><span class="p">),</span> <span class="n">high</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_point_observation_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Set-point limits: the schedule range widened to `set_point_limits` when they apply.</span>
+
+<span class="sd">        Occupants move the set point from the schedule or from an earlier change, and never past</span>
+<span class="sd">        `set_point_limits`, so these limits are exact.</span>
+<span class="sd">        """</span>
+
+        <span class="n">limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_point_limits</span>
+
+        <span class="k">if</span> <span class="n">limits</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_occupant</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_set_point_observation_limits</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">OccupantInteractionBuilding</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_point_observation_limits</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_point_hold_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -4471,10 +4551,10 @@
 
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">setpoint_delta</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_occupant</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">hvac_mode</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">indoor_dry_bulb_temperature_cooling_set_point</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">:]</span> <span class="o">=</span> <span class="n">as_float</span><span class="p">(</span><span class="n">current_set_point</span><span class="p">)</span> <span class="o">+</span> <span class="n">setpoint_delta</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">indoor_dry_bulb_temperature_cooling_set_point</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_occupant_set_point</span><span class="p">(</span><span class="n">current_set_point</span><span class="p">,</span> <span class="n">setpoint_delta</span><span class="p">)</span>
 
             <span class="k">elif</span> <span class="n">hvac_mode</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">indoor_dry_bulb_temperature_heating_set_point</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">:]</span> <span class="o">=</span> <span class="n">as_float</span><span class="p">(</span><span class="n">current_set_point</span><span class="p">)</span> <span class="o">+</span> <span class="n">setpoint_delta</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">energy_simulation</span><span class="o">.</span><span class="n">indoor_dry_bulb_temperature_heating_set_point</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_occupant_set_point</span><span class="p">(</span><span class="n">current_set_point</span><span class="p">,</span> <span class="n">setpoint_delta</span><span class="p">)</span>
             
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">pass</span>

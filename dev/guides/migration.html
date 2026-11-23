@@ -103,6 +103,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#resolve-public-and-local-data-separately">Resolve public and local data separately</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#district-emissions-with-local-trading-off">District emissions with local trading off</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#occupant-set-point-limits">Occupant set-point limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#observation-spaces-follow-the-observations">Observation spaces follow the observations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-native-bau-uses-current-step-load-and-solar">The native BAU uses current-step load and solar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
@@ -254,6 +255,48 @@ unchanged, and the local price ratio does not affect emissions. To compare
 with an earlier run made with local trading off, re-evaluate it with the
 current release. See <a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/327">#327</a>.</p>
 </section>
+<section id="occupant-set-point-limits">
+<h3>Occupant set-point limits<a class="headerlink" href="#occupant-set-point-limits" title="Link to this heading"></a></h3>
+<p>Under physics version 2, an occupant of a
+<code class="docutils literal notranslate"><span class="pre">LogisticRegressionOccupantInteractionBuilding</span></code> can no longer move a heating or
+cooling set point past <code class="docutils literal notranslate"><span class="pre">set_point_limits</span></code>, a building schema key (and
+constructor argument) that defaults to <code class="docutils literal notranslate"><span class="pre">[15,</span> <span class="pre">30]</span></code> °C. Before, each occupant
+change was added to the current set point with no limit, and under arbitrary
+HVAC control the occupant keeps interacting: over the first Quebec episode
+the heating set point reached -2323 °C with random actions and 3230 °C with
+<code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code>, far outside its observation bounds
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/352">#352</a>,
+<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/357">#357</a>).</p>
+<ul class="simple">
+<li><p>A change stops at the limit it would cross. A schedule value already outside
+the range is kept, and an occupant can still move the set point back towards
+the range.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">occupant_interaction_indoor_dry_bulb_temperature_set_point_delta</span></code> still
+reports the change the occupant asked for, also when the limit stopped it.</p></li>
+<li><p>The cooling and heating set-point observation bounds of these buildings are
+the schedule range widened to <code class="docutils literal notranslate"><span class="pre">set_point_limits</span></code>, which the set points can
+no longer leave. On both Quebec neighbourhoods they become [15, 30] °C
+instead of the indoor temperature limits (about -1 to 42 °C), so
+bound-based normalisation of these features changes: agents trained there
+under physics version 2 should be retrained.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">NoControlAgent</span></code> nothing changes: the Quebec set points stay within
+16.6 to 26.6 °C over the first episode. With <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> the
+simulation and the <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> KPIs do not change, because the large set
+points fall on unoccupied steps, but the set-point observations and the
+rewards that read them (such as <code class="docutils literal notranslate"><span class="pre">ComfortReward</span></code>) do. With random actions the
+discomfort KPIs change too; energy, cost and emissions do not, because the
+HVAC action, not the set point, sets the heating supplied.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set_point_limits</span></code> applies under physics version 2 and later only. Set
+<code class="docutils literal notranslate"><span class="pre">physics_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code> to reproduce the unbounded set points of
+CityLearn 3.6.0. To widen or narrow the range, set <code class="docutils literal notranslate"><span class="pre">set_point_limits</span></code> in each
+building of the schema, for example <code class="docutils literal notranslate"><span class="pre">&quot;set_point_limits&quot;:</span> <span class="pre">[16,</span> <span class="pre">28]</span></code>.</p></li>
+</ul>
+<p>The limits do not bound the LSTM indoor temperature: under random heating
+actions the Quebec indoor temperature still reaches about 60 °C, because the
+HVAC action sets the heating supplied whatever the set point. That temperature
+is outside the range the LSTM models were trained on, so treat such runs with
+care.</p>
+</section>
 <section id="observation-spaces-follow-the-observations">
 <h3>Observation spaces follow the observations<a class="headerlink" href="#observation-spaces-follow-the-observations" title="Link to this heading"></a></h3>
 <p>The observation values, their order and <code class="docutils literal notranslate"><span class="pre">observation_names</span></code> do not change, and
@@ -288,8 +331,10 @@ which now cover the indoor temperature limits.</p></li>
 </ul>
 <p>These bounds are still estimates where the model has no hard limit. Under
 arbitrary control, for example random actions over a full Quebec episode, the
-LSTM indoor temperature and the occupant set points that follow it can leave
-them; <code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code> keeps such values inside the space.</p>
+LSTM indoor temperature, and under physics version 1 the occupant set points,
+can leave them; <code class="docutils literal notranslate"><span class="pre">ClippedObservationWrapper</span></code> keeps such values inside the space.
+Under physics version 2 the occupant set points stay within <code class="docutils literal notranslate"><span class="pre">set_point_limits</span></code>
+(see <a class="reference internal" href="#occupant-set-point-limits"><span class="std std-ref">occupant set-point limits</span></a>).</p>
 <p>What reads the bounds:</p>
 <table class="docutils align-default">
 <thead>
@@ -600,6 +645,10 @@ the controller does not set.</p></li>
 electrical-service limit, and <code class="docutils literal notranslate"><span class="pre">Building_15</span></code> of the three-phase demos.</p>
 <p>It also changes runs that use the following:</p>
 <ul class="simple">
+<li><p><strong>Occupant set points under arbitrary control.</strong> An occupant change stops at
+<code class="docutils literal notranslate"><span class="pre">set_point_limits</span></code>, [15, 30] °C by default; version 1 had no limit
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/352">#352</a>, see
+<a class="reference internal" href="#occupant-set-point-limits"><span class="std std-ref">occupant set-point limits</span></a>).</p></li>
 <li><p><strong>EVs with a standby loss.</strong> An EV away from its charger now keeps the
 standby loss of each step; version 1 discarded it, so a non-zero battery
 <code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code> had no effect while the EV was away
