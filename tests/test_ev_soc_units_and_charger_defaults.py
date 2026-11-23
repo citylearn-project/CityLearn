@@ -57,7 +57,7 @@ def test_one_percent_arrival_soc_is_not_read_as_full(ev_schema, physics_version,
     raw = pd.read_csv(f"{env.schema['root_directory']}/charger_12_1.csv").iloc[4160:4191]
     assert raw['electric_vehicle_estimated_soc_arrival'].iloc[7:10].tolist() == [1.0, 1.0, 1.0]
     assert raw['electric_vehicle_estimated_soc_arrival'].max() <= 1.0
-    assert charger.charger_simulation.soc_unit == expected_unit
+    assert charger.charger_simulation.soc_units['electric_vehicle_estimated_soc_arrival'] == expected_unit
 
     ev = charger.past_connected_evs[10]
     charged = float(np.sum(charger.electricity_consumption[:30]))
@@ -80,7 +80,7 @@ def test_schema_can_declare_the_soc_unit(ev_schema):
         schema, interface='flat', render_mode='none', simulation_start_time_step=4160, simulation_end_time_step=4190,
     )
     simulation = _charger(env, 'Building_12').charger_simulation
-    assert simulation.soc_unit == 'fraction'
+    assert set(simulation.soc_units.values()) == {'fraction'}
     assert simulation.electric_vehicle_estimated_soc_arrival[7] == pytest.approx(1.0)
     env.close()
 

@@ -31,8 +31,8 @@ Versions
       capacity, where `Battery.charge` stops, instead of at its nominal capacity;
     * occupant set-point changes stop at
       `LogisticRegressionOccupantInteractionBuilding.set_point_limits`, [15, 30] C by default (#352);
-    * the SOC columns of a charger file share one unit, percent if any value is above 1, decided
-      from the whole file, so 1 in a percent file is 1 % and not 100 % (#368);
+    * each SOC column of a charger file has one unit, percent if any value is above 1, decided
+      from the whole column, so 1 in a percent column is 1 % and not 100 % (#368);
     * a charger without `max_discharging_power` cannot discharge (V2G off), and one without
       `max_charging_power` charges up to its `nominal_power`; version 1 gives both 50 kW (#369).
 """

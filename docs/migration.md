@@ -159,8 +159,8 @@ care.
 
 Under physics version 2 the SOC columns of a charger file
 (`electric_vehicle_required_soc_departure`, `electric_vehicle_estimated_soc_arrival`
-and `electric_vehicle_current_soc`) share one unit, decided once from the whole
-file: percent if any value is above 1, ratio otherwise. Before, the unit was
+and `electric_vehicle_current_soc`) each have one unit, decided once from the
+whole column of the file: percent if any value is above 1, ratio otherwise. Before, the unit was
 guessed value by value, so an arrival SOC of 1 (1 %) in a percent file was read
 as 100 %: the EV arrived full and was not charged
 ([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
@@ -177,7 +177,7 @@ as 100 %: the EV arrived full and was not charged
   such an arrival (steps 79,200 to 84,959) charges 474 instead of 377 kWh.
   The EV departure KPIs barely move (the surplus mean changes in the fifth
   decimal), because those EVs used to arrive full.
-- A file whose values are all between 0 and 1 is read as ratio. If it is in
+- A column whose values are all between 0 and 1 is read as ratio. If it is in
   percent, declare `"soc_unit": "percent"` on the charger, next to
   `charger_simulation`; `"fraction"` forces ratio.
 - Set `physics_version` to `1` to reproduce the value-by-value rule of
@@ -539,7 +539,7 @@ electrical-service limit, and `Building_15` of the three-phase demos.
 
 It also changes runs that use the following:
 
-- **Charger files in percent.** The SOC unit is decided once per file, so an
+- **Charger files in percent.** The SOC unit is decided once per column, so an
   SOC of 1 in a percent file is 1 % instead of 100 %
   ([#368](https://github.com/citylearn-project/CityLearn/issues/368), see
   [EV SOC unit of charger files](#ev-soc-unit-of-charger-files)).

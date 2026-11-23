@@ -280,22 +280,26 @@ def _soc_simulation(required, arrival, **kwargs):
 
 def test_charger_simulation_soc_fields_accept_fraction_and_percent_units():
     fraction = _soc_simulation([0.8, 1.0, np.nan, -0.1, 0.0], [0.4, 0.01, np.nan, -0.1, 1.0000000000000013])
-    assert fraction.soc_unit == "fraction"
+    assert set(fraction.soc_units.values()) == {"fraction"}
     np.testing.assert_allclose(fraction.electric_vehicle_required_soc_departure, [0.8, 1.0, -0.1, -0.1, 0.0], atol=1.0e-6)
     np.testing.assert_allclose(fraction.electric_vehicle_estimated_soc_arrival, [0.4, 0.01, -0.1, -0.1, 1.0], atol=1.0e-6)
 
     percent = _soc_simulation([80.0, 100.0, np.nan, -0.1, 150.0], [40.0, 1.0, np.nan, -0.1, 0.5])
-    assert percent.soc_unit == "percent"
+    assert set(percent.soc_units.values()) == {"percent"}
     np.testing.assert_allclose(percent.electric_vehicle_required_soc_departure, [0.8, 1.0, -0.1, -0.1, 1.0], atol=1.0e-6)
     np.testing.assert_allclose(percent.electric_vehicle_estimated_soc_arrival, [0.4, 0.01, -0.1, -0.1, 0.005], atol=1.0e-6)
 
 
-def test_soc_unit_is_decided_once_for_both_columns():
-    """#368: one value above 1 in either SOC column makes both columns percent."""
+def test_soc_unit_is_decided_once_per_column():
+    """#368: one value above 1 makes the whole column percent; each column has its own unit."""
 
-    simulation = _soc_simulation([80.0, 90.0], [1.0, 0.5])
-    assert simulation.soc_unit == "percent"
-    np.testing.assert_allclose(simulation.electric_vehicle_estimated_soc_arrival, [0.01, 0.005], atol=1.0e-6)
+    simulation = _soc_simulation([0.8, 0.9], [1.0, 50.0])
+    assert simulation.soc_units == {
+        "electric_vehicle_required_soc_departure": "fraction",
+        "electric_vehicle_estimated_soc_arrival": "percent",
+    }
+    np.testing.assert_allclose(simulation.electric_vehicle_required_soc_departure, [0.8, 0.9], atol=1.0e-6)
+    np.testing.assert_allclose(simulation.electric_vehicle_estimated_soc_arrival, [0.01, 0.5], atol=1.0e-6)
 
 
 def test_soc_unit_can_be_declared():

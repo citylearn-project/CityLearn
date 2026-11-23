@@ -333,7 +333,7 @@ margens descrevem o último intervalo executado, pelo que refletem o limite ent�
 | Campo | Unidade | Finalidade |
 |---|---:|---|
 | `charger_simulation` | caminho | Ficheiro com o horário do carregador. |
-| `soc_unit` | `percent`, `fraction` | Opcional, ao lado de `charger_simulation`: a unidade das colunas de SOC do ficheiro de horário. Se for omitido, é inferido uma vez para o ficheiro inteiro (ver [unidade do SOC](dataset_reference.md#unidade-do-soc)). |
+| `soc_unit` | `percent`, `fraction` | Opcional, ao lado de `charger_simulation`: a unidade das colunas de SOC do ficheiro de horário. Se for omitido, é inferido uma vez por coluna a partir do ficheiro inteiro (ver [unidade do SOC](dataset_reference.md#unidade-do-soc)). |
 | `attributes.nominal_power` | kW | Potência nominal. Valor predefinido de `max_charging_power`. |
 | `attributes.charger_type` | qualquer | Etiqueta descritiva (por exemplo 0 para AC, 1 para DC). Não tem efeito na simulação. |
 | `attributes.max_charging_power` | kW | Limite superior de carregamento. Por omissão é `nominal_power`, ou 50 kW com um aviso. |

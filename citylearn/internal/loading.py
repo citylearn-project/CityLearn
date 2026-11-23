@@ -66,7 +66,7 @@ class CityLearnLoadingService:
         self._dynamic_rejoining_members: set = set()
         self._dynamic_dataset_rows: Optional[int] = None
         self._timeseries_row_counts: Dict[str, int] = {}
-        self._charger_soc_units: Dict[str, str] = {}
+        self._charger_soc_unit_cache: Dict[str, Dict[str, str]] = {}
         self._shared_timeseries_cache: Dict[Tuple[Any, ...], Any] = {}
 
     @staticmethod
@@ -1451,14 +1451,14 @@ class CityLearnLoadingService:
                 aligned[column] = aligned[column].ffill().bfill()
         return aligned.reset_index(drop=True)
 
-    def _charger_soc_unit(self, filepath: Union[str, os.PathLike]) -> str:
-        """SOC unit of a charger file, decided once from all its rows and SOC columns, cached by path."""
+    def _charger_soc_units(self, filepath: Union[str, os.PathLike]) -> Dict[str, str]:
+        """SOC unit of each SOC column of a charger file, decided from all its rows, cached by path."""
 
         from citylearn.data import ChargerSimulation
 
         key = os.path.abspath(str(filepath))
 
-        if key not in self._charger_soc_units:
+        if key not in self._charger_soc_unit_cache:
             columns = ChargerSimulation.SOC_COLUMNS
 
             if self._file_format(filepath) == 'parquet':
@@ -1469,11 +1469,11 @@ class CityLearnLoadingService:
             else:
                 dataframe = pd.read_csv(filepath, usecols=lambda c: c in columns)
 
-            self._charger_soc_units[key] = ChargerSimulation.soc_series_unit(
-                *(dataframe[c].to_numpy() for c in columns if c in dataframe.columns),
-            )
+            self._charger_soc_unit_cache[key] = {
+                c: ChargerSimulation.soc_series_unit(dataframe[c].to_numpy()) for c in columns if c in dataframe.columns
+            }
 
-        return self._charger_soc_units[key]
+        return self._charger_soc_unit_cache[key]
 
     def _timeseries_row_count(self, filepath: Union[str, os.PathLike]) -> int:
         """Number of data rows in a CSV or Parquet time series file, cached by path."""

@@ -167,8 +167,8 @@ isso trate essas execuções com cuidado.
 
 Na versão 2 da física, as colunas de SOC de um ficheiro de carregador
 (`electric_vehicle_required_soc_departure`, `electric_vehicle_estimated_soc_arrival`
-e `electric_vehicle_current_soc`) partilham uma unidade, decidida uma vez a partir
-do ficheiro inteiro: percentagem se algum valor for superior a 1, rácio caso
+e `electric_vehicle_current_soc`) têm cada uma uma unidade, decidida uma vez a partir
+da coluna inteira do ficheiro: percentagem se algum valor for superior a 1, rácio caso
 contrário. Antes, a unidade era adivinhada valor a valor, pelo que um SOC de
 chegada de 1 (1 %) num ficheiro em percentagem era lido como 100 %: o VE chegava
 cheio e não era carregado
@@ -187,7 +187,7 @@ cheio e não era carregado
   dia em torno de uma dessas chegadas (passos 79 200 a 84 959) carrega 474 kWh
   em vez de 377 kWh. Os KPIs de partida dos VE quase não mudam (a média do
   excedente muda na quinta casa decimal), porque esses VE chegavam cheios.
-- Um ficheiro com todos os valores entre 0 e 1 é lido como rácio. Se estiver em
+- Uma coluna com todos os valores entre 0 e 1 é lida como rácio. Se estiver em
   percentagem, declare `"soc_unit": "percent"` no carregador, ao lado de
   `charger_simulation`; `"fraction"` força o rácio.
 - Defina `physics_version` como `1` para reproduzir a regra valor a valor do
@@ -576,7 +576,7 @@ um limite de serviço elétrico, e o `Building_15` das demos trifásicas.
 Altera também as execuções que usam o seguinte:
 
 - **Ficheiros de carregadores em percentagem.** A unidade do SOC é decidida uma
-  vez por ficheiro, pelo que um SOC de 1 num ficheiro em percentagem é 1 % e não
+  vez por coluna, pelo que um SOC de 1 num ficheiro em percentagem é 1 % e não
   100 % ([#368](https://github.com/citylearn-project/CityLearn/issues/368), ver
   [unidade do SOC dos VE nos ficheiros de carregadores](#unidade-do-soc-dos-ve-nos-ficheiros-de-carregadores)).
 - **Carregadores sem `max_discharging_power`.** Não podem descarregar; a versão 1

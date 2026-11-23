@@ -168,17 +168,18 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
                     f"Charger simulation '{charger_simulation_filepath}' is missing "
                     f"required columns: {missing_charger_columns}."
                 )
-            # One SOC unit per file (#368): the loader reads only the simulation window, so the unit
-            # is decided from the whole file unless the schema declares it. Physics version 1 keeps
-            # the old value-by-value rule.
+            # One unit per SOC column (#368). The loader reads only the simulation window, so the unit
+            # is decided from the whole column of the file unless the schema declares it. Physics
+            # version 1 keeps the old value-by-value rule.
             soc_unit = ChargerSimulation.resolve_soc_unit(
                 charger_config.get('soc_unit'), path=f'buildings.{building_name}.chargers.{charger_name}.soc_unit',
             )
-            if soc_unit is None:
-                soc_unit = (
-                    'per_value' if resolve_physics_version(schema.get('physics_version')) < 2
-                    else loader._charger_soc_unit(charger_simulation_filepath)
-                )
+            if soc_unit is not None:
+                soc_unit = {column: soc_unit for column in ChargerSimulation.SOC_COLUMNS}
+            elif resolve_physics_version(schema.get('physics_version')) < 2:
+                soc_unit = {column: 'per_value' for column in ChargerSimulation.SOC_COLUMNS}
+            else:
+                soc_unit = loader._charger_soc_units(charger_simulation_filepath)
             charger_simulation = ChargerSimulation(
                 *(charger_simulation_file[column].to_numpy() for column in charger_columns),
                 electric_vehicle_session_id=(
@@ -198,7 +199,11 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
                     current_soc_raw,
                     default_soc_value=-0.1,
                     noise_std=0.0,
-                    unit=soc_unit,
+                    unit=soc_unit.get('electric_vehicle_current_soc'),
+                )
+                charger_simulation.soc_units['electric_vehicle_current_soc'] = (
+                    soc_unit.get('electric_vehicle_current_soc')
+                    or ChargerSimulation.soc_series_unit(current_soc_raw)
                 )
 
             charger_type = charger_config['type']

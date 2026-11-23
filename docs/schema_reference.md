@@ -330,7 +330,7 @@ interval, so they reflect the limit that was in force then.
 | Field | Unit | Purpose |
 |---|---:|---|
 | `charger_simulation` | path | Charger schedule file. |
-| `soc_unit` | `percent`, `fraction` | Optional, next to `charger_simulation`: the unit of the SOC columns of the schedule file. Omitted, it is inferred once for the whole file (see [SOC unit](dataset_reference.md#soc-unit)). |
+| `soc_unit` | `percent`, `fraction` | Optional, next to `charger_simulation`: the unit of the SOC columns of the schedule file. Omitted, it is inferred once per column from the whole file (see [SOC unit](dataset_reference.md#soc-unit)). |
 | `attributes.nominal_power` | kW | Rated power. Default of `max_charging_power`. |
 | `attributes.charger_type` | any | Descriptive label (for example 0 for AC, 1 for DC). No effect on the simulation. |
 | `attributes.max_charging_power` | kW | Charging upper limit. Defaults to `nominal_power`, or to 50 kW with a warning. |

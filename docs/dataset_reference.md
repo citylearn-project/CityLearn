@@ -42,7 +42,7 @@ communities of 4 to 100 members, each with evaluation scenarios.
 | PV with `generation_mode="absolute"` | kWh/step |
 | PV with `generation_mode="per_kw"` | W/kW |
 | BESS and charger power limits | kW |
-| EV required/estimated SOC in charger files | percent or ratio, one unit per file (see [SOC unit](#soc-unit)), converted to ratio internally |
+| EV required/estimated SOC in charger files | percent or ratio, one unit per column (see [SOC unit](#soc-unit)), converted to ratio internally |
 | Prices | currency/kWh |
 | DR request target power | kW |
 | DR request prices and penalties | currency/kWh |
@@ -115,12 +115,14 @@ For sub-hourly datasets, countdown fields must be expressed in timesteps at the 
 
 ### SOC unit
 
-The three SOC columns of a charger file share one unit. Under physics version 2 it is decided once
-for the whole file, not only the simulation window: the file is in percent if any SOC value is above
-1 (a rounding margin of 1e-6 is allowed, so `1.0000000000000013` in a ratio file stays a ratio), and
-in ratio otherwise. In a percent file a value of 1 is therefore 1 %. Negative values and blanks are
-missing. A file whose values are all between 0 and 1 is read as ratio; declare
-`"soc_unit": "percent"` on the charger in the schema if such a file is in percent. Physics version 1
+Each SOC column of a charger file has one unit. Under physics version 2 it is decided once from the
+whole column of the file, not only the simulation window: the column is in percent if any of its
+values is above 1 (a rounding margin of 1e-6 is allowed, so `1.0000000000000013` in a ratio column
+stays a ratio), and in ratio otherwise. In a percent column a value of 1 is therefore 1 %. Negative
+values and blanks are missing. The columns are decided separately, so `electric_vehicle_current_soc`
+may be in ratio while the targets are in percent. A column whose values are all between 0 and 1 is
+read as ratio; declare `"soc_unit": "percent"` on the charger in the schema if such a file is in
+percent (the declared unit applies to all its SOC columns). Physics version 1
 keeps the rule of CityLearn 3.6.0, value by value: a value in [0, 1] is a ratio and a value above 1 a
 percentage, so 1 (1 %) in a percent file was read as 100 %, unless the charger declares `soc_unit`
 ([#368](https://github.com/citylearn-project/CityLearn/issues/368)).

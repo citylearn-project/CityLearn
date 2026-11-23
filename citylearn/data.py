@@ -1349,10 +1349,11 @@ class ChargerSimulation(TimeSeriesData):
         Estimated SOC percentage at the time of arrival to the charger (only for state 2),
         normalized to the [0, 1] range and with optional Gaussian noise.
         Defaults to -0.1 when not present.
-    soc_unit : str
-        Unit of the two SOC columns: ``'percent'`` or ``'fraction'``. ``None`` (default) infers it
-        once from both columns with :py:meth:`soc_series_unit`; ``'per_value'`` is the value-by-value
-        rule of physics version 1. The schema loader infers it from the whole file.
+    soc_unit : str or Mapping[str, str]
+        Unit of the SOC columns, ``'percent'`` or ``'fraction'``, for both columns or per column
+        name. ``None`` (default) infers it once per column with :py:meth:`soc_series_unit`;
+        ``'per_value'`` is the value-by-value rule of physics version 1. The schema loader infers it
+        from the whole column of the file. The units used are in `soc_units`.
     """
 
     def __init__(
@@ -1369,7 +1370,7 @@ class ChargerSimulation(TimeSeriesData):
         noise_std: float = 1.0,
         noise_seed=None,
         noise_start_index=0,
-        soc_unit: str = None,
+        soc_unit: Union[str, Mapping[str, str]] = None,
     ):
         """Initialize ChargerSchedule from charger-centric EV CSV input."""
         super().__init__(start_time_step=start_time_step, end_time_step=end_time_step)
@@ -1381,18 +1382,20 @@ class ChargerSimulation(TimeSeriesData):
         default_time_value = -1
         default_soc_value = -0.1
 
-        # One unit for both SOC columns (#368). 'per_value' is the rule of physics version 1.
-        if soc_unit != 'per_value':
-            soc_unit = self.resolve_soc_unit(soc_unit)
+        # One unit per SOC column (#368), not per value. 'per_value' is the rule of physics version 1.
+        soc_columns = {
+            'electric_vehicle_required_soc_departure': electric_vehicle_required_soc_departure,
+            'electric_vehicle_estimated_soc_arrival': electric_vehicle_estimated_soc_arrival,
+        }
+        declared = dict(soc_unit) if isinstance(soc_unit, Mapping) else {c: soc_unit for c in soc_columns}
+        self.soc_units = {}
 
-        if soc_unit is None:
-            soc_unit = self.soc_series_unit(
-                electric_vehicle_required_soc_departure,
-                electric_vehicle_estimated_soc_arrival,
-                default_soc_value=default_soc_value,
+        for column, values in soc_columns.items():
+            unit = declared.get(column)
+            unit = unit if unit == 'per_value' else self.resolve_soc_unit(unit, path=f'soc_unit[{column!r}]')
+            self.soc_units[column] = (
+                self.soc_series_unit(values, default_soc_value=default_soc_value) if unit is None else unit
             )
-
-        self.soc_unit = soc_unit
 
         # A blank cell makes pandas read the column as floats (1.0, 2.0, NaN), so parse numbers, not digit
         # strings. Anything that is not a non-negative integer is no state (NaN).
@@ -1424,7 +1427,7 @@ class ChargerSimulation(TimeSeriesData):
             default_soc_value=default_soc_value,
             noise_std=self.noise_std,
             random_state=noise_random_state,
-            unit=soc_unit,
+            unit=self.soc_units['electric_vehicle_required_soc_departure'],
         )
 
         self.electric_vehicle_estimated_soc_arrival = self.normalize_soc_series(
@@ -1432,7 +1435,7 @@ class ChargerSimulation(TimeSeriesData):
             default_soc_value=default_soc_value,
             noise_std=self.noise_std,
             random_state=noise_random_state,
-            unit=soc_unit,
+            unit=self.soc_units['electric_vehicle_estimated_soc_arrival'],
         )
 
     @staticmethod
@@ -1516,7 +1519,7 @@ class ChargerSimulation(TimeSeriesData):
     #: Units of the SOC columns of a charger file, see :py:meth:`soc_series_unit`.
     SOC_UNITS = ('percent', 'fraction')
 
-    #: SOC columns of a charger file that share one unit.
+    #: SOC columns of a charger file; each has one unit.
     SOC_COLUMNS = (
         'electric_vehicle_required_soc_departure',
         'electric_vehicle_estimated_soc_arrival',
@@ -1529,10 +1532,10 @@ class ChargerSimulation(TimeSeriesData):
 
     @classmethod
     def soc_series_unit(cls, *series: Iterable[float], default_soc_value: float = -0.1) -> str:
-        """Unit of one or more SOC series: ``'percent'`` if any valid value is above 1, else ``'fraction'``.
+        """Unit of SOC values: ``'percent'`` if any valid value is above 1, else ``'fraction'``.
 
         Missing values (NaN, `default_soc_value` and negative sentinels) are ignored. The unit is
-        decided once for all the values together, so a single value such as 1 (1 %) in a file written
+        decided once for all the values together, so a single value such as 1 (1 %) in a column written
         in percent is not read as 1.0 (100 %).
         """
 

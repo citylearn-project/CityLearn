@@ -42,7 +42,7 @@ comunidades a 15 minutos, de 4 a 100 membros, cada uma com cenários de avaliaç
 | FV com `generation_mode="absolute"` | kWh/passo |
 | FV com `generation_mode="per_kw"` | W/kW |
 | Limites de potência de BESS e carregadores | kW |
-| SOC requerido/estimado dos VE nos ficheiros de carregadores | percentagem ou rácio, uma unidade por ficheiro (ver [unidade do SOC](#unidade-do-soc)), convertida internamente para rácio |
+| SOC requerido/estimado dos VE nos ficheiros de carregadores | percentagem ou rácio, uma unidade por coluna (ver [unidade do SOC](#unidade-do-soc)), convertida internamente para rácio |
 | Preços | moeda/kWh |
 | Potência alvo dos pedidos de DR | kW |
 | Preços e penalizações dos pedidos de DR | moeda/kWh |
@@ -115,13 +115,15 @@ Em datasets abaixo da hora, os campos de contagem decrescente têm de ser expres
 
 ### Unidade do SOC
 
-As três colunas de SOC de um ficheiro de carregador partilham uma unidade. Com a versão de física 2,
-é decidida uma vez para o ficheiro inteiro, e não apenas para a janela de simulação: o ficheiro está
-em percentagem se algum valor de SOC for superior a 1 (com uma margem de arredondamento de 1e-6, para
-que `1.0000000000000013` num ficheiro em rácio continue a ser rácio), e em rácio caso contrário. Num
-ficheiro em percentagem, o valor 1 é portanto 1 %. Valores negativos e células vazias são valores em
-falta. Um ficheiro com todos os valores entre 0 e 1 é lido como rácio; declare `"soc_unit": "percent"`
-no carregador do esquema se esse ficheiro estiver em percentagem. A versão de física 1 mantém a regra
+Cada coluna de SOC de um ficheiro de carregador tem uma unidade. Com a versão de física 2, é decidida
+uma vez a partir da coluna inteira do ficheiro, e não apenas da janela de simulação: a coluna está em
+percentagem se algum dos seus valores for superior a 1 (com uma margem de arredondamento de 1e-6, para
+que `1.0000000000000013` numa coluna em rácio continue a ser rácio), e em rácio caso contrário. Numa
+coluna em percentagem, o valor 1 é portanto 1 %. Valores negativos e células vazias são valores em
+falta. As colunas são decididas em separado, pelo que `electric_vehicle_current_soc` pode estar em
+rácio e as metas em percentagem. Uma coluna com todos os valores entre 0 e 1 é lida como rácio; declare
+`"soc_unit": "percent"` no carregador do esquema se esse ficheiro estiver em percentagem (a unidade
+declarada aplica-se a todas as suas colunas de SOC). A versão de física 1 mantém a regra
 do CityLearn 3.6.0, valor a valor: um valor em [0, 1] é um rácio e um valor acima de 1 uma
 percentagem, pelo que 1 (1 %) num ficheiro em percentagem era lido como 100 %, exceto se o carregador declarar `soc_unit`
 ([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
