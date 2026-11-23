@@ -4,6 +4,8 @@ Start with the [first simulation](https://www.citylearn.net/quickstart.html),
 then choose the conditions your controller should handle. Features are configured
 in the schema or environment arguments; the same simulation loop runs the episode.
 
+Portuguese version: [pt/features.md](pt/features.md).
+
 ## Buildings, thermal systems and storage
 
 A community contains buildings with electricity demand and optional cooling,

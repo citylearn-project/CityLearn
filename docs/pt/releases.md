@@ -635,7 +635,7 @@ Estão desligadas por omissão; os schemas e resultados existentes não mudam.
   A nova observação flat `available_grid_power` indica o limite do próximo
   intervalo quando há série, e as baselines baseadas em regras limitam com ela
   a margem de importação planeada. Os edifícios sem série não mudam. Ver a
-  [referência do schema](schema_reference.md#potencia-de-rede-disponivel).
+  [referência do schema](schema_reference.md#potência-de-rede-disponível).
   ([#216](https://github.com/citylearn-project/CityLearn/pull/216))
 - **Apoio do veículo ao edifício durante cortes (opcional).** Com
   `power_outage.vehicle_to_building: true`, um VE ligado pode descarregar para o
