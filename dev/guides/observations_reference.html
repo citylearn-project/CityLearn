@@ -470,11 +470,11 @@
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solar_generation</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
-<td><p>PV generation after PV mode conversion.</p></td>
+<td><p>PV generation after PV mode conversion, for the coming interval (row t+1 when the observation is for t+1), as a positive value. <code class="docutils literal notranslate"><span class="pre">Building.solar_generation</span></code> stores the same series as negative values.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">net_electricity_consumption</span></code></p></td>
 <td class="text-right"><p>kWh/step</p></td>
-<td><p>Import positive, export negative.</p></td>
+<td><p>Import positive, export negative, in the last settled interval (row t when the observation is for t+1).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">power_outage</span></code></p></td>
 <td class="text-right"><p>binary</p></td>

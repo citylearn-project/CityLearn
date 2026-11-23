@@ -175,16 +175,30 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>capacity</strong> (<em>float</em><em>, </em><em>default: 0.0</em>) – Maximum amount of energy the storage device can store in [kWh]. Must be &gt;= 0.</p></li>
 <li><p><strong>nominal_power</strong> (<em>float</em>) – Maximum amount of electric power that the battery can use to charge or discharge.</p></li>
-<li><p><strong>capacity_loss_coefficient</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default:</em><em> (</em><em>1e-5</em><em>, </em><em>1e-4</em><em>)</em>) – Battery degradation; storage capacity lost in each charge and discharge cycle (as a fraction of the total capacity).</p></li>
-<li><p><strong>power_efficiency_curve</strong> (<em>list</em><em>, </em><em>default:</em><em> [</em><em>[</em><em>0</em><em>, </em><em>0.83</em><em>]</em><em>,</em><em>[</em><em>0.3</em><em>, </em><em>0.83</em><em>]</em><em>,</em><em>[</em><em>0.7</em><em>, </em><em>0.9</em><em>]</em><em>,</em><em>[</em><em>0.8</em><em>, </em><em>0.9</em><em>]</em><em>,</em><em>[</em><em>1</em><em>, </em><em>0.85</em><em>]</em><em>]</em>) – Charging/Discharging efficiency as a function of nominal power.</p></li>
-<li><p><strong>capacity_power_curve</strong> (<em>list</em><em>, </em><em>default:</em><em> [</em><em>[</em><em>0.0</em><em>, </em><em>1</em><em>]</em><em>,</em><em>[</em><em>0.8</em><em>, </em><em>1</em><em>]</em><em>,</em><em>[</em><em>1.0</em><em>, </em><em>0.2</em><em>]</em><em>]</em>) – Maximum charging power of the battery, as a fraction of <cite>nominal_power</cite>, as a function of its current state
-of charge.</p></li>
-<li><p><strong>depth_of_discharge</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default: 1.0</em>) – Maximum fraction of the battery that can be discharged relative to the total battery capacity.</p></li>
-<li><p><strong>discharge_power_curve</strong> (<em>list</em><em>, </em><em>default:</em><em> [</em><em>[</em><em>0.0</em><em>, </em><em>1.0</em><em>]</em><em>, </em><em>[</em><em>1.0</em><em>, </em><em>1.0</em><em>]</em><em>]</em>) – Maximum discharging power of the battery, as a fraction of <cite>nominal_power</cite>, as a function of its current
-state of charge. The default discharges at <cite>nominal_power</cite> at any state of charge.</p></li>
+<li><p><strong>capacity_loss_coefficient</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default:</em><em> (</em><em>1e-5</em><em>, </em><em>1e-4</em><em>)</em>) – Battery degradation: fraction of <cite>capacity</cite> lost per equivalent full cycle. The loss in a step is
+<code class="docutils literal notranslate"><span class="pre">capacity_loss_coefficient</span> <span class="pre">*</span> <span class="pre">capacity</span> <span class="pre">*</span> <span class="pre">|terminal</span> <span class="pre">energy|</span> <span class="pre">/</span> <span class="pre">(2</span> <span class="pre">*</span> <span class="pre">degraded_capacity)</span></code>.</p></li>
+<li><p><strong>power_efficiency_curve</strong> (<em>list</em><em>, </em><em>optional</em>) – Round-trip efficiency as a function of the terminal power divided by <cite>nominal_power</cite>, as <code class="docutils literal notranslate"><span class="pre">[[x,</span> <span class="pre">y],</span> <span class="pre">...]</span></code>
+points. Each conversion uses the square root of the interpolated value. When omitted, a five-point curve is
+drawn from the random stream around <cite>efficiency</cite> (x points near 0, 0.3, 0.7, 0.8 and 1, values between
+0.85 and 1.0 times <cite>efficiency</cite>), so it depends on the seed.</p></li>
+<li><p><strong>capacity_power_curve</strong> (<em>list</em><em>, </em><em>optional</em>) – Maximum charging power of the battery, as a fraction of <cite>nominal_power</cite>, as a function of the state of charge
+at the start of the step. When omitted, a three-point curve is drawn from the random stream (0.95 to 1.0 at an
+empty battery, 0.9 to 0.95 near 0.8 state of charge and 0.2 to 0.3 when full), so it depends on the seed.</p></li>
+<li><p><strong>depth_of_discharge</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default: 1.0</em>) – Maximum fraction of <cite>capacity</cite> that can be discharged. Discharging stops at a state of charge of
+<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">depth_of_discharge</span></code>. It also sets the default <cite>initial_soc</cite>.</p></li>
+<li><p><strong>discharge_power_curve</strong> (<em>list</em><em>, </em><em>default:</em><em> [</em><em>[</em><em>0.0</em><em>, </em><em>1.0</em><em>]</em><em>, </em><em>[</em><em>1.0</em><em>, </em><em>1.0</em><em>]</em><em>]</em>) – Maximum discharging power of the battery, as a fraction of <cite>nominal_power</cite>, as a function of the state of
+charge at the start of the step. The default discharges at <cite>nominal_power</cite> at any state of charge.</p></li>
+<li><p><strong>time_step_ratio</strong> (<em>float</em><em>, </em><em>default: 1.0</em>) – Ratio of the control step to the dataset step.</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Energies here are per control step, at the battery terminals (the building side). <cite>efficiency</cite> is a
+round-trip value and each conversion keeps its square root, so charging <span class="math notranslate nohighlight">\(E\)</span> stores
+<span class="math notranslate nohighlight">\(E\sqrt{\eta}\)</span> and discharging <span class="math notranslate nohighlight">\(E\)</span> takes <span class="math notranslate nohighlight">\(E/\sqrt{\eta}\)</span> from storage, where
+<span class="math notranslate nohighlight">\(\eta\)</span> is read from <cite>power_efficiency_curve</cite> at the applied power. Charging is limited by
+<cite>capacity_power_curve</cite> and by the degraded capacity; discharging by <cite>discharge_power_curve</cite> and by the
+floor <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">-</span> <span class="pre">depth_of_discharge)</span> <span class="pre">*</span> <span class="pre">capacity</span></code>. If <cite>initial_soc</cite> is omitted, the battery starts at that floor.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.legacy_discharge_power_limit">
 <span class="sig-name descname"><span class="pre">legacy_discharge_power_limit</span></span><a class="headerlink" href="#citylearn.energy_model.Battery.legacy_discharge_power_limit" title="Link to this definition"></a></dt>
@@ -262,13 +276,23 @@ a building’s battery. If the dataframe is not provided it is read in using
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.capacity_loss_coefficient">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">capacity_loss_coefficient</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.capacity_loss_coefficient" title="Link to this definition"></a></dt>
-<dd><p>Battery degradation; storage capacity lost in each charge and discharge cycle (as a fraction of the total capacity).</p>
+<dd><p>fraction of <cite>capacity</cite> lost per equivalent full cycle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Battery degradation</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.capacity_power_curve">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">capacity_power_curve</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.capacity_power_curve" title="Link to this definition"></a></dt>
-<dd><p>Maximum power of the battery as a function of its current state of charge.</p>
+<dd><p>state of charge in row 0, maximum power as a fraction of <cite>nominal_power</cite> in row 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Charging power curve as a 2 x N array</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -310,7 +334,7 @@ limitations, losses to the environment quantified by <cite>efficiency</cite>, <c
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.depth_of_discharge">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">depth_of_discharge</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.depth_of_discharge" title="Link to this definition"></a></dt>
-<dd><p>Maximum fraction of the battery that can be discharged relative to the total battery capacity.</p>
+<dd><p>Maximum fraction of <cite>capacity</cite> that can be discharged; the state of charge stays at or above <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">depth_of_discharge</span></code>.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -386,7 +410,7 @@ curve, <cite>capacity_power_curve</cite>, as in CityLearn 3.6.0 and earlier.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.initial_soc">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initial_soc</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.initial_soc" title="Link to this definition"></a></dt>
-<dd><p>State of charge when <cite>time_step</cite> = 0 in [kWh].</p>
+<dd><p>State of charge when <cite>time_step</cite> = 0, as a fraction of <cite>capacity</cite> in [0, 1].</p>
 </dd></dl>
 
 <dl class="py method">
@@ -400,7 +424,12 @@ curve, <cite>capacity_power_curve</cite>, as in CityLearn 3.6.0 and earlier.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.power_efficiency_curve">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">power_efficiency_curve</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.power_efficiency_curve" title="Link to this definition"></a></dt>
-<dd><p>Charging/Discharging efficiency as a function of the nomianl power.</p>
+<dd><p>terminal power divided by <cite>nominal_power</cite> in row 0, efficiency in row 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Round-trip efficiency curve as a 2 x N array</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -446,7 +475,7 @@ it. A user-supplied curve is left unchanged.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.Battery.time_step_ratio">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.Battery.time_step_ratio" title="Link to this definition"></a></dt>
-<dd><p>Maximum power of the battery as a function of its current state of charge.</p>
+<dd><p>Ratio of the control step to the dataset step.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1087,7 +1116,7 @@ a building’s PV. If the dataframe is not provided it is read in using
 <dd><p>Get solar generation output in kWh per active time step.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inverter_ac_power_perk_w</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em>) – Inverter AC power output per kW of PV capacity in [W/kW] when
+<dd class="field-odd"><p><strong>inverter_ac_power_per_kw</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Iterable</em><em>[</em><em>float</em><em>]</em><em>]</em>) – Inverter AC power output per kW of PV capacity in [W/kW] when
 <code class="docutils literal notranslate"><span class="pre">generation_mode='per_kw'</span></code>. Absolute PV generation in [kWh/step]
 when <code class="docutils literal notranslate"><span class="pre">generation_mode='absolute'</span></code>.</p>
 </dd>
@@ -1100,7 +1129,7 @@ when <code class="docutils literal notranslate"><span class="pre">generation_mod
 </dl>
 <p class="rubric">Notes</p>
 <div class="math notranslate nohighlight">
-\[\textrm{generation} = \frac{\textrm{capacity} \times \textrm{inverter_ac_power_per_w}}{1000} \times \Delta t\]</div>
+\[\textrm{generation} = \frac{\textrm{nominal_power} \times \textrm{inverter_ac_power_per_kw}}{1000} \times \frac{\textrm{seconds_per_time_step}}{3600}\]</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1120,9 +1149,13 @@ when <code class="docutils literal notranslate"><span class="pre">generation_mod
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>capacity</strong> (<em>float</em><em>, </em><em>default: 0.0</em>) – Maximum amount of energy the storage device can store in [kWh]. Must be &gt;= 0.</p></li>
-<li><p><strong>efficiency</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default:</em><em> (</em><em>0.90</em><em>, </em><em>0.98</em><em>)</em>) – Technical efficiency.</p></li>
-<li><p><strong>loss_coefficient</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default:</em><em> (</em><em>0.001</em><em>, </em><em>0.009</em><em>)</em>) – Standby hourly losses. Must be between 0 and 1 (this value is often 0 or really close to 0).</p></li>
-<li><p><strong>initial_soc</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default: 0.0</em>) – State of charge when <cite>time_step</cite> = 0. Must be &gt;= 0 and &lt; <cite>capacity</cite>.</p></li>
+<li><p><strong>efficiency</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default:</em><em> (</em><em>0.90</em><em>, </em><em>0.98</em><em>)</em>) – Round-trip efficiency. Each charge or discharge conversion uses its square root,
+<cite>one_way_efficiency</cite>.</p></li>
+<li><p><strong>loss_coefficient</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default:</em><em> (</em><em>0.001</em><em>, </em><em>0.009</em><em>)</em>) – Standby losses as a fraction of the stored energy per hour. Must be between 0 and 1 (this value is often 0
+or really close to 0). The loss per step is compounded: <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">loss_coefficient)**(seconds_per_time_step/3600)</span></code>.</p></li>
+<li><p><strong>initial_soc</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em><em>, </em><em>default: 0.0</em>) – State of charge when <cite>time_step</cite> = 0, as a fraction of <cite>capacity</cite> in [0, 1]. <a class="reference internal" href="#citylearn.energy_model.Battery" title="citylearn.energy_model.Battery"><code class="xref py py-class docutils literal notranslate"><span class="pre">Battery</span></code></a> overrides
+the default with <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">depth_of_discharge</span></code>.</p></li>
+<li><p><strong>time_step_ratio</strong> (<em>float</em><em>, </em><em>default: 1.0</em>) – Ratio of the control step to the dataset step.</p></li>
 <li><p><strong>**kwargs</strong> (<em>Any</em>) – Other keyword arguments used to initialize super class.</p></li>
 </ul>
 </dd>
@@ -1217,7 +1250,7 @@ only for hourly steps. Defaults to the latest version.</p></li>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.initial_soc">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initial_soc</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.StorageDevice.initial_soc" title="Link to this definition"></a></dt>
-<dd><p>State of charge when <cite>time_step</cite> = 0 in [kWh].</p>
+<dd><p>State of charge when <cite>time_step</cite> = 0, as a fraction of <cite>capacity</cite> in [0, 1].</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1304,7 +1337,7 @@ standby losses and exogenous SOC assignments such as vehicle arrivals.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageDevice.time_step_ratio">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_step_ratio</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.StorageDevice.time_step_ratio" title="Link to this definition"></a></dt>
-<dd><p>Maximum amount of energy the storage device can store in [kWh].</p>
+<dd><p>Ratio of the control step to the dataset step.</p>
 </dd></dl>
 
 </dd></dl>

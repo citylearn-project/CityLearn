@@ -189,8 +189,10 @@ temperature. Comfort and outage indicators report the resulting service.</p>
 <code class="docutils literal notranslate"><span class="pre">kWh/step</span></code> with <code class="docutils literal notranslate"><span class="pre">generation_mode=&quot;absolute&quot;</span></code>. Stationary batteries have capacity,
 SOC, charging/discharging power, efficiency and degradation parameters. Positive
 storage actions charge and negative actions discharge; physical and connection
-limits determine the applied energy.</p>
+limits determine the applied energy. Battery efficiencies are round-trip values, and
+power curves left out of the schema are drawn from the random stream.</p>
 <p>See <a class="reference internal" href="schema_reference.html#pv"><span class="std std-ref">PV configuration</span></a>, the
+<a class="reference internal" href="schema_reference.html#battery"><span class="std std-ref">battery model</span></a>, the
 <a class="reference internal" href="data_unit_contract.html"><span class="std std-doc">unit contract</span></a> and <a class="reference internal" href="actions_reference.html#physical-conversion"><span class="std std-ref">storage actions</span></a>.</p>
 </section>
 <section id="electric-vehicles-and-chargers">
@@ -316,8 +318,9 @@ Transformer controllers supplied by the researcher.</p>
 <section id="multiple-communities">
 <h2>Multiple communities<a class="headerlink" href="#multiple-communities" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">MultiCommunityEnv</span></code> steps independent communities in lockstep and reports local
-and portfolio results. Children share timestep, episode length, interface and
-central-agent mode. Each keeps its own physical state, DR requests and settlement.
+and portfolio results. Children share timestep, episode length, interface,
+central-agent mode, <code class="docutils literal notranslate"><span class="pre">physics_version</span></code>, <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code> and
+<code class="docutils literal notranslate"><span class="pre">baseline_version</span></code>. Each keeps its own physical state, DR requests and settlement.
 The wrapper aggregates results; it does not physically transfer energy between
 communities or optimize inter-community dispatch.</p>
 <p>The <a class="reference internal" href="multi_community_reference.html"><span class="std std-doc">multi-community guide</span></a> includes a complete

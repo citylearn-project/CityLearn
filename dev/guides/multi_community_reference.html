@@ -232,6 +232,17 @@
 <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"communities"</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span> <span class="s2">"time_step"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">reset(seed=...,</span> <span class="pre">options=...)</span></code> passes <code class="docutils literal notranslate"><span class="pre">seed</span></code> to every child. <code class="docutils literal notranslate"><span class="pre">options</span></code> can hold one
+mapping per community, keyed by <code class="docutils literal notranslate"><span class="pre">community_id</span></code>; a community without its own entry
+receives the whole <code class="docutils literal notranslate"><span class="pre">options</span></code> mapping:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># community_a replays episode 2. community_b has no entry, so it receives the</span>
+<span class="c1"># whole mapping and replays episode 0.</span>
+<span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"community_a"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"episode_index"</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span> <span class="s2">"episode_index"</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+
+<span class="c1"># The same options for every child.</span>
+<span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"episode_index"</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+</pre></div>
+</div>
 <p><code class="docutils literal notranslate"><span class="pre">step(actions)</span></code> expects one child action payload per community:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">actions</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"community_a"</span><span class="p">:</span> <span class="n">child_actions</span><span class="p">,</span> <span class="s2">"community_b"</span><span class="p">:</span> <span class="n">child_actions</span><span class="p">}</span>
 </pre></div>
@@ -293,9 +304,22 @@
 <tr class="row-odd"><td><p>Same <code class="docutils literal notranslate"><span class="pre">central_agent</span></code> mode</p></td>
 <td><p>Avoids mixing centralized and decentralized reward/action semantics.</p></td>
 </tr>
+<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">physics_version</span></code></p></td>
+<td><p>Portfolio totals add up district values, so every community must simulate the same physics.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Same <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code></p></td>
+<td><p>Randomly drawn defaults (battery curves, efficiencies, noise) must come from the same stream definition for the totals to be comparable.</p></td>
+</tr>
+<tr class="row-even"><td><p>Same <code class="docutils literal notranslate"><span class="pre">baseline_version</span></code></p></td>
+<td><p>Portfolio baseline KPIs add up district baselines, so the baseline definition must match.</p></td>
+</tr>
 </tbody>
 </table>
-<p>The wrapper validates these conditions at construction and again after reset.</p>
+<p>The wrapper validates these conditions at construction and again after reset, and
+raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the setting, for example:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ValueError: MultiCommunityEnv requires all communities to share physics_version, got {'A': 2, 'B': 1}.
+</pre></div>
+</div>
 <p>Calendar windows are not part of the contract. Each child selects its episode
 split from its own simulation window, <code class="docutils literal notranslate"><span class="pre">random_episode_split</span></code> setting and
 <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>, so communities can simulate different dates at the same step.

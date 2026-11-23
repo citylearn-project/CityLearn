@@ -78,6 +78,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#buildings"><code class="docutils literal notranslate"><span class="pre">buildings</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#device-sections">Device Sections</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pv">PV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#battery">Battery</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#electrical-service">Electrical Service</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#available-grid-power">Available grid power</a></li>
 </ul>
@@ -862,7 +863,7 @@ load or PV truth.</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">per_kw</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">profile</span></code>, <code class="docutils literal notranslate"><span class="pre">w_per_kw</span></code></p></td>
 <td><p>Normalized profile per installed kW in <code class="docutils literal notranslate"><span class="pre">W/kW</span></code>.</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">generation_kwh</span> <span class="pre">=</span> <span class="pre">nominal_power</span> <span class="pre">*</span> <span class="pre">value</span> <span class="pre">/</span> <span class="pre">1000</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">generation_kwh</span> <span class="pre">=</span> <span class="pre">nominal_power</span> <span class="pre">*</span> <span class="pre">value</span> <span class="pre">/</span> <span class="pre">1000</span> <span class="pre">*</span> <span class="pre">seconds_per_time_step</span> <span class="pre">/</span> <span class="pre">3600</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">absolute</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">absolute_kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">kwh</span></code>, <code class="docutils literal notranslate"><span class="pre">kwh_step</span></code>, <code class="docutils literal notranslate"><span class="pre">energy</span></code></p></td>
@@ -872,6 +873,117 @@ load or PV truth.</p>
 </tbody>
 </table>
 <p>Use <code class="docutils literal notranslate"><span class="pre">absolute</span></code> for real measured generation or converter-generated energy series. Use <code class="docutils literal notranslate"><span class="pre">per_kw</span></code> for normalized PV profiles.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">nominal_power=4.0</span></code> and a value of 1000 W/kW give 4.0 kWh per hourly step and
+1.0 kWh per 900 s step.</p>
+</section>
+<section id="battery">
+<h2>Battery<a class="headerlink" href="#battery" title="Link to this heading"></a></h2>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">"electrical_storage"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"citylearn.energy_model.Battery"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"capacity"</span><span class="p">:</span><span class="w"> </span><span class="mf">6.4</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"nominal_power"</span><span class="p">:</span><span class="w"> </span><span class="mf">5.0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"efficiency"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"depth_of_discharge"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"initial_soc"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"capacity_loss_coefficient"</span><span class="p">:</span><span class="w"> </span><span class="mf">1e-5</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"loss_coefficient"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"power_efficiency_curve"</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.83</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="mf">0.83</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.7</span><span class="p">,</span><span class="w"> </span><span class="mf">0.9</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.8</span><span class="p">,</span><span class="w"> </span><span class="mf">0.9</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0.85</span><span class="p">]],</span>
+<span class="w">    </span><span class="nt">"capacity_power_curve"</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">0.8</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">],</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">]]</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The stationary battery model works on energy per control step at the battery terminals, the
+building side of the battery. The state of charge (SOC) is a fraction of <code class="docutils literal notranslate"><span class="pre">capacity</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head text-right"><p>Unit</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">capacity</span></code></p></td>
+<td class="text-right"><p>kWh</p></td>
+<td><p>0</p></td>
+<td><p>Rated storage capacity, before fade.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nominal_power</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>0</p></td>
+<td><p>Power that the curves scale.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">efficiency</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>drawn in [0.90, 0.98]</p></td>
+<td><p>Round-trip efficiency. A generated <code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code> is built around it; during the simulation the curve gives the efficiency at each step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[[x,</span> <span class="pre">y],</span> <span class="pre">...]</span></code></p></td>
+<td><p>drawn, see below</p></td>
+<td><p>Round-trip efficiency <code class="docutils literal notranslate"><span class="pre">y</span></code> against terminal power divided by <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> (<code class="docutils literal notranslate"><span class="pre">x</span></code> in [0, 1]).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[[x,</span> <span class="pre">y],</span> <span class="pre">...]</span></code></p></td>
+<td><p>drawn, see below</p></td>
+<td><p>Maximum charging power as a fraction of <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> (<code class="docutils literal notranslate"><span class="pre">y</span></code>) against SOC (<code class="docutils literal notranslate"><span class="pre">x</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">discharge_power_curve</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">[[x,</span> <span class="pre">y],</span> <span class="pre">...]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[[0,</span> <span class="pre">1],</span> <span class="pre">[1,</span> <span class="pre">1]]</span></code></p></td>
+<td><p>Maximum discharging power as a fraction of <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> against SOC. Physics version 1 uses <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> instead.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">depth_of_discharge</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>1.0</p></td>
+<td><p>Fraction of <code class="docutils literal notranslate"><span class="pre">capacity</span></code> that may be discharged.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">initial_soc</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">depth_of_discharge</span></code></p></td>
+<td><p>SOC at the start of the episode, in [0, 1].</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">capacity_loss_coefficient</span></code></p></td>
+<td class="text-right"><p>ratio</p></td>
+<td><p>drawn in [1e-5, 1e-4]</p></td>
+<td><p>Fraction of <code class="docutils literal notranslate"><span class="pre">capacity</span></code> lost per equivalent full cycle.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code></p></td>
+<td class="text-right"><p>ratio per hour</p></td>
+<td><p>drawn in [0.001, 0.009]</p></td>
+<td><p>Standby loss of the stored energy, see <a class="reference internal" href="#ev-definitions"><span class="std std-ref">EV definitions</span></a> for the per-step formula.</p></td>
+</tr>
+</tbody>
+</table>
+<p>A default shown as “drawn” is taken from the environment’s random stream when the attribute is
+omitted, so it depends on the seed and on <code class="docutils literal notranslate"><span class="pre">random_stream_version</span></code>. The 2022 challenge datasets
+omit both curves, so each seed gets different curves. Set the attributes explicitly to fix them.</p>
+<ul class="simple">
+<li><p><strong>Efficiency.</strong> <code class="docutils literal notranslate"><span class="pre">efficiency</span></code> and every value of <code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code> are round-trip
+efficiencies: energy charged and later discharged keeps <code class="docutils literal notranslate"><span class="pre">efficiency</span></code> of its value. Each
+conversion uses the square root. Charging <code class="docutils literal notranslate"><span class="pre">E</span></code> kWh at the terminals stores <code class="docutils literal notranslate"><span class="pre">E</span> <span class="pre">*</span> <span class="pre">sqrt(eta)</span></code>,
+and delivering <code class="docutils literal notranslate"><span class="pre">E</span></code> kWh takes <code class="docutils literal notranslate"><span class="pre">E</span> <span class="pre">/</span> <span class="pre">sqrt(eta)</span></code> from storage, where <code class="docutils literal notranslate"><span class="pre">eta</span></code> is read from
+<code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code> at the applied terminal power. A datasheet one-way efficiency of
+0.95 must be entered as 0.95² = 0.9025; entered as 0.95, it gives a one-way efficiency of
+about 0.975.</p></li>
+<li><p><strong>Power curves.</strong> <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code> and <code class="docutils literal notranslate"><span class="pre">discharge_power_curve</span></code> are evaluated at the SOC
+at the start of the step, and their values are multiplied by <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code>. Between points
+the curves are interpolated linearly.</p></li>
+<li><p><strong>Depth of discharge.</strong> Discharging stops at a SOC of <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">depth_of_discharge</span></code>, a floor
+measured on the rated <code class="docutils literal notranslate"><span class="pre">capacity</span></code>. Charging stops at the degraded capacity.</p></li>
+<li><p><strong>Capacity fade.</strong> After each charge or discharge the capacity falls by
+<code class="docutils literal notranslate"><span class="pre">capacity_loss_coefficient</span> <span class="pre">*</span> <span class="pre">capacity</span> <span class="pre">*</span> <span class="pre">|terminal</span> <span class="pre">energy|</span> <span class="pre">/</span> <span class="pre">(2</span> <span class="pre">*</span> <span class="pre">degraded</span> <span class="pre">capacity)</span></code>. A full
+charge and discharge of the degraded capacity is one equivalent full cycle and loses
+<code class="docutils literal notranslate"><span class="pre">capacity_loss_coefficient</span> <span class="pre">*</span> <span class="pre">capacity</span></code>.</p></li>
+<li><p><strong>Generated curves.</strong> Without <code class="docutils literal notranslate"><span class="pre">power_efficiency_curve</span></code>, five points are drawn at <code class="docutils literal notranslate"><span class="pre">x</span></code> near 0,
+0.3, 0.7, 0.8 and 1, with values between 0.85 and 1.0 times <code class="docutils literal notranslate"><span class="pre">efficiency</span></code> (the point near 0.8
+equals <code class="docutils literal notranslate"><span class="pre">efficiency</span></code>). Without <code class="docutils literal notranslate"><span class="pre">capacity_power_curve</span></code>, three points are drawn: 0.95 to 1.0 at
+SOC 0, 0.90 to 0.95 at a SOC near 0.8, and 0.20 to 0.30 at SOC 1.</p></li>
+<li><p>With the default <code class="docutils literal notranslate"><span class="pre">initial_soc</span></code>, a battery starts at its reserve: empty when
+<code class="docutils literal notranslate"><span class="pre">depth_of_discharge</span></code> is 1. Set <code class="docutils literal notranslate"><span class="pre">initial_soc</span></code> to start elsewhere.</p></li>
+</ul>
 </section>
 <section id="electrical-service">
 <h2>Electrical Service<a class="headerlink" href="#electrical-service" title="Link to this heading"></a></h2>
@@ -1078,7 +1190,7 @@ and <code class="docutils literal notranslate"><span class="pre">nominal_power</
 <ul class="simple">
 <li><p>Missing or <code class="docutils literal notranslate"><span class="pre">null</span></code> <code class="docutils literal notranslate"><span class="pre">battery.attributes.loss_coefficient</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code> for EVs.</p></li>
 <li><p>Explicit EV <code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code> values are interpreted as hourly loss ratios.</p></li>
-<li><p>All <code class="docutils literal notranslate"><span class="pre">StorageDevice</span></code> implementations, including stationary <code class="docutils literal notranslate"><span class="pre">Battery</span></code> and <code class="docutils literal notranslate"><span class="pre">StorageTank</span></code>, convert hourly <code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code> values to effective per-step loss with <code class="docutils literal notranslate"><span class="pre">loss_coefficient</span> <span class="pre">*</span> <span class="pre">seconds_per_time_step</span> <span class="pre">/</span> <span class="pre">3600</span></code>.</p></li>
+<li><p>All <code class="docutils literal notranslate"><span class="pre">StorageDevice</span></code> implementations, including stationary <code class="docutils literal notranslate"><span class="pre">Battery</span></code> and <code class="docutils literal notranslate"><span class="pre">StorageTank</span></code>, convert hourly <code class="docutils literal notranslate"><span class="pre">loss_coefficient</span></code> values to an effective per-step loss compounded over the step: <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">loss_coefficient)</span> <span class="pre">**</span> <span class="pre">(seconds_per_time_step</span> <span class="pre">/</span> <span class="pre">3600)</span></code>.</p></li>
 <li><p>Stationary storage default parameter ranges are unchanged.</p></li>
 </ul>
 </section>
