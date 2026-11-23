@@ -172,6 +172,25 @@
     <span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">:</span> <span class="n">Env</span><span class="p">,</span> <span class="n">wrapper_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raise a clear error when a flat-vector wrapper is put around an entity-interface environment.</span>
+
+<span class="sd">    These wrappers read and return the flat lists of :py:class:`citylearn.citylearn.CityLearnEnv`. With</span>
+<span class="sd">    `interface='entity'` the environment returns dictionaries of tables instead, which they would misread.</span>
+<span class="sd">    """</span>
+
+    <span class="n">interface</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="p">,</span> <span class="s1">'interface'</span><span class="p">,</span> <span class="s1">'flat'</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">interface</span> <span class="o">!=</span> <span class="s1">'flat'</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">wrapper_name</span><span class="si">}</span><span class="s2"> needs interface='flat', but the environment uses interface='</span><span class="si">{</span><span class="n">interface</span><span class="si">}</span><span class="s2">'. "</span>
+            <span class="s2">"Several bundled datasets, such as pt_rec_* and the three-phase demos, default to the entity interface. "</span>
+            <span class="s2">"Create the environment with CityLearnEnv(schema, interface='flat', ...), or pass "</span>
+            <span class="s2">"-ke '{</span><span class="se">\"</span><span class="s2">interface</span><span class="se">\"</span><span class="s2">: </span><span class="se">\"</span><span class="s2">flat</span><span class="se">\"</span><span class="s2">}' to the CLI. Dynamic topology and demand response need the entity "</span>
+            <span class="s2">"interface, so these wrappers cannot be used with them."</span>
+        <span class="p">)</span>
+
+
 <div class="viewcode-block" id="DiscreteCombinations">
 <a class="viewcode-back" href="../../api/citylearn.wrappers.html#citylearn.wrappers.DiscreteCombinations">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DiscreteCombinations</span><span class="p">(</span><span class="n">Sequence</span><span class="p">):</span>
@@ -284,6 +303,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
 
@@ -318,6 +338,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
 
@@ -508,6 +529,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
         
@@ -591,6 +613,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
         <span class="k">assert</span> <span class="n">bin_sizes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">),</span> <span class="s1">'length of bin_size must equal number of buildings.'</span>
@@ -718,6 +741,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
         <span class="k">assert</span> <span class="n">bin_sizes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_sizes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">buildings</span><span class="p">),</span> <span class="s1">'length of bin_size must equal number of buildings.'</span>
@@ -812,6 +836,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">DiscreteObservationWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="o">=</span><span class="n">bin_sizes</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="o">=</span><span class="n">default_bin_size</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
@@ -866,6 +891,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">DiscreteActionWrapper</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="n">bin_sizes</span><span class="o">=</span><span class="n">bin_sizes</span><span class="p">,</span> <span class="n">default_bin_size</span><span class="o">=</span><span class="n">default_bin_size</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">env</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span>
@@ -946,6 +972,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'StableBaselines3ObservationWrapper is compatible only when env.central_agent = True.'</span>\
             <span class="s1">' First set env.central_agent = True to use this wrapper.'</span>
         
@@ -983,6 +1010,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'StableBaselines3ActionWrapper is compatible only when env.central_agent = True.'</span>\
             <span class="s1">' First set env.central_agent = True to use this wrapper.'</span>
         
@@ -1020,6 +1048,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'StableBaselines3RewardWrapper is compatible only when env.central_agent = True.'</span>\
             <span class="s1">' First set env.central_agent = True to use this wrapper.'</span>
         
@@ -1119,6 +1148,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="k">assert</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'RLlibMultiAgentObservationWrapper is'</span>\
             <span class="s1">' compatible only when env.central_agent = False.'</span>\
                 <span class="s1">' First set env.central_agent = False to use this wrapper.'</span>
@@ -1160,6 +1190,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="k">assert</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'RLlibMultiAgentActionWrapper is'</span>\
             <span class="s1">' compatible only when env.central_agent = False.'</span>\
                 <span class="s1">' First set env.central_agent = False to use this wrapper.'</span>
@@ -1197,6 +1228,7 @@
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env</span><span class="p">:</span> <span class="n">CityLearnEnv</span><span class="p">):</span>
+        <span class="n">_require_flat_interface</span><span class="p">(</span><span class="n">env</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
         <span class="k">assert</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">unwrapped</span><span class="o">.</span><span class="n">central_agent</span><span class="p">,</span> <span class="s1">'RLlibMultiAgentRewardWrapper is'</span>\
             <span class="s1">' compatible only when env.central_agent = False.'</span>\
                 <span class="s1">' First set env.central_agent = False to use this wrapper.'</span>

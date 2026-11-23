@@ -204,6 +204,13 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">env</span> <span class="o">=</span> <span class="n">CityLearnEnv</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="s2">"flat"</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>The wrappers in <code class="docutils literal notranslate"><span class="pre">citylearn.wrappers</span></code> (normalisation, discretisation, Stable
+Baselines3 and RLlib) read and return these flat vectors, so they need
+<code class="docutils literal notranslate"><span class="pre">interface=&quot;flat&quot;</span></code> and raise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> on an entity environment. The
+<code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code>, three-phase, demand-response and robustness datasets default to the
+entity interface: pass <code class="docutils literal notranslate"><span class="pre">interface=&quot;flat&quot;</span></code> to use them with the wrappers. Dynamic
+topology and demand response need the entity interface, so the wrappers cannot
+be used with them.</p>
 <p>With <code class="docutils literal notranslate"><span class="pre">central_agent=False</span></code>, observations are one vector per building:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">observations</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">[</span><span class="n">building_1_feature_1</span><span class="p">,</span> <span class="n">building_1_feature_2</span><span class="p">],</span>
