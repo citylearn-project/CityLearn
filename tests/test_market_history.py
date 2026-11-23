@@ -13,6 +13,7 @@ from pandas.testing import assert_frame_equal
 from citylearn.internal.kpi import CityLearnKPIService
 from citylearn.internal.market_history import FIELDS, MarketSettlementHistory
 from test_evaluation_progress import completed_env
+from private_access import market_settlement_history
 
 
 def record(name='house / 001', value=0.1):
@@ -92,7 +93,7 @@ def test_random_edits_empty_steps_members_and_totals_match_list_exactly():
 def test_native_kpis_exports_and_reset_match_materialized_history(tmp_path, dynamic, robust):
     env = completed_env(tmp_path, dynamic=dynamic, robust=robust)
     try:
-        compact = env._community_market_settlement_history
+        compact = market_settlement_history(env)
         assert isinstance(compact, MarketSettlementHistory)
         expected_rows = list(compact)
         compact_frame = env.evaluate_v2(include_business_as_usual=False)
@@ -105,14 +106,14 @@ def test_native_kpis_exports_and_reset_match_materialized_history(tmp_path, dyna
         assert env._last_community_market_settlement == last == expected_rows[-1]
         env._community_market_settlement_history = compact
         env.reset(seed=19)
-        assert isinstance(env._community_market_settlement_history, MarketSettlementHistory)
+        assert isinstance(market_settlement_history(env), MarketSettlementHistory)
         # Reset settles the initial t=0 interval, as the legacy runtime did.
-        reset_history = env._community_market_settlement_history
+        reset_history = market_settlement_history(env)
         assert len(reset_history) == 1
         assert reset_history[0] == env._last_community_market_settlement
         names = [b.name for b in env.buildings]
         assert reset_history.market_totals(names) == legacy_totals(list(reset_history), names)
-        assert env._community_market_settlement_history is not compact
+        assert market_settlement_history(env) is not compact
         assert list(compact) == expected_rows
     finally:
         env.close()

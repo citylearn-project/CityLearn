@@ -25,6 +25,7 @@ from citylearn.internal.physics_version import (
     resolve_physics_version,
 )
 from citylearn.internal.runtime import CityLearnRuntimeService
+from private_access import baseline_service
 
 ROOT = Path(__file__).resolve().parents[1]
 DATASETS = ROOT / 'data' / 'datasets'
@@ -80,7 +81,7 @@ def test_environment_argument_overrides_schema_and_reaches_buildings_metadata_an
     assert [building.physics_version for building in overridden.buildings] == [2]
 
     # The native business-as-usual reference simulates the same physics as the evaluated env.
-    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar = baseline_service(env)._new_sidecar_env()
     assert sidecar.physics_version == 1
     assert [building.physics_version for building in sidecar.buildings] == [1]
 

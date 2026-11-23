@@ -19,6 +19,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from private_access import physics_invariant_service
 
 pytest.importorskip("gymnasium")
 
@@ -100,7 +101,7 @@ def test_invariant_checker_treats_non_finite_state_as_a_violation(bad):
     env.buildings[0].electrical_storage.soc[t] = bad
 
     with pytest.raises(PhysicsInvariantError, match="Non-finite"):
-        env._physics_invariant_service.assert_step_invariants(t)
+        physics_invariant_service(env).assert_step_invariants(t)
 
 
 def test_invariant_errors_remain_assertion_errors():
@@ -109,7 +110,7 @@ def test_invariant_errors_remain_assertion_errors():
     env.buildings[0].electrical_storage.soc[t] = 1.5
 
     with pytest.raises(AssertionError, match="SOC out of bounds"):
-        env._physics_invariant_service.assert_step_invariants(t)
+        physics_invariant_service(env).assert_step_invariants(t)
 
 
 def test_invariant_checks_still_run_under_python_optimize():
