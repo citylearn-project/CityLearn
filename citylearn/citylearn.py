@@ -221,9 +221,10 @@ class CityLearnEnv(Environment, Env):
         Physics definitions: ``2`` (default) or ``1``, which reproduces the physics of CityLearn 3.6.0. Overrides the
         schema key. The migration guide lists the corrections of version 2.
     baseline_version: int, optional
-        Definition of the default KPI baseline (the ``*_without_storage`` series): ``2`` (default) removes the battery
-        and thermal storage and keeps the EV charging of the controlled run; ``1`` also removes the EV charging, as in
-        CityLearn 3.6.0. Overrides the schema key. See :py:mod:`citylearn.internal.baseline_version`.
+        Definition of the default KPI baseline (the ``*_without_storage`` series): ``2`` (default) removes the battery,
+        the thermal storage and the EV charging of the controlled run, and adds back the EV charging of the native BAU
+        with the ``'full'`` target, so it is the same for every controller and has no V2G; ``1`` adds nothing back, as
+        in CityLearn 3.6.0. Overrides the schema key. See :py:mod:`citylearn.internal.baseline_version`.
     debug_timing: bool, optional
         Log runtime timings. Defaults to the schema value, else ``False``.
     check_observation_limits: bool, optional
@@ -1478,6 +1479,7 @@ class CityLearnEnv(Environment, Env):
 
         for b in buildings or []:
             b.baseline_version = version
+            b._baseline_ev_charging_source = self._baseline_ev_charging
 
     @electric_vehicles.setter
     def electric_vehicles(self, electric_vehicles: List[ElectricVehicle]):
@@ -1829,6 +1831,11 @@ class CityLearnEnv(Environment, Env):
         """Return observed populations, thermal service and equity audit evidence."""
         return self._kpi_service.family_audit(comfort_band=comfort_band,
             control_condition=control_condition, baseline_condition=baseline_condition)
+
+    def _baseline_ev_charging(self, building: Building) -> np.ndarray:
+        """EV charging that the version 2 KPI baseline keeps for `building`: its charging in the ``'full'`` BAU."""
+
+        return self._business_as_usual_baseline_service.ev_charging(building)
 
     def run_business_as_usual_baseline(self, force: bool = False):
         """Run or return the cached native business-as-usual baseline."""

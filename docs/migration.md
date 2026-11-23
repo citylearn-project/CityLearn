@@ -53,19 +53,27 @@ development-line history.
 ### EV charging in the default baseline
 
 The default KPI baseline (`EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV`,
-the `*_without_storage` series) now removes only the battery and the thermal
-storage from the controlled run. It used to subtract the EV charger
-consumption too, so on EV datasets the `*_baseline_*`, `*_delta_*` and
-`*_ratio_to_baseline_*` rows, and every value of the legacy `evaluate()` table,
-compared the run with a community whose cars never charge: any controller that
-charged the cars looked worse than the baseline
-([#365](https://github.com/citylearn-project/CityLearn/issues/365)).
+the `*_without_storage` series) subtracted the EV charger consumption with the
+battery and the thermal storage and added nothing back, so on EV datasets the
+`*_baseline_*`, `*_delta_*` and `*_ratio_to_baseline_*` rows, and every value of
+the legacy `evaluate()` table, compared the run with a community whose cars
+never charge: any controller that charged the cars looked worse than the
+baseline ([#365](https://github.com/citylearn-project/CityLearn/issues/365)).
 
-- The baseline keeps every load of the run: EV charging (V2G included), the
-  deferrable appliances and the HVAC. It measures what the storage dispatch
-  changes for the same EV schedule. To measure smart charging or V2G, read the
-  `*_delta_to_business_as_usual_*` rows: the native BAU charges each car on
-  arrival.
+- The baseline now adds back the EV charging of the native BAU with the
+  `'full'` target: each car is charged on arrival at maximum power until it is
+  full, and never discharged. The cars get the energy they need, without V2G,
+  and the baseline is the same for every controller, so the `baseline` rows
+  credit a controller with its storage dispatch, its EV charging and its V2G
+  against charging on arrival. The deferrable appliances and the HVAC stay as
+  the controller ran them.
+- On datasets with EV chargers, every evaluation runs the BAU sidecar for that
+  charging, also the legacy `evaluate()` and
+  `evaluate_v2(include_business_as_usual=False)`, and uses the `'full'` target
+  whatever `business_as_usual_ev_charge_target` is. Where the sidecar cannot
+  run, because inputs, buildings or devices changed after loading, evaluating
+  raises `ValueError`; use `baseline_version=1` there. The manifest of such a
+  run records the BAU reference as evaluated.
 - Only datasets with EV chargers change: `citylearn_challenge_2022_phase_all_plus_evs`,
   the `pt_rec_*` datasets and the three-phase demos. The simulation, the
   control rows, the BAU rows and the rewards do not change. The equity KPIs,
@@ -320,7 +328,8 @@ lists every changed row and the name that keeps its 3.6.0 value.
   ratios of the district totals instead of means of the building ratios
   ([#237](https://github.com/citylearn-project/CityLearn/issues/237)). The
   3.6.0 values are published as `*_building_mean_ratio`, and the legacy
-  `evaluate()` district rows still hold them.
+  `evaluate()` district rows still hold them; on datasets with EV chargers,
+  with `baseline_version=1` (see [EV charging in the default baseline](#ev-charging-in-the-default-baseline)).
 - **District emissions** are those of the netted district import, so local
   sharing between members lowers them, consistent with district import and
   cost ([#238](https://github.com/citylearn-project/CityLearn/issues/238)).
@@ -374,8 +383,9 @@ report two runs under different physics versions as `incompatible`, with
 `physics_version` among the mismatches, and a manifest written before the
 version was recorded as `unknown`, with `physics_version` among the missing
 evidence; export such runs again to pair them. To reproduce a 3.6.0 result, set
-`physics_version` to `1`; to compare controllers, run them under the same
-version.
+`physics_version` to `1`, and also `baseline_version` to `1` for the KPIs of
+datasets with EV chargers; to compare controllers, run them under the same
+versions.
 
 `MultiCommunityEnv` requires every community to use the same
 `physics_version` and `random_stream_version`, because portfolio KPIs add up

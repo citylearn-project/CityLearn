@@ -57,7 +57,7 @@ Versão em inglês: [../schema_reference.md](../schema_reference.md).
 | `check_observation_limits` | bool | não | Valida os limites das observações. |
 | `physics_invariant_checks` | bool | não | Verificações de invariantes físicos em tempo de execução. |
 | `physics_version` | int | não | Versão da física, `1` ou `2` (predefinida). `1` reproduz a física do CityLearn 3.6.0; consulte o [guia de migração](migration.md#versão-da-física). O argumento `physics_version` de `CityLearnEnv` tem precedência. |
-| `baseline_version` | int | não | Definição da baseline por omissão dos KPIs, `1` ou `2` (predefinida). `2` retira a bateria e o armazenamento térmico e mantém o carregamento dos VE da execução controlada; `1` retira também o carregamento dos VE, como no CityLearn 3.6.0; consulte o [guia de migração](migration.md#carregamento-dos-ve-na-baseline-por-omissão). O argumento `baseline_version` de `CityLearnEnv` tem precedência. |
+| `baseline_version` | int | não | Definição da baseline por omissão dos KPIs, `1` ou `2` (predefinida). `2` retira a bateria, o armazenamento térmico e o carregamento dos VE da execução controlada e volta a somar o carregamento dos VE do BAU nativo com o alvo `'full'`; `1` não volta a somar nada, como no CityLearn 3.6.0; consulte o [guia de migração](migration.md#carregamento-dos-ve-na-baseline-por-omissão). O argumento `baseline_version` de `CityLearnEnv` tem precedência. |
 | `metrics_log_interval` | int | não | Cadência de registo das métricas de execução. |
 
 ### Chaves de calendário e metadados do dataset

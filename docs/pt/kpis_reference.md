@@ -150,7 +150,7 @@ um step. Com topologia dinâmica, um membro só conta enquanto está ativo.
 | Variante | Significado |
 |---|---|
 | `control` | A execução avaliada. |
-| `baseline` | O contrafactual convencional da mesma execução: os membros sem a bateria e o armazenamento térmico (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. Todas as cargas da execução ficam, incluindo o carregamento dos VE (e o V2G, se houver) e os aparelhos diferíveis, pelo que a baseline mede o despacho do armazenamento para o mesmo calendário de VE; `baseline_version=1` retira também o carregamento dos VE, como no CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
+| `baseline` | O contrafactual convencional da mesma execução: os membros sem a bateria e o armazenamento térmico (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. O carregamento dos VE da execução é substituído pelo do BAU nativo com o alvo `'full'` (carregados à chegada até ficarem cheios, sem V2G), igual para todos os controladores; os aparelhos diferíveis e o AVAC ficam como o controlador os operou. `baseline_version=1` não volta a somar carregamento dos VE, como no CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
 | `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](baselines.md)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
@@ -1546,7 +1546,7 @@ Limitações conhecidas: o marcador não contém qualquer medição; use as colu
 
 ## Definicoes alteradas depois da 3.6.0
 
-A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_accounting` de `evaluate_v2()`) e `2.0.0`. Estas linhas de `evaluate_v2()` mudaram de definicao. Onde um valor da 3.6.0 pode ter sido usado em comparacoes publicadas, fica com um nome proprio, e as linhas legacy de `evaluate()` mantem as suas definicoes da 3.6.0.
+A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_accounting` de `evaluate_v2()`) e `2.0.0`. Estas linhas de `evaluate_v2()` mudaram de definicao. Onde um valor da 3.6.0 pode ter sido usado em comparacoes publicadas, fica com um nome proprio, e as linhas legacy de `evaluate()` mantem as suas definicoes da 3.6.0, exceto a baseline dos datasets com carregadores de VE (ultima linha), que `baseline_version=1` repoe.
 
 | KPI | Nova definicao | Valor da 3.6.0 mantido como |
 |---|---|---|
@@ -1564,6 +1564,7 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 | Taxas e medias EV de departure, service levels dos deferrable appliances e das escadas rolantes, start delay e self-consumption solar do portefólio (`MultiCommunityEnv`) | Agregadas a partir dos seus denominadores aditivos. | nenhum |
 | Shares locais do mercado comunitário, compliance de demand response e ratios de cobertura das auditorias de demand response do portefólio (`MultiCommunityEnv`, #285) | Agregados a partir da energia local mais a da rede, da energia pedida válida, da energia pedida e dos intervalos ativos. | nenhum |
 | Ciclos completos equivalentes das baterias estacionárias do portefólio e comparações com a execução BAU (`MultiCommunityEnv`, #330) | Energia movimentada total sobre o dobro da capacidade nominal total. A diferença e o rácio face à execução BAU usam os dois valores do portefólio. | nenhum |
+| Nos datasets com carregadores de VE: todas as linhas `*_baseline_*`, `*_delta_*` (exceto `*_delta_to_business_as_usual_*`) e `*_ratio_to_baseline_*`, os KPIs de equidade calculados a partir delas, e toda a tabela legacy de `evaluate()` (#365) | A baseline carrega os VE como o BAU nativo com o alvo `'full'`, em vez de nao os carregar (`baseline_version=2`). | `baseline_version=1` |
 
 Nas linhas legacy, uma janela de load factor cujo pico com sinal nao e positivo passa a ser indefinida; antes dava uma penalizacao infinita ou negativa, que a safe division reportava como um 0 perfeito.
 

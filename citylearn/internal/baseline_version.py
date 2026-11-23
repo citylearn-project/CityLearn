@@ -4,7 +4,8 @@ The baseline version fixes what the ``*_without_storage`` counterfactual series 
 controlled run. They are the default ``baseline`` of :py:meth:`citylearn.citylearn.CityLearnEnv.evaluate`
 and :py:meth:`citylearn.citylearn.CityLearnEnv.evaluate_v2`, so the version changes every
 ``*_baseline_*``, ``*_delta_*`` (not ``*_delta_to_business_as_usual_*``) and ``*_ratio_to_baseline_*``
-value on datasets with EV chargers, and the legacy ``evaluate()`` table. Nothing simulated changes.
+value on datasets with EV chargers, the equity KPIs built on them, and the legacy ``evaluate()`` table.
+Nothing simulated changes.
 A run selects a version with the ``baseline_version`` schema key or the
 :py:class:`citylearn.citylearn.CityLearnEnv` argument of the same name; the argument takes precedence.
 
@@ -12,13 +13,22 @@ Versions
 --------
 1
     The baseline of CityLearn 3.6.0 and earlier: it removes the battery, the thermal storage and the
-    EV chargers, so on EV datasets it is a community whose cars never charge (#365).
+    EV charging, and adds nothing back, so on EV datasets it is a community whose cars never charge (#365).
 2
-    The baseline removes the battery and the thermal storage and keeps every load of the controlled
-    run, the EV charging (and any V2G) included, as it already kept the deferrable appliances. It
-    therefore measures what the storage dispatch changes for the same EV schedule. The value of EV
-    smart charging and V2G is measured against the native BAU (``*_delta_to_business_as_usual_*``),
-    which charges every car on arrival.
+    The baseline removes the battery, the thermal storage and the EV charging of the controlled run,
+    and adds back the EV charging of the native BAU of the same scenario with the ``'full'`` target:
+    each car is charged on arrival at maximum power until it is full, and never discharged. The cars
+    get the energy they need, without V2G, and the baseline is the same whatever the controller does
+    with the cars or the storage, so a controller that leaves the cars short does not lower its own
+    baseline. The deferrable appliances and the HVAC stay as the controller ran them.
+
+    The BAU charging comes from the BAU sidecar
+    (:py:meth:`citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline`), which is therefore run
+    for every evaluation of a dataset with EV chargers, also by the legacy ``evaluate()`` and by
+    ``evaluate_v2(include_business_as_usual=False)``, and it uses the ``'full'`` target whatever
+    ``business_as_usual_ev_charge_target`` is. Where the sidecar cannot run (inputs, buildings or
+    devices changed after loading), evaluating with version 2 raises; version 1 needs no sidecar.
+    Datasets without chargers give the same values under both versions.
 """
 
 from typing import Any

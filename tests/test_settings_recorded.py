@@ -71,7 +71,10 @@ def test_exports_under_different_baseline_versions_are_incompatible(tmp_path):
 
     report = compare_exports(a, b)
     assert report['status'] == 'incompatible'
-    assert report['mismatches'] == ['baseline_version']
+    # The schema has an EV charger, so the version 2 baseline ran the native BAU for its EV charging and the
+    # manifest records it as evaluated; the version 1 run did not need it.
+    assert report['mismatches'] == ['baseline_version', 'business_as_usual_reference']
+    assert (left['business_as_usual_reference']['evaluated'], right['business_as_usual_reference']['evaluated']) == (False, True)
 
     other = deepcopy(left)
     del other['comparison_context']['baseline_version']
