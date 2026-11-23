@@ -537,7 +537,8 @@ def test_mixed_portfolio_market_rows_include_communities_without_a_market():
 
     env = _pt_rec_4_portfolio({
         "market": {},
-        "market_export_tariff": {"local_price_ratio_to_grid_import": 1.0, "grid_export_price": 0.05},
+        # Settlement version 1 pays nothing for exports, so the export price is 0 (#366).
+        "market_export_tariff": {"local_price_ratio_to_grid_import": 1.0, "grid_export_price": 0.0},
         "no_market": None,
     })
 
