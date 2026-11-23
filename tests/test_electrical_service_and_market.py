@@ -167,6 +167,7 @@ def test_disabled_community_market_keeps_legacy_costs(tmp_path: Path):
                     "enabled": False,
                     "intra_community_sell_ratio": 0.2,
                     "grid_export_price": 0.9,
+                    "settlement_version": 2,
                 }
             }
         ),
@@ -201,6 +202,7 @@ def test_disabled_community_market_with_string_false_keeps_legacy_costs(tmp_path
                     "enabled": "false",
                     "intra_community_sell_ratio": 0.2,
                     "grid_export_price": 0.9,
+                    "settlement_version": 2,
                 }
             }
         ),
@@ -231,6 +233,7 @@ def test_disabled_community_market_does_not_credit_building_exports(tmp_path: Pa
 
     schema["community_market"]["enabled"] = False
     schema["community_market"]["grid_export_price"] = 0.9
+    schema["community_market"]["settlement_version"] = 2
     with open(schema_path, "w", encoding="utf-8") as f:
         json.dump(schema, f, indent=2)
 

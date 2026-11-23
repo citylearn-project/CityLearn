@@ -142,6 +142,24 @@ class CityLearnBusinessAsUsualBaselineService:
                 'from the schema, so it cannot follow devices changed after loading; evaluate without the native reference '
                 '(include_business_as_usual=False) in that case.'
             )
+        # Market attributes set on the env after construction (ratio, export price, weights, tariffs, ...)
+        # settle the evaluated episode but not the reference, which reads the schema (#366). Compare the
+        # values at the last reset and now, since either may have been changed.
+        from citylearn.internal.market_config import market_configuration, market_differences
+        reference_market = market_configuration(baseline_env)
+        differences = []
+        for label, market in (('at its last reset', getattr(env, '_comparison_initial_market', None)),
+                              ('now', market_configuration(env))):
+            if market is not None:
+                differences += [f'{d} {label}' for d in market_differences(market, reference_market)]
+        if differences:
+            shown = '; '.join(differences[:3]) + ('; ...' if len(differences) > 3 else '')
+            raise ValueError(
+                f'Native BAU community market settings differ from the evaluated env in {len(differences)} '
+                f'setting(s) (evaluated vs reference): {shown}. The reference reads them from the schema, so it '
+                "cannot follow market attributes changed after loading; change env.schema['community_market'] and "
+                'rebuild the env, or evaluate without the native reference (include_business_as_usual=False).'
+            )
         identity = agent.comparison_identity()
         baseline_env._native_reference_metadata = dict(
             implementation='citylearn.agents.baseline.BusinessAsUsualAgent', simulator_version=__version__,
