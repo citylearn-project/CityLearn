@@ -250,8 +250,10 @@ among members. Local prices and importer weights determine financial allocation;
 exports expose settled costs, the grid-only counterfactual and savings for each
 member and the community. Settlement values the recorded physical trajectory.</p>
 <p>Configure the <a class="reference internal" href="schema_reference.html#community-market"><span class="std std-ref">community market</span></a>.
-Residual grid exports currently receive zero remuneration. Local settlement
-is within a community; multi-community reporting is described below.</p>
+Residual grid exports earn nothing by default; with <code class="docutils literal notranslate"><span class="pre">&quot;settlement_version&quot;:</span> <span class="pre">2</span></code>
+they are paid <code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code>, and <code class="docutils literal notranslate"><span class="pre">tariff_files</span></code> give each member its own
+prices. Invalid market settings raise an error when the env is built. Local
+settlement is within a community; multi-community reporting is described below.</p>
 </section>
 <section id="demand-response-requests">
 <h2>Demand-response requests<a class="headerlink" href="#demand-response-requests" title="Link to this heading"></a></h2>

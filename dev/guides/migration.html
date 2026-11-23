@@ -104,6 +104,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#unreleased">Unreleased</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#ev-charging-in-the-default-baseline">EV charging in the default baseline</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#district-emissions-with-local-trading-off">District emissions with local trading off</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#community-market-settings-are-validated">Community market settings are validated</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#portfolio-market-rows-with-and-without-markets">Portfolio market rows with and without markets</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#occupant-set-point-limits">Occupant set-point limits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#observation-spaces-follow-the-observations">Observation spaces follow the observations</a></li>
@@ -292,6 +293,30 @@ local trading on, runs without a market and every bundled dataset are
 unchanged, and the local price ratio does not affect emissions. To compare
 with an earlier run made with local trading off, re-evaluate it with the
 current release. See <a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/327">#327</a>.</p>
+</section>
+<section id="community-market-settings-are-validated">
+<h3>Community market settings are validated<a class="headerlink" href="#community-market-settings-are-validated" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">CityLearnEnv</span></code> now checks the <code class="docutils literal notranslate"><span class="pre">community_market</span></code> section when it is built and
+raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> for settings that earlier releases ignored or replaced:
+unknown keys (<code class="docutils literal notranslate"><span class="pre">enable</span></code> instead of <code class="docutils literal notranslate"><span class="pre">enabled</span></code>), a ratio that is not a number or
+is outside <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>, ratio aliases with different values, a
+<code class="docutils literal notranslate"><span class="pre">settlement_version</span></code> other than <code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code> (a string such as <code class="docutils literal notranslate"><span class="pre">&quot;2&quot;</span></code> included), a non-zero
+<code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code> without <code class="docutils literal notranslate"><span class="pre">&quot;settlement_version&quot;:</span> <span class="pre">2</span></code>, and member weights or
+tariff files for buildings that are not in the schema. The message names the
+key and the fix. A schema that loaded before and now raises was not simulating
+what it said: for example, a ratio of 1.5 settled at 1.0 and a
+<code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code> without settlement version 2 paid nothing. Write the value
+that was applied (ratio 1, <code class="docutils literal notranslate"><span class="pre">grid_export_price:</span> <span class="pre">0</span></code>) to keep the earlier results,
+or fix the setting to get what was intended. Every bundled dataset is valid and
+its results do not change.</p>
+<p>Market attributes set on the env after construction
+(<code class="docutils literal notranslate"><span class="pre">community_market_enabled</span></code>, <code class="docutils literal notranslate"><span class="pre">community_market_sell_ratio</span></code>,
+<code class="docutils literal notranslate"><span class="pre">community_market_grid_export_price</span></code>,
+<code class="docutils literal notranslate"><span class="pre">community_market_import_member_weights</span></code>, <code class="docutils literal notranslate"><span class="pre">community_market_local_enabled</span></code>,
+<code class="docutils literal notranslate"><span class="pre">community_tariffs</span></code>) are not supported. The native BAU reference is rebuilt
+from the schema, so <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> with the BAU comparison now raises when they
+differ from it. Change <code class="docutils literal notranslate"><span class="pre">schema['community_market']</span></code> and build a new env instead.
+See <a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/366">#366</a>.</p>
 </section>
 <section id="portfolio-market-rows-with-and-without-markets">
 <h3>Portfolio market rows with and without markets<a class="headerlink" href="#portfolio-market-rows-with-and-without-markets" title="Link to this heading"></a></h3>

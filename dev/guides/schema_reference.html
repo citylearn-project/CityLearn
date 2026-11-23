@@ -1453,19 +1453,19 @@ Escalator support is currently exposed through the flat interface.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">local_price_ratio_to_grid_import</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.8</span></code></p></td>
-<td><p>Local price relative to grid import price.</p></td>
+<td><p>Local price relative to grid import price. A number from 0 to 1.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">intra_community_sell_ratio</span></code></p></td>
 <td class="text-right"><p>alias</p></td>
-<td><p>Legacy name for the same ratio.</p></td>
+<td><p>Legacy name for the same ratio. If both keys are set, they must be equal.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">settlement_version</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">2</span></code> enables <code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code>; with <code class="docutils literal notranslate"><span class="pre">1</span></code>, residual grid exports earn nothing.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code>, as a number (<code class="docutils literal notranslate"><span class="pre">2.0</span></code> is accepted, the string <code class="docutils literal notranslate"><span class="pre">&quot;2&quot;</span></code> is not). <code class="docutils literal notranslate"><span class="pre">2</span></code> enables <code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code>; with <code class="docutils literal notranslate"><span class="pre">1</span></code>, residual grid exports earn nothing.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></td>
-<td><p>EUR/kWh paid for residual grid exports when <code class="docutils literal notranslate"><span class="pre">settlement_version</span></code> is <code class="docutils literal notranslate"><span class="pre">2</span></code>. Must be finite.</p></td>
+<td><p>EUR/kWh paid for residual grid exports. A finite number; a non-zero value requires <code class="docutils literal notranslate"><span class="pre">&quot;settlement_version&quot;:</span> <span class="pre">2</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tariff_files</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
@@ -1477,7 +1477,7 @@ Escalator support is currently exposed through the flat interface.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">import_member_weights</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">{}</span></code></p></td>
-<td><p>Weights for allocating local energy among importers.</p></td>
+<td><p>Weights for allocating local energy among importers, <code class="docutils literal notranslate"><span class="pre">{&quot;&lt;building&gt;&quot;:</span> <span class="pre">weight}</span></code>. Each building must be in the schema and each weight a finite number of at least 0.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kpis.community_local_traded_enabled</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
@@ -1487,13 +1487,35 @@ Escalator support is currently exposed through the flat interface.</p>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
 <td><p>Enables local import-share KPI.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">matching_granularity</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">&quot;aggregate_building&quot;</span></code></p></td>
+<td><p>The only supported value; recorded in the metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">counterfactual</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">&quot;grid_only&quot;</span></code></p></td>
+<td><p>The only supported value: savings compare each member with buying and selling on the grid alone. Written by the annual REC suite generator.</p></td>
+</tr>
 </tbody>
 </table>
 </section>
 <section id="important-combinations">
 <h2>Important Combinations<a class="headerlink" href="#important-combinations" title="Link to this heading"></a></h2>
-<p>The local price ratio is clipped to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>. The legacy
-<code class="docutils literal notranslate"><span class="pre">intra_community_sell_ratio</span></code> key is an alias. Local settlement values
+<p>The settings are checked when the env is built, even with <code class="docutils literal notranslate"><span class="pre">enabled:</span> <span class="pre">false</span></code>.
+An unknown key (for example <code class="docutils literal notranslate"><span class="pre">enable</span></code>), a ratio that is not a number or is
+outside <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>, a <code class="docutils literal notranslate"><span class="pre">settlement_version</span></code> other than <code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code>
+(the string <code class="docutils literal notranslate"><span class="pre">&quot;2&quot;</span></code> included), a non-zero <code class="docutils literal notranslate"><span class="pre">grid_export_price</span></code> without
+<code class="docutils literal notranslate"><span class="pre">&quot;settlement_version&quot;:</span> <span class="pre">2</span></code>, and a member weight or tariff file for a building
+that is not in the schema raise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>. Earlier releases ignored these
+settings or replaced them with defaults. The legacy
+<code class="docutils literal notranslate"><span class="pre">intra_community_sell_ratio</span></code> key is an alias.</p>
+<p>The settings are read from the schema at construction. Setting the market
+attributes on the env afterwards (<code class="docutils literal notranslate"><span class="pre">community_market_enabled</span></code>,
+<code class="docutils literal notranslate"><span class="pre">community_market_sell_ratio</span></code>,
+<code class="docutils literal notranslate"><span class="pre">community_market_grid_export_price</span></code>, <code class="docutils literal notranslate"><span class="pre">community_market_import_member_weights</span></code>,
+<code class="docutils literal notranslate"><span class="pre">community_market_local_enabled</span></code>, <code class="docutils literal notranslate"><span class="pre">community_tariffs</span></code>) is not supported: the
+native BAU reference is rebuilt from the schema, so <code class="docutils literal notranslate"><span class="pre">evaluate_v2()</span></code> with the
+BAU comparison raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> when they differ. To change the market,
+edit <code class="docutils literal notranslate"><span class="pre">schema['community_market']</span></code> and build a new env. Local settlement values
 same-timestep member imports and exports; it does not change the physical
 device dispatch.</p>
 <p>Each side of a local trade is priced with its own member’s tariff. When members
