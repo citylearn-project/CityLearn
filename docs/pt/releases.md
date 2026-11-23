@@ -63,6 +63,13 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
   mantendo a página equivalente aberta ao mudar de versão ou abrindo a página inicial dessa versão quando a página não
   existe nela ([`docs/pt/publishing.md`](publishing.md),
   [#296](https://github.com/citylearn-project/CityLearn/issues/296)).
+- **Auditorias de execução em jobs paralelos da CI (engenharia, sem alteração de
+  resultados).** A auditoria de física, a dos datasets oficiais e as do contrato
+  de entidades e da paridade da refatoração correm em três jobs paralelos em vez
+  de uma após a outra. Cada uma continua estrita, envia a sua evidência JSON
+  (`citylearn-runtime-audits-<nome>`) e mostra pelo nome do job qual falhou; o
+  job `runtime-audits` falha se alguma das três não passar
+  ([#339](https://github.com/citylearn-project/CityLearn/issues/339)).
 - **Lint e CI (engenharia, sem alteração de resultados).** O `ruff` usa as
   regras de `pyproject.toml`: F401 (imports não usados removidos mantendo
   reexportações explícitas `as` nos módulos públicos), F841 (variáveis não

@@ -175,9 +175,22 @@ jobs:
           --schema "${{ github.workspace }}/tests/data/minute_ev_demo/schema.json"
           --output "${{ runner.temp }}/citylearn-installed-export"
 
-  runtime-audits:
+  runtime-audit:
+    # One job per audit, in parallel. Each job runs run_full_audit.py in strict mode on its own
+    # selection and uploads its own JSON evidence; the runtime-audits job below requires all of them.
     needs: lint
+    name: audit (${{ matrix.name }})
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: physics
+            audits: physics
+          - name: datasets
+            audits: datasets
+          - name: entity-contract-and-refactor-parity
+            audits: entity_contract refactor_parity
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
@@ -185,11 +198,26 @@ jobs:
           python-version: '3.10'
       - name: Install audit dependencies
         run: pip install -r requirements.txt -r test_requirements.txt pyarrow nrel-pysam -e .
-      - name: Verify physics, entities, official datasets and fixed-command references
-        run: python scripts/audit/run_full_audit.py --strict --output-dir "${{ runner.temp }}/citylearn-audits"
-      - name: Upload runtime audit evidence
+      - name: Verify ${{ matrix.name }}
+        run: >-
+          python scripts/audit/run_full_audit.py --strict
+          --audits ${{ matrix.audits }}
+          --output-dir "${{ runner.temp }}/citylearn-audits"
+      - name: Upload ${{ matrix.name }} audit evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
         with:
-          name: citylearn-runtime-audits
+          name: citylearn-runtime-audits-${{ matrix.name }}
           path: ${{ runner.temp }}/citylearn-audits/*.json
+
+  runtime-audits:
+    # Single gate for every runtime audit: physics, entity contract, official datasets and
+    # refactor parity. It fails unless each audit job above succeeded.
+    needs: runtime-audit
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every runtime audit
+        run: |
+          echo "runtime-audit result: ${{ needs.runtime-audit.result }}"
+          test "${{ needs.runtime-audit.result }}" = "success"
