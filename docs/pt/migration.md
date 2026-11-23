@@ -176,7 +176,12 @@ cheio e não era carregado
 
 - Dados incluídos: os ficheiros dos carregadores de
   `citylearn_challenge_2022_phase_all_plus_evs`, das três demos trifásicas horárias
-  e das demos a 15 segundos estão em percentagem e têm essas linhas. No ano simulado, 8 de cerca de 2800 chegadas dos datasets horários e 8 chegadas das demos a 15 segundos partem de uma dessas linhas.
+  e das demos a 15 segundos `citylearn_three_phase_electrical_service_demo_15s_parquet`
+  e `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` estão em
+  percentagem e têm essas linhas. No ano simulado, 8 de cerca de 2800 chegadas
+  dos datasets horários e 8 chegadas de cada uma dessas duas demos a 15 segundos
+  partem de uma dessas linhas. `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet`
+  não tem nenhuma e não muda.
   Os ficheiros `pt_rec_*` estão em rácio e não mudam.
 - Os resultados desses datasets mudam. Com o `BusinessAsUsualAgent`, no ano
   completo de `citylearn_challenge_2022_phase_all_plus_evs`, o carregamento dos
@@ -189,7 +194,12 @@ cheio e não era carregado
   excedente muda na quinta casa decimal), porque esses VE chegavam cheios.
 - Uma coluna com todos os valores entre 0 e 1 é lida como rácio. Se estiver em
   percentagem, declare `"soc_unit": "percent"` no carregador, ao lado de
-  `charger_simulation`; `"fraction"` força o rácio.
+  `charger_simulation`; `"fraction"` força o rácio. Uma chave de carregador mal
+  escrita, como `soc_units`, é indicada com um aviso.
+- Uma coluna lida em percentagem que também tem valores entre 0 e 1 dá um aviso:
+  um valor perdido acima de 1 (1,00001, por exemplo) numa coluna em rácio torna
+  toda a coluna em percentagem, e 0,3 passaria a 0,3 %. Corrija esse valor ou
+  declare `"soc_unit": "fraction"`.
 - Defina `physics_version` como `1` para reproduzir a regra valor a valor do
   CityLearn 3.6.0.
 
@@ -213,7 +223,8 @@ bidirecional de 50 kW:
 - um `max_charging_power` omitido vale `nominal_power`, ou 50 kW quando este
   também falta;
 - um aviso indica cada limite que cai num valor assumido
-  (`max_charging_power`, `max_discharging_power`, `efficiency`).
+  (`max_charging_power`, `max_discharging_power`, `efficiency`); `efficiency`
+  só quando é usado, isto é, quando nenhuma curva de eficiência o substitui.
 
 Todos os carregadores incluídos definem todos os seus limites, pelo que os
 resultados incluídos não mudam. Um schema que omite `max_discharging_power` e

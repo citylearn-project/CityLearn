@@ -166,8 +166,13 @@ as 100 %: the EV arrived full and was not charged
 ([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
 
 - Bundled data: the EV charger files of `citylearn_challenge_2022_phase_all_plus_evs`,
-  the three hourly three-phase demos and the 15-second demos are in percent and
-  contain such rows. Over the simulated year, 8 of about 2,800 arrivals of the hourly datasets and 8 arrivals of the 15-second demos start from such a row. The `pt_rec_*` files are ratios and do not change.
+  the three hourly three-phase demos and the 15-second
+  `citylearn_three_phase_electrical_service_demo_15s_parquet` and
+  `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` are in percent
+  and contain such rows. Over the simulated year, 8 of about 2,800 arrivals of
+  the hourly datasets and 8 arrivals of each of those two 15-second demos start
+  from such a row. `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet`
+  has none and does not change. The `pt_rec_*` files are ratios and do not change.
 - Results change for those datasets. With `BusinessAsUsualAgent` over the full
   year of `citylearn_challenge_2022_phase_all_plus_evs`, EV charging rises by
   534 kWh (0.58 %), district import by 0.31 % and cost by 0.33 % (31,412.62 to
@@ -179,7 +184,12 @@ as 100 %: the EV arrived full and was not charged
   decimal), because those EVs used to arrive full.
 - A column whose values are all between 0 and 1 is read as ratio. If it is in
   percent, declare `"soc_unit": "percent"` on the charger, next to
-  `charger_simulation`; `"fraction"` forces ratio.
+  `charger_simulation`; `"fraction"` forces ratio. A misspelt charger key,
+  such as `soc_units`, is reported with a warning.
+- A column read as percent that also holds values between 0 and 1 gives a
+  warning: one stray value above 1 (1.00001, say) in a ratio column makes the
+  whole column percent, so 0.3 would become 0.3 %. Fix the stray value or
+  declare `"soc_unit": "fraction"`.
 - Set `physics_version` to `1` to reproduce the value-by-value rule of
   CityLearn 3.6.0.
 
@@ -202,7 +212,8 @@ bidirectional charger:
 - an omitted `max_charging_power` is `nominal_power`, or 50 kW when that is
   missing too;
 - a warning names every limit that falls back to an assumed value
-  (`max_charging_power`, `max_discharging_power`, `efficiency`).
+  (`max_charging_power`, `max_discharging_power`, `efficiency`); `efficiency`
+  only when it is used, that is when an efficiency curve does not replace it.
 
 Every bundled charger sets all its limits, so bundled results do not change.
 A schema that omits `max_discharging_power` and relied on the 50 kW of V2G

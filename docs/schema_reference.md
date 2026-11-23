@@ -337,14 +337,16 @@ interval, so they reflect the limit that was in force then.
 | `attributes.min_charging_power` | kW | Technical minimum charging power. Default 0. |
 | `attributes.max_discharging_power` | kW | V2G upper limit. Default 0: the charger cannot discharge unless this is set (a warning says so). |
 | `attributes.min_discharging_power` | kW | Technical minimum V2G power. Default 0. |
-| `attributes.efficiency` | ratio | Fixed/default efficiency. Default 1.0, with a warning. |
+| `attributes.efficiency` | ratio | Fixed/default efficiency, used in a direction without an efficiency curve. Default 1.0, with a warning when it is used. |
 | `attributes.charge_efficiency_curve` | ratio vs normalized power | Optional charging efficiency curve. |
 | `attributes.discharge_efficiency_curve` | ratio vs normalized power | Optional discharging efficiency curve. |
 | `attributes.phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Electrical phase assignment. |
 
 Any other name in `attributes` raises a `ValueError` that names the charger and suggests the
 closest valid name, so a misspelt `max_discharge_power` no longer falls back to a default
-([#369](https://github.com/citylearn-project/CityLearn/issues/369)). Under physics version 1
+([#369](https://github.com/citylearn-project/CityLearn/issues/369)). A charger key other than
+`type`, `charger_simulation`, `attributes`, `autosize`, `noise_std` and `soc_unit` is ignored
+with a warning that suggests the closest key. Under physics version 1
 an omitted `max_charging_power` or `max_discharging_power` is 50 kW, as in CityLearn 3.6.0,
 and `nominal_power` is not used.
 

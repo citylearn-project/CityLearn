@@ -122,7 +122,9 @@ stays a ratio), and in ratio otherwise. In a percent column a value of 1 is ther
 values and blanks are missing. The columns are decided separately, so `electric_vehicle_current_soc`
 may be in ratio while the targets are in percent. A column whose values are all between 0 and 1 is
 read as ratio; declare `"soc_unit": "percent"` on the charger in the schema if such a file is in
-percent (the declared unit applies to all its SOC columns). Physics version 1
+percent (the declared unit applies to all its SOC columns). A column read as percent that also
+holds values between 0 and 1 gives a warning, since one stray value above 1 in a ratio column would
+turn 0.3 into 0.3 %. Physics version 1
 keeps the rule of CityLearn 3.6.0, value by value: a value in [0, 1] is a ratio and a value above 1 a
 percentage, so 1 (1 %) in a percent file was read as 100 %, unless the charger declares `soc_unit`
 ([#368](https://github.com/citylearn-project/CityLearn/issues/368)).

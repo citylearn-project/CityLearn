@@ -123,7 +123,9 @@ coluna em percentagem, o valor 1 é portanto 1 %. Valores negativos e células v
 falta. As colunas são decididas em separado, pelo que `electric_vehicle_current_soc` pode estar em
 rácio e as metas em percentagem. Uma coluna com todos os valores entre 0 e 1 é lida como rácio; declare
 `"soc_unit": "percent"` no carregador do esquema se esse ficheiro estiver em percentagem (a unidade
-declarada aplica-se a todas as suas colunas de SOC). A versão de física 1 mantém a regra
+declarada aplica-se a todas as suas colunas de SOC). Uma coluna lida em percentagem que também
+tem valores entre 0 e 1 dá um aviso, porque um valor perdido acima de 1 numa coluna em rácio
+transformaria 0,3 em 0,3 %. A versão de física 1 mantém a regra
 do CityLearn 3.6.0, valor a valor: um valor em [0, 1] é um rácio e um valor acima de 1 uma
 percentagem, pelo que 1 (1 %) num ficheiro em percentagem era lido como 100 %, exceto se o carregador declarar `soc_unit`
 ([#368](https://github.com/citylearn-project/CityLearn/issues/368)).

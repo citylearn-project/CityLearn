@@ -14,10 +14,10 @@ from citylearn.internal.units import (
 
 class Charger(Environment):
     #: Charging power in kW assumed when neither `max_charging_power` nor `nominal_power` is given.
-    DEFAULT_MAX_CHARGING_POWER = 50.0
+    _DEFAULT_MAX_CHARGING_POWER = 50.0
 
     #: Defaults of physics version 1 for omitted power limits: a 50 kW charger in both directions.
-    LEGACY_DEFAULT_POWER = 50.0
+    _LEGACY_DEFAULT_POWER = 50.0
 
     def __init__(
             self, episode_tracker: EpisodeTracker, charger_simulation: ChargerSimulation ,charger_id: str = None, efficiency: float = None, max_charging_power: float = None,
@@ -65,7 +65,7 @@ class Charger(Environment):
         unknown = [key for key in kwargs if key not in self._environment_arguments()]
 
         if unknown:
-            raise TypeError(self.unknown_attributes_message(unknown, f'Charger {charger_id!r}'))
+            raise TypeError(self._unknown_attributes_message(unknown, f'Charger {charger_id!r}'))
 
         self.nominal_power = nominal_power
         self.charger_type = charger_type
@@ -90,10 +90,11 @@ class Charger(Environment):
 
     @staticmethod
     def _environment_arguments() -> List[str]:
-        return [a for a in inspect.getfullargspec(Environment.__init__).args if a != 'self']
+        spec = inspect.getfullargspec(Environment.__init__)
+        return [a for a in spec.args + spec.kwonlyargs if a != 'self']
 
     @classmethod
-    def attribute_names(cls) -> List[str]:
+    def _attribute_names(cls) -> List[str]:
         """Names a charger schema's `attributes` may use: the constructor arguments of `cls` and its
         parent charger classes, and the :py:class:`citylearn.base.Environment` arguments."""
 
@@ -103,15 +104,16 @@ class Charger(Environment):
             if not (isinstance(klass, type) and issubclass(klass, Charger)) or '__init__' not in vars(klass):
                 continue
 
-            names += [a for a in inspect.getfullargspec(klass.__init__).args if a != 'self']
+            spec = inspect.getfullargspec(klass.__init__)
+            names += [a for a in spec.args + spec.kwonlyargs if a != 'self']
 
         names += cls._environment_arguments()
         excluded = {'charger_simulation', 'charger_id', 'connected_electric_vehicle', 'incoming_electric_vehicle'}
         return list(dict.fromkeys(n for n in names if n not in excluded))
 
     @staticmethod
-    def unknown_attributes_message(unknown: Iterable[str], owner: str, known: Iterable[str] = None) -> str:
-        known = list(Charger.attribute_names() if known is None else known)
+    def _unknown_attributes_message(unknown: Iterable[str], owner: str, known: Iterable[str] = None) -> str:
+        known = list(Charger._attribute_names() if known is None else known)
         details = []
 
         for name in sorted(unknown):
@@ -121,14 +123,14 @@ class Charger(Environment):
         return f"{owner} has unknown attributes: {', '.join(details)}."
 
     @classmethod
-    def validate_attributes(cls, attributes: Mapping[str, Any], path: str = 'attributes'):
+    def _validate_attributes(cls, attributes: Mapping[str, Any], path: str = 'attributes'):
         """Raise `ValueError` if `attributes` holds a name the charger does not accept."""
 
-        known = cls.attribute_names()
+        known = cls._attribute_names()
         unknown = [key for key in (attributes or {}) if key not in known]
 
         if unknown:
-            raise ValueError(cls.unknown_attributes_message(unknown, path, known=known))
+            raise ValueError(cls._unknown_attributes_message(unknown, path, known=known))
 
     @property
     def nominal_power(self) -> float:
@@ -267,7 +269,7 @@ class Charger(Environment):
     def max_charging_power(self, max_charging_power: float):
             if max_charging_power is None:
                 self.__max_charging_power = (
-                    self.DEFAULT_MAX_CHARGING_POWER if self.nominal_power is None else self.nominal_power
+                    self._DEFAULT_MAX_CHARGING_POWER if self.nominal_power is None else self.nominal_power
                 )
             else:
                 self.__max_charging_power = max_charging_power

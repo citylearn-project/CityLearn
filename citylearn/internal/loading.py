@@ -1459,7 +1459,7 @@ class CityLearnLoadingService:
         key = os.path.abspath(str(filepath))
 
         if key not in self._charger_soc_unit_cache:
-            columns = ChargerSimulation.SOC_COLUMNS
+            columns = ChargerSimulation._SOC_COLUMNS
 
             if self._file_format(filepath) == 'parquet':
                 import pyarrow.parquet as pq
@@ -1469,9 +1469,27 @@ class CityLearnLoadingService:
             else:
                 dataframe = pd.read_csv(filepath, usecols=lambda c: c in columns)
 
-            self._charger_soc_unit_cache[key] = {
-                c: ChargerSimulation.soc_series_unit(dataframe[c].to_numpy()) for c in columns if c in dataframe.columns
+            units = {
+                c: ChargerSimulation._soc_series_unit(dataframe[c].to_numpy()) for c in columns if c in dataframe.columns
             }
+
+            for column, unit in units.items():
+                if unit != 'percent':
+                    continue
+
+                fractions = ChargerSimulation._soc_fraction_values_in_percent(dataframe[column].to_numpy())
+
+                if fractions.size > 0:
+                    warnings.warn(
+                        f"Column {column!r} of {filepath} is read as percent because it has values above 1, "
+                        f"but {fractions.size} of its values lie between 0 and 1 (e.g. {fractions[0]:g}), "
+                        f"which become {fractions[0] / 100.0:g}. If the column holds fractions, fix the values "
+                        "above 1 or set the charger's soc_unit to 'fraction'.",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+
+            self._charger_soc_unit_cache[key] = units
 
         return self._charger_soc_unit_cache[key]
 

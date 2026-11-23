@@ -57,7 +57,7 @@ def test_one_percent_arrival_soc_is_not_read_as_full(ev_schema, physics_version,
     raw = pd.read_csv(f"{env.schema['root_directory']}/charger_12_1.csv").iloc[4160:4191]
     assert raw['electric_vehicle_estimated_soc_arrival'].iloc[7:10].tolist() == [1.0, 1.0, 1.0]
     assert raw['electric_vehicle_estimated_soc_arrival'].max() <= 1.0
-    assert charger.charger_simulation.soc_units['electric_vehicle_estimated_soc_arrival'] == expected_unit
+    assert charger.charger_simulation._soc_units['electric_vehicle_estimated_soc_arrival'] == expected_unit
 
     ev = charger.past_connected_evs[10]
     charged = float(np.sum(charger.electricity_consumption[:30]))
@@ -80,7 +80,7 @@ def test_schema_can_declare_the_soc_unit(ev_schema):
         schema, interface='flat', render_mode='none', simulation_start_time_step=4160, simulation_end_time_step=4190,
     )
     simulation = _charger(env, 'Building_12').charger_simulation
-    assert set(simulation.soc_units.values()) == {'fraction'}
+    assert set(simulation._soc_units.values()) == {'fraction'}
     assert simulation.electric_vehicle_estimated_soc_arrival[7] == pytest.approx(1.0)
     env.close()
 
@@ -90,9 +90,9 @@ def test_schema_can_declare_the_soc_unit(ev_schema):
 
 
 def test_fraction_files_with_rounding_above_one_stay_fractions():
-    assert ChargerSimulation.soc_series_unit([0.2, 1.0000000000000013, np.nan, -0.1]) == 'fraction'
-    assert ChargerSimulation.soc_series_unit([0.2, 1.0], [0.5, 80.0]) == 'percent'
-    assert ChargerSimulation.soc_series_unit([np.nan, -1.0]) == 'fraction'
+    assert ChargerSimulation._soc_series_unit([0.2, 1.0000000000000013, np.nan, -0.1]) == 'fraction'
+    assert ChargerSimulation._soc_series_unit([0.2, 1.0], [0.5, 80.0]) == 'percent'
+    assert ChargerSimulation._soc_series_unit([np.nan, -1.0]) == 'fraction'
 
 
 # #369 ------------------------------------------------------------------------------------------
@@ -185,3 +185,72 @@ def test_bundled_chargers_set_every_power_limit(ev_schema):
     chargers = [c for b in env.buildings for c in b.electric_vehicle_chargers]
     assert chargers and all(c.max_discharging_power > 0 and c.nominal_power == c.max_charging_power for c in chargers)
     env.close()
+
+
+def test_stray_value_above_one_in_a_ratio_column_warns(ev_schema, tmp_path):
+    """One value just above 1 makes a ratio column percent; the loader says so."""
+
+    schema = copy.deepcopy(ev_schema)
+    charger = schema['buildings']['Building_5']['chargers']['charger_5_1']
+    frame = pd.read_csv(f"{schema['root_directory']}/{charger['charger_simulation']}")
+    column = 'electric_vehicle_estimated_soc_arrival'
+    valid = frame[column] > 0
+    frame.loc[valid, column] = frame.loc[valid, column] / 100.0
+    frame.loc[frame.index[valid][0], column] = 1.00001
+    path = tmp_path / 'charger_5_1_ratio.csv'
+    frame.to_csv(path, index=False)
+    charger['charger_simulation'] = str(path)
+
+    with pytest.warns(UserWarning, match=f"{column}.*read as percent"):
+        env = CityLearnEnv(schema, interface='flat', render_mode='none', episode_time_steps=24)
+
+    env.close()
+
+
+def test_misspelt_soc_unit_key_warns(ev_schema):
+    schema = copy.deepcopy(ev_schema)
+    schema['buildings']['Building_12']['chargers']['charger_12_1']['soc_units'] = 'percent'
+
+    with pytest.warns(UserWarning, match=r"'soc_units' \(did you mean 'soc_unit'\?\)"):
+        env = CityLearnEnv(schema, interface='flat', render_mode='none', episode_time_steps=24)
+
+    env.close()
+
+
+class GainCharger(Charger):
+    def __init__(self, *args, gain: float = 1.0, **kwargs):
+        self.gain = gain
+        super().__init__(*args, **kwargs)
+
+
+def test_charger_subclass_keyword_only_arguments_are_valid_attributes():
+    from citylearn.internal.loading_components import charger_power_attributes
+
+    attributes = {'gain': 2.0, 'max_charging_power': 7.4, 'max_discharging_power': 0.0, 'efficiency': 0.95}
+    assert 'gain' in GainCharger._attribute_names()
+    assert charger_power_attributes(GainCharger, attributes, 'charger', 2) == attributes
+    charger = GainCharger(episode_tracker=EpisodeTracker(0, 1), charger_simulation=None, charger_id='c', **attributes)
+    assert charger.gain == 2.0
+
+    with pytest.raises(ValueError, match="'gian' \\(did you mean 'gain'\\?\\)"):
+        charger_power_attributes(GainCharger, {'gian': 2.0}, 'charger', 2)
+
+
+def test_efficiency_warning_only_when_efficiency_is_used():
+    from citylearn.internal.loading_components import charger_power_attributes
+
+    curve = [[0.0, 0.9], [1.0, 0.95]]
+    limits = {'max_charging_power': 7.4, 'max_discharging_power': 7.4}
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        charger_power_attributes(
+            Charger, {**limits, 'charge_efficiency_curve': curve, 'discharge_efficiency_curve': curve}, 'c', 2,
+        )
+        charger_power_attributes(
+            Charger, {'max_charging_power': 7.4, 'max_discharging_power': 0.0, 'charge_efficiency_curve': curve},
+            'c', 2,
+        )
+
+    with pytest.warns(UserWarning, match='efficiency=1.0'):
+        charger_power_attributes(Charger, {**limits, 'charge_efficiency_curve': curve}, 'c', 2)
