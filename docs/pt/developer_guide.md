@@ -26,6 +26,7 @@ os wrappers RLlib só o importam quando está instalado.
 | PV autosizing | `.venv/bin/pip install -e ".[pysam]"` |
 | Testes em paralelo | `.venv/bin/pip install pytest-xdist` |
 | Cobertura (`--cov=citylearn`) e limite de 600 s por teste em `pytest.ini` | `.venv/bin/pip install pytest-cov pytest-timeout` (ambos em `test_requirements.txt`) |
+| Testes de conservação de energia baseados em propriedades | `.venv/bin/pip install hypothesis` (em `test_requirements.txt`; `tests/test_property_energy_conservation.py` é ignorado sem ele) |
 | Notebooks de exemplo | `.venv/bin/pip install nbclient nbformat ipykernel` |
 | Checks de build | `.venv/bin/pip install build twine` |
 

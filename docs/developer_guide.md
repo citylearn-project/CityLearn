@@ -31,6 +31,7 @@ Optional dependencies:
 | PV autosizing | `.venv/bin/pip install -e ".[pysam]"` |
 | Parallel tests | `.venv/bin/pip install pytest-xdist` |
 | Coverage report (`--cov=citylearn`) and the 600 s per-test timeout of `pytest.ini` | `.venv/bin/pip install pytest-cov pytest-timeout` (both are in `test_requirements.txt`) |
+| Property-based energy-conservation tests | `.venv/bin/pip install hypothesis` (in `test_requirements.txt`; `tests/test_property_energy_conservation.py` skips without it) |
 | Notebook checks | `.venv/bin/pip install nbclient nbformat ipykernel` |
 | RLlib wrappers | `.venv/bin/pip install "ray[rllib]"` (tested with Ray 2.60.0; `tests/test_rllib_wrappers.py` skips without it) |
 | Build checks | `.venv/bin/pip install build twine` |
