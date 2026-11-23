@@ -66,6 +66,22 @@ mudam, e o rácio de preço local não afeta as emissões. Para comparar com uma
 execução anterior feita com a troca local desligada, reavalie-a com a versão
 atual. Consulte [#327](https://github.com/citylearn-project/CityLearn/issues/327).
 
+### Linhas de mercado do portefólio com e sem mercados
+
+Num `MultiCommunityEnv` em que umas comunidades têm mercado comunitário e outras
+não, as linhas `portfolio_*_community_market_*` passam a incluir as comunidades
+sem mercado com a sua liquidação simples com a rede: sem troca local, a
+importação e a exportação dos seus membros como importação e exportação da rede
+depois da troca local, o seu `cost_total_control_eur` como custo liquidado e
+contrafactual, e poupança e saldo do operador nulos. Antes, estas linhas
+somavam os zeros que essas comunidades reportam, pelo que descreviam só as
+comunidades com mercado. Os seus valores, e as quotas agregadas de troca local,
+mudam apenas nesses portefólios. As linhas de distrito, as simulações, os nomes
+dos KPIs e os portefólios em que todas as comunidades têm mercado, ou nenhuma
+tem, não mudam. Reavalie com a versão atual os portefólios mistos anteriores
+antes de comparar as suas linhas de mercado do portefólio. Consulte
+[#373](https://github.com/citylearn-project/CityLearn/issues/373).
+
 ### Limites dos set points dos ocupantes
 
 Na versão 2 da física, um ocupante de um

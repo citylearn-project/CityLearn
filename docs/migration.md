@@ -63,6 +63,21 @@ unchanged, and the local price ratio does not affect emissions. To compare
 with an earlier run made with local trading off, re-evaluate it with the
 current release. See [#327](https://github.com/citylearn-project/CityLearn/issues/327).
 
+### Portfolio market rows with and without markets
+
+In a `MultiCommunityEnv` where some communities have a community market and
+others do not, the `portfolio_*_community_market_*` rows now include the
+communities without a market with their plain grid settlement: no local trade,
+their members' grid import and export as grid import and export after local
+trading, their `cost_total_control_eur` as settled and counterfactual cost, and
+zero savings and operator balance. These rows used to add the zeros those
+communities report, so they described only the market communities. Their
+values, and the pooled local-trade shares, change for such portfolios only.
+District rows, simulations, KPI names and portfolios where every community has
+a market, or none has, are unchanged. Re-evaluate earlier mixed portfolios with
+the current release before comparing their portfolio market rows. See
+[#373](https://github.com/citylearn-project/CityLearn/issues/373).
+
 ### Occupant set-point limits
 
 Under physics version 2, an occupant of a

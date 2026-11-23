@@ -419,6 +419,7 @@ Distrito e portefólio:
 - As quotas do portefólio são agregadas (#312), o que dá a quota dos totais somados:
   - `import_share` e `local_share_of_demand` são ponderadas pela importação local mais a importação da rede depois da troca local;
   - `local_share_of_export` pela exportação local mais a exportação para a rede depois da troca local.
+- Portefólio com e sem mercados (#373): quando umas comunidades têm mercado comunitário e outras não, uma comunidade sem mercado entra nas linhas de mercado do portefólio com a sua liquidação simples com a rede. Não troca nada localmente; a sua importação e exportação da rede depois da troca local são a importação e a exportação dos seus próprios membros, as somas dos seus consumos líquidos positivos e negativos; os seus custos liquidado e contrafactual são o seu `cost_total_control_eur`, porque sem mercado os membros pagam à rede; a sua poupança e o saldo do operador são 0. As suas quotas contam por isso como 0, agregadas pelos seus fluxos com a rede. O custo liquidado do portefólio fica então igual ao `cost_total_control_eur` do portefólio, porque o custo de controlo de cada comunidade com mercado é o seu custo liquidado, e as quotas descrevem todo o portefólio. As linhas de distrito da própria comunidade mantêm os seus zeros. Quando nenhuma comunidade tem mercado, as linhas do portefólio são as somas desses zeros.
 
 Que KPI usar:
 - Para a parte da procura coberta localmente, use `district_solar_self_consumption_community_market_import_share_ratio`.
@@ -427,7 +428,7 @@ Que KPI usar:
 - Nenhuma destas quotas é o rácio de autoconsumo solar da família `solar_self_consumption`.
 
 Limitações conhecidas:
-- As linhas existem com o mercado desativado: os zeros não medem troca local.
+- As linhas existem com o mercado desativado: os zeros não medem troca local. Num portefólio que junta comunidades com e sem mercado, esses zeros são substituídos pela liquidação simples com a rede (ver acima).
 - O nome `local_share_of_demand` refere a procura, mas o seu denominador é a importação bruta dos membros.
 - As quotas e o saldo do operador não têm variante BAU.
 
