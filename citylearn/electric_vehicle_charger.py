@@ -253,7 +253,7 @@ class Charger(Environment):
     
     @property
     def time_step_ratio(self) -> float:
-        r"""Electricity consumption time series."""
+        r"""Ratio of the control step to the dataset step."""
 
         return self.__time_step_ratio
 
