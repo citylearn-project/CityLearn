@@ -138,3 +138,29 @@ def test_a_schedule_outside_the_limits_is_not_moved_into_them():
 def test_invalid_set_point_limits_are_rejected(value):
     with pytest.raises(ValueError, match='set_point_limits'):
         _env(2, set_point_limits=value)
+
+
+def test_business_as_usual_set_point_observation_stays_in_the_space():
+    """Under the BAU agent the occupant took the Quebec heating set point to about 139 C within
+    96 steps, far above its observation bound (CityLearn #357, set-point part)."""
+
+    from citylearn.agents.baseline import BusinessAsUsualAgent
+
+    schema = _schema()
+    env = CityLearnEnv(schema, interface='flat', central_agent=True, episode_time_steps=96, random_seed=0, physics_version=2)
+
+    try:
+        observations, _ = env.reset()
+        agent = BusinessAsUsualAgent(env)
+        space = env.observation_space[0]
+        index = env.observation_names[0].index('indoor_dry_bulb_temperature_heating_set_point')
+        values = []
+
+        while not env.terminated:
+            observations, *_ = env.step(agent.predict(observations))
+            values.append(float(observations[0][index]))
+
+        values = np.asarray(values)
+        assert (values >= space.low[index]).all() and (values <= space.high[index]).all(), (values.min(), values.max())
+    finally:
+        env.close()

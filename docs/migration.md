@@ -70,9 +70,11 @@ Under physics version 2, an occupant of a
 cooling set point past `set_point_limits`, a building schema key (and
 constructor argument) that defaults to `[15, 30]` °C. Before, each occupant
 change was added to the current set point with no limit, and under arbitrary
-HVAC control, such as random actions over a full Quebec episode, the heating
-set point random-walked to thousands of degrees below zero
-([#352](https://github.com/citylearn-project/CityLearn/issues/352)).
+HVAC control the occupant keeps interacting: over the first Quebec episode
+the heating set point reached -2323 °C with random actions and 3230 °C with
+`BusinessAsUsualAgent`, far outside its observation bounds
+([#352](https://github.com/citylearn-project/CityLearn/issues/352),
+[#357](https://github.com/citylearn-project/CityLearn/issues/357)).
 
 - A change stops at the limit it would cross. A schedule value already outside
   the range is kept, and an occupant can still move the set point back towards
@@ -85,10 +87,13 @@ set point random-walked to thousands of degrees below zero
   instead of the indoor temperature limits (about -1 to 42 °C), so
   bound-based normalisation of these features changes: agents trained there
   under physics version 2 should be retrained.
-- Runs without control are unchanged: with `NoControlAgent` the Quebec set
-  points stay within 16.6 to 26.6 °C over the first episode. Runs whose
-  control drives the occupant past the limits change, including their comfort
-  KPIs and rewards.
+- With `NoControlAgent` nothing changes: the Quebec set points stay within
+  16.6 to 26.6 °C over the first episode. With `BusinessAsUsualAgent` the
+  simulation and the `evaluate()` KPIs do not change, because the large set
+  points fall on unoccupied steps, but the set-point observations and the
+  rewards that read them (such as `ComfortReward`) do. With random actions the
+  discomfort KPIs change too; energy, cost and emissions do not, because the
+  HVAC action, not the set point, sets the heating supplied.
 - `set_point_limits` applies under physics version 2 and later only. Set
   `physics_version` to `1` to reproduce the unbounded set points of
   CityLearn 3.6.0. To widen or narrow the range, set `set_point_limits` in each
