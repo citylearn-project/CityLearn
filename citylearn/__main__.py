@@ -135,8 +135,9 @@ class Simulator:
         self.time_series_variables = time_series_variables
         self.simulation_id = simulation_id
         self.overwrite = overwrite
-        self.output_directory = output_directory
+        # Set before the output directory, which refuses to delete a directory that holds the agent to load.
         self.agent_filepath = agent_filepath
+        self.output_directory = output_directory
         self.__reset()
 
     @property
@@ -221,6 +222,15 @@ class Simulator:
             if value is None else value
         
         if os.path.isdir(self.__output_directory) and self.overwrite:
+            agent_filepath = getattr(self, '_Simulator__agent_filepath', None)
+
+            if agent_filepath is not None and Path(os.path.abspath(self.__output_directory)) in Path(os.path.abspath(agent_filepath)).parents:
+                raise ValueError(
+                    f'The output directory {self.__output_directory} holds the agent to load, {agent_filepath}, '
+                    'and would be deleted before loading it. Write to another directory with -d, or keep the '
+                    'existing output with -p.'
+                )
+
             shutil.rmtree(self.__output_directory)
         
         else:
@@ -402,9 +412,30 @@ class Simulator:
                 agent.env = self.env
 
             else:
-                agent = StableBaselines3Agent.load(self.agent_filepath, self.env)
+                # A saved Stable Baselines3 model is loaded with its own algorithm class: the abstract
+                # BaseAlgorithm cannot be instantiated, so -a must name the algorithm that saved the model.
+                agent_type = self.__import_agent_type()
+
+                if not (isinstance(agent_type, type) and 'stable_baselines3' in agent_type.__module__):
+                    raise ValueError(
+                        f'{self.agent_filepath} is not a .pkl CityLearn agent, so it is loaded as a Stable Baselines3 '
+                        f'model, and -a must name the algorithm that saved it, for example -a stable_baselines3.SAC '
+                        f'(got -a {self.agent_name}).'
+                    )
+
+                agent = agent_type.load(self.agent_filepath, env=self.env)
 
         return agent
+
+    def __import_agent_type(self) -> Any:
+        agent_module = '.'.join(str(self.agent_name).split('.')[0:-1])
+        agent_name = str(self.agent_name).split('.')[-1]
+
+        try:
+            return getattr(importlib.import_module(agent_module), agent_name)
+
+        except (ImportError, ValueError, AttributeError):
+            return None
     
     def __set_env(self) -> CityLearnEnv:
         env = CityLearnEnv(self.schema, **self.env_kwargs)
