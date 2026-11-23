@@ -8,6 +8,7 @@ from typing import Any, Mapping
 
 import numpy as np
 import pytest
+from private_access import entity_service
 
 pytest.importorskip("gymnasium")
 
@@ -592,7 +593,7 @@ def test_near_full_ev_availability_allows_viable_command_only_inside_headroom(tm
         charger.min_charging_power = 1.38
         ev = charger.connected_electric_vehicle
         ev.battery.soc[0] = 0.999
-        service = env._entity_service
+        service = entity_service(env)
         service._headroom_power_limit_for_connection = lambda *args, **kwargs: headroom
         obs = service.observation_payload()
         names = env.entity_specs['tables']['charger']['features']
@@ -630,7 +631,7 @@ def test_faded_ev_reports_the_energy_its_battery_accepts(tmp_path, soc):
         battery.capacity_power_curve = [[0.0, 1.0], [1.0, 1.0]]
         battery._capacity_history.append(0.99 * battery.capacity)
         battery.soc[0] = soc
-        payload = env._entity_service.observation_payload()
+        payload = entity_service(env).observation_payload()
 
         def value(table: str, name: str) -> float:
             return _payload_value(env, payload, table, name)
@@ -668,7 +669,7 @@ def test_physics_version_1_keeps_the_nominal_energy_to_full_of_a_faded_ev(tmp_pa
         battery = env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery
         battery._capacity_history.append(0.99 * battery.capacity)
         battery.soc[0] = 0.995
-        payload = env._entity_service.observation_payload()
+        payload = entity_service(env).observation_payload()
 
         assert _payload_value(env, payload, "charger", "connected_ev_energy_to_full_kwh") == pytest.approx(
             0.005 * battery.capacity, rel=1.0e-5
@@ -687,7 +688,7 @@ def test_faded_storage_battery_reports_no_charge_headroom_when_full(tmp_path):
         storage.capacity_power_curve = [[0.0, 1.0], [1.0, 1.0]]
         storage._capacity_history.append(0.98 * storage.capacity)
         storage.soc[0] = 0.99
-        payload = env._entity_service.observation_payload()
+        payload = entity_service(env).observation_payload()
 
         assert storage.preview_charge(1.0) == 0.0
         assert _payload_value(env, payload, "storage", "degraded_capacity_kwh") == pytest.approx(0.98 * storage.capacity)

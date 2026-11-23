@@ -17,6 +17,7 @@ from test_deferrable_appliance_integration import (
     _zero_entity_payload,
 )
 from test_market_phase_invariants import _write_residual_market_schema
+from private_access import provenance_service, runtime_service, topology_service
 
 
 def scenario(
@@ -164,7 +165,7 @@ def test_joint_equipment_sharing_losses_and_carbon(tmp_path, seconds, fast):
     try:
         env.reset()
         with IndependentBalanceAudit(env) as audit:
-            step = env._runtime_service.step_without_feedback if fast else env.step
+            step = runtime_service(env).step_without_feedback if fast else env.step
             while not env.terminated:
                 t = env.time_step
                 step(
@@ -224,7 +225,7 @@ def test_history_survives_exit_and_recommissioning(tmp_path, kind):
         assert any(
             r["destination"] == "asset_exit" for r in result["source_destinations"]
         )
-        history = env._topology_service.historical_storages("Building_1")
+        history = topology_service(env).historical_storages("Building_1")
         assert len(history) == 2
         # Querying must not consume source or destination evidence.
         before = deepcopy(result["source_destinations"])
@@ -301,12 +302,12 @@ def test_audit_is_passive_restores_runtime_and_has_no_reset_leak(tmp_path):
     env = scenario(tmp_path)
     try:
         env.reset()
-        method = env._runtime_service._step_once
+        method = runtime_service(env)._step_once
         with IndependentBalanceAudit(env) as audit:
             while not env.terminated:
                 env.step(commands(env, [0.0, 0.0]))
             first = audit.finish()
-        assert env._runtime_service._step_once == method
+        assert runtime_service(env)._step_once == method
         env.reset()
         with IndependentBalanceAudit(env) as audit:
             while not env.terminated:
@@ -324,14 +325,14 @@ def test_corrupted_accounting_is_detected_without_using_it_as_expected(tmp_path)
         with IndependentBalanceAudit(env) as audit:
             while not env.terminated:
                 env.step(commands(env, [0.0, 0.0]))
-            source = env._provenance_service.source_destinations
+            source = provenance_service(env).source_destinations
 
             def wrong():
                 rows = source()
                 rows[0]["energy_kwh"] += 0.1
                 return rows
 
-            env._provenance_service.source_destinations = wrong
+            provenance_service(env).source_destinations = wrong
             with pytest.raises(BalanceAuditError, match="provenance"):
                 audit.finish()
     finally:
@@ -379,7 +380,7 @@ def test_unused_pv_in_outage_is_curtailment_not_useful_load(tmp_path):
             while not env.terminated:
                 env.step([np.zeros(env.action_space[0].shape)])
             report = audit.finish()
-        summary = env._provenance_service.summary()[1]
+        summary = provenance_service(env).summary()[1]
         assert summary["pv_load_kwh"] == 0
         assert summary["pv_curtailment_kwh"] == pytest.approx(4.5)
         assert summary["pv_useful_building_ratio"] == 0

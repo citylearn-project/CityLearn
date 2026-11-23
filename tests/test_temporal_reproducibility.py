@@ -12,6 +12,7 @@ from test_demand_response import (
     _clean_schema,
     _zero_entity_actions,
 )
+from private_access import ev_drift_seed, robustness_service
 
 
 def schema_at(tmp_path, origin="2024-03-31T00:45:00Z", *, noise=0.0):
@@ -134,13 +135,13 @@ def test_seeded_reset_replays_fixed_window_and_preserves_unseeded_episode_variat
             while not env.terminated:
                 env.step(_zero_entity_actions(env))
             traces.append(
-                (env._ev_drift_seed, env.electric_vehicles[0].battery.soc.copy())
+                (ev_drift_seed(env), env.electric_vehicles[0].battery.soc.copy())
             )
         assert traces[0][0] == traces[1][0]
         np.testing.assert_array_equal(traces[0][1], traces[1][1])
-        first = env._ev_drift_seed
+        first = ev_drift_seed(env)
         env.reset()
-        assert env._ev_drift_seed != first
+        assert ev_drift_seed(env) != first
     finally:
         env.close()
 
@@ -156,11 +157,11 @@ def test_explicit_episode_index_replays_random_split(tmp_path):
     )
     try:
         env.reset(seed=9, options={"episode_index": 3})
-        first = (env.episode_tracker.episode_start_time_step, env._ev_drift_seed)
+        first = (env.episode_tracker.episode_start_time_step, ev_drift_seed(env))
         env.reset(seed=9, options={"episode_index": 3})
         assert first == (
             env.episode_tracker.episode_start_time_step,
-            env._ev_drift_seed,
+            ev_drift_seed(env),
         )
         with pytest.raises(ValueError):
             env.reset(options={"episode_index": -1})
@@ -195,11 +196,11 @@ def test_robustness_default_seed_follows_explicit_reset_but_override_is_preserve
     env = CityLearnEnv(schema, random_seed=7, offline=True)
     try:
         env.reset(seed=19)
-        assert env._robustness_service.random_seed == 19
+        assert robustness_service(env).random_seed == 19
         env.schema["robustness"] = {"enabled": False, "random_seed": 23}
-        env._robustness_service.random_seed = 23
+        robustness_service(env).random_seed = 23
         env.reset(seed=20)
-        assert env._robustness_service.random_seed == 23
+        assert robustness_service(env).random_seed == 23
     finally:
         env.close()
 

@@ -8,6 +8,13 @@ from typing import Mapping
 import numpy as np
 import pandas as pd
 import pytest
+from private_access import (
+    charging_constraint_last_penalty_kwh,
+    charging_constraints_state,
+    market_settlement_history,
+    member_pool,
+    topology_service,
+)
 
 pytest.importorskip("gymnasium")
 
@@ -243,7 +250,7 @@ def _assert_market_settlement_conservation(
 
 
 def _assert_phase_state_coherent(building, *, history_time_step: int):
-    state = building._charging_constraints_state
+    state = charging_constraints_state(building)
     assert state is not None
 
     eps = 1.0e-5
@@ -288,7 +295,7 @@ def test_community_market_runtime_settlement_conserves_energy_with_grid_residual
 
         saw_grid_import = False
         saw_grid_export = False
-        for t, rows in enumerate(env._community_market_settlement_history):
+        for t, rows in enumerate(market_settlement_history(env)):
             _assert_market_settlement_conservation(
                 env,
                 time_step=t,
@@ -352,7 +359,7 @@ def test_three_phase_service_state_conserves_total_phase_power_and_headroom(tmp_
 
         building = env.buildings[0]
         _assert_phase_state_coherent(building, history_time_step=building.time_step - 1)
-        assert building._charging_constraint_last_penalty_kwh > 0.0
+        assert charging_constraint_last_penalty_kwh(building) > 0.0
     finally:
         env.close()
 
@@ -445,15 +452,15 @@ def test_dynamic_topology_community_market_conservation_tracks_active_members():
 
     try:
         _rollout_zero_actions(env)
-        member_pool = env._topology_service.member_pool
+        pool = member_pool(env)
 
-        for t, rows in enumerate(env._community_market_settlement_history):
-            active_ids = env._topology_service.active_member_ids_at(t)
+        for t, rows in enumerate(market_settlement_history(env)):
+            active_ids = topology_service(env).active_member_ids_at(t)
             _assert_market_settlement_conservation(
                 env,
                 time_step=t,
                 rows=rows,
-                building_by_name=member_pool,
+                building_by_name=pool,
                 expected_names=active_ids,
             )
     finally:

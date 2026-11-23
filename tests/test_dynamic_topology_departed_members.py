@@ -10,6 +10,7 @@ from citylearn.citylearn import CityLearnEnv
 from citylearn.internal.kpi_equipment import compute_phase_metrics
 from test_deferrable_appliance_integration import _zero_entity_payload
 from test_independent_balances import commands, scenario
+from private_access import kpi_buildings, kpi_service, member_pool
 
 DYNAMIC_SCHEMA = Path(__file__).resolve().parents[1] / 'data/datasets/citylearn_three_phase_dynamic_topology_demo/schema.json'
 EVENT_STEP = 4
@@ -51,12 +52,12 @@ def test_district_counterfactual_series_keep_departed_members():
 
         # Every reference series, PV-free variants included, is the sum of the members' series over
         # the steps at which they were members, as the building-level KPIs read them.
-        members = env._kpi_service._get_kpi_buildings()
+        members = kpi_buildings(env)
         assert {'Building_6', 'Building_18'} <= {b.name for b in members}
         for name in COUNTERFACTUAL_PROPERTIES:
             expected = np.zeros(executed)
             for b in members:
-                values = env._kpi_service._energy_values(b, getattr(
+                values = kpi_service(env)._energy_values(b, getattr(
                     b, name if isinstance(b, DynamicsBuilding) else name.replace('_and_partial_load', '')
                 ))
                 expected[:len(values)] += values
@@ -89,7 +90,7 @@ def test_topology_events_keep_recorded_charging_and_phase_histories(tmp_path, ev
     env = scenario(tmp_path, phase_limits=True, events=events)
     try:
         env.reset()
-        building = env._topology_service.member_pool['Building_1']
+        building = member_pool(env)['Building_1']
         while env.time_step < EVENT_STEP - 1:
             env.step(commands(env, [0.5, -0.4], start=env.time_step == 0))
 
@@ -112,9 +113,9 @@ def test_topology_events_keep_recorded_charging_and_phase_histories(tmp_path, ev
             np.testing.assert_array_equal(building._charging_phase_power_history_kw[name][:recorded], values, err_msg=name)
 
         # The member's KPI window still starts at 0, so the phase peaks recorded before the event count.
-        t_start, t_end = env._kpi_service._building_active_window(building)
+        t_start, t_end = kpi_service(env)._building_active_window(building)
         assert t_start == 0
-        peaks = compute_phase_metrics(env._kpi_service, building, t_start=t_start, t_final=t_end)['phase_import_peak_kw']
+        peaks = compute_phase_metrics(kpi_service(env), building, t_start=t_start, t_final=t_end)['phase_import_peak_kw']
         for name, values in before_phases.items():
             assert peaks[name] >= float(np.clip(values, 0.0, None).max()), name
     finally:

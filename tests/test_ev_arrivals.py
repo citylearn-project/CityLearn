@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from pathlib import Path
+from private_access import kpi_service
 
 pytest.importorskip("gymnasium")
 
@@ -115,7 +116,7 @@ def test_arrival_soc_estimate_found_on_earlier_incoming_row():
     assert charger.connected_electric_vehicle is ev
     assert float(ev.battery.soc[arrival]) == pytest.approx(estimate, abs=1e-6)
     states = np.asarray(sim.electric_vehicle_charger_state, dtype='float64')
-    assert env._kpi_service._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(estimate, abs=1e-6)
+    assert kpi_service(env)._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(estimate, abs=1e-6)
     env.close()
 
 
@@ -196,7 +197,7 @@ def test_battery_arrival_soc_matches_kpi_and_departure_audit_references(rows, ex
         env.step(_zero_actions(env))
 
     assert charger.connected_electric_vehicle is ev
-    service = env._kpi_service
+    service = kpi_service(env)
     states = np.asarray(sim.electric_vehicle_charger_state, dtype='float64')
     assert service._ev_connected_interval_start(sim, states, 7) == arrival
     battery_soc = float(ev.battery.soc[arrival])
@@ -244,8 +245,8 @@ def test_numeric_csv_session_ids_keep_arrival_soc_within_the_session(tmp_path, s
         battery_soc = float(ev.battery.soc[arrival])
         assert battery_soc == pytest.approx(float(ev.battery.soc[arrival - 1]))
         assert battery_soc != pytest.approx(0.3)
-        assert env._kpi_service._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(battery_soc)
-        assert ev_departure_audit.arrival_soc(env._kpi_service, sim, ev.battery, states, arrival) is None
+        assert kpi_service(env)._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(battery_soc)
+        assert ev_departure_audit.arrival_soc(kpi_service(env), sim, ev.battery, states, arrival) is None
     finally:
         env.close()
 

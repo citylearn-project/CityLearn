@@ -13,6 +13,7 @@ from citylearn.citylearn import CityLearnEnv
 from citylearn.internal.baseline import CityLearnBusinessAsUsualBaselineService
 from citylearn.internal.comparison import configuration_differences, inventory
 from test_market_phase_invariants import _rollout_zero_actions, _write_residual_market_schema
+from private_access import baseline_service
 
 BAU_DATASET = 'citylearn_challenge_2023_phase_1'
 OVERRIDES = dict(simulate_power_outage=True, inactive_actions=['electrical_storage'], solar_generation=False)
@@ -45,7 +46,7 @@ def _business_as_usual_self_comparison(env):
 
 def test_business_as_usual_sidecar_reapplies_constructor_overrides():
     env = CityLearnEnv(BAU_DATASET, central_agent=True, episode_time_steps=24, random_seed=0, **OVERRIDES)
-    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar = baseline_service(env)._new_sidecar_env()
 
     for source, reference in zip(env.buildings, sidecar.buildings):
         assert reference.simulate_power_outage == source.simulate_power_outage is True
@@ -107,7 +108,7 @@ def test_business_as_usual_reference_keeps_equipment_autosized_over_the_loaded_d
     assert len(equipment) > 0
     assert _autosized_equipment(episode_only, schema) != equipment
 
-    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar = baseline_service(env)._new_sidecar_env()
     sidecar.reset()
     tracker = sidecar.episode_tracker
     assert (tracker.simulation_start_time_step, tracker.simulation_end_time_step) == (0, 8759)
@@ -157,7 +158,7 @@ def test_business_as_usual_reference_is_released_before_the_next_one_is_built(mo
     env = CityLearnEnv(BAU_DATASET, central_agent=True, episode_time_steps=24, random_seed=0)
     agent = BusinessAsUsualAgent(env)
     observations, _ = env.reset(seed=0)
-    service = env._business_as_usual_baseline_service
+    service = baseline_service(env)
     build = service._new_sidecar_env
     built, alive_at_build = [], []
 
@@ -188,7 +189,7 @@ def test_business_as_usual_reference_rejects_other_equipment_even_with_the_same_
     env = CityLearnEnv('citylearn_challenge_2020_climate_zone_1', buildings=['Building_1', 'Building_2'],
                        central_agent=True, episode_time_steps=24, random_seed=0)
     env.reset(seed=0, options={'episode_index': 2})
-    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar = baseline_service(env)._new_sidecar_env()
     sidecar.reset()
     assert inventory(sidecar) == env._comparison_initial_inventory
 
@@ -213,7 +214,7 @@ def test_business_as_usual_reference_rejects_devices_changed_after_loading():
 def test_business_as_usual_reference_loads_only_the_episode_without_autosizing():
     env = CityLearnEnv(BAU_DATASET, central_agent=True, episode_time_steps=24, random_seed=0)
     env.reset(seed=0, options={'episode_index': 2})
-    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar = baseline_service(env)._new_sidecar_env()
     sidecar.reset()
     tracker = sidecar.episode_tracker
 
@@ -234,7 +235,7 @@ def test_business_as_usual_reference_loads_only_the_episode_when_disabled_pv_is_
 
     env = CityLearnEnv(schema, central_agent=True, episode_time_steps=24, random_seed=0, solar_generation=solar_generation)
     env.reset(seed=0, options={'episode_index': 2})
-    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar = baseline_service(env)._new_sidecar_env()
     sidecar.reset()
     tracker = sidecar.episode_tracker
 
@@ -265,7 +266,7 @@ def test_business_as_usual_reference_keeps_reversed_building_order_and_per_build
     assert first.simulate_power_outage and first.pv.nominal_power == 0.0 and 'electrical_storage' not in first.active_actions
     assert not second.simulate_power_outage and second.pv.nominal_power > 0.0 and 'electrical_storage' in second.active_actions
 
-    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+    sidecar = baseline_service(env)._new_sidecar_env()
 
     # The reference used to load Building_1 first and give it Building_2's outage, PV and storage settings.
     assert [b.name for b in sidecar.buildings] == ['Building_2', 'Building_1']
@@ -287,7 +288,7 @@ def test_business_as_usual_reference_in_another_building_order_is_rejected(monke
         BAU_DATASET, central_agent=True, episode_time_steps=24, random_seed=0, buildings=[1, 0], **PER_BUILDING_OVERRIDES,
     )
     # Selecting the reference's buildings by name, as before, loads them in schema order.
-    monkeypatch.setattr(type(env._business_as_usual_baseline_service), '_schema_indices', staticmethod(lambda _, names: names))
+    monkeypatch.setattr(type(baseline_service(env)), '_schema_indices', staticmethod(lambda _, names: names))
     agent = BusinessAsUsualAgent(env)
     observations, _ = env.reset(seed=0)
     env.step(agent.predict(observations, deterministic=True))

@@ -13,6 +13,7 @@ import pytest
 
 from citylearn.citylearn import CityLearnEnv
 from citylearn.internal.physics_invariants import PhysicsInvariantError
+from private_access import physics_invariant_service
 
 ROOT = Path(__file__).resolve().parents[1]
 MINUTE_EV_DEMO = ROOT/'tests'/'data'/'minute_ev_demo'/'schema.json'
@@ -43,7 +44,7 @@ def _zero(env):
 def _step_with_unchecked_net_balance(env, action):
     """Step, and check that the net balance alone accepts the step the device identity rejects."""
 
-    service = env._physics_invariant_service
+    service = physics_invariant_service(env)
     net_balance = service._assert_building_energy_balance
     with pytest.raises(PhysicsInvariantError) as error:
         env.step(action)

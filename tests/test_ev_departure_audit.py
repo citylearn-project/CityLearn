@@ -14,6 +14,7 @@ from citylearn.citylearn import CityLearnEnv
 from citylearn.community_dataset import InventoryBattery
 from citylearn.internal import ev_departure_audit as audit
 from citylearn.internal.kpi import CityLearnKPIService
+from private_access import kpi_service
 
 
 SOURCE = Path(__file__).parent / 'data/minute_ev_demo'
@@ -240,7 +241,7 @@ def test_real_outage_delayed_charge_and_departure_service_export(tmp_path, targe
         b = env.buildings[0]
         assert sum(b.chargers_electricity_consumption[:2]) == 0.
         assert sum(b.chargers_electricity_consumption[2:4]) > 0.
-        c = env._kpi_service._compute_ev_metrics(b)['_departure_audit']
+        c = kpi_service(env)._compute_ev_metrics(b)['_departure_audit']
         assert c['departures_count'] == 1
         assert c['target_service_met_count'] == expected_met
         assert_partition(c)
