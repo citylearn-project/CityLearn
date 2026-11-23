@@ -52,7 +52,8 @@ def scenario(
     schema["community_market"] = {
         "enabled": True,
         "local_price_ratio_to_grid_import": 0.8,
-        "grid_export_price": 0.05,
+        # Version 1 pays nothing for exports and rejects a non-zero price (#366).
+        "grid_export_price": 0.05 if version == 2 else 0.0,
         "settlement_version": version,
         "import_member_weights": {"Building_1": 2.0, "Building_2": 1.0},
     }

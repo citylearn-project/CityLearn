@@ -98,6 +98,31 @@ unchanged, and the local price ratio does not affect emissions. To compare
 with an earlier run made with local trading off, re-evaluate it with the
 current release. See [#327](https://github.com/citylearn-project/CityLearn/issues/327).
 
+### Community market settings are validated
+
+`CityLearnEnv` now checks the `community_market` section when it is built and
+raises a `ValueError` for settings that earlier releases ignored or replaced:
+unknown keys (`enable` instead of `enabled`), a ratio that is not a number or
+is outside `[0, 1]`, ratio aliases with different values, a
+`settlement_version` other than `1` or `2` (a string such as `"2"` included), a non-zero
+`grid_export_price` without `"settlement_version": 2`, and member weights or
+tariff files for buildings that are not in the schema. The message names the
+key and the fix. A schema that loaded before and now raises was not simulating
+what it said: for example, a ratio of 1.5 settled at 1.0 and a
+`grid_export_price` without settlement version 2 paid nothing. Write the value
+that was applied (ratio 1, `grid_export_price: 0`) to keep the earlier results,
+or fix the setting to get what was intended. Every bundled dataset is valid and
+its results do not change.
+
+Market attributes set on the env after construction
+(`community_market_enabled`, `community_market_sell_ratio`,
+`community_market_grid_export_price`,
+`community_market_import_member_weights`, `community_market_local_enabled`,
+`community_tariffs`) are not supported. The native BAU reference is rebuilt
+from the schema, so `evaluate_v2()` with the BAU comparison now raises when they
+differ from it. Change `schema['community_market']` and build a new env instead.
+See [#366](https://github.com/citylearn-project/CityLearn/issues/366).
+
 ### Portfolio market rows with and without markets
 
 In a `MultiCommunityEnv` where some communities have a community market and
