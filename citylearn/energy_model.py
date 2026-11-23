@@ -648,7 +648,7 @@ class PV(ElectricDevice):
 
         Parameters
         ----------
-        inverter_ac_power_perk_w : Union[float, Iterable[float]]
+        inverter_ac_power_per_kw : Union[float, Iterable[float]]
             Inverter AC power output per kW of PV capacity in [W/kW] when
             ``generation_mode='per_kw'``. Absolute PV generation in [kWh/step]
             when ``generation_mode='absolute'``.
@@ -661,7 +661,7 @@ class PV(ElectricDevice):
         Notes
         -----
         .. math::
-            \textrm{generation} = \frac{\textrm{capacity} \times \textrm{inverter_ac_power_per_w}}{1000} \times \Delta t
+            \textrm{generation} = \frac{\textrm{nominal_power} \times \textrm{inverter_ac_power_per_kw}}{1000} \times \frac{\textrm{seconds_per_time_step}}{3600}
         """
 
         if self.generation_mode == 'absolute':
@@ -802,11 +802,16 @@ class StorageDevice(Device):
     capacity : float, default: 0.0
         Maximum amount of energy the storage device can store in [kWh]. Must be >= 0.
     efficiency : Union[float, Tuple[float, float]], default: (0.90, 0.98)
-        Technical efficiency.
+        Round-trip efficiency. Each charge or discharge conversion uses its square root,
+        `one_way_efficiency`.
     loss_coefficient : Union[float, Tuple[float, float]], default: (0.001, 0.009)
-        Standby hourly losses. Must be between 0 and 1 (this value is often 0 or really close to 0).
+        Standby losses as a fraction of the stored energy per hour. Must be between 0 and 1 (this value is often 0
+        or really close to 0). The loss per step is compounded: ``1 - (1 - loss_coefficient)**(seconds_per_time_step/3600)``.
     initial_soc : Union[float, Tuple[float, float]], default: 0.0
-        State of charge when `time_step` = 0. Must be >= 0 and < `capacity`.
+        State of charge when `time_step` = 0, as a fraction of `capacity` in [0, 1]. :py:class:`Battery` overrides
+        the default with ``1 - depth_of_discharge``.
+    time_step_ratio : float, default: 1.0
+        Ratio of the control step to the dataset step.
 
     Other Parameters
     ----------------
@@ -831,7 +836,7 @@ class StorageDevice(Device):
     
     @property
     def time_step_ratio(self) -> float:
-        r"""Maximum amount of energy the storage device can store in [kWh]."""
+        r"""Ratio of the control step to the dataset step."""
 
         return self.__time_step_ratio
 
@@ -844,7 +849,7 @@ class StorageDevice(Device):
     
     @property
     def initial_soc(self) -> float:
-        r"""State of charge when `time_step` = 0 in [kWh]."""
+        r"""State of charge when `time_step` = 0, as a fraction of `capacity` in [0, 1]."""
 
         return self.__initial_soc
 
@@ -1233,17 +1238,34 @@ class Battery(StorageDevice, ElectricDevice):
     nominal_power: float
         Maximum amount of electric power that the battery can use to charge or discharge.
     capacity_loss_coefficient : Union[float, Tuple[float, float]], default: (1e-5, 1e-4)
-        Battery degradation; storage capacity lost in each charge and discharge cycle (as a fraction of the total capacity).
-    power_efficiency_curve: list, default: [[0, 0.83],[0.3, 0.83],[0.7, 0.9],[0.8, 0.9],[1, 0.85]]
-        Charging/Discharging efficiency as a function of nominal power.
-    capacity_power_curve: list, default: [[0.0, 1],[0.8, 1],[1.0, 0.2]]   
-        Maximum charging power of the battery, as a fraction of `nominal_power`, as a function of its current state
-        of charge.
+        Battery degradation: fraction of `capacity` lost per equivalent full cycle. The loss in a step is
+        ``capacity_loss_coefficient * capacity * |terminal energy| / (2 * degraded_capacity)``.
+    power_efficiency_curve: list, optional
+        Round-trip efficiency as a function of the terminal power divided by `nominal_power`, as ``[[x, y], ...]``
+        points. Each conversion uses the square root of the interpolated value. When omitted, a five-point curve is
+        drawn from the random stream around `efficiency` (x points near 0, 0.3, 0.7, 0.8 and 1, values between
+        0.85 and 1.0 times `efficiency`), so it depends on the seed.
+    capacity_power_curve: list, optional
+        Maximum charging power of the battery, as a fraction of `nominal_power`, as a function of the state of charge
+        at the start of the step. When omitted, a three-point curve is drawn from the random stream (0.95 to 1.0 at an
+        empty battery, 0.9 to 0.95 near 0.8 state of charge and 0.2 to 0.3 when full), so it depends on the seed.
     depth_of_discharge: Union[float, Tuple[float, float]], default: 1.0
-        Maximum fraction of the battery that can be discharged relative to the total battery capacity.
+        Maximum fraction of `capacity` that can be discharged. Discharging stops at a state of charge of
+        ``1 - depth_of_discharge``. It also sets the default `initial_soc`.
     discharge_power_curve: list, default: [[0.0, 1.0], [1.0, 1.0]]
-        Maximum discharging power of the battery, as a fraction of `nominal_power`, as a function of its current
-        state of charge. The default discharges at `nominal_power` at any state of charge.
+        Maximum discharging power of the battery, as a fraction of `nominal_power`, as a function of the state of
+        charge at the start of the step. The default discharges at `nominal_power` at any state of charge.
+    time_step_ratio : float, default: 1.0
+        Ratio of the control step to the dataset step.
+
+    Notes
+    -----
+    Energies here are per control step, at the battery terminals (the building side). `efficiency` is a
+    round-trip value and each conversion keeps its square root, so charging :math:`E` stores
+    :math:`E\sqrt{\eta}` and discharging :math:`E` takes :math:`E/\sqrt{\eta}` from storage, where
+    :math:`\eta` is read from `power_efficiency_curve` at the applied power. Charging is limited by
+    `capacity_power_curve` and by the degraded capacity; discharging by `discharge_power_curve` and by the
+    floor ``(1 - depth_of_discharge) * capacity``. If `initial_soc` is omitted, the battery starts at that floor.
 
     Attributes
     ----------
@@ -1286,19 +1308,19 @@ class Battery(StorageDevice, ElectricDevice):
 
     @property
     def capacity_loss_coefficient(self) -> float:
-        """Battery degradation; storage capacity lost in each charge and discharge cycle (as a fraction of the total capacity)."""
+        """Battery degradation: fraction of `capacity` lost per equivalent full cycle."""
 
         return self.__capacity_loss_coefficient
 
     @property
     def power_efficiency_curve(self) -> np.ndarray:
-        """Charging/Discharging efficiency as a function of the nomianl power."""
+        """Round-trip efficiency curve as a 2 x N array: terminal power divided by `nominal_power` in row 0, efficiency in row 1."""
 
         return self.__power_efficiency_curve
 
     @property
     def capacity_power_curve(self) -> np.ndarray:
-        """Maximum power of the battery as a function of its current state of charge."""
+        """Charging power curve as a 2 x N array: state of charge in row 0, maximum power as a fraction of `nominal_power` in row 1."""
 
         return self.__capacity_power_curve
     
@@ -1321,13 +1343,13 @@ class Battery(StorageDevice, ElectricDevice):
 
     @property
     def time_step_ratio(self) -> float:
-        """Maximum power of the battery as a function of its current state of charge."""
+        """Ratio of the control step to the dataset step."""
 
         return self.__time_step_ratio
     
     @property
     def depth_of_discharge(self) -> float:
-        """Maximum fraction of the battery that can be discharged relative to the total battery capacity."""
+        """Maximum fraction of `capacity` that can be discharged; the state of charge stays at or above ``1 - depth_of_discharge``."""
 
         return self.__depth_of_discharge
 

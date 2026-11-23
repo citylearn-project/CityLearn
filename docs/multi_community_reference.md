@@ -79,6 +79,19 @@ observations = {"community_a": child_observations, "community_b": child_observat
 info = {"communities": {...}, "time_step": 0}
 ```
 
+`reset(seed=..., options=...)` passes `seed` to every child. `options` can hold one
+mapping per community, keyed by `community_id`; a community without its own entry
+receives the whole `options` mapping:
+
+```python
+# community_a replays episode 2. community_b has no entry, so it receives the
+# whole mapping and replays episode 0.
+env.reset(options={"community_a": {"episode_index": 2}, "episode_index": 0})
+
+# The same options for every child.
+env.reset(options={"episode_index": 2})
+```
+
 `step(actions)` expects one child action payload per community:
 
 ```python
@@ -117,8 +130,16 @@ All child environments must use:
 | Same effective episode length | Keeps training batches rectangular. |
 | Same `interface` | Keeps observation/action payload contracts stable. |
 | Same `central_agent` mode | Avoids mixing centralized and decentralized reward/action semantics. |
+| Same `physics_version` | Portfolio totals add up district values, so every community must simulate the same physics. |
+| Same `random_stream_version` | Randomly drawn defaults (battery curves, efficiencies, noise) must come from the same stream definition for the totals to be comparable. |
+| Same `baseline_version` | Portfolio baseline KPIs add up district baselines, so the baseline definition must match. |
 
-The wrapper validates these conditions at construction and again after reset.
+The wrapper validates these conditions at construction and again after reset, and
+raises a `ValueError` that names the setting, for example:
+
+```text
+ValueError: MultiCommunityEnv requires all communities to share physics_version, got {'A': 2, 'B': 1}.
+```
 
 Calendar windows are not part of the contract. Each child selects its episode
 split from its own simulation window, `random_episode_split` setting and

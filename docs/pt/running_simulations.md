@@ -93,7 +93,7 @@ env = MultiCommunityEnv(
 observations, info = env.reset(seed=0)
 ```
 
-Todas as comunidades têm de partilhar `seconds_per_time_step`, a duração efetiva do episódio, a `interface` e o modo `central_agent`. `evaluate_v2()` devolve linhas locais com `community_id` e linhas de portefólio com `level="portfolio"`. Consulte [multi_community_reference.md](multi_community_reference.md).
+Todas as comunidades têm de partilhar `seconds_per_time_step`, a duração efetiva do episódio, a `interface`, o modo `central_agent`, `physics_version`, `random_stream_version` e `baseline_version`. `evaluate_v2()` devolve linhas locais com `community_id` e linhas de portefólio com `level="portfolio"`. Consulte [multi_community_reference.md](multi_community_reference.md).
 
 ## Parâmetros de `CityLearnEnv`
 
