@@ -31,7 +31,12 @@ def scenario(
     phase_limits=False,
     negative=False,
     unknown_carbon=False,
+    physics_version=None,
 ):
+    """Two members with storage, PV, an EV charger, a washer, a community market and optional outages.
+
+    ``outage`` is a bool (outage at steps 2 and 3) or a list of eight 0/1 flags.
+    """
     path = _schema_with_deferrable_appliance(tmp_path, earliest=0, latest=1)
     schema = json.loads(path.read_text())
     schema.update(
@@ -91,10 +96,13 @@ def scenario(
         f = frame.copy()
         f["non_shiftable_load"] = load
         f["solar_generation"] = pv
-        f["power_outage"] = [0, 0, 1, 1, 0, 0, 0, 0] if outage else 0
+        if isinstance(outage, (list, tuple)):
+            f["power_outage"] = [int(v) for v in outage]
+        else:
+            f["power_outage"] = [0, 0, 1, 1, 0, 0, 0, 0] if outage else 0
         f.to_csv(path.parent / (name + ".csv"), index=False)
         schema["buildings"][name]["power_outage"] = {
-            "simulate_power_outage": bool(outage)
+            "simulate_power_outage": bool(outage) if not isinstance(outage, (list, tuple)) else any(outage)
         }
     carbon = pd.read_csv(path.parent / "carbon_intensity.csv")
     carbon["carbon_intensity"] = [0.2, 0.6, 0.1, 0.7, 0.15, 0.4, 0.1, 0.2]
@@ -134,6 +142,8 @@ def scenario(
             schema["community_market"]["tariff_files"][name] = file
     if events is not None:
         schema.update(topology_mode="dynamic", topology_events=events)
+    if physics_version is not None:
+        schema["physics_version"] = physics_version
     return CityLearnEnv(schema, random_seed=19, offline=True)
 
 
