@@ -217,6 +217,38 @@ O `train --evaluate` avalia na janela do primeiro episódio de treino, salvo se
 `-te` indicar outras janelas. O resumo do treino só regista o nome da máquina e
 o nome do utilizador com `--record_host`.
 
+Para avaliar ou continuar a treinar um modelo guardado, passe-o com `-fa` e
+indique com `-a` o algoritmo que o guardou, por exemplo `-a stable_baselines3.SAC
+-fa outputs/sb3_sac/sb3_sac-agent.zip`. Escreva noutra pasta com `-d`: o
+`simulate` esvazia primeiro a pasta de saída, por isso recusa correr quando essa
+pasta contém o modelo a carregar.
+
+O que a integração com o Stable Baselines3 suporta:
+
+- **Agente central, interface flat.** O `StableBaselines3Wrapper` transforma os
+  vetores de observações e de ações do agente central num único `Box` cada. Com
+  `central_agent=False` há um vetor por edifício e o wrapper lança um erro; para
+  uma política por edifício, use o `RLlibMultiAgentEnv`.
+- **Sem interface entity.** As observações entity são dicionários de tabelas
+  cujo tamanho pode mudar, que as políticas do SB3 não aceitam. Os datasets
+  `pt_rec_*`, trifásicos, de resposta à procura e de robustez usam por omissão a
+  interface entity, por isso passe `"interface": "flat"` em `-ke` (ou
+  `interface="flat"` em Python). A topologia dinâmica e a resposta à procura
+  precisam da interface entity e não podem ser usadas com o SB3.
+- **Limites das ações.** O espaço de ações mantém os limites de cada
+  equipamento, por exemplo [-1, 1] para o armazenamento e os carregadores de VE
+  e [0, 1] para os restantes, por isso o `check_env` avisa que não é simétrico. O
+  SAC reescala as ações para os limites e o PPO corta-as, por isso ambos
+  funcionam assim.
+- **Falhas de robustez.** Uma leitura de sensor em falta é substituída por
+  `missing_replacement_value` (-9999 em `citylearn_challenge_2022_phase_all_robustness`),
+  que normalizada fica muito fora de [0, 1]. O SB3 não verifica os limites das
+  observações, mas a política recebe esse valor tal como está.
+
+O `tests/test_stable_baselines3_integration.py` corre o `check_env`, algumas
+atualizações do SAC e do PPO, o `predict` num episódio com cada observação
+dentro do seu espaço, o `evaluate_v2()` e a CLI a guardar e a carregar um modelo.
+
 | Opcao CLI | Exemplo | O que faz |
 |---|---|---|
 | `schema` | `citylearn_challenge_2020_climate_zone_2` ou path | Dataset ou ficheiro de schema. |
