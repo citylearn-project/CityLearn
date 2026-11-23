@@ -333,14 +333,23 @@ margens descrevem o último intervalo executado, pelo que refletem o limite ent�
 | Campo | Unidade | Finalidade |
 |---|---:|---|
 | `charger_simulation` | caminho | Ficheiro com o horário do carregador. |
-| `max_charging_power` | kW | Limite superior de carregamento. |
-| `min_charging_power` | kW | Potência mínima técnica de carregamento. |
-| `max_discharging_power` | kW | Limite superior de V2G. |
-| `min_discharging_power` | kW | Potência mínima técnica de V2G. |
-| `efficiency` | rácio | Eficiência fixa/predefinida. |
-| `charge_efficiency_curve` | rácio vs potência normalizada | Curva opcional de eficiência de carregamento. |
-| `discharge_efficiency_curve` | rácio vs potência normalizada | Curva opcional de eficiência de descarga. |
-| `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Atribuição da fase elétrica. |
+| `soc_unit` | `percent`, `fraction` | Opcional, ao lado de `charger_simulation`: a unidade das colunas de SOC do ficheiro de horário. Se for omitido, é inferido uma vez para o ficheiro inteiro (ver [unidade do SOC](dataset_reference.md#unidade-do-soc)). |
+| `attributes.nominal_power` | kW | Potência nominal. Valor predefinido de `max_charging_power`. |
+| `attributes.charger_type` | qualquer | Etiqueta descritiva (por exemplo 0 para AC, 1 para DC). Não tem efeito na simulação. |
+| `attributes.max_charging_power` | kW | Limite superior de carregamento. Por omissão é `nominal_power`, ou 50 kW com um aviso. |
+| `attributes.min_charging_power` | kW | Potência mínima técnica de carregamento. Por omissão 0. |
+| `attributes.max_discharging_power` | kW | Limite superior de V2G. Por omissão 0: o carregador não descarrega a menos que este campo seja definido (um aviso indica-o). |
+| `attributes.min_discharging_power` | kW | Potência mínima técnica de V2G. Por omissão 0. |
+| `attributes.efficiency` | rácio | Eficiência fixa/predefinida. Por omissão 1.0, com um aviso. |
+| `attributes.charge_efficiency_curve` | rácio vs potência normalizada | Curva opcional de eficiência de carregamento. |
+| `attributes.discharge_efficiency_curve` | rácio vs potência normalizada | Curva opcional de eficiência de descarga. |
+| `attributes.phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Atribuição da fase elétrica. |
+
+Qualquer outro nome em `attributes` lança um `ValueError` que indica o carregador e sugere o
+nome válido mais próximo, pelo que um `max_discharge_power` mal escrito deixa de cair num valor
+predefinido ([#369](https://github.com/citylearn-project/CityLearn/issues/369)). Com a versão
+de física 1, um `max_charging_power` ou `max_discharging_power` omitido vale 50 kW, como no
+CityLearn 3.6.0, e `nominal_power` não é usado.
 
 ## Definições dos VE
 

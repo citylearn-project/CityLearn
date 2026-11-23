@@ -42,7 +42,7 @@ communities of 4 to 100 members, each with evaluation scenarios.
 | PV with `generation_mode="absolute"` | kWh/step |
 | PV with `generation_mode="per_kw"` | W/kW |
 | BESS and charger power limits | kW |
-| EV required/estimated SOC in charger files | percent in the raw file, converted to ratio internally |
+| EV required/estimated SOC in charger files | percent or ratio, one unit per file (see [SOC unit](#soc-unit)), converted to ratio internally |
 | Prices | currency/kWh |
 | DR request target power | kW |
 | DR request prices and penalties | currency/kWh |
@@ -106,12 +106,24 @@ Cooling and heating demand cannot both be positive in the same timestep.
 | `electric_vehicle_id` | string | EV ID. |
 | `electric_vehicle_session_id` | string | Optional charging-session ID. A change separates two sessions of the same EV, including back-to-back ones. Missing or empty values are not a change. |
 | `electric_vehicle_departure_time` | steps | Steps until departure. Internal default `-1`. |
-| `electric_vehicle_required_soc_departure` | percent | Required departure SOC. Converted to ratio. |
+| `electric_vehicle_required_soc_departure` | percent or ratio | Required departure SOC. Converted to ratio. |
 | `electric_vehicle_estimated_arrival_time` | steps | Steps until arrival. Internal default `-1`. |
-| `electric_vehicle_estimated_soc_arrival` | percent | Estimated arrival SOC on the incoming (state 2) rows. Converted to ratio. At connection the EV starts from the latest estimate on the row just before it and the contiguous incoming rows of the same EV and session before that row, usually the last incoming row. The lookup does not pass an away (state 3) row, another EV or a change of `electric_vehicle_session_id`. Without such an estimate the EV starts from the estimate on its connection row, if any, and otherwise keeps its simulated SOC. The KPI and departure-audit arrival references use the same value. |
+| `electric_vehicle_estimated_soc_arrival` | percent or ratio | Estimated arrival SOC on the incoming (state 2) rows. Converted to ratio. At connection the EV starts from the latest estimate on the row just before it and the contiguous incoming rows of the same EV and session before that row, usually the last incoming row. The lookup does not pass an away (state 3) row, another EV or a change of `electric_vehicle_session_id`. Without such an estimate the EV starts from the estimate on its connection row, if any, and otherwise keeps its simulated SOC. The KPI and departure-audit arrival references use the same value. |
 | `electric_vehicle_current_soc` | percent or ratio | Optional current-SOC telemetry. In the annual REC suite this is a neutral constant-rate boundary-initialization reference, used only when an episode starts inside an occupied session; it does not override SOC during an uninterrupted rollout. |
 
 For sub-hourly datasets, countdown fields must be expressed in timesteps at the dataset resolution. Example: 1 hour at 15s is 240 steps.
+
+### SOC unit
+
+The three SOC columns of a charger file share one unit. Under physics version 2 it is decided once
+for the whole file, not only the simulation window: the file is in percent if any SOC value is above
+1 (a rounding margin of 1e-6 is allowed, so `1.0000000000000013` in a ratio file stays a ratio), and
+in ratio otherwise. In a percent file a value of 1 is therefore 1 %. Negative values and blanks are
+missing. A file whose values are all between 0 and 1 is read as ratio; declare
+`"soc_unit": "percent"` on the charger in the schema if such a file is in percent. Physics version 1
+keeps the rule of CityLearn 3.6.0, value by value: a value in [0, 1] is a ratio and a value above 1 a
+percentage, so 1 (1 %) in a percent file was read as 100 %, unless the charger declares `soc_unit`
+([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
 
 ## Entity Observation Bundles in Packaged Datasets
 
