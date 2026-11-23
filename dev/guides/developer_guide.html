@@ -397,6 +397,12 @@ reference trajectories. Missing dependencies/scripts, child failures and referen
 drift fail verification; ordinary runs do not rewrite snapshots. Algorithm audits
 remain explicit opt-in tools. Reference tests generate small temporary cases from
 existing fixtures; no SoftCPS production datasets are included.</p>
+<p>CI runs the physics audit, the official dataset audit, and the entity contract and
+refactor parity audits as three parallel jobs (<code class="docutils literal notranslate"><span class="pre">audit</span> <span class="pre">(physics)</span></code>, <code class="docutils literal notranslate"><span class="pre">audit</span> <span class="pre">(datasets)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">audit</span> <span class="pre">(entity-contract-and-refactor-parity)</span></code>), each with <code class="docutils literal notranslate"><span class="pre">--strict</span></code> and its own
+<code class="docutils literal notranslate"><span class="pre">--audits</span></code> selection. Each job uploads its JSON evidence as
+<code class="docutils literal notranslate"><span class="pre">citylearn-runtime-audits-&lt;name&gt;</span></code>, and the <code class="docutils literal notranslate"><span class="pre">runtime-audits</span></code> job fails unless all
+three pass.</p>
 <p>Public facades delegate to focused internal modules for energy/equipment/service/
 community KPIs, entity observation/layout preparation, loading inputs/components
 and robustness contracts/auditing. Electrical-service allocation is shared by
