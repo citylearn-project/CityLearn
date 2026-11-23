@@ -193,6 +193,7 @@ load or PV truth.
 | `occupant` | object | no | Occupant interaction model. |
 | `power_outage` | object | no | Outage configuration. |
 | `set_point_hold_time_steps` | int | no | Hold time for occupant interaction. |
+| `set_point_limits` | [float, float] | no | Range, in °C, an occupant can move a heating or cooling set point to; default `[15, 30]`. Physics version 2 and later; see the [migration guide](migration.md#occupant-set-point-limits). |
 
 `power_outage` keys:
 
