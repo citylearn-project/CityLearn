@@ -205,13 +205,16 @@ dependency: the RLlib wrappers import it only when it is installed.</p>
 <tr class="row-odd"><td><p>Coverage report (<code class="docutils literal notranslate"><span class="pre">--cov=citylearn</span></code>) and the 600 s per-test timeout of <code class="docutils literal notranslate"><span class="pre">pytest.ini</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">pytest-cov</span> <span class="pre">pytest-timeout</span></code> (both are in <code class="docutils literal notranslate"><span class="pre">test_requirements.txt</span></code>)</p></td>
 </tr>
-<tr class="row-even"><td><p>Notebook checks</p></td>
+<tr class="row-even"><td><p>Property-based energy-conservation tests</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">hypothesis</span></code> (in <code class="docutils literal notranslate"><span class="pre">test_requirements.txt</span></code>; <code class="docutils literal notranslate"><span class="pre">tests/test_property_energy_conservation.py</span></code> skips without it)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Notebook checks</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">nbclient</span> <span class="pre">nbformat</span> <span class="pre">ipykernel</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>RLlib wrappers</p></td>
+<tr class="row-even"><td><p>RLlib wrappers</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">&quot;ray[rllib]&quot;</span></code> (tested with Ray 2.60.0; <code class="docutils literal notranslate"><span class="pre">tests/test_rllib_wrappers.py</span></code> skips without it)</p></td>
 </tr>
-<tr class="row-even"><td><p>Build checks</p></td>
+<tr class="row-odd"><td><p>Build checks</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">.venv/bin/pip</span> <span class="pre">install</span> <span class="pre">build</span> <span class="pre">twine</span></code></p></td>
 </tr>
 </tbody>
