@@ -984,40 +984,59 @@ interval, so they reflect the limit that was in force then.</p>
 <td class="text-right"><p>path</p></td>
 <td><p>Charger schedule file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code></p></td>
-<td class="text-right"><p>kW</p></td>
-<td><p>Charging upper limit.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">soc_unit</span></code></p></td>
+<td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">percent</span></code>, <code class="docutils literal notranslate"><span class="pre">fraction</span></code></p></td>
+<td><p>Optional, next to <code class="docutils literal notranslate"><span class="pre">charger_simulation</span></code>: the unit of the SOC columns of the schedule file. Omitted, it is inferred once per column from the whole file (see <a class="reference internal" href="dataset_reference.html#soc-unit"><span class="std std-ref">SOC unit</span></a>).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min_charging_power</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.nominal_power</span></code></p></td>
 <td class="text-right"><p>kW</p></td>
-<td><p>Technical minimum charging power.</p></td>
+<td><p>Rated power. Default of <code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.charger_type</span></code></p></td>
+<td class="text-right"><p>any</p></td>
+<td><p>Descriptive label (for example 0 for AC, 1 for DC). No effect on the simulation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.max_charging_power</span></code></p></td>
 <td class="text-right"><p>kW</p></td>
-<td><p>V2G upper limit.</p></td>
+<td><p>Charging upper limit. Defaults to <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code>, or to 50 kW with a warning.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min_discharging_power</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.min_charging_power</span></code></p></td>
 <td class="text-right"><p>kW</p></td>
-<td><p>Technical minimum V2G power.</p></td>
+<td><p>Technical minimum charging power. Default 0.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">efficiency</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.max_discharging_power</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>V2G upper limit. Default 0: the charger cannot discharge unless this is set (a warning says so).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.min_discharging_power</span></code></p></td>
+<td class="text-right"><p>kW</p></td>
+<td><p>Technical minimum V2G power. Default 0.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.efficiency</span></code></p></td>
 <td class="text-right"><p>ratio</p></td>
-<td><p>Fixed/default efficiency.</p></td>
+<td><p>Fixed/default efficiency, used in a direction without an efficiency curve. Default 1.0, with a warning when it is used.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge_efficiency_curve</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.charge_efficiency_curve</span></code></p></td>
 <td class="text-right"><p>ratio vs normalized power</p></td>
 <td><p>Optional charging efficiency curve.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">discharge_efficiency_curve</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.discharge_efficiency_curve</span></code></p></td>
 <td class="text-right"><p>ratio vs normalized power</p></td>
 <td><p>Optional discharging efficiency curve.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">phase_connection</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attributes.phase_connection</span></code></p></td>
 <td class="text-right"><p><code class="docutils literal notranslate"><span class="pre">L1</span></code>, <code class="docutils literal notranslate"><span class="pre">L2</span></code>, <code class="docutils literal notranslate"><span class="pre">L3</span></code>, <code class="docutils literal notranslate"><span class="pre">all_phases</span></code></p></td>
 <td><p>Electrical phase assignment.</p></td>
 </tr>
 </tbody>
 </table>
+<p>Any other name in <code class="docutils literal notranslate"><span class="pre">attributes</span></code> raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the charger and suggests the
+closest valid name, so a misspelt <code class="docutils literal notranslate"><span class="pre">max_discharge_power</span></code> no longer falls back to a default
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/369">#369</a>). A charger key other than
+<code class="docutils literal notranslate"><span class="pre">type</span></code>, <code class="docutils literal notranslate"><span class="pre">charger_simulation</span></code>, <code class="docutils literal notranslate"><span class="pre">attributes</span></code>, <code class="docutils literal notranslate"><span class="pre">autosize</span></code>, <code class="docutils literal notranslate"><span class="pre">noise_std</span></code> and <code class="docutils literal notranslate"><span class="pre">soc_unit</span></code> is ignored
+with a warning that suggests the closest key. Under physics version 1
+an omitted <code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code> or <code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code> is 50 kW, as in CityLearn 3.6.0,
+and <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> is not used.</p>
 </section>
 <section id="ev-definitions">
 <h2>EV Definitions<a class="headerlink" href="#ev-definitions" title="Link to this heading"></a></h2>

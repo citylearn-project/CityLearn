@@ -328,14 +328,25 @@ interval, so they reflect the limit that was in force then.
 | Field | Unit | Purpose |
 |---|---:|---|
 | `charger_simulation` | path | Charger schedule file. |
-| `max_charging_power` | kW | Charging upper limit. |
-| `min_charging_power` | kW | Technical minimum charging power. |
-| `max_discharging_power` | kW | V2G upper limit. |
-| `min_discharging_power` | kW | Technical minimum V2G power. |
-| `efficiency` | ratio | Fixed/default efficiency. |
-| `charge_efficiency_curve` | ratio vs normalized power | Optional charging efficiency curve. |
-| `discharge_efficiency_curve` | ratio vs normalized power | Optional discharging efficiency curve. |
-| `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Electrical phase assignment. |
+| `soc_unit` | `percent`, `fraction` | Optional, next to `charger_simulation`: the unit of the SOC columns of the schedule file. Omitted, it is inferred once per column from the whole file (see [SOC unit](dataset_reference.md#soc-unit)). |
+| `attributes.nominal_power` | kW | Rated power. Default of `max_charging_power`. |
+| `attributes.charger_type` | any | Descriptive label (for example 0 for AC, 1 for DC). No effect on the simulation. |
+| `attributes.max_charging_power` | kW | Charging upper limit. Defaults to `nominal_power`, or to 50 kW with a warning. |
+| `attributes.min_charging_power` | kW | Technical minimum charging power. Default 0. |
+| `attributes.max_discharging_power` | kW | V2G upper limit. Default 0: the charger cannot discharge unless this is set (a warning says so). |
+| `attributes.min_discharging_power` | kW | Technical minimum V2G power. Default 0. |
+| `attributes.efficiency` | ratio | Fixed/default efficiency, used in a direction without an efficiency curve. Default 1.0, with a warning when it is used. |
+| `attributes.charge_efficiency_curve` | ratio vs normalized power | Optional charging efficiency curve. |
+| `attributes.discharge_efficiency_curve` | ratio vs normalized power | Optional discharging efficiency curve. |
+| `attributes.phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Electrical phase assignment. |
+
+Any other name in `attributes` raises a `ValueError` that names the charger and suggests the
+closest valid name, so a misspelt `max_discharge_power` no longer falls back to a default
+([#369](https://github.com/citylearn-project/CityLearn/issues/369)). A charger key other than
+`type`, `charger_simulation`, `attributes`, `autosize`, `noise_std` and `soc_unit` is ignored
+with a warning that suggests the closest key. Under physics version 1
+an omitted `max_charging_power` or `max_discharging_power` is 50 kW, as in CityLearn 3.6.0,
+and `nominal_power` is not used.
 
 ## EV Definitions
 

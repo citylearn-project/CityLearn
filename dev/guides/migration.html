@@ -107,6 +107,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#community-market-settings-are-validated">Community market settings are validated</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#portfolio-market-rows-with-and-without-markets">Portfolio market rows with and without markets</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#occupant-set-point-limits">Occupant set-point limits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ev-soc-unit-of-charger-files">EV SOC unit of charger files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#charger-defaults-and-attribute-names">Charger defaults and attribute names</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#observation-spaces-follow-the-observations">Observation spaces follow the observations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-native-bau-uses-current-step-load-and-solar">The native BAU uses current-step load and solar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#numeric-and-configuration-hygiene">Numeric and configuration hygiene</a></li>
@@ -374,6 +376,71 @@ actions the Quebec indoor temperature still reaches about 60 °C, because the
 HVAC action sets the heating supplied whatever the set point. That temperature
 is outside the range the LSTM models were trained on, so treat such runs with
 care.</p>
+</section>
+<section id="ev-soc-unit-of-charger-files">
+<h3>EV SOC unit of charger files<a class="headerlink" href="#ev-soc-unit-of-charger-files" title="Link to this heading"></a></h3>
+<p>Under physics version 2 the SOC columns of a charger file
+(<code class="docutils literal notranslate"><span class="pre">electric_vehicle_required_soc_departure</span></code>, <code class="docutils literal notranslate"><span class="pre">electric_vehicle_estimated_soc_arrival</span></code>
+and <code class="docutils literal notranslate"><span class="pre">electric_vehicle_current_soc</span></code>) each have one unit, decided once from the
+whole column of the file: percent if any value is above 1, ratio otherwise. Before, the unit was
+guessed value by value, so an arrival SOC of 1 (1 %) in a percent file was read
+as 100 %: the EV arrived full and was not charged
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/368">#368</a>).</p>
+<ul class="simple">
+<li><p>Bundled data: the EV charger files of <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>,
+the three hourly three-phase demos and the 15-second
+<code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo_15s_parquet</span></code> and
+<code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_assets_only_demo_15s_parquet</span></code> are in percent
+and contain such rows. Over the simulated year, 8 of about 2,800 arrivals of
+the hourly datasets and 8 arrivals of each of those two 15-second demos start
+from such a row. <code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet</span></code>
+has none and does not change. The <code class="docutils literal notranslate"><span class="pre">pt_rec_*</span></code> files are ratios and do not change.</p></li>
+<li><p>Results change for those datasets. With <code class="docutils literal notranslate"><span class="pre">BusinessAsUsualAgent</span></code> over the full
+year of <code class="docutils literal notranslate"><span class="pre">citylearn_challenge_2022_phase_all_plus_evs</span></code>, EV charging rises by
+534 kWh (0.58 %), district import by 0.31 % and cost by 0.33 % (31,412.62 to
+31,515.25 EUR); the three hourly three-phase demos change by 0.31 to 0.34 %
+in import and 0.35 to 0.38 % in cost. On the 15-second
+<code class="docutils literal notranslate"><span class="pre">citylearn_three_phase_electrical_service_demo_15s_parquet</span></code>, the day around
+such an arrival (steps 79,200 to 84,959) charges 474 instead of 377 kWh.
+The EV departure KPIs barely move (the surplus mean changes in the fifth
+decimal), because those EVs used to arrive full.</p></li>
+<li><p>A column whose values are all between 0 and 1 is read as ratio. If it is in
+percent, declare <code class="docutils literal notranslate"><span class="pre">&quot;soc_unit&quot;:</span> <span class="pre">&quot;percent&quot;</span></code> on the charger, next to
+<code class="docutils literal notranslate"><span class="pre">charger_simulation</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;fraction&quot;</span></code> forces ratio. A misspelt charger key,
+such as <code class="docutils literal notranslate"><span class="pre">soc_units</span></code>, is reported with a warning.</p></li>
+<li><p>A column read as percent that also holds values between 0 and 1 gives a
+warning: one stray value above 1 (1.00001, say) in a ratio column makes the
+whole column percent, so 0.3 would become 0.3 %. Fix the stray value or
+declare <code class="docutils literal notranslate"><span class="pre">&quot;soc_unit&quot;:</span> <span class="pre">&quot;fraction&quot;</span></code>.</p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">physics_version</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code> to reproduce the value-by-value rule of
+CityLearn 3.6.0.</p></li>
+</ul>
+</section>
+<section id="charger-defaults-and-attribute-names">
+<h3>Charger defaults and attribute names<a class="headerlink" href="#charger-defaults-and-attribute-names" title="Link to this heading"></a></h3>
+<p>Charger <code class="docutils literal notranslate"><span class="pre">attributes</span></code> are checked by name: a name the charger does not accept
+raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> that names the charger and suggests the closest valid
+name. Before, a misspelt name such as <code class="docutils literal notranslate"><span class="pre">max_discharge_power</span></code> was dropped and the
+limit fell back to its default. <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> and <code class="docutils literal notranslate"><span class="pre">charger_type</span></code>, which the
+bundled schemas set, are now accepted explicitly: <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code> is the
+default of <code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code>, and <code class="docutils literal notranslate"><span class="pre">charger_type</span></code> is a label without effect
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/369">#369</a>).</p>
+<p>Under physics version 2 an omitted limit no longer gives a 50 kW
+bidirectional charger:</p>
+<ul class="simple">
+<li><p>an omitted <code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code> is 0, so the charger cannot discharge
+(V2G off) and its action space starts at 0 instead of -1. Set
+<code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code> to allow V2G;</p></li>
+<li><p>an omitted <code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code> is <code class="docutils literal notranslate"><span class="pre">nominal_power</span></code>, or 50 kW when that is
+missing too;</p></li>
+<li><p>a warning names every limit that falls back to an assumed value
+(<code class="docutils literal notranslate"><span class="pre">max_charging_power</span></code>, <code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code>, <code class="docutils literal notranslate"><span class="pre">efficiency</span></code>); <code class="docutils literal notranslate"><span class="pre">efficiency</span></code>
+only when it is used, that is when an efficiency curve does not replace it.</p></li>
+</ul>
+<p>Every bundled charger sets all its limits, so bundled results do not change.
+A schema that omits <code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code> and relied on the 50 kW of V2G
+needs it set explicitly, or <code class="docutils literal notranslate"><span class="pre">physics_version=1</span></code>, which keeps the 50 kW defaults
+of CityLearn 3.6.0 (the name check applies to both versions).</p>
 </section>
 <section id="observation-spaces-follow-the-observations">
 <h3>Observation spaces follow the observations<a class="headerlink" href="#observation-spaces-follow-the-observations" title="Link to this heading"></a></h3>
@@ -725,6 +792,14 @@ the controller does not set.</p></li>
 electrical-service limit, and <code class="docutils literal notranslate"><span class="pre">Building_15</span></code> of the three-phase demos.</p>
 <p>It also changes runs that use the following:</p>
 <ul class="simple">
+<li><p><strong>Charger files in percent.</strong> The SOC unit is decided once per column, so an
+SOC of 1 in a percent file is 1 % instead of 100 %
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/368">#368</a>, see
+<a class="reference internal" href="#ev-soc-unit-of-charger-files"><span class="std std-ref">EV SOC unit of charger files</span></a>).</p></li>
+<li><p><strong>Chargers without <code class="docutils literal notranslate"><span class="pre">max_discharging_power</span></code>.</strong> They cannot discharge; version
+1 gave them 50 kW of V2G
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/369">#369</a>, see
+<a class="reference internal" href="#charger-defaults-and-attribute-names"><span class="std std-ref">charger defaults and attribute names</span></a>).</p></li>
 <li><p><strong>Occupant set points under arbitrary control.</strong> An occupant change stops at
 <code class="docutils literal notranslate"><span class="pre">set_point_limits</span></code>, [15, 30] °C by default; version 1 had no limit
 (<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/352">#352</a>, see

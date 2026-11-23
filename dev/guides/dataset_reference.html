@@ -73,7 +73,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#unit-contract">Unit Contract</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#energy-simulation-columns"><code class="docutils literal notranslate"><span class="pre">energy_simulation</span></code> Columns</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#weather-pricing-and-carbon-files">Weather, Pricing and Carbon Files</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#charger-simulation-columns">Charger Simulation Columns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#charger-simulation-columns">Charger Simulation Columns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#soc-unit">SOC unit</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#entity-observation-bundles-in-packaged-datasets">Entity Observation Bundles in Packaged Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#demand-response-request-files">Demand Response Request Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#robustness-event-files">Robustness Event Files</a></li>
@@ -239,7 +242,7 @@ communities of 4 to 100 members, each with evaluation scenarios.</p>
 <td class="text-right"><p>kW</p></td>
 </tr>
 <tr class="row-even"><td><p>EV required/estimated SOC in charger files</p></td>
-<td class="text-right"><p>percent in the raw file, converted to ratio internally</p></td>
+<td class="text-right"><p>percent or ratio, one unit per column (see <a class="reference internal" href="#soc-unit"><span class="std std-ref">SOC unit</span></a>), converted to ratio internally</p></td>
 </tr>
 <tr class="row-odd"><td><p>Prices</p></td>
 <td class="text-right"><p>currency/kWh</p></td>
@@ -438,7 +441,7 @@ kW = kWh_per_step * 3600 / seconds_per_time_step
 <td><p>Steps until departure. Internal default <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_required_soc_departure</span></code></p></td>
-<td class="text-right"><p>percent</p></td>
+<td class="text-right"><p>percent or ratio</p></td>
 <td><p>Required departure SOC. Converted to ratio.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_estimated_arrival_time</span></code></p></td>
@@ -446,7 +449,7 @@ kW = kWh_per_step * 3600 / seconds_per_time_step
 <td><p>Steps until arrival. Internal default <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_estimated_soc_arrival</span></code></p></td>
-<td class="text-right"><p>percent</p></td>
+<td class="text-right"><p>percent or ratio</p></td>
 <td><p>Estimated arrival SOC on the incoming (state 2) rows. Converted to ratio. At connection the EV starts from the latest estimate on the row just before it and the contiguous incoming rows of the same EV and session before that row, usually the last incoming row. The lookup does not pass an away (state 3) row, another EV or a change of <code class="docutils literal notranslate"><span class="pre">electric_vehicle_session_id</span></code>. Without such an estimate the EV starts from the estimate on its connection row, if any, and otherwise keeps its simulated SOC. The KPI and departure-audit arrival references use the same value.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">electric_vehicle_current_soc</span></code></p></td>
@@ -456,6 +459,22 @@ kW = kWh_per_step * 3600 / seconds_per_time_step
 </tbody>
 </table>
 <p>For sub-hourly datasets, countdown fields must be expressed in timesteps at the dataset resolution. Example: 1 hour at 15s is 240 steps.</p>
+<section id="soc-unit">
+<h3>SOC unit<a class="headerlink" href="#soc-unit" title="Link to this heading"></a></h3>
+<p>Each SOC column of a charger file has one unit. Under physics version 2 it is decided once from the
+whole column of the file, not only the simulation window: the column is in percent if any of its
+values is above 1 (a rounding margin of 1e-6 is allowed, so <code class="docutils literal notranslate"><span class="pre">1.0000000000000013</span></code> in a ratio column
+stays a ratio), and in ratio otherwise. In a percent column a value of 1 is therefore 1 %. Negative
+values and blanks are missing. The columns are decided separately, so <code class="docutils literal notranslate"><span class="pre">electric_vehicle_current_soc</span></code>
+may be in ratio while the targets are in percent. A column whose values are all between 0 and 1 is
+read as ratio; declare <code class="docutils literal notranslate"><span class="pre">&quot;soc_unit&quot;:</span> <span class="pre">&quot;percent&quot;</span></code> on the charger in the schema if such a file is in
+percent (the declared unit applies to all its SOC columns). A column read as percent that also
+holds values between 0 and 1 gives a warning, since one stray value above 1 in a ratio column would
+turn 0.3 into 0.3 %. Physics version 1
+keeps the rule of CityLearn 3.6.0, value by value: a value in [0, 1] is a ratio and a value above 1 a
+percentage, so 1 (1 %) in a percent file was read as 100 %, unless the charger declares <code class="docutils literal notranslate"><span class="pre">soc_unit</span></code>
+(<a class="reference external" href="https://github.com/citylearn-project/CityLearn/issues/368">#368</a>).</p>
+</section>
 </section>
 <section id="entity-observation-bundles-in-packaged-datasets">
 <h2>Entity Observation Bundles in Packaged Datasets<a class="headerlink" href="#entity-observation-bundles-in-packaged-datasets" title="Link to this heading"></a></h2>

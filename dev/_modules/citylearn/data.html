@@ -1565,6 +1565,11 @@
 <span class="sd">        Estimated SOC percentage at the time of arrival to the charger (only for state 2),</span>
 <span class="sd">        normalized to the [0, 1] range and with optional Gaussian noise.</span>
 <span class="sd">        Defaults to -0.1 when not present.</span>
+<span class="sd">    soc_unit : str or Mapping[str, str]</span>
+<span class="sd">        Unit of the SOC columns, ``'percent'`` or ``'fraction'``, for both columns or per column</span>
+<span class="sd">        name. ``None`` (default) infers it once per column: percent if any valid value is above 1.</span>
+<span class="sd">        ``'per_value'`` is the value-by-value rule of physics version 1. The schema loader infers it</span>
+<span class="sd">        from the whole column of the file.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -1581,6 +1586,7 @@
         <span class="n">noise_std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
         <span class="n">noise_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">noise_start_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">soc_unit</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Initialize ChargerSchedule from charger-centric EV CSV input."""</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">start_time_step</span><span class="o">=</span><span class="n">start_time_step</span><span class="p">,</span> <span class="n">end_time_step</span><span class="o">=</span><span class="n">end_time_step</span><span class="p">)</span>
@@ -1591,6 +1597,21 @@
 
         <span class="n">default_time_value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="n">default_soc_value</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span>
+
+        <span class="c1"># One unit per SOC column (#368), not per value. 'per_value' is the rule of physics version 1.</span>
+        <span class="n">soc_columns</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">'electric_vehicle_required_soc_departure'</span><span class="p">:</span> <span class="n">electric_vehicle_required_soc_departure</span><span class="p">,</span>
+            <span class="s1">'electric_vehicle_estimated_soc_arrival'</span><span class="p">:</span> <span class="n">electric_vehicle_estimated_soc_arrival</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">declared</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">soc_unit</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">soc_unit</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="n">soc_unit</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">soc_columns</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_soc_units</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">soc_columns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">declared</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span> <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s1">'per_value'</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_soc_unit</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s1">'soc_unit[</span><span class="si">{</span><span class="n">column</span><span class="si">!r}</span><span class="s1">]'</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_soc_units</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_soc_series_unit</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">default_soc_value</span><span class="o">=</span><span class="n">default_soc_value</span><span class="p">)</span> <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">unit</span>
+            <span class="p">)</span>
 
         <span class="c1"># A blank cell makes pandas read the column as floats (1.0, 2.0, NaN), so parse numbers, not digit</span>
         <span class="c1"># strings. Anything that is not a non-negative integer is no state (NaN).</span>
@@ -1617,18 +1638,20 @@
             <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">arrival_time_arr</span><span class="p">),</span> <span class="n">default_time_value</span><span class="p">,</span> <span class="n">arrival_time_arr</span>
         <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'int32'</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">electric_vehicle_required_soc_departure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_soc_series</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">electric_vehicle_required_soc_departure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_soc_series</span><span class="p">(</span>
             <span class="n">electric_vehicle_required_soc_departure</span><span class="p">,</span>
             <span class="n">default_soc_value</span><span class="o">=</span><span class="n">default_soc_value</span><span class="p">,</span>
             <span class="n">noise_std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_std</span><span class="p">,</span>
             <span class="n">random_state</span><span class="o">=</span><span class="n">noise_random_state</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_soc_units</span><span class="p">[</span><span class="s1">'electric_vehicle_required_soc_departure'</span><span class="p">],</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_soc_series</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">electric_vehicle_estimated_soc_arrival</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_soc_series</span><span class="p">(</span>
             <span class="n">electric_vehicle_estimated_soc_arrival</span><span class="p">,</span>
             <span class="n">default_soc_value</span><span class="o">=</span><span class="n">default_soc_value</span><span class="p">,</span>
             <span class="n">noise_std</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_std</span><span class="p">,</span>
             <span class="n">random_state</span><span class="o">=</span><span class="n">noise_random_state</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_soc_units</span><span class="p">[</span><span class="s1">'electric_vehicle_estimated_soc_arrival'</span><span class="p">],</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="ChargerSimulation.arrival_soc_index">
@@ -1712,24 +1735,121 @@
             <span class="n">index</span> <span class="o">-=</span> <span class="mi">1</span></div>
 
 
+    <span class="c1"># Units of the SOC columns of a charger file, see `_soc_series_unit`.</span>
+    <span class="n">_SOC_UNITS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'percent'</span><span class="p">,</span> <span class="s1">'fraction'</span><span class="p">)</span>
+
+    <span class="c1"># SOC columns of a charger file; each has one unit.</span>
+    <span class="n">_SOC_COLUMNS</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">'electric_vehicle_required_soc_departure'</span><span class="p">,</span>
+        <span class="s1">'electric_vehicle_estimated_soc_arrival'</span><span class="p">,</span>
+        <span class="s1">'electric_vehicle_current_soc'</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Margin above 1 still read as a fraction when the unit is inferred. It absorbs floating-point</span>
+    <span class="c1"># rounding such as 1.0000000000000013 in a file written as fractions.</span>
+    <span class="n">_SOC_FRACTION_TOLERANCE</span> <span class="o">=</span> <span class="mf">1.0e-6</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_soc_series_unit</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">series</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">default_soc_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Unit of SOC values: ``'percent'`` if any valid value is above 1, else ``'fraction'``.</span>
+
+<span class="sd">        Missing values (NaN, `default_soc_value` and negative sentinels) are ignored. The unit is</span>
+<span class="sd">        decided once for all the values together, so a single value such as 1 (1 %) in a column written</span>
+<span class="sd">        in percent is not read as 1.0 (100 %).</span>
+<span class="sd">        """</span>
+
+        <span class="k">for</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">series</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">))),</span> <span class="n">errors</span><span class="o">=</span><span class="s1">'coerce'</span><span class="p">)</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">!=</span> <span class="n">default_soc_value</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_SOC_FRACTION_TOLERANCE</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s1">'percent'</span>
+
+        <span class="k">return</span> <span class="s1">'fraction'</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_soc_fraction_values_in_percent</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">default_soc_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Valid values strictly between 0 and 1 of a series read as percent.</span>
+
+<span class="sd">        A percent column normally has none: 1 (1 %) is its smallest non-zero value. Values such as 0.3</span>
+<span class="sd">        suggest a fraction column that one stray value above 1 turned into percent.</span>
+<span class="sd">        """</span>
+
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">))),</span> <span class="n">errors</span><span class="o">=</span><span class="s1">'coerce'</span><span class="p">)</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s1">'float64'</span><span class="p">)</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">!=</span> <span class="n">default_soc_value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">raw</span><span class="p">[</span><span class="n">valid</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">)]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_soc_unit</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">'soc_unit'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Validate a declared SOC unit; ``None`` means the unit is inferred."""</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">unit</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_SOC_UNITS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1"> must be one of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_SOC_UNITS</span><span class="p">)</span><span class="si">}</span><span class="s1">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s1">.'</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">unit</span>
+
 <div class="viewcode-block" id="ChargerSimulation.normalize_soc_series">
 <a class="viewcode-back" href="../../api/citylearn.data.html#citylearn.data.ChargerSimulation.normalize_soc_series">[docs]</a>
-    <span class="nd">@staticmethod</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">normalize_soc_series</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
         <span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
         <span class="n">default_soc_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span>
         <span class="n">noise_std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Normalize SOC inputs that may be fractions or percentages."""</span>
+<span class="w">        </span><span class="sd">"""Normalize SOC inputs given as fractions or percentages to the [0, 1] range.</span>
+
+<span class="sd">        The unit is decided once for the whole series: percent if any valid value is above 1, else</span>
+<span class="sd">        fraction, so 1 in a percent series is 1 % and not 100 % (#368). NaN, `default_soc_value` and</span>
+<span class="sd">        negative values are missing and become `default_soc_value`.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_normalize_soc_series</span><span class="p">(</span>
+            <span class="n">values</span><span class="p">,</span> <span class="n">default_soc_value</span><span class="o">=</span><span class="n">default_soc_value</span><span class="p">,</span> <span class="n">noise_std</span><span class="o">=</span><span class="n">noise_std</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_normalize_soc_series</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">default_soc_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">noise_std</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">""":py:meth:`normalize_soc_series` with an explicit `unit`.</span>
+
+<span class="sd">        ``'percent'`` divides every value by 100 and ``'fraction'`` keeps it. ``None`` infers the</span>
+<span class="sd">        unit once for the whole series with :py:meth:`_soc_series_unit`. ``'per_value'`` is the rule</span>
+<span class="sd">        of physics version 1: a value in [0, 1] is a fraction and a value above 1 a percentage, value</span>
+<span class="sd">        by value, so 1 (1 %) in a percent file is read as 100 %.</span>
+<span class="sd">        """</span>
 
         <span class="n">raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
         <span class="n">raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">raw</span><span class="p">),</span> <span class="n">default_soc_value</span><span class="p">,</span> <span class="n">raw</span><span class="p">)</span>
         <span class="n">normalized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">default_soc_value</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span><span class="p">)</span>
-
         <span class="n">valid</span> <span class="o">=</span> <span class="p">(</span><span class="n">raw</span> <span class="o">!=</span> <span class="n">default_soc_value</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">)</span>
-        <span class="n">fraction</span> <span class="o">=</span> <span class="n">valid</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">)</span>
-        <span class="n">percent</span> <span class="o">=</span> <span class="n">valid</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s1">'per_value'</span><span class="p">:</span>
+            <span class="n">fraction</span> <span class="o">=</span> <span class="n">valid</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">percent</span> <span class="o">=</span> <span class="n">valid</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">raw</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unit</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_soc_series_unit</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">default_soc_value</span><span class="o">=</span><span class="n">default_soc_value</span><span class="p">)</span> \
+                <span class="k">if</span> <span class="n">unit</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_resolve_soc_unit</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">'unit'</span><span class="p">)</span>
+            <span class="n">percent</span> <span class="o">=</span> <span class="n">valid</span> <span class="k">if</span> <span class="n">unit</span> <span class="o">==</span> <span class="s1">'percent'</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+            <span class="n">fraction</span> <span class="o">=</span> <span class="n">valid</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">percent</span>
 
         <span class="n">normalized</span><span class="p">[</span><span class="n">fraction</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="n">fraction</span><span class="p">]</span>
         <span class="n">normalized</span><span class="p">[</span><span class="n">percent</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="n">percent</span><span class="p">]</span> <span class="o">/</span> <span class="mf">100.0</span>
@@ -1740,7 +1860,6 @@
 
         <span class="n">normalized</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">normalized</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">normalized</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'float32'</span><span class="p">)</span></div>
-</div>
 
 
 <div class="viewcode-block" id="EscalatorSimulation">
