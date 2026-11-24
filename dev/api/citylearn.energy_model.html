@@ -305,6 +305,11 @@ limitations, losses to the environment quantified by <cite>efficiency</cite>, <c
 <dd class="field-odd"><p><strong>energy</strong> (<em>float</em>) – Energy to charge if (+) or discharge if (-) in [kWh].</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>The power curves give one terminal-energy budget per control step and direction, read at the stored
+energy before the step’s first transfer. The first call in a step can use all of it; a later call in
+the same step gets only what the earlier calls in that direction left. Capacity and depth-of-discharge
+limits use the current stored energy.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1367,8 +1372,13 @@ standby losses and exogenous SOC assignments such as vehicle arrivals.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>If charging, soc = min(<cite>soc_init</cite> + energy*`efficiency`, <cite>max_input_power</cite>, <cite>capacity</cite>)
-If discharging, soc = max(0, <cite>soc_init</cite> + energy/<cite>efficiency</cite>, <cite>max_output_power</cite>)</p>
+<p><cite>max_input_power</cite> and <cite>max_output_power</cite> give one terminal-energy budget per control step and
+direction, power times step duration. The first call in a step can use all of it; a later call in
+the same step gets only what the earlier calls in that direction left.</p>
+<p>If charging, soc = min(<cite>soc_init</cite> + energy*`efficiency`, <cite>capacity</cite>), with energy limited by the
+remaining charge budget.
+If discharging, soc = max(0, <cite>soc_init</cite> + energy/<cite>efficiency</cite>), with energy limited by the
+remaining discharge budget.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1381,6 +1391,12 @@ If discharging, soc = max(0, <cite>soc_init</cite> + energy/<cite>efficiency</ci
 <dt class="sig sig-object py" id="citylearn.energy_model.StorageTank.max_output_power">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_output_power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#citylearn.energy_model.StorageTank.max_output_power" title="Link to this definition"></a></dt>
 <dd><p>Maximum amount of power that the storage unit can output [kW].</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="citylearn.energy_model.StorageTank.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citylearn/energy_model.html#StorageTank.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citylearn.energy_model.StorageTank.reset" title="Link to this definition"></a></dt>
+<dd><p>Reset <cite>StorageTank</cite> to initial state.</p>
 </dd></dl>
 
 </dd></dl>

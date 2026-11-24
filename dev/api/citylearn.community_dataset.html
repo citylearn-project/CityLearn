@@ -181,6 +181,11 @@ limitations, losses to the environment quantified by <cite>efficiency</cite>, <c
 <dd class="field-odd"><p><strong>energy</strong> (<em>float</em>) – Energy to charge if (+) or discharge if (-) in [kWh].</p>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>The power curves give one terminal-energy budget per control step and direction, read at the stored
+energy before the step’s first transfer. The first call in a step can use all of it; a later call in
+the same step gets only what the earlier calls in that direction left. Capacity and depth-of-discharge
+limits use the current stored energy.</p>
 </dd></dl>
 
 <dl class="py method">
