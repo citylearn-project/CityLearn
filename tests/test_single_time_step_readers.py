@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 
 from citylearn.citylearn import CityLearnEnv
+from private_access import entity_service, ops_service
 
 ROOT = Path(__file__).resolve().parents[1]
 STEPS = 24
@@ -84,7 +85,7 @@ def _check_building(building, mismatches):
             if not _identical(fast, series[i]):
                 mismatches.append((building.name, f'energy_from_{storage}_storage', i))
 
-    data = building._ops_service.get_observations_data(include_all=True)
+    data = ops_service(building).get_observations_data(include_all=True)
     reference = {
         'cooling_electricity_consumption': building.cooling_electricity_consumption[t],
         'heating_electricity_consumption': building.heating_electricity_consumption[t],
@@ -100,7 +101,7 @@ def _check_building(building, mismatches):
 
 
 def _check_entity(env, mismatches):
-    entity = env._entity_service
+    entity = entity_service(env)
     endogenous_t = max(int(env.time_step) - 1, 0)
     step_hours = entity._step_hours()
     for building in env.buildings:

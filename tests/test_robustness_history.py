@@ -3,7 +3,6 @@ from copy import deepcopy
 import pickle
 from types import SimpleNamespace
 
-import pytest
 
 from citylearn.internal.robustness import CityLearnRobustnessService
 from citylearn.internal.robustness_history import RobustnessHistory, _StepRecord

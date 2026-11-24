@@ -12,6 +12,7 @@ from citylearn.citylearn import CityLearnEnv
 from citylearn.data import DataSet
 from citylearn.energy_model import Battery, StorageTank
 from citylearn.power_outage import PowerOutage, ReliabilityMetricsPowerOutage
+from private_access import ev_drift_seed, runtime_service, topology_service
 
 # First uniform of RandomState(1234): every 'v1' parameter of a device seeded with 1234 sits here.
 LEGACY_QUANTILE_1234 = np.random.RandomState(1234).uniform()
@@ -178,7 +179,7 @@ def test_v1_ev_drift_seed_is_additive():
     try:
         env.reset()
         env.reset()
-        assert env._ev_drift_seed == 7 + 1
+        assert ev_drift_seed(env) == 7 + 1
     finally:
         env.close()
 
@@ -191,13 +192,13 @@ def test_v2_ev_drift_is_per_ev_and_episode_and_repeats_with_the_seed():
         b0 = _run_zero(env_b)
         n0 = _run_zero(env_next)
         np.testing.assert_array_equal(a0, b0)
-        assert env_a._ev_drift_seed != env_next._ev_drift_seed
+        assert ev_drift_seed(env_a) != ev_drift_seed(env_next)
         # Episode 1 of seed 7 is not episode 0 of seed 8.
         assert not np.array_equal(a1, n0)
         # Every EV holds its own stream.
         keys = {key[1] for key in env_a._ev_drift_generators}
         assert len(keys) >= 2
-        streams = [env_a._runtime_service.ev_drift_generator(name, random_streams.EV_AWAY_SOC_DRIFT) for name in sorted(keys)]
+        streams = [runtime_service(env_a).ev_drift_generator(name, random_streams.EV_AWAY_SOC_DRIFT) for name in sorted(keys)]
         assert len({id(s) for s in streams}) == len(streams)
         # An explicit reset seed repeats the first episode of an env built with that seed.
         explicit = _run_zero(env_a, seed=7, options={'episode_index': 0})
@@ -205,6 +206,40 @@ def test_v2_ev_drift_is_per_ev_and_episode_and_repeats_with_the_seed():
     finally:
         for env in (env_a, env_b, env_next):
             env.close()
+
+
+def test_seeded_reset_restarts_the_episode_streams_but_not_the_window_or_construction_draws():
+    """What ``reset(seed=s)`` repeats (#303): the episode-0 streams, not the window or construction draws."""
+
+    env_7, env_8 = _ev_env('v2', seed=7), _ev_env('v2', seed=8)
+    try:
+        first_7 = _run_zero(env_7)
+        efficiencies_7 = [ev.battery.efficiency for ev in env_7.electric_vehicles]
+        efficiencies_8 = [ev.battery.efficiency for ev in env_8.electric_vehicles]
+        assert efficiencies_7 != efficiencies_8
+
+        # A seeded reset of the seed-8 env takes the episode-0 streams of seed 7 ...
+        env_8.reset(seed=7)
+        assert env_8.random_seed == 7
+        assert env_8.episode_tracker.random_stream_episode == 0
+        assert ev_drift_seed(env_8) == ev_drift_seed(env_7)
+        # ... but keeps the parameters drawn at construction with seed 8.
+        assert [ev.battery.efficiency for ev in env_8.electric_vehicles] == efficiencies_8
+
+        # The window still advances; the streams restart at episode 0 at every seeded reset.
+        start = env_7.episode_tracker.episode_start_time_step
+        env_7.reset(seed=7)
+        assert env_7.episode_tracker.episode == 1
+        assert env_7.episode_tracker.episode_start_time_step != start
+        assert env_7.episode_tracker.random_stream_episode == 0
+
+        # Without a seed, episode_index replays both the window and the streams of that episode.
+        env_7.reset(options={'episode_index': 1})
+        assert env_7.episode_tracker.random_stream_episode == 1
+        np.testing.assert_array_equal(_run_zero(env_7, options={'episode_index': 0}), first_7)
+    finally:
+        env_7.close()
+        env_8.close()
 
 
 # --- 3. shared occupant draws ------------------------------------------------------------------
@@ -250,6 +285,53 @@ def test_v2_occupant_draws_differ_by_building_and_episode_and_repeat_with_the_se
     other = _occupant_draws('v2', seed=1)
     both = (draws != 0) & (other != 0)
     assert both.sum() > 5 and not np.allclose(draws[both], other[both])
+
+
+def _cloned_member_env(version='v2'):
+    schema = DataSet().get_schema('quebec_neighborhood_without_demand_response_set_points')
+    names = list(schema['buildings'])
+    for name in names[2:]:
+        schema['buildings'][name]['include'] = False
+    schema.update(interface='entity', topology_mode='dynamic', topology_events=[{
+        'id': 'clone', 'time_step': 1, 'operation': 'add_member',
+        'target_member_id': 'Clone_1', 'source_member_id': names[0],
+    }])
+    env = CityLearnEnv(schema, random_seed=0, random_stream_version=version, episode_time_steps=24,
+                       simulation_start_time_step=0, simulation_end_time_step=47)
+    return env, names[0]
+
+
+def _zero_entity_actions(env):
+    tables = env.action_space['tables']
+    return {'tables': {
+        name: np.zeros(space.shape, dtype='float32') for name, space in tables.items()
+        if name in {'building', 'charger', 'deferrable_appliance'}
+    }}
+
+
+def test_v2_cloned_member_draws_its_own_streams():
+    """A member cloned from ``source_member_id`` is keyed by its own name, not its source's (#304)."""
+
+    env, source_name = _cloned_member_env()
+    try:
+        env.reset()
+        for _ in range(3):
+            env.step(_zero_entity_actions(env))
+        pool = topology_service(env)._member_pool
+        source, clone = pool[source_name], pool['Clone_1']
+        assert clone.random_stream_key == ('building', 'Clone_1')
+        assert clone.occupant.random_stream_key == ('building', 'Clone_1', 'occupant')
+        assert clone.non_shiftable_load_device.random_stream_key == ('building', 'Clone_1', 'non_shiftable_load_device')
+        # The source keeps its own keys and draws.
+        assert source.occupant.random_stream_key == ('building', source_name, 'occupant')
+        assert not np.array_equal(clone.occupant._interaction_draws, source.occupant._interaction_draws)
+        expected = random_streams.generator(
+            0, random_streams.OCCUPANT_SETPOINT_INTERACTION, 'building', 'Clone_1', 'occupant',
+            env.episode_tracker.random_stream_episode,
+        ).random(env.episode_tracker.episode_time_steps)
+        np.testing.assert_array_equal(clone.occupant._interaction_draws, expected)
+    finally:
+        env.close()
 
 
 # --- 4. stochastic outages ---------------------------------------------------------------------

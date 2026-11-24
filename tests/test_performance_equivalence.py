@@ -14,6 +14,7 @@ import pytest
 
 from citylearn.internal import kpi_equipment, temporal
 from citylearn.wrappers import DiscreteCombinations
+from private_access import kpi_service, topology_service
 
 ROOT = Path(__file__).resolve().parents[1]
 DATASET = ROOT / 'data' / 'datasets' / 'citylearn_challenge_2022_phase_all'
@@ -347,7 +348,7 @@ def _reference_settled_cost_series(self, *, condition_by_building):
                 continue
             if getattr(env, 'topology_mode', 'static') == 'dynamic':
                 population = current_population(self)
-                active = (building.name in env._topology_service.active_member_ids_at(t)
+                active = (building.name in topology_service(env).active_member_ids_at(t)
                           if population is None else population.mask(building.name, final_t)[t])
                 if not active:
                     continue
@@ -415,7 +416,7 @@ def _run_market_env(schema, steps, seed):
 def _assert_settled_costs_match(env, variants):
     from citylearn.citylearn import EvaluationCondition
 
-    service = env._kpi_service
+    service = kpi_service(env)
     names = [b.name for b in service._get_kpi_buildings()]
     conditions = [
         {name: EvaluationCondition.WITH_STORAGE_AND_PV for name in names},

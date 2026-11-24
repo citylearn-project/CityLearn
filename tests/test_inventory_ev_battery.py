@@ -1,7 +1,6 @@
 import json
 import shutil
 from pathlib import Path
-import pytest
 from citylearn.citylearn import CityLearnEnv
 from citylearn.community_dataset import InventoryBattery
 

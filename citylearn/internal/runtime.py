@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 import time
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, List, Mapping, Optional, Sequence, Union
 
 import math
 
@@ -1200,12 +1200,38 @@ class CityLearnRuntimeService:
                         handover = topology_connection and continuing_schedule and (
                             env._topology_service.was_ev_connected(ev, env.time_step - 1)
                         )
-                        soc_value = None if handover else _resolve_arrival_soc(
+                        # With `ev_soc_carryover`, a session that continues from the previous
+                        # episode keeps the SOC carried at reset instead of the schedule's.
+                        carryover = getattr(env, '_ev_soc_carryover_context', None) or {}
+                        carried = (
+                            env.time_step == 0
+                            and carryover.get('carried_in', False)
+                            and ev.name in carryover.get('continuing', ())
+                            and ev.name in carryover.get('soc', {})
+                        )
+                        soc_value = None if handover or carried else _resolve_arrival_soc(
                             sim, env.time_step, prev_state, prev_ev_id, ev_id, ev,
                         )
                         if soc_value is not None:
                             ev.battery.force_set_soc(soc_value)
                             ev._arrival_soc_time_step = env.time_step
+                        # An EV that arrives on the first row of a carried episode without an arrival SOC in
+                        # the file keeps its simulated SOC, which is the carried one, as in one run.
+                        kept_carried = (
+                            soc_value is None
+                            and not handover
+                            and env.time_step == 0
+                            and carryover.get('carried_in', False)
+                            and ev.name in carryover.get('soc', {})
+                        )
+                        if carried or kept_carried:
+                            # The carried SOC is this session's start SOC in the episode: record it where the
+                            # KPIs, the departure audit and the observations read a connection boundary,
+                            # instead of the EV's initial SOC.
+                            boundary_soc = getattr(charger, '_topology_connection_soc', None)
+                            if boundary_soc is None:
+                                boundary_soc = charger._topology_connection_soc = {}
+                            boundary_soc[env.time_step] = float(ev.battery.soc[env.time_step])
                         if topology_connection:
                             # Capture the real boundary before any action changes the new stock.
                             boundary_soc = getattr(charger, '_topology_connection_soc', None)

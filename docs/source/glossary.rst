@@ -28,8 +28,11 @@ carries.
       without storage (and without partial-load control for buildings with LSTM dynamics), PV retained,
       computed from the simulator's own series without another rollout. It is selected by the
       ``baseline_condition`` of ``evaluate_v2()``. It is not the :term:`Business as usual` controller.
-      Two class names also contain the word: ``BaselineAgent`` is a passive controller that disables
-      every active action (no control), and ``ZeroActionBaselineAgent`` requests zero for every action.
+      Two agent classes used to contain the word although they are not baselines in this sense, and
+      were renamed for that reason: ``BaselineAgent`` is now :py:class:`citylearn.agents.base.NoControlAgent`,
+      a passive controller that disables every active action, and ``ZeroActionBaselineAgent`` is now
+      :py:class:`citylearn.agents.baseline.ZeroActionAgent`, which requests zero for every action. The
+      old names remain as deprecated aliases until a later release.
       The rule-based policies are called :term:`Reference controllers`, not baselines. In
       :term:`Demand response` settlement, the request's baseline is its pre-event reference power.
 

@@ -5,7 +5,8 @@ Tutorials
 For current runnable examples, start with :doc:`../quickstart` and
 :doc:`custom_controller`. :doc:`rl_training` trains a Stable Baselines3
 controller with the v3 API, evaluates it on unseen data and compares it with
-the business-as-usual operation; CI runs it with the other example notebooks.
+the business-as-usual operation. :doc:`rllib_training` trains Ray RLlib PPO
+controllers with the RLlib wrappers. CI runs both with the other example notebooks.
 
 The following longer-form tutorial explains the building-control and
 reinforcement-learning concepts behind CityLearn:

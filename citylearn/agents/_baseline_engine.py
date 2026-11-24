@@ -214,6 +214,7 @@ class _OperationalBaselinePolicy(RulePolicyBase):
         self._dispatch_budgets: Dict[int, Dict[str, float]] = {}
         self._shared_community_budget: Optional[Dict[str, float]] = None
         self._observed_storage_info: Dict[int, StorageInfo] = {}
+        self._current_step_load_ratios: Sequence[float] = ()
 
     def attach_environment(
         self,
@@ -235,6 +236,7 @@ class _OperationalBaselinePolicy(RulePolicyBase):
         self._dispatch_budgets = {}
         self._shared_community_budget = None
         self._observed_storage_info = {}
+        self._current_step_load_ratios = (metadata or {}).get("current_step_load_ratios", ())
         for agent_idx, names in enumerate(action_names):
             obs_map = self._obs_index[agent_idx] if agent_idx < len(self._obs_index) else {}
             unsupported = [
@@ -437,9 +439,18 @@ class _OperationalBaselinePolicy(RulePolicyBase):
     def _init_dispatch_budget(
         self, agent_idx: int, obs: np.ndarray, obs_map: Mapping[str, int]
     ) -> None:
+        current_net = None
+        if self._current_step_load_ratios:
+            current_net = self._current_step_passive_net_kw(obs, obs_map, self._current_step_load_ratios[agent_idx])
+        if current_net is None:
+            local_surplus = self._pv_surplus_kw(obs, obs_map)
+            local_import = self._get_import_power(obs, obs_map)
+        else:
+            local_surplus = -current_net
+            local_import = current_net
         self._dispatch_budgets[agent_idx] = {
-            "local_surplus_kw": max(0.0, self._pv_surplus_kw(obs, obs_map)),
-            "local_import_kw": max(0.0, self._get_import_power(obs, obs_map)),
+            "local_surplus_kw": max(0.0, local_surplus),
+            "local_import_kw": max(0.0, local_import),
             "community_surplus_kw": max(0.0, self._community_surplus_kw(obs, obs_map)),
             "community_import_kw": max(0.0, self._get_community_import_power(obs, obs_map)),
         }
@@ -834,6 +845,35 @@ class _OperationalBaselinePolicy(RulePolicyBase):
         if min_soc > max_soc:
             return observed_min, observed_max
         return min_soc, max_soc
+
+    def _current_step_passive_net_kw(
+        self, obs: np.ndarray, obs_map: Mapping[str, int], time_step_ratio: float,
+    ) -> Optional[float]:
+        """Use current-step load and PV only when both terms are observable."""
+        load_kwh = self._get_value(obs, obs_map, "non_shiftable_load", default=float("nan"))
+        if not math.isfinite(load_kwh):
+            return None
+
+        # The flattener can alias missing solar_generation to settled PV in kW.
+        pv_kwh = float("nan")
+        solar_idx = obs_map.get("solar_generation")
+        if solar_idx is not None and solar_idx != obs_map.get("pv_power_kw"):
+            pv_kwh = self._get_value(obs, obs_map, "solar_generation", default=float("nan"))
+        if not math.isfinite(pv_kwh):
+            if self._get_value(obs, obs_map, "active_pvs_count", default=float("nan")) != 0.0:
+                return None
+            pv_kwh = 0.0
+
+        running_appliance_kw = sum(
+            max(0.0, float(obs[idx]))
+            for _, idx in self._cached_observation_matches(
+                obs_map, prefix="deferrable_appliance::", suffixes=("::current_step_power_kw",)
+            )
+            if idx < len(obs) and math.isfinite(obs[idx])
+        )
+        # Raw load is dataset-step energy. Solar is already control-step energy.
+        # Thermal device electricity observations describe the previous step.
+        return (max(0.0, load_kwh) * time_step_ratio - max(0.0, pv_kwh)) / self.step_hours + running_appliance_kw
 
     def _get_pv_power(self, obs: np.ndarray, obs_map: Mapping[str, int]) -> float:
         return max(
@@ -1913,8 +1953,9 @@ class NormalPolicy(_OperationalBaselinePolicy):
             # entity_core_electrical bundle. Without it, estimate the power the
             # EV can accept from the observed SOC, battery capacity, charger
             # power and charger efficiency, as the Simulator computes that
-            # observation. The estimate omits the service import limit and the
-            # efficiency curve, which are not observable without the bundle.
+            # observation. The estimate omits the service import limit, the
+            # efficiency curve and capacity fade, which are not observable
+            # without the bundle; the observation stops at the degraded capacity.
             efficiency = self._get_ev_value(
                 obs,
                 obs_map,

@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple, Union
 from gymnasium import spaces
 import numpy as np
 from citylearn.internal.scalars import as_float, clip_scalar
@@ -17,6 +17,7 @@ from citylearn.energy_model import (
 )
 from citylearn.internal import grid_availability
 from citylearn.internal.building_ops import BuildingOpsService
+from citylearn.internal.baseline_version import baseline_version_of
 from citylearn.internal.physics_version import physics_version_of
 from citylearn.internal.service_energy import SERVICE_ENERGY_COMPONENTS
 from citylearn.internal.units import (
@@ -28,7 +29,7 @@ from citylearn.internal.units import (
 )
 from citylearn.occupant import LogisticRegressionOccupant, Occupant
 from citylearn.power_outage import PowerOutage
-from citylearn.preprocessing import Normalize, PeriodicNormalization
+from citylearn.preprocessing import Normalize as Normalize, PeriodicNormalization
 from citylearn.utilities import parse_bool
 
 LOGGER = logging.getLogger(__name__)
@@ -121,6 +122,14 @@ class Building(Environment):
     #: Physics version of the building, see :py:mod:`citylearn.internal.physics_version`. Set by the
     #: environment; ``None`` selects the default version.
     physics_version: Optional[int] = None
+
+    #: KPI baseline version of the building, see :py:mod:`citylearn.internal.baseline_version`. Set by the
+    #: environment; ``None`` selects the default version.
+    baseline_version: Optional[int] = None
+
+    #: Supplies the EV charging that the version 2 KPI baseline keeps: a callable that takes the building and
+    #: returns its charger consumption in the native BAU with the ``'full'`` target. Set by the environment.
+    _baseline_ev_charging_source: Optional[Callable[['Building'], np.ndarray]] = None
 
     def __init__(
         self, energy_simulation: EnergySimulation, weather: Weather, observation_metadata: Mapping[str, bool],
@@ -413,6 +422,16 @@ class Building(Environment):
         return [k for k, v in self.observation_metadata.items() if v]
 
     @property
+    def flat_observation_order(self) -> List[str]:
+        """Active observations in the order of the flat observation vector and `observation_space`.
+
+        Building-level observations keep `active_observations` order; per-device observations (EV
+        chargers, deferrable appliances, escalators) follow, grouped by device.
+        """
+
+        return self._ops_service.flat_observation_order()
+
+    @property
     def active_actions(self) -> List[str]:
         """Actions in `action_metadata` with True value i.e. 
         indicates which storage systems are to be controlled during simulation."""
@@ -484,29 +503,66 @@ class Building(Environment):
 
     @property
     def net_electricity_consumption_without_storage(self) -> np.ndarray:
-        """net electricity consumption in the absence of flexibility provided by storage devices time series, in [kWh]. 
-        
+        """Net electricity consumption in the absence of flexibility provided by storage devices time series, in [kWh].
+
         Notes
         -----
+        The default KPI baseline. It removes the storage devices from the controlled run and replaces the EV
+        charging of the controlled run with the EV charging of the native business-as-usual (BAU) run:
+
         net_electricity_consumption_without_storage = `net_electricity_consumption` - (`cooling_storage_electricity_consumption`
-        + `heating_storage_electricity_consumption` + `dhw_storage_electricity_consumption` + `electrical_storage_electricity_consumption` + `charger_electricity_consumption`)
+        + `heating_storage_electricity_consumption` + `dhw_storage_electricity_consumption`
+        + `electrical_storage_electricity_consumption` + `chargers_electricity_consumption`)
+        + BAU `chargers_electricity_consumption`
 
-        Regarding electric vehicles there is:
-        chargers_electricity_consumption -> Sum of the electricity consumption of all electric_vehicle_chargers in the building
+        The BAU charges each car on arrival at maximum power until it is full, and never discharges it, so the
+        cars get the energy they need, without V2G, and the baseline is the same whatever the controller does with
+        the cars. The BAU charging comes from the native BAU sidecar of the same scenario
+        (:py:meth:`citylearn.citylearn.CityLearnEnv.run_business_as_usual_baseline` with the ``'full'`` target,
+        whatever `business_as_usual_ev_charge_target` is), so it is run when a building has EV chargers.
+        Buildings without chargers need no sidecar. The deferrable appliances and the HVAC stay as the
+        controller ran them.
 
-        So, the first one is subtracted from the net_electricity_consumption, obtaining the energy consumption as if the cars were not used at all.
-        However, if there are chargers and EVs, they need to charge per usual, so that consumption is added
-        This is what allows to check if the control mechanism affects the grid balancing scheme for EVs for example.
+        With `baseline_version` 1 (CityLearn 3.6.0 and earlier) no charging is added back, so on EV datasets the
+        baseline is a community whose cars never charge. See :py:mod:`citylearn.internal.baseline_version`.
 
         Like the controlled series, it is zero at power outage time steps: there is no grid exchange while the grid is down.
         """
-        return self._without_grid_during_outage(self.net_electricity_consumption - np.sum([
+
+        values = self.net_electricity_consumption - np.sum([
             self.cooling_storage_electricity_consumption,
             self.heating_storage_electricity_consumption,
             self.dhw_storage_electricity_consumption,
             self.electrical_storage_electricity_consumption,
             self.chargers_electricity_consumption,
-        ], axis=0))
+        ], axis=0)
+
+        if baseline_version_of(self) >= 2 and self.electric_vehicle_chargers:
+            values = values + self._baseline_ev_charging(len(values))
+
+        return self._without_grid_during_outage(values)
+
+    def _baseline_ev_charging(self, length: int) -> np.ndarray:
+        """EV charging that the version 2 baseline keeps: the building's BAU charger consumption, `length` steps."""
+
+        source = self._baseline_ev_charging_source
+
+        if source is None:
+            raise ValueError(
+                f'Building {self.name!r} has EV chargers, and the version 2 KPI baseline adds back their charging in '
+                'the native BAU run, which only an environment can supply. Evaluate the building through its '
+                'CityLearnEnv, or set baseline_version=1.'
+            )
+
+        charging = np.asarray(source(self))
+
+        if charging.shape[0] < length:
+            raise ValueError(
+                f'The native BAU run supplies {charging.shape[0]} EV charging time steps for building {self.name!r}, '
+                f'fewer than the {length} the baseline needs.'
+            )
+
+        return charging[:length]
 
     @property
     def net_electricity_consumption_emission(self) -> np.ndarray:
@@ -2143,6 +2199,16 @@ class Building(Environment):
 
         return spaces.Box(low=np.array(low_limit, dtype='float32'), high=np.array(high_limit, dtype='float32'), dtype='float32')
 
+    def _controlled_demand_observation_high_limit(self, key: str, data: Mapping[str, Any]) -> float:
+        """Largest demand an action can set, in [kWh] per control step; 0 when actions do not set the demand."""
+
+        return 0.0
+
+    def _set_point_observation_limits(self, key: str, data: Mapping[str, Any]) -> Tuple[float, float]:
+        """Set-point limits: the range of the set-point schedule."""
+
+        return self._series_bound(data[key], upper=False), self._series_bound(data[key], upper=True)
+
     def _ev_time_observation_high_limit(self, key: str) -> float:
         try:
             episode_steps = float(getattr(self.episode_tracker, 'episode_time_steps', 0) or 0)
@@ -2292,7 +2358,7 @@ class Building(Environment):
             'net_electricity_consumption_without_storage_and_partial_load',
             'net_electricity_consumption_without_storage_and_partial_load_and_pv'
         ]
-        observation_names = list(self.observation_metadata.keys()) + internal_limit_observations if include_all else self.active_observations
+        observation_names = list(self.observation_metadata.keys()) + internal_limit_observations if include_all else self.flat_observation_order
         periodic_normalization = False if periodic_normalization is None else periodic_normalization
         periodic_observations = self.get_periodic_observation_metadata()
         low_limit, high_limit = {}, {}
@@ -2475,6 +2541,9 @@ class Building(Environment):
                 low_limit[key] = -self.maximum_temperature_delta
                 high_limit[key] = self.maximum_temperature_delta
 
+            elif key in ['indoor_dry_bulb_temperature_cooling_set_point', 'indoor_dry_bulb_temperature_heating_set_point']:
+                low_limit[key], high_limit[key] = self._set_point_observation_limits(key, data)
+
             elif key == 'comfort_band':
                 low_limit[key] = 0
                 high_limit[key] = self._series_bound(data[key], upper=True)
@@ -2482,7 +2551,10 @@ class Building(Environment):
             elif key in ['cooling_demand', 'heating_demand', 'dhw_demand']:
                 low_limit[key] = 0.0
                 max_demand = data[key].max()
-                high_limit[key] = as_float(max_demand) * self.demand_observation_limit_factor
+                high_limit[key] = max(
+                    as_float(max_demand) * self.demand_observation_limit_factor,
+                    self._controlled_demand_observation_high_limit(key, data),
+                )
 
             elif key == 'cooling_electricity_consumption':
                 low_limit[key] = 0.0
@@ -2628,12 +2700,15 @@ class Building(Environment):
             except Exception:
                 pass
 
-            def _headroom_bounds(limit, *, export: bool = False, limit_low=None):
+            def _headroom_bounds(limit, *, export: bool = False, limit_low=None, phase: bool = False):
                 limit = float(limit)
                 limit_low = limit if limit_low is None else float(limit_low)
                 if getattr(self, '_electrical_service_enabled', False):
                     min_total_kw = base_power_min_kw - control_margin_kw
                     max_total_kw = base_power_max_kw + control_margin_kw
+                    if phase:
+                        # A phase carries a share of the building power, which can be none of it.
+                        min_total_kw, max_total_kw = min(min_total_kw, 0.0), max(max_total_kw, 0.0)
                     if export:
                         bounds = [limit_low + min_total_kw, limit + max_total_kw]
                     else:
@@ -2663,12 +2738,12 @@ class Building(Environment):
                     import_limit = phase.get('import_kw')
                     if import_limit is not None:
                         key = f"charging_phase_{phase['name']}_headroom_kw"
-                        data[key] = _headroom_bounds(import_limit)
+                        data[key] = _headroom_bounds(import_limit, phase=True)
                     if getattr(self, '_electrical_service_enabled', False):
                         export_limit = phase.get('export_kw')
                         if export_limit is not None:
                             key = f"charging_phase_{phase['name']}_export_headroom_kw"
-                            data[key] = _headroom_bounds(export_limit, export=True)
+                            data[key] = _headroom_bounds(export_limit, export=True, phase=True)
 
             max_violation_energy = power_kw_to_energy_kwh(total_charger_power_kw + total_storage_power_kw, self.seconds_per_time_step)
             data['charging_constraint_violation_kwh'] = np.array([0.0, max_violation_energy], dtype='float32')
@@ -3721,7 +3796,10 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
         model_input_tensor = model_input_tensor[np.newaxis, :, :]
         hidden_state = tuple([h.data for h in self.dynamics._hidden_state])
 
-        indoor_dry_bulb_temperature_norm, self.dynamics._hidden_state = self.dynamics(model_input_tensor.float(), hidden_state)
+        indoor_dry_bulb_temperature_norm, hidden_state = self.dynamics(model_input_tensor.float(), hidden_state)
+        # Store a detached hidden state: with its grad_fn, copy.deepcopy of the environment fails (CityLearn #307).
+        # The forward pass is unchanged; running it under torch.no_grad() changes its outputs in the last bits.
+        self.dynamics._hidden_state = tuple(h.detach() for h in hidden_state)
 
         # update dry bulb temperature for current time step in model input
         ix = self.dynamics.input_observation_names.index('indoor_dry_bulb_temperature')
@@ -3809,6 +3887,58 @@ class LSTMDynamicsBuilding(DynamicsBuilding):
                 self.dynamics.input_normalization_maximum
             )
         ]
+
+    def _controlled_demand_observation_high_limit(self, key: str, data: Mapping[str, Any]) -> float:
+        """Largest cooling or heating demand that `update_cooling_demand` or `update_heating_demand` can set.
+
+        With dynamics, the action sets the demand to the device output at up to its nominal power, which
+        can exceed the largest demand in the dataset.
+        """
+
+        high = super()._controlled_demand_observation_high_limit(key, data)
+
+        # `ignore_dynamics`, not `simulate_dynamics`: the latter is also False during the LSTM warm-up.
+        if self.ignore_dynamics or key not in ('cooling_demand', 'heating_demand'):
+            return high
+
+        heating = key == 'heating_demand'
+        device = self.heating_device if heating else self.cooling_device
+        actions = ('heating_device' if heating else 'cooling_device', 'cooling_or_heating_device')
+
+        if device is None or not any(a in self.active_actions for a in actions):
+            return high
+
+        # Same cap as the update methods, with the nominal power as the available power (an upper bound).
+        # Physics version 1 compares the step energy with the power, which caps it at one hour.
+        hours = self._dataset_step_hours()
+        hours = hours if physics_version_of(self) >= 2 else min(hours, 1.0)
+        electric_energy = float(getattr(device, 'nominal_power', 0.0) or 0.0) * hours
+
+        if electric_energy <= 0.0:
+            return high
+
+        # The action only sets the demand in the steps whose HVAC mode allows that service.
+        hvac_mode = np.asarray(data.get('hvac_mode', []), dtype='float64')
+        modes = (2, 3) if heating else (1, 3)
+        steps = np.isin(hvac_mode, modes) if hvac_mode.size > 0 else None
+
+        if steps is not None and not steps.any():
+            return high
+
+        if isinstance(device, HeatPump):
+            temperature = np.asarray(data['outdoor_dry_bulb_temperature'], dtype='float64')
+            cop = np.atleast_1d(np.asarray(device.get_cop(temperature, heating), dtype='float64'))
+
+            if steps is not None and cop.size == steps.size:
+                cop = cop[steps]
+
+            cop = self._series_bound(cop, upper=True)
+        else:
+            cop = float(getattr(device, 'efficiency', 1.0) or 1.0)
+
+        output = electric_energy * cop
+
+        return max(high, as_float(self._dataset_energy_to_control_step(output)))
 
     def update_cooling_demand(self, action: float):
         """Update space cooling demand for current time step.
@@ -3924,6 +4054,25 @@ class OccupantInteractionBuilding(DynamicsBuilding):
         self.ignore_occupant = False if ignore_occupant is None else ignore_occupant
         super().__init__(*args, **kwargs)
     
+    def _set_point_observation_limits(self, key: str, data: Mapping[str, Any]) -> Tuple[float, float]:
+        """Set-point limits that also cover the occupant's changes.
+
+        Each occupant interaction moves the set point from its current value and holds it, so repeated
+        interactions can take it outside the schedule. The limits then cover the indoor temperature
+        limits, the range of temperatures the building is expected to reach.
+        """
+
+        low, high = super()._set_point_observation_limits(key, data)
+
+        if self.ignore_occupant or 'indoor_dry_bulb_temperature' not in data:
+            return low, high
+
+        temperature = data['indoor_dry_bulb_temperature']
+        low = min(low, self._series_bound(temperature, upper=False) - self.maximum_temperature_delta)
+        high = max(high, self._series_bound(temperature, upper=True) + self.maximum_temperature_delta)
+
+        return low, high
+
     @DynamicsBuilding.episode_tracker.setter
     def episode_tracker(self, episode_tracker: EpisodeTracker):
         DynamicsBuilding.episode_tracker.fset(self, episode_tracker)
@@ -3974,12 +4123,92 @@ class OccupantInteractionBuilding(DynamicsBuilding):
         self.occupant.reset()
 
 class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding, LSTMDynamicsBuilding):
-    def __init__(self, *args, occupant: LogisticRegressionOccupant = None, set_point_hold_time_steps: int = None, **kwargs):
+    r"""Building whose occupants adjust the HVAC set point with a logistic regression model.
+
+    Parameters
+    ----------
+    *args : Any
+        Positional arguments of :py:class:`citylearn.building.OccupantInteractionBuilding`.
+    occupant : LogisticRegressionOccupant
+        Occupant interaction model.
+    set_point_hold_time_steps : int, optional
+        Time steps without interaction after which the set points return to the schedule. Holds for the
+        rest of the episode when ``None``.
+    set_point_limits : Tuple[float, float], optional
+        Range, in [C], an occupant can move a heating or cooling set point to; defaults to
+        :py:data:`DEFAULT_OCCUPANT_SET_POINT_LIMITS`. A change never goes past a limit, and a schedule
+        value outside the range is not moved into it. Applies under physics version 2 and later only:
+        physics version 1 keeps the unbounded set points of CityLearn 3.6.0 (CityLearn #352).
+    **kwargs : Any
+        Other keyword arguments of :py:class:`citylearn.building.OccupantInteractionBuilding`.
+    """
+
+    #: Default occupant set-point range in [C]: covers the residential heating and cooling set points of
+    #: ResStock (12.8 to 26.7 C) and the bundled Quebec schedules (18.5 to 21.6 C) with margin.
+    DEFAULT_OCCUPANT_SET_POINT_LIMITS = (15.0, 30.0)
+
+    def __init__(
+        self, *args, occupant: LogisticRegressionOccupant = None, set_point_hold_time_steps: int = None,
+        set_point_limits: Tuple[float, float] = None, **kwargs
+    ):
+        self.set_point_limits = set_point_limits
         super().__init__(*args, occupant=occupant, **kwargs)
         self.occupant: LogisticRegressionOccupant
         self.__set_point_hold_time_step_counter = None
         self.set_point_hold_time_steps = set_point_hold_time_steps
         self.occupant_interaction_indoor_dry_bulb_temperature_set_point_delta_summary = []
+
+    @property
+    def set_point_limits(self) -> Optional[Tuple[float, float]]:
+        """Range, in [C], an occupant can move a set point to; ``None`` under physics version 1, which
+        does not limit it."""
+
+        return None if physics_version_of(self) < 2 else self.__set_point_limits
+
+    @set_point_limits.setter
+    def set_point_limits(self, value: Tuple[float, float]):
+        value = self.DEFAULT_OCCUPANT_SET_POINT_LIMITS if value is None else value
+
+        try:
+            low, high = (float(v) for v in value)
+        except (TypeError, ValueError):
+            raise ValueError(f'set_point_limits must be a pair of numbers [low, high], got {value!r}.') from None
+
+        if not (np.isfinite(low) and np.isfinite(high) and low < high):
+            raise ValueError(f'set_point_limits must be finite with low < high, got {value!r}.')
+
+        self.__set_point_limits = (low, high)
+
+    def _occupant_set_point(self, current_set_point: float, setpoint_delta: float) -> float:
+        """Set point after an occupant change, kept within `set_point_limits` when they apply."""
+
+        set_point = as_float(current_set_point) + setpoint_delta
+        limits = self.set_point_limits
+
+        if limits is None:
+            return set_point
+
+        # Never past a limit, and never pulled into the range when the schedule is already outside it.
+        current_set_point = as_float(current_set_point)
+        low, high = min(limits[0], current_set_point), max(limits[1], current_set_point)
+
+        return min(max(set_point, low), high)
+
+    def _set_point_observation_limits(self, key: str, data: Mapping[str, Any]) -> Tuple[float, float]:
+        """Set-point limits: the schedule range widened to `set_point_limits` when they apply.
+
+        Occupants move the set point from the schedule or from an earlier change, and never past
+        `set_point_limits`, so these limits are exact.
+        """
+
+        limits = self.set_point_limits
+
+        if limits is None or self.ignore_occupant:
+            return super()._set_point_observation_limits(key, data)
+
+        low, high = super(OccupantInteractionBuilding, self)._set_point_observation_limits(key, data)
+
+        return min(low, limits[0]), max(high, limits[1])
         
     @property
     def set_point_hold_time_steps(self) -> int:
@@ -4030,10 +4259,10 @@ class LogisticRegressionOccupantInteractionBuilding(OccupantInteractionBuilding,
 
         if abs(setpoint_delta) > 0.0 and not self.ignore_occupant:
             if hvac_mode == 1:
-                self.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[self.time_step:] = as_float(current_set_point) + setpoint_delta
+                self.energy_simulation.indoor_dry_bulb_temperature_cooling_set_point[self.time_step:] = self._occupant_set_point(current_set_point, setpoint_delta)
 
             elif hvac_mode == 2:
-                self.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[self.time_step:] = as_float(current_set_point) + setpoint_delta
+                self.energy_simulation.indoor_dry_bulb_temperature_heating_set_point[self.time_step:] = self._occupant_set_point(current_set_point, setpoint_delta)
             
             else:
                 pass

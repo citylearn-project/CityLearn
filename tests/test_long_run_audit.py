@@ -8,6 +8,7 @@ import sys
 from types import SimpleNamespace as NS
 
 import pytest
+from private_access import runtime_service
 
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('long_run_audit',ROOT/'scripts/audit/audit_long_run.py')
@@ -68,14 +69,14 @@ def test_observer_samples_before_equipment_is_replaced_at_next_boundary():
            _runtime_service=NS(update_variables=update))
     observer=audit.ExecutedIntervalObserver(env,m,100)
     try:
-        assert env._runtime_service.update_variables()=='updated'
+        assert runtime_service(env).update_variables()=='updated'
         # Replacing the next interval's hardware must not rewrite the executed sample.
         env.buildings[0].electrical_storage=NS(electricity_consumption=[99])
         assert m.steps==1 and m.totals()['storage_net_kwh']==0
         assert observer.row[:2]==[100,2]
         assert observer.row[2]==pytest.approx(.25)
     finally:observer.close()
-    assert env._runtime_service.update_variables is update
+    assert runtime_service(env).update_variables is update
 
 
 def test_run_refuses_platforms_without_resource_meters_before_writing(tmp_path, monkeypatch):

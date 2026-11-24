@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 
 from citylearn.citylearn import CityLearnEnv
+from private_access import provenance_service
 
 DATASET = 'citylearn_challenge_2022_phase_all_plus_evs'
 STEPS = 48
@@ -38,7 +39,7 @@ def test_disabling_provenance_keeps_trajectory_and_non_provenance_kpis():
     np.testing.assert_array_equal(enabled_trace, disabled_trace)
     np.testing.assert_array_equal(enabled_rewards, disabled_rewards)
     np.testing.assert_array_equal(enabled.net_electricity_consumption, disabled.net_electricity_consumption)
-    assert disabled._provenance_service.steps == enabled._provenance_service.steps == STEPS
+    assert provenance_service(disabled).steps == provenance_service(enabled).steps == STEPS
 
     enabled_kpis = enabled.evaluate_v2(include_business_as_usual=False)
     disabled_kpis = disabled.evaluate_v2(include_business_as_usual=False)
@@ -56,10 +57,10 @@ def test_disabling_provenance_keeps_trajectory_and_non_provenance_kpis():
 def test_disabled_provenance_reports_itself():
     env, *_ = _run(False)
 
-    assert env._provenance_service.get_metadata()['enabled'] is False
+    assert provenance_service(env).get_metadata()['enabled'] is False
 
     with pytest.raises(RuntimeError, match='energy_provenance=True'):
-        env._provenance_service.summary()
+        provenance_service(env).summary()
 
 
 MINUTE_EV_SCHEMA = Path(__file__).resolve().parent/'data'/'minute_ev_demo'/'schema.json'
@@ -120,6 +121,6 @@ def test_business_as_usual_sidecar_uses_effective_provenance_setting(tmp_path, c
     try:
         sidecar = env.run_business_as_usual_baseline().env
         assert sidecar.energy_provenance is effective
-        assert sidecar._provenance_service.enabled is effective
+        assert provenance_service(sidecar).enabled is effective
     finally:
         env.close()

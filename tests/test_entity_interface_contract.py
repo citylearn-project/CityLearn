@@ -28,7 +28,6 @@ def _zero_entity_actions(env: CityLearnEnv):
 
 
 def _entity_storage_action(env: CityLearnEnv, value: float):
-    tables = env.action_space["tables"]
     payload = _zero_entity_actions(env)
     building = payload["tables"]["building"]
     features = env.entity_specs["actions"]["building"]["features"]

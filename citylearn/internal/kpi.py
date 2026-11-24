@@ -11,6 +11,7 @@ from array import array
 from citylearn.energy_model import Battery
 from citylearn.internal import ev_departure_audit, deferrable_service_audit, grid_availability
 from citylearn.internal import kpi_energy, kpi_equipment, kpi_community, kpi_service_metrics
+from citylearn.internal.kpi_catalogue import attach_kpi_metadata
 from citylearn.internal.service_energy import service_energy_components
 
 from typing import TYPE_CHECKING, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -25,6 +26,9 @@ from citylearn.internal.charger_dynamics import (
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
+
+
+BATTERY_NOMINAL_CAPACITY_ATTR = '_battery_nominal_capacity_kwh'
 
 
 def settled_cost_scope(function):
@@ -1069,6 +1073,100 @@ class CityLearnKPIService:
 
         return float(poor_mean / rich_mean)
 
+    def _ev_session_connected_before_window(self, sim) -> bool:
+        """Whether the session departing at episode step 0 was already connected on the row before.
+
+        Such a session belongs to the rows before the window: a window ending there counts it at
+        its last step with the SOC the controller set (see ``_ev_last_step_countdown``). Counting it
+        again at step 0 would score the SOC set at reset. The first episode has no row before it.
+        """
+
+        start = getattr(sim, 'start_time_step', None)
+        data = getattr(sim, '__dict__', {})
+        states = data.get('_electric_vehicle_charger_state')
+        if start is None or states is None:
+            return False
+
+        start = int(start)
+        rows = (start - 1, start)
+        if rows[0] < 0 or start >= len(states) or any(states[row] != 1 for row in rows):
+            return False
+
+        has_session_ids = False
+        for name in ('_electric_vehicle_session_id', '_electric_vehicle_id'):
+            ids = data.get(name)
+            values = [None if ids is None else self._normal_ev_id(self._safe_sequence_value(ids, row)) for row in rows]
+            if any(value is not None and value != values[0] for value in values):
+                return False
+            if name == '_electric_vehicle_session_id':
+                has_session_ids = any(value is not None for value in values)
+
+        countdowns = data.get('_electric_vehicle_departure_time')
+        if has_session_ids or countdowns is None:
+            return True
+
+        # Without session ids, a countdown that resets from [0, 1] marks a new session, as in the
+        # departure rules.
+        before, after = (self._to_scalar(countdowns[row], np.nan) for row in rows)
+        return not (
+            np.isfinite(before)
+            and np.isfinite(after)
+            and 0.0 <= before <= 1.0 + self.EV_DEPARTURE_EPS
+            and after > before + self.EV_DEPARTURE_EPS
+        )
+
+    def _ev_soc_carried_in(self) -> bool:
+        """Whether the episode started from EV SOC carried from the previous one (`ev_soc_carryover`).
+
+        A session that continues across the first row then keeps the charge of the previous episode and is
+        scored where it leaves, so step 0 does not skip it.
+        """
+
+        carryover = getattr(self.env, '_ev_soc_carryover_context', None)
+        return bool(carryover and carryover.get('carried_in', False))
+
+    def _ev_last_step_countdown(self, terminal_step: int) -> float:
+        """Largest departure countdown counted at a window's last control step.
+
+        A session connected there with this countdown or less leaves before the next control
+        step: one row later in general, and two rows later when another ``disjoint`` split of
+        the simulation follows the episode, because the row between the two episodes is never
+        controlled. The last window of a simulation, a single episode and a window that ends
+        before the episode does (a member that leaves, or a mid-episode evaluation) use one row.
+        """
+
+        env = self.env
+        carryover = getattr(env, '_ev_soc_carryover_context', None)
+        if carryover is not None:
+            # With `ev_soc_carryover` a session connected on the next episode's first row is scored there,
+            # with the carried SOC; the env sets the countdown from where that episode starts.
+            tracker = getattr(env, 'episode_tracker', None)
+            start = getattr(tracker, 'episode_start_time_step', None)
+            end = getattr(tracker, 'episode_end_time_step', None)
+            if start is None or end is None or terminal_step != end - start - 1:
+                return 1.0
+            return float(carryover.get('last_step_countdown', 1.0))
+
+        if (
+            getattr(env, 'episode_split_boundary', 'shared') != 'disjoint'
+            or getattr(env, 'rolling_episode_split', False)
+        ):
+            return 1.0
+
+        length = getattr(env, 'episode_time_steps', None)
+        tracker = getattr(env, 'episode_tracker', None)
+        if isinstance(length, bool) or not isinstance(length, (int, np.integer)) or tracker is None:
+            return 1.0
+
+        start = getattr(tracker, 'episode_start_time_step', None)
+        end = getattr(tracker, 'episode_end_time_step', None)
+        simulation_end = getattr(tracker, 'simulation_end_time_step', None)
+        if start is None or end is None or simulation_end is None or terminal_step != end - start - 1:
+            return 1.0
+
+        # Disjoint splits advance by `length` rows, so the next one starts at `end + 1`.
+        return 2.0 if end + int(length) <= simulation_end else 1.0
+
     def _compute_ev_metrics(self, building, *, t_start: int = 0, t_final: Optional[int] = None) -> Dict[str, float]:
         upper = int(max(building.time_step, 0))
         t_start = int(max(t_start, 0))
@@ -1153,6 +1251,10 @@ class CityLearnKPIService:
             if history_limit < t_start:
                 continue
 
+            # The window's last control step, not the schedule's terminal
+            # row: the loop never reaches that row in a normal episode.
+            terminal_step = history_limit
+            terminal_countdown = self._ev_last_step_countdown(terminal_step)
             ev_ids = getattr(sim, 'electric_vehicle_id', None)
             session_ids = getattr(sim, 'electric_vehicle_session_id', None)
             departure_times = getattr(sim, 'electric_vehicle_departure_time', None)
@@ -1189,10 +1291,10 @@ class CityLearnKPIService:
                     np.nan,
                 )
                 terminal_departure = (
-                    t == len(states) - 1
+                    t == terminal_step
                     and np.isfinite(departure_countdown)
                     # -1 is the schedule's unknown-departure sentinel.
-                    and 0.0 <= departure_countdown <= 1.0 + self.EV_DEPARTURE_EPS
+                    and 0.0 <= departure_countdown <= terminal_countdown + self.EV_DEPARTURE_EPS
                 )
                 departure_transition = t + 1 < len(states) and (
                     next_state != 1
@@ -1224,6 +1326,9 @@ class CityLearnKPIService:
                 )
 
                 if current_state != 1 or not (departure_transition or terminal_departure):
+                    continue
+
+                if t == 0 and not self._ev_soc_carried_in() and self._ev_session_connected_before_window(sim):
                     continue
 
                 ev = self._safe_sequence_value(charger.past_connected_evs, t)
@@ -1525,7 +1630,11 @@ class CityLearnKPIService:
         follows the weighted allocation of the provenance ledger
         (`community_market_import_member_weights`), so the totals match its
         `external_purchase_emissions`. A non-finite intensity counts as zero
-        carbon, as in the ledger. `condition` is a district evaluation
+        carbon, as in the ledger. When a community market is enabled with
+        `local_trading_enabled` false, no energy is exchanged locally (as in
+        the settlement and the ledger), so every member import is a grid
+        import charged at that member's intensity; the local price ratio never
+        enters. `condition` is a district evaluation
         condition; buildings that are not `DynamicsBuilding` use it without the
         partial-load suffix, as the district series do.
         """
@@ -1547,6 +1656,9 @@ class CityLearnKPIService:
             intensities[:carbon.size, column] = np.where(np.isfinite(carbon), carbon, 0.0)
 
         imports = np.clip(nets, 0.0, None)
+        if getattr(env, 'community_market_enabled', False) and not getattr(env, 'community_market_local_enabled', True):
+            return (imports*intensities).sum(axis=1)
+
         district_import = np.clip(nets.sum(axis=1), 0.0, None)
         importing = imports > float(ZERO_DIVISION_PLACEHOLDER)
         any_importing = importing.any(axis=1)
@@ -1995,8 +2107,11 @@ class CityLearnKPIService:
             rows, district = run(progress, family.__name__, family, self, buildings)
             building_rows.extend(rows)
             district_rows.extend(district)
-        return pd.concat([legacy, pd.DataFrame(district_rows), pd.DataFrame(building_rows)],
-                         ignore_index=True, sort=False)
+        output = pd.concat([legacy, pd.DataFrame(district_rows), pd.DataFrame(building_rows)],
+                           ignore_index=True, sort=False)
+        # Keep the exact district denominator available to portfolio evaluation without exporting a new KPI.
+        output.attrs[BATTERY_NOMINAL_CAPACITY_ATTR] = {'control': equipment.bess_capacity_total}
+        return output
 
     @staticmethod
     def _v2_name(
@@ -2070,8 +2185,9 @@ class CityLearnKPIService:
     def ratio_zero_over_zero(ratio_name: str) -> Optional[float]:
         """Value of a ratio KPI when its control and reference totals are both zero.
 
-        Deferrable-appliance service ratios are undefined (None) when no cycle
-        was due in either run; every other ratio reads 1.0, "no change".
+        Deferrable-appliance ratios are undefined (None) when their own two totals
+        are zero, even if cycles were due (for example the missed-cycle ratio when
+        neither run missed a cycle); every other ratio reads 1.0, "no change".
         """
         return None if '_deferrable_appliance_' in f'_{ratio_name}' else 1.0
 
@@ -2107,6 +2223,24 @@ class CityLearnKPIService:
         components[v2(level, 'escalator', 'service', 'service_level', None, 'ratio')] = (
             v2(level, 'escalator', 'service', 'requested_passengers_total', None, 'count'),
         )
+        # Community-market shares: local energy over local plus grid energy after local trading.
+        demand_share_weights = (
+            v2(level, 'energy_grid', 'community_market', 'local_import', 'total', 'kwh'),
+            v2(level, 'energy_grid', 'community_market', 'grid_import_after_local', 'total', 'kwh'),
+        )
+        components[v2(level, 'solar_self_consumption', 'community_market', 'local_share_of_demand', None, 'ratio')] = demand_share_weights
+        components[v2(level, 'solar_self_consumption', 'community_market', 'import_share', None, 'ratio')] = demand_share_weights
+        components[v2(level, 'solar_self_consumption', 'community_market', 'local_share_of_export', None, 'ratio')] = (
+            v2(level, 'energy_grid', 'community_market', 'local_export', 'total', 'kwh'),
+            v2(level, 'energy_grid', 'community_market', 'grid_export_after_local', 'total', 'kwh'),
+        )
+        # Demand response: credited over valid requested energy, and the audit coverage ratios.
+        components[f'{level}_demand_response_compliance_ratio'] = (f'{level}_demand_response_valid_requested_total_kwh',)
+        for purpose in ('all', 'service', 'stress', 'unspecified'):
+            audit = f'{level}_demand_response_audit_{purpose}'
+            components[f'{audit}_compliance_ratio'] = (f'{audit}_valid_requested_kwh',)
+            components[f'{audit}_requested_energy_coverage_ratio'] = (f'{audit}_requested_kwh',)
+            components[f'{audit}_baseline_coverage_ratio'] = (f'{audit}_active_intervals_count',)
         return components
 
     @classmethod
@@ -2122,6 +2256,7 @@ class CityLearnKPIService:
             ('deferrable_appliance', 'service', 'service_level', 'ratio'),
             ('deferrable_appliance', 'service', 'average_start_delay', 'hours'),
             ('solar_self_consumption', 'ratio', 'self_consumption', 'ratio'),
+            ('battery', 'health', 'equivalent_full_cycles', 'count'),
         ):
             control = v2(level, family, subfamily, metric, None, unit)
             reference = v2(level, family, subfamily, metric, 'business_as_usual', unit)
@@ -2147,6 +2282,7 @@ class CityLearnKPIService:
         )
 
         legacy = all_metrics[all_metrics['cost_function'].isin(self.LEGACY_COST_FUNCTIONS)].copy()
+        legacy.attrs.pop(BATTERY_NOMINAL_CAPACITY_ATTR, None)
         return legacy.reset_index(drop=True)
 
     def _add_business_as_usual_records(
@@ -2437,6 +2573,7 @@ class CityLearnKPIService:
                 bau('district', 'District', member_sum_key))
 
         self._add_business_as_usual_shape_records(records, result.env, v2, simulated_days)
+        return bau_df.attrs.get(BATTERY_NOMINAL_CAPACITY_ATTR, {}).get('control')
 
     def _add_business_as_usual_shape_records(
         self,
@@ -2519,6 +2656,8 @@ class CityLearnKPIService:
         for metric, control_value, bau_value, unit, with_ratio in metrics:
             control_defined = self._defined_scalar(control_value)
             bau_defined = self._defined_scalar(bau_value)
+            # The control value behind the delta and the ratio, on the same district series (#326).
+            put(v2('district', 'energy_grid', 'shape_quality', metric, 'control', unit), control_defined)
             put(v2('district', 'energy_grid', 'shape_quality', metric, 'business_as_usual', unit), bau_defined)
             put(
                 v2('district', 'energy_grid', 'shape_quality', metric, 'delta_to_business_as_usual', unit),
@@ -2878,6 +3017,13 @@ class CityLearnKPIService:
             for suffix, key in dr_metrics:
                 put('district', 'District', dr_name('district', suffix), dr_district.get(key))
 
+            # The additive components of the compliance ratio, so a portfolio can pool it (#285).
+            for suffix, key in (
+                ('valid_requested_total_kwh', 'demand_response_valid_requested_total_kwh'),
+                ('credited_total_kwh', 'demand_response_credited_total_kwh'),
+            ):
+                put('district', 'District', dr_name('district', suffix), dr_district.get(key))
+
             for building_name in building_names:
                 totals = dr_by_building.get(building_name, {})
                 for suffix, key in dr_metrics + [('uncapped_contribution_total_kwh', 'demand_response_uncapped_contribution_total_kwh')]:
@@ -3069,8 +3215,9 @@ class CityLearnKPIService:
             for metric, value in district.items():
                 put('district', 'District', f'district_energy_provenance_{metric}', value)
 
+        capacities = all_metrics.attrs[BATTERY_NOMINAL_CAPACITY_ATTR]
         if include_business_as_usual and not bool(getattr(env, '_business_as_usual_sidecar', False)):
-            run(progress, 'business_as_usual', self._add_business_as_usual_records,
+            capacities['business_as_usual'] = run(progress, 'business_as_usual', self._add_business_as_usual_records,
                 records,
                 v2,
                 simulated_days,
@@ -3087,7 +3234,7 @@ class CityLearnKPIService:
         output.attrs['kpi_family_audit'] = family_metadata()
         output.attrs['kpi_family_audit']['equity_conditions'] = family_audit['equity_conditions']
         if output.empty:
-            return pd.DataFrame(columns=['cost_function', 'value', 'name', 'level'])
+            return attach_kpi_metadata(pd.DataFrame(columns=['cost_function', 'value', 'name', 'level']))
 
         if getattr(env, 'topology_mode', 'static') == 'dynamic':
             lifecycle = getattr(env, 'topology_member_lifecycle', {}) or {}
@@ -3118,4 +3265,5 @@ class CityLearnKPIService:
                 output.loc[mask, 'topology_active'] = 1.0 if state.get('active', False) else 0.0
 
         output = run(progress, 'formatting', lambda: output.sort_values(['level', 'name', 'cost_function']).reset_index(drop=True))
-        return output
+        output.attrs[BATTERY_NOMINAL_CAPACITY_ATTR] = capacities
+        return attach_kpi_metadata(output)

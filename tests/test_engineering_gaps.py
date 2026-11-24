@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from private_access import market_settlement_history
 
 pytest.importorskip("gymnasium")
 
@@ -103,7 +104,7 @@ def _kpi(frame, name):
 
 def test_operator_balance_kpi_reports_the_money_kept_by_the_market(tmp_path):
     env = _market_env(tmp_path, [("a.csv", .3, .2), ("b.csv", .6, .25)])
-    rows = env._community_market_settlement_history[-1]
+    rows = market_settlement_history(env)[-1]
     expected = sum(r["operator_balance_eur"] for r in rows)
     assert expected == pytest.approx(.1)
 
@@ -128,7 +129,7 @@ def test_operator_balance_reports_the_residual_of_different_member_pricing_files
     env = CityLearnEnv(str(path), episode_time_steps=2)
     env.reset()
     env.step([np.zeros(len(env.action_names[0]))])
-    rows = {r["building"]: r for r in env._community_market_settlement_history[-1]}
+    rows = {r["building"]: r for r in market_settlement_history(env)[-1]}
     traded = rows["Building_A"]["local_import_kwh"]
     assert traded > 0 and rows["Building_B"]["local_export_kwh"] == pytest.approx(traded)
 

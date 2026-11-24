@@ -62,7 +62,8 @@ def experiment_manifest(env):
     source_destinations = provenance.source_destinations() if provenance.enabled else None
     return dict(simulator_version=__version__, git_commit=revision, tracked_worktree_dirty=dirty,
                 business_as_usual_definition=BusinessAsUsualAgent.definition(
-                    getattr(env, 'business_as_usual_ev_charge_target', 'full'))[1],
+                    getattr(env, 'business_as_usual_ev_charge_target', 'full'),
+                    BusinessAsUsualAgent.hvac_mode_for(env))[1],
                 business_as_usual_reference=native_reference(env),
                 controller_identity=getattr(env, '_controller_identity', None),
                 comparison_context=context(env, files), final_inventory=inventory(env),
@@ -71,6 +72,11 @@ def experiment_manifest(env):
                 runtime_versions=runtime_versions(),
                 input_file_changes=changed, temporal_reproducibility=metadata['temporal_reproducibility'],
                 random_seed=env.random_seed, random_stream_version=env.random_stream_version,
+                physics_version=env.physics_version,
+                baseline_version=env.baseline_version,
+                episode_split_boundary=env.episode_split_boundary,
+                ev_soc_carryover=bool(getattr(env, 'ev_soc_carryover', False)),
+                time_step_ratio_mode=env.time_step_ratio_mode,
                 seconds_per_time_step=env.seconds_per_time_step,
                 episode_start_time_step=tracker.episode_start_time_step,
                 episode_end_time_step=tracker.episode_end_time_step,

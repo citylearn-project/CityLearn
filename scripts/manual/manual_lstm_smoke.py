@@ -1,5 +1,4 @@
 # Ensure parent repo root on sys.path for local import
-import os
 import sys
 from pathlib import Path
 
@@ -7,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from citylearn.agents.base import BaselineAgent as Agent
+from citylearn.agents.base import NoControlAgent as Agent
 from citylearn.citylearn import CityLearnEnv
 import matplotlib.pyplot as plt
 

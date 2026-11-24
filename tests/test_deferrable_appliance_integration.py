@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from private_access import charging_constraint_last_penalty_kwh, charging_constraints_state
 
 pytest.importorskip("gymnasium")
 
@@ -186,11 +187,11 @@ def test_deferrable_start_reduces_ev_headroom_in_electrical_service_constraints(
 
         building = env.buildings[0]
         charger = building.electric_vehicle_chargers[0]
-        state = building._charging_constraints_state
+        state = charging_constraints_state(building)
 
         assert building.deferrable_appliances_electricity_consumption[0] == pytest.approx(0.1)
         assert state["total_power_kw"] <= 5.2 + 1e-6
-        assert building._charging_constraint_last_penalty_kwh > 0.0
+        assert charging_constraint_last_penalty_kwh(building) > 0.0
         assert charger.past_charging_action_values_kwh[0] == pytest.approx(0.0, abs=1e-6)
     finally:
         env.close()

@@ -15,6 +15,15 @@ vehicles away from their charger, occupant set-point interactions and stochastic
     Each stream comes from :class:`numpy.random.SeedSequence` with the seed as entropy and the
     purpose, entity and episode as its spawn key, so streams for different purposes, objects
     and episodes are independent. Each object keeps one generator per stream.
+
+Agents follow the version of their environment. With ``'v1'``, :class:`~citylearn.agents.q_learning.TabularQLearning`
+draws its exploration decision from ``RandomState(seed + time_step)`` and
+:class:`~citylearn.agents.marlisa.MARLISA` shuffles its coordination order with the same seed, so
+seed ``s`` at time step ``t + 1`` repeats seed ``s + 1`` at time step ``t``; with ``'v2'`` each agent
+keeps one generator per purpose and episode. :class:`~citylearn.end_use_load_profiles.neighborhood.Neighborhood`
+takes its own ``random_stream_version``: with ``'v1'`` partial-load simulation ``i`` of building
+``b`` is seeded with ``b + i``, which repeats simulation ``i - 1`` of building ``b + 1``; with ``'v2'``
+the seed is derived from the neighborhood seed, the building and the simulation index.
 """
 
 import hashlib
@@ -33,6 +42,9 @@ EV_AWAY_SOC_DRIFT = 'ev_away_soc_drift'
 EV_SUSPENDED_SOC_DRIFT = 'ev_suspended_soc_drift'
 OCCUPANT_SETPOINT_INTERACTION = 'occupant_setpoint_interaction'
 POWER_OUTAGE = 'power_outage'
+AGENT_EXPLORATION = 'agent_exploration'
+AGENT_COORDINATION_ORDER = 'agent_coordination_order'
+PARTIAL_LOAD_SIMULATION = 'partial_load_simulation'
 
 
 def parse_random_stream_version(value: Union[str, int, None], path: str = 'random_stream_version') -> str:
@@ -101,3 +113,29 @@ def stream_id(seed: int, purpose: str, *parts: Hashable) -> int:
     """A 32-bit identifier of the stream, for metadata and comparisons; not a seed to draw from."""
 
     return int(seed_sequence(seed, purpose, *parts).generate_state(1, dtype=np.uint32)[0])
+
+
+def derived_seed(seed: int, purpose: str, *parts: Hashable) -> int:
+    """32-bit integer seed for a consumer that only accepts an integer, derived like :func:`generator`.
+
+    Use it where the stream is created by code that takes a plain seed, such as a simulator that builds
+    its own ``RandomState``; otherwise prefer :func:`generator`.
+    """
+
+    return int(seed_sequence(seed, purpose, *parts).generate_state(1, dtype=np.uint32)[0])
+
+
+def partial_load_simulation_seed(
+    seed: int, building_id: Union[int, str], simulation_index: int, random_stream_version: Union[str, int, None] = None
+) -> int:
+    """Seed of partial-load simulation `simulation_index` of building `building_id` in a generated neighborhood.
+
+    With ``random_stream_version='v1'`` it is ``int(building_id) + simulation_index``, as in CityLearn 3.6.0,
+    which ignores `seed` and repeats simulation ``i - 1`` of building ``b + 1`` in simulation ``i`` of building
+    ``b``. With ``'v2'`` it is derived from `seed`, the building and the simulation index.
+    """
+
+    if parse_random_stream_version(random_stream_version) == LEGACY_RANDOM_STREAM_VERSION:
+        return int(building_id) + int(simulation_index)
+
+    return derived_seed(seed, PARTIAL_LOAD_SIMULATION, int(building_id), int(simulation_index))

@@ -8,6 +8,7 @@ from typing import Optional
 
 import numpy as np
 import pytest
+from private_access import charging_constraint_last_penalty_kwh, charging_constraints_state
 
 pytest.importorskip("gymnasium")
 
@@ -100,7 +101,7 @@ def test_charging_constraints_scaling_and_penalty(tmp_path):
         assert limit_kw is not None
         assert total_energy <= limit_kw + 1e-3
 
-        state = building_with._charging_constraints_state
+        state = charging_constraints_state(building_with)
         assert state is not None
         headroom = state['building_headroom_kw']
         assert headroom == pytest.approx(limit_kw - total_energy, rel=1e-3, abs=1e-3)
@@ -108,7 +109,7 @@ def test_charging_constraints_scaling_and_penalty(tmp_path):
         phase_headroom = state['phase_headroom_kw']
         assert abs(phase_headroom['phase_b']) <= 1e-3
 
-        penalty_kwh = building_with._charging_constraint_last_penalty_kwh
+        penalty_kwh = charging_constraint_last_penalty_kwh(building_with)
         assert penalty_kwh > 0.0
 
         obs = building_with.observations(include_all=True, normalize=False, periodic_normalization=False)
@@ -123,12 +124,13 @@ def test_charging_constraints_scaling_and_penalty(tmp_path):
             reward_with_value = reward_with_penalty
         reward_fn = env_with_penalty.reward_function
         coeff = reward_fn.charging_constraint_penalty_coefficient
-        baseline_value = reward_fn._last_base_reward_total
+        # Version 2 of the EV reward: reward = base reward + EV terms - charging constraint penalty.
+        unpenalised_value = reward_fn._last_base_reward_total + reward_fn._last_ev_terms_total
         penalty_from_reward = reward_fn._last_penalty_total
 
         expected_delta = penalty_kwh * coeff
         assert penalty_from_reward == pytest.approx(expected_delta, rel=1e-3, abs=1e-6)
-        assert baseline_value - reward_with_value == pytest.approx(penalty_from_reward, rel=1e-3, abs=1e-6)
+        assert unpenalised_value - reward_with_value == pytest.approx(penalty_from_reward, rel=1e-3, abs=1e-6)
     finally:
         env_with_penalty.close()
 
@@ -227,7 +229,7 @@ def test_charging_constraints_no_violation(tmp_path):
         assert reward is not None
 
         building = _get_building(env, 'Building_15')
-        assert building._charging_constraint_last_penalty_kwh == pytest.approx(0.0, abs=1e-6)
+        assert charging_constraint_last_penalty_kwh(building) == pytest.approx(0.0, abs=1e-6)
         obs = building.observations(include_all=True, normalize=False, periodic_normalization=False)
         assert obs.get('charging_constraint_violation_kwh', 0.0) == pytest.approx(0.0, abs=1e-6)
 

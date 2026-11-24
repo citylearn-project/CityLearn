@@ -110,7 +110,8 @@ def _write_golden_schema(
         schema["community_market"] = {
             "enabled": True,
             "intra_community_sell_ratio": 0.8,
-            "grid_export_price": 0.05,
+            # Settlement version 1 pays nothing for exports, so the price is 0 (#366).
+            "grid_export_price": 0.0,
         }
 
     for name in ["Building_A", "Building_B"]:
