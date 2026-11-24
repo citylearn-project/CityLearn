@@ -557,12 +557,12 @@ def test_unknown_grid_carbon_keeps_unknown_energy_cohort(tmp_path):
 def test_residual_tolerance_scales_with_the_gross_flow_and_still_catches_1e_3_kwh(tmp_path):
     # A balance residual is the difference of the window's source total and its destination flows, so its
     # rounding grows with that gross flow. On citylearn_three_phase_electrical_service_demo with the BAU over
-    # 336 steps it was 1.2e-5 kWh on about 14.7 MWh of gross grid flow, above the fixed 1e-5 kWh floor.
+    # 336 steps it was 1.2e-5 kWh on about 14.5 MWh of gross grid flow, above the fixed 1e-5 kWh floor.
     env = scenario(tmp_path)
     try:
         env.reset()
         audit = IndependentBalanceAudit(env)
-        gross = 14_700.0
+        gross = 14_500.0
         audit.check("grid_balance_residual_kwh", -6.5e-6, 5.1e-6, scale=gross)
         with pytest.raises(BalanceAuditError, match="grid_balance_residual_kwh"):
             audit.check("grid_balance_residual_kwh", -6.5e-6, 5.1e-6)

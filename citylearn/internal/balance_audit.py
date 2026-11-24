@@ -159,11 +159,12 @@ class IndependentBalanceAudit:
         # relative to itself. Neither bounds a balance residual: it is close to zero by definition, but it
         # is the difference of the window's source total and the sum of its destination flows, so it
         # carries their rounding. Its scale is the gross flow it is computed from, the sum of the absolute
-        # values of those terms, which grows with the window length and with the energy that flows. The
-        # rounding observed on the three-phase demo is about 1.5e-9 of that flow, constant from 168 to 336
-        # steps (5.5e-6 kWh on 7.3 MWh, 1.2e-5 on 14.7 MWh with the BAU), so flow_rtol = 1e-8 leaves a
-        # margin of about 6 while a 1e-3 kWh imbalance still fails on any window with less than 100 MWh of
-        # gross flow (some 2,000 steps of that demo).
+        # values of those terms, which grows with the window length and with the energy that flows. On
+        # citylearn_three_phase_electrical_service_demo over 168 and 336 steps, with the BAU and with seeded
+        # random actions, the rounding is at most 2e-9 of that flow (1.6e-5 kWh on 8.0 MWh for the unknown
+        # residual, random actions, 336 steps; 1.2e-5 kWh on 14.5 MWh for the grid residual with the BAU),
+        # so flow_rtol = 1e-8 leaves a margin of at least 5, while a 1e-3 kWh imbalance still fails on any
+        # window with less than 99 MWh of gross flow, some 2,000 steps of that demo.
         self.atol = float(absolute_tolerance)
         self.rtol = float(relative_tolerance)
         self.flow_rtol = float(flow_relative_tolerance)
