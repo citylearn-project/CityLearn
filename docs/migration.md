@@ -97,7 +97,7 @@ compared the controller with unheated or uncooled houses
 
 - Under `baseline_version=2`, the default, the BAU now delivers the dataset's
   own heating and cooling demand at each step, clipped to the action bounds
-  and device limits. The BAU definition becomes
+  and device limits. On those datasets the BAU definition becomes
   `immediate-full-charge-v4+hvac-dataset-demand-v1` (or
   `immediate-user-target-v3+hvac-dataset-demand-v1`). See
   [HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version).

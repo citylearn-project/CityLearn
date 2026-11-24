@@ -38,8 +38,9 @@ Versions
     one that delivers the dataset's own heating or cooling demand (the as-simulated ``heating_demand`` and
     ``cooling_demand`` of the building files), clipped to the action bounds and device limits. This changes
     the BAU rows, and the ``*_delta_to_business_as_usual_*`` and ``*_ratio_to_business_as_usual_*`` values,
-    on datasets with HVAC actions only; on datasets without HVAC actions the BAU is the same under both
-    versions. The controlled run is never changed.
+    on datasets with HVAC actions only, and there the BAU definition gets the suffix
+    ``+hvac-dataset-demand-v1``. On datasets without HVAC actions the BAU, its definition and its identity
+    are the same under both versions. The controlled run is never changed.
 """
 
 from typing import Any

@@ -100,7 +100,7 @@ arrefecimento ([#362](https://github.com/citylearn-project/CityLearn/issues/362)
 
 - Com `baseline_version=2`, a predefinida, o BAU passa a fornecer, em cada
   passo, a procura de aquecimento e de arrefecimento do próprio dataset,
-  limitada aos limites da ação e do equipamento. A definição do BAU passa a
+  limitada aos limites da ação e do equipamento. Nesses datasets, a definição do BAU passa a
   `immediate-full-charge-v4+hvac-dataset-demand-v1` (ou
   `immediate-user-target-v3+hvac-dataset-demand-v1`). Consulte
   [AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline).

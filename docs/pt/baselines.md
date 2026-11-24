@@ -99,15 +99,16 @@ aquecimento (ou sem arrefecimento)
 | `baseline_version` | Baseline dos KPIs | AVAC do BAU | Definição do BAU |
 |---|---|---|---|
 | `1` | 3.6.0: sem carregamento de VE reposto | zero | `immediate-full-charge-v4` |
-| `2` (predefinida) | repõe o carregamento de VE do BAU `'full'` | fornece a procura de aquecimento e de arrefecimento do dataset | `immediate-full-charge-v4+hvac-dataset-demand-v1` |
+| `2` (predefinida) | repõe o carregamento de VE do BAU `'full'` | fornece a procura de aquecimento e de arrefecimento do dataset | `immediate-full-charge-v4+hvac-dataset-demand-v1` nos datasets com ações de AVAC, `immediate-full-charge-v4` nos outros |
 
 (Com `business_as_usual_ev_charge_target='requested'`, a definição começa por
 `immediate-user-target-v3`.)
 
 A regra do AVAC muda as linhas `*_business_as_usual` e os valores
 `*_delta_to_business_as_usual_*` e `*_ratio_to_business_as_usual_*` apenas nos
-datasets com ações de AVAC. Nos datasets sem ações de AVAC, o BAU e todos os KPIs
-são iguais, bit a bit, aos de antes da regra do AVAC. As comparações dão como
+datasets com ações de AVAC. Nos datasets sem ações de AVAC, o BAU, a sua
+definição e identidade, e todos os KPIs são iguais, bit a bit, aos de antes da
+regra do AVAC. As comparações dão como
 incompatíveis execuções com versões da baseline diferentes.
 
 No Quebec (`quebec_neighborhood_without_demand_response_set_points`, passos

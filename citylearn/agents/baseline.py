@@ -339,7 +339,8 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
     action. That is a thermostat that meets the
     load without optimisation. The demand is used only in the steps whose ``hvac_mode`` allows that service.
     The default, ``None``, is ``'dataset_demand'`` when the environment's ``baseline_version`` is 2 (the
-    default) and ``'off'`` under version 1.
+    default) and it has HVAC actions, and ``'off'`` under version 1 or without HVAC actions, which keeps the
+    definition and identity of earlier releases there.
 
     Choose the BAU that ``evaluate_v2()`` uses with the environment's
     ``business_as_usual_ev_charge_target`` and ``baseline_version``.
@@ -381,12 +382,20 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
 
     @classmethod
     def hvac_mode_for(cls, env: Any) -> str:
-        """HVAC behaviour of the BAU under the environment's ``baseline_version``."""
+        """HVAC behaviour of the BAU under the environment's ``baseline_version``.
+
+        ``'dataset_demand'`` from version 2 on an environment with HVAC actions, ``'off'`` otherwise: where no
+        building has an HVAC action both run the same, and ``'off'`` keeps the BAU definition and identity of
+        earlier releases.
+        """
 
         from citylearn.internal.baseline_version import BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION, baseline_version_of
 
-        version = baseline_version_of(getattr(env, 'unwrapped', env))
-        return 'dataset_demand' if version >= BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION else 'off'
+        env = getattr(env, 'unwrapped', env)
+        has_hvac = any(name in cls._HVAC_ACTIONS for building in (getattr(env, 'buildings', None) or [])
+                       for name in getattr(building, 'active_actions', []))
+        version = baseline_version_of(env)
+        return 'dataset_demand' if has_hvac and version >= BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION else 'off'
 
 
 class _RuleBasedPolicy(_RuleBaselineAgent):

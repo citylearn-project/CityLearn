@@ -94,15 +94,16 @@ houses ([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
 | `baseline_version` | KPI baseline | BAU HVAC | BAU definition |
 |---|---|---|---|
 | `1` | 3.6.0: no EV charging added back | zero | `immediate-full-charge-v4` |
-| `2` (default) | EV charging of the `'full'` BAU added back | delivers the dataset heating and cooling demand | `immediate-full-charge-v4+hvac-dataset-demand-v1` |
+| `2` (default) | EV charging of the `'full'` BAU added back | delivers the dataset heating and cooling demand | `immediate-full-charge-v4+hvac-dataset-demand-v1` on datasets with HVAC actions, `immediate-full-charge-v4` on the others |
 
 (With `business_as_usual_ev_charge_target='requested'` the definition starts
 with `immediate-user-target-v3` instead.)
 
 The HVAC rule changes the `*_business_as_usual` rows, and the
 `*_delta_to_business_as_usual_*` and `*_ratio_to_business_as_usual_*` values,
-on datasets with HVAC actions only. On datasets without HVAC actions the BAU
-and every KPI are the same, bit for bit, as before the HVAC rule was added.
+on datasets with HVAC actions only. On datasets without HVAC actions the BAU,
+its definition and identity, and every KPI are the same, bit for bit, as before
+the HVAC rule was added.
 Comparisons report runs with different baseline versions as incompatible.
 
 On Quebec (`quebec_neighborhood_without_demand_response_set_points`, steps

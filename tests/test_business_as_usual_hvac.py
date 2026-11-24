@@ -153,6 +153,16 @@ def _evaluate(hvac):
     return env, env.evaluate_v2(), env.evaluate()
 
 
+def test_default_bau_keeps_its_earlier_definition_without_hvac_actions():
+    env = CityLearnEnv(str(MINUTE_EV_SCHEMA), central_agent=True, episode_time_steps=4)
+    agent = BusinessAsUsualAgent(env)
+
+    assert env.baseline_version == 2
+    assert agent.hvac == 'off'
+    assert agent.DEFINITION_VERSION == 'immediate-full-charge-v4'
+    assert 'hvac' not in agent.comparison_identity()['parameters']
+
+
 def test_the_hvac_rule_changes_nothing_without_hvac_actions():
     off_env, off_kpis, off_legacy = _evaluate('off')
     on_env, on_kpis, on_legacy = _evaluate('dataset_demand')
