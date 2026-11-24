@@ -25,6 +25,8 @@ CASES = {
     'heating_device': ('quebec_neighborhood_without_demand_response_set_points', 'heating_device', 0, True),
     'cooling_device': ('citylearn_challenge_2023_phase_1', 'cooling_device', 200, False),
     'cooling_or_heating_device_heating': ('vt_chittenden_county_neighborhood', 'cooling_or_heating_device', 0, True),
+    # Summer in Texas: cooling, so the shared action must be negative.
+    'cooling_or_heating_device_cooling': ('tx_travis_county_neighborhood', 'cooling_or_heating_device', 4344, False),
 }
 
 

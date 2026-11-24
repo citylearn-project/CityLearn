@@ -124,6 +124,18 @@ agent = BusinessAsUsualAgent(env)  # hvac='dataset_demand', a partir do env
 agente: `'off'` envia zero, `'dataset_demand'` fornece a procura do dataset. O
 BAU nativo do `evaluate_v2()` segue sempre a `baseline_version` do ambiente.
 
+**Leia os rácios face ao BAU com os KPIs de conforto.** Só o BAU muda com a versão 3. `RBCBasicPolicy`, `RBCSmartPolicy`,
+`RBCCommunityPolicy` e `ZeroActionAgent` continuam a enviar zero às ações de
+AVAC, pelo que, nestes datasets, as suas casas continuam sem aquecimento e sem
+arrefecimento. Com a versão 3, os seus valores `*_ratio_to_business_as_usual_*`
+parecem muito melhores apenas porque o BAU passa a pagar o aquecimento e o
+arrefecimento e eles não: no Quebec, nas duas primeiras semanas, o rácio de custo
+do `RBCSmartPolicy` passa de 1,000 para 0,144, enquanto o seu desconforto não
+muda. Leia os rácios face ao BAU em conjunto com os KPIs de conforto
+(`*_comfort_resilience_discomfort_*`). O `evaluate_v2()` não tem linhas de
+conforto `*_business_as_usual`; para ver o conforto do BAU, execute o
+`BusinessAsUsualAgent` como controlador e leia os seus KPIs de conforto.
+
 ### Limitações conhecidas
 
 O BAU estima o orçamento inicial de despacho da bateria com a procura não

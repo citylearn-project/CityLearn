@@ -119,6 +119,17 @@ agent = BusinessAsUsualAgent(env)  # hvac='dataset_demand', from the env
 `'off'` sends zero, `'dataset_demand'` delivers the dataset demand. The native
 BAU of `evaluate_v2()` always follows the environment's `baseline_version`.
 
+**Read the ratios to the BAU with the comfort KPIs.** Only the BAU changes with version 3. `RBCBasicPolicy`, `RBCSmartPolicy`,
+`RBCCommunityPolicy` and `ZeroActionAgent` still send zero to the HVAC actions,
+so on these datasets their houses stay unheated and uncooled. Under version 3
+their `*_ratio_to_business_as_usual_*` values look much better only because the
+BAU now pays for heating and cooling and they do not: on Quebec over the first
+two weeks, the cost ratio of `RBCSmartPolicy` goes from 1.000 to 0.144 while its
+discomfort does not change. Read the ratios to the BAU together with the comfort
+KPIs (`*_comfort_resilience_discomfort_*`). `evaluate_v2()` has no
+`*_business_as_usual` comfort rows, so to see the BAU comfort, run
+`BusinessAsUsualAgent` as the controller and read its comfort KPIs.
+
 ### Known limits
 
 The BAU estimates the battery's starting dispatch budget using the observed
