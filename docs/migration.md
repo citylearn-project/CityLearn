@@ -327,8 +327,12 @@ charge, as described in the [KPI reference](kpis_reference.md#departures). Only 
 Met departures of split runs then rise towards those of one run, so results
 with and without the setting are not comparable, and `compare_exports` reports
 them as incompatible. Under `'disjoint'` the row between two episodes is never
-controlled, so a session connected across it can be one charging step behind
-one run. Episodes chosen at random, rolling splits, splits with a gap and a
+controlled, so a session connected across it can be up to one charging step
+behind one run. A carried episode starts from the SOC that the previous
+controller left, which enters its initial inventory, so the same carried
+episode run by two controllers is not comparable, and `compare_exports`
+reports it as incompatible: with carry-over, compare whole split runs, not
+single episodes. Episodes chosen at random, rolling splits, splits with a gap and a
 `reset(options={'episode_index': ...})` that jumps elsewhere keep the
 schedule SOC ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
 

@@ -341,8 +341,12 @@ SOC que atingiu no fim desse episódio, e uma sessão ligada através da frontei
 execuções divididas aproximam-se então das de uma execução única, pelo que os
 resultados com e sem a definição não são comparáveis, e `compare_exports`
 indica-os como incompatíveis. Com `'disjoint'`, a linha entre dois episódios
-nunca é controlada, pelo que uma sessão ligada através dela pode ficar um passo
-de carregamento atrás da execução única. Os episódios escolhidos ao acaso, as
+nunca é controlada, pelo que uma sessão ligada através dela pode ficar até um
+passo de carregamento atrás da execução única. Um episódio transportado começa
+com o SOC deixado pelo controlador anterior, que entra no seu inventário
+inicial, pelo que o mesmo episódio transportado corrido por dois controladores
+não é comparável, e `compare_exports` indica-o como incompatível: com
+transporte, compare execuções divididas inteiras, não episódios isolados. Os episódios escolhidos ao acaso, as
 divisões rolantes, as divisões com intervalo e um
 `reset(options={'episode_index': ...})` que salta para outro lado mantêm o SOC
 do calendário ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).

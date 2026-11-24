@@ -16,6 +16,12 @@ from test_settings_recorded import _export
 
 DATASET = 'citylearn_challenge_2022_phase_all_plus_evs'
 KEYS = ('ev_events_departure_count', 'ev_departure_audit_departures_count', 'ev_events_departure_met_count')
+FEASIBILITY = tuple(
+    f'{family}_{threshold}_{kind}_count'
+    for family in ('ev_events_departure', 'ev_departure_audit')
+    for threshold in ('target', 'min_acceptable')
+    for kind in ('feasible', 'infeasible')
+)
 
 
 def _bau(episodes=1, **kwargs):
@@ -67,6 +73,13 @@ def test_shared_split_with_carryover_scores_like_one_run():
             assert sum(_value(f, name, key) for f in frames) == pytest.approx(_value(full, name, key)), (name, key)
     assert sum(_value(f, 'District', 'district_ev_events_departure_met_count') for f in frames) == 67
 
+    # The carried SOC is the session's start SOC for feasibility and the energy accounting too: the
+    # feasible classes add up to one run, and no episode counts the previous episode's charge again.
+    for key in FEASIBILITY:
+        key = f'district_{key}'
+        assert sum(_value(f, 'District', key) for f in frames) == _value(full, 'District', key), key
+    assert [_value(f, 'District', 'district_ev_energy_accounting_shortfall_kwh') for f in frames] == [0., 0.]
+
 
 @pytest.mark.parametrize('boundary', ['shared', 'disjoint'])
 def test_carryover_counts_each_session_once(boundary):
@@ -78,6 +91,8 @@ def test_carryover_counts_each_session_once(boundary):
         assert sum(_value(f, 'District', key) for f in frames) == _value(full, 'District', key)
     met = sum(_value(f, 'District', 'district_ev_events_departure_met_count') for f in frames)
     assert met <= _value(full, 'District', 'district_ev_events_departure_met_count')
+    # Each episode's connected SOC gain starts from the carried SOC, which its own charging explains.
+    assert [_value(f, 'District', 'district_ev_energy_accounting_shortfall_kwh') for f in frames] == [0., 0.]
 
 
 def test_off_by_default_and_unchanged():
