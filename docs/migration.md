@@ -326,6 +326,36 @@ that was connected on the row before it. Departure counts and rates from
 earlier runs with short or split episodes should be recomputed before
 comparing ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
 
+### EV SOC carried across episode splits
+
+Nothing changes unless `ev_soc_carryover=True` is set. With it, an episode that
+continues the previous one in time (it starts on the previous episode's last
+row, or on the row after it, and the previous episode ran to its end) starts
+each EV from the SOC it reached at the end of that episode, and a session
+connected across the boundary is scored where it really leaves, with that
+charge, as described in the [KPI reference](kpis_reference.md#departures). Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still start every episode from their initial state. The setting is a trade-off. Off, every episode is independent of the ones before it, but a session that crosses a boundary loses the charge it received. On, that charge is kept, but an episode that continues the previous one depends on what the previous controller did, so its KPIs are no longer those of an independent episode.
+Met departures of split runs then rise towards those of one run, so results
+with and without the setting are not comparable, and `compare_exports` reports
+them as incompatible. Under `'disjoint'` the row between two episodes is never
+controlled, so a session connected across it can be up to one charging step
+behind one run. A carried episode starts from the SOC that the previous
+controller left, which enters its initial inventory, so the same carried
+episode run by two controllers is not comparable, and `compare_exports`
+reports it as incompatible: with carry-over, compare whole split runs, not
+single episodes. Random and rolling splits never carry, and the env warns
+once that the setting has no effect there; an explicit list carries only when
+a window starts exactly where the previous one ends for the split boundary, so
+under the default `'shared'` a list without a gap, such as
+`[(1900, 1949), (1950, 1999)]`, does not carry (it carries under `'disjoint'`,
+or under `'shared'` when the next window starts on the previous window's last
+row), and a `reset(options={'episode_index': ...})` that jumps elsewhere keeps the
+schedule SOC. Only the session connected across the boundary is carried;
+every later arrival takes the arrival SOC of the file, and an arrival without
+one keeps the EV's simulated SOC, as in one run. Summed over the episodes,
+departures, met departures and feasibility classes match one run, but the
+connected SOC gain of the energy accounting is each episode's own gain, so its
+sum is lower than in one run, and energy totals can differ slightly ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
+
 ### Observation spaces follow the observations
 
 The observation values, their order and `observation_names` do not change, and

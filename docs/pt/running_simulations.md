@@ -109,6 +109,7 @@ Todas as comunidades têm de partilhar `seconds_per_time_step`, a duração efet
 | `rolling_episode_split` | bool | schema | Episódios em janelas sequenciais. | Útil para treino. |
 | `random_episode_split` | bool | schema | Episódios em janelas aleatórias. | Usa `random_seed`. |
 | `episode_split_boundary` | str | `shared` | Como se ligam divisões consecutivas (não rolling). | `shared` partilha a linha de fronteira, pelo que todos os intervalos são simulados; `disjoint` repõe as divisões da 3.6.0. |
+| `ev_soc_carryover` | bool | `False` | Começa cada VE de um episódio que continua o anterior no tempo com o SOC que tinha no fim desse episódio. | Só o SOC dos VE é transportado. Desligado, os episódios são independentes mas uma sessão através de uma fronteira perde a carga; ligado, episódios consecutivos dependem do controlador anterior. Ver [Partidas](kpis_reference.md#partidas). |
 | `seconds_per_time_step` | float | schema | Duração física de cada passo. | Exemplos: 15, 60, 300, 900, 3600. |
 | `time_step_ratio` | int/float | inferido | Razão entre o passo de controlo e o espaçamento do dataset. | Inferido a partir dos dados; um valor passado aqui tem de coincidir com ele. |
 | `time_step_ratio_mode` | str | `reject` | O que fazer quando o passo de controlo difere do passo do dataset. | `reject` gera um erro; `compress` mantém o comportamento da 3.6.0 (uma linha de dados por passo, energias escaladas). |
