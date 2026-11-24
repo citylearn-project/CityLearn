@@ -33,6 +33,7 @@ Portuguese version: [pt/schema_reference.md](pt/schema_reference.md).
 | `random_episode_split` | bool/null | no | Random episode windows. |
 | `time_step_ratio_mode` | `reject`/`compress`/null | no | `reject` (default) refuses a `seconds_per_time_step` that differs from the dataset step; `compress` keeps the 3.6.0 behaviour of reading one data row per control step and scaling energies. |
 | `episode_split_boundary` | `shared`/`disjoint`/null | no | How consecutive episode splits meet. `shared` (default) starts each split on the terminal row of the previous one, so every interval is simulated; `disjoint` keeps the 3.6.0 splits, which skip the interval between two episodes. |
+| `ev_soc_carryover` | bool/null | no | Start each EV of an episode that continues the previous one in time (it starts on the previous episode's last row, or on the row after it) from its SOC at the end of that episode, instead of the schedule SOC. Default `false`. |
 | `reward_function` | object/string | yes | Reward class and kwargs. |
 | `observations` | object | yes | Flat observation catalog and flags. |
 | `actions` | object | yes | Flat action catalog and flags. |
