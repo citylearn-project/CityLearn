@@ -106,50 +106,64 @@ controlador que carregasse os carros parecia pior do que a baseline
   O manifesto dessa execução regista a referência do BAU como avaliada.
 - Só mudam os datasets com carregadores de VE: `citylearn_challenge_2022_phase_all_plus_evs`,
   os datasets `pt_rec_*` e os demos trifásicos. A simulação, as linhas do
-  controlo, as linhas do BAU e as recompensas não mudam. Os KPIs de equidade,
+  controlo e as recompensas não mudam, nem as linhas do BAU nos datasets sem
+  ações de AVAC (ver [AVAC no BAU](#avac-no-bau)). Os KPIs de equidade,
   calculados a partir do benefício de cada membro face à baseline, mudam com ela.
 - Defina `baseline_version` como `1` (argumento do construtor ou chave do
-  schema) para reproduzir a baseline do CityLearn 3.6.0. A versão fica em
+  schema) para reproduzir a baseline do CityLearn 3.6.0, incluindo o seu BAU
+  que não usa o AVAC. A versão fica em
   `env.get_metadata()` e no manifesto de exportação, no nível de topo e em
   `comparison_context`; `compare_exports()` dá como `incompatible` duas
   execuções com versões diferentes. O `MultiCommunityEnv` exige que todas as
   comunidades usem a mesma versão.
 
-### AVAC no BAU (`baseline_version=3`, opcional)
+### AVAC no BAU
 
-Nos datasets com ações de AVAC (dinâmica de temperatura), o BAU envia zero a
+Nos datasets com ações de AVAC (dinâmica de temperatura), o BAU enviava zero a
 `heating_device`, `cooling_device` e `cooling_or_heating_device`, pelo que os
-seus edifícios não são aquecidos nem arrefecidos e as linhas
-`*_business_as_usual` comparam o controlador com casas sem aquecimento ou sem
+seus edifícios não eram aquecidos nem arrefecidos e as linhas
+`*_business_as_usual` comparavam o controlador com casas sem aquecimento ou sem
 arrefecimento ([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
 
-- Por omissão nada muda: `baseline_version=2` continua a ser a predefinida, e as
-  versões 1 e 2 dão os mesmos resultados de antes.
-- Defina `baseline_version=3` para o BAU fornecer, em cada passo, a procura de
-  aquecimento e de arrefecimento do próprio dataset, limitada aos limites da
-  ação e do equipamento. As linhas do BAU e os deltas e rácios face ao BAU
-  mudam nos datasets com ações de AVAC; nos outros datasets a versão 3 é igual
-  à versão 2. A definição do BAU passa a
+- Com `baseline_version=2`, a predefinida, o BAU passa a fornecer, em cada
+  passo, a procura de aquecimento e de arrefecimento do próprio dataset,
+  limitada aos limites da ação e do equipamento. Nesses datasets, a definição do BAU passa a
   `immediate-full-charge-v4+hvac-dataset-demand-v1` (ou
   `immediate-user-target-v3+hvac-dataset-demand-v1`). Consulte
   [AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline).
+- Nos datasets com ações de AVAC (`quebec_neighborhood_with_demand_response_set_points`,
+  `quebec_neighborhood_without_demand_response_set_points`,
+  `tx_travis_county_neighborhood`, `vt_chittenden_county_neighborhood`,
+  `ca_alameda_county_neighborhood`, `baeda_3dem` e os
+  datasets `citylearn_challenge_2023_*`), as linhas
+  `*_business_as_usual` predefinidas, e os deltas e rácios face ao BAU, mudam.
+  No `quebec_neighborhood_without_demand_response_set_points` (passos 0–335), o custo do BAU passa de 631,8 para 4403,8 EUR, a sua
+  temperatura interior média de 3,4 para 20,6 °C, e o rácio de custo do
+  `RBCSmartPolicy` face ao BAU de 6,970 para 1,000.
+- Nos datasets sem ações de AVAC nada muda, bit a bit.
+- `baseline_version=1` mantém o BAU com o AVAC a zero, como no CityLearn 3.6.0,
+  para reproduzir resultados anteriores.
 - Um `BusinessAsUsualAgent` executado por si segue a versão do ambiente;
   `hvac='off'` ou `hvac='dataset_demand'` substitui-a.
+- Um controlador que não comande o AVAC, como o `ZeroActionAgent`, parece agora
+  muito mais barato do que o BAU nestes datasets, porque o BAU paga o
+  aquecimento e o arrefecimento. Leia os seus rácios face ao BAU em conjunto com
+  os KPIs de conforto.
 
 ### As referências baseadas em regras usam o AVAC
 
 `RBCBasicPolicy`, `RBCSmartPolicy` e `RBCCommunityPolicy` passam a fornecer a
 procura de aquecimento e de arrefecimento do dataset através das ações de AVAC,
-com a regra do BAU de `baseline_version=3`.
+com a regra do BAU predefinido.
 
 - Datasets sem ações de AVAC: nada muda, bit a bit, incluindo a
   `comparison_identity()`.
 - Datasets com ações de AVAC: as referências baseadas em regras aquecem e
-  arrefecem, pelo que os seus KPIs de energia, custo e conforto mudam.
-  Compare-as com o BAU de `baseline_version=3`; face ao BAU da versão 2,
-  predefinida, que não aquece nem arrefece, os seus rácios face ao BAU comparam
-  casas aquecidas com casas sem aquecimento. A sua identidade regista
-  `hvac='dataset_demand'` e a definição ganha o sufixo `+hvac-dataset-demand-v1`.
+  arrefecem, pelo que os seus KPIs de energia, custo e conforto mudam. Com a
+  `baseline_version=2` predefinida, o BAU também aquece e arrefece, pelo que os
+  seus rácios face ao BAU comparam casas aquecidas e arrefecidas da mesma forma.
+  A sua identidade regista `hvac='dataset_demand'` e a definição ganha o sufixo
+  `+hvac-dataset-demand-v1`.
 - As regras do armazenamento, dos VE e dos aparelhos não mudam, mas, num dataset
   com ações de AVAC que também tenha baterias, as ações das baterias podem mudar:
   a carga a que as regras reagem passa a incluir o AVAC.
