@@ -23,7 +23,8 @@ restrições elétricas. Não é um cenário com todos os equipamentos desligado
 | Ligação elétrica | O simulador aplica os limites de importação/exportação totais e por fase configurados; as restrições dos equipamentos e do simulador determinam a energia aplicada. |
 | Partilha local | As regras de liquidação do cenário valorizam a trajetória resultante. O BAU não otimiza a repartição nem o preço do mercado local. |
 | Resposta à procura | Funciona no cenário, mas não tem uma política que otimize um alvo de ativação, um pagamento ou uma penalização. |
-| Outras ações ativas | Pede zero, limitado aos limites da ação. Não é uma política dedicada de AVAC, armazenamento térmico ou escadas rolantes; o efeito de zero segue o contrato de ação de cada equipamento. |
+| AVAC (`heating_device`, `cooling_device`, `cooling_or_heating_device`) | Com `baseline_version` 1 ou 2 (predefinida): pede zero, pelo que nos edifícios com dinâmica de temperatura o BAU não aquece nem arrefece. Com `baseline_version=3`: pede, em cada passo, a ação que fornece a procura de aquecimento ou de arrefecimento do próprio dataset (ver [AVAC e a versão da baseline](#avac-e-a-versão-da-baseline)). |
+| Outras ações ativas | Pede zero, limitado aos limites da ação. Não é uma política dedicada de armazenamento térmico ou de escadas rolantes; o efeito de zero segue o contrato de ação de cada equipamento. |
 
 ### Escolher o alvo de carregamento do BAU
 
@@ -59,6 +60,81 @@ flat, pelo que `predict(observations)` aplica os eventos do passo às observaç�
 de entidades que a referência lê, como faz a interface de entidades.
 `predict([])`, que a referência BAU nativa de `evaluate_v2()` usa, lê-as sem
 corrupção.
+
+### AVAC e a versão da baseline
+
+Nos datasets cujos edifícios têm dinâmica de temperatura (um modelo LSTM), o
+AVAC é uma ação: `heating_device`, `cooling_device` ou
+`cooling_or_heating_device`, a fração da potência nominal do equipamento que
+fica disponível. Os datasets incluídos com uma ação de AVAC ativa são
+`quebec_neighborhood_with_demand_response_set_points`,
+`quebec_neighborhood_without_demand_response_set_points`,
+`tx_travis_county_neighborhood`, `vt_chittenden_county_neighborhood`,
+`ca_alameda_county_neighborhood`, `baeda_3dem` e os datasets
+`citylearn_challenge_2023_*`.
+
+Até `baseline_version=2`, o BAU pede zero nessas ações, pelo que, terminado o
+aquecimento inicial do LSTM, os seus edifícios não são aquecidos nem
+arrefecidos: as temperaturas interiores afastam-se dos set points e todas as
+linhas `*_business_as_usual` comparam o controlador com casas sem aquecimento
+(ou sem arrefecimento)
+([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
+
+Com `baseline_version=3`, o BAU funciona com o AVAC como um edifício sem
+otimização. Em cada passo pede a ação que fornece a procura de aquecimento ou
+de arrefecimento do próprio dataset, a `heating_demand` e a `cooling_demand`
+simuladas do ficheiro do edifício (as séries `*_demand_without_control` da
+simulação energética):
+
+    ação = energia de entrada do equipamento para a procura / (potência nominal × passo do dataset em horas)
+
+limitada aos limites da ação. Os limites do equipamento aplicam-se como a
+qualquer outra ação: a potência nominal, o COP da bomba de calor à temperatura
+exterior e, durante um corte de energia, a alimentação local. Cada serviço só é
+usado nos passos em que o `hvac_mode` o permite; com `cooling_or_heating_device`,
+a maior das duas procuras define o sinal. O BAU não pré-aquece, não
+pré-arrefece, não segue preços nem usa o armazenamento térmico, que continua a
+receber zero. Tudo o resto (VE, bateria, aparelhos) é o BAU da versão 2, e a
+baseline dos KPIs (linhas `*_baseline_*`) é também a da versão 2.
+
+| `baseline_version` | Baseline dos KPIs | AVAC do BAU | Definição do BAU |
+|---|---|---|---|
+| `1` | 3.6.0: não volta a somar o carregamento dos VE | zero | `immediate-full-charge-v4` |
+| `2` (predefinida) | volta a somar o carregamento dos VE do BAU `'full'` | zero | `immediate-full-charge-v4` |
+| `3` (opcional) | igual a `2` | fornece a procura de aquecimento e de arrefecimento do dataset | `immediate-full-charge-v4+hvac-dataset-demand-v1` |
+
+(Com `business_as_usual_ev_charge_target='requested'`, a definição começa por
+`immediate-user-target-v3`.)
+
+Use a versão 3 quando comparar controladores com o BAU num dataset com ações de
+AVAC e quiser que o BAU mantenha as casas aquecidas e arrefecidas como no
+dataset; as linhas `*_business_as_usual` e os valores
+`*_delta_to_business_as_usual_*` e `*_ratio_to_business_as_usual_*` mudam nesses
+datasets. Nos datasets sem ações de AVAC, a versão 3 dá exatamente os resultados
+da versão 2. A versão 2 continua a ser a predefinida para que os resultados
+existentes não mudem; as comparações tratam como incompatíveis corridas com
+versões da baseline diferentes.
+
+```python
+env = CityLearnEnv('quebec_neighborhood_without_demand_response_set_points', baseline_version=3)
+agent = BusinessAsUsualAgent(env)  # hvac='dataset_demand', a partir do env
+```
+
+`BusinessAsUsualAgent(env, hvac=...)` substitui a definição do ambiente para esse
+agente: `'off'` envia zero, `'dataset_demand'` fornece a procura do dataset. O
+BAU nativo do `evaluate_v2()` segue sempre a `baseline_version` do ambiente.
+
+**Leia os rácios face ao BAU com os KPIs de conforto.** Só o BAU muda com a versão 3. `RBCBasicPolicy`, `RBCSmartPolicy`,
+`RBCCommunityPolicy` e `ZeroActionAgent` continuam a enviar zero às ações de
+AVAC, pelo que, nestes datasets, as suas casas continuam sem aquecimento e sem
+arrefecimento. Com a versão 3, os seus valores `*_ratio_to_business_as_usual_*`
+parecem muito melhores apenas porque o BAU passa a pagar o aquecimento e o
+arrefecimento e eles não: no Quebec, nas duas primeiras semanas, o rácio de custo
+do `RBCSmartPolicy` passa de 1,000 para 0,143, enquanto o seu desconforto não
+muda. Leia os rácios face ao BAU em conjunto com os KPIs de conforto
+(`*_comfort_resilience_discomfort_*`). O `evaluate_v2()` não tem linhas de
+conforto `*_business_as_usual`; para ver o conforto do BAU, execute o
+`BusinessAsUsualAgent` como controlador e leia os seus KPIs de conforto.
 
 ### Limitações conhecidas
 

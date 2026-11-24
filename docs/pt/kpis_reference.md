@@ -151,7 +151,7 @@ um step. Com topologia dinâmica, um membro só conta enquanto está ativo.
 |---|---|
 | `control` | A execução avaliada. |
 | `baseline` | O contrafactual convencional da mesma execução: os membros sem a bateria e o armazenamento térmico (e sem controlo de carga parcial nos edifícios com dinâmica LSTM), com PV, lido das próprias séries do simulador. O carregamento dos VE da execução é substituído pelo do BAU nativo com o alvo `'full'` (carregados à chegada até ficarem cheios, sem V2G), igual para todos os controladores; os aparelhos diferíveis e o AVAC ficam como o controlador os operou. `baseline_version=1` não volta a somar carregamento dos VE, como no CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` escolhe outra condição. Nos steps com falha de energia, as suas séries de net, custo e emissões são zero, como as da execução controlada. |
-| `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](baselines.md)). |
+| `business_as_usual` | A execução business-as-usual nativa do mesmo cenário e janela (ver [Baselines](baselines.md)). O seu AVAC pede zero até `baseline_version=2`; com `baseline_version=3` fornece a procura de aquecimento e de arrefecimento do dataset ([AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
 
