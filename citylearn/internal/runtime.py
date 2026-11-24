@@ -970,6 +970,12 @@ class CityLearnRuntimeService:
         if debug_timing:
             timings['topology_time'] = time.perf_counter() - timer_start
 
+        # Carry external charger rows into the new interval and let the mobility provider update
+        # them now: the energy of the finished interval is final and nothing is associated yet.
+        mobility = getattr(env, '_mobility_service', None)
+        if mobility is not None and mobility.active:
+            mobility.advance(int(env.time_step), call_provider=not reached_terminal_transition)
+
         if not reached_terminal_transition:
             timer_start = time.perf_counter() if debug_timing else 0.0
             continuing_evs = None
@@ -1003,6 +1009,9 @@ class CityLearnRuntimeService:
         r"""Associate charger to its corresponding EV based on charger simulation state."""
 
         env = self.env
+        mobility = getattr(env, '_mobility_service', None)
+        if mobility is not None and mobility.active:
+            mobility.before_association()
         ev_by_name = {ev.name: ev for ev in env.electric_vehicles}
 
         def _resolve_arrival_soc(
@@ -1011,7 +1020,18 @@ class CityLearnRuntimeService:
             prev_state: float,
             prev_id: Union[str, None],
             ev_identifier: str,
+            ev=None,
         ) -> Union[float, None]:
+            trip_energy = getattr(simulation, 'electric_vehicle_trip_energy_kwh', None)
+            if ev is not None and trip_energy is not None and 0 <= step < len(trip_energy):
+                trip_kwh = float(trip_energy[step])
+                capacity = float(ev.battery.capacity)
+                if np.isfinite(trip_kwh) and capacity > 0.0:
+                    # Trace replay: the SOC the EV held since its previous departure, less the trip's energy.
+                    soc = float(np.clip(float(ev.battery.soc[step]) - trip_kwh / capacity, 0.0, 1.0))
+                    simulation.electric_vehicle_current_soc[step] = soc
+                    return soc
+
             current_soc = getattr(simulation, 'electric_vehicle_current_soc', None)
             if current_soc is not None and 0 <= step < len(current_soc):
                 current_value = current_soc[step]
@@ -1168,6 +1188,8 @@ class CityLearnRuntimeService:
                         previous_runtime_ev is not ev or session_changed
                     )
                     if is_new_connection:
+                        # Session boundary for the charger's session dynamics (start-up delay).
+                        charger._session_started_at = env.time_step
                         continuing_schedule = prev_state == 1 and prev_ev_id == ev_id and not session_changed
                         topology_connection = env._topology_service.enabled and (
                             getattr(charger, '_topology_added_time_step', None) == env.time_step
@@ -1188,7 +1210,7 @@ class CityLearnRuntimeService:
                             and ev.name in carryover.get('soc', {})
                         )
                         soc_value = None if handover or carried else _resolve_arrival_soc(
-                            sim, env.time_step, prev_state, prev_ev_id, ev_id,
+                            sim, env.time_step, prev_state, prev_ev_id, ev_id, ev,
                         )
                         if soc_value is not None:
                             ev.battery.force_set_soc(soc_value)
@@ -1293,11 +1315,21 @@ class CityLearnRuntimeService:
                 charger_event_by_ev_id.setdefault(next_id, ('connecting', soc))
 
         legacy_drift = physics_version_of(env) < 2
+        mobility = getattr(env, '_mobility_service', None)
+        managed_evs = mobility.managed_vehicle_names() if mobility is not None else ()
+        # A trip energy sets the SOC at arrival; nothing drifts it before.
+        managed_evs = set(managed_evs).union(*(
+            getattr(charger.charger_simulation, 'trip_energy_vehicle_ids', ())
+            for building in env.buildings for charger in building.electric_vehicle_chargers or []
+        ))
 
         for ev in env.electric_vehicles:
             if continuing_evs is not None and ev not in continuing_evs:
                 continue
             ev_id = ev.name
+            if ev_id in managed_evs:
+                # The mobility provider reports this vehicle's SOC.
+                continue
             event = charger_event_by_ev_id.get(ev_id)
             if event is not None:
                 event_type, soc = event

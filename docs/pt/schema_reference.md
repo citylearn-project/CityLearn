@@ -399,7 +399,7 @@ margens descrevem o último intervalo executado, pelo que refletem o limite ent�
 
 | Campo | Unidade | Finalidade |
 |---|---:|---|
-| `charger_simulation` | caminho | Ficheiro com o horário do carregador. |
+| `charger_simulation` | path ou `{"source": "external"}` | Schedule temporal do charger, ou `{"source": "external"}` para um schedule escrito em runtime por um [fornecedor de mobilidade](mobility_provider.md). |
 | `soc_unit` | `percent`, `fraction` | Opcional, ao lado de `charger_simulation`: a unidade das colunas de SOC do ficheiro de horário. Se for omitido, é inferido uma vez por coluna a partir do ficheiro inteiro (ver [unidade do SOC](dataset_reference.md#unidade-do-soc)). |
 | `attributes.nominal_power` | kW | Potência nominal. Valor predefinido de `max_charging_power`. |
 | `attributes.charger_type` | qualquer | Etiqueta descritiva (por exemplo 0 para AC, 1 para DC). Não tem efeito na simulação. |
@@ -419,6 +419,18 @@ carregador que não seja `type`, `charger_simulation`, `attributes`, `autosize`,
 `soc_unit` é ignorada com um aviso que sugere a chave mais próxima. Com a versão
 de física 1, um `max_charging_power` ou `max_discharging_power` omitido vale 50 kW, como no
 CityLearn 3.6.0, e `nominal_power` não é usado.
+| `start_delay_seconds` | s | Opcional. Tempo após a ligação do veículo antes de a energia fluir. |
+| `setpoint_delay_seconds` | s | Opcional. Atraso até o comando de um passo ter efeito. |
+| `ramp_up_kw_per_second` | kW/s | Opcional. Taxa máxima de subida do valor absoluto da potência. |
+| `ramp_down_kw_per_second` | kW/s | Opcional. Taxa máxima de descida do valor absoluto da potência. |
+| `stop_delay_seconds` | s | Opcional. A transferência termina este tempo antes de uma partida conhecida. |
+
+Os últimos cinco atributos modelam a [dinâmica das sessões de carga](charger_session_dynamics.md); omitidos,
+a potência comandada aplica-se durante todo o tempo de ligação.
+
+O schedule de um charger externo começa ausente durante todo o episódio; o fornecedor liga, anuncia e
+liberta veículos enquanto o episódio corre. Chargers externos não são suportados com `topology_mode="dynamic"`.
+Ver [fornecedores externos de mobilidade](mobility_provider.md).
 
 ## Definições dos VE
 
@@ -443,6 +455,7 @@ CityLearn 3.6.0, e `nominal_power` não é usado.
 |---|---|
 | `type` | Caminho da classe do VE. |
 | `include` | Inclui o VE no conjunto inicial. |
+| `external` | `true` quando um [fornecedor de mobilidade](mobility_provider.md) comunica o SOC do EV: sem deriva aleatória de SOC enquanto está ausente. Default `false`. |
 | `battery.attributes` | Kwargs de `Battery`. |
 
 A perda em repouso da bateria dos VE está intencionalmente isolada dos valores predefinidos do armazenamento estacionário:
