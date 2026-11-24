@@ -95,8 +95,8 @@ The simulator does not assume fixed forecast horizons. They are whatever the dat
 | `electrical_storage_soc` | ratio | BESS SOC. |
 | `*_electricity_consumption` | kWh/step | End-use electricity consumption. |
 | `electrical_storage_electricity_consumption` | kWh/step | BESS consumption, positive charge and negative discharge. |
-| `solar_generation` | kWh/step | PV generation after PV mode conversion. |
-| `net_electricity_consumption` | kWh/step | Import positive, export negative. |
+| `solar_generation` | kWh/step | PV generation after PV mode conversion, for the coming interval (row t+1 when the observation is for t+1), as a positive value. `Building.solar_generation` stores the same series as negative values. |
+| `net_electricity_consumption` | kWh/step | Import positive, export negative, in the last settled interval (row t when the observation is for t+1). |
 | `power_outage` | binary | Power outage state. |
 | `power_outage_unserved_energy` | kWh/step | Load left unserved during a power outage, as in the `power_outage_normalized_unserved_energy_total` KPI. Zero without an outage. Flat interface only; the entity `building` table does not include it. |
 | `available_grid_power` | kW | Grid import limit for the coming interval: the smaller of the static `import_kw` and the [available grid power](schema_reference.md#available-grid-power) series. Only with a series. Flat interface only; under the entity interface the building headroom features follow the limit. |
@@ -222,7 +222,7 @@ Demand-response `request_id` and baseline validity are exposed in `observations[
 | `hours_until_departure`, `time_until_departure_ratio` | `entity_core_electrical` | hours/ratio | Connected EV time pressure. |
 | `energy_to_required_soc_kwh`, `required_average_power_kw` | `entity_core_electrical` | kWh/kW | Energy and average power required to meet departure SOC. |
 | `charging_slack_kw`, `charging_priority_ratio` | `entity_core_electrical` | kW/ratio | Charging urgency descriptors. |
-| `connected_ev_soc_min_ratio`, `connected_ev_energy_available_kwh`, `connected_ev_energy_to_full_kwh` | `entity_core_electrical` | mixed | Connected EV usable discharge energy and remaining charge headroom. |
+| `connected_ev_soc_min_ratio`, `connected_ev_energy_available_kwh`, `connected_ev_energy_to_full_kwh` | `entity_core_electrical` | mixed | Connected EV usable discharge energy and remaining charge headroom ([energy to full](#energy-to-full)). |
 | `can_charge`, `can_discharge`, `available_charge/discharge_power_kw`, `available_charge/discharge_action_normalized` | `entity_core_electrical` | mixed | Current feasible charger action capacity after SOC, availability, outage and headroom limits. |
 | `max_deliverable_energy_until_departure_kwh`, `departure_energy_margin_kwh` | `entity_core_electrical` | kWh | Energy still deliverable by departure under current limits and its margin over required energy. |
 | `departure_feasibility_ratio`, `min_required_action_normalized` | `entity_core_electrical` | ratio | Deadline pressure; values above `1` indicate the target needs more than the current feasible/max action. |
@@ -241,7 +241,7 @@ Demand-response `request_id` and baseline validity are exposed in `observations[
 | `battery_capacity_kwh` | legacy | kWh | EV battery capacity. |
 | `depth_of_discharge_ratio` | legacy | ratio | Allowed depth of discharge. |
 | `soc_ratio`, `soc_min_ratio`, `soc_max_ratio` | `entity_core_electrical` | ratio | Canonical SOC bounds. |
-| `energy_available_kwh`, `energy_to_full_kwh` | `entity_core_electrical` | kWh | Usable energy and energy to full. |
+| `energy_available_kwh`, `energy_to_full_kwh` | `entity_core_electrical` | kWh | Usable energy and [energy to full](#energy-to-full). |
 
 ### `storage`
 
@@ -254,13 +254,31 @@ Demand-response `request_id` and baseline validity are exposed in `observations[
 | `phase_connection_L1/L2/L3` | `entity_base` | one-hot | Storage phase connection. |
 | `electrical_storage_soc_ratio` | `entity_core_electrical` | ratio | Canonical BESS SOC. |
 | `max_charge_power_kw`, `max_discharge_power_kw` | `entity_core_electrical` | kW | Current max powers. |
-| `energy_to_full_kwh`, `energy_available_kwh` | `entity_core_electrical` | kWh | Energy headroom and available energy. |
+| `energy_to_full_kwh`, `energy_available_kwh` | `entity_core_electrical` | kWh | Energy headroom ([energy to full](#energy-to-full)) and available energy. |
 | `can_charge`, `can_discharge`, `available_charge/discharge_power_kw`, `available_charge/discharge_action_normalized` | `entity_core_electrical` | mixed | Current feasible BESS action capacity after SOC, outage and headroom limits. |
 | `available_charge_energy_kwh_step`, `available_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Feasible BESS energy this step after SOC/headroom/outage limits. |
 | `max_charge_energy_kwh_step`, `max_discharge_energy_kwh_step` | `entity_core_electrical` | kWh/step | Nominal BESS power limit converted to this step duration. |
 | `charge_headroom_ratio`, `discharge_available_ratio`, `usable_soc_ratio` | `entity_core_electrical` | ratio | Normalized BESS charge room, discharge energy and SOC within usable range. |
 | `current_efficiency_ratio`, `degraded_capacity_kwh`, `soc_min_ratio` | `entity_core_electrical` | mixed | Current efficiency, degraded capacity and minimum SOC. |
 | `last_requested_*`, `last_limited_*`, `last_applied_power_kw`, `last_projection_error_kw`, `clip_reason_*` | `entity_action_feedback` | mixed | Previous BESS action request, limited command, applied power and clipping causes. |
+
+### Energy to full
+
+SOC is relative to the nominal capacity (`capacity_kwh`, `battery_capacity_kwh`).
+Capacity fade lowers a battery's degraded capacity (`degraded_capacity_kwh` for
+storage), where `Battery.charge` stops, so a faded battery is full below an SOC
+of 1. Under physics version 2, the default, `energy_to_full_kwh`,
+`connected_ev_energy_to_full_kwh` and `flexible_energy_to_full_kwh` are the
+energy the battery still accepts: the lower of `soc_max_ratio` times the
+capacity and the degraded capacity, minus the stored energy. The charge
+features derived from them (`can_charge`, `available_charge_power_kw`,
+`available_charge_action_normalized`, `available_charge_energy_kwh_step`,
+`charge_headroom_ratio`, `max_deliverable_energy_until_departure_kwh`,
+`departure_energy_margin_kwh`, `departure_feasibility_ratio` and the
+`flexible_charge_*` and `community_flexible_*` sums) follow. Under physics
+version 1 they are computed from the nominal capacity, as in CityLearn 3.6.0,
+and report a full faded battery as able to charge. Batteries without fade
+(`capacity_loss_coefficient` 0) give the same values in both versions.
 
 ### `pv`
 

@@ -260,7 +260,7 @@ schema:
       cooling_or_heating_device:
         active: true
     agent:
-      type: citylearn.agents.base.BaselineAgent
+      type: citylearn.agents.base.NoControlAgent
       attributes: null
     reward_function:
       type: citylearn.reward_function.RewardFunction

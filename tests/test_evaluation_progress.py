@@ -12,6 +12,7 @@ from citylearn.agents.baseline import BusinessAsUsualAgent
 from citylearn.citylearn import CityLearnEnv
 from test_independent_balances import scenario
 from test_robustness import _event
+from private_access import kpi_buildings, kpi_service
 
 
 def completed_env(tmp_path, *, dynamic=False, robust=False):
@@ -39,7 +40,7 @@ def test_progress_is_local_ordered_and_preserves_results_and_physical_state(tmp_
     env = completed_env(tmp_path, dynamic=dynamic, robust=robust)
     try:
         before = [(b.electrical_storage.soc.copy(), b.electrical_storage.capacity_history[:])
-                  for b in env._kpi_service._get_kpi_buildings()]
+                  for b in kpi_buildings(env)]
         plain = env.evaluate_v2(include_business_as_usual=False)
         events = []
         observed = env.evaluate_v2(include_business_as_usual=False, progress_callback=events.append)
@@ -59,7 +60,7 @@ def test_progress_is_local_ordered_and_preserves_results_and_physical_state(tmp_
         env.evaluate_v2(include_business_as_usual=False, progress_callback=again.append)
         assert again[0]['sequence'] == 1
         assert not any('progress' in key for key in observed.attrs)
-        for building, (soc, capacity) in zip(env._kpi_service._get_kpi_buildings(), before):
+        for building, (soc, capacity) in zip(kpi_buildings(env), before):
             np.testing.assert_array_equal(building.electrical_storage.soc, soc)
             np.testing.assert_array_equal(building.electrical_storage.capacity_history, capacity)
     finally:
@@ -90,7 +91,7 @@ def test_numerical_failure_reports_the_member_and_family_and_propagates(tmp_path
         events = []
         def fail(*args, **kwargs):
             raise RuntimeError('evaluation failed')
-        monkeypatch.setattr(env._kpi_service, '_compute_ev_metrics', fail)
+        monkeypatch.setattr(kpi_service(env), '_compute_ev_metrics', fail)
         with pytest.raises(RuntimeError, match='^evaluation failed$'):
             env.evaluate_v2(include_business_as_usual=False, progress_callback=events.append)
         failed = [e for e in events if e['stage'] == 'ev' and e['status'] == 'failed']

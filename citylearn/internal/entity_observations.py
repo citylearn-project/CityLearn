@@ -364,7 +364,9 @@ def fill_ev_rows(entity: "CityLearnEntityInterfaceService", context: Observation
             soc_min = max(1.0 - depth_of_discharge, 0.0)
             soc_max = entity._soc_max(ev.battery)
             energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
-            energy_to_full = max((soc_max - soc) * max(capacity, 0.0), 0.0)
+            energy_to_full = entity._energy_to_full_kwh(
+                ev.battery, soc, max(capacity, 0.0), max((soc_max - soc) * max(capacity, 0.0), 0.0)
+            )
             entity._set_obs_value(row, entity._ev_feature_cols, "soc_ratio", soc)
             entity._set_obs_value(row, entity._ev_feature_cols, "soc_min_ratio", soc_min)
             entity._set_obs_value(row, entity._ev_feature_cols, "soc_max_ratio", soc_max)
@@ -422,7 +424,9 @@ def fill_storage_rows(entity: "CityLearnEntityInterfaceService", context: Observ
             soc_min = max(1.0 - depth_of_discharge, 0.0)
             soc_max = entity._soc_max(storage)
             current_energy = soc * max(capacity, 0.0)
-            energy_to_full = max(soc_max * capacity - current_energy, 0.0)
+            energy_to_full = entity._energy_to_full_kwh(
+                storage, soc, max(capacity, 0.0), max(soc_max * capacity - current_energy, 0.0)
+            )
             energy_available = max((soc - soc_min) * max(capacity, 0.0), 0.0)
             max_charge_power = (
                 entity._safe_scalar(storage.get_max_input_power(), nominal_power)

@@ -1,10 +1,11 @@
 import importlib
 from typing import Any, Iterable, List, Mapping, Optional, Set, Tuple, Union
 import numpy as np
-from citylearn.building import Building
+from citylearn.building import Building as Building
 from citylearn.data import ZERO_DIVISION_PLACEHOLDER
 from citylearn.internal.scalars import numpy1_scalar
 import logging
+import warnings
 
 LOGGER = logging.getLogger(__name__)
 class RewardFunction:
@@ -65,11 +66,23 @@ class RewardFunction:
         pass
 
     @staticmethod
-    def _parse_version(version: Optional[int], supported: Tuple[int, ...], owner: str) -> int:
-        version = supported[0] if version is None else version
+    def _parse_version(
+        version: Optional[int], supported: Tuple[int, ...], owner: str, default: int = None,
+        deprecated: Tuple[int, ...] = (),
+    ) -> int:
+        version = (supported[-1] if default is None else default) if version is None else version
 
         if isinstance(version, bool) or not isinstance(version, (int, np.integer)) or int(version) not in supported:
             raise ValueError(f'{owner} version must be one of {list(supported)}, got {version!r}.')
+
+        if int(version) in deprecated:
+            warnings.warn(
+                f'{owner} version {int(version)} is deprecated and will be removed in a later release. It exists only '
+                'to reproduce runs made with CityLearn 3.6.0 or earlier, whose reward had known defects; use version '
+                f'{supported[-1]}, the default.',
+                DeprecationWarning,
+                stacklevel=3,
+            )
 
         return int(version)
 
@@ -344,24 +357,25 @@ class ComfortReward(RewardFunction):
     higher_exponent: float, default = 2.0
         Penalty exponent for when in cooling mode but temperature is below setpoint lower
         boundary or heating mode but temperature is above setpoint upper boundary.
-    version: int, default: 1
+    version: int, default: 2
         Reward definition version.
 
-        * ``1``: the reward of CityLearn 3.6.0 and earlier. In cooling (``hvac_mode`` 1) and heating
-          (``hvac_mode`` 2) mode, the side of the set point penalised within the comfort band, and the exponent
+        * ``2`` (default): follows the HVAC mode as described above. In heating mode at 21.5 C with a 20 C set
+          point the reward is -1.5 whether the heater runs or not.
+        * ``1`` (deprecated): the reward of CityLearn 3.6.0 and earlier, kept only to reproduce earlier runs and to
+          be removed in a later release; selecting it raises a ``DeprecationWarning``. In cooling (``hvac_mode`` 1)
+          and heating (``hvac_mode`` 2) mode, the side of the set point penalised within the comfort band, and the exponent
           above the upper boundary, follow whether the heating demand exceeds the cooling demand at the time step,
           not the mode. In heating mode at 21.5 C with a 20 C set point, the reward is 0 while the heater is off
           and -1.5 while it runs; passive overheating within the band is not penalised.
-        * ``2``: follows the HVAC mode as described above. In heating mode at 21.5 C with a 20 C set point the
-          reward is -1.5 whether the heater runs or not.
 
         In off (``hvac_mode`` 0) and automatic (``hvac_mode`` 3) mode, which do not identify a single service,
-        both versions use the demands to choose the exponent outside the band. Version 1 is the default so that
-        existing schemas and trained policies keep their reward; use version 2 for new work.
+        both versions use the demands to choose the exponent outside the band.
     """
 
     VERSIONS: Tuple[int, ...] = (1, 2)
-    # Class default for instances pickled before the version attribute existed (CityLearn 3.6.0 and earlier).
+    # Instances pickled before the version attribute existed (CityLearn 3.6.0 and earlier) keep the reward they were
+    # trained with. New instances default to version 2.
     version: int = 1
     
     def __init__(self, env_metadata: Mapping[str, Any], band: float = None, lower_exponent: float = None, higher_exponent: float = None, version: int = None):
@@ -369,7 +383,7 @@ class ComfortReward(RewardFunction):
         self.band = band
         self.lower_exponent = lower_exponent
         self.higher_exponent = higher_exponent
-        self.version = self._parse_version(version, self.VERSIONS, type(self).__name__)
+        self.version = self._parse_version(version, self.VERSIONS, type(self).__name__, default=2, deprecated=(1,))
 
     @property
     def band(self) -> float:
@@ -494,8 +508,9 @@ class SolarPenaltyAndComfortReward(RewardFunction):
         boundary or heating mode but temperature is above setpoint upper boundary.
     coefficients: Tuple, default = (1.0, 1.0)
         Coefficents for `citylearn.reward_function.SolarPenaltyReward` and :py:class:`citylearn.reward_function.ComfortReward` values respectively.
-    version: int, default: 1
+    version: int, default: 2
         Version of the :py:class:`citylearn.reward_function.ComfortReward` term; see its `version` parameter.
+        Version 1 is deprecated.
     """
     
     def __init__(self, env_metadata: Mapping[str, Any], band: float = None, lower_exponent: float = None, higher_exponent: float = None, coefficients: Tuple = None, version: int = None):
@@ -558,30 +573,29 @@ class Electric_Vehicles_Reward_Function(MARL):
     weights: Mapping[str, float], optional
         Signed weights of the EV terms: `no_car_charging`, `battery_limits`, `soc_impossible`, `soc_under`,
         `close_soc`, `self_ev_consumption` and `extra_self_production`. Penalties are negative.
-    version: int, default: 1
+    version: int, default: 2
         Reward definition version.
 
-        * ``1``: the reward of CityLearn 3.6.0 and earlier. A building with chargers gets only its EV terms; the
-          base reward scales them but is not added. A building without chargers gets 0. With a central agent, the
-          scale uses the district total of the base reward. Leaving with a state of charge 0.25 or more below the
-          required departure SOC adds ``weights['soc_under'] ** 2`` (+25 with the default weights), which exceeds
+        * ``2`` (default): every building gets its base reward plus its EV terms; a building without chargers gets
+          its base reward. The scale uses the building's own base reward, with or without a central agent. A
+          deficit of 0.25 or more adds ``min(2 * w, -(w ** 2))`` with ``w = weights['soc_under']`` (-25 with the
+          default weights), never less than the moderate deficit term.
+        * ``1`` (deprecated): the reward of CityLearn 3.6.0 and earlier, kept only to reproduce earlier runs and to
+          be removed in a later release; selecting it raises a ``DeprecationWarning``. A building with chargers gets
+          only its EV terms; the base reward scales them but is not added. A building without chargers gets 0.
+          With a central agent, the scale uses the district total of the base reward. Leaving with a state of
+          charge 0.25 or more below the required departure SOC adds ``weights['soc_under'] ** 2`` (+25 with the default weights), which exceeds
           the moderate deficit term ``2 * weights['soc_under']`` (-10): severe under-charging is rewarded.
-        * ``2``: every building gets its base reward plus its EV terms; a building without chargers gets its base
-          reward. The scale uses the building's own base reward, with or without a central agent. A deficit of
-          0.25 or more adds ``min(2 * w, -(w ** 2))`` with ``w = weights['soc_under']`` (-25 with the default
-          weights), never less than the moderate deficit term.
-
-        Version 1 is the default so that existing schemas and trained policies keep their reward; use version 2
-        for new work.
     """
 
     VERSIONS: Tuple[int, ...] = (1, 2)
-    # Class default for instances pickled before the version attribute existed (CityLearn 3.6.0 and earlier).
+    # Instances pickled before the version attribute existed (CityLearn 3.6.0 and earlier) keep the reward they were
+    # trained with. New instances default to version 2.
     version: int = 1
 
     def __init__(self, env_metadata: Mapping[str, Any], weights: Mapping[str, float] = None, version: int = None):
         super().__init__(env_metadata)
-        self.version = self._parse_version(version, self.VERSIONS, type(self).__name__)
+        self.version = self._parse_version(version, self.VERSIONS, type(self).__name__, default=2, deprecated=(1,))
 
         # Default tunable weights for EV-related reward components
         self.weights = weights or {
@@ -597,6 +611,7 @@ class Electric_Vehicles_Reward_Function(MARL):
         self._last_penalty_total = 0.0
         self._last_base_rewards_per_building: List[float] = []
         self._last_ev_terms_per_building: List[float] = []
+        self._last_ev_terms_total = 0.0
         self._last_penalties_per_building: List[float] = []
 
     def _charging_constraint_penalty(self, o: Mapping[str, Union[int, float, dict]]) -> float:
@@ -623,6 +638,7 @@ class Electric_Vehicles_Reward_Function(MARL):
         self._last_ev_terms_per_building = ev_terms
         self._last_penalties_per_building = penalty_values
         self._last_base_reward_total = sum(base_rewards) if self.central_agent else base_rewards
+        self._last_ev_terms_total = sum(ev_terms) if self.central_agent else ev_terms
         self._last_penalty_total = sum(penalty_values) if self.central_agent else penalty_values
         total_reward = [sum(reward_list)] if self.central_agent else reward_list
         LOGGER.debug(f"Calculated EV reward: {total_reward}")

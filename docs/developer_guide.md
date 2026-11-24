@@ -30,8 +30,10 @@ Optional dependencies:
 | Parquet datasets | `.venv/bin/pip install -e ".[parquet]"` |
 | PV autosizing | `.venv/bin/pip install -e ".[pysam]"` |
 | Parallel tests | `.venv/bin/pip install pytest-xdist` |
+| Coverage report (`--cov=citylearn`) and the 600 s per-test timeout of `pytest.ini` | `.venv/bin/pip install pytest-cov pytest-timeout` (both are in `test_requirements.txt`) |
+| Property-based energy-conservation tests | `.venv/bin/pip install hypothesis` (in `test_requirements.txt`; `tests/test_property_energy_conservation.py` skips without it) |
 | Notebook checks | `.venv/bin/pip install nbclient nbformat ipykernel` |
-| RLlib wrappers | `.venv/bin/pip install "ray[rllib]"` (a release with wheels for your Python) |
+| RLlib wrappers | `.venv/bin/pip install "ray[rllib]"` (tested with Ray 2.60.0; `tests/test_rllib_wrappers.py` skips without it) |
 | Build checks | `.venv/bin/pip install build twine` |
 
 ## Portable experiment evidence
@@ -75,7 +77,7 @@ the comparison reports `incompatible` rather than a pair.
 | Fast subset (about one minute) | `.venv/bin/pytest -q tests/unit` |
 | Full test suite (several minutes; `-n 4` with pytest-xdist) | `.venv/bin/pytest -q` |
 | Example notebooks | `.venv/bin/python scripts/ci/run_notebooks.py` |
-| Critical lint | `.venv/bin/python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821` |
+| Lint (rules in `pyproject.toml`, as in CI) | `.venv/bin/python -m ruff check citylearn tests scripts/manual scripts/ci` |
 | Entity contract audit | `.venv/bin/python scripts/audit/audit_entity_contract.py --strict` |
 | Physics audit | `.venv/bin/python scripts/audit/audit_physics.py` |
 | Diff whitespace check | `git diff --check` |
@@ -149,8 +151,15 @@ python -m pytest -q tests/test_documentation_examples.py
 
 Install Pandoc for the retained notebook tutorials. Use the `sphinx-build`
 executable: the current CLI reference detects that executable when returning
-its argument parser. Documentation examples are tested separately; the site
-build does not train learning agents.
+its argument parser. Documentation examples are tested separately.
+
+The notebooks in `examples/` are stored without outputs. The Sphinx workflow
+executes them before the build (`python scripts/ci/run_notebooks.py --output-dir examples`,
+which overwrites the sources in that checkout only) and runs
+`check_docs.py --require-notebook-outputs`, so the published notebook pages show
+the outputs of that run, including a short RL training run. To reproduce it
+locally, run these two commands and discard the changes in `examples/` afterwards
+(`git checkout examples`). Without the execution step the pages show the code only.
 
 ## Development rules
 
@@ -169,6 +178,13 @@ reference trajectories. Missing dependencies/scripts, child failures and referen
 drift fail verification; ordinary runs do not rewrite snapshots. Algorithm audits
 remain explicit opt-in tools. Reference tests generate small temporary cases from
 existing fixtures; no SoftCPS production datasets are included.
+
+CI runs the physics audit, the official dataset audit, and the entity contract and
+refactor parity audits as three parallel jobs (`audit (physics)`, `audit (datasets)`,
+`audit (entity-contract-and-refactor-parity)`), each with `--strict` and its own
+`--audits` selection. Each job uploads its JSON evidence as
+`citylearn-runtime-audits-<name>`, and the `runtime-audits` job fails unless all
+three pass.
 
 Public facades delegate to focused internal modules for energy/equipment/service/
 community KPIs, entity observation/layout preparation, loading inputs/components

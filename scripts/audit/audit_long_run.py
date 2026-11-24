@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 from collections import defaultdict
 import csv
-import datetime as dt
 import hashlib
 import json
 import os
@@ -230,7 +229,7 @@ def run(args):
             writer=csv.writer(stream);writer.writerow(['global_step','active_members','net_kwh','cost_eur','outage_members'])
             phase='dispatch';report['phase']=phase;save()
             while not env.terminated:
-                t=env.time_step;buildings=list(env.buildings)
+                t=env.time_step;list(env.buildings)
                 current_interval=args.start+t
                 if env.topology_version!=last_topology_version:
                     collect_batteries();last_topology_version=env.topology_version

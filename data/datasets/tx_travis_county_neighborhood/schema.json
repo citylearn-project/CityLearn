@@ -258,7 +258,7 @@
     }
   },
   "agent": {
-    "type": "citylearn.agents.base.BaselineAgent",
+    "type": "citylearn.agents.base.NoControlAgent",
     "attributes": null
   },
   "reward_function": {

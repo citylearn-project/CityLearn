@@ -17,7 +17,7 @@ class PolicyNetwork(nn.Module):
                  num_actions, 
                  action_space, 
                  action_scaling_coef, 
-                 hidden_dim = [400,300],
+                 hidden_dim = None,
                  init_w = 3e-3, 
                  log_std_min = -20, 
                  log_std_max = 2, 
@@ -26,6 +26,7 @@ class PolicyNetwork(nn.Module):
         
         super(PolicyNetwork, self).__init__()
 
+        hidden_dim = [400, 300] if hidden_dim is None else hidden_dim
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
         self.epsilon = epsilon
@@ -130,8 +131,9 @@ class RegressionBuffer:
         return len(self.x)
     
 class SoftQNetwork(nn.Module):
-    def __init__(self, num_inputs, num_actions, hidden_size=[400,300], init_w=3e-3):
+    def __init__(self, num_inputs, num_actions, hidden_size=None, init_w=3e-3):
         super(SoftQNetwork, self).__init__()
+        hidden_size = [400, 300] if hidden_size is None else hidden_size
         
         self.linear1 = nn.Linear(num_inputs + num_actions, hidden_size[0])
         self.linear2 = nn.Linear(hidden_size[0], hidden_size[1])

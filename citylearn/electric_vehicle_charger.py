@@ -1,5 +1,6 @@
+import difflib
 import inspect
-from typing import List, Dict, Tuple
+from typing import Any, Iterable, List, Dict, Mapping, Tuple
 import numpy as np
 from citylearn.base import Environment, EpisodeTracker
 from citylearn.electric_vehicle import ElectricVehicle
@@ -12,11 +13,17 @@ from citylearn.internal.units import (
 )
 
 class Charger(Environment):
+    #: Charging power in kW assumed when neither `max_charging_power` nor `nominal_power` is given.
+    _DEFAULT_MAX_CHARGING_POWER = 50.0
+
+    #: Defaults of physics version 1 for omitted power limits: a 50 kW charger in both directions.
+    _LEGACY_DEFAULT_POWER = 50.0
+
     def __init__(
             self, episode_tracker: EpisodeTracker, charger_simulation: ChargerSimulation ,charger_id: str = None, efficiency: float = None, max_charging_power: float = None,
             min_charging_power: float = None, max_discharging_power: float = None,  min_discharging_power: float = None, charge_efficiency_curve: Dict[float, float] = None,
             discharge_efficiency_curve: Dict[float, float] = None, connected_electric_vehicle: ElectricVehicle = None, incoming_electric_vehicle: ElectricVehicle = None,
-            phase_connection: str = None, time_step_ratio: int = None,
+            phase_connection: str = None, time_step_ratio: int = None, nominal_power: float = None, charger_type: Any = None,
             **kwargs
     ):
         r"""Initializes the `Electric Vehicle Charger` class with the given attributes.
@@ -25,25 +32,43 @@ class Charger(Environment):
         ----------
         charger_id: str
             Id through which the charger is uniquely identified in the system
-        max_charging_power : float, default 50
-            Maximum charging power in kW.
+        efficiency : float, default 1.0
+            Charger efficiency, in (0, 1].
+        max_charging_power : float, optional
+            Maximum charging power in kW. Defaults to `nominal_power`, or to 50 kW when that is not
+            given either.
         min_charging_power : float, default 0
             Minimum charging power in kW.
-        max_discharging_power : float, default 50
-            Maximum discharging power in kW.
+        max_discharging_power : float, default 0
+            Maximum discharging (V2G) power in kW. The default 0 means the charger cannot
+            discharge; set it to allow V2G. Physics version 1 loads an omitted value as 50 kW.
         min_discharging_power : float, default 0
             Minimum discharging power in kW.
         charge_efficiency_curve : List, none [[0, 0.83],[0.3, 0.83],[0.7, 0.9],[0.8, 0.9],[1, 0.85]]
             Efficiency curve for charging containing power levels and corresponding efficiency values.
         discharge_efficiency_curve : List, none [[0, 0.83],[0.3, 0.83],[0.7, 0.9],[0.8, 0.9],[1, 0.85]]
             Efficiency curve for discharging containing power levels and corresponding efficiency values.
+        nominal_power : float, optional
+            Rated power of the charger in kW. It is the default of `max_charging_power`.
+        charger_type : optional
+            Descriptive label kept on the charger (for example 0 for AC, 1 for DC). It has no
+            effect on the simulation.
 
         Other Parameters
         ----------------
         **kwargs : dict
-            Other keyword arguments used to initialize super classes.
+            Other keyword arguments used to initialize super classes. Any other name raises
+            `TypeError`, so that a misspelt attribute such as `max_discharge_power` does not fall
+            back to a default without notice.
         """
 
+        unknown = [key for key in kwargs if key not in self._environment_arguments()]
+
+        if unknown:
+            raise TypeError(self._unknown_attributes_message(unknown, f'Charger {charger_id!r}'))
+
+        self.nominal_power = nominal_power
+        self.charger_type = charger_type
         self.efficiency = efficiency
         self.charger_id = charger_id
         self.max_charging_power = max_charging_power
@@ -57,16 +82,75 @@ class Charger(Environment):
         self.phase_connection = phase_connection
         self.charger_simulation = charger_simulation
 
-        arg_spec = inspect.getfullargspec(super().__init__)
-        kwargs = {
-            key: value for (key, value) in kwargs.items()
-            if (key in arg_spec.args or (arg_spec.varkw is not None))
-        }
         self.time_step_ratio = time_step_ratio
         seconds_per_time_step = kwargs.get('seconds_per_time_step', 3600)
         self.algorithm_action_based_time_step_hours_ratio = seconds_per_time_step / 3600
         super().__init__(episode_tracker=episode_tracker,time_step_ratio=time_step_ratio
                         ,**kwargs)
+
+    @staticmethod
+    def _environment_arguments() -> List[str]:
+        spec = inspect.getfullargspec(Environment.__init__)
+        return [a for a in spec.args + spec.kwonlyargs if a != 'self']
+
+    @classmethod
+    def _attribute_names(cls) -> List[str]:
+        """Names a charger schema's `attributes` may use: the constructor arguments of `cls` and its
+        parent charger classes, and the :py:class:`citylearn.base.Environment` arguments."""
+
+        names = []
+
+        for klass in cls.__mro__:
+            if not (isinstance(klass, type) and issubclass(klass, Charger)) or '__init__' not in vars(klass):
+                continue
+
+            spec = inspect.getfullargspec(klass.__init__)
+            names += [a for a in spec.args + spec.kwonlyargs if a != 'self']
+
+        names += cls._environment_arguments()
+        excluded = {'charger_simulation', 'charger_id', 'connected_electric_vehicle', 'incoming_electric_vehicle'}
+        return list(dict.fromkeys(n for n in names if n not in excluded))
+
+    @staticmethod
+    def _unknown_attributes_message(unknown: Iterable[str], owner: str, known: Iterable[str] = None) -> str:
+        known = list(Charger._attribute_names() if known is None else known)
+        details = []
+
+        for name in sorted(unknown):
+            match = difflib.get_close_matches(name, known, n=1)
+            details.append(f"'{name}'" + (f" (did you mean '{match[0]}'?)" if match else ''))
+
+        return f"{owner} has unknown attributes: {', '.join(details)}."
+
+    @classmethod
+    def _validate_attributes(cls, attributes: Mapping[str, Any], path: str = 'attributes'):
+        """Raise `ValueError` if `attributes` holds a name the charger does not accept."""
+
+        known = cls._attribute_names()
+        unknown = [key for key in (attributes or {}) if key not in known]
+
+        if unknown:
+            raise ValueError(cls._unknown_attributes_message(unknown, path, known=known))
+
+    @property
+    def nominal_power(self) -> float:
+        """Rated power of the charger in kW, the default of `max_charging_power`."""
+
+        return self.__nominal_power
+
+    @nominal_power.setter
+    def nominal_power(self, nominal_power: float):
+        self.__nominal_power = None if nominal_power is None else float(nominal_power)
+
+    @property
+    def charger_type(self) -> Any:
+        """Descriptive charger label from the schema; it has no effect on the simulation."""
+
+        return self.__charger_type
+
+    @charger_type.setter
+    def charger_type(self, charger_type: Any):
+        self.__charger_type = charger_type
 
     @property
     def charger_simulation(self) -> ChargerSimulation:
@@ -169,7 +253,7 @@ class Charger(Environment):
     
     @property
     def time_step_ratio(self) -> float:
-        r"""Electricity consumption time series."""
+        r"""Ratio of the control step to the dataset step."""
 
         return self.__time_step_ratio
 
@@ -184,7 +268,9 @@ class Charger(Environment):
     @max_charging_power.setter
     def max_charging_power(self, max_charging_power: float):
             if max_charging_power is None:
-                self.__max_charging_power = 50.0
+                self.__max_charging_power = (
+                    self._DEFAULT_MAX_CHARGING_POWER if self.nominal_power is None else self.nominal_power
+                )
             else:
                 self.__max_charging_power = max_charging_power
 
@@ -198,7 +284,8 @@ class Charger(Environment):
     @max_discharging_power.setter
     def max_discharging_power(self, max_discharging_power: float):
             if max_discharging_power is None:
-                self.__max_discharging_power = 50.0
+                # V2G is off unless configured (#369); physics version 1 loads an omitted value as 50 kW.
+                self.__max_discharging_power = 0.0
             else:
                 self.__max_discharging_power = max_discharging_power
 
@@ -485,7 +572,10 @@ class Charger(Environment):
                     soc_floor=None if charging else soc_floor,
                 )
 
-            battery_energy_balance = float(electric_vehicle.battery.energy_balance[self.time_step])
+            if getattr(electric_vehicle.battery, '_balance_time_step', -1) == self.time_step:
+                battery_energy_balance = float(electric_vehicle.battery._last_transfer_energy)
+            else:
+                battery_energy_balance = float(electric_vehicle.battery.energy_balance[self.time_step])
             ac_energy = (
                 battery_energy_balance / max(efficiency, ZERO_DIVISION_PLACEHOLDER)
                 if battery_energy_balance >= 0 else battery_energy_balance * efficiency

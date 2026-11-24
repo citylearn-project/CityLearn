@@ -1,6 +1,8 @@
+import copy
 import json
 import shutil
 from pathlib import Path
+from typing import Mapping, Optional
 import warnings
 
 import numpy as np
@@ -128,6 +130,42 @@ def test_constructor_accepts_named_communities_and_exposes_spaces():
 def test_constructor_rejects_invalid_community_config(communities, match):
     with pytest.raises((TypeError, ValueError), match=match):
         MultiCommunityEnv(communities=communities)
+
+
+@pytest.mark.parametrize("key", ["wieght", "env_kwarg", "Schema"])
+def test_constructor_rejects_unknown_community_keys(key):
+    entry = _community("a")
+    entry[key] = 3.0
+
+    with pytest.raises(ValueError) as excinfo:
+        MultiCommunityEnv(communities=[entry, _community("b")])
+
+    message = str(excinfo.value)
+    assert "communities[0]" in message
+    assert repr(key) in message
+    for accepted in ("community_id", "schema", "env_kwargs", "weight"):
+        assert accepted in message
+
+
+@pytest.mark.parametrize("weight", [True, False, np.bool_(True)])
+def test_constructor_rejects_boolean_weight(weight):
+    with pytest.raises(ValueError, match="boolean"):
+        MultiCommunityEnv(communities=[_community("a", weight=weight), _community("b")])
+
+
+def test_constructor_keeps_valid_entries_with_every_accepted_key():
+    env = MultiCommunityEnv(
+        communities=[
+            _community("a", weight=3),
+            _community("b", weight=np.float64(0.5)),
+            {"community_id": "c", "schema": str(MINUTE_SCHEMA), "env_kwargs": _community("c")["env_kwargs"]},
+        ]
+    )
+
+    try:
+        assert env.weights == {"a": 3.0, "b": 0.5, "c": 1.0}
+    finally:
+        env.close()
 
 
 def test_constructor_rejects_mismatched_time_resolution_or_episode_length():
@@ -309,6 +347,53 @@ def test_evaluate_v2_includes_portfolio_sum_and_weighted_ratio_rows():
         env.close()
 
 
+@pytest.mark.parametrize("capacities", [(5.0, 15.0, 0.0), (0.0, 0.0, 0.0)])
+def test_portfolio_battery_cycles_use_total_nominal_capacity(capacities):
+    communities = []
+    for capacity, community_id, weight in zip(capacities, ("a", "b", "c"), (1.0, 0.0, 5.0)):
+        schema = json.loads(MINUTE_SCHEMA.read_text(encoding="utf-8"))
+        schema["root_directory"] = str(MINUTE_SCHEMA.parent)
+        building = schema["buildings"]["Building_1"]
+        building["electrical_storage"]["attributes"]["capacity"] = capacity
+        if capacity == 0:
+            building["inactive_actions"].append("electrical_storage")
+        communities.append(_community(community_id, schema=schema, weight=weight))
+
+    env = MultiCommunityEnv(communities=communities)
+    try:
+        env.reset(seed=0)
+        while not env.terminated:
+            actions = _multi_zero_actions(env)
+            # The idle battery still contributes its nominal capacity.
+            action_names = env.envs["a"].action_names[0]
+            if "electrical_storage" in action_names:
+                actions["a"][0][action_names.index("electrical_storage")] = -0.2
+            env.step(actions)
+        kpis = env.evaluate_v2()
+    finally:
+        env.close()
+
+    def portfolio(metric):
+        return _kpi_value(kpis, f"portfolio_{metric}", community_id=env.PORTFOLIO_COMMUNITY_ID, level="portfolio")
+
+    cycle_stem = "battery_health_equivalent_full_cycles"
+    control = portfolio(f"{cycle_stem}_count")
+    bau = portfolio(f"{cycle_stem}_business_as_usual_count")
+    delta = portfolio(f"{cycle_stem}_delta_to_business_as_usual_count")
+    ratio = portfolio("battery_ratio_to_business_as_usual_equivalent_full_cycles_ratio")
+    if sum(capacities) == 0:
+        assert all(pd.isna(value) for value in (control, bau, delta, ratio))
+        return
+
+    control_throughput = portfolio("battery_total_throughput_kwh")
+    bau_throughput = portfolio("battery_total_throughput_business_as_usual_kwh")
+    assert control_throughput > 0 and bau_throughput > 0
+    assert control == pytest.approx(control_throughput / (2 * sum(capacities)))
+    assert bau == pytest.approx(bau_throughput / (2 * sum(capacities)))
+    assert delta == pytest.approx(control - bau)
+    assert ratio == pytest.approx(control / bau)
+
+
 @pytest.mark.parametrize("weight_b", [3.0, 0.0])
 def test_portfolio_ratios_to_a_reference_are_ratios_of_summed_totals(weight_b):
     env = MultiCommunityEnv(
@@ -387,6 +472,17 @@ def test_export_final_kpis_writes_child_subfolders_and_global_csv(tmp_path: Path
         root = tmp_path / "renders" / "mc_export"
         assert (root / "exported_kpis_multi_community.csv").is_file()
         assert (root / "community_a" / "exported_kpis.csv").is_file()
+        long = pd.read_csv(root / "exported_kpis_multi_community.csv")
+        assert list(long.columns) == ["cost_function", "value", "name", "level", "unit", "description", "community_id"]
+        child_dir = root / "community_a"
+        wide = pd.read_csv(child_dir / "exported_kpis.csv")
+        assert set(wide.columns) == {"KPI", "Building_1", "District"}
+        manifest = json.loads((child_dir / "exported_kpis.manifest.json").read_text(encoding="utf-8"))
+        definitions = manifest["kpi_definitions"]
+        assert set(definitions) == set(wide["KPI"])
+        for name, metadata in definitions.items():
+            rows = long[(long["community_id"] == "community_a") & (long["cost_function"] == name)]
+            assert rows[["unit", "description"]].to_dict("records") == [metadata] * len(rows)
         assert (root / "community_b" / "exported_kpis.csv").is_file()
     finally:
         env.close()
@@ -433,5 +529,161 @@ def test_citylearn_env_single_community_regression_still_resets_and_steps():
         _, _, terminated, truncated, _ = env.step(_zero_actions(env))
         assert terminated
         assert not truncated
+    finally:
+        env.close()
+
+
+PT_REC_4_SCHEMA = Path(__file__).resolve().parents[1] / "data/datasets/pt_rec_4/schema.json"
+# Summer midday at 900 s steps: one pt_rec_4 member exports while others import.
+PT_REC_4_WINDOW = [17324, 17335]
+MARKET_ENERGY = "energy_grid_community_market_"
+MARKET_COST = "cost_community_market_"
+MARKET_SHARE = "solar_self_consumption_community_market_"
+
+
+def _pt_rec_4_portfolio(markets: Mapping[str, Optional[dict]]) -> MultiCommunityEnv:
+    """pt_rec_4 communities over a sunny midday window; ``None`` disables the market."""
+
+    base = json.loads(PT_REC_4_SCHEMA.read_text(encoding="utf-8"))
+    base["root_directory"] = str(PT_REC_4_SCHEMA.parent)
+    communities = []
+    for community_id, market in markets.items():
+        schema = copy.deepcopy(base)
+        if market is None:
+            schema["community_market"]["enabled"] = False
+        else:
+            schema["community_market"].update(market)
+        communities.append(_community(
+            community_id, schema=schema, interface="flat", episode_time_steps=[PT_REC_4_WINDOW],
+        ))
+
+    return MultiCommunityEnv(communities=communities)
+
+
+def _run_zero_actions(env: MultiCommunityEnv) -> pd.DataFrame:
+    env.reset(seed=0)
+    while not env.terminated:
+        env.step(_multi_zero_actions(env))
+
+    return env.evaluate_v2(include_business_as_usual=False)
+
+
+def test_mixed_portfolio_market_rows_include_communities_without_a_market():
+    """#373: a community without a market adds its plain grid settlement to the portfolio market rows."""
+
+    env = _pt_rec_4_portfolio({
+        "market": {},
+        # Settlement version 1 pays nothing for exports, so the export price is 0 (#366).
+        "market_export_tariff": {"local_price_ratio_to_grid_import": 1.0, "grid_export_price": 0.0},
+        "no_market": None,
+    })
+
+    try:
+        kpis = _run_zero_actions(env)
+        portfolio_id = MultiCommunityEnv.PORTFOLIO_COMMUNITY_ID
+
+        def portfolio(name):
+            return _kpi_value(kpis, f"portfolio_{name}", community_id=portfolio_id, level="portfolio")
+
+        def district(community_id, name):
+            return _kpi_value(kpis, f"district_{name}", community_id=community_id, level="district")
+
+        # By hand from the members' series of the community without a market: it pays the grid for its
+        # imports and gets nothing for its exports.
+        child = env.envs["no_market"]
+        steps = child.time_step
+        grid_import = grid_export = cost = 0.0
+        for building in child.buildings:
+            net = np.asarray(building.net_electricity_consumption[:steps], dtype="float64")
+            price = np.asarray(building.pricing.electricity_pricing[:steps], dtype="float64")
+            grid_import += float(np.clip(net, 0.0, None).sum())
+            grid_export += float(np.clip(-net, 0.0, None).sum())
+            cost += float((np.clip(net, 0.0, None)*price).sum())
+        days = steps*child.seconds_per_time_step/86400.0
+        assert grid_export > 0.0
+        assert cost == pytest.approx(district("no_market", "cost_total_control_eur"))
+
+        markets = ("market", "market_export_tariff")
+
+        def market_sum(name):
+            return sum(district(community_id, name) for community_id in markets)
+
+        local_import = market_sum(f"{MARKET_ENERGY}local_import_total_kwh")
+        local_export = market_sum(f"{MARKET_ENERGY}local_export_total_kwh")
+        assert local_import > 0.0
+        expected = {
+            "local_import": local_import,
+            "local_export": local_export,
+            "grid_import_after_local": market_sum(f"{MARKET_ENERGY}grid_import_after_local_total_kwh") + grid_import,
+            "grid_export_after_local": market_sum(f"{MARKET_ENERGY}grid_export_after_local_total_kwh") + grid_export,
+        }
+        for metric, value in expected.items():
+            assert portfolio(f"{MARKET_ENERGY}{metric}_total_kwh") == pytest.approx(value, rel=1e-9)
+            # Every community shares the step length and episode length, so daily averages add up.
+            assert portfolio(f"{MARKET_ENERGY}{metric}_daily_average_kwh") == pytest.approx(value/days, rel=1e-9)
+
+        expected_costs = {
+            "settled": market_sum(f"{MARKET_COST}settled_total_eur") + cost,
+            "counterfactual": market_sum(f"{MARKET_COST}counterfactual_total_eur") + cost,
+            "savings": market_sum(f"{MARKET_COST}savings_total_eur"),
+        }
+        for metric, value in expected_costs.items():
+            # The building cost series are float32, so costs match to about 1e-9.
+            assert portfolio(f"{MARKET_COST}{metric}_total_eur") == pytest.approx(value, rel=1e-7)
+            assert portfolio(f"{MARKET_COST}{metric}_daily_average_eur") == pytest.approx(value/days, rel=1e-7)
+        assert portfolio(f"{MARKET_COST}operator_balance_total_eur") == pytest.approx(
+            market_sum(f"{MARKET_COST}operator_balance_total_eur"), abs=1e-12,
+        )
+        assert portfolio(f"{MARKET_ENERGY}local_traded_total_kwh") == pytest.approx(local_import, rel=1e-9)
+
+        # The settled cost now covers the whole portfolio: each market community's cost is its settled cost.
+        assert portfolio(f"{MARKET_COST}settled_total_eur") == pytest.approx(portfolio("cost_total_control_eur"), rel=1e-9)
+
+        # Shares of the whole portfolio, by hand from the pooled totals.
+        demand_share = local_import/(local_import + expected["grid_import_after_local"])
+        export_share = local_export/(local_export + expected["grid_export_after_local"])
+        assert portfolio(f"{MARKET_SHARE}import_share_ratio") == pytest.approx(demand_share, rel=1e-9)
+        assert portfolio(f"{MARKET_SHARE}local_share_of_demand_ratio") == pytest.approx(demand_share, rel=1e-9)
+        assert portfolio(f"{MARKET_SHARE}local_share_of_export_ratio") == pytest.approx(export_share, rel=1e-9)
+
+        # The community's own district rows keep the documented zeros.
+        assert district("no_market", f"{MARKET_ENERGY}grid_import_after_local_total_kwh") == 0.0
+        assert district("no_market", f"{MARKET_COST}settled_total_eur") == 0.0
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize("markets", [
+    {"a": {}, "b": {"local_price_ratio_to_grid_import": 0.5}},
+    {"a": None, "b": None},
+], ids=["every_community_has_a_market", "no_community_has_a_market"])
+def test_uniform_portfolios_keep_their_market_rows(monkeypatch, markets):
+    """#373 changes only portfolios that mix communities with and without a market."""
+
+    env = _pt_rec_4_portfolio(markets)
+
+    try:
+        kpis = _run_zero_actions(env)
+        monkeypatch.setattr(MultiCommunityEnv, "_with_plain_grid_settlement", lambda self, district, local: district)
+        previous = env.evaluate_v2(include_business_as_usual=False)
+        pd.testing.assert_frame_equal(kpis, previous)
+        assert (kpis["cost_function"].str.startswith("portfolio_") & kpis["cost_function"].str.contains("community_market")).any()
+    finally:
+        env.close()
+
+
+def test_mixed_portfolio_changes_only_portfolio_market_rows(monkeypatch):
+    env = _pt_rec_4_portfolio({"market": {}, "no_market": None})
+
+    try:
+        kpis = _run_zero_actions(env)
+        monkeypatch.setattr(MultiCommunityEnv, "_with_plain_grid_settlement", lambda self, district, local: district)
+        previous = env.evaluate_v2(include_business_as_usual=False)
+        values = pd.to_numeric(kpis["value"], errors="coerce")
+        before = pd.to_numeric(previous["value"], errors="coerce")
+        changed = kpis.loc[~(np.isclose(values, before, rtol=0.0, atol=0.0) | (values.isna() & before.isna())), "cost_function"]
+        assert not changed.empty
+        assert changed.str.startswith("portfolio_").all()
+        assert changed.str.contains("_community_market_").all()
     finally:
         env.close()

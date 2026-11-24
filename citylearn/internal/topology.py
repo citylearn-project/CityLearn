@@ -579,6 +579,50 @@ class CityLearnTopologyService:
             appliance.random_seed = env.random_seed
             appliance.time_step_ratio = building.time_step_ratio
 
+    @staticmethod
+    def _rekey_cloned_member_streams(building: Building, source_member_id: str, target_member_id: str):
+        """Give a member cloned from `source_member_id` its own random streams (#304).
+
+        The deep copy keeps the source's stream keys, ``('building', <source>, ...)``, on the building,
+        its occupant, devices and appliances, so the clone would draw exactly what its source draws.
+        Every key under the source prefix is moved to the target's. Keys of other owners, such as
+        ``('electric_vehicle', ...)``, and objects seeded on their own (empty key) are left alone, and
+        the walk does not enter other buildings or the environment.
+        """
+
+        from citylearn.base import Environment
+        from citylearn.building import Building as BuildingClass
+        from citylearn.citylearn import CityLearnEnv
+
+        source, target = ('building', source_member_id), ('building', target_member_id)
+        seen: Set[int] = set()
+        stack: List[Any] = [building]
+
+        while stack:
+            obj = stack.pop()
+
+            if id(obj) in seen:
+                continue
+
+            seen.add(id(obj))
+
+            if isinstance(obj, Environment):
+                if obj is not building and isinstance(obj, (BuildingClass, CityLearnEnv)):
+                    continue
+
+                key = obj.random_stream_key
+
+                if key[:2] == source:
+                    obj.random_stream_key = (*target, *key[2:])
+
+                stack.extend(vars(obj).values())
+
+            elif isinstance(obj, (list, tuple, set)):
+                stack.extend(obj)
+
+            elif isinstance(obj, dict):
+                stack.extend(obj.values())
+
     def _collect_active_ev_ids(self, buildings: Iterable[Building]) -> Set[str]:
         active_ev_ids: Set[str] = set()
 
@@ -642,6 +686,7 @@ class CityLearnTopologyService:
 
             cloned = deepcopy(self._member_pool[source_member_id])
             cloned.name = target_member_id
+            self._rekey_cloned_member_streams(cloned, source_member_id, target_member_id)
             self._bind_building_runtime_context(cloned)
             self._member_pool[target_member_id] = cloned
             self._member_order.append(target_member_id)

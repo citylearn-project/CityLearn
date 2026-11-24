@@ -3,6 +3,8 @@
 Both the distribution and import name are `citylearn`. Install it from PyPI, or
 use the [developer guide](developer_guide.md) for a repository checkout.
 
+Portuguese version: [pt/migration.md](pt/migration.md).
+
 ## Keep the controller loop explicit
 
 ```python
@@ -48,6 +50,363 @@ development-line history.
 
 ## Unreleased
 
+### EV charging in the default baseline
+
+The default KPI baseline (`EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV`,
+the `*_without_storage` series) subtracted the EV charger consumption with the
+battery and the thermal storage and added nothing back, so on EV datasets the
+`*_baseline_*`, `*_delta_*` and `*_ratio_to_baseline_*` rows, and every value of
+the legacy `evaluate()` table, compared the run with a community whose cars
+never charge: any controller that charged the cars looked worse than the
+baseline ([#365](https://github.com/citylearn-project/CityLearn/issues/365)).
+
+- The baseline now adds back the EV charging of the native BAU with the
+  `'full'` target: each car is charged on arrival at maximum power until it is
+  full, and never discharged. The cars get the energy they need, without V2G,
+  and the baseline is the same for every controller, so the `baseline` rows
+  credit a controller with its storage dispatch, its EV charging and its V2G
+  against charging on arrival. The deferrable appliances and the HVAC stay as
+  the controller ran them.
+- On datasets with EV chargers, every evaluation runs the BAU sidecar for that
+  charging, also the legacy `evaluate()` and
+  `evaluate_v2(include_business_as_usual=False)`, and uses the `'full'` target
+  whatever `business_as_usual_ev_charge_target` is. Where the sidecar cannot
+  run, because inputs, buildings or devices changed after loading, evaluating
+  raises `ValueError`; use `baseline_version=1` there. The manifest of such a
+  run records the BAU reference as evaluated.
+- Only datasets with EV chargers change: `citylearn_challenge_2022_phase_all_plus_evs`,
+  the `pt_rec_*` datasets and the three-phase demos. The simulation, the
+  control rows, the BAU rows and the rewards do not change. The equity KPIs,
+  which are built from each member's benefit against the baseline, change with it.
+- Set `baseline_version` to `1` (constructor argument or schema key) to
+  reproduce the baseline of CityLearn 3.6.0. The version is in
+  `env.get_metadata()` and the export manifest, at top level and in
+  `comparison_context`; `compare_exports()` reports two runs under different
+  versions as `incompatible`. `MultiCommunityEnv` requires every community to
+  use the same version.
+
+### HVAC in the BAU (opt-in `baseline_version=3`)
+
+On datasets with HVAC actions (temperature dynamics), the BAU sends zero to
+`heating_device`, `cooling_device` and `cooling_or_heating_device`, so its
+buildings are neither heated nor cooled and the `*_business_as_usual` rows
+compare the controller with unheated or uncooled houses
+([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
+
+- Nothing changes by default: `baseline_version=2` stays the default and
+  versions 1 and 2 give the same results as before.
+- Set `baseline_version=3` to make the BAU deliver the dataset's own heating and
+  cooling demand at each step, clipped to the action bounds and device limits.
+  The BAU rows and the deltas and ratios to the BAU change on datasets with
+  HVAC actions; on other datasets version 3 equals version 2. The BAU definition
+  becomes `immediate-full-charge-v4+hvac-dataset-demand-v1` (or
+  `immediate-user-target-v3+hvac-dataset-demand-v1`). See
+  [HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version).
+- A `BusinessAsUsualAgent` you run yourself follows the environment's version;
+  `hvac='off'` or `hvac='dataset_demand'` overrides it.
+
+### The rule-based baselines run the HVAC
+
+`RBCBasicPolicy`, `RBCSmartPolicy` and `RBCCommunityPolicy` now deliver the
+dataset's heating and cooling demand through the HVAC actions, with the rule of
+the `baseline_version=3` BAU.
+
+- Datasets without HVAC actions: nothing changes, bit for bit, including
+  `comparison_identity()`.
+- Datasets with HVAC actions: the rule-based baselines heat and cool, so their
+  energy, cost and comfort KPIs change. Compare them with the
+  `baseline_version=3` BAU; against the default version 2 BAU, which does not
+  heat or cool, their ratios to the BAU compare heated houses with unheated
+  ones. Their identity records `hvac='dataset_demand'` and the definition gets
+  the suffix `+hvac-dataset-demand-v1`.
+- The storage, EV and appliance rules do not change, but where a dataset with
+  HVAC actions also has batteries, the battery actions can change: the load the
+  rules react to now includes the HVAC.
+- `SACRBC` and `MARLISARBC` built with a rule baseline as `rbc` explore with the
+  HVAC at the dataset demand. `hvac` is not a learner parameter, so
+  `SACRBC(env, rbc=RBCBasicPolicy, hvac='off')` passes it to the rule baseline
+  and keeps the old exploration.
+- `RBCSmartPolicy(env, hvac='off')` (and the same for the other two) gives the
+  zero HVAC of earlier releases, to reproduce earlier numbers. See
+  [HVAC of the rule-based baselines](baselines.md#hvac-of-the-rule-based-baselines).
+
+### District emissions with local trading off
+
+With a community market enabled and `community_market.local_trading_enabled`
+set to `false`, `district_emissions_total_*_kgco2` and the KPIs derived from it
+now count every member import at its carbon intensity, because no energy is
+exchanged locally. They used to net members' exports against other members'
+imports as if trading were on. The new value equals the `member_sum` row and
+`district_energy_provenance_external_purchase_emissions_kgco2`. Runs with
+local trading on, runs without a market and every bundled dataset are
+unchanged, and the local price ratio does not affect emissions. To compare
+with an earlier run made with local trading off, re-evaluate it with the
+current release. See [#327](https://github.com/citylearn-project/CityLearn/issues/327).
+
+### Community market settings are validated
+
+`CityLearnEnv` now checks the `community_market` section when it is built and
+raises a `ValueError` for settings that earlier releases ignored or replaced:
+unknown keys (`enable` instead of `enabled`), a ratio that is not a number or
+is outside `[0, 1]`, ratio aliases with different values, a
+`settlement_version` other than `1` or `2` (a string such as `"2"` included), a non-zero
+`grid_export_price` without `"settlement_version": 2`, and member weights or
+tariff files for buildings that are not in the schema. The message names the
+key and the fix. A schema that loaded before and now raises was not simulating
+what it said: for example, a ratio of 1.5 settled at 1.0 and a
+`grid_export_price` without settlement version 2 paid nothing. Write the value
+that was applied (ratio 1, `grid_export_price: 0`) to keep the earlier results,
+or fix the setting to get what was intended. Every bundled dataset is valid and
+its results do not change.
+
+Market attributes set on the env after construction
+(`community_market_enabled`, `community_market_sell_ratio`,
+`community_market_grid_export_price`,
+`community_market_import_member_weights`, `community_market_local_enabled`,
+`community_tariffs`) are not supported. The native BAU reference is rebuilt
+from the schema, so `evaluate_v2()` with the BAU comparison now raises when they
+differ from it. Change `schema['community_market']` and build a new env instead.
+See [#366](https://github.com/citylearn-project/CityLearn/issues/366).
+
+### Portfolio market rows with and without markets
+
+In a `MultiCommunityEnv` where some communities have a community market and
+others do not, the `portfolio_*_community_market_*` rows now include the
+communities without a market with their plain grid settlement: no local trade,
+their members' grid import and export as grid import and export after local
+trading, their `cost_total_control_eur` as settled and counterfactual cost, and
+zero savings and operator balance. These rows used to add the zeros those
+communities report, so they described only the market communities. Their
+values, and the pooled local-trade shares, change for such portfolios only.
+District rows, simulations, KPI names and portfolios where every community has
+a market, or none has, are unchanged. Re-evaluate earlier mixed portfolios with
+the current release before comparing their portfolio market rows. See
+[#373](https://github.com/citylearn-project/CityLearn/issues/373).
+
+### Occupant set-point limits
+
+Under physics version 2, an occupant of a
+`LogisticRegressionOccupantInteractionBuilding` can no longer move a heating or
+cooling set point past `set_point_limits`, a building schema key (and
+constructor argument) that defaults to `[15, 30]` °C. Before, each occupant
+change was added to the current set point with no limit, and under arbitrary
+HVAC control the occupant keeps interacting: over the first Quebec episode
+the heating set point reached -2323 °C with random actions and 3230 °C with
+`BusinessAsUsualAgent`, far outside its observation bounds
+([#352](https://github.com/citylearn-project/CityLearn/issues/352),
+[#357](https://github.com/citylearn-project/CityLearn/issues/357)).
+
+- A change stops at the limit it would cross. A schedule value already outside
+  the range is kept, and an occupant can still move the set point back towards
+  the range.
+- `occupant_interaction_indoor_dry_bulb_temperature_set_point_delta` still
+  reports the change the occupant asked for, also when the limit stopped it.
+- The cooling and heating set-point observation bounds of these buildings are
+  the schedule range widened to `set_point_limits`, which the set points can
+  no longer leave. On both Quebec neighbourhoods they become [15, 30] °C
+  instead of the indoor temperature limits (about -1 to 42 °C), so
+  bound-based normalisation of these features changes: agents trained there
+  under physics version 2 should be retrained.
+- With `NoControlAgent` nothing changes: the Quebec set points stay within
+  16.6 to 26.6 °C over the first episode. With `BusinessAsUsualAgent` the
+  simulation and the `evaluate()` KPIs do not change, because the large set
+  points fall on unoccupied steps, but the set-point observations and the
+  rewards that read them (such as `ComfortReward`) do. With random actions the
+  discomfort KPIs change too; energy, cost and emissions do not, because the
+  HVAC action, not the set point, sets the heating supplied.
+- `set_point_limits` applies under physics version 2 and later only. Set
+  `physics_version` to `1` to reproduce the unbounded set points of
+  CityLearn 3.6.0. To widen or narrow the range, set `set_point_limits` in each
+  building of the schema, for example `"set_point_limits": [16, 28]`.
+
+The limits do not bound the LSTM indoor temperature: under random heating
+actions the Quebec indoor temperature still reaches about 60 °C, because the
+HVAC action sets the heating supplied whatever the set point. That temperature
+is outside the range the LSTM models were trained on, so treat such runs with
+care.
+
+### EV SOC unit of charger files
+
+Under physics version 2 the SOC columns of a charger file
+(`electric_vehicle_required_soc_departure`, `electric_vehicle_estimated_soc_arrival`
+and `electric_vehicle_current_soc`) each have one unit, decided once from the
+whole column of the file: percent if any value is above 1, ratio otherwise. Before, the unit was
+guessed value by value, so an arrival SOC of 1 (1 %) in a percent file was read
+as 100 %: the EV arrived full and was not charged
+([#368](https://github.com/citylearn-project/CityLearn/issues/368)).
+
+- Bundled data: the EV charger files of `citylearn_challenge_2022_phase_all_plus_evs`,
+  the three hourly three-phase demos and the 15-second
+  `citylearn_three_phase_electrical_service_demo_15s_parquet` and
+  `citylearn_three_phase_dynamic_assets_only_demo_15s_parquet` are in percent
+  and contain such rows. Over the simulated year, 8 of about 2,800 arrivals of
+  the hourly datasets and 8 arrivals of each of those two 15-second demos start
+  from such a row. `citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet`
+  has none and does not change. The `pt_rec_*` files are ratios and do not change.
+- Results change for those datasets. With `BusinessAsUsualAgent` over the full
+  year of `citylearn_challenge_2022_phase_all_plus_evs`, EV charging rises by
+  534 kWh (0.58 %), district import by 0.31 % and cost by 0.33 % (31,412.62 to
+  31,515.25 EUR); the three hourly three-phase demos change by 0.31 to 0.34 %
+  in import and 0.35 to 0.38 % in cost. On the 15-second
+  `citylearn_three_phase_electrical_service_demo_15s_parquet`, the day around
+  such an arrival (steps 79,200 to 84,959) charges 474 instead of 377 kWh.
+  The EV departure KPIs barely move (the surplus mean changes in the fifth
+  decimal), because those EVs used to arrive full.
+- A column whose values are all between 0 and 1 is read as ratio. If it is in
+  percent, declare `"soc_unit": "percent"` on the charger, next to
+  `charger_simulation`; `"fraction"` forces ratio. A misspelt charger key,
+  such as `soc_units`, is reported with a warning.
+- A column read as percent that also holds values between 0 and 1 gives a
+  warning: one stray value above 1 (1.00001, say) in a ratio column makes the
+  whole column percent, so 0.3 would become 0.3 %. Fix the stray value or
+  declare `"soc_unit": "fraction"`.
+- Set `physics_version` to `1` to reproduce the value-by-value rule of
+  CityLearn 3.6.0.
+
+### Charger defaults and attribute names
+
+Charger `attributes` are checked by name: a name the charger does not accept
+raises a `ValueError` that names the charger and suggests the closest valid
+name. Before, a misspelt name such as `max_discharge_power` was dropped and the
+limit fell back to its default. `nominal_power` and `charger_type`, which the
+bundled schemas set, are now accepted explicitly: `nominal_power` is the
+default of `max_charging_power`, and `charger_type` is a label without effect
+([#369](https://github.com/citylearn-project/CityLearn/issues/369)).
+
+Under physics version 2 an omitted limit no longer gives a 50 kW
+bidirectional charger:
+
+- an omitted `max_discharging_power` is 0, so the charger cannot discharge
+  (V2G off) and its action space starts at 0 instead of -1. Set
+  `max_discharging_power` to allow V2G;
+- an omitted `max_charging_power` is `nominal_power`, or 50 kW when that is
+  missing too;
+- a warning names every limit that falls back to an assumed value
+  (`max_charging_power`, `max_discharging_power`, `efficiency`); `efficiency`
+  only when it is used, that is when an efficiency curve does not replace it.
+
+Every bundled charger sets all its limits, so bundled results do not change.
+A schema that omits `max_discharging_power` and relied on the 50 kW of V2G
+needs it set explicitly, or `physics_version=1`, which keeps the 50 kW defaults
+of CityLearn 3.6.0 (the name check applies to both versions).
+
+### EV departures at the end of the window
+
+A session that is still connected at the last step of a member's KPI window,
+with a countdown to departure of 0 or 1, is now a departure, as the
+[KPI reference](kpis_reference.md#departures) says. Its SOC at that step is
+scored against its target in `ev_events` and `ev_performance`, and the
+departure audit counts it. The last step is the last control step of the
+episode, or the step before a member leaves under a dynamic topology. At most
+one departure per charger is added per window, so short episodes that end at
+a usual departure time change the most; the default episodes of the bundled
+datasets do not change.
+
+Over consecutive split episodes each session is now counted once, by the
+episode that controlled it. Before, a session that ended with an episode was
+counted at step 0 of the next one, with the SOC set at reset, under
+`episode_split_boundary='shared'`, and not at all under `'disjoint'`, where a
+session connected on the row between two episodes was instead scored at step
+0 of the next one with the SOC set at reset. Now the last step of an episode
+counts a session that leaves before the next control step (countdown in
+[0, 1], or in [0, 2] when another `'disjoint'` split follows, so a run that is
+not split does not depend on the boundary), with the SOC the controller
+reached, and step 0 skips any session
+that was connected on the row before it. Departure counts and rates from
+earlier runs with short or split episodes should be recomputed before
+comparing ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
+
+### EV SOC carried across episode splits
+
+Nothing changes unless `ev_soc_carryover=True` is set. With it, an episode that
+continues the previous one in time (it starts on the previous episode's last
+row, or on the row after it, and the previous episode ran to its end) starts
+each EV from the SOC it reached at the end of that episode, and a session
+connected across the boundary is scored where it really leaves, with that
+charge, as described in the [KPI reference](kpis_reference.md#departures). Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still start every episode from their initial state. The setting is a trade-off. Off, every episode is independent of the ones before it, but a session that crosses a boundary loses the charge it received. On, that charge is kept, but an episode that continues the previous one depends on what the previous controller did, so its KPIs are no longer those of an independent episode.
+Met departures of split runs then rise towards those of one run, so results
+with and without the setting are not comparable, and `compare_exports` reports
+them as incompatible. Under `'disjoint'` the row between two episodes is never
+controlled, so a session connected across it can be up to one charging step
+behind one run. A carried episode starts from the SOC that the previous
+controller left, which enters its initial inventory, so the same carried
+episode run by two controllers is not comparable, and `compare_exports`
+reports it as incompatible: with carry-over, compare whole split runs, not
+single episodes. Random and rolling splits never carry, and the env warns
+once that the setting has no effect there; an explicit list carries only when
+a window starts exactly where the previous one ends for the split boundary, so
+under the default `'shared'` a list without a gap, such as
+`[(1900, 1949), (1950, 1999)]`, does not carry (it carries under `'disjoint'`,
+or under `'shared'` when the next window starts on the previous window's last
+row), and a `reset(options={'episode_index': ...})` that jumps elsewhere keeps the
+schedule SOC. Only the session connected across the boundary is carried;
+every later arrival takes the arrival SOC of the file, and an arrival without
+one keeps the EV's simulated SOC, as in one run. Summed over the episodes,
+departures, met departures and feasibility classes match one run, but the
+connected SOC gain of the energy accounting is each episode's own gain, so its
+sum is lower than in one run, and energy totals can differ slightly ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
+
+### Observation spaces follow the observations
+
+The observation values, their order and `observation_names` do not change, and
+neither do simulations or KPIs, except runs with robustness faults on the flat
+interface of `pt_rec_*` or the three-phase electrical-service demo: those faults
+now reach the feature they name. The observation spaces change, and so does
+anything that reads bounds from them: agents trained on the datasets below
+should be retrained, and their earlier results are not comparable.
+
+- **Flat order.** `env.observation_space` now follows `env.observation_names`.
+  Each building lists its own features first, in `active_observations` order,
+  then the features of its EV chargers, deferrable appliances and escalators,
+  grouped by device (`Building.flat_observation_order`). The space used to
+  follow `active_observations`, so for buildings with EV chargers or deferrable
+  appliances whose features are not already at the end of
+  `active_observations`, positions carried another feature's bounds. This
+  affects the flat interface of `pt_rec_4`, `pt_rec_15`, `pt_rec_30`,
+  `pt_rec_100` and one building of the three-phase electrical-service demo
+  (hourly and 15 s).
+- **Entity `meta`.** `env.observation_space['meta']` is an `EntityMetaSpace`.
+  It accepts a mapping with `time_step`, `endogenous_time_step`,
+  `seconds_per_time_step` and `spec_version`, is not flattenable and should not
+  be fed to a network. Code that iterates over `observation_space.spaces` should
+  skip it, as it skips `observations['meta']`.
+- **Wider estimated bounds**, in both interfaces:
+  per-phase charging headroom (`charging_phase_*_headroom_kw` and
+  `charging_phase_*_export_headroom_kw`) on `pt_rec_*`; `cooling_demand` and
+  `heating_demand` of LSTM buildings whose HVAC action is active, on the 2023
+  challenge datasets and both Quebec neighbourhoods; and the cooling and heating
+  set points of occupant-interaction buildings, on both Quebec neighbourhoods,
+  which now cover the indoor temperature limits.
+
+These bounds are still estimates where the model has no hard limit. Under
+arbitrary control, for example random actions over a full Quebec episode, the
+LSTM indoor temperature, and under physics version 1 the occupant set points,
+can leave them; `ClippedObservationWrapper` keeps such values inside the space.
+Under physics version 2 the occupant set points stay within `set_point_limits`
+(see [occupant set-point limits](#occupant-set-point-limits)). Without heating,
+for example under the default BAU, the indoor temperature leaves them on the
+cold side; see [observation bounds](interfaces_flat_entity.md#observation-bounds).
+
+What reads the bounds:
+
+| Consumer | Uses | Affected by |
+|---|---|---|
+| `RLC`, `SAC`, `MARLISA` encoders | `observation_space` by position | order and bounds |
+| `ClippedObservationWrapper` | `observation_space` by position | order and bounds |
+| `DiscreteObservationWrapper`, `TabularQLearningWrapper` | bins from `observation_space` by position | order and bounds |
+| `NormalizedObservationWrapper` | building limits by name | bounds only |
+| `StableBaselines3Wrapper`, `RLlibSingleAgentWrapper`, `RLlibMultiAgentEnv` | declare the space, do not rescale | only through a normalising wrapper or the algorithm's own use of the space |
+| Robustness faults on the flat interface | feature by position | order (faults now reach the named feature) |
+
+### The native BAU uses current-step load and solar
+
+The native BAU now uses observed load and PV from the step being planned when
+it requests battery charging or discharging. This can change BAU-relative KPIs.
+Re-evaluate both runs with the current release and the same EV charging target
+before comparing them. To reproduce a result using the previous BAU, use the
+CityLearn release or commit recorded in its original manifest. See the
+[BAU reference](baselines.md#known-limits).
+
 ### Numeric and configuration hygiene
 
 These changes require no dataset, schema or KPI migration. Valid runs give the same results; a few silent mistakes now raise.
@@ -58,6 +417,21 @@ These changes require no dataset, schema or KPI migration. Valid runs give the s
 - **Logging.** CityLearn no longer configures the root logger. Warnings still print; to see INFO messages, configure logging in your script, for example `logging.basicConfig(level=logging.INFO)`. `learn(logging_level=...)` and `DataSet(logging_level=...)` set the level of the `citylearn` logger only when passed.
 - **Export location.** Exports go to `./render_logs` in the working directory by default, and relative `render_directory` values resolve against the working directory. Pass an absolute `render_directory` to keep the previous location.
 - **Physics invariants** raise `PhysicsInvariantError`, which is an `AssertionError`, so existing handlers keep working.
+
+### Recorded settings
+
+The settings added since 3.6.0 are recorded with each run. `env.get_metadata()`,
+its `temporal_reproducibility` block and the export manifest hold
+`physics_version`, `episode_split_boundary` and `time_step_ratio_mode`; the
+manifest also keeps `random_stream_version`. With per-building reward
+functions, the reward evidence lists each building's reward class and
+parameters, including `version`, under `per_building`, because the
+`MultiBuildingRewardFunction` that combines them has no version of its own.
+Invalid values of these settings raise `ValueError` that names the accepted
+values, whether set in the schema or as a constructor argument, and a
+misspelled `physics_version` argument gets a suggestion. Simulation results do
+not change ([#301](https://github.com/citylearn-project/CityLearn/issues/301),
+[#302](https://github.com/citylearn-project/CityLearn/issues/302)).
 
 ### Consecutive episode splits share their boundary row
 
@@ -132,13 +506,23 @@ as `RewardFunction`, give the same rewards. Retrain policies trained with such a
 schema. No bundled dataset uses per-building reward functions.
 
 `Electric_Vehicles_Reward_Function`, `ComfortReward` and
-`SolarPenaltyAndComfortReward` accept a `version` attribute. Version 1, the
-default, is the reward of 3.6.0, so existing schemas and trained policies keep
-their reward. Version 2 corrects the EV departure penalty, adds the base reward
+`SolarPenaltyAndComfortReward` accept a `version` attribute, and version 2 is
+the default. Version 2 corrects the EV departure penalty, adds the base reward
 and follows the HVAC mode in the comfort term, as the reward function overview
-of the documentation describes. Set `"version": 2` in the
-reward attributes for new training runs, and compare policies only within one
-version. The reward evidence in the environment metadata records the version.
+of the documentation describes. Every bundled schema that uses these rewards
+sets `"version": 2`, so the rewards of `citylearn_challenge_2022_phase_all_plus_evs`,
+the three-phase demos, the 2023 challenge datasets, both Quebec neighbourhoods
+and `baeda_3dem` differ from 3.6.0; their simulations and KPIs do not. Retrain
+policies trained on these rewards before comparing them with new runs, and
+compare policies only within one version.
+
+Version 1, the reward of 3.6.0, is deprecated and exists only to reproduce runs
+made with CityLearn 3.6.0 or earlier. Select it with `"version": 1` in the
+reward attributes (or `reward_function_kwargs={"version": 1}`); it raises a
+`DeprecationWarning` and will be removed in a later release. Reward objects
+pickled by 3.6.0, for example inside a saved agent or environment, keep version
+1 without a warning. The reward evidence in the environment metadata and in
+export manifests records the version.
 
 ### KPI definitions
 
@@ -152,7 +536,8 @@ lists every changed row and the name that keeps its 3.6.0 value.
   ratios of the district totals instead of means of the building ratios
   ([#237](https://github.com/citylearn-project/CityLearn/issues/237)). The
   3.6.0 values are published as `*_building_mean_ratio`, and the legacy
-  `evaluate()` district rows still hold them.
+  `evaluate()` district rows still hold them; on datasets with EV chargers,
+  with `baseline_version=1` (see [EV charging in the default baseline](#ev-charging-in-the-default-baseline)).
 - **District emissions** are those of the netted district import, so local
   sharing between members lowers them, consistent with district import and
   cost ([#238](https://github.com/citylearn-project/CityLearn/issues/238)).
@@ -170,14 +555,23 @@ lists every changed row and the name that keeps its 3.6.0 value.
   signed-net values are published as `*_signed_net_*`; the legacy `evaluate()`
   rows keep the signed-net series.
 - **Undefined values stay undefined**: a ratio with a missing control or
-  reference, the deferrable start delay without completed cycles, and the
-  deferrable service ratios to the BAU when no cycle was due are now missing
-  instead of 0 or 1 ([#243](https://github.com/citylearn-project/CityLearn/issues/243)).
+  reference, the deferrable start delay without completed cycles, and each
+  deferrable-appliance ratio to the BAU whose own two totals are zero (for
+  example the missed-cycle ratio when neither run missed a cycle, even if cycles
+  were due) are now missing instead of 0 or 1 ([#243](https://github.com/citylearn-project/CityLearn/issues/243)).
   Code that reads these cells must handle `None`/NaN.
 - **Portfolio rates** of `MultiCommunityEnv` (EV departure rates and means,
   service levels, start delay, self-consumption) are pooled from their additive
   denominators instead of weighted by community
-  ([#244](https://github.com/citylearn-project/CityLearn/issues/244)).
+  ([#244](https://github.com/citylearn-project/CityLearn/issues/244)). The
+  community-market local shares of demand and export and the demand-response
+  compliance and audit coverage ratios are pooled the same way, from local plus
+  grid energy and from requested energy; the new district rows
+  `district_demand_response_valid_requested_total_kwh` and
+  `district_demand_response_credited_total_kwh` are the components of the
+  compliance ratio ([#285](https://github.com/citylearn-project/CityLearn/issues/285)).
+  District and building values are unchanged; rerun `MultiCommunityEnv`
+  evaluations whose portfolio rows you compare.
 - **BAU ramping average** is the mean upward ramp per step instead of the sum
   over the episode; the sum is published as `*_ramping_total_*_kw`
   ([#245](https://github.com/citylearn-project/CityLearn/issues/245)). The ratio
@@ -190,9 +584,21 @@ definitions, selected with the `physics_version` schema key or the
 `CityLearnEnv(physics_version=...)` argument, which takes precedence. Version
 `1` is the physics of CityLearn 3.6.0 and earlier; version `2`, the default,
 contains the corrections below. The native BAU reference of `evaluate_v2()`
-uses the version of the evaluated environment, and exports record it in the
-run metadata. To reproduce a 3.6.0 result, set `physics_version` to `1`; to
-compare controllers, run them under the same version.
+uses the version of the evaluated environment. The resolved version is in
+`env.get_metadata()`, its temporal block, and the export manifest, both at top
+level and in `comparison_context`. `compare_manifests()` and `compare_exports()`
+report two runs under different physics versions as `incompatible`, with
+`physics_version` among the mismatches, and a manifest written before the
+version was recorded as `unknown`, with `physics_version` among the missing
+evidence; export such runs again to pair them. To reproduce a 3.6.0 result, set
+`physics_version` to `1`, and also `baseline_version` to `1` for the KPIs of
+datasets with EV chargers; to compare controllers, run them under the same
+versions.
+
+`MultiCommunityEnv` requires every community to use the same
+`physics_version` and `random_stream_version`, because portfolio KPIs add up
+the communities' totals; mixed versions raise `ValueError` at construction.
+Its `get_metadata()` records both.
 
 Version 2 changes the following on bundled datasets:
 
@@ -218,6 +624,24 @@ Version 2 changes the following on bundled datasets:
   `PhysicsInvariantError`. This changes scenarios with outages and batteries, such as
   the `citylearn_challenge_2023_*` datasets with stochastic outages and the
   `pt_rec_*` robustness, combined and all-in scenarios.
+- **Energy to full of faded batteries.** Charging stops at a battery's
+  degraded capacity, which capacity fade lowers below its nominal capacity,
+  but version 1 computed the entity observations of the energy a battery can
+  still take from the nominal capacity, so a battery that fade had made full
+  was observed with `can_charge` 1 and charge power available. Version 2 stops
+  `energy_to_full_kwh`, `connected_ev_energy_to_full_kwh`,
+  `flexible_energy_to_full_kwh` and the charge features derived from them at
+  the degraded capacity (see [energy to full](observations_reference.md#energy-to-full)).
+  The simulated physics is unchanged, but controllers that read these
+  observations act differently: the BAU no longer reserves power for a faded EV
+  that is already full, so its home battery no longer discharges for it and
+  exports the energy. This changes the BAU on datasets whose EV batteries fade
+  and that publish the `entity_core_electrical` bundle:
+  `citylearn_challenge_2022_phase_all_plus_evs`, the dynamic assets and
+  dynamic topology three-phase demos and the 15-second three-phase demos.
+  Batteries without fade, including every `pt_rec_*` battery, and
+  `citylearn_three_phase_electrical_service_demo`, which does not publish
+  the bundle, are unchanged.
 
 - **Electrical-service headroom.** The import limit of a building with
   `electrical_service` was shared among the EV chargers and the battery in
@@ -254,6 +678,18 @@ electrical-service limit, and `Building_15` of the three-phase demos.
 
 It also changes runs that use the following:
 
+- **Charger files in percent.** The SOC unit is decided once per column, so an
+  SOC of 1 in a percent file is 1 % instead of 100 %
+  ([#368](https://github.com/citylearn-project/CityLearn/issues/368), see
+  [EV SOC unit of charger files](#ev-soc-unit-of-charger-files)).
+- **Chargers without `max_discharging_power`.** They cannot discharge; version
+  1 gave them 50 kW of V2G
+  ([#369](https://github.com/citylearn-project/CityLearn/issues/369), see
+  [charger defaults and attribute names](#charger-defaults-and-attribute-names)).
+- **Occupant set points under arbitrary control.** An occupant change stops at
+  `set_point_limits`, [15, 30] °C by default; version 1 had no limit
+  ([#352](https://github.com/citylearn-project/CityLearn/issues/352), see
+  [occupant set-point limits](#occupant-set-point-limits)).
 - **EVs with a standby loss.** An EV away from its charger now keeps the
   standby loss of each step; version 1 discarded it, so a non-zero battery
   `loss_coefficient` had no effect while the EV was away
@@ -312,10 +748,31 @@ key, and keeps one generator per stream:
   same outages in every episode with the same window. A seed given to the
   outage model is now the root of that building's stream instead of a stream
   shared by every building that uses it.
+- a member that a dynamic topology clones from `source_member_id` is keyed by
+  its own name, so it draws its own occupant and device streams; it used to keep
+  its source's keys and draw exactly what its source drew
+  ([#304](https://github.com/citylearn-project/CityLearn/issues/304)). No
+  bundled dataset clones a member. `v1` does not key its streams by object and
+  is unchanged.
 
-`reset(seed=s)` repeats the first episode of an environment built with
-`random_seed=s`, and `reset(options={'episode_index': k})` repeats episode `k`.
-The native BAU reference uses the streams of the episode it evaluates.
+`reset(seed=s)` sets `random_seed` to `s` and restarts the per-episode streams
+(EV drift, occupant interactions and stochastic outages) at episode key 0, the
+key of the first episode of an environment built with `random_seed=s`. It does
+not rebuild the environment, so it repeats that first episode only on a new
+environment built with `random_seed=s`:
+
+- the episode window still advances, so a second `reset(seed=s)` simulates the
+  next window; `reset(seed=s, options={'episode_index': k})` simulates window
+  `k` with the streams of episode 0;
+- device and EV battery parameters drawn at construction, and the initial EV
+  state of charge, keep the values drawn with the construction seed.
+
+To repeat a run with another seed, build a new environment with that
+`random_seed`. `reset(options={'episode_index': k})` without a seed repeats
+episode `k` of the same environment, or of another one built with the same
+seed. As Gymnasium recommends, pass a seed to the first reset only: a seed at
+every reset gives every episode the same per-episode streams. The native BAU
+reference uses the streams of the episode it evaluates.
 
 Runs that use none of these random features are unchanged. To reproduce results
 obtained with 3.6.0 or earlier for the same seed, set `random_stream_version`
@@ -352,6 +809,29 @@ below; `v2` changes:
 Rerun stochastic experiments, and retrain policies whose results you compare
 across seeds, with `v2`; keep `v1` only to reproduce published 3.6.0 numbers.
 
+Agents and generated neighborhoods follow the same setting
+([#287](https://github.com/citylearn-project/CityLearn/issues/287)).
+`TabularQLearning` decided between exploration and exploitation with
+`RandomState(random_seed + time_step)`, and MARLISA with information sharing
+shuffled the order in which its buildings act with the same seed, so seed `s`
+at time step `t + 1` repeated seed `s + 1` at time step `t`. With `v2`, an
+agent keeps one generator per purpose and episode, derived from its seed and
+the episode, and takes the version of its environment, so an environment built
+with `random_stream_version='v1'` gives its agents the 3.6.0 streams. The
+neighborhood generator (`citylearn.end_use_load_profiles.neighborhood.Neighborhood`)
+seeded partial-load simulation `i` of building `b` with `b + i`, which ignored
+the neighborhood seed and repeated simulation `i - 1` of building `b + 1`. Its
+new `random_stream_version` argument, `v2` by default, derives that seed from
+the neighborhood seed, the building and the simulation index:
+
+```python
+Neighborhood(random_seed=0, random_stream_version='v1')  # 3.6.0 partial-load seeds
+```
+
+These changes alter the exploration of these agents, and therefore the policies
+they learn, and newly generated datasets; simulations and the bundled datasets
+are unchanged.
+
 ### Optional PyTorch and scikit-learn
 
 `pip install citylearn` no longer installs PyTorch or scikit-learn. Install the
@@ -383,6 +863,26 @@ simulation window. Runs without `episode_time_steps` evaluate the same window
 as before. Pass `-te start end` to evaluate on a chosen window. The training
 summary JSON records `hostname` and `username` only with `--record_host`;
 scripts that read these keys need the flag.
+
+### Renamed agent classes
+
+`citylearn.agents.base.BaselineAgent` is now `NoControlAgent`, and
+`citylearn.agents.baseline.ZeroActionBaselineAgent` is now `ZeroActionAgent`. In
+CityLearn, "baseline" names the KPI counterfactual, the same buildings without
+storage and with PV, which the `*_baseline_*` KPIs report; the two agents are a
+no-control and a zero-action controller, so their names now say so. The old
+names are deprecated aliases of the same classes, so existing imports, CLI
+`-a` paths, schema `agent.type` values and pickled agents keep working and only
+raise a `DeprecationWarning`. Replace the old names before a later release
+removes them:
+
+```python
+from citylearn.agents.base import NoControlAgent        # was BaselineAgent
+from citylearn.agents.baseline import ZeroActionAgent  # was ZeroActionBaselineAgent
+```
+
+The bundled EULP neighbourhood schemas and the default agent of generated EULP
+schemas use `citylearn.agents.base.NoControlAgent`. Results are unchanged.
 
 ## Upgrade from 3.5.0 to 3.6.0
 

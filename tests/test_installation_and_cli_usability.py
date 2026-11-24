@@ -154,7 +154,7 @@ def _code_cells(name):
 
 
 def test_passive_agent_cell_evaluates_without_the_bau_reference():
-    cell = next(c for c in _code_cells('controller_examples') if 'BaselineAgent' in c)
+    cell = next(c for c in _code_cells('controller_examples') if 'NoControlAgent' in c)
 
     assert 'evaluate_v2(include_business_as_usual=False)' in cell
 
@@ -178,7 +178,7 @@ def test_notebook_runner_skips_install_and_tagged_cells():
     finally:
         sys.path.remove(str(ROOT / 'scripts' / 'ci'))
 
-    assert {Path(n).stem for n in NOTEBOOKS} == {'controller_examples', 'load_environment', 'cli', 'rl_training'}
+    assert {Path(n).stem for n in NOTEBOOKS} == {'controller_examples', 'load_environment', 'cli', 'rl_training', 'rllib_training'}
     cells = executable_copy(ROOT / 'examples' / 'controller_examples.ipynb').cells
     assert not any(c.cell_type == 'code' and c.source.lstrip().startswith('%pip') for c in cells)
     assert not any('Neighborhood()' in c.source for c in cells if c.cell_type == 'code')

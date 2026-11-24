@@ -13,6 +13,7 @@ from citylearn.internal.electrical_limits import (
     electrical_service_violation_kw,
 )
 from test_electrical_service_allocation_regressions import two_charger_schema
+from private_access import charging_constraint_last_penalty_kwh, charging_constraints_state
 
 
 def request(kw):
@@ -95,14 +96,14 @@ def test_prediction_leaves_device_and_runtime_accounting_state_untouched(tmp_pat
         env.reset(seed=0)
         policy = BusinessAsUsualAgent(env)
         building = env.buildings[0]
-        state = deepcopy(building._charging_constraints_state)
-        penalties = (building._charging_constraint_penalty_kwh, building._charging_constraint_last_penalty_kwh)
+        state = deepcopy(charging_constraints_state(building))
+        penalties = (building._charging_constraint_penalty_kwh, charging_constraint_last_penalty_kwh(building))
         chargers = list(building.electric_vehicle_chargers)
         stocks = [c.connected_electric_vehicle.battery.soc.copy() for c in chargers]
         meters = [c.electricity_consumption.copy() for c in chargers]
         policy.predict([])
-        assert building._charging_constraints_state == state
-        assert (building._charging_constraint_penalty_kwh, building._charging_constraint_last_penalty_kwh) == penalties
+        assert charging_constraints_state(building) == state
+        assert (building._charging_constraint_penalty_kwh, charging_constraint_last_penalty_kwh(building)) == penalties
         for charger, stock, meter in zip(chargers, stocks, meters):
             np.testing.assert_array_equal(charger.connected_electric_vehicle.battery.soc, stock)
             np.testing.assert_array_equal(charger.electricity_consumption, meter)

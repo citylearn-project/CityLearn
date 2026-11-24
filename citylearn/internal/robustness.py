@@ -936,7 +936,7 @@ class CityLearnRobustnessService:
             agent_layout: List[Mapping[str, Any]] = []
             seen_shared = set()
             for building in env.buildings:
-                for feature in building.active_observations:
+                for feature in building.flat_observation_order:
                     if feature in shared and feature in seen_shared:
                         continue
                     is_shared = feature in shared
@@ -952,7 +952,7 @@ class CityLearnRobustnessService:
         else:
             for building in env.buildings:
                 agent_layout = []
-                for feature in building.active_observations:
+                for feature in building.flat_observation_order:
                     is_shared = feature in shared
                     target_type = "district" if is_shared else "building"
                     target_id = "District" if is_shared else building.name
@@ -1397,7 +1397,7 @@ class CityLearnRobustnessService:
     def _layout_signature(self):
         building_names = tuple(building.name for building in getattr(self.env, "buildings", []))
         action_names = tuple(tuple(building.active_actions) for building in getattr(self.env, "buildings", []))
-        observation_names = tuple(tuple(building.active_observations) for building in getattr(self.env, "buildings", []))
+        observation_names = tuple(tuple(building.flat_observation_order) for building in getattr(self.env, "buildings", []))
         topology_version = int(getattr(self.env, "topology_version", 0) or 0)
         return building_names, action_names, observation_names, topology_version, getattr(self.env, "interface", "flat")
 

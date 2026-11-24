@@ -12,5 +12,6 @@ Start with a complete episode, then adapt the parts needed for your study.
    custom_controller
    agents
    rl_training
+   rllib_training
    cli
    tutorials

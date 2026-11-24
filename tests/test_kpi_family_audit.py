@@ -1,5 +1,3 @@
-import json
-from copy import deepcopy
 from types import SimpleNamespace
 
 import numpy as np
@@ -14,7 +12,6 @@ from citylearn.citylearn import CityLearnEnv
 from test_demand_response import (
     _copy_minute_schema,
     _clean_schema,
-    _write_requests,
     _request,
     _zero_entity_actions,
 )
@@ -489,7 +486,7 @@ def test_executed_active_population_and_manifest_survive_reentry(tmp_path):
         env.reset()
         while not env.terminated:
             env.step(commands(env, [0.0, 0.0]))
-        r = env._kpi_service.family_audit()
+        r = env.get_kpi_family_audit()
         assert r["buildings"]["Building_1"]["executed_intervals_count"] == 5
         assert r["buildings"]["Building_2"]["executed_intervals_count"] == 7
         assert r["district"]["executed_intervals_count"] == 12

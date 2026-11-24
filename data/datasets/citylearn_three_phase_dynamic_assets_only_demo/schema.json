@@ -228,7 +228,9 @@
   },
   "reward_function": {
     "type": "citylearn.reward_function.Electric_Vehicles_Reward_Function",
-    "attributes": {}
+    "attributes": {
+      "version": 2
+    }
   },
   "community_market": {
     "enabled": true,

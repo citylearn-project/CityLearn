@@ -14,6 +14,48 @@ if TYPE_CHECKING:
     from citylearn.internal.entity_interface import CityLearnEntityInterfaceService
 
 
+class EntityMetaSpace(spaces.Space):
+    """Space of the entity observation `meta` entry.
+
+    `meta` carries run metadata rather than features: time steps, the spec version, the forecast,
+    topology, demand-response and robustness context. Its content is nested and can grow, so the
+    space only checks that the value is a mapping with the core keys. It is not flattenable and
+    agents should not feed it to a network as is.
+    """
+
+    REQUIRED_KEYS = ('time_step', 'endogenous_time_step', 'seconds_per_time_step', 'spec_version')
+
+    def __init__(self, seconds_per_time_step: float = 3600.0, spec_version: str = 'entity_v1', seed=None):
+        super().__init__(shape=None, dtype=None, seed=seed)
+        self.seconds_per_time_step = float(seconds_per_time_step)
+        self.spec_version = str(spec_version)
+
+    @property
+    def is_np_flattenable(self) -> bool:
+        return False
+
+    def sample(self, mask: Any = None, *args, **kwargs) -> Mapping[str, Any]:
+        return {
+            'time_step': 0,
+            'endogenous_time_step': -1,
+            'seconds_per_time_step': self.seconds_per_time_step,
+            'spec_version': self.spec_version,
+        }
+
+    def contains(self, x: Any) -> bool:
+        return isinstance(x, Mapping) and all(key in x for key in self.REQUIRED_KEYS)
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, EntityMetaSpace)
+            and other.seconds_per_time_step == self.seconds_per_time_step
+            and other.spec_version == self.spec_version
+        )
+
+    def __repr__(self) -> str:
+        return f'EntityMetaSpace(seconds_per_time_step={self.seconds_per_time_step}, spec_version={self.spec_version!r})'
+
+
 def build_static_observation_rows(entity: "CityLearnEntityInterfaceService") -> None:
     """Pre-fill static entity feature values for the current topology layout."""
 
@@ -162,6 +204,9 @@ def build_spaces(entity: "CityLearnEntityInterfaceService") -> None:
                         dtype=np.float32,
                     ),
                 }
+            ),
+            "meta": EntityMetaSpace(
+                seconds_per_time_step=float(getattr(entity.env, "seconds_per_time_step", 3600.0)),
             ),
         }
     )

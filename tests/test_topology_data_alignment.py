@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from private_access import baseline_service, kpi_buildings, member_pool
 
 pytest.importorskip("gymnasium")
 
@@ -133,7 +134,7 @@ def test_short_member_file_is_aligned_with_a_late_simulation_start(window):
     env = CityLearnEnv(
         _schema(TOPOLOGY_DEMO), simulation_start_time_step=start, simulation_end_time_step=end, random_seed=0,
     )
-    building = env._topology_service.member_pool["Building_18"]
+    building = member_pool(env)["Building_18"]
     first_row = pd.read_csv(TOPOLOGY_DEMO / "Building_18.csv", nrows=1)["non_shiftable_load"].iloc[0]
 
     # Building_18 joins at global step 1000, and its file starts there (row 0 = 2.123).
@@ -146,8 +147,8 @@ def test_business_as_usual_sidecar_aligns_short_member_files():
         episode_time_steps=[(950, 1045)], random_seed=0,
     )
     env.reset()
-    sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
-    building = sidecar._topology_service.member_pool["Building_18"]
+    sidecar = baseline_service(env)._new_sidecar_env()
+    building = member_pool(sidecar)["Building_18"]
     offset = 1000 - sidecar.episode_tracker.simulation_start_time_step
 
     assert building.energy_simulation.non_shiftable_load[offset] == pytest.approx(2.123)
@@ -167,7 +168,7 @@ def test_short_member_file_that_ends_early_warns(tmp_path):
     with pytest.warns(UserWarning, match="ends before the member's active steps"):
         env = CityLearnEnv(_schema(root), simulation_start_time_step=950, simulation_end_time_step=1200, random_seed=0)
 
-    building = env._topology_service.member_pool["Building_18"]
+    building = member_pool(env)["Building_18"]
     np.testing.assert_allclose(
         building.energy_simulation.non_shiftable_load[50:150], frame["non_shiftable_load"].iloc[:100], rtol=1.0e-6,
     )
@@ -198,7 +199,7 @@ def test_joining_member_starts_thermal_storage_at_initial_soc():
     ]
     env = CityLearnEnv(schema, random_seed=0)
     env.reset()
-    building = env._topology_service.member_pool["Building_3"]
+    building = member_pool(env)["Building_3"]
 
     while env.time_step < 20:
         env.step(_zero_entity_actions(env))
@@ -224,13 +225,13 @@ def test_district_series_keep_departed_members_and_skip_future_members():
     before = np.array(env.non_shiftable_load[:49], dtype=float)
     _run_episode(env, _zero_entity_actions)
     after = np.array(env.non_shiftable_load, dtype=float)
-    joined = np.array(env._topology_service.member_pool["Building_18"].non_shiftable_load, dtype=float)
+    joined = np.array(member_pool(env)["Building_18"].non_shiftable_load, dtype=float)
 
     np.testing.assert_allclose(after[:49], before)
     # The joining member counts from its first step only.
-    members = [b for b in env._kpi_service._get_kpi_buildings() if b.name != "Building_18"]
+    members = [b for b in kpi_buildings(env) if b.name != "Building_18"]
     others = sum(np.array(b.non_shiftable_load, dtype=float)[:60] for b in members if b.name != "Building_1")
-    leaver = np.array(env._topology_service.member_pool["Building_1"].non_shiftable_load, dtype=float)
+    leaver = np.array(member_pool(env)["Building_1"].non_shiftable_load, dtype=float)
     np.testing.assert_allclose(after[50:60], others[50:60], rtol=1.0e-6)
     np.testing.assert_allclose(after[:50], others[:50] + leaver[:50], rtol=1.0e-6)
     assert joined[:60].sum() > 0.0
@@ -256,7 +257,7 @@ def test_terminal_step_event_does_not_add_an_unexecuted_interval(events):
 
     assert len(executed) == env.time_steps - 1 == 10
     for name in ("Building_1", "Building_11"):
-        building = env._topology_service.member_pool[name]
+        building = member_pool(env)[name]
         assert building.time_step == 9
         assert len(building.net_electricity_consumption) == 10
     assert len(env.net_electricity_consumption) == 10

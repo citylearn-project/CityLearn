@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 from citylearn.citylearn import CityLearnEnv
 from test_robustness import _copy_schema,_event,_write_events,_clean_schema,_zero_actions
+from private_access import provenance_service
 
 
 def schema_with_contract(tmp_path, *, selected=None, mode='hidden_faults', enabled=True):
@@ -67,7 +68,7 @@ def test_known_fault_mode_remains_explicit_and_physics_matches_hidden(tmp_path):
         while not known.terminated:
             known.step(_zero_actions(known));hidden.step(_zero_actions(hidden))
         np.testing.assert_allclose(known.net_electricity_consumption,hidden.net_electricity_consumption)
-        assert known._provenance_service.summary()==hidden._provenance_service.summary()
+        assert provenance_service(known).summary()==provenance_service(hidden).summary()
     finally:known.close();hidden.close()
 
 
