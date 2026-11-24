@@ -188,6 +188,7 @@
     <span class="n">PORTFOLIO_COMMUNITY_ID</span> <span class="o">=</span> <span class="s2">"__portfolio__"</span>
     <span class="n">PORTFOLIO_NAME</span> <span class="o">=</span> <span class="s2">"Portfolio"</span>
     <span class="n">_COMMUNITY_ID_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[A-Za-z0-9_.-]+$"</span><span class="p">)</span>
+    <span class="n">_COMMUNITY_KEYS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"community_id"</span><span class="p">,</span> <span class="s2">"schema"</span><span class="p">,</span> <span class="s2">"env_kwargs"</span><span class="p">,</span> <span class="s2">"weight"</span><span class="p">)</span>
     <span class="n">_SUM_SUFFIXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"_kwh"</span><span class="p">,</span> <span class="s2">"_eur"</span><span class="p">,</span> <span class="s2">"_kgco2"</span><span class="p">,</span> <span class="s2">"_count"</span><span class="p">)</span>
     <span class="n">_WEIGHTED_MEAN_SUFFIXES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"_ratio"</span><span class="p">,</span> <span class="s2">"_percent"</span><span class="p">)</span>
     <span class="n">_MARKET_ENERGY</span> <span class="o">=</span> <span class="s2">"district_energy_grid_community_market_"</span>
@@ -542,6 +543,14 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"communities[</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">] must be a mapping."</span><span class="p">)</span>
 
+            <span class="n">unknown_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">raw</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_COMMUNITY_KEYS</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">unknown_keys</span><span class="p">:</span>
+                <span class="n">accepted</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_COMMUNITY_KEYS</span><span class="p">)</span>
+                <span class="n">names</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">unknown_keys</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"communities[</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">] has unknown key(s) </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">; accepted keys are </span><span class="si">{</span><span class="n">accepted</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">)</span>
+
             <span class="n">community_id</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_validate_community_id</span><span class="p">(</span><span class="n">raw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"community_id"</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">community_id</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Duplicate community_id: </span><span class="si">{</span><span class="n">community_id</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
@@ -591,6 +600,9 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_validate_weight</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"communities[</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">].weight must be a non-negative finite number, not a boolean."</span><span class="p">)</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">weight</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>

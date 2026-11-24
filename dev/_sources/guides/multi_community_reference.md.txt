@@ -64,7 +64,7 @@ MultiCommunityEnv(
 )
 ```
 
-`community_id` must be unique, non-empty and safe as a relative path component. It may contain only letters, numbers, `_`, `-` and `.`. `weight` defaults to `1.0`, must be finite and non-negative, and at least one community must have a positive weight.
+`community_id` must be unique, non-empty and safe as a relative path component. It may contain only letters, numbers, `_`, `-` and `.`. `weight` defaults to `1.0`, must be finite and non-negative, and at least one community must have a positive weight. Only `community_id`, `schema`, `env_kwargs` and `weight` are accepted in an entry: any other key raises a `ValueError` that names it, and `weight` cannot be a boolean.
 
 `env_kwargs` are passed to the child `CityLearnEnv`. The wrapper sets each child export session to `<render_session_name>/<community_id>` so render and KPI files are separated by community.
 
