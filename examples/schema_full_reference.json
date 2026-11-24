@@ -67,7 +67,6 @@
     "indoor_dry_bulb_temperature_heating_delta": {"active": false, "shared_in_central_agent": false},
     "comfort_band": {"active": false, "shared_in_central_agent": false},
     "hvac_mode": {"active": false, "shared_in_central_agent": false},
-    "occupant_interaction_indoor_dry_bulb_temperature_set_point_delta": {"active": false, "shared_in_central_agent": false},
     "cooling_device_efficiency": {"active": false, "shared_in_central_agent": false},
     "heating_device_efficiency": {"active": false, "shared_in_central_agent": false},
     "dhw_device_efficiency": {"active": false, "shared_in_central_agent": false},
@@ -306,9 +305,9 @@
         "mode": "single_phase",
         "default_split": "balanced",
         "limits": {
-          "total": {"import_kw": null, "export_kw": null},
+          "total": {"import_kw": 17.25, "export_kw": 6.9},
           "per_phase": {
-            "L1": {"import_kw": null, "export_kw": null}
+            "L1": {"import_kw": 17.25, "export_kw": 6.9}
           }
         },
         "available_grid_power": null,

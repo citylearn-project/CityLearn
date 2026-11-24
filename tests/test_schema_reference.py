@@ -364,11 +364,14 @@ def test_full_reference_schema_loads_and_runs():
             actions = [np.zeros(space.shape, dtype="float32") for space in env.action_space]
             observations, _, terminated, truncated, _ = env.step(actions)
         assert env.time_step == 24
+        # The KPIs run the native BAU for the EV baseline of baseline_version 2.
+        kpis = env.evaluate()
+        assert len(kpis) > 0
         # Every observation a building of this schema can produce is listed in the reference catalogue.
         internal = {"electric_vehicles_chargers_dict", "deferrable_appliances_dict", "washing_machines_dict",
                     "deferrable_appliance_electricity_consumption", "washing_machine_electricity_consumption"}
         for building in env.buildings:
-            names = set(building.get_observations_data(include_all=True))
+            names = set(building._get_observations_data(include_all=True))
             names = {n for n in names if not n.endswith("_without_control") and not n.startswith("charging_")}
             assert names - internal - {"available_grid_power"} <= set(schema["observations"]), building.name
     finally:

@@ -128,7 +128,8 @@ raiz do schema é ignorada sem aviso.
 | `chargers.<id>.attributes` | `ValueError` com o nome válido mais próximo | |
 | `attributes` dos dispositivos (bateria, FV, bomba de calor, depósito) | `TypeError` | `AssertionError` ou `ValueError` |
 | `electric_vehicles_def.<ev>.battery.attributes` | ignorada | |
-| `observations`, `actions` | ignorada quando inativa; um nome ativo desconhecido lança erro na construção | `ValueError` para um `active` que não seja booleano |
+| `observations` | `KeyError` na construção, mesmo quando inativa (os nomes de modelo por dispositivo não são verificados) | `ValueError` para um `active` que não seja booleano |
+| `actions` | um nome ativo desconhecido lança erro na construção | `ValueError` para um `active` que não seja booleano |
 | `electrical_service.available_grid_power` | `ValueError` | `ValueError` |
 | `demand_response`, `robustness`, `derived_forecasts`, `observation_bundles`, `topology_events` | ignorada | `ValueError` para a maioria dos valores |
 | Entradas de `MultiCommunityEnv` | `ValueError` | `ValueError` |
@@ -384,9 +385,11 @@ Opções só do construtor, sem chave no schema: `offline` (ou a variável de am
 | `active` | bool | `false` | A observação é devolvida para todos os edifícios que a conseguem produzir. |
 | `shared_in_central_agent` | bool | `false` | Com `central_agent: true`, a observação aparece uma só vez no vetor central (tirada do primeiro edifício) em vez de uma vez por edifício. Use-a para valores iguais em todos os edifícios (calendário, meteorologia, uma tarifa partilhada). Ignorada para observações de carregadores, aparelhos diferíveis e escadas rolantes. |
 
-Um nome inativo que o CityLearn não conhece é ignorado. Um nome **ativo** desconhecido lança `KeyError` na construção,
-exceto os nomes que começam por `deferrable_appliance_` ou `escalator_`, ou que contêm `electric_vehicle_`, que são
-tratados como modelos por dispositivo (ver abaixo): use apenas os nomes listados aqui.
+Um nome que um edifício não consegue produzir lança `KeyError` na construção, **mesmo quando não está ativo**, por isso
+liste apenas os nomes que existem nos seus edifícios (por exemplo
+`occupant_interaction_indoor_dry_bulb_temperature_set_point_delta` só com o tipo de edifício com ocupantes). Os nomes
+que começam por `deferrable_appliance_` ou `escalator_`, ou que contêm `electric_vehicle_`, são tratados como modelos por
+dispositivo (ver abaixo): use apenas os nomes de modelo listados aqui.
 
 Nomes das observações, por grupo. As definições completas, as unidades e as linhas temporais estão na
 [referência das observações](observations_reference.md#observações-flat); os limites estão em
@@ -395,8 +398,8 @@ Nomes das observações, por grupo. As definições completas, as unidades e as 
 | Grupo | Nomes | Precisa de |
 |---|---|---|
 | Calendário | `month`, `day_type` (1-7, 8 = feriado), `hour` (1-24), `minutes`, `seconds`, `daylight_savings_status` | `minutes` e `seconds` só quando as colunas existem |
-| Meteorologia | `outdoor_dry_bulb_temperature`, `outdoor_relative_humidity`, `diffuse_solar_irradiance`, `direct_solar_irradiance`, cada uma também com `_predicted_1`, `_predicted_2`, `_predicted_3` | ficheiro `weather` |
-| Preço e carbono | `electricity_pricing`, `electricity_pricing_predicted_1`, `_2`, `_3`, `carbon_intensity` | ficheiros `pricing`, `carbon_intensity` (zeros sem eles) |
+| Meteorologia | `outdoor_dry_bulb_temperature`, `outdoor_dry_bulb_temperature_predicted_1`, `outdoor_dry_bulb_temperature_predicted_2`, `outdoor_dry_bulb_temperature_predicted_3`, `outdoor_relative_humidity`, `outdoor_relative_humidity_predicted_1`, `outdoor_relative_humidity_predicted_2`, `outdoor_relative_humidity_predicted_3`, `diffuse_solar_irradiance`, `diffuse_solar_irradiance_predicted_1`, `diffuse_solar_irradiance_predicted_2`, `diffuse_solar_irradiance_predicted_3`, `direct_solar_irradiance`, `direct_solar_irradiance_predicted_1`, `direct_solar_irradiance_predicted_2`, `direct_solar_irradiance_predicted_3` | ficheiro `weather` |
+| Preço e carbono | `electricity_pricing`, `electricity_pricing_predicted_1`, `electricity_pricing_predicted_2`, `electricity_pricing_predicted_3`, `carbon_intensity` | ficheiros `pricing`, `carbon_intensity` (zeros sem eles) |
 | Cargas e conforto | `non_shiftable_load`, `cooling_demand`, `heating_demand`, `dhw_demand`, `indoor_dry_bulb_temperature`, `indoor_relative_humidity`, `average_unmet_cooling_setpoint_difference`, `occupant_count`, `indoor_dry_bulb_temperature_cooling_set_point`, `indoor_dry_bulb_temperature_heating_set_point`, `indoor_dry_bulb_temperature_cooling_delta`, `indoor_dry_bulb_temperature_heating_delta`, `comfort_band`, `hvac_mode` | colunas de `energy_simulation` |
 | Ocupantes | `occupant_interaction_indoor_dry_bulb_temperature_set_point_delta` | tipo de edifício `LogisticRegressionOccupantInteractionBuilding` |
 | Eficiência dos dispositivos | `cooling_device_efficiency`, `heating_device_efficiency`, `dhw_device_efficiency` | o dispositivo |
@@ -728,7 +731,8 @@ dados horários.
 ## Serviço elétrico
 
 `buildings.<name>.electrical_service` define os limites da ligação do edifício à rede. Os
-limites são potência ativa em kW; `null`, uma chave ausente ou `Infinity` significa sem limite.
+limites são potência ativa em kW; uma chave ausente significa sem limite (`null` e `Infinity` também, na simulação, mas
+consulte [Erros comuns](#erros-comuns-e-o-que-evitar)).
 
 ```json
 {"electrical_service": {
@@ -1334,6 +1338,7 @@ são as mesmas.
 | Definir `stochastic_power_outage: true` sem modelo | Metade dos passos são falhas. | Use `ReliabilityMetricsPowerOutage`. |
 | `electrical_service` e `charging_constraints` ao mesmo tempo | `charging_constraints` é ignorado. | Use `electrical_service`. |
 | `set_point_limits`, `dynamics` ou `occupant` em `citylearn.building.Building` | Ignorados. | Use o tipo de edifício correspondente. |
+| `null` num limite de `electrical_service` | A simulação trata-o como sem limite, mas o BAU nativo usado por `evaluate()` e `evaluate_v2()` lança `TypeError`. | Deixe a chave de fora para não ter limite. |
 | `render_mode` no schema e outro valor como argumento | Prevalece o schema. | Defina-o num só sítio. |
 | Alterar `env.community_market_*` depois da construção | `evaluate_v2()` lança erro. | Edite `schema["community_market"]` e construa um ambiente novo. |
 | `price_source` ou `load_pv_method` na predefinição num benchmark | O agente lê preços ou cargas futuros. | Use `daily_persistence` ou `publication_aware_day_ahead_market_input`. |

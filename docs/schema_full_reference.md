@@ -117,7 +117,9 @@ Portuguese version: [pt/schema_full_reference.md](pt/schema_full_reference.md).
 
 ## Observations
 
-Every observation name CityLearn accepts in the catalogue is listed. `active` (default `false`) turns a name on for
+Every observation name CityLearn accepts in the catalogue is listed, except
+`occupant_interaction_indoor_dry_bulb_temperature_set_point_delta`, which exists only for the occupant building type:
+a name that a building cannot produce raises `KeyError` at construction, even when it is not active. `active` (default `false`) turns a name on for
 every building that can produce it; `shared_in_central_agent` (default `false`) puts it once in the central vector when
 `central_agent` is `true`. This file turns on a small example set and marks calendar, weather, price and carbon names
 as shared, because they are the same for every building.
@@ -171,7 +173,6 @@ observations are not listed here: `electrical_service.observations` switches the
     "indoor_dry_bulb_temperature_heating_delta": {"active": false, "shared_in_central_agent": false},
     "comfort_band": {"active": false, "shared_in_central_agent": false},
     "hvac_mode": {"active": false, "shared_in_central_agent": false},
-    "occupant_interaction_indoor_dry_bulb_temperature_set_point_delta": {"active": false, "shared_in_central_agent": false},
     "cooling_device_efficiency": {"active": false, "shared_in_central_agent": false},
     "heating_device_efficiency": {"active": false, "shared_in_central_agent": false},
     "dhw_device_efficiency": {"active": false, "shared_in_central_agent": false},
@@ -603,9 +604,9 @@ size them or use `"autosize": true`.
         "mode": "single_phase",
         "default_split": "balanced",
         "limits": {
-          "total": {"import_kw": null, "export_kw": null},
+          "total": {"import_kw": 17.25, "export_kw": 6.9},
           "per_phase": {
-            "L1": {"import_kw": null, "export_kw": null}
+            "L1": {"import_kw": 17.25, "export_kw": 6.9}
           }
         },
         "available_grid_power": null,
@@ -626,10 +627,10 @@ size them or use `"autosize": true`.
 |---|---|---|---|
 | `mode` | `"single_phase"` | `"single_phase"` | `"three_phase"` adds `L2` and `L3`. |
 | `default_split` | `"balanced"` | `"balanced"` | Phase of load without a phase connection. |
-| `limits.total.import_kw`, `export_kw` | `null` | no limit | For example `17.25` and `6.9` kW. |
-| `limits.per_phase.L1.import_kw`, `export_kw` | `null` | no limit | |
+| `limits.total.import_kw`, `export_kw` | 17.25 kW, 6.9 kW | no limit | A 25 A single-phase connection with a 6.9 kW export limit. Leave a key out for no limit. |
+| `limits.per_phase.L1.import_kw`, `export_kw` | 17.25 kW, 6.9 kW | no limit | |
 | `available_grid_power` | `null` | none | A file (or `{filename, column}`) with the import limit per step. |
-| `observations.headroom`, `headroom_export`, `violation`, `available_grid_power` | `true` | `true` | Headroom observations appear only for limits that exist. |
+| `observations.headroom`, `headroom_export`, `violation`, `available_grid_power` | `true` | `true` | Adds `charging_building_headroom_kw`, the export and `L1` headrooms and `charging_constraint_violation_kwh` to the observations. |
 | `observations.phase_encoding` | `false` | `false` | One-hot phase of each charger. |
 
 ## Building_1: outages, dynamics and occupants

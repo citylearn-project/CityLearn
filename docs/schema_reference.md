@@ -127,7 +127,8 @@ ignored without a warning.
 | `chargers.<id>.attributes` | `ValueError` with the closest valid name | |
 | Device `attributes` (battery, PV, heat pump, tank) | `TypeError` | `AssertionError` or `ValueError` |
 | `electric_vehicles_def.<ev>.battery.attributes` | ignored | |
-| `observations`, `actions` | ignored when inactive; an active unknown name raises at construction | `ValueError` for a non-boolean `active` |
+| `observations` | `KeyError` at construction, even when inactive (per-device template names are not checked) | `ValueError` for a non-boolean `active` |
+| `actions` | an unknown active name raises at construction | `ValueError` for a non-boolean `active` |
 | `electrical_service.available_grid_power` | `ValueError` | `ValueError` |
 | `demand_response`, `robustness`, `derived_forecasts`, `observation_bundles`, `topology_events` | ignored | `ValueError` for most values |
 | `MultiCommunityEnv` entries | `ValueError` | `ValueError` |
@@ -381,9 +382,10 @@ Constructor-only options, which have no schema key: `offline` (or the `CITYLEARN
 | `active` | bool | `false` | The observation is returned for every building that can produce it. |
 | `shared_in_central_agent` | bool | `false` | With `central_agent: true`, the observation appears once in the central vector (taken from the first building) instead of once per building. Use it for values that are the same for every building (calendar, weather, a shared tariff). Ignored for charger, deferrable and escalator observations. |
 
-An inactive name that CityLearn does not know is ignored. An **active** unknown name raises `KeyError` at
-construction, except names that start with `deferrable_appliance_` or `escalator_`, or that contain
-`electric_vehicle_`, which are treated as per-device templates (see below): use only the names listed here.
+A name that a building cannot produce raises `KeyError` at construction, **even when it is not active**, so list only
+names that exist for your buildings (for example `occupant_interaction_indoor_dry_bulb_temperature_set_point_delta`
+only with the occupant building type). Names that start with `deferrable_appliance_` or `escalator_`, or that contain
+`electric_vehicle_`, are treated as per-device templates (see below): use only the template names listed here.
 
 Observation names, grouped. Full definitions, units and time rows are in the
 [observations reference](observations_reference.md#flat-observations); bounds are in
@@ -392,8 +394,8 @@ Observation names, grouped. Full definitions, units and time rows are in the
 | Group | Names | Needs |
 |---|---|---|
 | Calendar | `month`, `day_type` (1-7, 8 = holiday), `hour` (1-24), `minutes`, `seconds`, `daylight_savings_status` | `minutes` and `seconds` only when the columns exist |
-| Weather | `outdoor_dry_bulb_temperature`, `outdoor_relative_humidity`, `diffuse_solar_irradiance`, `direct_solar_irradiance`, each also with `_predicted_1`, `_predicted_2`, `_predicted_3` | `weather` file |
-| Pricing and carbon | `electricity_pricing`, `electricity_pricing_predicted_1`, `_2`, `_3`, `carbon_intensity` | `pricing`, `carbon_intensity` files (zeros without them) |
+| Weather | `outdoor_dry_bulb_temperature`, `outdoor_dry_bulb_temperature_predicted_1`, `outdoor_dry_bulb_temperature_predicted_2`, `outdoor_dry_bulb_temperature_predicted_3`, `outdoor_relative_humidity`, `outdoor_relative_humidity_predicted_1`, `outdoor_relative_humidity_predicted_2`, `outdoor_relative_humidity_predicted_3`, `diffuse_solar_irradiance`, `diffuse_solar_irradiance_predicted_1`, `diffuse_solar_irradiance_predicted_2`, `diffuse_solar_irradiance_predicted_3`, `direct_solar_irradiance`, `direct_solar_irradiance_predicted_1`, `direct_solar_irradiance_predicted_2`, `direct_solar_irradiance_predicted_3` | `weather` file |
+| Pricing and carbon | `electricity_pricing`, `electricity_pricing_predicted_1`, `electricity_pricing_predicted_2`, `electricity_pricing_predicted_3`, `carbon_intensity` | `pricing`, `carbon_intensity` files (zeros without them) |
 | Loads and comfort | `non_shiftable_load`, `cooling_demand`, `heating_demand`, `dhw_demand`, `indoor_dry_bulb_temperature`, `indoor_relative_humidity`, `average_unmet_cooling_setpoint_difference`, `occupant_count`, `indoor_dry_bulb_temperature_cooling_set_point`, `indoor_dry_bulb_temperature_heating_set_point`, `indoor_dry_bulb_temperature_cooling_delta`, `indoor_dry_bulb_temperature_heating_delta`, `comfort_band`, `hvac_mode` | `energy_simulation` columns |
 | Occupant | `occupant_interaction_indoor_dry_bulb_temperature_set_point_delta` | building type `LogisticRegressionOccupantInteractionBuilding` |
 | Device efficiency | `cooling_device_efficiency`, `heating_device_efficiency`, `dhw_device_efficiency` | the device |
@@ -720,7 +722,8 @@ Battery and PV autosizing download sizing data unless it is cached (`offline=Tru
 ## Electrical service
 
 `buildings.<name>.electrical_service` sets the building's grid connection limits. Limits are
-active power in kW; `null`, a missing key or `Infinity` means no limit.
+active power in kW; a missing key means no limit (`null` and `Infinity` also do in the simulation, but see
+[Common mistakes](#common-mistakes-and-what-to-avoid)).
 
 ```json
 {"electrical_service": {
@@ -1323,6 +1326,7 @@ same.
 | Setting `stochastic_power_outage: true` without a model | Half of the steps are outages. | Use `ReliabilityMetricsPowerOutage`. |
 | Both `electrical_service` and `charging_constraints` | `charging_constraints` is ignored. | Use `electrical_service`. |
 | `set_point_limits`, `dynamics` or `occupant` on `citylearn.building.Building` | Ignored. | Use the matching building type. |
+| `null` for an `electrical_service` limit | The simulation treats it as no limit, but the native BAU used by `evaluate()` and `evaluate_v2()` raises `TypeError`. | Leave the key out for no limit. |
 | `render_mode` in the schema and another value as argument | The schema wins. | Set it in one place. |
 | Changing `env.community_market_*` after construction | `evaluate_v2()` raises. | Edit `schema["community_market"]` and build a new env. |
 | `price_source` or `load_pv_method` left at the default for a benchmark | The agent reads future prices or loads. | Use `daily_persistence` or `publication_aware_day_ahead_market_input`. |
