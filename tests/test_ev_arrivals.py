@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from pathlib import Path
+from private_access import kpi_service
 
 pytest.importorskip("gymnasium")
 
@@ -115,7 +116,7 @@ def test_arrival_soc_estimate_found_on_earlier_incoming_row():
     assert charger.connected_electric_vehicle is ev
     assert float(ev.battery.soc[arrival]) == pytest.approx(estimate, abs=1e-6)
     states = np.asarray(sim.electric_vehicle_charger_state, dtype='float64')
-    assert env._kpi_service._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(estimate, abs=1e-6)
+    assert kpi_service(env)._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(estimate, abs=1e-6)
     env.close()
 
 
@@ -196,7 +197,7 @@ def test_battery_arrival_soc_matches_kpi_and_departure_audit_references(rows, ex
         env.step(_zero_actions(env))
 
     assert charger.connected_electric_vehicle is ev
-    service = env._kpi_service
+    service = kpi_service(env)
     states = np.asarray(sim.electric_vehicle_charger_state, dtype='float64')
     assert service._ev_connected_interval_start(sim, states, 7) == arrival
     battery_soc = float(ev.battery.soc[arrival])
@@ -244,8 +245,8 @@ def test_numeric_csv_session_ids_keep_arrival_soc_within_the_session(tmp_path, s
         battery_soc = float(ev.battery.soc[arrival])
         assert battery_soc == pytest.approx(float(ev.battery.soc[arrival - 1]))
         assert battery_soc != pytest.approx(0.3)
-        assert env._kpi_service._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(battery_soc)
-        assert ev_departure_audit.arrival_soc(env._kpi_service, sim, ev.battery, states, arrival) is None
+        assert kpi_service(env)._ev_arrival_soc_for_interval(sim, ev, states, arrival) == pytest.approx(battery_soc)
+        assert ev_departure_audit.arrival_soc(kpi_service(env), sim, ev.battery, states, arrival) is None
     finally:
         env.close()
 
@@ -263,27 +264,58 @@ def test_connected_ev_without_arrival_soc_uses_initial_soc_on_reset():
     assert float(ev.battery.soc[0]) == pytest.approx(ev.battery.initial_soc)
 
 
-def test_charger_simulation_soc_fields_accept_fraction_and_percent_units():
-    simulation = ChargerSimulation(
-        electric_vehicle_charger_state=[1, 1, 2, 2, 3],
-        electric_vehicle_id=["EV"] * 5,
-        electric_vehicle_departure_time=[1, 1, -1, -1, -1],
-        electric_vehicle_required_soc_departure=[0.8, 80.0, np.nan, -0.1, 150.0],
-        electric_vehicle_estimated_arrival_time=[-1, -1, 1, 1, -1],
-        electric_vehicle_estimated_soc_arrival=[0.4, 40.0, np.nan, -0.1, 125.0],
+def _soc_simulation(required, arrival, **kwargs):
+    n = len(required)
+    return ChargerSimulation(
+        electric_vehicle_charger_state=[1, 1, 2, 2, 3][:n],
+        electric_vehicle_id=["EV"] * n,
+        electric_vehicle_departure_time=[1, 1, -1, -1, -1][:n],
+        electric_vehicle_required_soc_departure=required,
+        electric_vehicle_estimated_arrival_time=[-1, -1, 1, 1, -1][:n],
+        electric_vehicle_estimated_soc_arrival=arrival,
         noise_std=0.0,
+        **kwargs,
     )
 
-    np.testing.assert_allclose(
-        simulation.electric_vehicle_required_soc_departure,
-        [0.8, 0.8, -0.1, -0.1, 1.0],
-        atol=1.0e-6,
+
+def test_charger_simulation_soc_fields_accept_fraction_and_percent_units():
+    fraction = _soc_simulation([0.8, 1.0, np.nan, -0.1, 0.0], [0.4, 0.01, np.nan, -0.1, 1.0000000000000013])
+    assert set(fraction._soc_units.values()) == {"fraction"}
+    np.testing.assert_allclose(fraction.electric_vehicle_required_soc_departure, [0.8, 1.0, -0.1, -0.1, 0.0], atol=1.0e-6)
+    np.testing.assert_allclose(fraction.electric_vehicle_estimated_soc_arrival, [0.4, 0.01, -0.1, -0.1, 1.0], atol=1.0e-6)
+
+    percent = _soc_simulation([80.0, 100.0, np.nan, -0.1, 150.0], [40.0, 1.0, np.nan, -0.1, 0.5])
+    assert set(percent._soc_units.values()) == {"percent"}
+    np.testing.assert_allclose(percent.electric_vehicle_required_soc_departure, [0.8, 1.0, -0.1, -0.1, 1.0], atol=1.0e-6)
+    np.testing.assert_allclose(percent.electric_vehicle_estimated_soc_arrival, [0.4, 0.01, -0.1, -0.1, 0.005], atol=1.0e-6)
+
+
+def test_soc_unit_is_decided_once_per_column():
+    """#368: one value above 1 makes the whole column percent; each column has its own unit."""
+
+    simulation = _soc_simulation([0.8, 0.9], [1.0, 50.0])
+    assert simulation._soc_units == {
+        "electric_vehicle_required_soc_departure": "fraction",
+        "electric_vehicle_estimated_soc_arrival": "percent",
+    }
+    np.testing.assert_allclose(simulation.electric_vehicle_required_soc_departure, [0.8, 0.9], atol=1.0e-6)
+    np.testing.assert_allclose(simulation.electric_vehicle_estimated_soc_arrival, [0.01, 0.5], atol=1.0e-6)
+
+
+def test_soc_unit_can_be_declared():
+    simulation = _soc_simulation([0.8, 1.0], [1.0, 0.5], soc_unit="percent")
+    np.testing.assert_allclose(simulation.electric_vehicle_required_soc_departure, [0.008, 0.01], atol=1.0e-6)
+
+    with pytest.raises(ValueError, match="soc_unit"):
+        _soc_simulation([0.8], [0.4], soc_unit="percentage")
+
+
+def test_per_value_soc_unit_keeps_the_physics_v1_rule():
+    simulation = _soc_simulation(
+        [0.8, 80.0, np.nan, -0.1, 150.0], [0.4, 40.0, np.nan, -0.1, 1.0], soc_unit="per_value",
     )
-    np.testing.assert_allclose(
-        simulation.electric_vehicle_estimated_soc_arrival,
-        [0.4, 0.4, -0.1, -0.1, 1.0],
-        atol=1.0e-6,
-    )
+    np.testing.assert_allclose(simulation.electric_vehicle_required_soc_departure, [0.8, 0.8, -0.1, -0.1, 1.0], atol=1.0e-6)
+    np.testing.assert_allclose(simulation.electric_vehicle_estimated_soc_arrival, [0.4, 0.4, -0.1, -0.1, 1.0], atol=1.0e-6)
 
 
 def test_ev_battery_schema_attributes_are_loaded(tmp_path):
@@ -531,4 +563,6 @@ def test_current_soc_initializes_runtime_reconnection_inside_occupied_window():
 
 def test_negative_soc_sentinels_remain_missing_values():
     values = ChargerSimulation.normalize_soc_series([-1.0, -0.1, np.nan, 0.0, 1.0, 80.0, 150.0])
+    assert values.tolist() == pytest.approx([-0.1, -0.1, -0.1, 0.0, 0.01, 0.8, 1.0])
+    values = ChargerSimulation._normalize_soc_series([-1.0, -0.1, np.nan, 0.0, 1.0, 80.0, 150.0], unit="per_value")
     assert values.tolist() == pytest.approx([-0.1, -0.1, -0.1, 0.0, 1.0, 0.8, 1.0])

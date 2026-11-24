@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from private_access import entity_service, robustness_service, runtime_service
 
 pytest.importorskip("gymnasium")
 
@@ -343,7 +344,7 @@ def test_flat_baseline_robustness_view_leaves_the_env_and_its_random_streams_unc
                 action = agent.predict(observations) if agent else actions[len(taken)]
                 taken.append(action)
                 observations, *_ = env.step(action)
-            service = env._robustness_service
+            service = robustness_service(env)
             return dict(
                 actions=taken, observations=seen, history=service.history, stuck=dict(service._stuck_values),
                 net=np.asarray(env.net_electricity_consumption, dtype="float64"),
@@ -508,7 +509,7 @@ def test_business_as_usual_fast_rollout_matches_regular_step():
 
         while not fast_env.terminated:
             actions = fast_agent.predict([], deterministic=True)
-            fast_env._runtime_service.step_without_feedback(actions)
+            runtime_service(fast_env).step_without_feedback(actions)
 
         assert fast_env.time_step == regular_env.time_step
         np.testing.assert_allclose(
@@ -719,7 +720,7 @@ def test_fast_observation_layout_matches_reference(dataset):
         observations, _ = env.reset(seed=0)
         agent = BusinessAsUsualAgent(env)
         while not env.terminated:
-            payload = env._entity_service.observation_payload()
+            payload = entity_service(env).observation_payload()
             fast_names, fast_values = agent._flattener.flatten(payload)
             names, values = agent._flattener.flatten_reference(payload)
             assert fast_names == names

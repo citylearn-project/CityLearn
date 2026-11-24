@@ -11,7 +11,7 @@ Versão inglesa: [Publishing CityLearn](../publishing.md).
    de `requirements.txt`.
 2. Acrescentar às [notas da versão](releases.md) as alterações para utilizadores,
    compatibilidade, impacto nos dados, validação e instruções de migração.
-3. Atualizar os guias afetados e as [instruções de migração](../migration.md).
+3. Atualizar os guias afetados e as [instruções de migração](migration.md).
 4. Executar os testes e auditores do [guia de desenvolvimento](developer_guide.md).
    Construir também o site Sphinx e verificar ligações e exemplos.
 5. Construir e verificar o wheel e o arquivo de código, incluindo uma instalação

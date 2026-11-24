@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
+from private_access import physics_invariant_service
 
 pytest.importorskip("gymnasium")
 
@@ -66,7 +67,7 @@ def test_physics_invariants_detect_building_energy_balance_mismatch():
         building._Building__net_electricity_consumption[t] += 5.0
 
         with pytest.raises(AssertionError, match="Net energy balance mismatch"):
-            env._physics_invariant_service.assert_step_invariants(t)
+            physics_invariant_service(env).assert_step_invariants(t)
     finally:
         env.close()
 
@@ -81,7 +82,7 @@ def test_physics_invariants_detect_soc_out_of_bounds():
         building.electrical_storage._StorageDevice__soc[t] = 1.2
 
         with pytest.raises(AssertionError, match="SOC out of bounds"):
-            env._physics_invariant_service.assert_step_invariants(t)
+            physics_invariant_service(env).assert_step_invariants(t)
     finally:
         env.close()
 
@@ -104,7 +105,7 @@ def test_physics_invariants_detect_charger_power_limit_violation():
         charger._Charger__electricity_consumption[t] = 1.0e6
 
         with pytest.raises(AssertionError, match="Charger power bound exceeded"):
-            env._physics_invariant_service.assert_step_invariants(t)
+            physics_invariant_service(env).assert_step_invariants(t)
     finally:
         env.close()
 

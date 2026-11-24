@@ -26,6 +26,7 @@ from citylearn.reward_function import MultiBuildingRewardFunction, RewardFunctio
 from citylearn.utilities import parse_bool
 from citylearn.internal import grid_availability, loading_inputs, loading_components
 from citylearn.internal.physics_version import resolve_physics_version
+from citylearn.internal.baseline import BaselineEVChargingSource
 
 LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +66,7 @@ class CityLearnLoadingService:
         self._dynamic_rejoining_members: set = set()
         self._dynamic_dataset_rows: Optional[int] = None
         self._timeseries_row_counts: Dict[str, int] = {}
+        self._charger_soc_unit_cache: Dict[str, Dict[str, str]] = {}
         self._shared_timeseries_cache: Dict[Tuple[Any, ...], Any] = {}
 
     @staticmethod
@@ -530,6 +532,8 @@ class CityLearnLoadingService:
         building._declared_inactive_actions = set(inactive_actions)
         # Before the devices are configured: autosizing depends on the physics version.
         building.physics_version = getattr(self.env, 'physics_version', schema.get('physics_version'))
+        building.baseline_version = getattr(self.env, 'baseline_version', schema.get('baseline_version'))
+        building._baseline_ev_charging_source = BaselineEVChargingSource(self.env)
         loading_components.configure_devices(
             building, building_name, building_type, building_schema, schema, index, kwargs,
             pv_sizing_data, battery_sizing_data,
@@ -1446,6 +1450,48 @@ class CityLearnLoadingService:
             with pd.option_context('future.no_silent_downcasting', True):
                 aligned[column] = aligned[column].ffill().bfill()
         return aligned.reset_index(drop=True)
+
+    def _charger_soc_units(self, filepath: Union[str, os.PathLike]) -> Dict[str, str]:
+        """SOC unit of each SOC column of a charger file, decided from all its rows, cached by path."""
+
+        from citylearn.data import ChargerSimulation
+
+        key = os.path.abspath(str(filepath))
+
+        if key not in self._charger_soc_unit_cache:
+            columns = ChargerSimulation._SOC_COLUMNS
+
+            if self._file_format(filepath) == 'parquet':
+                import pyarrow.parquet as pq
+
+                names = set(pq.ParquetFile(filepath).schema_arrow.names)
+                dataframe = pq.read_table(filepath, columns=[c for c in columns if c in names]).to_pandas()
+            else:
+                dataframe = pd.read_csv(filepath, usecols=lambda c: c in columns)
+
+            units = {
+                c: ChargerSimulation._soc_series_unit(dataframe[c].to_numpy()) for c in columns if c in dataframe.columns
+            }
+
+            for column, unit in units.items():
+                if unit != 'percent':
+                    continue
+
+                fractions = ChargerSimulation._soc_fraction_values_in_percent(dataframe[column].to_numpy())
+
+                if fractions.size > 0:
+                    warnings.warn(
+                        f"Column {column!r} of {filepath} is read as percent because it has values above 1, "
+                        f"but {fractions.size} of its values lie between 0 and 1 (e.g. {fractions[0]:g}), "
+                        f"which become {fractions[0] / 100.0:g}. If the column holds fractions, fix the values "
+                        "above 1 or set the charger's soc_unit to 'fraction'.",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+
+            self._charger_soc_unit_cache[key] = units
+
+        return self._charger_soc_unit_cache[key]
 
     def _timeseries_row_count(self, filepath: Union[str, os.PathLike]) -> int:
         """Number of data rows in a CSV or Parquet time series file, cached by path."""

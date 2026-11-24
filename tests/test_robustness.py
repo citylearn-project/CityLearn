@@ -8,6 +8,7 @@ from typing import Iterable, Mapping
 import numpy as np
 import pandas as pd
 import pytest
+from private_access import baseline_service, robustness_service, runtime_service
 
 pytest.importorskip("gymnasium")
 
@@ -173,7 +174,7 @@ def test_robustness_disabled_preserves_default_observations_and_rewards(tmp_path
         _, baseline_reward, *_ = baseline.step(_zero_actions(baseline))
         _, robust_reward, *_ = robust.step(_zero_actions(robust))
         assert np.allclose(np.asarray(baseline_reward), np.asarray(robust_reward))
-        assert robust._robustness_service.history == {}
+        assert robustness_service(robust).history == {}
     finally:
         baseline.close()
         robust.close()
@@ -187,7 +188,7 @@ def test_robustness_events_file_supports_csv_and_parquet(tmp_path: Path, event_f
 
     try:
         obs, _ = env.reset(seed=0)
-        assert len(env._robustness_service.events) == 1
+        assert len(robustness_service(env).events) == 1
         assert _flat_value(env, obs, "non_shiftable_load") == pytest.approx(-1234.0)
     finally:
         env.close()
@@ -237,7 +238,7 @@ def test_robustness_modules_can_be_disabled_individually(tmp_path: Path):
         assert _flat_value(env, obs, "non_shiftable_load") == pytest.approx(
             _flat_value(baseline, baseline_obs, "non_shiftable_load")
         )
-        assert env._robustness_service.history == {}
+        assert robustness_service(env).history == {}
     finally:
         env.close()
         baseline.close()
@@ -501,14 +502,14 @@ def test_action_execution_capture_is_entity_only_and_reuses_nominal_snapshot(
         random_seed=0,
     )
     flat_calls = 0
-    flat_capture = flat._runtime_service._entity_action_records
+    flat_capture = runtime_service(flat)._entity_action_records
 
     def count_flat(actions):
         nonlocal flat_calls
         flat_calls += 1
         return flat_capture(actions)
 
-    monkeypatch.setattr(flat._runtime_service, "_entity_action_records", count_flat)
+    monkeypatch.setattr(runtime_service(flat), "_entity_action_records", count_flat)
     try:
         flat.reset(seed=0)
         flat.step(_zero_actions(flat))
@@ -530,14 +531,14 @@ def test_action_execution_capture_is_entity_only_and_reuses_nominal_snapshot(
         random_seed=0,
     )
     entity_calls = 0
-    entity_capture = entity._runtime_service._entity_action_records
+    entity_capture = runtime_service(entity)._entity_action_records
 
     def count_entity(actions):
         nonlocal entity_calls
         entity_calls += 1
         return entity_capture(actions)
 
-    monkeypatch.setattr(entity._runtime_service, "_entity_action_records", count_entity)
+    monkeypatch.setattr(runtime_service(entity), "_entity_action_records", count_entity)
     try:
         entity.reset(seed=0)
         _, _, _, _, info = entity.step(_zero_actions(entity))
@@ -575,7 +576,7 @@ def test_action_channel_dropout_bias_and_clip(tmp_path: Path, mode: str, kwargs:
     try:
         env.reset(seed=0)
         parsed = [{"electrical_storage_action": input_value}]
-        applied = env._robustness_service.apply_actions(parsed)
+        applied = robustness_service(env).apply_actions(parsed)
         assert applied[0]["electrical_storage_action"] == pytest.approx(expected)
         assert parsed[0]["electrical_storage_action"] == pytest.approx(input_value)
     finally:
@@ -617,8 +618,8 @@ def test_action_channel_noise_stuck_and_delay(tmp_path: Path):
 
     try:
         noise_env.reset(seed=0)
-        first = noise_env._robustness_service.apply_actions([{"electrical_storage_action": 0.2}])[0]["electrical_storage_action"]
-        second = noise_env._robustness_service.apply_actions([{"electrical_storage_action": 0.2}])[0]["electrical_storage_action"]
+        first = robustness_service(noise_env).apply_actions([{"electrical_storage_action": 0.2}])[0]["electrical_storage_action"]
+        second = robustness_service(noise_env).apply_actions([{"electrical_storage_action": 0.2}])[0]["electrical_storage_action"]
         assert first == pytest.approx(second)
         assert first != pytest.approx(0.2)
 
@@ -659,7 +660,7 @@ def test_asset_unavailable_telemetry_and_control_without_dynamic_topology(tmp_pa
         assert np.allclose(obs["tables"]["storage"], -777.0)
         env.step(_storage_action(env, 1.0))
         assert env.buildings[0].electrical_storage_electricity_consumption[0] == pytest.approx(0.0)
-        counts = env._robustness_service.history[0]
+        counts = robustness_service(env).history[0]
         assert len(counts["asset"]) == 1
         assert len(counts["dropout"]) >= 1
         kpis = env.evaluate_v2(include_business_as_usual=False)
@@ -698,7 +699,7 @@ def test_business_as_usual_reference_accepts_entity_only_targets_with_static_top
         env.reset(seed=0)
         while not env.terminated:
             env.step(_zero_actions(env))
-        sidecar = env._business_as_usual_baseline_service._new_sidecar_env()
+        sidecar = baseline_service(env)._new_sidecar_env()
         try:
             assert sidecar.interface == "entity"
         finally:
@@ -800,7 +801,7 @@ def test_robustness_history_is_sparse_for_long_runs(tmp_path: Path):
         while int(env.time_step) < 7:
             env.step(_zero_actions(env))
 
-        assert list(env._robustness_service.history.keys()) == [5]
+        assert list(robustness_service(env).history.keys()) == [5]
     finally:
         env.close()
 
@@ -816,7 +817,7 @@ def test_packaged_2022_robustness_dataset_loads_in_flat_and_entity(interface: st
 
     try:
         observations, _ = env.reset(seed=0)
-        assert env._robustness_service.enabled is True
+        assert robustness_service(env).enabled is True
         assert len(env.electric_vehicles) == 0
         assert env.topology_mode == "static"
         if interface == "entity":

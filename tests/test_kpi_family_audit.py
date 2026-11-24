@@ -486,7 +486,7 @@ def test_executed_active_population_and_manifest_survive_reentry(tmp_path):
         env.reset()
         while not env.terminated:
             env.step(commands(env, [0.0, 0.0]))
-        r = env._kpi_service.family_audit()
+        r = env.get_kpi_family_audit()
         assert r["buildings"]["Building_1"]["executed_intervals_count"] == 5
         assert r["buildings"]["Building_2"]["executed_intervals_count"] == 7
         assert r["district"]["executed_intervals_count"] == 12

@@ -150,8 +150,8 @@ a step. With dynamic topology a member counts only while it is active.
 | Variant | Meaning |
 |---|---|
 | `control` | The run being evaluated. |
-| `baseline` | The conventional counterfactual of the same run: the members without storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
-| `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). |
+| `baseline` | The conventional counterfactual of the same run: the members without their battery and thermal storage (and without partial-load control for buildings with LSTM dynamics), PV retained, read from the simulator's own series. The EV charging of the run is replaced by that of the native BAU with the `'full'` target (charged on arrival until full, no V2G), the same for every controller; the deferrable appliances and the HVAC stay as the controller ran them. `baseline_version=1` adds no EV charging back, as in CityLearn 3.6.0. `evaluate_v2(baseline_condition=...)` selects another condition. At power-outage steps its net, cost and emission series are zero, like those of the controlled run. |
+| `business_as_usual` | The native business-as-usual rollout of the same scenario and window (see [Baselines](baselines.md)). Its HVAC requests zero up to `baseline_version=2`; with `baseline_version=3` it delivers the dataset heating and cooling demand ([HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version)). |
 | `delta` | `control - baseline`. |
 | `delta_to_business_as_usual` | `control - business_as_usual`. |
 
@@ -472,6 +472,7 @@ District and portfolio:
 - Portfolio shares are pooled (#312), which gives the share of the summed totals:
   - `import_share` and `local_share_of_demand` are weighted by local import plus grid import after local;
   - `local_share_of_export` by local export plus grid export after local.
+- Portfolio with and without markets (#373): when some communities have a community market and others do not, a community without a market enters the portfolio market rows with its plain grid settlement. It trades nothing locally; its grid import and export after local are its members' own grid import and export, the sums of their positive and negative nets; its settled and counterfactual costs are its `cost_total_control_eur`, because without a market the members pay the grid; its savings and operator balance are 0. Its shares therefore count as 0, pooled by its grid flows. The portfolio settled cost then equals the portfolio `cost_total_control_eur`, as each market community's control cost is its settled cost, and the shares describe the whole portfolio. The community's own district rows keep their zeros. When no community has a market, the portfolio rows are the sums of those zeros.
 
 Which KPI to use:
 - For the share of demand covered locally, use `district_solar_self_consumption_community_market_import_share_ratio`.
@@ -480,7 +481,7 @@ Which KPI to use:
 - None of these shares is the solar self-consumption ratio of the `solar_self_consumption` family.
 
 Known limits:
-- The rows exist when the market is disabled: zeros are not a measurement of local trading.
+- The rows exist when the market is disabled: zeros are not a measurement of local trading. In a portfolio that mixes communities with and without a market, those zeros are replaced by the plain grid settlement (see above).
 - The name `local_share_of_demand` says demand, but its denominator is gross member import.
 - Shares and the operator balance have no business-as-usual variant.
 
@@ -567,7 +568,11 @@ A departure is recorded at step `t` when an EV is connected at `t` and any of th
 - at `t + 1` the charger is free;
 - the session id or the EV id changes;
 - the schedule has no session ids and the countdown to departure resets: it is at most 1 at `t` and increases at `t + 1`;
-- `t` is the last step and the countdown is in [0, 1].
+- `t` is the last step of the member's window (the last control step of the episode, or the step before the member leaves) and the countdown is in [0, 1], or in [0, 2] when another `episode_split_boundary='disjoint'` split of the simulation follows the episode. These are the sessions that leave before the next control step, which comes one row after the last step, or two rows after it before a following `'disjoint'` split, whose row in between is never controlled. The last window of a simulation, a single episode, rolling and explicit-list splits, and a window that ends before its episode does all use [0, 1], so a run that is not split does not depend on the boundary. The last step scores them with the SOC the controller reached. With `evaluate_v2()` in the middle of an episode, the window ends at the current step.
+
+Each session is counted once over consecutive episodes. A departure at step 0 of an episode is not counted when the same session was already connected on the row before step 0: the same session or EV id there, and, without ids, no countdown reset from [0, 1]. Between consecutive episodes that row is the last control step of the episode before under `'shared'`, and the row between the two episodes under `'disjoint'`, so the episode before has already counted the session at its last step, and step 0 would only score the SOC set at reset. The rule looks only at that row, so it also applies with `rolling_episode_split` or an explicit list of `episode_time_steps`, where the row before step 0 may belong to no simulated episode and the session is then not counted. The first episode of a simulation has no row before step 0.
+
+With `ev_soc_carryover=True`, an episode that continues the previous one in time starts each EV from the SOC it reached at the end of that episode, so a session connected across the boundary keeps its charge and is scored where it really leaves. Which splits carry depends on the split mode. Sequential splits carry. Random and rolling splits never carry, even when a random pick happens to follow the previous episode, and the env warns once that the setting has no effect there. An explicit list of `episode_time_steps` carries only when a window starts exactly on the previous window's last row under `'shared'`, or on the row after it under `'disjoint'`. So under the default `'shared'` a list without a gap, such as `[(1900, 1949), (1950, 1999)]`, does not carry, while `[(1900, 1949), (1949, 1999)]` does; under `'disjoint'` the list without a gap carries. Only the session connected across the boundary takes the carried SOC in place of the schedule's, at the new episode's first step. Every later arrival in the episode, the same EV arriving again included, takes the arrival SOC of the file. An arrival with no arrival SOC in the file keeps the EV's simulated SOC, as in one run, and at step 0 of a carried episode that is the carried SOC. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still start every episode from their initial state. The setting is a trade-off. Off, every episode is independent of the ones before it, but a session that crosses a boundary loses the charge it received. On, that charge is kept, but an episode that continues the previous one depends on what the previous controller did, so its KPIs are no longer those of an independent episode. The two rules above change accordingly. When the next episode starts on this episode's last row (consecutive `'shared'` splits), the last step only counts a countdown of 0, and a session still connected on that row is counted by the next episode. When it starts on the row after (consecutive `'disjoint'` splits), the last step counts a countdown in [0, 1]. Step 0 of an episode that started from carried SOC does not skip a session connected on the row before it. The carried SOC, or the simulated SOC of a step-0 arrival without a file SOC, is the session's start SOC in the new episode for every EV KPI: met departures, feasibility and the connected SOC gain of the energy accounting all start from it, so the charge of the previous episode is not counted again. Summed over the episodes, the departures, the met departures and the feasibility classes then match one run, except for a session whose arrival SOC one run cannot resolve and reports as unknown, which the split resolves from the carried SOC. The connected SOC gain is each episode's own gain: a session that charges before the boundary and leaves after it has that charge in neither episode, so the sum over the episodes is lower than in one run (2,412 against 6,120 kWh for 30 × 24 `'shared'` splits on the dataset below) and is not comparable with it. Under `'shared'` a session reaches the boundary row with the same SOC as in one run; the controller can still act differently at step 0 than one run does at that row, so energy totals can differ slightly. Under `'disjoint'` the row between two episodes is never controlled, so a session connected across it reaches step 0 up to one charging step behind one run (between 0 and 0.086 SOC on this dataset). On `citylearn_challenge_2022_phase_all_plus_evs` with the BAU from step 1900, the met departures of 2 × 100 and 30 × 24 `'disjoint'` splits are 67 and 221, the same as one run, while without carry-over they are 67 and 163.
 
 The target SOC is read at `t`. A target in (1, 100] is taken as a percentage and divided by 100. A target outside [0, 1] after that, or a missing one, is invalid.
 
@@ -1606,7 +1611,8 @@ The KPI definition version (`kpi_definition_version` in the
 `energy_accounting` metadata of `evaluate_v2()`) is `2.0.0`. These rows of
 `evaluate_v2()` changed definition. Where a 3.6.0 value may have been used in
 published comparisons, it is kept under a distinct name, and the legacy
-`evaluate()` rows keep their own 3.6.0 definitions.
+`evaluate()` rows keep their own 3.6.0 definitions, apart from the baseline of
+datasets with EV chargers (last row), which `baseline_version=1` restores.
 
 | KPI | New definition | 3.6.0 value kept as |
 |---|---|---|
@@ -1624,6 +1630,7 @@ published comparisons, it is kept under a distinct name, and the legacy
 | Portfolio EV departure rates and means, deferrable and escalator service levels, start delay and solar self-consumption (`MultiCommunityEnv`) | Pooled from their additive denominators. | none |
 | Portfolio community-market local shares, demand-response compliance and demand-response audit coverage ratios (`MultiCommunityEnv`, #285) | Pooled from local plus grid energy, valid requested energy, requested energy and active intervals. | none |
 | Portfolio stationary-battery equivalent full cycles and their BAU comparisons (`MultiCommunityEnv`, #330) | Total throughput over twice the total nominal capacity, with BAU delta and ratio derived from the two portfolio values. | none |
+| On datasets with EV chargers: every `*_baseline_*`, `*_delta_*` (not `*_delta_to_business_as_usual_*`) and `*_ratio_to_baseline_*` row, the equity KPIs built on them, and the whole legacy `evaluate()` table (#365) | The baseline charges the EVs as the native BAU with the `'full'` target does, instead of not charging them (`baseline_version=2`). | `baseline_version=1` |
 
 In the legacy rows, a load-factor window whose signed peak is not positive is
 now undefined; it used to give an infinite or negative penalty, which safe

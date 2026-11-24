@@ -20,6 +20,7 @@ import pytest
 from citylearn.base import EpisodeTracker
 from citylearn.citylearn import CityLearnEnv
 from citylearn.energy_model import HeatPump
+from private_access import ops_service
 
 ROOT = Path(__file__).resolve().parents[1]
 DATASETS = ROOT / 'data' / 'datasets'
@@ -146,7 +147,7 @@ def test_demand_observation_converts_storage_discharge_to_dataset_resolution():
         env.step(_action(env, dhw_storage=-1.0))
         assert building.dhw_storage.energy_balance[t] < 0.0
         assert building.energy_from_dhw_device[t] > 0.0
-        observed = building._ops_service.get_observations_data(observation_names=['dhw_demand'])['dhw_demand']
+        observed = ops_service(building).get_observations_data(observation_names=['dhw_demand'])['dhw_demand']
         # Device and tank together serve the dataset demand; both terms are dataset-resolution kWh.
         assert observed == pytest.approx(float(building.energy_simulation.dhw_demand[t]), rel=1.0e-5)
     finally:
@@ -168,7 +169,7 @@ def test_base_power_estimate_does_not_subtract_thermal_discharge_twice():
         expected_kw = sum(float(device.electricity_consumption[t]) for device in (
             building.cooling_device, building.heating_device, building.dhw_device, building.non_shiftable_load_device,
         )) + float(building.solar_generation[t])
-        estimate_kw, _ = building._ops_service._estimate_base_power_at_step(t)
+        estimate_kw, _ = ops_service(building)._estimate_base_power_at_step(t)
         assert estimate_kw == pytest.approx(expected_kw, abs=1.0e-4)
     finally:
         env.close()

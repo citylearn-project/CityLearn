@@ -232,7 +232,7 @@ class RLC(Agent):
         Returns
         -------
         encoders : List[List[Encoder]]
-            Encoder classes for observations ordered with respect to `active_observations`.
+            Encoder classes for observations ordered with respect to `observation_names`.
         """
 
         encoders = []

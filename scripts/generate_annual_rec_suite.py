@@ -70,6 +70,22 @@ PORDATA_CONSUMPTION_URL = (
 )
 
 
+def community_market_config(member_ids: Iterable[str]) -> Dict[str, object]:
+    """The `community_market` section of a generated schema; CityLearn validates it at load (#366)."""
+    return {
+        "enabled": True,
+        "local_price_ratio_to_grid_import": 0.8,
+        "intra_community_sell_ratio": 0.8,
+        "grid_export_price": 0.0,
+        "import_member_weights": {member_id: 1.0 for member_id in member_ids},
+        "counterfactual": "grid_only",
+        "kpis": {
+            "community_local_traded_enabled": True,
+            "community_self_consumption_enabled": True,
+        },
+    }
+
+
 @dataclass(frozen=True)
 class FamilyConfig:
     key: str
@@ -1838,18 +1854,7 @@ def build_schema(
             "price_unpublished_fallback": "daily_persistence",
             "price_horizon_steps": [4, 24, 96],
         },
-        "community_market": {
-            "enabled": True,
-            "local_price_ratio_to_grid_import": 0.8,
-            "intra_community_sell_ratio": 0.8,
-            "grid_export_price": 0.0,
-            "import_member_weights": {member_id: 1.0 for member_id in member_by_id},
-            "counterfactual": "grid_only",
-            "kpis": {
-                "community_local_traded_enabled": True,
-                "community_self_consumption_enabled": True,
-            },
-        },
+        "community_market": community_market_config(member_by_id),
         "electric_vehicles_def": ev_definitions,
         "buildings": buildings,
         "render_file_format": "parquet",
