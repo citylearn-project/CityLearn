@@ -175,6 +175,11 @@ Every ratio uses safe division:
 - **exception:** each `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio`
   is undefined when its own two totals are zero, even when cycles were due. For
   example, the missed-cycle ratio is undefined when neither run missed a cycle.
+- **exception:** the cost and emissions ratios
+  (`*_cost_ratio_to_*_total_ratio`, `*_emissions_ratio_to_*_total_ratio`) are
+  undefined when both totals are zero. Nothing was priced or emitted, as on a
+  dataset with zero carbon intensity, so there is nothing to compare. The
+  `*_building_mean_ratio` variants keep their 3.6.0 value.
 
 Ratios stay lower-is-better when the reference total is negative. Net exchange
 and cost totals can be negative, for a net exporter or after community-market
@@ -529,9 +534,10 @@ s      = battery SOC at the departure step (fraction 0-1)
 s*     = target SOC
 tol_s  = ev_departure_service_tolerance   (default 0.05, >= 0)
 tol_w  = ev_departure_within_tolerance    (default 0.05, >= 0)
+tol_t  = min(0.005, tol_s)
 eps    = 1e-6
 
-met              : s* - s <= eps
+met              : s* - s <= tol_t + eps
 min_acceptable   : s + tol_s + eps >= s*
 within_tolerance : |s - s*| <= tol_w + eps
 
@@ -545,6 +551,11 @@ abs_error = |s - s*|
 - **Means:** the `*_mean_ratio` rows are the means of deficit, shortfall, surplus and absolute error over the same departures, as SOC fractions.
 - **Undefined values:** both rates and means are undefined without departures.
 
+`tol_t` is the service tolerance of the EV target, 0.005 SOC (0.5 %), held by the constant
+`EV_SERVICE_SOC_TOLERANCE` in `citylearn.electric_vehicle`. The rule-based baselines stop charging 0.001
+below the target, so their cars count as meeting it. It is capped by `tol_s` so that met never exceeds
+min_acceptable. The deficit, surplus, absolute-error and shortfall means stay exact.
+
 The counts are ordered: met ≤ min_acceptable ≤ departures, and within_tolerance ≤ departures. Met and within_tolerance are not ordered relative to each other: an EV charged above the band is met but not within tolerance.
 
 ### Legacy feasibility
@@ -552,7 +563,7 @@ The counts are ordered: met ≤ min_acceptable ≤ departures, and within_tolera
 The `ev_events_departure_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count` rows say whether each threshold could be reached. A threshold is feasible when an isolated replay reaches it. The thresholds are:
 
 ```text
-threshold_target         = s*
+threshold_target         = max(s* - tol_t, 0)
 threshold_min_acceptable = max(s* - tol_s, 0)
 threshold_within         = max(s* - tol_w, 0)
 feasible                 : s_replay + eps >= threshold
@@ -635,7 +646,7 @@ The legacy feasible rates count departures with missing data as feasible, and th
 The audit reports departure service with an explicit population, and it separates feasibility that could not be judged from feasibility that failed. Every member emits the rows. A member without departures reports 0 counts and undefined ratios. It uses the departure detection, target normalisation, tolerances and met tests of [Electric vehicles](kpis_reference.md#electric-vehicles), applied to three thresholds:
 
 ```text
-target           : tolerance 0
+target           : tolerance tol_t
 min_acceptable   : tolerance tol_s
 within_tolerance : tolerance tol_w   (met test is symmetric: |s - s*| <= tol_w + eps)
 ```
@@ -936,6 +947,15 @@ hot_t       = evaluated_t and T_t > T_cool,t + band_t
 
 Only occupied steps are evaluated. A step is comfortable when
 `T_heat - band <= T <= T_cool + band`.
+
+**Buildings without set points.** When a building's dataset has no
+`indoor_dry_bulb_temperature_cooling_set_point` or no
+`indoor_dry_bulb_temperature_heating_set_point` column, the simulation and the observations use a set point
+of 0 °C. The comfort KPIs do not judge comfort against that default: they read `T_heat` and `T_cool` as
+undefined, so no step of the building is evaluated. Every discomfort ratio, delta and outage ratio of the
+building is then undefined, in `evaluate_v2()`, `evaluate()` and the
+[thermal-service audit](kpis_reference.md#thermal-service-audit), and the district skips the building. The
+bundled `pt_rec_*` datasets have no set-point columns.
 
 **Discomfort ratios.**
 
@@ -1557,6 +1577,9 @@ datasets with EV chargers (last row), which `baseline_version=1` restores.
 | `*_deferrable_appliance_service_average_start_delay_hours` | Undefined when no cycle completed (was 0). | none |
 | Ratios with an undefined control or reference | Undefined (were read as 0, or 1 when both were undefined). | none |
 | `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio` with both totals zero | Undefined (was 1). | none |
+| `*_ev_performance_departure_success_ratio`, `*_ev_performance_departure_success_feasible_ratio`, `*_ev_events_departure_target_{feasible,infeasible}_count`, `*_ev_departure_audit_target_*` | A departure meets its target within 0.005 SOC (was 1e-6), so a car that the rule-based baselines stop 0.001 short of its target counts as served. | none |
+| Comfort rows (`*_comfort_resilience_*`, `*_thermal_service_audit_*` discomfort rows, legacy `discomfort_*` and `one_minus_thermal_resilience_proportion`) of a building without set-point columns | Undefined (was judged against a 0 °C cooling set point). | none |
+| `*_{cost,emissions}_ratio_to_{baseline,business_as_usual}_total_ratio` with both totals zero, and their portfolio values | Undefined (was 1). | none |
 | `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Allocated from the district settlement. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostic) |
 | Portfolio EV departure rates and means, deferrable and escalator service levels, start delay and solar self-consumption (`MultiCommunityEnv`) | Pooled from their additive denominators. | none |
 | Portfolio community-market local shares, demand-response compliance and demand-response audit coverage ratios (`MultiCommunityEnv`, #285) | Pooled from local plus grid energy, valid requested energy, requested energy and active intervals. | none |

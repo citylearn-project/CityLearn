@@ -178,6 +178,11 @@ Todos os ratios usam divisão segura:
   é indefinido quando os seus dois totais são zero, mesmo que tenha havido ciclos
   devidos. Por exemplo, o ratio de ciclos falhados é indefinido quando nenhuma das
   execuções falhou um ciclo.
+- **exceção:** os ratios de custo e de emissões
+  (`*_cost_ratio_to_*_total_ratio`, `*_emissions_ratio_to_*_total_ratio`) são
+  indefinidos quando os dois totais são zero. Nada foi faturado nem emitido, como
+  num dataset com intensidade carbónica nula, pelo que não há nada a comparar. As
+  variantes `*_building_mean_ratio` mantêm o valor da 3.6.0.
 
 Os ratios mantêm-se lower-is-better quando o total de referência é negativo. Os
 totais de net exchange e de custo podem ser negativos, para um exportador
@@ -533,9 +538,10 @@ s      = SOC da bateria no passo de partida (fração 0-1)
 s*     = SOC alvo
 tol_s  = ev_departure_service_tolerance   (por omissão 0,05, >= 0)
 tol_w  = ev_departure_within_tolerance    (por omissão 0,05, >= 0)
+tol_t  = min(0,005, tol_s)
 eps    = 1e-6
 
-met              : s* - s <= eps
+met              : s* - s <= tol_t + eps
 min_acceptable   : s + tol_s + eps >= s*
 within_tolerance : |s - s*| <= tol_w + eps
 
@@ -549,6 +555,12 @@ abs_error = |s - s*|
 - **Médias:** as linhas `*_mean_ratio` são as médias do défice, da insuficiência, do excesso e do erro absoluto sobre as mesmas partidas, em fração de SOC.
 - **Valores indefinidos:** as taxas e as médias ficam indefinidas sem partidas.
 
+`tol_t` é a tolerância de serviço do alvo do VE, 0,005 de SOC (0,5 %), guardada na constante
+`EV_SERVICE_SOC_TOLERANCE` em `citylearn.electric_vehicle`. As baselines baseadas em regras param de
+carregar 0,001 abaixo do alvo, pelo que os seus carros contam como tendo cumprido o alvo. Está limitada por
+`tol_s`, para que met nunca exceda min_acceptable. As médias do défice, do excesso, do erro
+absoluto e da insuficiência continuam exatas.
+
 As contagens estão ordenadas: met ≤ min_acceptable ≤ partidas, e within_tolerance ≤ partidas. Met e within_tolerance não estão ordenadas entre si: um VE carregado acima da banda cumpre o alvo mas fica fora da tolerância.
 
 ### Viabilidade antiga
@@ -556,7 +568,7 @@ As contagens estão ordenadas: met ≤ min_acceptable ≤ partidas, e within_tol
 As linhas `ev_events_departure_{target,min_acceptable,within_tolerance}_{feasible,infeasible}_count` indicam se cada limiar podia ser atingido. Um limiar é viável quando uma simulação isolada o atinge. Os limiares são:
 
 ```text
-threshold_target         = s*
+threshold_target         = max(s* - tol_t, 0)
 threshold_min_acceptable = max(s* - tol_s, 0)
 threshold_within         = max(s* - tol_w, 0)
 viável                   : s_simulado + eps >= limiar
@@ -639,7 +651,7 @@ As taxas viáveis antigas contam como viáveis as partidas com dados em falta e 
 A auditoria reporta o serviço à partida com uma população explícita, e separa a viabilidade que não pôde ser avaliada da viabilidade que falhou. Todos os membros emitem as linhas. Um membro sem partidas reporta contagens 0 e ratios indefinidos. Usa a deteção de partidas, a normalização do alvo, as tolerâncias e os testes de cumprimento de [Veículos elétricos](#veículos-elétricos), aplicados a três limiares:
 
 ```text
-target           : tolerância 0
+target           : tolerância tol_t
 min_acceptable   : tolerância tol_s
 within_tolerance : tolerância tol_w   (teste simétrico: |s - s*| <= tol_w + eps)
 ```
@@ -940,6 +952,15 @@ quente_t   = avaliado_t e T_t > T_cool,t + banda_t
 
 Só os passos ocupados são avaliados. Um passo é confortável quando
 `T_heat - banda <= T <= T_cool + banda`.
+
+**Edifícios sem set points.** Quando o dataset de um edifício não tem a coluna
+`indoor_dry_bulb_temperature_cooling_set_point` ou a coluna
+`indoor_dry_bulb_temperature_heating_set_point`, a simulação e as observações usam um set point de 0 °C.
+Os KPIs de conforto não avaliam o conforto contra esse valor por omissão: leem `T_heat` e `T_cool` como
+indefinidos, pelo que nenhum passo do edifício é avaliado. Todas as razões, deltas e razões de falha de
+energia do desconforto desse edifício ficam então indefinidas, no `evaluate_v2()`, no `evaluate()` e na
+auditoria do serviço térmico, e o distrito ignora o
+edifício. Os datasets `pt_rec_*` incluídos não têm colunas de set points.
 
 **Razões de desconforto.**
 
@@ -1563,6 +1584,9 @@ A versao das definicoes de KPIs (`kpi_definition_version` nos metadados `energy_
 | `*_deferrable_appliance_service_average_start_delay_hours` | Indefinido quando nenhum ciclo foi completado (era 0). | nenhum |
 | Ratios com control ou referencia indefinidos | Indefinidos (eram lidos como 0, ou 1 quando ambos eram indefinidos). | nenhum |
 | `*_deferrable_appliance_ratio_to_business_as_usual_*_ratio` com os dois totais a zero | Indefinido (era 1). | nenhum |
+| `*_ev_performance_departure_success_ratio`, `*_ev_performance_departure_success_feasible_ratio`, `*_ev_events_departure_target_{feasible,infeasible}_count`, `*_ev_departure_audit_target_*` | Uma partida cumpre o alvo a menos de 0,005 de SOC (era 1e-6), pelo que um carro que as baselines baseadas em regras param 0,001 abaixo do alvo conta como servido. | nenhum |
+| Linhas de conforto (`*_comfort_resilience_*`, linhas de desconforto `*_thermal_service_audit_*`, `discomfort_*` e `one_minus_thermal_resilience_proportion` antigos) de um edifício sem colunas de set points | Indefinidas (eram avaliadas contra um set point de arrefecimento de 0 °C). | nenhum |
+| `*_{cost,emissions}_ratio_to_{baseline,business_as_usual}_total_ratio` com os dois totais a zero, e os seus valores de portfólio | Indefinido (era 1). | nenhum |
 | `building_demand_response_{shortfall_total_kwh,compliance_ratio}` | Alocados a partir do settlement district. | `building_demand_response_uncapped_contribution_total_kwh` (diagnostico) |
 | Taxas e medias EV de departure, service levels dos deferrable appliances e das escadas rolantes, start delay e self-consumption solar do portefólio (`MultiCommunityEnv`) | Agregadas a partir dos seus denominadores aditivos. | nenhum |
 | Shares locais do mercado comunitário, compliance de demand response e ratios de cobertura das auditorias de demand response do portefólio (`MultiCommunityEnv`, #285) | Agregados a partir da energia local mais a da rede, da energia pedida válida, da energia pedida e dos intervalos ativos. | nenhum |
