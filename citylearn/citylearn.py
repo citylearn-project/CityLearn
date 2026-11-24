@@ -1212,6 +1212,61 @@ class CityLearnEnv(Environment, Env):
 
         return None if self._net_electricity_consumption_history is None else self._net_electricity_consumption_history.to_list()
 
+    def _sum_building_series(self, attribute: str) -> np.ndarray:
+        """Sum a building series over the members of the district at each step.
+
+        In dynamic topology every member that has been active contributes, masked to the steps at which
+        it belonged to the district, as in `net_electricity_consumption` and `_sum_counterfactual_series`:
+        a member that leaves keeps its past contribution, and a member that joins adds nothing before it
+        joined, so it adds zero at the steps where it was not a member. A step is NaN only if no member
+        has a value there.
+        """
+
+        if self.topology_mode == 'dynamic' and getattr(self, '_topology_service', None) is not None:
+            population = ActivePopulation(self)
+            series = []
+
+            for building in self._kpi_service._get_kpi_buildings():
+                values = np.asarray(getattr(building, attribute)).reshape(-1)
+                if values.dtype.kind not in 'fc':
+                    values = values.astype('float64')
+                values = values.copy()
+                values[~population.mask(building.name, len(values), energy=True)] = 0.0
+                series.append(values)
+
+        elif len(self.buildings) == 0:
+            return np.array([], dtype='float64')
+
+        else:
+            series = [np.asarray(getattr(b, attribute)).reshape(-1) for b in self.buildings]
+
+        if len(series) == 0:
+            return np.array([], dtype='float64')
+
+        length = max((len(values) for values in series), default=0)
+        total = np.zeros(length, dtype='float64')
+        valid = np.zeros(length, dtype=bool)
+
+        for values in series:
+            end = len(values)
+            if end == 0:
+                continue
+
+            try:
+                mask = ~np.isnan(values)
+            except TypeError:
+                values = np.asarray(values, dtype='float64').reshape(-1)
+                mask = ~np.isnan(values)
+            if not np.any(mask):
+                continue
+
+            target = total[:end]
+            target[mask] = target[mask] + values[mask]
+            valid[:end] = valid[:end] | mask
+
+        total[~valid] = np.nan
+        return total
+
     @property
     def cooling_electricity_consumption(self) -> np.ndarray:
         """Summed `Building.cooling_electricity_consumption` time series, in [kWh]."""
