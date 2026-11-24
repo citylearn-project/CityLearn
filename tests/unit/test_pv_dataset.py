@@ -94,3 +94,11 @@ def test_cli_generate(dataset, tmp_path, capsys):
     out = tmp_path / 'cli'
     assert pvd.main(['generate', str(dataset), '--latitude', '30', '--longitude', '-90', '--out', str(out), '--forecast', 'none']) == 0
     assert 'solar_generation' in pd.read_csv(out / 'Building_1.csv')
+
+
+def test_cli_utc_offset_shifts_output(dataset, tmp_path):
+    a, b = tmp_path / 'a', tmp_path / 'b'
+    base = ['generate', str(dataset), '--latitude', '30', '--longitude', '-90', '--forecast', 'none']
+    assert pvd.main(base + ['--out', str(a), '--utc-offset-hours', '-6']) == 0
+    assert pvd.main(base + ['--out', str(b), '--utc-offset-hours', '-5']) == 0
+    assert not np.allclose(pd.read_csv(a / 'Building_1.csv')['solar_generation'], pd.read_csv(b / 'Building_1.csv')['solar_generation'])

@@ -342,6 +342,7 @@ def _parser() -> argparse.ArgumentParser:
         s.add_argument('--azimuth', type=float, default=180.0, help='degrees from north, 180 = south')
         s.add_argument('--loss-percent', type=float, default=14.0)
         s.add_argument('--year', type=int, default=2017)
+        s.add_argument('--utc-offset-hours', type=float, default=None, help='standard-time offset of the dataset (Austin: -6); default longitude/15, the mean solar time')
         s.add_argument('--building', default='Building_1', help='validate only')
 
     g = sub.choices['generate']
@@ -359,12 +360,12 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     spec = PVSpec(kwp=a.kwp, tilt=a.tilt, azimuth=a.azimuth, loss_percent=a.loss_percent)
 
     if a.command == 'validate':
-        print(json.dumps(validate(a.dataset_dir, a.latitude, a.longitude, spec, building=a.building, year=a.year), indent=2))
+        print(json.dumps(validate(a.dataset_dir, a.latitude, a.longitude, spec, building=a.building, year=a.year, utc_offset_hours=a.utc_offset_hours), indent=2))
         return 0
 
     params = json.loads(a.forecast_params.read_text()) if a.forecast_params else None
     prov = generate(a.dataset_dir, a.out, a.latitude, a.longitude, {'*': spec}, year=a.year, start=a.start,
-                    forecast=a.forecast, forecast_params=params, seed=a.seed, tmy=a.pvgis_tmy)
+                    forecast=a.forecast, forecast_params=params, seed=a.seed, tmy=a.pvgis_tmy, utc_offset_hours=a.utc_offset_hours)
     print(json.dumps(prov, indent=2, default=str))
     return 0
 

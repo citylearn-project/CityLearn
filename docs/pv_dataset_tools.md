@@ -9,14 +9,14 @@ Install the optional dependency with `pip install citylearn[pvlib]`. No function
 ```console
 python -m citylearn.pv_dataset generate DATASET_DIR --out NEW_DIR \
     --latitude 30.27 --longitude -97.74 --tilt 25 --azimuth 180 --loss-percent 14 \
-    --forecast statistical --seed 0
+    --utc-offset-hours -6 --forecast statistical --seed 0
 ```
 
 The dataset is copied to `NEW_DIR`. Every `Building_*.csv` gets a new `solar_generation` and `weather.csv` gets new predicted irradiance columns. `pv_provenance.json` records the model, the location, the PV parameters, the forecast method and the seed. From Python, `generate(..., specs={'Building_1': PVSpec(tilt=20), '*': PVSpec()})` sets parameters per building.
 
 - **Unit.** `solar_generation` is the average AC power in W per kW of installed PV (CityLearn `per_kw` mode). The schema's `nominal_power` scales it, so `--kwp` does not change the file.
 - **Model.** pvlib `ModelChain.with_pvwatts` with fixed-tilt mounting, physical AOI loss, SAPM open-rack cell temperature, `gamma_pdc = -0.004 /K`, DC/AC ratio 1.2 and a scalar loss (default 14 %) applied to the AC output. Solar position uses the interval midpoint.
-- **Weather.** The dataset's `weather.csv` (`direct_solar_irradiance` is read as DNI, `diffuse_solar_irradiance` as DHI, `ghi = dhi + dni cos(zenith)`), or PVGIS TMY with `--pvgis-tmy`. CityLearn files carry no year or location: the timestamps come from `month` and `hour` (hourly files; `--start` for others) and the longitude gives the UTC offset.
+- **Weather.** The dataset's `weather.csv` (`direct_solar_irradiance` is read as DNI, `diffuse_solar_irradiance` as DHI, `ghi = dhi + dni cos(zenith)`), or PVGIS TMY with `--pvgis-tmy`. CityLearn files carry no year or location: the timestamps come from `month` and `hour` (hourly files; `--start` for others) and `--utc-offset-hours` gives the standard-time offset of the dataset (default `longitude / 15`, the mean solar time, which differs from the civil zone by up to about 1 h; set it explicitly).
 
 ## Forecast columns
 
@@ -28,7 +28,7 @@ The tool states in `pv_provenance.json` and on stdout which forecast ran.
 ## Validation
 
 ```console
-python -m citylearn.pv_dataset validate DATASET_DIR --latitude 30.27 --longitude -97.74 --tilt 20
+python -m citylearn.pv_dataset validate DATASET_DIR --latitude 30.27 --longitude -97.74 --tilt 20 --utc-offset-hours -6
 ```
 
-prints Pearson r, the energy ratio, nMBE and nRMSE of pvlib against the dataset's `solar_generation`. For `citylearn_challenge_2022_phase_all` `Building_1` (latitude and longitude of Austin, Texas assumed, tilt 20, UTC-6, hourly) r is 0.83 and the pvlib energy is 95 % of the dataset energy. The agreement is limited by the dataset: its `diffuse_solar_irradiance` reaches 1017 W/m2, which a diffuse component cannot, so its irradiance columns are not a clean pvlib input.
+prints Pearson r, the energy ratio, nMBE and nRMSE of pvlib against the dataset's `solar_generation`. For `citylearn_challenge_2022_phase_all` `Building_1` (latitude and longitude of Austin, Texas assumed, tilt 20, UTC-6, hourly) r is 0.82 and the pvlib energy is 95 % of the dataset energy. The agreement is limited by the dataset: its `diffuse_solar_irradiance` reaches 1017 W/m2, which a diffuse component cannot, so its irradiance columns are not a clean pvlib input.
