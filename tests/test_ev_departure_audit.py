@@ -257,19 +257,33 @@ def split_window(*, boundary='shared', start=2, states=(1., 1., 1., 0.), countdo
 
 
 @pytest.mark.parametrize('kwargs,expected', [
-    # Shared: the window before ends at row 1, where countdown 1 counted the session.
+    # The session was connected on the row before step 0, whatever its countdown there.
     (dict(), 0),
-    # Disjoint: it ends at row 0, where countdown 2 did not count it.
-    (dict(boundary='disjoint'), 1),
-    (dict(boundary='disjoint', countdowns=(1., 1., 0., -1.)), 0),
-    # A different session at the row before, or no row before the simulation start.
+    (dict(boundary='disjoint'), 0),
+    (dict(countdowns=(2., -1., 0., -1.)), 0),
+    (dict(boundary='disjoint', states=(0., 1., 1., 0.), countdowns=(-1., 1., 0., -1.)), 0),
+    # A different session at the row before, or a charger that was free there.
     (dict(ids=('A', 'A', 'B', None)), 1),
     (dict(session_ids=('s1', 's1', 's2', None)), 1),
     (dict(countdowns=(2., 0., 1., -1.)), 1),
-    (dict(countdowns=(2., -1., 0., -1.)), 1),
+    (dict(boundary='disjoint', states=(1., 0., 1., 0.), countdowns=(0., -1., 0., -1.)), 1),
 ])
 def test_departure_at_step_zero_is_not_counted_twice(kwargs, expected):
     service, building = split_window(**kwargs)
+    metrics = service._compute_ev_metrics(building)
+    assert metrics['_departure_audit']['departures_count'] == expected
+    assert metrics['departures_total'] == expected
+
+
+@pytest.mark.parametrize('boundary,expected', [('shared', 0), ('disjoint', 1)])
+def test_last_step_counts_a_session_that_leaves_before_the_next_control_step(boundary, expected):
+    # The window's last step is row 2, with countdown 2: the EV stays connected until row 4.
+    # That row is the next window's step 0 under disjoint boundaries, which skips it, and its
+    # step 1 under shared ones, which counts it.
+    service, building = split_window(boundary=boundary, start=1, states=(1., 1., 1., 1., 1., 0.),
+                                     countdowns=(3., 3., 2., 1., 0., -1.), ids=('EV',) * 6)
+    charger = building.electric_vehicle_chargers[0]
+    charger.past_connected_evs = [charger.past_connected_evs[0]] * 2
     metrics = service._compute_ev_metrics(building)
     assert metrics['_departure_audit']['departures_count'] == expected
     assert metrics['departures_total'] == expected
@@ -314,8 +328,10 @@ def test_bundled_episode_ending_at_a_departure_counts_it():
 
 @pytest.mark.parametrize('boundary,step', [('shared', 99), ('disjoint', 100)])
 def test_split_episodes_count_each_session_once(boundary, step):
-    # Electric_Vehicle_7 on charger_1_1 leaves after row 1999: episode 0 counts it at its
-    # last step (row 1998), and episode 1 must not count it again at step 0.
+    # Shared: Electric_Vehicle_7 on charger_1_1 leaves after row 1999, so episode 0 counts it at
+    # its last step (row 1998) and episode 1 skips it at step 0. Disjoint: five sessions have
+    # countdown 2 at row 1998 and leave after row 2000, so episode 0 counts them with the SOC
+    # BAU reached, and episode 1 skips them at step 0 instead of scoring the SOC set at reset.
     end = 1900 + step + 99
     _, frames = _bau_departures(simulation_start_time_step=1900, simulation_end_time_step=end,
                                 episode_time_steps=100, episode_split_boundary=boundary, episodes=2)
@@ -327,6 +343,16 @@ def test_split_episodes_count_each_session_once(boundary, step):
     for key in ('ev_departure_audit_departures_count', 'ev_events_departure_count'):
         assert sum(value(f, 'District', f'district_{key}') for f in frames) == value(full, 'District', f'district_{key}')
     assert [value(f) for f in frames] == [5, value(full) - 5]
+    if boundary == 'disjoint':
+        # The gap row is never controlled, so each session is scored at a row both runs control.
+        names = ['District'] + [f'Building_{i}' for i in (5, 7, 10, 12, 15)]
+        for name in names:
+            level = 'district' if name == 'District' else 'building'
+            for key in ('ev_events_departure_count', 'ev_events_departure_met_count'):
+                key = f'{level}_{key}'
+                assert sum(value(f, name, key) for f in frames) == value(full, name, key)
+        met = [value(frames[1], 'Building_5', f'building_ev_events_departure_{k}') for k in ('count', 'met_count')]
+        assert met == [4, 4]
 
 
 @pytest.mark.parametrize('target,expected_met', [(45., 1), (90., 0)])

@@ -269,15 +269,18 @@ janela ganha no máximo uma partida por carregador, pelo que mudam mais os
 episódios curtos que terminam a uma hora habitual de partida; os episódios
 por omissão dos datasets incluídos não mudam.
 
-Em episódios divididos consecutivos, cada sessão passa a ser contada uma vez.
-Antes, uma sessão que terminava com um episódio era contada no passo 0 do
-seguinte, com o SOC definido no reset, com `episode_split_boundary='shared'`,
-e não era contada com `'disjoint'`. Agora o episódio em que termina conta-a no
-seu último passo, com o SOC que o controlador atingiu, e o episódio seguinte
-ignora-a. Com `'disjoint'`, uma sessão que parte na linha entre dois episódios
-continua a ser contada no passo 0 do seguinte. As contagens e rácios de
-partidas de execuções anteriores com episódios curtos ou divididos devem ser
-recalculados antes de comparar
+Em episódios divididos consecutivos, cada sessão passa a ser contada uma vez,
+pelo episódio que a controlou. Antes, uma sessão que terminava com um episódio
+era contada no passo 0 do seguinte, com o SOC definido no reset, com
+`episode_split_boundary='shared'`, e não era contada com `'disjoint'`, em que
+uma sessão ligada na linha entre dois episódios era antes avaliada no passo 0
+do seguinte com o SOC definido no reset. Agora o último passo de um episódio
+conta uma sessão que parte antes do passo de controlo seguinte (contagem
+decrescente em [0, 1] com `'shared'` e em [0, 2] com `'disjoint'`, também num
+único episódio), com o SOC que o controlador atingiu, e o passo 0 ignora
+qualquer sessão que já estava ligada na linha antes dele. As contagens e
+rácios de partidas de execuções anteriores com episódios curtos ou divididos
+devem ser recalculados antes de comparar
 ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
 
 ### Os espaços de observação seguem as observações

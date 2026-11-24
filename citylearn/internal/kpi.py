@@ -1019,34 +1019,23 @@ class CityLearnKPIService:
 
         return float(poor_mean / rich_mean)
 
-    def _ev_session_counted_before_window(self, sim) -> bool:
-        """Whether the session departing at episode step 0 was counted by the window before.
+    def _ev_session_connected_before_window(self, sim) -> bool:
+        """Whether the session departing at episode step 0 was already connected on the row before.
 
-        That window ends at the row before step 0 under ``shared`` episode boundaries and two
-        rows before it under ``disjoint`` ones. It counted the session at its last step when the
-        session was connected there with a countdown in [0, 1] and is the session still connected
-        at step 0. Counting it again at step 0 would score the SOC set at reset.
+        Such a session belongs to the rows before the window: a window ending there counts it at
+        its last step with the SOC the controller set (see ``_ev_last_step_countdown``). Counting it
+        again at step 0 would score the SOC set at reset. The first episode has no row before it.
         """
 
         start = getattr(sim, 'start_time_step', None)
         data = getattr(sim, '__dict__', {})
         states = data.get('_electric_vehicle_charger_state')
-        countdowns = data.get('_electric_vehicle_departure_time')
-        if start is None or states is None or countdowns is None:
+        if start is None or states is None:
             return False
 
         start = int(start)
-        boundary = getattr(self.env, 'episode_split_boundary', 'shared')
-        previous = start - (2 if boundary == 'disjoint' else 1)
-        if previous < 0 or start >= len(states):
-            return False
-
-        countdown = self._to_scalar(countdowns[previous], np.nan)
-        if not (np.isfinite(countdown) and 0.0 <= countdown <= 1.0 + self.EV_DEPARTURE_EPS):
-            return False
-
-        rows = range(previous, start + 1)
-        if any(states[row] != 1 for row in rows):
+        rows = (start - 1, start)
+        if rows[0] < 0 or start >= len(states) or any(states[row] != 1 for row in rows):
             return False
 
         has_session_ids = False
@@ -1058,15 +1047,29 @@ class CityLearnKPIService:
             if name == '_electric_vehicle_session_id':
                 has_session_ids = any(value is not None for value in values)
 
-        if has_session_ids:
+        countdowns = data.get('_electric_vehicle_departure_time')
+        if has_session_ids or countdowns is None:
             return True
 
-        # Without session ids, a countdown that rises marks a new session, as in the departure rules.
-        values = [self._to_scalar(countdowns[row], np.nan) for row in rows]
-        return all(
-            not (np.isfinite(a) and np.isfinite(b) and b > a + self.EV_DEPARTURE_EPS)
-            for a, b in zip(values, values[1:])
+        # Without session ids, a countdown that resets from [0, 1] marks a new session, as in the
+        # departure rules.
+        before, after = (self._to_scalar(countdowns[row], np.nan) for row in rows)
+        return not (
+            np.isfinite(before)
+            and np.isfinite(after)
+            and 0.0 <= before <= 1.0 + self.EV_DEPARTURE_EPS
+            and after > before + self.EV_DEPARTURE_EPS
         )
+
+    def _ev_last_step_countdown(self) -> float:
+        """Largest departure countdown counted at a window's last control step.
+
+        A session connected there with this countdown or less leaves before the first control
+        step after the window ends: one row later under ``shared`` episode boundaries, and two
+        rows later under ``disjoint`` ones, whose row in between is never controlled.
+        """
+
+        return 2.0 if getattr(self.env, 'episode_split_boundary', 'shared') == 'disjoint' else 1.0
 
     def _compute_ev_metrics(self, building, *, t_start: int = 0, t_final: Optional[int] = None) -> Dict[str, float]:
         upper = int(max(building.time_step, 0))
@@ -1155,6 +1158,7 @@ class CityLearnKPIService:
             # The window's last control step, not the schedule's terminal
             # row: the loop never reaches that row in a normal episode.
             terminal_step = history_limit
+            terminal_countdown = self._ev_last_step_countdown()
             ev_ids = getattr(sim, 'electric_vehicle_id', None)
             session_ids = getattr(sim, 'electric_vehicle_session_id', None)
             departure_times = getattr(sim, 'electric_vehicle_departure_time', None)
@@ -1194,7 +1198,7 @@ class CityLearnKPIService:
                     t == terminal_step
                     and np.isfinite(departure_countdown)
                     # -1 is the schedule's unknown-departure sentinel.
-                    and 0.0 <= departure_countdown <= 1.0 + self.EV_DEPARTURE_EPS
+                    and 0.0 <= departure_countdown <= terminal_countdown + self.EV_DEPARTURE_EPS
                 )
                 departure_transition = t + 1 < len(states) and (
                     next_state != 1
@@ -1228,7 +1232,7 @@ class CityLearnKPIService:
                 if current_state != 1 or not (departure_transition or terminal_departure):
                     continue
 
-                if t == 0 and self._ev_session_counted_before_window(sim):
+                if t == 0 and self._ev_session_connected_before_window(sim):
                     continue
 
                 ev = self._safe_sequence_value(charger.past_connected_evs, t)

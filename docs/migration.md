@@ -257,15 +257,18 @@ one departure per charger is added per window, so short episodes that end at
 a usual departure time change the most; the default episodes of the bundled
 datasets do not change.
 
-Over consecutive split episodes each session is now counted once. Before, a
-session that ended with an episode was counted at step 0 of the next one, with
-the SOC set at reset, under `episode_split_boundary='shared'`, and not at all
-under `'disjoint'`. Now the episode it ends with counts it at its last step,
-with the SOC the controller reached, and the next episode skips it. Under
-`'disjoint'` a session that leaves on the row between two episodes is still
-counted at step 0 of the next one. Departure counts and rates from earlier
-runs with short or split episodes should be recomputed before comparing
-([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
+Over consecutive split episodes each session is now counted once, by the
+episode that controlled it. Before, a session that ended with an episode was
+counted at step 0 of the next one, with the SOC set at reset, under
+`episode_split_boundary='shared'`, and not at all under `'disjoint'`, where a
+session connected on the row between two episodes was instead scored at step
+0 of the next one with the SOC set at reset. Now the last step of an episode
+counts a session that leaves before the next control step (countdown in
+[0, 1] under `'shared'`, in [0, 2] under `'disjoint'`, also for a single
+episode), with the SOC the controller reached, and step 0 skips any session
+that was connected on the row before it. Departure counts and rates from
+earlier runs with short or split episodes should be recomputed before
+comparing ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
 
 ### Observation spaces follow the observations
 
