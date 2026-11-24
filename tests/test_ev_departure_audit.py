@@ -217,7 +217,6 @@ def test_back_to_back_countdown_reset_does_not_borrow_previous_session_time():
     assert_partition(c)
 
 
-
 @pytest.mark.parametrize('countdown,expected', [(1., 1), (0., 1), (2., 0), (-1., 0)])
 def test_session_that_ends_with_the_window_is_a_departure(countdown, expected):
     # Issue #370: the EV stays connected through the schedule's terminal row,
@@ -240,29 +239,95 @@ def test_session_that_ends_with_the_window_is_a_departure(countdown, expected):
         assert counts(service, building)['departures_count'] == 1
 
 
-def test_bundled_episode_ending_at_a_departure_counts_it():
-    """Reproduction from issue #370 on the bundled EV dataset."""
+def split_window(*, boundary='shared', start=2, states=(1., 1., 1., 0.), countdowns=(2., 1., 0., -1.),
+                 ids=('EV',) * 4, session_ids=None):
+    """A one-step window at full schedule row `start` of a schedule that starts at the simulation start."""
+    service, building, charger, ev = event(steps=1)
+    service.env.episode_split_boundary = boundary
+    sim = charger.charger_simulation
+    full = dict(electric_vehicle_charger_state=np.array(states),
+                electric_vehicle_departure_time=list(countdowns), electric_vehicle_id=list(ids))
+    if session_ids is not None:
+        full['electric_vehicle_session_id'] = list(session_ids)
+    for name, values in full.items():
+        setattr(sim, f'_{name}', values)
+        setattr(sim, name, values[start:start + 2])
+    sim.start_time_step = start
+    return service, building
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    # Shared: the window before ends at row 1, where countdown 1 counted the session.
+    (dict(), 0),
+    # Disjoint: it ends at row 0, where countdown 2 did not count it.
+    (dict(boundary='disjoint'), 1),
+    (dict(boundary='disjoint', countdowns=(1., 1., 0., -1.)), 0),
+    # A different session at the row before, or no row before the simulation start.
+    (dict(ids=('A', 'A', 'B', None)), 1),
+    (dict(session_ids=('s1', 's1', 's2', None)), 1),
+    (dict(countdowns=(2., 0., 1., -1.)), 1),
+    (dict(countdowns=(2., -1., 0., -1.)), 1),
+])
+def test_departure_at_step_zero_is_not_counted_twice(kwargs, expected):
+    service, building = split_window(**kwargs)
+    metrics = service._compute_ev_metrics(building)
+    assert metrics['_departure_audit']['departures_count'] == expected
+    assert metrics['departures_total'] == expected
+
+
+def test_first_window_counts_a_departure_at_step_zero():
+    service, building = split_window(start=0, states=(1., 0., 0., 0.), countdowns=(0., -1., -1., -1.))
+    assert counts(service, building)['departures_count'] == 1
+
+
+def _bau_departures(**kwargs):
     from citylearn.agents.baseline import BusinessAsUsualAgent
 
+    episodes = kwargs.pop('episodes', 1)
     env = CityLearnEnv('citylearn_challenge_2022_phase_all_plus_evs', interface='flat',
-                       simulation_start_time_step=1900, simulation_end_time_step=1999,
-                       render_mode='none', export_kpis_on_episode_end=False)
+                       render_mode='none', export_kpis_on_episode_end=False, **kwargs)
     try:
-        obs, _ = env.reset()
-        agent = BusinessAsUsualAgent(env)
-        done = False
-        while not done:
-            obs, _, terminated, truncated, _ = env.step(agent.predict(obs))
-            done = terminated or truncated
-        sim = next(b for b in env.buildings if b.name == 'Building_1').electric_vehicle_chargers[0].charger_simulation
-        assert list(sim.electric_vehicle_charger_state[95:100]) == [1.] * 5
-        assert list(sim.electric_vehicle_departure_time[95:100]) == [4., 3., 2., 1., 0.]
-        frame = env.evaluate_v2()
-        values = frame[frame.name == 'Building_1'].set_index('cost_function')['value']
-        assert values['building_ev_events_departure_count'] == 5
-        assert values['building_ev_departure_audit_departures_count'] == 5
+        results = []
+        for _ in range(episodes):
+            obs, _ = env.reset()
+            agent = BusinessAsUsualAgent(env)
+            done = False
+            while not done:
+                obs, _, terminated, truncated, _ = env.step(agent.predict(obs))
+                done = terminated or truncated
+            results.append(env.evaluate_v2())
+        return env, results
     finally:
         env.close()
+
+
+def test_bundled_episode_ending_at_a_departure_counts_it():
+    """Reproduction from issue #370 on the bundled EV dataset."""
+    env, (frame,) = _bau_departures(simulation_start_time_step=1900, simulation_end_time_step=1999)
+    sim = next(b for b in env.buildings if b.name == 'Building_1').electric_vehicle_chargers[0].charger_simulation
+    assert list(sim.electric_vehicle_charger_state[95:100]) == [1.] * 5
+    assert list(sim.electric_vehicle_departure_time[95:100]) == [4., 3., 2., 1., 0.]
+    values = frame[frame.name == 'Building_1'].set_index('cost_function')['value']
+    assert values['building_ev_events_departure_count'] == 5
+    assert values['building_ev_departure_audit_departures_count'] == 5
+
+
+@pytest.mark.parametrize('boundary,step', [('shared', 99), ('disjoint', 100)])
+def test_split_episodes_count_each_session_once(boundary, step):
+    # Electric_Vehicle_7 on charger_1_1 leaves after row 1999: episode 0 counts it at its
+    # last step (row 1998), and episode 1 must not count it again at step 0.
+    end = 1900 + step + 99
+    _, frames = _bau_departures(simulation_start_time_step=1900, simulation_end_time_step=end,
+                                episode_time_steps=100, episode_split_boundary=boundary, episodes=2)
+    _, (full,) = _bau_departures(simulation_start_time_step=1900, simulation_end_time_step=end)
+
+    def value(frame, name='Building_1', key='building_ev_departure_audit_departures_count'):
+        return frame[frame.name == name].set_index('cost_function')['value'][key]
+
+    for key in ('ev_departure_audit_departures_count', 'ev_events_departure_count'):
+        assert sum(value(f, 'District', f'district_{key}') for f in frames) == value(full, 'District', f'district_{key}')
+    assert [value(f) for f in frames] == [5, value(full) - 5]
+
 
 @pytest.mark.parametrize('target,expected_met', [(45., 1), (90., 0)])
 def test_real_outage_delayed_charge_and_departure_service_export(tmp_path, target, expected_met):

@@ -255,9 +255,17 @@ departure audit counts it. The last step is the last control step of the
 episode, or the step before a member leaves under a dynamic topology. At most
 one departure per charger is added per window, so short episodes that end at
 a usual departure time change the most; the default episodes of the bundled
-datasets do not change. Departure counts and rates from earlier runs with
-such episodes are one departure short per affected charger and should be
-recomputed before comparing ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
+datasets do not change.
+
+Over consecutive split episodes each session is now counted once. Before, a
+session that ended with an episode was counted at step 0 of the next one, with
+the SOC set at reset, under `episode_split_boundary='shared'`, and not at all
+under `'disjoint'`. Now the episode it ends with counts it at its last step,
+with the SOC the controller reached, and the next episode skips it. Under
+`'disjoint'` a session that leaves on the row between two episodes is still
+counted at step 0 of the next one. Departure counts and rates from earlier
+runs with short or split episodes should be recomputed before comparing
+([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
 
 ### Observation spaces follow the observations
 

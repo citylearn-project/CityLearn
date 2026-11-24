@@ -515,7 +515,9 @@ Regista-se uma partida no passo `t` quando há um VE ligado em `t` e se verifica
 - em `t + 1` o carregador fica livre;
 - o identificador da sessão ou do VE muda;
 - o calendário não tem identificadores de sessão e a contagem decrescente até à partida reinicia: é no máximo 1 em `t` e aumenta em `t + 1`;
-- `t` é o último passo da janela do membro (o último passo de controlo do episódio, ou o passo antes de o membro sair) e a contagem decrescente está em [0, 1], de modo que conta uma sessão ainda ligada quando a janela termina.
+- `t` é o último passo da janela do membro (o último passo de controlo do episódio, ou o passo antes de o membro sair) e a contagem decrescente está em [0, 1], de modo que conta uma sessão ainda ligada quando a janela termina. Com `evaluate_v2()` a meio de um episódio, a janela termina no passo atual.
+
+Cada sessão é contada uma vez ao longo de episódios consecutivos. Uma partida no passo 0 de um episódio não é contada quando a janela anterior já contou a mesma sessão no seu último passo, isto é, quando a sessão estava aí ligada com uma contagem decrescente em [0, 1] e continua ligada no passo 0. Essa janela termina na linha antes do passo 0 com `episode_split_boundary='shared'` e duas linhas antes com `'disjoint'`. Com `'disjoint'`, uma sessão cuja contagem decrescente é 2 no último passo parte na linha entre os dois episódios, pelo que o episódio seguinte a conta no passo 0, com o SOC definido no reset. O primeiro episódio de uma simulação não tem janela anterior.
 
 O SOC alvo é lido em `t`. Um alvo em (1, 100] é tratado como percentagem e dividido por 100. Um alvo fora de [0, 1] depois disso, ou em falta, é inválido.
 

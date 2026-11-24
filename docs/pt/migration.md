@@ -267,9 +267,17 @@ das partidas conta-a. O último passo é o último passo de controlo do
 episódio, ou o passo antes de um membro sair numa topologia dinâmica. Cada
 janela ganha no máximo uma partida por carregador, pelo que mudam mais os
 episódios curtos que terminam a uma hora habitual de partida; os episódios
-por omissão dos datasets incluídos não mudam. As contagens e rácios de
-partidas de execuções anteriores com esses episódios têm uma partida a menos
-por carregador afetado e devem ser recalculados antes de comparar
+por omissão dos datasets incluídos não mudam.
+
+Em episódios divididos consecutivos, cada sessão passa a ser contada uma vez.
+Antes, uma sessão que terminava com um episódio era contada no passo 0 do
+seguinte, com o SOC definido no reset, com `episode_split_boundary='shared'`,
+e não era contada com `'disjoint'`. Agora o episódio em que termina conta-a no
+seu último passo, com o SOC que o controlador atingiu, e o episódio seguinte
+ignora-a. Com `'disjoint'`, uma sessão que parte na linha entre dois episódios
+continua a ser contada no passo 0 do seguinte. As contagens e rácios de
+partidas de execuções anteriores com episódios curtos ou divididos devem ser
+recalculados antes de comparar
 ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
 
 ### Os espaços de observação seguem as observações

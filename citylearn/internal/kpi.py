@@ -1019,10 +1019,54 @@ class CityLearnKPIService:
 
         return float(poor_mean / rich_mean)
 
-    @staticmethod
-    def _ev_terminal_departure_step(history_limit: int, states) -> int:
-        """Step at which a session whose countdown is in [0, 1] counts as a departure."""
-        return int(history_limit)
+    def _ev_session_counted_before_window(self, sim) -> bool:
+        """Whether the session departing at episode step 0 was counted by the window before.
+
+        That window ends at the row before step 0 under ``shared`` episode boundaries and two
+        rows before it under ``disjoint`` ones. It counted the session at its last step when the
+        session was connected there with a countdown in [0, 1] and is the session still connected
+        at step 0. Counting it again at step 0 would score the SOC set at reset.
+        """
+
+        start = getattr(sim, 'start_time_step', None)
+        data = getattr(sim, '__dict__', {})
+        states = data.get('_electric_vehicle_charger_state')
+        countdowns = data.get('_electric_vehicle_departure_time')
+        if start is None or states is None or countdowns is None:
+            return False
+
+        start = int(start)
+        boundary = getattr(self.env, 'episode_split_boundary', 'shared')
+        previous = start - (2 if boundary == 'disjoint' else 1)
+        if previous < 0 or start >= len(states):
+            return False
+
+        countdown = self._to_scalar(countdowns[previous], np.nan)
+        if not (np.isfinite(countdown) and 0.0 <= countdown <= 1.0 + self.EV_DEPARTURE_EPS):
+            return False
+
+        rows = range(previous, start + 1)
+        if any(states[row] != 1 for row in rows):
+            return False
+
+        has_session_ids = False
+        for name in ('_electric_vehicle_session_id', '_electric_vehicle_id'):
+            ids = data.get(name)
+            values = [None if ids is None else self._normal_ev_id(self._safe_sequence_value(ids, row)) for row in rows]
+            if any(value is not None and value != values[0] for value in values):
+                return False
+            if name == '_electric_vehicle_session_id':
+                has_session_ids = any(value is not None for value in values)
+
+        if has_session_ids:
+            return True
+
+        # Without session ids, a countdown that rises marks a new session, as in the departure rules.
+        values = [self._to_scalar(countdowns[row], np.nan) for row in rows]
+        return all(
+            not (np.isfinite(a) and np.isfinite(b) and b > a + self.EV_DEPARTURE_EPS)
+            for a, b in zip(values, values[1:])
+        )
 
     def _compute_ev_metrics(self, building, *, t_start: int = 0, t_final: Optional[int] = None) -> Dict[str, float]:
         upper = int(max(building.time_step, 0))
@@ -1110,7 +1154,7 @@ class CityLearnKPIService:
 
             # The window's last control step, not the schedule's terminal
             # row: the loop never reaches that row in a normal episode.
-            terminal_step = self._ev_terminal_departure_step(history_limit, states)
+            terminal_step = history_limit
             ev_ids = getattr(sim, 'electric_vehicle_id', None)
             session_ids = getattr(sim, 'electric_vehicle_session_id', None)
             departure_times = getattr(sim, 'electric_vehicle_departure_time', None)
@@ -1182,6 +1226,9 @@ class CityLearnKPIService:
                 )
 
                 if current_state != 1 or not (departure_transition or terminal_departure):
+                    continue
+
+                if t == 0 and self._ev_session_counted_before_window(sim):
                     continue
 
                 ev = self._safe_sequence_value(charger.past_connected_evs, t)

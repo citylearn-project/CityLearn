@@ -511,7 +511,9 @@ A departure is recorded at step `t` when an EV is connected at `t` and any of th
 - at `t + 1` the charger is free;
 - the session id or the EV id changes;
 - the schedule has no session ids and the countdown to departure resets: it is at most 1 at `t` and increases at `t + 1`;
-- `t` is the last step of the member's window (the last control step of the episode, or the step before the member leaves) and the countdown is in [0, 1], so a session that is still connected when the window ends counts.
+- `t` is the last step of the member's window (the last control step of the episode, or the step before the member leaves) and the countdown is in [0, 1], so a session that is still connected when the window ends counts. With `evaluate_v2()` in the middle of an episode, the window ends at the current step.
+
+Each session is counted once over consecutive episodes. A departure at step 0 of an episode is not counted when the window before already counted the same session at its last step, that is, when the session was connected there with a countdown in [0, 1] and is still connected at step 0. That window ends at the row before step 0 with `episode_split_boundary='shared'` and two rows before it with `'disjoint'`. Under `'disjoint'` a session whose countdown is 2 at the last step leaves on the row between the two episodes, so the next episode counts it at step 0, with the SOC set at reset. The first episode of a simulation has no window before it.
 
 The target SOC is read at `t`. A target in (1, 100] is taken as a percentage and divided by 100. A target outside [0, 1] after that, or a missing one, is invalid.
 
