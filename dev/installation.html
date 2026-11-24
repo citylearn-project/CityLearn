@@ -251,7 +251,10 @@ names in Python, or with <code class="docutils literal notranslate"><span class=
 <p>The cache is a <code class="docutils literal notranslate"><span class="pre">citylearn</span></code> folder in the user cache directory, with one
 subfolder per dataset release, for example <code class="docutils literal notranslate"><span class="pre">~/.cache/citylearn/v3.6.0</span></code> on
 Linux; <code class="docutils literal notranslate"><span class="pre">DataSet().cache_directory</span></code> returns it and <code class="docutils literal notranslate"><span class="pre">DataSet().clear_cache()</span></code>
-empties it. For your own data, pass a local <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> path instead of a
+empties it. Downloads go to its <code class="docutils literal notranslate"><span class="pre">datasets</span></code> folder. A complete local copy of a
+dataset, such as <code class="docutils literal notranslate"><span class="pre">data/datasets</span></code> in a repository checkout, is copied to
+<code class="docutils literal notranslate"><span class="pre">datasets_by_content/&lt;key&gt;/&lt;dataset&gt;</span></code>, where the key is a digest of its
+files, so checkouts with different data never share a copy. For your own data, pass a local <code class="docutils literal notranslate"><span class="pre">schema.json</span></code> path instead of a
 dataset name. See <a class="reference internal" href="guides/dataset_reference.html"><span class="doc">Dataset Reference</span></a> for files and units.</p>
 <p>These environment variables change where CityLearn looks for data:</p>
 <table class="docutils align-default">

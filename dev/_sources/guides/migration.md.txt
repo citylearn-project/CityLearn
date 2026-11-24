@@ -48,6 +48,30 @@ development-line history.
 
 ## Unreleased
 
+### Dataset cache keyed by content
+
+Local copies of datasets are now cached under the key of their content, in
+`datasets_by_content/<key>/<dataset>` of `DataSet().cache_directory`, instead
+of `datasets/<dataset>`. Nothing needs to change in code that loads datasets by
+name or by the path that `DataSet().get_dataset()` returns.
+
+- Copies cached by earlier runs under `datasets/<dataset>` are no longer read
+  while a complete local copy exists, and they are left untouched. A run that
+  used a stale cached schema now loads the local one, which can change its
+  results; to reproduce such a run, pass the old `schema.json` path explicitly.
+- Each different content of a dataset keeps its own copy, so checkouts that
+  switch between branches accumulate copies. `DataSet().clear_cache()` removes
+  them all.
+- Code that built the cache path by hand from `cache_directory`, `datasets` and
+  the dataset name should use the path returned by `DataSet().get_dataset(name)`.
+- Downloads, used when no local copy exists, are still cached under
+  `datasets/<dataset>` of the release tag.
+
+`IndependentBalanceAudit` accepts `flow_relative_tolerance` (default 1e-8),
+which scales the tolerance of the district balance residuals with their gross
+flow; its report records the value. Pass `flow_relative_tolerance=0` to keep
+the previous fixed tolerance.
+
 ### EV charging in the default baseline
 
 The default KPI baseline (`EvaluationCondition.WITHOUT_STORAGE_BUT_WITH_PV`,

@@ -230,8 +230,9 @@ these files, so the hashes then agree on all platforms. A checkout made before
 data files as modified. Make a fresh clone and set it up as in
 <a class="reference internal" href="#local-environment"><span class="std std-ref">Local Environment</span></a>: the clone applies the new checkout
 rules and leaves the existing working copy, including uncommitted changes,
-untouched. Then clear the dataset cache, which may hold copies made from the old
-checkout:</p>
+untouched. The dataset cache keys local copies by the content of their files, so
+copies made from the old checkout are not read; clear it to free the space they
+take:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/citylearn-project/CityLearn.git</span>
 <span class="go">python -c "from citylearn.data import DataSet; DataSet().clear_cache()"</span>
 </pre></div>

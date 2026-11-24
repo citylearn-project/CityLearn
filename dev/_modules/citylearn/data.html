@@ -147,6 +147,7 @@
              
   <h1>Source code for citylearn.data</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">posixpath</span>
@@ -180,6 +181,8 @@
 <span class="n">LOCAL_DATA_MISC_DIRECTORY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span>
     <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">LOCAL_DATA_DIRECTORY</span><span class="p">,</span> <span class="s1">'misc'</span><span class="p">)</span>
 <span class="p">)</span>
+<span class="c1"># Content keys of local dataset folders computed in this process: real path -&gt; (file signature, key).</span>
+<span class="n">_LOCAL_DATASET_CONTENT_KEYS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
 
 <div class="viewcode-block" id="OfflineDataError">
@@ -250,6 +253,8 @@
         <span class="s1">'DataSet.DEFAULT_CACHE_DIRECTORY is deprecated and unused; it is not the folder datasets are cached in. '</span>
         <span class="s1">'Use DataSet().cache_directory.'</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="c1"># Folder of `cache_directory` that holds copies of local dataset folders, one subfolder per content key.</span>
+    <span class="n">CONTENT_CACHE_DIRECTORY</span> <span class="o">=</span> <span class="s1">'datasets_by_content'</span>
     <span class="n">BATTERY_CHOICES_FILENAME</span> <span class="o">=</span> <span class="s1">'battery_choices.yaml'</span>
     <span class="n">PV_CHOICES_FILENAME</span> <span class="o">=</span> <span class="s1">'lbl-tracking_the_sun-res-pv.csv'</span>
 
@@ -526,28 +531,100 @@
         <span class="k">return</span> <span class="n">schema</span></div>
 
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_directory_signature</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `(relative path, size, mtime in ns)` of every file under `directory`, sorted by path."""</span>
+
+        <span class="n">directory</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+        <span class="n">entries</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">followlinks</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+                <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+                <span class="n">stat</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+                <span class="n">relative_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">directory</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s1">'/'</span><span class="p">)</span>
+                <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">relative_path</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_size</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">st_mtime_ns</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">entries</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_hash_directory</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">signature</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the content key of the files in `signature`: a digest of their relative paths and bytes."""</span>
+
+        <span class="n">digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">relative_path</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">signature</span><span class="p">:</span>
+            <span class="n">file_digest</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">directory</span><span class="p">),</span> <span class="o">*</span><span class="n">relative_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'/'</span><span class="p">)),</span> <span class="s1">'rb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">20</span><span class="p">),</span> <span class="sa">b</span><span class="s1">''</span><span class="p">):</span>
+                    <span class="n">file_digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+
+            <span class="n">digest</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">relative_path</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'utf-8'</span><span class="p">)</span> <span class="o">+</span> <span class="sa">b</span><span class="s1">'</span><span class="se">\0</span><span class="s1">'</span> <span class="o">+</span> <span class="n">file_digest</span><span class="o">.</span><span class="n">digest</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">digest</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">16</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_content_key</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the content key of the local dataset folder `directory`.</span>
+
+<span class="sd">        The key is a digest of the relative path and bytes of every file in the folder, so two folders get</span>
+<span class="sd">        the same key exactly when they hold the same files. Hashing a large dataset takes a moment, so the</span>
+<span class="sd">        key is kept for the rest of the process and computed again only when the size or modification</span>
+<span class="sd">        time of a file changes, or a file is added or removed; a cache hit then costs one `stat` per file.</span>
+<span class="sd">        """</span>
+
+        <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">directory</span><span class="p">))</span>
+        <span class="n">signature</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_directory_signature</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+        <span class="n">known</span> <span class="o">=</span> <span class="n">_LOCAL_DATASET_CONTENT_KEYS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">known</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">known</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">signature</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">known</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_hash_directory</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">signature</span><span class="p">)</span>
+        <span class="n">_LOCAL_DATASET_CONTENT_KEYS</span><span class="p">[</span><span class="n">directory</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">signature</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">key</span>
+
 <div class="viewcode-block" id="DataSet.get_dataset">
 <a class="viewcode-back" href="../../api/citylearn.data.html#citylearn.data.DataSet.get_dataset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">directory</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">dataset_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">'/'</span><span class="p">))</span><span class="o">.</span><span class="n">name</span>
         <span class="n">datasets_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_directory</span><span class="p">,</span> <span class="s1">'datasets'</span><span class="p">)</span>
-        <span class="n">root_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datasets_directory</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">)</span>
-        <span class="n">schema_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_directory</span><span class="p">,</span> <span class="s1">'schema.json'</span><span class="p">)</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">FileHandler</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datasets_path</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">)</span>
+        <span class="n">local_root_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_local_dataset_root</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
 
-        <span class="c1"># The cached dataset is complete when its schema and every input file the schema loads exist. An</span>
-        <span class="c1"># interrupted download by an earlier version can leave schema.json without the files it names.</span>
-        <span class="n">missing_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_dataset_files</span><span class="p">(</span><span class="n">root_directory</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">local_root_directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># A complete local copy, such as `data/datasets` of a checkout, is cached under the key of its</span>
+            <span class="c1"># content, not only under the release tag. Checkouts or versions with different files then never</span>
+            <span class="c1"># read each other's copy, even when they share the tag, and a published copy is never replaced:</span>
+            <span class="c1"># different content goes to a new folder, so environments that read the old one are not disturbed.</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_content_key</span><span class="p">(</span><span class="n">local_root_directory</span><span class="p">)</span>
+            <span class="n">root_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_directory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONTENT_CACHE_DIRECTORY</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">local_root_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_local_dataset_root</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_missing_dataset_files</span><span class="p">(</span><span class="n">root_directory</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="n">staging</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">local_root_directory</span><span class="p">,</span> <span class="n">staging</span><span class="p">,</span> <span class="n">dirs_exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">copied_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash_directory</span><span class="p">(</span><span class="n">staging</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directory_signature</span><span class="p">(</span><span class="n">staging</span><span class="p">))</span>
 
-            <span class="k">if</span> <span class="n">local_root_directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_publish_directory</span><span class="p">(</span>
-                    <span class="n">root_directory</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">staging</span><span class="p">:</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">local_root_directory</span><span class="p">,</span> <span class="n">staging</span><span class="p">,</span> <span class="n">dirs_exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">copied_key</span> <span class="o">!=</span> <span class="n">key</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"The local dataset '</span><span class="si">{</span><span class="n">local_root_directory</span><span class="si">}</span><span class="s2">' changed while it was being cached. Try again."</span>
+                        <span class="p">)</span>
 
-            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_publish_directory</span><span class="p">(</span><span class="n">root_directory</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span>
+
+            <span class="n">schema_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_directory</span><span class="p">,</span> <span class="s1">'schema.json'</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Downloads are cached under the release tag that `cache_directory` is named after.</span>
+            <span class="n">root_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datasets_directory</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">)</span>
+            <span class="n">schema_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_directory</span><span class="p">,</span> <span class="s1">'schema.json'</span><span class="p">)</span>
+            <span class="c1"># The cached dataset is complete when its schema and every input file the schema loads exist. An</span>
+            <span class="c1"># interrupted download by an earlier version can leave schema.json without the files it names.</span>
+            <span class="n">missing_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_dataset_files</span><span class="p">(</span><span class="n">root_directory</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_files</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offline</span><span class="p">:</span>
                     <span class="n">local_directories</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_datasets_directories</span>
                     <span class="n">local_directories_message</span> <span class="o">=</span> <span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">local_directories</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_directories</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">'(none)'</span>
@@ -708,7 +785,9 @@
 <span class="sd">        input file the schema loads exist; a process that loses the race to publish keeps the complete</span>
 <span class="sd">        copy that won. Publishing, including the replacement of an incomplete folder left by an earlier</span>
 <span class="sd">        version, holds a lock and checks again for a complete copy first, so a complete published</span>
-<span class="sd">        dataset is never removed.</span>
+<span class="sd">        dataset is never removed. Copies of local datasets are published under their content key, so a</span>
+<span class="sd">        complete copy is never replaced by different files either; only a damaged one, with input files</span>
+<span class="sd">        missing, is moved aside.</span>
 <span class="sd">        """</span>
 
         <span class="n">parent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">target_directory</span><span class="p">)</span>
