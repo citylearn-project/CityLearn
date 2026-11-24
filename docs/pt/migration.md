@@ -109,6 +109,24 @@ arrefecimento ([#362](https://github.com/citylearn-project/CityLearn/issues/362)
 - Um `BusinessAsUsualAgent` executado por si segue a versão do ambiente;
   `hvac='off'` ou `hvac='dataset_demand'` substitui-a.
 
+### As referências baseadas em regras usam o AVAC
+
+`RBCBasicPolicy`, `RBCSmartPolicy` e `RBCCommunityPolicy` passam a fornecer a
+procura de aquecimento e de arrefecimento do dataset através das ações de AVAC,
+com a regra do BAU de `baseline_version=3`.
+
+- Datasets sem ações de AVAC: nada muda, bit a bit, incluindo a
+  `comparison_identity()`.
+- Datasets com ações de AVAC: as referências baseadas em regras aquecem e
+  arrefecem, pelo que os seus KPIs de energia, custo e conforto mudam.
+  Compare-as com o BAU de `baseline_version=3`; face ao BAU da versão 2,
+  predefinida, que não aquece nem arrefece, os seus rácios face ao BAU comparam
+  casas aquecidas com casas sem aquecimento. A sua identidade regista
+  `hvac='dataset_demand'` e a definição ganha o sufixo `+hvac-dataset-demand-v1`.
+- `RBCSmartPolicy(env, hvac='off')` (e o mesmo para as outras duas) dá o AVAC a
+  zero das versões anteriores, para reproduzir resultados anteriores. Consulte
+  [AVAC das referências baseadas em regras](baselines.md#avac-das-referências-baseadas-em-regras).
+
 ### Emissões do distrito com a troca local desligada
 
 Com um mercado comunitário ativo e `community_market.local_trading_enabled`
