@@ -701,7 +701,15 @@ class IndependentBalanceAudit:
                     total(bag),
                 )
         if check_kpis:
-            frame = self.env.evaluate_v2(include_business_as_usual=False)
+            # Only control rows are checked, and they do not depend on the baseline version. Version 1 needs no
+            # BAU run, so the audit also works on envs whose devices changed after loading.
+            env = getattr(self.env, 'unwrapped', self.env)
+            version = env.baseline_version
+            env.baseline_version = 1
+            try:
+                frame = env.evaluate_v2(include_business_as_usual=False)
+            finally:
+                env.baseline_version = version
             values = {(r.name, r.cost_function): r.value for r in frame.itertuples()}
             for name, row in self.members.items():
                 for suffix, key in [

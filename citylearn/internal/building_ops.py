@@ -52,7 +52,7 @@ class BuildingOpsService:
             data = self.get_observations_data(include_all=include_all)
             valid_observations = list(set(data.keys()) | set(building.active_observations))
         else:
-            valid_observations = building.active_observations
+            valid_observations = self.flat_observation_order()
             data = self.get_observations_data(include_all=include_all, observation_names=valid_observations)
 
         valid_observation_set = set(valid_observations)
@@ -81,6 +81,10 @@ class BuildingOpsService:
         unknown_observations = set(observations.keys()).difference(set(valid_observations))
         assert len(unknown_observations) == 0, f'Unknown observations: {unknown_observations}'
 
+        if observation_names is None and not include_all and list(observations.keys()) != valid_observations:
+            # Keep the order that the observation space follows (`flat_observation_order`).
+            observations = {k: observations[k] for k in valid_observations if k in observations}
+
         if check_limits:
             non_periodic_low_limit, non_periodic_high_limit = building.non_periodic_normalized_observation_space_limits
             for key in building.active_observations:
@@ -100,6 +104,51 @@ class BuildingOpsService:
                     LOGGER.debug(f'Observation outside space limit: {report}')
 
         return self.transform_observations(observations, normalize=normalize, periodic_normalization=periodic_normalization)
+
+    @staticmethod
+    def ev_charger_observation_names(charger_id: str) -> Tuple[str, ...]:
+        """Flat observation names of one charger, in the order they are written."""
+
+        return (
+            f'electric_vehicle_charger_{charger_id}_connected_state',
+            f'connected_electric_vehicle_at_charger_{charger_id}_departure_time',
+            f'connected_electric_vehicle_at_charger_{charger_id}_required_soc_departure',
+            f'connected_electric_vehicle_at_charger_{charger_id}_soc',
+            f'connected_electric_vehicle_at_charger_{charger_id}_battery_capacity',
+            f'electric_vehicle_charger_{charger_id}_incoming_state',
+            f'incoming_electric_vehicle_at_charger_{charger_id}_estimated_arrival_time',
+            f'incoming_electric_vehicle_at_charger_{charger_id}_estimated_soc_arrival',
+        )
+
+    def flat_observation_order(self) -> List[str]:
+        """Order of the active observations in the flat observation vector.
+
+        Building-level observations come first, in `active_observations` order. The per-device
+        observations of EV chargers, deferrable appliances and escalators follow, grouped by device
+        in device order. The observation space, `observation_names` and the observation values all
+        follow this order.
+        """
+
+        building = self.building
+        active = building.active_observations
+        active_set = set(active)
+        device_keys = []
+
+        for charger in building.electric_vehicle_chargers or []:
+            device_keys.extend(k for k in self.ev_charger_observation_names(charger.charger_id) if k in active_set)
+
+        prefixes = [f'deferrable_appliance_{a.name}_' for a in building.deferrable_appliances or []]
+        prefixes += [f'escalator_{e.name}_' for e in getattr(building, 'escalators', None) or []]
+
+        for prefix in prefixes:
+            device_keys.extend(k for k in active if k.startswith(prefix) and k not in device_keys)
+
+        if len(device_keys) == 0:
+            return list(active)
+
+        device_set = set(device_keys)
+
+        return [k for k in active if k not in device_set] + device_keys
 
     def transform_observations(
         self,
@@ -153,24 +202,17 @@ class BuildingOpsService:
             sim = charger.charger_simulation
             t, endogenous_t = self._observation_time_steps(include_all)
 
-            connected_state_key = f'electric_vehicle_charger_{charger_id}_connected_state'
-            incoming_state_key = f'electric_vehicle_charger_{charger_id}_incoming_state'
-            departure_key = f'connected_electric_vehicle_at_charger_{charger_id}_departure_time'
-            req_soc_key = f'connected_electric_vehicle_at_charger_{charger_id}_required_soc_departure'
-            soc_key = f'connected_electric_vehicle_at_charger_{charger_id}_soc'
-            capacity_key = f'connected_electric_vehicle_at_charger_{charger_id}_battery_capacity'
-            arrival_key = f'incoming_electric_vehicle_at_charger_{charger_id}_estimated_arrival_time'
-            soc_arrival_key = f'incoming_electric_vehicle_at_charger_{charger_id}_estimated_soc_arrival'
-            charger_keys = (
+            charger_keys = self.ev_charger_observation_names(charger_id)
+            (
                 connected_state_key,
-                incoming_state_key,
                 departure_key,
                 req_soc_key,
                 soc_key,
                 capacity_key,
+                incoming_state_key,
                 arrival_key,
                 soc_arrival_key,
-            )
+            ) = charger_keys
 
             if not any(key in valid_observations for key in charger_keys):
                 continue

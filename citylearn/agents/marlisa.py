@@ -469,7 +469,7 @@ class MARLISA(SAC):
         Returns
         -------
         encoders : List[Encoder]
-            Encoder classes for observations ordered with respect to `active_observations`.
+            Encoder classes for observations ordered with respect to `observation_names`.
         """
 
         encoders = []

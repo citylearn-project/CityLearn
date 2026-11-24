@@ -4,6 +4,8 @@ Start with the [first simulation](https://www.citylearn.net/quickstart.html),
 then choose the conditions your controller should handle. Features are configured
 in the schema or environment arguments; the same simulation loop runs the episode.
 
+Portuguese version: [pt/features.md](pt/features.md).
+
 ## Buildings, thermal systems and storage
 
 A community contains buildings with electricity demand and optional cooling,
@@ -24,9 +26,11 @@ PV can use a normalized per-kW generation profile or measured generation in
 `kWh/step` with `generation_mode="absolute"`. Stationary batteries have capacity,
 SOC, charging/discharging power, efficiency and degradation parameters. Positive
 storage actions charge and negative actions discharge; physical and connection
-limits determine the applied energy.
+limits determine the applied energy. Battery efficiencies are round-trip values, and
+power curves left out of the schema are drawn from the random stream.
 
 See [PV configuration](schema_reference.md#pv), the
+[battery model](schema_reference.md#battery), the
 [unit contract](data_unit_contract.md) and [storage actions](actions_reference.md#physical-conversion).
 
 ## Electric vehicles and chargers
@@ -93,8 +97,10 @@ exports expose settled costs, the grid-only counterfactual and savings for each
 member and the community. Settlement values the recorded physical trajectory.
 
 Configure the [community market](schema_reference.md#community-market).
-Residual grid exports currently receive zero remuneration. Local settlement
-is within a community; multi-community reporting is described below.
+Residual grid exports earn nothing by default; with `"settlement_version": 2`
+they are paid `grid_export_price`, and `tariff_files` give each member its own
+prices. Invalid market settings raise an error when the env is built. Local
+settlement is within a community; multi-community reporting is described below.
 
 ## Demand-response requests
 
@@ -163,8 +169,9 @@ The [interface guide](interfaces_flat_entity.md),
 ## Multiple communities
 
 `MultiCommunityEnv` steps independent communities in lockstep and reports local
-and portfolio results. Children share timestep, episode length, interface and
-central-agent mode. Each keeps its own physical state, DR requests and settlement.
+and portfolio results. Children share timestep, episode length, interface,
+central-agent mode, `physics_version`, `random_stream_version` and
+`baseline_version`. Each keeps its own physical state, DR requests and settlement.
 The wrapper aggregates results; it does not physically transfer energy between
 communities or optimize inter-community dispatch.
 

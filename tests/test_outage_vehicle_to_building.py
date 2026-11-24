@@ -17,6 +17,7 @@ import pytest
 
 from citylearn.citylearn import CityLearnEnv
 from citylearn.internal.physics_invariants import PhysicsInvariantError
+from private_access import entity_service
 
 MINUTE_DATASET = Path(__file__).resolve().parent / 'data' / 'minute_ev_demo'
 STEP_HOURS = 0.25  # the dataset and the control step are 900 s
@@ -179,7 +180,7 @@ def test_entity_charger_observations_report_vehicle_to_building_discharge(tmp_pa
     env = _env(tmp_path, vehicle_to_building=vehicle_to_building, interface='entity')
     try:
         # `_env` has reset the env; another reset would move to the next episode, where the vehicle is away.
-        observations = env._entity_service.observation_payload()
+        observations = entity_service(env).observation_payload()
         assert env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle is not None
         features = list(env.entity_specs['tables']['charger']['features'])
         row = observations['tables']['charger'][0]

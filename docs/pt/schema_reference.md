@@ -1,84 +1,87 @@
-# Schema Reference
+# Referência do schema
 
-Esta pagina documenta o contrato do `schema.json`. O schema e a fonte oficial para construir buildings, dispositivos, EVs, appliances, modos de interface, demand response, robustez, topology dynamic, bundles e mercado.
+Esta página documenta o contrato do `schema.json`. O schema é a fonte de verdade para edifícios, dispositivos, VE, aparelhos diferíveis, escadas rolantes, interfaces, bundles de observação, resposta à procura, robustez, topologia dinâmica e configuração do mercado local.
 
-## Regras Gerais
+Versão em inglês: [../schema_reference.md](../schema_reference.md).
+
+## Regras gerais
 
 | Regra | Contrato |
 |---|---|
-| Caminhos | Sao relativos a `root_directory`, exceto quando sao absolutos. |
-| Ficheiros tabulares | CSV e Parquet sao aceites de forma intercambiavel quando as colunas sao equivalentes. |
-| Energia | Series energeticas sao `kWh/step`. |
-| Potencia e limites | Potencias e limites sao `kW`. |
-| Precos | Precos sao por `kWh`. |
-| Emissoes | Carbon intensity e `kgCO2/kWh`. |
-| Timesteps | Campos de janela, deadline e topology usam indices globais da simulacao. |
-| Legacy washing machines | `washing_machines` e `washing_machine_energy_simulation` nao sao o formato oficial. Usar `deferrable_appliances`. |
+| Caminhos | Os caminhos relativos são resolvidos a partir de `root_directory`; os caminhos absolutos são permitidos. |
+| Ficheiros tabulares | CSV e Parquet são intercambiáveis quando as colunas e as unidades são equivalentes. |
+| Energia | As séries de energia do dataset estão em `kWh/step`. |
+| Potência e limites | As potências nominais e os limites estão em `kW`. |
+| Preços | Os preços são por `kWh`. |
+| Emissões | A intensidade carbónica está em `kgCO2/kWh`. |
+| Passos de tempo | As janelas, os prazos e os eventos de topologia usam índices globais de passo de tempo da simulação. |
+| Máquinas de lavar antigas | `washing_machines` e `washing_machine_energy_simulation` não são o formato oficial. Use `deferrable_appliances`. |
 
-## Top Level
+## Chaves de nível superior
 
-| Chave | Tipo | Obrigatoria | O que faz |
+| Chave | Tipo | Obrigatória | Finalidade |
 |---|---:|---:|---|
 | `root_directory` | string | sim | Pasta base dos ficheiros do dataset. |
-| `random_seed` | int/null | nao | Semente global. |
-| `random_stream_version` | string | nao | Como os fluxos aleatórios são derivados de `random_seed`: `v2` (predefinição, um fluxo `SeedSequence` independente por finalidade, objeto e episódio) ou `v1` (CityLearn 3.6.0 e anteriores). O argumento `random_stream_version` do construtor sobrepõe-se. |
-| `central_agent` | bool | sim | Controlador unico ou multi-agent por building. |
-| `seconds_per_time_step` | number | sim | Duracao fisica de cada step. |
-| `simulation_start_time_step` | int | sim | Primeiro timestep global. |
-| `simulation_end_time_step` | int | sim | Ultimo timestep global. |
-| `episode_time_steps` | int/list/null | nao | Tamanho ou janelas de episodio. |
-| `rolling_episode_split` | bool/null | nao | Episodios sequenciais. |
-| `random_episode_split` | bool/null | nao | Episodios aleatorios. |
-| `time_step_ratio_mode` | `reject`/`compress`/null | nao | `reject` (por omissao) recusa um `seconds_per_time_step` diferente do step do dataset; `compress` mantem o comportamento da 3.6.0 (uma linha de dados por step de controlo, energias escaladas). |
-| `episode_split_boundary` | `shared`/`disjoint`/null | nao | Como se ligam splits consecutivos. `shared` (por omissao) comeca cada split na linha terminal do anterior, pelo que todos os intervalos sao simulados; `disjoint` mantem os splits da 3.6.0, que saltam o intervalo entre dois episodios. |
-| `reward_function` | object/string | sim | Classe do reward e kwargs. |
-| `observations` | object | sim | Catalogo flat de observacoes e flags. |
-| `actions` | object | sim | Catalogo flat de acoes e flags. |
-| `buildings` | object | sim | Definicao de cada building. |
-| `agent` | object/string | nao | Configuracao de agente para CLI. |
-| `electric_vehicles_def` | object | se houver EVs | Catalogo de EVs. |
-| `interface` | `flat`/`entity` | nao | Modo de I/O do ambiente. |
-| `observation_bundles` | object | nao | Bundles adicionais da entity interface. |
-| `topology_mode` | `static`/`dynamic` | nao | Ativa eventos dinamicos. |
-| `topology_events` | list | se dynamic | Eventos add/remove. |
-| `demand_response` | object | nao | Pedidos DSO/TSO de flexibilidade e settlement orientados por dataset. |
-| `robustness` | object | nao | Perturbacoes orientadas por dataset para observacoes, forecasts, acoes e assets. |
-| `community_market` | object | nao | Mercado local e KPIs associados. |
-| `ev_departure_within_tolerance` | float | nao | Tolerancia simetrica de accuracy do SOC no departure, default `0.05`. |
-| `ev_departure_service_tolerance` | float | nao | Tolerancia inferior de servico EV minimo no departure, default `0.05`. |
-| `render_mode` | string | nao | `none`, `during`, `end`. |
-| `render_file_format` | `csv`/`parquet` | nao | Formato dos exports de render, KPIs e serie temporal BAU. |
-| `render_chunk_size` | int | nao | Linhas por chunk de export; default `50000` para parquet e `100000` para CSV. |
-| `export_kpis_on_episode_end` | bool | nao | Export de KPIs no fim do episodio. |
-| `start_date` | string | nao | Data base de render/export. |
-| `debug_timing` | bool | nao | Logs de tempo runtime. |
-| `check_observation_limits` | bool | nao | Valida bounds de observacoes. |
-| `physics_invariant_checks` | bool | nao | Checks de invariantes fisicos. |
-| `physics_version` | int | nao | Versao da fisica, `1` ou `2` (predefinida). `1` reproduz a fisica do CityLearn 3.6.0; ver o [guia de migracao](../migration.md#physics-version). O argumento `physics_version` do `CityLearnEnv` tem precedencia. |
-| `metrics_log_interval` | int | nao | Periodicidade de logs. |
+| `random_seed` | int/null | não | Semente aleatória global. |
+| `random_stream_version` | string | não | Como os fluxos aleatórios são derivados de `random_seed`: `v2` (predefinido, um fluxo `SeedSequence` independente por finalidade, objeto e episódio) ou `v1` (CityLearn 3.6.0 e anteriores). O argumento `random_stream_version` do construtor sobrepõe-se a esta chave. Consulte o [guia de migração](migration.md#fluxos-aleatórios). |
+| `central_agent` | bool | sim | Controlador único ou um agente por edifício. |
+| `seconds_per_time_step` | number | sim | Duração física de cada passo. |
+| `simulation_start_time_step` | int | sim | Primeiro passo de tempo global. |
+| `simulation_end_time_step` | int | sim | Último passo de tempo global. |
+| `episode_time_steps` | int/list/null | não | Duração do episódio ou janelas de episódio explícitas. |
+| `rolling_episode_split` | bool/null | não | Janelas de episódio sequenciais. |
+| `random_episode_split` | bool/null | não | Janelas de episódio aleatórias. |
+| `time_step_ratio_mode` | `reject`/`compress`/null | não | `reject` (predefinido) recusa um `seconds_per_time_step` diferente do passo do dataset; `compress` mantém o comportamento da 3.6.0, que lê uma linha de dados por passo de controlo e escala as energias. |
+| `episode_split_boundary` | `shared`/`disjoint`/null | não | Como se ligam divisões de episódio consecutivas. `shared` (predefinido) começa cada divisão na linha terminal da anterior, pelo que todos os intervalos são simulados; `disjoint` mantém as divisões da 3.6.0, que saltam o intervalo entre dois episódios. |
+| `ev_soc_carryover` | bool/null | não | Começa cada VE de um episódio que continua o anterior no tempo (começa na última linha do episódio anterior, ou na linha seguinte) com o SOC que tinha no fim desse episódio, em vez do SOC do calendário. Por omissão `false`. |
+| `reward_function` | object/string | sim | Classe da recompensa e kwargs. |
+| `observations` | object | sim | Catálogo flat de observações e flags. |
+| `actions` | object | sim | Catálogo flat de ações e flags. |
+| `buildings` | object | sim | Definições dos edifícios. |
+| `agent` | object/string | não | Configuração do agente da CLI. |
+| `electric_vehicles_def` | object | se existirem VE | Catálogo de VE. |
+| `interface` | `flat`/`entity` | não | Modo de entrada/saída do ambiente. |
+| `observation_bundles` | object | não | Bundles adicionais de observações entity. |
+| `topology_mode` | `static`/`dynamic` | não | Ativa os eventos de topologia. |
+| `topology_events` | list | se dinâmica | Eventos de adição/remoção. |
+| `demand_response` | object | não | Pedidos de flexibilidade DSO/TSO e liquidação definidos pelo dataset. |
+| `robustness` | object | não | Perturbações de observações, previsões, ações e disponibilidade de ativos definidas pelo dataset. |
+| `community_market` | object | não | Mercado local e KPIs do mercado. |
+| `ev_departure_within_tolerance` | float | não | Tolerância simétrica de exatidão do SOC à partida, predefinida `0.05`. |
+| `ev_departure_service_tolerance` | float | não | Tolerância inferior do SOC à partida para o serviço mínimo aceitável dos VE, predefinida `0.05`. |
+| `render_mode` | string | não | `none`, `during` ou `end`. |
+| `render_file_format` | `csv`/`parquet` | não | Formato de exportação dos ficheiros de render, KPIs e séries temporais BAU. |
+| `render_chunk_size` | int | não | Linhas por bloco de exportação; predefinido `50000` para parquet e `100000` para CSV. |
+| `export_kpis_on_episode_end` | bool | não | Exporta os KPIs no fim do episódio. |
+| `start_date` | string | não | Data base para render/exportação. |
+| `debug_timing` | bool | não | Registos de tempos de execução. |
+| `check_observation_limits` | bool | não | Valida os limites das observações. |
+| `physics_invariant_checks` | bool | não | Verificações de invariantes físicos em tempo de execução. |
+| `physics_version` | int | não | Versão da física, `1` ou `2` (predefinida). `1` reproduz a física do CityLearn 3.6.0; consulte o [guia de migração](migration.md#versão-da-física). O argumento `physics_version` de `CityLearnEnv` tem precedência. |
+| `baseline_version` | int | não | Definição da baseline por omissão dos KPIs, `1`, `2` (predefinida) ou `3`. `3` (opcional) mantém a baseline de `2` e faz o BAU nativo fornecer a procura de aquecimento e de arrefecimento do dataset, em vez de enviar zero às ações de AVAC; consulte [AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline). `2` retira a bateria, o armazenamento térmico e o carregamento dos VE da execução controlada e volta a somar o carregamento dos VE do BAU nativo com o alvo `'full'`; `1` não volta a somar nada, como no CityLearn 3.6.0; consulte o [guia de migração](migration.md#carregamento-dos-ve-na-baseline-por-omissão). O argumento `baseline_version` de `CityLearnEnv` tem precedência. |
+| `metrics_log_interval` | int | não | Cadência de registo das métricas de execução. |
 
-### Chaves de calendario e metadados do dataset
+### Chaves de calendário e metadados do dataset
 
-Estas chaves descrevem o relogio do dataset e a sua proveniencia; os schemas
-das REC portuguesas (`pt_rec_*`) usam varias delas. As cinco primeiras mudam a forma como o relogio do dataset e lido; as restantes
-sao metadados descritivos que o simulador nao le, mantidos para que um dataset
-possa ser rastreado ate a sua origem.
+Estas chaves descrevem o relógio do dataset e a sua proveniência; os schemas das
+REC portuguesas (`pt_rec_*`) usam várias delas. As cinco primeiras mudam a forma
+como o relógio do dataset é lido; as restantes são metadados descritivos que o
+simulador não lê, mantidos para que um dataset possa ser rastreado até à sua
+origem.
 
 | Chave | Tipo | Efeito |
 |---|---:|---|
-| `time_axis.calendar_file` | string | Calendario canonico com as colunas `time_step` e `timestamp_utc` (e opcionalmente `timestamp_local`), uma linha regular por linha do dataset. Define o step do dataset e os timestamps das series renderizadas e exportadas, salvo se `start_date` for passado ao `CityLearnEnv`. |
-| `timezone` | string | Fuso horario IANA do calendario, p. ex. `Europe/Lisbon`. Os timestamps exportados sao convertidos de UTC para este fuso; um nome desconhecido da erro no carregamento. Sem calendario, apenas fica registado. |
-| `dataset_seconds_per_time_step` | number | Step do dataset declarado em segundos, para dados cujas colunas de calendario nao o permitem obter. Tem de coincidir com o calendario. |
-| `dataset_contract_version` | string | Versao do contrato de dados do dataset. Um valor que comece por `portugal-native` faz de `shared/calendar.parquet` o calendario quando `time_axis` nao existe; caso contrario, e metadado. |
-| `terminal_observation_padding` | bool | Permite que os ficheiros terminem uma linha antes da janela e repete a ultima linha apenas como observacao terminal, que nunca e simulada. Predefinido `false`. |
+| `time_axis.calendar_file` | string | Calendário canónico com as colunas `time_step` e `timestamp_utc` (e, opcionalmente, `timestamp_local`), uma linha regular por linha do dataset. Define o passo do dataset e os carimbos temporais das séries renderizadas e exportadas, salvo se `start_date` for passado a `CityLearnEnv`. |
+| `timezone` | string | Fuso horário IANA do calendário, por exemplo `Europe/Lisbon`. Os carimbos temporais exportados são convertidos de UTC para este fuso; um nome desconhecido dá erro no carregamento. Sem calendário, fica apenas registado. |
+| `dataset_seconds_per_time_step` | number | Passo declarado do dataset, em segundos, para dados cujas colunas de calendário não o permitem obter. Tem de coincidir com o calendário. |
+| `dataset_contract_version` | string | Versão do contrato de dados do dataset. Um valor que comece por `portugal-native` faz de `shared/calendar.parquet` o calendário quando `time_axis` está ausente; caso contrário, é metadado. |
+| `terminal_observation_padding` | bool | Permite que os ficheiros terminem uma linha antes da janela e repete a última linha apenas como observação terminal, que nunca é simulada. Predefinido `false`. |
 | `dataset_id`, `dataset_family` | string | Metadados: identificadores do dataset. |
-| `experimental_design` | object | Metadados: o desenho de avaliacao para que o dataset foi construido (fatores, objetivo, etiquetas). |
-| `native_compatibility` | object | Metadados: o commit do motor e as verificacoes com que o dataset foi validado. |
-| `_derivation`, `_derived_from` | object/string | Metadados: como um dataset derivado foi produzido a partir da origem. |
+| `experimental_design` | object | Metadados: o desenho de avaliação para o qual o dataset foi construído (fatores, finalidade, etiquetas). |
+| `native_compatibility` | object | Metadados: o commit do motor e as verificações com que o dataset foi validado. |
+| `_derivation`, `_derived_from` | object/string | Metadados: como um dataset derivado foi produzido a partir da sua origem. |
 
 ## `observations`
-
-Cada entrada tem o formato:
 
 ```json
 "hour": {
@@ -87,16 +90,14 @@ Cada entrada tem o formato:
 }
 ```
 
-| Campo | Tipo | Default | O que faz |
+| Campo | Tipo | Predefinido | Finalidade |
 |---|---:|---:|---|
-| `active` | bool | `false` | Liga a observacao no flat mode. |
-| `shared_in_central_agent` | bool | `false` | Se `central_agent=true`, a observacao aparece uma vez no vetor central quando e comum. |
+| `active` | bool | `false` | Ativa a observação flat. |
+| `shared_in_central_agent` | bool | `false` | Inclui uma observação comum uma única vez nos vetores do agente central. |
 
-Observacoes especiais com prefixo `electric_vehicle_` sao expandidas por charger. Observacoes com prefixo `deferrable_appliance_` sao expandidas por appliance.
+Os nomes de observações com o prefixo `electric_vehicle_` são expandidos por carregador. Os nomes com o prefixo `deferrable_appliance_` são expandidos por aparelho diferível. Os nomes com o prefixo `escalator_` são expandidos por escada rolante.
 
 ## `actions`
-
-Cada entrada tem o formato:
 
 ```json
 "electrical_storage": {
@@ -104,15 +105,15 @@ Cada entrada tem o formato:
 }
 ```
 
-| Campo | Tipo | Default | O que faz |
+| Campo | Tipo | Predefinido | Finalidade |
 |---|---:|---:|---|
-| `active` | bool | `false` | Liga a acao. |
+| `active` | bool | `false` | Ativa a ação. |
 
-A acao `electric_vehicle_storage` e expandida para `electric_vehicle_storage_{charger_id}`. A acao `deferrable_appliance` e expandida para `deferrable_appliance_{appliance_id}`.
+`electric_vehicle_storage` expande para `electric_vehicle_storage_{charger_id}`. `deferrable_appliance` expande para `deferrable_appliance_{appliance_id}`. `escalator` expande para `escalator_{escalator_id}`.
 
 ## `observation_bundles`
 
-Usado apenas na entity interface.
+Configuração exclusiva da interface entity:
 
 ```json
 "observation_bundles": {
@@ -127,17 +128,35 @@ Usado apenas na entity interface.
 }
 ```
 
-| Bundle | Default | O que adiciona |
+| Bundle | Predefinido | Adiciona |
 |---|---:|---|
-| `entity_base` | sempre ativo | Features estaticas/essenciais de charger, storage, phases e deferrables. |
-| `entity_core_electrical` | `false` | Potencias, energia por step, PV, BESS, EV, eficiencia e metricas eletricas por building. |
-| `entity_community_operational` | `false` | Agregados district/community, headrooms, counts e topology version. |
-| `entity_forecasts_existing` | `false` | Forecasts ja existentes no dataset. |
-| `entity_forecasts_derived` | `false` | Forecasts pontuais compactos para preco, load, PV e net demand. |
-| `entity_demand_response` | `false` | Estado do pedido DR district, baseline congelado e delivery/shortfall do step anterior. |
-| `entity_robustness` | `false` | Estado de robustez e contadores de corrupcao do step anterior na tabela district. |
-| `entity_temporal_derived` | `false` | Lags, medias curtas e calendario sin/cos. |
-| `entity_action_feedback` | `false` | Acao pedida, limitada e aplicada, mais flags de clipping. |
+| `entity_base` | sempre ativo | Features essenciais de carregadores, armazenamento, fases e aparelhos diferíveis. |
+| `entity_core_electrical` | `false` | Potência, energia por passo, FV, BESS, VE, eficiência e métricas elétricas dos edifícios. |
+| `entity_community_operational` | `false` | Agregados do distrito/comunidade, margens, contagens e versão da topologia. |
+| `entity_forecasts_existing` | `false` | Previsões já presentes no dataset. |
+| `entity_forecasts_derived` | `false` | Previsões pontuais compactas de preço, carga, FV e procura líquida. |
+| `entity_demand_response` | `false` | Campos do pedido DR atual do distrito, referência congelada e entrega/défice do passo anterior. |
+| `entity_robustness` | `false` | Estado de robustez ativo e contadores de corrupção do passo anterior na tabela do distrito. |
+| `entity_temporal_derived` | `false` | Atrasos curtos, médias móveis e features de calendário sin/cos. |
+| `entity_action_feedback` | `false` | Feedback da ação pedida, limitada e aplicada, mais flags com a razão do corte. |
+
+As fontes de carga/FV do bundle derivado são configuráveis:
+
+```json
+"derived_forecasts": {
+  "load_pv_method": "daily_persistence",
+  "persistence_period_seconds": 86400,
+  "cold_start": "current_step",
+  "price_source": "publication_aware_day_ahead_market_input",
+  "price_publication_time_local": "13:00",
+  "price_unpublished_fallback": "daily_persistence",
+  "price_horizon_steps": [4, 24, 96]
+}
+```
+
+`actual_future` continua a ser o valor predefinido de carga/FV, por
+compatibilidade com versões anteriores. Use `daily_persistence` em benchmarks de
+algoritmos causais que não podem expor os valores futuros reais da carga ou do FV.
 
 ## `buildings`
 
@@ -154,46 +173,43 @@ Usado apenas na entity interface.
 }
 ```
 
-| Chave | Tipo | Obrigatoria | O que faz |
+| Chave | Tipo | Obrigatória | Finalidade |
 |---|---:|---:|---|
-| `include` | bool | nao | Inclui building inicialmente. Em topology dynamic pode comecar inativo. |
-| `type` | string | nao | Classe do building. Ex.: `citylearn.building.Building`, `LSTMDynamicsBuilding`. |
-| `energy_simulation` | string | sim | Ficheiro principal de cargas, calendario e PV input. |
-| `weather` | string/object | sim | Ficheiro meteorologico. |
-| `pricing` | string/object | sim | Ficheiro de precos. |
-| `carbon_intensity` | string/object | nao | Ficheiro de emissoes. |
-| `inactive_observations` | list | nao | Desliga observacoes neste building. |
-| `inactive_actions` | list | nao | Desliga acoes neste building. |
-| `cooling_device` | object | sim em datasets HVAC | Dispositivo de cooling. |
-| `heating_device` | object | sim em datasets HVAC | Dispositivo de heating. |
-| `dhw_device` | object | sim em datasets HVAC | Dispositivo de hot water. |
-| `cooling_storage` | object | sim em datasets HVAC | Storage termico cooling. |
-| `heating_storage` | object | sim em datasets HVAC | Storage termico heating. |
-| `dhw_storage` | object | sim em datasets HVAC | Storage termico DHW. |
-| `electrical_storage` | object | nao | BESS do building. |
-| `pv` | object | nao | PV do building. |
-| `chargers` | object | nao | Chargers associados ao building. |
-| `deferrable_appliances` | object | nao | Appliances deferiveis normalizados. |
-| `charging_constraints` | object | nao | Limites de charging por building/fase. |
-| `electrical_service` | object | nao | Limites de import/export por fase e total; ver [Servico eletrico](#servico-eletrico). |
-| `equity_group` | string | nao | Grupo usado nos KPIs de equity. |
-| `dynamics` | object | nao | Modelo dinamico para indoor temperature. |
-| `occupant` | object | nao | Modelo occupant interaction. |
-| `power_outage` | object | nao | Config de outage. |
-| `set_point_hold_time_steps` | int | nao | Hold time para occupant interaction. |
+| `include` | bool | não | Inclui o edifício inicialmente. Na topologia dinâmica pode começar inativo. |
+| `type` | string | não | Caminho da classe do edifício, por exemplo `citylearn.building.Building`. |
+| `energy_simulation` | string | sim | Ficheiro principal de entrada de cargas, calendário e FV. |
+| `weather` | string/object | sim | Ficheiro meteorológico. |
+| `pricing` | string/object | sim | Ficheiro de preços. |
+| `carbon_intensity` | string/object | não | Ficheiro de intensidade carbónica. |
+| `inactive_observations` | list | não | Desativa observações neste edifício. |
+| `inactive_actions` | list | não | Desativa ações neste edifício. |
+| `cooling_device`, `heating_device`, `dhw_device` | object | datasets AVAC | Dispositivos de utilização final. |
+| `cooling_storage`, `heating_storage`, `dhw_storage` | object | datasets AVAC | Armazenamentos térmicos. |
+| `electrical_storage` | object | não | BESS do edifício. |
+| `pv` | object | não | FV do edifício. |
+| `chargers` | object | não | Carregadores de VE. |
+| `deferrable_appliances` | object | não | Aparelhos diferíveis normalizados. |
+| `charging_constraints` | object | não | Limites de carregamento por edifício/fase. |
+| `electrical_service` | object | não | Limites de importação/exportação do serviço; consulte [Serviço elétrico](#serviço-elétrico). |
+| `equity_group` | string | não | Grupo usado pelos KPIs de equidade. |
+| `dynamics` | object | não | Modelo da dinâmica da temperatura interior. |
+| `occupant` | object | não | Modelo de interação dos ocupantes. |
+| `power_outage` | object | não | Configuração das falhas de energia. |
+| `set_point_hold_time_steps` | int | não | Tempo de manutenção para a interação dos ocupantes. |
+| `set_point_limits` | [float, float] | não | Intervalo, em °C, para onde um ocupante pode mover um set point de aquecimento ou arrefecimento; por omissão `[15, 30]`. Versão 2 da física e seguintes; ver o [guia de migração](../migration.md#occupant-set-point-limits). |
 
 Chaves de `power_outage`:
 
-| Chave | Tipo | Padrao | O que faz |
+| Chave | Tipo | Predefinido | Finalidade |
 |---|---:|---|---|
-| `simulate_power_outage` | bool | `false` | Simula falhas da rede neste edificio. |
-| `stochastic_power_outage` | bool | `false` | Gera as falhas com `stochastic_power_outage_model` em vez da coluna `power_outage`. |
+| `simulate_power_outage` | bool | `false` | Simula falhas da rede neste edifício. |
+| `stochastic_power_outage` | bool | `false` | Gera as falhas a partir de `stochastic_power_outage_model` em vez da coluna `power_outage`. |
 | `stochastic_power_outage_model` | object | `PowerOutage` | Classe e atributos do modelo de falhas. |
-| `vehicle_to_building` | bool | `false` | Deixa um VE ligado descarregar para o edificio durante uma falha (apoio vehicle-to-building), ate a carga isolada que o PV e a bateria nao cobrem. As features entity do carregador `can_discharge` e `available_discharge_power_kw` indicam a capacidade de descarga do veiculo durante a falha. A descarga pode deixar o veiculo abaixo do SOC pedido para a partida. |
+| `vehicle_to_building` | bool | `false` | Permite que um VE ligado descarregue para o edifício durante uma falha (apoio vehicle-to-building), até à carga em ilha que o FV e a bateria deixam por cobrir. As features entity do carregador `can_discharge` e `available_discharge_power_kw` indicam a capacidade de descarga do veículo durante a falha. A descarga pode deixar o veículo abaixo do SOC exigido à partida. |
 
-## Secoes de Dispositivo
+## Secções de dispositivos
 
-Padrao comum:
+Forma comum:
 
 ```json
 "electrical_storage": {
@@ -208,24 +224,24 @@ Padrao comum:
 }
 ```
 
-| Campo | Tipo | O que faz |
+| Campo | Tipo | Finalidade |
 |---|---:|---|
-| `type` | string | Classe Python a instanciar. |
+| `type` | string | Caminho da classe Python. |
 | `attributes` | object | Kwargs do construtor. |
-| `autosize` | bool | Se `true`, chama autosizer do building quando existir. |
-| `autosize_attributes` | object | Parametros do autosizer. |
+| `autosize` | bool | Chama o dimensionamento automático do edifício, quando disponível. |
+| `autosize_attributes` | object | Kwargs do dimensionamento automático. |
 
-### Classes comuns
+Classes comuns:
 
 | Classe | Atributos principais |
 |---|---|
 | `citylearn.energy_model.HeatPump` | `nominal_power`, `efficiency`, `target_heating_temperature`, `target_cooling_temperature`. |
 | `citylearn.energy_model.ElectricHeater` | `nominal_power`, `efficiency`. |
 | `citylearn.energy_model.StorageTank` | `capacity`, `efficiency`, `loss_coefficient`, `initial_soc`, `max_output_power`, `max_input_power`. |
-| `citylearn.energy_model.Battery` | `capacity`, `nominal_power`, `capacity_loss_coefficient`, `power_efficiency_curve`, `capacity_power_curve` (carga), `discharge_power_curve` (descarga, versao da fisica 2), `depth_of_discharge`. |
+| `citylearn.energy_model.Battery` | `capacity`, `nominal_power`, `capacity_loss_coefficient`, `power_efficiency_curve`, `capacity_power_curve` (carregamento), `discharge_power_curve` (descarga, versão da física 2), `depth_of_discharge`. |
 | `citylearn.energy_model.PV` | `nominal_power`, `generation_mode`. |
 
-## PV
+## FV
 
 ```json
 "pv": {
@@ -237,36 +253,132 @@ Padrao comum:
 }
 ```
 
-| `generation_mode` | Aliases | Interpreta `energy_simulation.solar_generation` como | Formula |
+| `generation_mode` | Aliases | Interpreta `energy_simulation.solar_generation` como | Fórmula |
 |---|---|---|---|
-| `per_kw` | `profile`, `w_per_kw` | Perfil por 1 kW instalado em `W/kW`. | `generation_kwh = nominal_power * value / 1000`. |
-| `absolute` | `absolute_kwh`, `kwh`, `kwh_step`, `energy` | Geracao absoluta ja em `kWh/step`. | `generation_kwh = value`. |
+| `per_kw` | `profile`, `w_per_kw` | Perfil normalizado por kW instalado, em `W/kW`. | `generation_kwh = nominal_power * value / 1000 * seconds_per_time_step / 3600`. |
+| `absolute` | `absolute_kwh`, `kwh`, `kwh_step`, `energy` | Produção absoluta já em `kWh/step`. | `generation_kwh = value`. |
 
-Usa `absolute` quando o dataset vem de medicao real ou de conversor externo ja em energia por step. Usa `per_kw` quando o dataset contem perfil normalizado por capacidade instalada.
+Use `absolute` para produção real medida ou para séries de energia geradas por um conversor. Use `per_kw` para perfis FV normalizados.
 
-## Servico eletrico
+Por exemplo, `nominal_power=4.0` e um valor de 1000 W/kW dão 4,0 kWh num passo horário e
+1,0 kWh num passo de 900 s.
 
-`buildings.<name>.electrical_service` define os limites da ligacao a rede do edificio. Os
-limites sao potencia ativa em kW; `null`, chave ausente ou `Infinity` significa sem limite.
-Campos: `mode` (`single_phase`/`three_phase`), `default_split`, `limits.total`,
-`limits.per_phase`, `available_grid_power` e `observations` (`headroom`,
-`headroom_export`, `violation`, `phase_encoding`, `available_grid_power`).
+## Bateria
 
-### Potencia de rede disponivel
+```json
+"electrical_storage": {
+  "type": "citylearn.energy_model.Battery",
+  "attributes": {
+    "capacity": 6.4,
+    "nominal_power": 5.0,
+    "efficiency": 0.9,
+    "depth_of_discharge": 0.9,
+    "initial_soc": 0.1,
+    "capacity_loss_coefficient": 1e-5,
+    "loss_coefficient": 0.0,
+    "power_efficiency_curve": [[0, 0.83], [0.3, 0.83], [0.7, 0.9], [0.8, 0.9], [1, 0.85]],
+    "capacity_power_curve": [[0.0, 1.0], [0.8, 1.0], [1.0, 0.2]]
+  }
+}
+```
 
-`available_grid_power` indica um ficheiro CSV ou Parquet com uma linha por timestep,
-alinhado com `energy_simulation`, como nome de ficheiro ou `{"filename": ..., "column": ...}`.
-Sem `column`, usa a coluna com o nome do edificio e depois `available_grid_power`. Os valores
-sao a potencia (kW, nao energia por step) que o edificio pode importar nesse timestep.
+O modelo da bateria estacionária trabalha com a energia por passo de controlo nos terminais
+da bateria, do lado do edifício. O estado de carga (SOC) é uma fração de `capacity`.
 
-O limite de importacao em vigor e o menor entre `limits.total.import_kw` e o valor da serie.
-Um valor vazio aplica so o limite estatico; sem `import_kw` e um erro. Os valores devem ser
-finitos e nao negativos. Os carregadores de EV e a bateria sao limitados primeiro; a carga
-nao controlavel continua servida e conta como violacao do servico eletrico. 0 kW nao isola o
-edificio; use `power_outage` para um apagao. A observacao `available_grid_power` indica o
-limite do proximo intervalo; o headroom descreve o ultimo intervalo executado.
+| Atributo | Unidade | Predefinição | Significado |
+|---|---:|---|---|
+| `capacity` | kWh | 0 | Capacidade nominal de armazenamento, antes da degradação. |
+| `nominal_power` | kW | 0 | Potência pela qual as curvas são escaladas. |
+| `efficiency` | rácio | sorteada em [0,90, 0,98] | Eficiência de ida e volta. Uma `power_efficiency_curve` gerada é construída à volta dela; durante a simulação, a curva dá a eficiência em cada passo. |
+| `power_efficiency_curve` | `[[x, y], ...]` | sorteada, ver abaixo | Eficiência de ida e volta `y` em função da potência nos terminais dividida por `nominal_power` (`x` em [0, 1]). |
+| `capacity_power_curve` | `[[x, y], ...]` | sorteada, ver abaixo | Potência máxima de carregamento como fração de `nominal_power` (`y`) em função do SOC (`x`). |
+| `discharge_power_curve` | `[[x, y], ...]` | `[[0, 1], [1, 1]]` | Potência máxima de descarga como fração de `nominal_power` em função do SOC. A versão da física 1 usa `capacity_power_curve` em vez desta. |
+| `depth_of_discharge` | rácio | 1,0 | Fração de `capacity` que pode ser descarregada. |
+| `initial_soc` | rácio | `1 - depth_of_discharge` | SOC no início do episódio, em [0, 1]. |
+| `capacity_loss_coefficient` | rácio | sorteado em [1e-5, 1e-4] | Fração de `capacity` perdida por ciclo completo equivalente. |
+| `loss_coefficient` | rácio por hora | sorteado em [0,001, 0,009] | Perda em repouso da energia armazenada; a fórmula por passo está nas [definições dos VE](#definições-dos-ve). |
 
-## Chargers
+Uma predefinição indicada como "sorteada" é tirada do fluxo aleatório do ambiente quando o
+atributo é omitido, pelo que depende da semente e de `random_stream_version`. Os datasets do
+desafio de 2022 omitem as duas curvas, pelo que cada semente obtém curvas diferentes. Defina os
+atributos explicitamente para as fixar.
+
+- **Eficiência.** `efficiency` e todos os valores de `power_efficiency_curve` são eficiências
+  de ida e volta: a energia carregada e depois descarregada conserva `efficiency` do seu
+  valor. Cada conversão usa a raiz quadrada. Carregar `E` kWh nos terminais armazena
+  `E * sqrt(eta)`, e entregar `E` kWh retira `E / sqrt(eta)` do armazenamento, em que `eta` é
+  lido de `power_efficiency_curve` à potência aplicada nos terminais. Uma eficiência num só
+  sentido de 0,95 numa ficha técnica deve ser introduzida como 0,95² = 0,9025; introduzida
+  como 0,95, dá uma eficiência num só sentido de cerca de 0,975.
+- **Curvas de potência.** `capacity_power_curve` e `discharge_power_curve` são avaliadas no SOC
+  do início do passo, e os seus valores são multiplicados por `nominal_power`. Entre pontos,
+  as curvas são interpoladas linearmente.
+- **Profundidade de descarga.** A descarga para num SOC de `1 - depth_of_discharge`, um
+  mínimo medido sobre a `capacity` nominal. O carregamento para na capacidade degradada.
+- **Degradação da capacidade.** Depois de cada carga ou descarga, a capacidade desce
+  `capacity_loss_coefficient * capacity * |energia nos terminais| / (2 * capacidade degradada)`.
+  Uma carga e descarga completas da capacidade degradada são um ciclo completo equivalente e
+  perdem `capacity_loss_coefficient * capacity`.
+- **Curvas geradas.** Sem `power_efficiency_curve`, são sorteados cinco pontos com `x` perto
+  de 0, 0,3, 0,7, 0,8 e 1, com valores entre 0,85 e 1,0 vezes `efficiency` (o ponto perto de
+  0,8 é igual a `efficiency`). Sem `capacity_power_curve`, são sorteados três pontos: 0,95 a
+  1,0 com SOC 0, 0,90 a 0,95 com um SOC perto de 0,8, e 0,20 a 0,30 com SOC 1.
+- Com o `initial_soc` predefinido, uma bateria começa na sua reserva: vazia quando
+  `depth_of_discharge` é 1. Defina `initial_soc` para começar noutro ponto.
+
+## Serviço elétrico
+
+`buildings.<name>.electrical_service` define os limites da ligação do edifício à rede. Os
+limites são potência ativa em kW; `null`, uma chave ausente ou `Infinity` significa sem limite.
+
+```json
+"electrical_service": {
+  "mode": "single_phase",
+  "limits": {
+    "total": {"import_kw": 17.25, "export_kw": 6.9},
+    "per_phase": {"L1": {"import_kw": 17.25, "export_kw": 6.9}}
+  },
+  "available_grid_power": {"filename": "available_grid_power.csv", "column": "Building_1"},
+  "observations": {"available_grid_power": true}
+}
+```
+
+| Campo | Tipo | Finalidade |
+|---|---:|---|
+| `mode` | `single_phase`, `three_phase` | Tipo de serviço. Os serviços monofásicos só têm `L1`. |
+| `default_split` | `balanced`, `L1`, `L2`, `L3` | Repartição por fases da carga sem ligação a uma fase. |
+| `limits.total.import_kw`, `limits.total.export_kw` | kW | Capacidade estática da ligação. |
+| `limits.per_phase.<L1/L2/L3>.import_kw`, `export_kw` | kW | Limites estáticos por fase. |
+| `available_grid_power` | caminho ou objeto | Série opcional da importação disponível em cada passo; ver abaixo. |
+| `observations.headroom`, `observations.headroom_export` | bool | Expõe as observações das margens de importação/exportação. Predefinido true. |
+| `observations.violation` | bool | Expõe `charging_constraint_violation_kwh`. Predefinido true. |
+| `observations.phase_encoding` | bool | Expõe a atribuição de fase dos carregadores em codificação one-hot. Predefinido false. |
+| `observations.available_grid_power` | bool | Expõe a observação `available_grid_power` quando há uma série definida. Predefinido true. |
+
+### Potência de rede disponível
+
+`available_grid_power` indica um ficheiro CSV ou Parquet com uma linha por passo de tempo,
+alinhado com `energy_simulation`. Indique-o como nome de ficheiro ou como
+`{"filename": ..., "column": ...}`. Sem `column`, é usada a coluna com o nome do edifício e,
+depois, uma coluna chamada `available_grid_power`, pelo que um só ficheiro pode ter uma coluna
+por edifício. Os valores são a potência que o edifício pode importar da rede nesse passo, em
+kW (potência, não energia por passo).
+
+O limite de importação em vigor num passo é o menor entre `limits.total.import_kw` e o valor
+da série. Um valor em branco aplica apenas o limite estático; é um erro quando `import_kw` não
+está definido. Os valores têm de ser finitos e não negativos. Use-o para limitações abaixo da
+capacidade da ligação, como um operador da rede de distribuição que reduz a potência de
+dispositivos controláveis (§14a EnWG alemão) ou uma redução de capacidade durante um período
+de stress da rede.
+
+O limite atua como o estático: os carregadores de VE e o armazenamento elétrico são limitados
+primeiro, e a carga que não pode ser limitada continua a ser servida e conta como violação do
+serviço elétrico. Um limite de 0 kW não coloca o edifício em ilha; use
+[`power_outage`](#buildings) para um apagão. Os limites por fase continuam estáticos. A
+observação `available_grid_power` indica o limite do intervalo seguinte; as observações das
+margens descrevem o último intervalo executado, pelo que refletem o limite então em vigor.
+
+## Carregadores
 
 ```json
 "chargers": {
@@ -285,19 +397,30 @@ limite do proximo intervalo; o headroom descreve o ultimo intervalo executado.
 }
 ```
 
-| Campo | Unidade | O que faz |
+| Campo | Unidade | Finalidade |
 |---|---:|---|
-| `charger_simulation` | path | Schedule temporal do charger. |
-| `max_charging_power` | kW | Limite superior de carga. |
-| `min_charging_power` | kW | Minimo tecnico de carga. |
-| `max_discharging_power` | kW | Limite V2G. |
-| `min_discharging_power` | kW | Minimo tecnico V2G. |
-| `efficiency` | ratio | Eficiencia fixa. |
-| `charge_efficiency_curve` | ratio vs potencia normalizada | Curva opcional de eficiencia de carga. |
-| `discharge_efficiency_curve` | ratio vs potencia normalizada | Curva opcional de eficiencia de descarga. |
-| `phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Fase eletrica do charger. |
+| `charger_simulation` | caminho | Ficheiro com o horário do carregador. |
+| `soc_unit` | `percent`, `fraction` | Opcional, ao lado de `charger_simulation`: a unidade das colunas de SOC do ficheiro de horário. Se for omitido, é inferido uma vez por coluna a partir do ficheiro inteiro (ver [unidade do SOC](dataset_reference.md#unidade-do-soc)). |
+| `attributes.nominal_power` | kW | Potência nominal. Valor predefinido de `max_charging_power`. |
+| `attributes.charger_type` | qualquer | Etiqueta descritiva (por exemplo 0 para AC, 1 para DC). Não tem efeito na simulação. |
+| `attributes.max_charging_power` | kW | Limite superior de carregamento. Por omissão é `nominal_power`, ou 50 kW com um aviso. |
+| `attributes.min_charging_power` | kW | Potência mínima técnica de carregamento. Por omissão 0. |
+| `attributes.max_discharging_power` | kW | Limite superior de V2G. Por omissão 0: o carregador não descarrega a menos que este campo seja definido (um aviso indica-o). |
+| `attributes.min_discharging_power` | kW | Potência mínima técnica de V2G. Por omissão 0. |
+| `attributes.efficiency` | rácio | Eficiência fixa/predefinida, usada num sentido sem curva de eficiência. Por omissão 1.0, com um aviso quando é usada. |
+| `attributes.charge_efficiency_curve` | rácio vs potência normalizada | Curva opcional de eficiência de carregamento. |
+| `attributes.discharge_efficiency_curve` | rácio vs potência normalizada | Curva opcional de eficiência de descarga. |
+| `attributes.phase_connection` | `L1`, `L2`, `L3`, `all_phases` | Atribuição da fase elétrica. |
 
-## EV Definitions
+Qualquer outro nome em `attributes` lança um `ValueError` que indica o carregador e sugere o
+nome válido mais próximo, pelo que um `max_discharge_power` mal escrito deixa de cair num valor
+predefinido ([#369](https://github.com/citylearn-project/CityLearn/issues/369)). Uma chave do
+carregador que não seja `type`, `charger_simulation`, `attributes`, `autosize`, `noise_std` ou
+`soc_unit` é ignorada com um aviso que sugere a chave mais próxima. Com a versão
+de física 1, um `max_charging_power` ou `max_discharging_power` omitido vale 50 kW, como no
+CityLearn 3.6.0, e `nominal_power` não é usado.
+
+## Definições dos VE
 
 ```json
 "electric_vehicles_def": {
@@ -316,20 +439,20 @@ limite do proximo intervalo; o headroom descreve o ultimo intervalo executado.
 }
 ```
 
-| Campo | O que faz |
+| Campo | Finalidade |
 |---|---|
-| `type` | Classe EV. |
-| `include` | Inclui EV no pool inicial. |
+| `type` | Caminho da classe do VE. |
+| `include` | Inclui o VE no conjunto inicial. |
 | `battery.attributes` | Kwargs de `Battery`. |
 
-O standby loss das baterias EV fica isolado dos defaults de storage estacionario:
+A perda em repouso da bateria dos VE está intencionalmente isolada dos valores predefinidos do armazenamento estacionário:
 
-- `battery.attributes.loss_coefficient` ausente ou `null` usa default `0.0` em EVs.
-- Valores EV explicitos de `loss_coefficient` sao interpretados como ratios de perda horaria.
-- Todas as implementacoes de `StorageDevice`, incluindo `Battery` estacionaria e `StorageTank`, convertem valores horarios de `loss_coefficient` para perda efetiva por step com `loss_coefficient * seconds_per_time_step / 3600`.
-- Os ranges default de parametros de storage estacionario ficam inalterados.
+- Um `battery.attributes.loss_coefficient` ausente ou `null` assume `0.0` nos VE.
+- Os valores explícitos de `loss_coefficient` dos VE são interpretados como rácios de perda horária.
+- Todas as implementações de `StorageDevice`, incluindo `Battery` estacionária e `StorageTank`, convertem os valores horários de `loss_coefficient` numa perda efetiva por passo, composta ao longo do passo: `1 - (1 - loss_coefficient) ** (seconds_per_time_step / 3600)`.
+- As gamas predefinidas dos parâmetros do armazenamento estacionário não mudam.
 
-## Deferrable Appliances
+## Aparelhos diferíveis
 
 ```json
 "deferrable_appliances": {
@@ -344,16 +467,49 @@ O standby loss das baterias EV fica isolado dos defaults de storage estacionario
 }
 ```
 
-| Campo | Obrigatorio | O que faz |
+| Campo | Obrigatório | Finalidade |
 |---|---:|---|
-| `type` | nao | Classe appliance. Default: `citylearn.energy_model.DeferrableAppliance`. |
-| `cycle_profiles_file` | sim | Catalogo de perfis fisicos dos ciclos. |
+| `type` | não | Classe do aparelho. Predefinida: `citylearn.energy_model.DeferrableAppliance`. |
+| `cycle_profiles_file` | sim | Catálogo dos perfis físicos dos ciclos. |
 | `flexibility_schedule_file` | sim | Pedidos/janelas de flexibilidade. |
-| `attributes.trigger_threshold` | nao | Threshold de start (default `0.5`; `action > threshold` e interpretado como ON). |
+| `attributes.trigger_threshold` | não | Limiar da ação de arranque (predefinido `0.5`; `action > threshold` é interpretado como ON). |
 
-## Dynamic Topology
+## Escadas rolantes (interface flat)
 
-`topology_mode="dynamic"` requer `interface="entity"`.
+```json
+"escalators": {
+  "EscadaRolante_1": {
+    "type": "citylearn.energy_model.Escalator",
+    "simulation": "EscadaRolante_1.csv",
+    "attributes": {
+      "standby_power": 0.08,
+      "slow_power": 0.42,
+      "normal_power": 2.10,
+      "minimum_state_steps": 1,
+      "service_threshold_passengers": 0.5
+    }
+  }
+}
+```
+
+| Campo | Obrigatório | Finalidade |
+|---|---:|---|
+| `type` | não | Classe da escada rolante. Predefinida: `citylearn.energy_model.Escalator`. |
+| `simulation` | sim | CSV com uma linha por passo de simulação. |
+| `attributes.standby_power`, `slow_power`, `normal_power` | sim | Potências em kW, não negativas; têm de ser não decrescentes. |
+| `attributes.minimum_state_steps` | não | Permanência mínima num estado; predefinida `1`. |
+| `attributes.service_threshold_passengers` | não | Procura de passageiros acima da qual o serviço é exigido; predefinida `0.5`. |
+
+O CSV exige `time_step`, `passengers_from_trains_15min`,
+`background_pedestrians_15min`, `passengers_expected_15min`, `people_detected`,
+`arriving_trains`, `departing_trains`, `minutes_to_next_train` e `available`.
+`passengers_expected_15min` tem de ser igual à soma das duas componentes de
+passageiros. O suporte das escadas rolantes está atualmente exposto através da
+interface flat.
+
+## Topologia dinâmica
+
+`topology_mode="dynamic"` exige `interface="entity"`.
 
 ```json
 "topology_events": [
@@ -371,25 +527,25 @@ O standby loss das baterias EV fica isolado dos defaults de storage estacionario
 ]
 ```
 
-| Campo | Tipo | O que faz |
+| Campo | Tipo | Finalidade |
 |---|---:|---|
 | `id` | string | ID do evento. |
-| `time_step` | int | Timestep global onde o evento e aplicado. |
+| `time_step` | int | Passo de tempo global em que o evento é aplicado. |
 | `operation` | enum | `add_member`, `remove_member`, `add_asset`, `remove_asset`. |
-| `target_member_id` | string | Building alvo. |
+| `target_member_id` | string | Edifício alvo. |
 | `target_asset_type` | enum | `charger`, `deferrable_appliance`, `pv`, `electrical_storage`. |
-| `target_asset_id` | string | Asset alvo. |
-| `source_member_id` | string | Building fonte para clones. |
-| `source_asset_id` | string | Asset fonte para clones. |
-| `overrides` | object | Atributos a aplicar depois do clone. |
+| `target_asset_id` | string | Ativo alvo. |
+| `source_member_id` | string | Edifício de origem para a clonagem. |
+| `source_asset_id` | string | Ativo de origem para a clonagem. |
+| `overrides` | object | Atributos aplicados depois da clonagem. |
 
-Remover `deferrable_appliance` cancela ciclos pendentes/running e limpa consumo futuro. Remover PV cria PV zero. Remover storage cria BESS zero.
+Remover um aparelho diferível cancela os ciclos pendentes/em curso e limpa o consumo futuro. Remover o FV cria um FV nulo. Remover o armazenamento cria um BESS nulo.
 
-Os ficheiros de series temporais de um membro (energy simulation, chargers, escalators) sao full-horizon, com uma linha por timestep do dataset, ou ficheiros de janela do membro, mais curtos que o dataset, cuja primeira linha e o timestep do evento `add_member`. Um ficheiro de janela deve cobrir os steps ativos do membro na janela de simulacao (caso contrario a ultima linha e repetida, com um aviso), e um membro que volta a entrar depois de sair precisa de ficheiros full-horizon. Um membro que entra a meio do episodio comeca a bateria e o armazenamento termico em `initial_soc`.
+Os ficheiros de séries temporais de um membro (energy simulation, carregadores, escadas rolantes) são de horizonte completo, com uma linha por passo de tempo do dataset, ou ficheiros de janela do membro, mais curtos do que o dataset, cuja primeira linha é o passo de tempo do evento `add_member` do membro. Um ficheiro de janela do membro deve cobrir os passos ativos do membro na janela de simulação (caso contrário, a última linha é repetida, com um aviso), e um membro que volta a entrar depois de ter saído precisa de ficheiros de horizonte completo. Um membro que entra a meio do episódio começa a bateria e o armazenamento térmico em `initial_soc`.
 
-## Demand Response
+## Resposta à procura
 
-Demand response v1 e orientado por dataset e entity-only. O agente observa pedidos de flexibilidade ao nivel district e responde atraves das acoes fisicas existentes, como storage, EVs e cargas flexiveis.
+A resposta à procura v1 é definida pelo dataset e exclusiva da interface entity. O agente observa pedidos de flexibilidade ao nível do distrito e responde através das ações físicas que já existem, como armazenamento, VE e cargas flexíveis.
 
 ```json
 "demand_response": {
@@ -401,28 +557,28 @@ Demand response v1 e orientado por dataset e entity-only. O agente observa pedid
 }
 ```
 
-| Campo | Default | O que faz |
+| Campo | Predefinido | Finalidade |
 |---|---:|---|
-| `enabled` | `false` | Ativa leitura de pedidos DR, observacoes, settlement e KPIs. |
-| `requests_file` | obrigatorio quando ativo | Ficheiro CSV ou Parquet relativo a `root_directory` ou a pasta do schema. |
-| `baseline_method` | `rolling_pre_event_average` | Metodo de baseline. Este e o unico metodo v1. |
-| `baseline_window_seconds` | `3600` | Janela historica pre-evento usada para calcular baseline congelado. |
-| `allow_overlapping_requests` | `false` | Pedidos sobrepostos sao rejeitados na v1. |
+| `enabled` | `false` | Ativa o carregamento dos pedidos de resposta à procura, as observações, a liquidação e os KPIs. |
+| `requests_file` | obrigatório quando ativo | Ficheiro CSV ou Parquet relativo a `root_directory` ou à pasta do schema. |
+| `baseline_method` | `rolling_pre_event_average` | Método da referência. É o único método da v1. |
+| `baseline_window_seconds` | `3600` | Janela de histórico anterior ao evento usada para calcular a referência congelada do evento. |
+| `allow_overlapping_requests` | `false` | Os pedidos sobrepostos são rejeitados na v1. |
 
 Colunas do ficheiro de pedidos:
 
-| Coluna | Unidade/dominio | O que e |
+| Coluna | Unidade/domínio | Significado |
 |---|---:|---|
-| `request_id` | string | ID unico do pedido. Exposto em `meta`. |
+| `request_id` | string | ID único do pedido. Exposto no `meta` das observações. |
 | `issuer` | `dso`/`tso` | Entidade que emitiu o pedido. |
-| `direction` | `up`/`down` | Perspetiva da carga: `up` aumenta net load, `down` reduz net load. |
-| `start_time_step`, `end_time_step` | timestep global | Janela inclusiva de ativacao. |
-| `target_power_kw` | kW | Target positivo ao nivel district. |
-| `activation_price_eur_per_kwh` | currency/kWh | Preco creditado pela entrega. |
-| `shortfall_penalty_eur_per_kwh` | currency/kWh | Penalizacao por shortfall. |
-| `tolerance_power_kw` | kW | Tolerancia opcional; default `0`. |
+| `direction` | `up`/`down` | Perspetiva da carga: `up` aumenta a carga líquida, `down` reduz a carga líquida. |
+| `start_time_step`, `end_time_step` | passo de tempo global | Janela de ativação inclusiva. |
+| `target_power_kw` | kW | Potência alvo positiva do distrito. |
+| `activation_price_eur_per_kwh` | moeda/kWh | Preço creditado pela entrega. |
+| `shortfall_penalty_eur_per_kwh` | moeda/kWh | Penalização pelo défice. |
+| `tolerance_power_kw` | kW | Tolerância opcional; predefinida `0`. |
 
-Quando ativo, ativar tambem o bundle:
+Quando estiver ativa, ative o bundle de observação:
 
 ```json
 "observation_bundles": {
@@ -430,11 +586,11 @@ Quando ativo, ativar tambem o bundle:
 }
 ```
 
-As features numericas entram na tabela entity `district`. O `request_id` ativo fica em `observations["meta"]["demand_response"]`, nao numa matriz numerica.
+As features numéricas são adicionadas à tabela entity `district`. O `request_id` ativo fica em `observations["meta"]["demand_response"]`, e não na matriz numérica.
 
 ## Robustez
 
-Robustez v1 e orientada por dataset e totalmente opcional. Eventos de observation e forecast degradam apenas o payload recebido pelo agente. Rewards, KPIs fisicos e settlement de demand response continuam a usar o estado real do simulador. Eventos de action e asset-control alteram a acao efetivamente aplicada.
+A robustez v1 é definida pelo dataset e totalmente opcional. Os eventos de observação e de previsão corrompem apenas o payload devolvido ao agente. As recompensas, os KPIs físicos e a liquidação da resposta à procura continuam a usar o estado real do simulador. Os eventos de ação e de controlo de ativos alteram a ação efetivamente aplicada.
 
 ```json
 "robustness": {
@@ -451,30 +607,30 @@ Robustez v1 e orientada por dataset e totalmente opcional. Eventos de observatio
 }
 ```
 
-| Campo | Default | O que faz |
+| Campo | Predefinido | Finalidade |
 |---|---:|---|
-| `enabled` | `false` | Ativa leitura e aplicacao de eventos de robustez. |
-| `events_file` | obrigatorio quando ativo | Ficheiro CSV ou Parquet relativo a `root_directory` ou a pasta do schema. |
-| `random_seed` | `0` | Semente deterministica para ruido dos eventos. |
-| `missing_replacement_value` | `-9999.0` | Sentinela default para observacoes/telemetria em falta. |
-| `modules.*.enabled` | `true` quando robustez ativa | Liga separadamente observations, forecasts, actions e assets. |
+| `enabled` | `false` | Ativa o carregamento e a aplicação dos eventos de robustez. |
+| `events_file` | obrigatório quando ativo | Ficheiro CSV ou Parquet relativo a `root_directory` ou à pasta do schema. |
+| `random_seed` | `0` | Semente determinística para o ruído dos eventos. |
+| `missing_replacement_value` | `-9999.0` | Sentinela predefinida para valores de observação/telemetria em falta. |
+| `modules.*.enabled` | `true` quando a robustez está ativa | Ativa individualmente observações, previsões, ações e ativos. |
 
 Colunas do ficheiro de eventos:
 
-| Coluna | Unidade/dominio | O que e |
+| Coluna | Unidade/domínio | Significado |
 |---|---:|---|
-| `event_id` | string | ID unico exposto em metadata. |
-| `module` | `observation`/`forecast`/`action`/`asset` | Modulo perturbado. |
+| `event_id` | string | ID único do evento, exposto nos metadados. |
+| `module` | `observation`/`forecast`/`action`/`asset` | Módulo de perturbação. |
 | `target_type` | tipo de entidade | `district`, `building`, `storage`, `charger`, `ev`, `pv` ou `deferrable_appliance`. |
-| `target_id` | id ou `*` | Nome/id da entidade, ou todos os targets compativeis. |
-| `target_feature` | feature/acao | Para assets usar `telemetry`, `control` ou `both`. |
-| `start_time_step`, `end_time_step` | timestep global | Janela inclusiva de ativacao. |
-| `mode` | enum | Observation/forecast: `missing`, `noise`, `bias`, `stuck`, `clip`; action: `dropout`, `noise`, `bias`, `stuck`, `delay`, `clip`; asset: `unavailable`. |
-| `value`, `std`, `min_value`, `max_value` | numerico | Parametros opcionais do modo. |
-| `replacement_value` | numerico | Sentinela opcional para missing/telemetry. |
-| `delay_steps` | count | Atraso opcional de acao. |
+| `target_id` | id ou `*` | Nome/id da entidade alvo, ou todos os alvos compatíveis. |
+| `target_feature` | feature/ação | Para ativos, use `telemetry`, `control` ou `both`. |
+| `start_time_step`, `end_time_step` | passo de tempo global | Janela de ativação inclusiva. |
+| `mode` | enum | Observação/previsão: `missing`, `noise`, `bias`, `stuck`, `clip`; ação: `dropout`, `noise`, `bias`, `stuck`, `delay`, `clip`; ativo: `unavailable`. |
+| `value`, `std`, `min_value`, `max_value` | numérico | Parâmetros opcionais do modo. |
+| `replacement_value` | numérico | Sentinela opcional para valores em falta/telemetria. |
+| `delay_steps` | contagem | Horizonte opcional do atraso da ação. |
 
-Em entity observations, ativar diagnostico se necessario:
+Com observações entity, ative os diagnósticos, se necessário:
 
 ```json
 "observation_bundles": {
@@ -482,9 +638,9 @@ Em entity observations, ativar diagnostico se necessario:
 }
 ```
 
-Metadata fica em `observations["meta"]["robustness"]`.
+Os metadados ficam expostos em `observations["meta"]["robustness"]`.
 
-## Community Market
+## Mercado comunitário
 
 ```json
 "community_market": {
@@ -501,34 +657,56 @@ Metadata fica em `observations["meta"]["robustness"]`.
 }
 ```
 
-| Campo | Default | O que faz |
+| Campo | Predefinido | Finalidade |
 |---|---:|---|
-| `enabled` | `false` | Ativa settlement local. |
-| `local_price_ratio_to_grid_import` | `0.8` | Preco local relativo ao preco de import grid. |
-| `intra_community_sell_ratio` | alias | Nome legacy para o mesmo ratio. |
-| `settlement_version` | `1` | `2` ativa o `grid_export_price`; com `1`, a exportação residual não é remunerada. |
-| `grid_export_price` | `0.0` | EUR/kWh pagos pela exportação residual quando `settlement_version` é `2`. Tem de ser finito. |
-| `tariff_files` | `{}` | Tarifas CSV por membro, `{"<edifício>": "<ficheiro no dataset>"}`, com uma linha por passo global e as colunas `grid_export_price`, `community_buy_price` e `community_sell_price` (EUR/kWh), cobrindo o episódio. Substituem o rácio e o `grid_export_price` para esse membro. |
-| `local_trading_enabled` | `true` | `false` mantém a liquidação e os KPIs do mercado mas não troca energia localmente. Aceita booleanos ou `"true"`/`"false"`. |
-| `import_member_weights` | `{}` | Pesos para repartir energia local entre importadores. |
-| `kpis.community_local_traded_enabled` | `true` | Ativa KPI v2 de energia local transacionada. |
-| `kpis.community_self_consumption_enabled` | `true` | Ativa KPI v2 de import share local. |
+| `enabled` | `false` | Ativa a liquidação local. |
+| `local_price_ratio_to_grid_import` | `0.8` | Preço local relativo ao preço de importação da rede. Um número de 0 a 1. |
+| `intra_community_sell_ratio` | alias | Nome antigo do mesmo rácio. Se as duas chaves estiverem definidas, têm de ser iguais. |
+| `settlement_version` | `1` | `1` ou `2`, como número (`2.0` é aceite, a string `"2"` não). `2` ativa `grid_export_price`; com `1`, as exportações residuais para a rede não são remuneradas. |
+| `grid_export_price` | `0.0` | EUR/kWh pagos pelas exportações residuais para a rede. Um número finito; um valor diferente de zero exige `"settlement_version": 2`. |
+| `tariff_files` | `{}` | Tarifas CSV por membro, `{"<building>": "<file inside the dataset>"}`. Cada ficheiro tem uma linha por passo de tempo global com `grid_export_price`, `community_buy_price` e `community_sell_price` (EUR/kWh) e tem de cobrir o episódio. Um membro com ficheiro usa estes preços em vez do rácio e de `grid_export_price`. |
+| `local_trading_enabled` | `true` | `false` mantém a liquidação e os KPIs do mercado, mas não troca energia localmente. Aceita booleanos ou `"true"`/`"false"`. |
+| `import_member_weights` | `{}` | Pesos para repartir a energia local entre os importadores, `{"<building>": peso}`. Cada edifício tem de estar no schema e cada peso tem de ser um número finito maior ou igual a 0. |
+| `kpis.community_local_traded_enabled` | `true` | Ativa o KPI de energia transacionada localmente. |
+| `kpis.community_self_consumption_enabled` | `true` | Ativa o KPI da quota de importação local. |
+| `matching_granularity` | `"aggregate_building"` | O único valor suportado; fica registado nos metadados. |
+| `counterfactual` | `"grid_only"` | O único valor suportado: as poupanças comparam cada membro com comprar e vender só à rede. Escrito pelo gerador das suites anuais de REC. |
 
-Cada lado de uma troca local usa a tarifa do seu membro. Com tarifas diferentes entre
-membros, os importadores podem pagar um valor diferente do que os exportadores
-recebem pela mesma energia; a diferença aparece em
-`community_operator_balance_total_eur` (positiva quando o mercado retém dinheiro) e é
-zero com uma tarifa única.
+## Combinações importantes
 
-## Combinacoes Importantes
+As definições são verificadas quando o env é construído, mesmo com
+`enabled: false`. Uma chave desconhecida (por exemplo `enable`), um rácio que
+não é um número ou está fora de `[0, 1]`, um `settlement_version` que não seja o
+valor `1` ou `2` (incluindo a string `"2"`), um `grid_export_price` diferente
+de zero sem `"settlement_version": 2`, e um peso ou ficheiro de tarifa de um
+edifício que não está no schema dão `ValueError`. As versões anteriores
+ignoravam estas definições ou substituíam-nas por valores predefinidos. A chave
+antiga `intra_community_sell_ratio` é um alias.
 
-| Caso | Configuracao |
+As definições são lidas do schema na construção. Alterar depois os atributos do
+mercado no env (`community_market_enabled`,
+`community_market_sell_ratio`,
+`community_market_grid_export_price`, `community_market_import_member_weights`,
+`community_market_local_enabled`, `community_tariffs`) não é suportado: a
+referência BAU nativa é reconstruída a partir do schema, por isso
+`evaluate_v2()` com a comparação BAU dá `ValueError` quando diferem. Para mudar
+o mercado, altere `schema['community_market']` e construa um novo env. A liquidação local valoriza as
+importações e exportações dos membros no mesmo passo de tempo; não altera o
+despacho físico dos dispositivos.
+
+Cada lado de uma troca local é valorizado com a tarifa do respetivo membro.
+Quando os membros têm tarifas de rede ou `tariff_files` diferentes, os
+importadores podem pagar um valor diferente do que os exportadores recebem pela
+mesma energia. A diferença é reportada como `community_operator_balance_total_eur`
+(positiva quando o mercado retém dinheiro); é zero com uma única tarifa partilhada.
+
+| Caso | Configuração |
 |---|---|
-| Treino flat classico | `interface` omitido ou `flat`, `topology_mode` omitido ou `static`. |
-| Entity para GNN/Transformer | `interface="entity"`, bundles conforme necessidade. |
-| Topologia dinamica | `interface="entity"`, `topology_mode="dynamic"`, `topology_events`. |
-| Demand response | `interface="entity"`, `demand_response.enabled=true`, bundle `entity_demand_response`. |
-| Robustez | Qualquer interface, `robustness.enabled=true`; adicionar `entity_robustness` para diagnostico entity. |
-| Datasets reais PV absoluto | `pv.attributes.generation_mode="absolute"`. |
-| 15 segundos | `seconds_per_time_step=15` e ficheiros ja nessa cadencia. |
-| Parquet pesado | Trocar paths `.csv` por `.parquet` mantendo colunas. |
+| Treino flat clássico | Omita `interface` ou use `interface="flat"`; topologia estática. |
+| Entity/GNN/Transformer | `interface="entity"` mais os bundles de observação pretendidos. |
+| Topologia dinâmica | `interface="entity"`, `topology_mode="dynamic"`, `topology_events`. |
+| Resposta à procura | `interface="entity"`, `demand_response.enabled=true`, bundle `entity_demand_response`. |
+| Robustez | Qualquer interface, `robustness.enabled=true`; adicione `entity_robustness` para diagnósticos entity. |
+| Medições FV reais | `pv.attributes.generation_mode="absolute"`. |
+| Dados de 15 segundos | `seconds_per_time_step=15` e ficheiros já nessa cadência. |
+| Datasets grandes | Prefira caminhos Parquet com as mesmas colunas. |

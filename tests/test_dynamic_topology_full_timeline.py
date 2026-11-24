@@ -6,6 +6,7 @@ from typing import Any, Mapping
 
 import numpy as np
 import pytest
+from private_access import entity_service, member_pool, topology_service
 
 pytest.importorskip("gymnasium")
 
@@ -184,7 +185,7 @@ def _assert_snapshot_contract(env: CityLearnEnv, snapshot: Mapping[str, Any]):
     _assert_edge_bounds(obs["edges"]["building_to_storage"], expected["counts"]["building"], expected["counts"]["storage"])
     _assert_edge_bounds(obs["edges"]["building_to_pv"], expected["counts"]["building"], expected["counts"]["pv"])
 
-    parsed = env._entity_service.parse_actions(_zero_entity_actions(env))
+    parsed = entity_service(env).parse_actions(_zero_entity_actions(env))
     assert len(parsed) == expected["counts"]["building"]
 
 
@@ -207,7 +208,7 @@ def _building_action_bound(env: CityLearnEnv, building_name: str, action_name: s
 def _assert_building_action_map(env: CityLearnEnv, building_name: str, action_name: str, value: float):
     payload = _zero_entity_actions(env)
     payload["map"] = {f"building:{building_name}": {action_name: value}}
-    parsed = env._entity_service.parse_actions(payload)
+    parsed = entity_service(env).parse_actions(payload)
     building_index = [building.name for building in env.buildings].index(building_name)
     assert parsed[building_index][f"{action_name}_action"] == pytest.approx(value)
 
@@ -215,7 +216,7 @@ def _assert_building_action_map(env: CityLearnEnv, building_name: str, action_na
 def _assert_charger_action_map(env: CityLearnEnv, charger_global_id: str, value: float):
     payload = _zero_entity_actions(env)
     payload["map"] = {f"charger:{charger_global_id}": {"electric_vehicle_storage": value}}
-    parsed = env._entity_service.parse_actions(payload)
+    parsed = entity_service(env).parse_actions(payload)
     building_name, charger_id = charger_global_id.split("/", 1)
     building_index = [building.name for building in env.buildings].index(building_name)
     assert parsed[building_index]["electric_vehicle_storage_actions"][charger_id] == pytest.approx(value)
@@ -247,7 +248,7 @@ def test_dynamic_topology_full_event_timeline_entity_contract_and_action_spaces(
             }
             if current_action_shape != previous_action_shape:
                 with pytest.raises(AssertionError, match="shape mismatch"):
-                    env._entity_service.parse_actions(previous_payload)
+                    entity_service(env).parse_actions(previous_payload)
 
         _assert_before_after_entity_observation_changes(snapshots)
     finally:
@@ -284,7 +285,7 @@ def _assert_event_specific_state(env: CityLearnEnv, t: int):
         payload = _zero_entity_actions(env)
         payload["map"] = {"charger:Building_5/charger_5_1": {"electric_vehicle_storage": 0.2}}
         with pytest.raises(AssertionError, match="Unknown charger id"):
-            env._entity_service.parse_actions(payload)
+            entity_service(env).parse_actions(payload)
 
     assert ("Building_11/pv" in pv) is (t < 5)
     assert ("Building_6/pv" in pv) is (t >= 6)
@@ -299,7 +300,7 @@ def _assert_event_specific_state(env: CityLearnEnv, t: int):
         payload = _zero_entity_actions(env)
         payload["map"] = {"building:Building_12": {"electrical_storage": 0.2}}
         with pytest.raises(AssertionError, match="Unknown building action keys"):
-            env._entity_service.parse_actions(payload)
+            entity_service(env).parse_actions(payload)
 
     assert ("Building_3/electrical_storage" in storage) is (t >= 8)
     _low, high = _building_action_bound(env, "Building_3", "electrical_storage")
@@ -349,7 +350,7 @@ def _assert_before_after_entity_observation_changes(snapshots: Mapping[int, Mapp
 
 
 def _structural_signature(env: CityLearnEnv):
-    service = env._topology_service
+    service = topology_service(env)
     assets = []
     for member_id, building in service.member_pool.items():
         assets.append(
@@ -388,7 +389,7 @@ def _run_complete_episode(env: CityLearnEnv):
             (
                 int(env.time_step),
                 int(env.topology_version),
-                tuple(env._topology_service.active_member_ids),
+                tuple(topology_service(env).active_member_ids),
                 tuple(specs["tables"]["charger"]["ids"]),
                 tuple(specs["tables"]["storage"]["ids"]),
                 tuple(specs["tables"]["pv"]["ids"]),
@@ -457,19 +458,19 @@ def test_dynamic_topology_reset_discards_runtime_cloned_members_before_replay():
 
     try:
         env.reset(seed=0)
-        assert "Building_clone" not in env._topology_service.member_pool
+        assert "Building_clone" not in member_pool(env)
         env.step(_zero_entity_actions(env))
-        assert "Building_clone" in env._topology_service.member_pool
+        assert "Building_clone" in member_pool(env)
         assert env.topology_event_log[-1]["applied"] is True
 
         while not (env.terminated or env.truncated):
             env.step(_zero_entity_actions(env))
 
         env.reset(seed=0)
-        assert "Building_clone" not in env._topology_service.member_pool
-        assert "Building_clone" not in env._topology_service.active_member_ids
+        assert "Building_clone" not in member_pool(env)
+        assert "Building_clone" not in topology_service(env).active_member_ids
         env.step(_zero_entity_actions(env))
-        assert "Building_clone" in env._topology_service.active_member_ids
+        assert "Building_clone" in topology_service(env).active_member_ids
         assert env.topology_event_log[-1]["applied"] is True
     finally:
         env.close()

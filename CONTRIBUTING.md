@@ -63,6 +63,11 @@ fails instead of blocking CI; the slowest tests take about two minutes.
 `python -m pytest -q --cov=citylearn --cov-report=term` prints the coverage
 (`pytest-cov`); a separate workflow (`.github/workflows/coverage.yml`) reports
 it weekly and on manual dispatch without slowing down pull-request checks.
+`tests/test_property_energy_conservation.py` uses `hypothesis` to draw step
+lengths, physics and settlement versions, outages, phase limits, topology events
+and every action of short episodes, and checks the physics invariants and the
+independent energy, cash and carbon balances. The search is derandomized, so a
+failure reproduces locally; Hypothesis prints the falsifying example.
 
 CI also runs the linter with the rules selected in `pyproject.toml`
 (`[tool.ruff.lint]`); run the same command before you push:
@@ -77,6 +82,11 @@ audits that CI runs:
 ```console
 python scripts/audit/run_full_audit.py --strict --output-dir audit-output
 ```
+
+CI runs the same audits as parallel jobs (`--audits physics`, `--audits datasets`
+and `--audits entity_contract refactor_parity`), uploads each job's JSON as its own
+artifact and requires all of them through the `runtime-audits` job. To rerun only
+the audit that failed, pass the same `--audits` selection.
 
 ## Documentation
 

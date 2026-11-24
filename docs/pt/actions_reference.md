@@ -1,80 +1,88 @@
-# Actions Reference
+# Referência de ações
 
-Todas as acoes sao normalizadas para uma faixa simples no agente. O simulador converte para energia/potencia fisica usando capacidade, potencia nominal, limites e `seconds_per_time_step`.
+As ações são normalizadas para o agente. O simulador converte-as em potência ou energia física usando a capacidade, a potência nominal, os limites dos ativos e `seconds_per_time_step`.
 
-## Regras Gerais
+Versão em inglês: [../actions_reference.md](../actions_reference.md).
+
+## Contrato geral
 
 | Regra | Contrato |
 |---|---|
-| Bounds | Vem de `env.action_space` e `env.action_names`. |
-| Storage actions | Valores positivos carregam, negativos descarregam. |
-| EV charger actions | Positivo carrega EV, negativo descarrega/V2G se permitido. |
-| Deferrable actions | Comando binario de start. `action > trigger_threshold` tenta iniciar o proximo ciclo pendente (`trigger_threshold` default: `0.5`). |
-| Unidades fisicas internas | A energia aplicada no step e `kWh/step`. Limites de potencia sao `kW`. |
-| Constraints | Charging/electrical service podem cortar a acao antes da aplicacao. |
+| Limites | Lidos de `env.action_space` e `env.action_names`. |
+| Ações de armazenamento | Positivo carrega, negativo descarrega. |
+| Ações de carregadores de VE | Positivo carrega o VE, negativo descarrega/V2G se estiver ativado. |
+| Ações de aparelhos diferíveis | Comando binário de arranque. `action > trigger_threshold` tenta arrancar o próximo ciclo pendente (`trigger_threshold` predefinido: `0.5`). |
+| Ações de escadas rolantes | Três estados: standby (`[0, 1/3[`), lento (`[1/3, 2/3[`) e normal (`[2/3, 1]`). |
+| Energia interna | A energia aplicada por passo está em `kWh/step`. |
+| Limites de potência | As potências nominais dos equipamentos e os limites de serviço estão em `kW`. |
+| Restrições | As restrições do serviço de carregamento/elétrico podem cortar as ações antes da aplicação. |
 
-## Acoes Flat
+## Ações flat
 
-| Acao | Range tipico | Entidade | Efeito |
+| Ação | Gama típica | Entidade | Efeito |
 |---|---:|---|---|
-| `cooling_or_heating_device` | `[-1, 1]` | building | Negativo controla cooling, positivo controla heating. Incompativel com `cooling_device` e `heating_device` ativos em simultaneo. |
-| `cooling_device` | `[0, 1]` | building | Controla setpoint/demand cooling em buildings dinamicos. |
-| `heating_device` | `[0, 1]` | building | Controla setpoint/demand heating em buildings dinamicos. |
-| `cooling_storage` | `[-limit, limit]` | building | Carrega/descarrega storage termico de cooling. |
-| `heating_storage` | `[-limit, limit]` | building | Carrega/descarrega storage termico de heating. |
-| `dhw_storage` | `[-limit, limit]` | building | Carrega/descarrega storage DHW. |
-| `electrical_storage` | `[-1, 1]` | building | Controla BESS. |
-| `electric_vehicle_storage_{charger_id}` | `[-1, 1]` ou `[0, 1]` | charger | Controla EV ligado ao charger. Limite negativo depende de `max_discharging_power`. |
-| `deferrable_appliance_{appliance_id}` | `[0, 1]` | appliance | Comando binario (`0` off, `1` on) para iniciar o proximo ciclo elegivel. |
+| `cooling_or_heating_device` | `[-1, 1]` | building | Negativo controla o arrefecimento, positivo controla o aquecimento. Mutuamente exclusiva com ações separadas de arrefecimento/aquecimento. |
+| `cooling_device` | `[0, 1]` | building | Controla a procura/setpoint de arrefecimento em edifícios dinâmicos. |
+| `heating_device` | `[0, 1]` | building | Controla a procura/setpoint de aquecimento em edifícios dinâmicos. |
+| `cooling_storage` | `[-limit, limit]` | building | Carrega/descarrega o armazenamento térmico de arrefecimento. |
+| `heating_storage` | `[-limit, limit]` | building | Carrega/descarrega o armazenamento térmico de aquecimento. |
+| `dhw_storage` | `[-limit, limit]` | building | Carrega/descarrega o armazenamento de água quente sanitária. |
+| `electrical_storage` | `[-1, 1]` | building | Controla o BESS do edifício. |
+| `electric_vehicle_storage_{charger_id}` | `[-1, 1]` ou `[0, 1]` | charger | Controla o VE ligado a um carregador. O limite negativo depende de `max_discharging_power`. |
+| `deferrable_appliance_{appliance_id}` | `[0, 1]` | appliance | Comando binário de arranque (`0` desligado, `1` ligado) para o próximo ciclo viável. |
+| `escalator_{escalator_id}` | `[0, 1]` | escalator | Seleciona o funcionamento em standby, lento ou normal. |
 
-### Conversao de BESS
+## Conversão física
 
-Para `electrical_storage`, a acao normalizada e convertida com a potencia nominal:
+Ação do BESS:
 
 ```text
 energy_kwh_step = action * nominal_power_kw * seconds_per_time_step / 3600
 ```
 
-Depois o storage aplica eficiencia, SOC, depth of discharge, power curves e capacidade.
-
-### Conversao de EV Charger
-
-Para EVs, a acao normalizada e convertida usando `max_charging_power` ou `max_discharging_power`:
+Ação do carregador de VE:
 
 ```text
-charge_energy_kwh_step = action_positive * max_charging_power_kw * seconds_per_time_step / 3600
-discharge_energy_kwh_step = action_negative * max_discharging_power_kw * seconds_per_time_step / 3600
+charge_energy_kwh_step = positive_action * max_charging_power_kw * seconds_per_time_step / 3600
+discharge_energy_kwh_step = negative_action * max_discharging_power_kw * seconds_per_time_step / 3600
 ```
 
-O charger aplica disponibilidade de EV, SOC, required SOC, eficiencia e constraints.
+Depois da conversão, o ativo aplica o SOC, a capacidade, a eficiência, as curvas de potência e as restrições de serviço.
 
-### Deferrable Appliances
+## Lógica de arranque dos aparelhos diferíveis
 
-O appliance so inicia se:
+Um ciclo só arranca quando todas as condições se verificam:
 
-| Condicao | Regra |
+| Condição | Regra |
 |---|---|
-| Ciclo pendente | Existe um ciclo com estado `pending`. |
-| Acao | `action > trigger_threshold` (default `0.5`). |
-| Janela | `earliest_start_time_step <= current_global_time_step <= latest_start_time_step`. |
-| Deadline | `current + duration_steps - 1 <= deadline_time_step`. |
-| Episodio | O ciclo cabe dentro do episodio atual. |
+| Ciclo pendente | Existe um ciclo com o estado `pending`. |
+| Limiar da ação | `action > trigger_threshold` (predefinido `0.5`). |
+| Janela de arranque | `earliest_start_time_step <= current_global_time_step <= latest_start_time_step`. |
+| Prazo | `current + duration_steps - 1 <= deadline_time_step`. |
+| Janela do episódio | O ciclo completo cabe dentro do episódio atual. |
 
-Se passar `latest_start_time_step` sem start valido, o ciclo fica `missed`. Se nao houver ciclo pendente, a acao nao tem efeito.
+Se o agente tentar tarde demais, o arranque é rejeitado. Se `latest_start_time_step` passar sem um arranque válido, o ciclo é marcado como falhado.
 
-Recomendacao para controladores: usar `deferrable_appliance_can_start` como sinal de disponibilidade e enviar `1.0` apenas quando pretende arrancar.
+Recomendação para controladores: use `deferrable_appliance_can_start` como sinal de prontidão e envie `1.0` apenas quando pretender um arranque.
 
-## Entity Actions
+## Controlo das escadas rolantes
 
-Em entity mode, as acoes ficam agrupadas por tabela:
+A ação de uma escada rolante só é contínua por compatibilidade com os agentes;
+é discretizada em três estados de funcionamento. `standby` consome a potência
+de standby e deixa por servir qualquer procura de passageiros acima de
+`service_threshold_passengers`. Tanto `slow` como `normal` servem a procura
+agregada. `available=0` força o standby. Este modelo não simula filas de
+passageiros nem limites de capacidade.
+
+## Ações entity
 
 | Tabela | Feature | Corresponde a |
 |---|---|---|
-| `building` | Actions de building | `cooling_storage`, `dhw_storage`, `electrical_storage`, etc. |
-| `charger` | `electric_vehicle_storage` | Uma row por charger ativo. |
-| `deferrable_appliance` | `start` | Uma row por appliance ativo. |
+| `building` | nomes das ações do edifício | `cooling_storage`, `dhw_storage`, `electrical_storage`, etc. |
+| `charger` | `electric_vehicle_storage` | Uma linha por carregador ativo. |
+| `deferrable_appliance` | `start` | Uma linha por aparelho ativo. |
 
-Exemplo por tabelas:
+Payload por tabelas:
 
 ```python
 actions = {
@@ -84,10 +92,9 @@ actions = {
         "deferrable_appliance": [[1.0]]
     }
 }
-obs, reward, terminated, truncated, info = env.step(actions)
 ```
 
-Exemplo por `map`:
+Payload por mapa:
 
 ```python
 actions = {
@@ -99,18 +106,21 @@ actions = {
 }
 ```
 
-## Ordem de Aplicacao no Step
+## Ordem no passo
 
-A ordem simplificada dentro do building e:
+A ordem simplificada das ações do edifício é:
 
-1. Resolver acoes ativas e preencher inativas com zero ou `nan` conforme o tipo.
-2. Aplicar charging/electrical constraints a EVs e BESS.
-3. Atualizar demandas dinamicas quando aplicavel.
-4. Atualizar dispositivos HVAC e storages termicos.
-5. Atualizar non-shiftable load.
-6. Atualizar BESS.
-7. Atualizar EV chargers.
-8. Atualizar deferrable appliances.
-9. Atualizar net balance, rewards, KPIs e observacoes.
+1. Resolver as ações ativas/inativas.
+2. Aplicar as restrições de carregamento/elétricas aos VE e ao BESS.
+3. Atualizar as procuras dinâmicas, quando aplicável.
+4. Atualizar os equipamentos AVAC e o armazenamento térmico.
+5. Atualizar a carga não deslocável.
+6. Atualizar o BESS.
+7. Atualizar os carregadores de VE.
+8. Atualizar os aparelhos diferíveis.
+9. Atualizar as escadas rolantes.
+10. Atualizar o balanço líquido, as recompensas, os KPIs e as observações.
 
-Quando `electrical_storage_action < 0`, a descarga BESS ganha prioridade antes de outros consumos eletricos.
+Quando `electrical_storage_action < 0`, a descarga do BESS tem prioridade sobre os outros consumos elétricos.
+
+Durante um corte de energia, as ações dos carregadores de VE ficam limitadas ao abastecimento local, e uma ação negativa (descarga) é posta a zero, salvo se o `power_outage.vehicle_to_building` do edifício for `true`. Com essa opção, um VE ligado pode descarregar para o edifício. A descarga fica limitada à carga não deslocável mais a eletricidade de que os equipamentos de arrefecimento, aquecimento e AQS precisam para a procura que resta depois da descarga do armazenamento, menos a produção FV e a saída da bateria já disponíveis, pelo que nada é exportado para a rede em falha. É aplicada depois das descargas térmicas e da bateria e antes dessas cargas; os aparelhos diferíveis continuam a arrancar apenas com o abastecimento que essas cargas deixam.

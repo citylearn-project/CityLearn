@@ -31,6 +31,7 @@ Optional dependencies:
 | PV autosizing | `.venv/bin/pip install -e ".[pysam]"` |
 | Parallel tests | `.venv/bin/pip install pytest-xdist` |
 | Coverage report (`--cov=citylearn`) and the 600 s per-test timeout of `pytest.ini` | `.venv/bin/pip install pytest-cov pytest-timeout` (both are in `test_requirements.txt`) |
+| Property-based energy-conservation tests | `.venv/bin/pip install hypothesis` (in `test_requirements.txt`; `tests/test_property_energy_conservation.py` skips without it) |
 | Notebook checks | `.venv/bin/pip install nbclient nbformat ipykernel` |
 | RLlib wrappers | `.venv/bin/pip install "ray[rllib]"` (tested with Ray 2.60.0; `tests/test_rllib_wrappers.py` skips without it) |
 | Build checks | `.venv/bin/pip install build twine` |
@@ -177,6 +178,13 @@ reference trajectories. Missing dependencies/scripts, child failures and referen
 drift fail verification; ordinary runs do not rewrite snapshots. Algorithm audits
 remain explicit opt-in tools. Reference tests generate small temporary cases from
 existing fixtures; no SoftCPS production datasets are included.
+
+CI runs the physics audit, the official dataset audit, and the entity contract and
+refactor parity audits as three parallel jobs (`audit (physics)`, `audit (datasets)`,
+`audit (entity-contract-and-refactor-parity)`), each with `--strict` and its own
+`--audits` selection. Each job uploads its JSON evidence as
+`citylearn-runtime-audits-<name>`, and the `runtime-audits` job fails unless all
+three pass.
 
 Public facades delegate to focused internal modules for energy/equipment/service/
 community KPIs, entity observation/layout preparation, loading inputs/components
