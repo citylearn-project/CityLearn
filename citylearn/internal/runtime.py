@@ -1178,7 +1178,16 @@ class CityLearnRuntimeService:
                         handover = topology_connection and continuing_schedule and (
                             env._topology_service.was_ev_connected(ev, env.time_step - 1)
                         )
-                        soc_value = None if handover else _resolve_arrival_soc(
+                        # With `ev_soc_carryover`, a session that continues from the previous
+                        # episode keeps the SOC carried at reset instead of the schedule's.
+                        carryover = getattr(env, '_ev_soc_carryover_context', None) or {}
+                        carried = (
+                            env.time_step == 0
+                            and carryover.get('carried_in', False)
+                            and ev.name in carryover.get('continuing', ())
+                            and ev.name in carryover.get('soc', {})
+                        )
+                        soc_value = None if handover or carried else _resolve_arrival_soc(
                             sim, env.time_step, prev_state, prev_ev_id, ev_id,
                         )
                         if soc_value is not None:

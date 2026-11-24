@@ -330,6 +330,23 @@ rácios de partidas de execuções anteriores com episódios curtos ou divididos
 devem ser recalculados antes de comparar
 ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
 
+### SOC dos VE transportado entre divisões de episódios
+
+Nada muda sem `ev_soc_carryover=True`. Com esta definição, um episódio que
+continua o anterior no tempo (começa na última linha do episódio anterior, ou
+na linha seguinte, e o episódio anterior chegou ao fim) começa cada VE com o
+SOC que atingiu no fim desse episódio, e uma sessão ligada através da fronteira
+é avaliada onde realmente parte, com essa carga, como descreve a
+[referência dos KPIs](kpis_reference.md#partidas). Só o SOC dos VE é transportado: as baterias, o armazenamento térmico e as temperaturas interiores continuam a começar cada episódio no seu estado inicial. A definição é um compromisso. Desligada, cada episódio é independente dos anteriores, mas uma sessão que atravessa uma fronteira perde a carga que recebeu. Ligada, essa carga mantém-se, mas um episódio que continua o anterior depende do que o controlador anterior fez, pelo que os seus KPIs deixam de ser os de um episódio independente. As partidas cumpridas das
+execuções divididas aproximam-se então das de uma execução única, pelo que os
+resultados com e sem a definição não são comparáveis, e `compare_exports`
+indica-os como incompatíveis. Com `'disjoint'`, a linha entre dois episódios
+nunca é controlada, pelo que uma sessão ligada através dela pode ficar um passo
+de carregamento atrás da execução única. Os episódios escolhidos ao acaso, as
+divisões rolantes, as divisões com intervalo e um
+`reset(options={'episode_index': ...})` que salta para outro lado mantêm o SOC
+do calendário ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
+
 ### Os espaços de observação seguem as observações
 
 Os valores das observações, a sua ordem e `observation_names` não mudam, nem as

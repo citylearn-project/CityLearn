@@ -109,6 +109,7 @@ All communities must share `seconds_per_time_step`, effective episode length, `i
 | `rolling_episode_split` | bool | schema | Sequential window episodes. | Useful for training. |
 | `random_episode_split` | bool | schema | Random window episodes. | Uses `random_seed`. |
 | `episode_split_boundary` | str | `shared` | How consecutive (non-rolling) splits meet. | `shared` shares the boundary row so every interval is simulated; `disjoint` restores the 3.6.0 splits. |
+| `ev_soc_carryover` | bool | `False` | Start each EV of an episode that continues the previous one in time from its SOC at the end of that episode. | Only the EV SOC is carried. Off, episodes are independent but a session across a boundary loses its charge; on, consecutive episodes depend on the previous controller. See the [KPI reference](kpis_reference.md#departures). |
 | `seconds_per_time_step` | float | schema | Physical duration of each step. | Examples: 15, 60, 300, 900, 3600. |
 | `time_step_ratio` | int/float | inferred | Ratio between control step and dataset spacing. | Inferred from the data; a value passed here must match it. |
 | `time_step_ratio_mode` | str | `reject` | What to do when the control step differs from the dataset step. | `reject` raises an error; `compress` keeps the 3.6.0 behaviour (one data row per step, energies scaled). |

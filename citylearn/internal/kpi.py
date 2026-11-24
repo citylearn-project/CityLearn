@@ -1061,6 +1061,16 @@ class CityLearnKPIService:
             and after > before + self.EV_DEPARTURE_EPS
         )
 
+    def _ev_soc_carried_in(self) -> bool:
+        """Whether the episode started from EV SOC carried from the previous one (`ev_soc_carryover`).
+
+        A session that continues across the first row then keeps the charge of the previous episode and is
+        scored where it leaves, so step 0 does not skip it.
+        """
+
+        carryover = getattr(self.env, '_ev_soc_carryover_context', None)
+        return bool(carryover and carryover.get('carried_in', False))
+
     def _ev_last_step_countdown(self, terminal_step: int) -> float:
         """Largest departure countdown counted at a window's last control step.
 
@@ -1072,6 +1082,17 @@ class CityLearnKPIService:
         """
 
         env = self.env
+        carryover = getattr(env, '_ev_soc_carryover_context', None)
+        if carryover is not None:
+            # With `ev_soc_carryover` a session connected on the next episode's first row is scored there,
+            # with the carried SOC; the env sets the countdown from where that episode starts.
+            tracker = getattr(env, 'episode_tracker', None)
+            start = getattr(tracker, 'episode_start_time_step', None)
+            end = getattr(tracker, 'episode_end_time_step', None)
+            if start is None or end is None or terminal_step != end - start - 1:
+                return 1.0
+            return float(carryover.get('last_step_countdown', 1.0))
+
         if (
             getattr(env, 'episode_split_boundary', 'shared') != 'disjoint'
             or getattr(env, 'rolling_episode_split', False)
@@ -1253,7 +1274,7 @@ class CityLearnKPIService:
                 if current_state != 1 or not (departure_transition or terminal_departure):
                     continue
 
-                if t == 0 and self._ev_session_connected_before_window(sim):
+                if t == 0 and not self._ev_soc_carried_in() and self._ev_session_connected_before_window(sim):
                     continue
 
                 ev = self._safe_sequence_value(charger.past_connected_evs, t)

@@ -316,6 +316,22 @@ that was connected on the row before it. Departure counts and rates from
 earlier runs with short or split episodes should be recomputed before
 comparing ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
 
+### EV SOC carried across episode splits
+
+Nothing changes unless `ev_soc_carryover=True` is set. With it, an episode that
+continues the previous one in time (it starts on the previous episode's last
+row, or on the row after it, and the previous episode ran to its end) starts
+each EV from the SOC it reached at the end of that episode, and a session
+connected across the boundary is scored where it really leaves, with that
+charge, as described in the [KPI reference](kpis_reference.md#departures). Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still start every episode from their initial state. The setting is a trade-off. Off, every episode is independent of the ones before it, but a session that crosses a boundary loses the charge it received. On, that charge is kept, but an episode that continues the previous one depends on what the previous controller did, so its KPIs are no longer those of an independent episode.
+Met departures of split runs then rise towards those of one run, so results
+with and without the setting are not comparable, and `compare_exports` reports
+them as incompatible. Under `'disjoint'` the row between two episodes is never
+controlled, so a session connected across it can be one charging step behind
+one run. Episodes chosen at random, rolling splits, splits with a gap and a
+`reset(options={'episode_index': ...})` that jumps elsewhere keep the
+schedule SOC ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
+
 ### Observation spaces follow the observations
 
 The observation values, their order and `observation_names` do not change, and
