@@ -138,6 +138,58 @@ Asset connection, asset availability, sensor-channel state,
 actuator-channel state and community/cloud communication state are independent
 parts of the contract. A normally disconnected EV is not a failed charger.
 
+## Observation Bounds
+
+`observation_space` declares a `low` and a `high` for every observation, in both
+interfaces. The environment does not clip observations to these bounds, so an
+observation can fall outside `observation_space`, and `observation_space.contains()`
+and checks such as Stable Baselines3's `check_env` can then report it
+([#357](https://github.com/citylearn-project/CityLearn/issues/357)).
+`NormalizedObservationWrapper` does not clip either: it applies
+`(x - low) / (high - low)`, so its outputs can leave [0, 1]. To keep observations
+inside the space, add `ClippedObservationWrapper` (flat interface):
+
+```python
+from citylearn.wrappers import ClippedObservationWrapper, NormalizedObservationWrapper
+
+env = NormalizedObservationWrapper(ClippedObservationWrapper(env))
+```
+
+Where the model has no hard limit, the bounds are estimates that
+`Building.estimate_observation_space_limits` computes from the dataset series of
+the simulation window. For the thermal observations:
+
+| Observation | Bound |
+|---|---|
+| `indoor_dry_bulb_temperature` | Range of the dataset's `indoor_dry_bulb_temperature` column, widened by `maximum_temperature_delta` (20 °C by default) on each side. |
+| `indoor_dry_bulb_temperature_heating_delta`, `indoor_dry_bulb_temperature_cooling_delta` | Fixed at ±`maximum_temperature_delta`, [−20, 20] by default. |
+| Heating and cooling set points | Range of the dataset schedule. For occupant-interaction buildings under physics version 2, widened to `set_point_limits` (15–30 °C by default); the occupants never move the set point past those limits, so these bounds are exact. |
+
+Every bound is then widened by `observation_space_limit_delta` (0 by default).
+
+The indoor temperature of the LSTM buildings depends on how the HVAC is run, so
+whether it stays inside these estimates depends on the controller. On the two
+Quebec neighbourhoods (20 buildings, steps 0–2159, physics version 2):
+
+| Controller | Indoor temperature | Heating delta | Set point |
+|---|---|---|---|
+| HVAC at the dataset demand: `BusinessAsUsualAgent` under `baseline_version=3`, `RBCBasicPolicy`, `RBCSmartPolicy`, `RBCCommunityPolicy` | inside, 17.0–26.5 °C against [−1.1, 42.4] | inside | inside |
+| HVAC not run: `BusinessAsUsualAgent` under `baseline_version` 1 or 2 (the default), the rule-based baselines with `hvac='off'`, `ZeroActionAgent` | below `low` in 38% of building-steps, by up to 22.6 °C | below `low` in 89% of building-steps, by up to 31.6 °C | inside |
+| Random actions | above `high` in 7% of building-steps, by up to 20.7 °C | above `high` in 19% of building-steps, by up to 27.3 °C | inside |
+
+Without heating the indoor temperature falls towards the outdoor temperature,
+which in this period goes down to −32.5 °C, so the excess is on the cold side.
+Random actions can heat a building well beyond any dataset value, so their
+excess is on the hot side. After normalisation, the indoor temperature of an
+unheated Quebec building reaches about −0.47, and its heating delta about −0.79.
+
+The KPIs, the rewards, `evaluate()` and `evaluate_v2()` read the building state,
+not the observation vector, so they do not depend on these bounds. Datasets
+without HVAC actions are not affected: over a full episode on
+`citylearn_challenge_2022_phase_all_plus_evs` and `pt_rec_4`, under the BAU,
+`RBCSmartPolicy` and random actions, no observation leaves the space by more than
+float32 rounding.
+
 ## `entity_specs`
 
 `env.entity_specs` is the machine-readable schema for tables, columns, IDs, units, bundles and edges:
