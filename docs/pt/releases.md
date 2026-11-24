@@ -5,6 +5,14 @@ O [guia de publicação](publishing.md) descreve o procedimento para mantenedore
 
 ## Por publicar
 
+- **Repetição de traços de mobilidade.** Os ficheiros de simulação de carregadores aceitam as colunas que um
+  fornecedor de mobilidade escreve: `electric_vehicle_connected_seconds`,
+  `electric_vehicle_connected_since_seconds`, `electric_vehicle_departure_seconds` e
+  `electric_vehicle_discharge_soc_floor`. A coluna `electric_vehicle_trip_energy_kwh` indica a energia que um
+  veículo usou desde a partida anterior, pelo que o SOC de chegada segue o SOC com que partiu e não um valor
+  absoluto gravado. Um simulador de tráfego corre uma vez e o CityLearn treina sobre o traço gravado, sem o
+  simulador no ciclo. Ver [repetir um fornecedor gravado](mobility_provider.md#replaying-a-recorded-provider).
+  Os ficheiros sem estas colunas simulam de forma bit-idêntica.
 - **Fornecedores externos de mobilidade.** Um carregador declarado
   `"charger_simulation": {"source": "external"}` não tem ficheiro de calendário: um
   `citylearn.mobility.MobilityProvider`, por exemplo um adaptador para um simulador de tráfego como

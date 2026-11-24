@@ -135,6 +135,30 @@ the same value when the reference vehicle had the same SOC before the write, and
 same change (clipped to [0, 1]): the reference keeps its own charging history and sees the same
 driving consumption.
 
+## Replaying a recorded provider
+
+A provider's rows can be written to charger simulation files and replayed by a plain
+`CityLearnEnv(schema)`, without the provider and the traffic simulator. This is valid when the
+controller changes only building and charger power and the mobility does not react to it. The
+traffic simulator then runs once and CityLearn trains on its trace many times.
+
+Write the rows of each external charger (`charger.charger_simulation`, one per time step) as the
+columns of the [charger simulation file](dataset_reference.md#charger-simulation-columns) and set
+`electric_vehicle_connected_seconds`, `electric_vehicle_connected_since_seconds`,
+`electric_vehicle_departure_seconds` and `electric_vehicle_discharge_soc_floor` as written. The
+rows of the provider carry the absolute SOC at arrival in `electric_vehicle_current_soc`. Replaying
+that value is exact for the recorded actions only: with other actions the vehicle left the previous
+session with another SOC. Write the energy the vehicle used since its previous departure in
+`electric_vehicle_trip_energy_kwh` on the first row of each session, and the vehicle arrives with
+its SOC at that departure minus the trip energy divided by the battery capacity, clipped to [0, 1].
+For the first session the previous SOC is the vehicle's `initial_soc`. Vehicles with a trip energy
+keep their SOC while away; they have no random drift, like `"external": true` vehicles.
+
+With the recorded actions the replay gives the same charger energies and KPIs as the live run. The
+driving consumption is the one recorded, so a vehicle that charged less leaves for the same trip
+with less energy, as it would in the live run; the route, the time of arrival and the choice of
+charger do not follow the controller.
+
 ## Example
 
 ```python

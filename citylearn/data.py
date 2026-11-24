@@ -1349,7 +1349,34 @@ class ChargerSimulation(TimeSeriesData):
         Estimated SOC percentage at the time of arrival to the charger (only for state 2),
         normalized to the [0, 1] range and with optional Gaussian noise.
         Defaults to -0.1 when not present.
+
+    Optional session rows. They exist only when the charger file has the column, or the schema declares the charger
+    external and a mobility provider writes them (:mod:`citylearn.mobility`). Blank cells are unknown.
+
+    electric_vehicle_connected_seconds : np.array
+        Seconds of the time step during which the EV is plugged in, in [0, ``seconds_per_time_step``].
+    electric_vehicle_connected_since_seconds : np.array
+        Session age in seconds at the start of the time step, on the first row of a session. A negative value
+        plugs in that many seconds after the step starts.
+    electric_vehicle_departure_seconds : np.array
+        Exact departure in seconds (> 0) after the start of the time step.
+    electric_vehicle_discharge_soc_floor : np.array
+        Discharging never takes the EV below this SOC ratio in [0, 1].
+    electric_vehicle_trip_energy_kwh : np.array
+        On the first row of a session: energy in kWh the EV used since the previous departure (negative when it
+        gained energy). The EV then arrives with its SOC at the previous departure minus this energy divided by the
+        battery capacity, clipped to [0, 1], instead of the absolute SOC of the other columns.
+    trip_energy_vehicle_ids : frozenset
+        EVs with a finite trip energy. Their SOC away from the chargers follows the trip energy, not a random drift.
     """
+
+    SESSION_COLUMNS = (
+        'electric_vehicle_connected_seconds',
+        'electric_vehicle_connected_since_seconds',
+        'electric_vehicle_departure_seconds',
+        'electric_vehicle_discharge_soc_floor',
+        'electric_vehicle_trip_energy_kwh',
+    )
 
     def __init__(
         self,
@@ -1414,6 +1441,44 @@ class ChargerSimulation(TimeSeriesData):
             noise_std=self.noise_std,
             random_state=noise_random_state,
         )
+
+    def set_session_columns(
+        self, columns: Mapping[str, Iterable[float]], seconds_per_time_step: float, source: str = 'charger simulation'
+    ):
+        """Set the optional session rows (:attr:`SESSION_COLUMNS`) given by name, validating their ranges."""
+
+        step = float(seconds_per_time_step)
+        limits = {
+            'electric_vehicle_connected_seconds': (0.0, step, 'in [0, seconds_per_time_step]'),
+            'electric_vehicle_discharge_soc_floor': (0.0, 1.0, 'a ratio in [0, 1]'),
+        }
+
+        for name, values in columns.items():
+            if name not in self.SESSION_COLUMNS:
+                raise ValueError(f'{source}: unknown session column {name!r}.')
+
+            array = np.array(pd.to_numeric(pd.Series(values), errors='coerce'), dtype='float64')
+            array[np.isinf(array)] = np.nan
+            known = array[~np.isnan(array)]
+
+            if name in limits and known.size and (known.min() < limits[name][0] or known.max() > limits[name][1]):
+                raise ValueError(f'{source}: {name} must be {limits[name][2]}.')
+
+            if name == 'electric_vehicle_departure_seconds' and known.size and known.min() <= 0.0:
+                raise ValueError(f'{source}: {name} must be > 0.')
+
+            setattr(self, name, array)
+
+        trip = columns.get('electric_vehicle_trip_energy_kwh')
+
+        if trip is not None:
+            # Reads the SOC reference of a connection; the runtime records the SOC it gives the EV there.
+            if getattr(self, 'electric_vehicle_current_soc', None) is None:
+                self.electric_vehicle_current_soc = np.full(len(self.electric_vehicle_charger_state), -0.1, dtype='float32')
+
+            finite = np.isfinite(self.electric_vehicle_trip_energy_kwh)
+            ids = np.asarray(self.electric_vehicle_id, dtype=object)[finite]
+            self.trip_energy_vehicle_ids = frozenset(i for i in ids if isinstance(i, str) and i.strip() not in ('', 'nan'))
 
     @staticmethod
     def arrival_soc_index(

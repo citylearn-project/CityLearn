@@ -197,6 +197,16 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
                     noise_std=0.0,
                 )
 
+            session_columns = {
+                column: charger_simulation_file[column].to_numpy()
+                for column in ChargerSimulation.SESSION_COLUMNS
+                if column in charger_simulation_file.columns
+            }
+            if session_columns:
+                charger_simulation.set_session_columns(
+                    session_columns, schema['seconds_per_time_step'], source=schema_path,
+                )
+
             chargers_list.append(_construct_charger(
                 building_name, charger_name, charger_config, charger_simulation, schema,
                 episode_tracker, time_step_ratio,
