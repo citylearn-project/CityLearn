@@ -332,9 +332,12 @@ behind one run. A carried episode starts from the SOC that the previous
 controller left, which enters its initial inventory, so the same carried
 episode run by two controllers is not comparable, and `compare_exports`
 reports it as incompatible: with carry-over, compare whole split runs, not
-single episodes. Episodes chosen at random, rolling splits, splits with a gap and a
-`reset(options={'episode_index': ...})` that jumps elsewhere keep the
-schedule SOC ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
+single episodes. Random and rolling splits never carry, and the env warns
+once that the setting has no effect there; an explicit list carries only when
+a window starts exactly where the previous one ends for the split boundary,
+and a `reset(options={'episode_index': ...})` that jumps elsewhere keeps the
+schedule SOC. Only the session connected across the boundary is carried;
+every later arrival takes the arrival SOC of the file ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
 
 ### Observation spaces follow the observations
 

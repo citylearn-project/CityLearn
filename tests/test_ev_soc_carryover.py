@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import warnings
 
+import numpy as np
 import pytest
 
 from citylearn.agents.baseline import BusinessAsUsualAgent
@@ -114,11 +115,98 @@ def test_episodes_that_do_not_continue_use_the_schedule_soc():
     assert on[1].equals(off[1])
 
 
-def test_explicit_splits_without_a_gap_carry_the_soc():
-    window = dict(simulation_start_time_step=1900, simulation_end_time_step=1999)
-    split = dict(episode_time_steps=[(1900, 1949), (1950, 1999)])
-    _, soc = _bau(episodes=2, ev_soc_carryover=True, **window, **split)
-    assert soc[1][0] != _bau(episodes=2, **window, **split)[1][1][0]
+def _carried_in(episodes=2, **kwargs):
+    """`carried_in` and the window of each episode, with the BAU, and the warnings raised."""
+    result = []
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always')
+        # The constructor resets the env once, so the warning can come from there.
+        env = CityLearnEnv(DATASET, interface='flat', render_mode='none', export_kpis_on_episode_end=False,
+                           ev_soc_carryover=True, **kwargs)
+        try:
+            for _ in range(episodes):
+                obs, _ = env.reset()
+                tracker = env.episode_tracker
+                result.append((tracker.episode_start_time_step, tracker.episode_end_time_step,
+                               env._ev_soc_carryover_context['carried_in']))
+                agent = BusinessAsUsualAgent(env)
+                while not env.terminated:
+                    obs, *_ = env.step(agent.predict(obs))
+        finally:
+            env.close()
+    messages = [str(w.message) for w in caught if 'ev_soc_carryover has no effect' in str(w.message)]
+    return result, messages
+
+
+@pytest.mark.parametrize('boundary,splits,carried', [
+    ('shared', [(1900, 1949), (1949, 1999)], True),
+    ('shared', [(1900, 1949), (1950, 1999)], False),
+    ('disjoint', [(1900, 1949), (1950, 1999)], True),
+    ('disjoint', [(1900, 1949), (1949, 1999)], False),
+])
+def test_explicit_splits_carry_only_when_the_window_continues_for_the_boundary(boundary, splits, carried):
+    episodes, messages = _carried_in(simulation_start_time_step=1900, simulation_end_time_step=1999,
+                                     episode_time_steps=splits, episode_split_boundary=boundary)
+    assert [e[2] for e in episodes] == [False, carried]
+    assert messages == []
+
+
+def test_random_split_never_carries_even_when_it_picks_the_next_window():
+    # With seed 1 the random picks over these four shared splits are [1900, 1923] then [1923, 1946],
+    # the window that a sequential split would carry into.
+    episodes, messages = _carried_in(simulation_start_time_step=1900, simulation_end_time_step=1992,
+                                     episode_time_steps=24, random_episode_split=True, random_seed=1)
+    assert [e[:2] for e in episodes] == [(1900, 1923), (1923, 1946)]
+    assert [e[2] for e in episodes] == [False, False]
+    assert len(messages) == 1
+
+
+def test_rolling_split_never_carries():
+    episodes, messages = _carried_in(simulation_start_time_step=1900, simulation_end_time_step=1910,
+                                     episode_time_steps=2, rolling_episode_split=True)
+    assert [e[:2] for e in episodes] == [(1900, 1901), (1901, 1902)]
+    assert [e[2] for e in episodes] == [False, False]
+    assert len(messages) == 1
+
+
+def test_later_arrival_of_a_carried_ev_takes_the_file_soc():
+    """Only the session connected across the boundary starts from the carried SOC (CityLearn #388)."""
+    window, split = _split('shared')
+
+    def second_episode(carry):
+        env = CityLearnEnv(DATASET, interface='flat', render_mode='none', export_kpis_on_episode_end=False,
+                           ev_soc_carryover=carry, **window, **split)
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                for _ in range(2):
+                    obs, _ = env.reset()
+                    continuing = list((env._ev_soc_carryover_context or {}).get('continuing', []))
+                    agent = BusinessAsUsualAgent(env)
+                    while not env.terminated:
+                        obs, *_ = env.step(agent.predict(obs))
+            arrivals = {}
+            for building in env.buildings:
+                for charger in building.electric_vehicle_chargers or []:
+                    sim = charger.charger_simulation
+                    states, ids = sim.electric_vehicle_charger_state, sim.electric_vehicle_id
+                    for t in range(1, env.time_step):
+                        if states[t] == 1 and (states[t - 1] != 1 or ids[t - 1] != ids[t]):
+                            arrivals.setdefault(str(ids[t]), t)
+            soc = {ev.name: np.array(ev.battery.soc[:env.time_step]) for ev in env.electric_vehicles}
+            return continuing, arrivals, soc
+        finally:
+            env.close()
+
+    continuing, arrivals, on = second_episode(True)
+    _, _, off = second_episode(False)
+    later = [name for name in continuing if name in arrivals]
+    assert later
+    for name in later:
+        t = arrivals[name]
+        # The next arrival of a carried EV starts from the file SOC, as without carry-over.
+        assert on[name][t] == pytest.approx(off[name][t], abs=1e-9)
+    assert any(on[name][0] != pytest.approx(off[name][0]) for name in continuing)
 
 
 def test_unit_last_step_and_step_zero_rules_follow_the_carryover_context():

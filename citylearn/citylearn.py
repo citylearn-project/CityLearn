@@ -3,6 +3,7 @@ from copy import deepcopy
 from enum import Enum
 import importlib
 import logging
+import warnings
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Mapping, Tuple, Union
@@ -130,11 +131,12 @@ class CityLearnEnv(Environment, Env):
         and explicit list splits are not affected.
     ev_soc_carryover: bool, default: False
         Start each EV of an episode from its SOC at the end of the previous episode, when the new episode continues
-        it in time: it starts on the previous episode's last row (`'shared'` splits) or on the row after it
-        (`'disjoint'` splits, or an explicit list of `episode_time_steps` without a gap), and the previous episode ran
-        to its end. A session connected across the boundary then keeps its charge instead of restarting from the
-        schedule SOC. The first episode, random and rolling splits, and splits with a gap use the schedule SOC, as
-        when the setting is off. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still
+        it in time: it starts on the previous episode's last row (`'shared'`) or on the row after it (`'disjoint'`),
+        and the previous episode ran to its end. Sequential splits carry, and an explicit list of `episode_time_steps`
+        carries when a window starts exactly there. Random and rolling splits never carry, even when a pick happens
+        to follow the previous episode, and the env warns once that the setting has no effect. Only the session
+        connected across the boundary keeps its charge, at the new episode's first step; every later arrival takes
+        the schedule SOC. The first episode uses the schedule SOC, as when the setting is off. Only the EV SOC is carried: batteries, thermal storage and indoor temperatures still
         start every episode from their initial state. Off, episodes are independent; on, an episode that continues the
         previous one depends on what the previous controller did. Can also be set with the schema key of the same name.
     seconds_per_time_step: float
@@ -2127,6 +2129,19 @@ class CityLearnEnv(Environment, Env):
 
         return dict(start=int(start), end=int(end), soc=soc)
 
+    def _ev_soc_carryover_applies(self) -> bool:
+        """Whether the split mode can carry EV SOC: sequential and explicit-list splits, not random or rolling ones."""
+
+        if self.random_episode_split:
+            return False
+        # Rolling is ignored for explicit lists, as in `EpisodeTracker.next_episode`.
+        return isinstance(self.episode_time_steps, list) or not self.rolling_episode_split
+
+    def _ev_soc_carryover_start_after(self, end: int) -> int:
+        """Row where an episode that continues one ending on row `end` starts, for the split boundary."""
+
+        return int(end) if self.episode_split_boundary == 'shared' else int(end) + 1
+
     def _ev_soc_carryover_next_start(self) -> Union[int, None]:
         """First row of the episode that follows the current one when episodes are taken in order, else `None`."""
 
@@ -2161,15 +2176,28 @@ class CityLearnEnv(Environment, Env):
             self._ev_soc_carryover_context = None
             return
 
+        if not self._ev_soc_carryover_applies() and not getattr(self, '_ev_soc_carryover_warned', False):
+            self._ev_soc_carryover_warned = True
+            warnings.warn(
+                'ev_soc_carryover has no effect with random or rolling episode splits: every episode starts '
+                'from the schedule SOC. Use sequential splits or an explicit list of episode_time_steps.',
+                UserWarning,
+                stacklevel=3,
+            )
+
         inherited = getattr(self, '_ev_soc_carryover_inherited', None)
         if inherited is not None:
             context = deepcopy(inherited)
         else:
             tracker = self.episode_tracker
             start, end = int(tracker.episode_start_time_step), int(tracker.episode_end_time_step)
+            # Random and rolling splits never carry, even when a pick happens to follow the previous
+            # episode, so those episodes stay independent. An explicit list carries only when the window
+            # starts exactly where the previous one ends for the split boundary.
             carried = (
-                previous_episode_end is not None
-                and start in (previous_episode_end['end'], previous_episode_end['end'] + 1)
+                self._ev_soc_carryover_applies()
+                and previous_episode_end is not None
+                and start == self._ev_soc_carryover_start_after(previous_episode_end['end'])
                 and start > previous_episode_end['start']
             )
             continuing = []
@@ -2187,7 +2215,9 @@ class CityLearnEnv(Environment, Env):
                 continuing=sorted(continuing),
                 # A session still connected on the next episode's first row is scored there, with the
                 # carried SOC, so the last step only counts those that leave before that row.
-                last_step_countdown=0.0 if next_start == end else 1.0,
+                last_step_countdown=(
+                    0.0 if next_start == end and self._ev_soc_carryover_start_after(end) == end else 1.0
+                ),
             )
 
         self._ev_soc_carryover_context = context

@@ -346,10 +346,13 @@ passo de carregamento atrás da execução única. Um episódio transportado com
 com o SOC deixado pelo controlador anterior, que entra no seu inventário
 inicial, pelo que o mesmo episódio transportado corrido por dois controladores
 não é comparável, e `compare_exports` indica-o como incompatível: com
-transporte, compare execuções divididas inteiras, não episódios isolados. Os episódios escolhidos ao acaso, as
-divisões rolantes, as divisões com intervalo e um
-`reset(options={'episode_index': ...})` que salta para outro lado mantêm o SOC
-do calendário ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
+transporte, compare execuções divididas inteiras, não episódios isolados. As divisões aleatórias e
+rolantes nunca transportam, e o ambiente avisa uma vez que a definição não tem
+efeito nesse caso; uma lista explícita só transporta quando uma janela começa
+exatamente onde a anterior termina para a fronteira escolhida, e um
+`reset(options={'episode_index': ...})` que salta para outro lado mantém o SOC
+do calendário. Só a sessão ligada através da fronteira é transportada; todas
+as chegadas seguintes usam o SOC de chegada do ficheiro ([#388](https://github.com/citylearn-project/CityLearn/issues/388)).
 
 ### Os espaços de observação seguem as observações
 
