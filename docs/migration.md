@@ -265,6 +265,32 @@ A schema that omits `max_discharging_power` and relied on the 50 kW of V2G
 needs it set explicitly, or `physics_version=1`, which keeps the 50 kW defaults
 of CityLearn 3.6.0 (the name check applies to both versions).
 
+### EV departures at the end of the window
+
+A session that is still connected at the last step of a member's KPI window,
+with a countdown to departure of 0 or 1, is now a departure, as the
+[KPI reference](kpis_reference.md#departures) says. Its SOC at that step is
+scored against its target in `ev_events` and `ev_performance`, and the
+departure audit counts it. The last step is the last control step of the
+episode, or the step before a member leaves under a dynamic topology. At most
+one departure per charger is added per window, so short episodes that end at
+a usual departure time change the most; the default episodes of the bundled
+datasets do not change.
+
+Over consecutive split episodes each session is now counted once, by the
+episode that controlled it. Before, a session that ended with an episode was
+counted at step 0 of the next one, with the SOC set at reset, under
+`episode_split_boundary='shared'`, and not at all under `'disjoint'`, where a
+session connected on the row between two episodes was instead scored at step
+0 of the next one with the SOC set at reset. Now the last step of an episode
+counts a session that leaves before the next control step (countdown in
+[0, 1], or in [0, 2] when another `'disjoint'` split follows, so a run that is
+not split does not depend on the boundary), with the SOC the controller
+reached, and step 0 skips any session
+that was connected on the row before it. Departure counts and rates from
+earlier runs with short or split episodes should be recomputed before
+comparing ([#370](https://github.com/citylearn-project/CityLearn/issues/370)).
+
 ### Observation spaces follow the observations
 
 The observation values, their order and `observation_names` do not change, and

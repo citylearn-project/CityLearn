@@ -217,6 +217,167 @@ def test_back_to_back_countdown_reset_does_not_borrow_previous_session_time():
     assert_partition(c)
 
 
+@pytest.mark.parametrize('countdown,expected', [(1., 1), (0., 1), (2., 0), (-1., 0)])
+def test_session_that_ends_with_the_window_is_a_departure(countdown, expected):
+    # Issue #370: the EV stays connected through the schedule's terminal row,
+    # so only the "last step" rule can record its departure.
+    service, building, charger, ev = event(steps=3)
+    sim = charger.charger_simulation
+    sim.electric_vehicle_charger_state = np.ones(4)
+    sim.electric_vehicle_id = ['EV'] * 4
+    sim.electric_vehicle_departure_time = [countdown + 2., countdown + 1., countdown, max(countdown - 1., -1.)]
+    charger.past_connected_evs = [ev] * 4
+    building.time_step = 2
+    metrics = service._compute_ev_metrics(building)
+    assert metrics['_departure_audit']['departures_count'] == expected
+    assert metrics['departures_total'] == expected
+    if expected:
+        assert metrics['departures_met'] == 1
+    if countdown == 1.:
+        # A window one step longer still counts the session once.
+        building.time_step = 3
+        assert counts(service, building)['departures_count'] == 1
+
+
+def split_window(*, boundary='shared', start=2, states=(1., 1., 1., 0.), countdowns=(2., 1., 0., -1.),
+                 ids=('EV',) * 4, session_ids=None, length=3, simulation_end=100, rolling=False):
+    """A window ending at step 1 of an episode of `length` rows (step 1 is its last control step for the
+    default 3 rows) at full schedule row `start` of a schedule that starts at the simulation start."""
+    service, building, charger, ev = event(steps=1)
+    service.env.episode_split_boundary = boundary
+    service.env.episode_time_steps = length
+    service.env.rolling_episode_split = rolling
+    end = start + (length if isinstance(length, int) else 3) - 1
+    service.env.episode_tracker = NS(episode_start_time_step=start, episode_end_time_step=end,
+                                     simulation_end_time_step=simulation_end)
+    sim = charger.charger_simulation
+    full = dict(electric_vehicle_charger_state=np.array(states),
+                electric_vehicle_departure_time=list(countdowns), electric_vehicle_id=list(ids))
+    if session_ids is not None:
+        full['electric_vehicle_session_id'] = list(session_ids)
+    for name, values in full.items():
+        setattr(sim, f'_{name}', values)
+        setattr(sim, name, values[start:start + 2])
+    sim.start_time_step = start
+    return service, building
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    # The session was connected on the row before step 0, whatever its countdown there.
+    (dict(), 0),
+    (dict(boundary='disjoint'), 0),
+    (dict(countdowns=(2., -1., 0., -1.)), 0),
+    (dict(boundary='disjoint', states=(0., 1., 1., 0.), countdowns=(-1., 1., 0., -1.)), 0),
+    # A different session at the row before, or a charger that was free there.
+    (dict(ids=('A', 'A', 'B', None)), 1),
+    (dict(session_ids=('s1', 's1', 's2', None)), 1),
+    (dict(countdowns=(2., 0., 1., -1.)), 1),
+    (dict(boundary='disjoint', states=(1., 0., 1., 0.), countdowns=(0., -1., 0., -1.)), 1),
+])
+def test_departure_at_step_zero_is_not_counted_twice(kwargs, expected):
+    service, building = split_window(**kwargs)
+    metrics = service._compute_ev_metrics(building)
+    assert metrics['_departure_audit']['departures_count'] == expected
+    assert metrics['departures_total'] == expected
+
+
+@pytest.mark.parametrize('kwargs,expected', [
+    (dict(boundary='shared'), 0),
+    (dict(boundary='disjoint'), 1),
+    # No disjoint split follows: the last window, a single episode, explicit or rolling splits,
+    # and a window that ends before the episode's last control step.
+    (dict(boundary='disjoint', simulation_end=5), 0),
+    (dict(boundary='disjoint', length=3, simulation_end=3), 0),
+    (dict(boundary='disjoint', length=[(1, 3), (4, 6)]), 0),
+    (dict(boundary='disjoint', rolling=True), 0),
+    (dict(boundary='disjoint', length=4), 0),
+])
+def test_last_step_counts_a_session_that_leaves_before_the_next_control_step(kwargs, expected):
+    # The window's last step is row 2, with countdown 2: the EV stays connected until row 4.
+    # When a disjoint split follows, row 4 is its step 0, which skips the session, so the last
+    # step counts it. Otherwise the next control step is row 3, and the session leaves after it.
+    service, building = split_window(start=1, states=(1., 1., 1., 1., 1., 0.),
+                                     countdowns=(3., 3., 2., 1., 0., -1.), ids=('EV',) * 6, **kwargs)
+    charger = building.electric_vehicle_chargers[0]
+    charger.past_connected_evs = [charger.past_connected_evs[0]] * 2
+    metrics = service._compute_ev_metrics(building)
+    assert metrics['_departure_audit']['departures_count'] == expected
+    assert metrics['departures_total'] == expected
+
+
+def test_first_window_counts_a_departure_at_step_zero():
+    service, building = split_window(start=0, states=(1., 0., 0., 0.), countdowns=(0., -1., -1., -1.))
+    assert counts(service, building)['departures_count'] == 1
+
+
+def _bau_departures(**kwargs):
+    from citylearn.agents.baseline import BusinessAsUsualAgent
+
+    episodes = kwargs.pop('episodes', 1)
+    env = CityLearnEnv('citylearn_challenge_2022_phase_all_plus_evs', interface='flat',
+                       render_mode='none', export_kpis_on_episode_end=False, **kwargs)
+    try:
+        results = []
+        for _ in range(episodes):
+            obs, _ = env.reset()
+            agent = BusinessAsUsualAgent(env)
+            done = False
+            while not done:
+                obs, _, terminated, truncated, _ = env.step(agent.predict(obs))
+                done = terminated or truncated
+            results.append(env.evaluate_v2())
+        return env, results
+    finally:
+        env.close()
+
+
+@pytest.mark.parametrize('boundary', ['shared', 'disjoint'])
+def test_bundled_episode_ending_at_a_departure_counts_it(boundary):
+    """Reproduction from issue #370 on the bundled EV dataset.
+
+    An unsplit run does not depend on the split boundary: under ``disjoint`` the five sessions
+    with countdown 2 at the last step leave after the simulation ends and are not counted."""
+    env, (frame,) = _bau_departures(simulation_start_time_step=1900, simulation_end_time_step=1999,
+                                    episode_split_boundary=boundary)
+    sim = next(b for b in env.buildings if b.name == 'Building_1').electric_vehicle_chargers[0].charger_simulation
+    assert list(sim.electric_vehicle_charger_state[95:100]) == [1.] * 5
+    assert list(sim.electric_vehicle_departure_time[95:100]) == [4., 3., 2., 1., 0.]
+    values = frame[frame.name == 'Building_1'].set_index('cost_function')['value']
+    assert values['building_ev_events_departure_count'] == 5
+    assert values['building_ev_departure_audit_departures_count'] == 5
+    district = frame[frame.name == 'District'].set_index('cost_function')['value']
+    assert district['district_ev_events_departure_count'] == 35
+
+
+@pytest.mark.parametrize('boundary,step', [('shared', 99), ('disjoint', 100)])
+def test_split_episodes_count_each_session_once(boundary, step):
+    # Shared: Electric_Vehicle_7 on charger_1_1 leaves after row 1999, so episode 0 counts it at
+    # its last step (row 1998) and episode 1 skips it at step 0. Disjoint: five sessions have
+    # countdown 2 at row 1998 and leave after row 2000, so episode 0 counts them with the SOC
+    # BAU reached, and episode 1 skips them at step 0 instead of scoring the SOC set at reset.
+    end = 1900 + step + 99
+    _, frames = _bau_departures(simulation_start_time_step=1900, simulation_end_time_step=end,
+                                episode_time_steps=100, episode_split_boundary=boundary, episodes=2)
+    _, (full,) = _bau_departures(simulation_start_time_step=1900, simulation_end_time_step=end)
+
+    def value(frame, name='Building_1', key='building_ev_departure_audit_departures_count'):
+        return frame[frame.name == name].set_index('cost_function')['value'][key]
+
+    for key in ('ev_departure_audit_departures_count', 'ev_events_departure_count'):
+        assert sum(value(f, 'District', f'district_{key}') for f in frames) == value(full, 'District', f'district_{key}')
+    assert [value(f) for f in frames] == [5, value(full) - 5]
+    if boundary == 'disjoint':
+        # The gap row is never controlled, so each session is scored at a row both runs control.
+        names = ['District'] + [f'Building_{i}' for i in (5, 7, 10, 12, 15)]
+        for name in names:
+            level = 'district' if name == 'District' else 'building'
+            for key in ('ev_events_departure_count', 'ev_events_departure_met_count'):
+                key = f'{level}_{key}'
+                assert sum(value(f, name, key) for f in frames) == value(full, name, key)
+        met = [value(frames[1], 'Building_5', f'building_ev_events_departure_{k}') for k in ('count', 'met_count')]
+        assert met == [4, 4]
+
+
 @pytest.mark.parametrize('target,expected_met', [(45., 1), (90., 0)])
 def test_real_outage_delayed_charge_and_departure_service_export(tmp_path, target, expected_met):
     root = tmp_path / 'data'
