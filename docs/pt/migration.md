@@ -88,6 +88,27 @@ controlador que carregasse os carros parecia pior do que a baseline
   execuções com versões diferentes. O `MultiCommunityEnv` exige que todas as
   comunidades usem a mesma versão.
 
+### AVAC no BAU (`baseline_version=3`, opcional)
+
+Nos datasets com ações de AVAC (dinâmica de temperatura), o BAU envia zero a
+`heating_device`, `cooling_device` e `cooling_or_heating_device`, pelo que os
+seus edifícios não são aquecidos nem arrefecidos e as linhas
+`*_business_as_usual` comparam o controlador com casas sem aquecimento ou sem
+arrefecimento ([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
+
+- Por omissão nada muda: `baseline_version=2` continua a ser a predefinida, e as
+  versões 1 e 2 dão os mesmos resultados de antes.
+- Defina `baseline_version=3` para o BAU fornecer, em cada passo, a procura de
+  aquecimento e de arrefecimento do próprio dataset, limitada aos limites da
+  ação e do equipamento. As linhas do BAU e os deltas e rácios face ao BAU
+  mudam nos datasets com ações de AVAC; nos outros datasets a versão 3 é igual
+  à versão 2. A definição do BAU passa a
+  `immediate-full-charge-v4+hvac-dataset-demand-v1` (ou
+  `immediate-user-target-v3+hvac-dataset-demand-v1`). Consulte
+  [AVAC e a versão da baseline](baselines.md#avac-e-a-versão-da-baseline).
+- Um `BusinessAsUsualAgent` executado por si segue a versão do ambiente;
+  `hvac='off'` ou `hvac='dataset_demand'` substitui-a.
+
 ### Emissões do distrito com a troca local desligada
 
 Com um mercado comunitário ativo e `community_market.local_trading_enabled`

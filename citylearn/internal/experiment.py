@@ -62,7 +62,8 @@ def experiment_manifest(env):
     source_destinations = provenance.source_destinations() if provenance.enabled else None
     return dict(simulator_version=__version__, git_commit=revision, tracked_worktree_dirty=dirty,
                 business_as_usual_definition=BusinessAsUsualAgent.definition(
-                    getattr(env, 'business_as_usual_ev_charge_target', 'full'))[1],
+                    getattr(env, 'business_as_usual_ev_charge_target', 'full'),
+                    BusinessAsUsualAgent.hvac_mode_for(env))[1],
                 business_as_usual_reference=native_reference(env),
                 controller_identity=getattr(env, '_controller_identity', None),
                 comparison_context=context(env, files), final_inventory=inventory(env),
