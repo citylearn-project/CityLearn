@@ -14,6 +14,9 @@ Agent                                       Behaviour
                                             departure SOC (``ev_charge_target='requested'``);
                                             starts appliances at the first admissible step; the
                                             home battery stores PV surplus and serves local import.
+                                            With ``hvac='dataset_demand'`` (default under
+                                            ``baseline_version=3``) the HVAC delivers the dataset's
+                                            heating and cooling demand.
 :class:`RBCBasicPolicy`                     Current price and service urgency for EVs and
                                             appliances; battery self-consumption.
 :class:`RBCSmartPolicy`                     Price and local PV-surplus forecasts schedule EVs and
@@ -172,21 +175,29 @@ class _RuleBaselineAgent(Agent):
 
         _, values = self._flattener.flatten(payload)
         per_building = []
-        for (controlled, zeros), vector in zip(self._layouts, self._engine.predict(values)):
+        # The layouts follow env.buildings, attached again above when the topology changes.
+        for building, (controlled, zeros), vector in zip(env.buildings, self._layouts, self._engine.predict(values)):
             full = [float(v) for v in zeros]
             for position, value in zip(controlled, vector):
                 full[position] = float(value)
+            self._set_uncontrolled_actions(building, full)
             per_building.append(full)
         actions = [[v for vector in per_building for v in vector]] if env.central_agent else per_building
         self.actions = actions
         self.next_time_step()
         return actions
 
+    def _set_uncontrolled_actions(self, building: Any, actions: List[float]):
+        """Set the actions the engine does not control in `actions`, the building's vector; they stay zero here."""
+
     def comparison_identity(self):
         from citylearn import __version__
         parameters = {'definition_version': self.DEFINITION_VERSION}
         if hasattr(self, 'ev_charge_target'):
             parameters['ev_charge_target'] = self.ev_charge_target
+        if getattr(self, 'hvac', 'off') != 'off':
+            # Only when it is on, so the identity of the BAU without HVAC is the one of earlier releases.
+            parameters['hvac'] = self.hvac
         for key, value in sorted(vars(self._engine).items()):
             if key.startswith('_') or not isinstance(value, (bool, int, float, str)):
                 continue
@@ -227,9 +238,26 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
     step and the home battery uses observed current-step demand and PV when
     estimating local surplus or import.
 
+    The HVAC follows `hvac`. With ``'off'`` the ``heating_device``, ``cooling_device`` and
+    ``cooling_or_heating_device`` actions are zero, as in CityLearn 3.6.0, so on datasets with HVAC
+    actions the BAU buildings are neither heated nor cooled (#362). With ``'dataset_demand'`` each step the
+    HVAC action is the fraction of the device's nominal power that delivers the dataset's own heating or
+    cooling demand (``heating_demand_without_control`` and ``cooling_demand_without_control`` of the energy
+    simulation, the as-simulated demand of the building file), clipped to the action bounds; the device
+    limits (nominal power, outage supply) cap it as for any action. That is a thermostat that meets the
+    load without optimisation. The demand is used only in the steps whose ``hvac_mode`` allows that service.
+    The default, ``None``, is ``'dataset_demand'`` when the environment's ``baseline_version`` is 3 or more
+    and ``'off'`` otherwise.
+
     Choose the BAU that ``evaluate_v2()`` uses with the environment's
-    ``business_as_usual_ev_charge_target``.
+    ``business_as_usual_ev_charge_target`` and ``baseline_version``.
     """
+
+    #: HVAC behaviours of the BAU, see the class description.
+    HVAC_MODES: ClassVar[Tuple[str, ...]] = ('off', 'dataset_demand')
+    #: Suffix of the definition identifier when the BAU delivers the dataset HVAC demand.
+    HVAC_DEFINITION_SUFFIX: ClassVar[str] = '+hvac-dataset-demand-v1'
+    _HVAC_ACTIONS: ClassVar[Tuple[str, ...]] = ('heating_device', 'cooling_device', 'cooling_or_heating_device')
 
     EV_CHARGE_TARGETS: ClassVar[Mapping[str, Tuple[type, str]]] = {
         'requested': (engines.NormalTargetPolicy, 'immediate-user-target-v3'),
@@ -239,21 +267,103 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
     DEFINITION_VERSION = 'immediate-full-charge-v4'
     _use_current_step_load = True
 
-    def __init__(self, env: CityLearnEnv, ev_charge_target: str = 'full', **hyperparameters: Any):
-        self.ENGINE_CLASS, self.DEFINITION_VERSION = self.definition(ev_charge_target)
+    def __init__(self, env: CityLearnEnv, ev_charge_target: str = 'full', hvac: Optional[str] = None,
+                 **hyperparameters: Any):
+        self.hvac = self.hvac_mode_for(env) if hvac is None else self._validate_hvac(hvac)
+        self.ENGINE_CLASS, self.DEFINITION_VERSION = self.definition(ev_charge_target, self.hvac)
         self.ev_charge_target = str(ev_charge_target)
         super().__init__(env, **hyperparameters)
 
     @classmethod
-    def definition(cls, ev_charge_target: str) -> Tuple[type, str]:
+    def definition(cls, ev_charge_target: str, hvac: str = 'off') -> Tuple[type, str]:
         """Return the engine and the reproducible BAU definition identifier."""
 
         try:
-            return cls.EV_CHARGE_TARGETS[str(ev_charge_target)]
+            engine, identifier = cls.EV_CHARGE_TARGETS[str(ev_charge_target)]
         except KeyError:
             raise ValueError(
                 f"ev_charge_target must be one of {sorted(cls.EV_CHARGE_TARGETS)}, got {ev_charge_target!r}."
             ) from None
+
+        if cls._validate_hvac(hvac) == 'dataset_demand':
+            identifier += cls.HVAC_DEFINITION_SUFFIX
+
+        return engine, identifier
+
+    @classmethod
+    def hvac_mode_for(cls, env: Any) -> str:
+        """HVAC behaviour of the BAU under the environment's ``baseline_version``."""
+
+        from citylearn.internal.baseline_version import BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION, baseline_version_of
+
+        version = baseline_version_of(getattr(env, 'unwrapped', env))
+        return 'dataset_demand' if version >= BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION else 'off'
+
+    @classmethod
+    def _validate_hvac(cls, hvac: str) -> str:
+        if hvac not in cls.HVAC_MODES:
+            raise ValueError(f'hvac must be one of {list(cls.HVAC_MODES)}, got {hvac!r}.')
+
+        return hvac
+
+    def _set_uncontrolled_actions(self, building: Any, actions: List[float]):
+        if self.hvac == 'off':
+            return
+
+        active = list(building.active_actions)
+        low, high = building.action_space.low, building.action_space.high
+
+        for position, name in enumerate(active):
+            if name in self._HVAC_ACTIONS:
+                value = self.dataset_demand_hvac_action(building, name)
+                actions[position] = float(np.clip(value, low[position], high[position]))
+
+    @staticmethod
+    def dataset_demand_hvac_action(building: Any, name: str) -> float:
+        """Action of HVAC action `name` that delivers the building's dataset demand at its current time step.
+
+        The LSTM buildings turn an action `a` into the output of the device run at ``a*nominal_power`` over
+        the dataset step, so `a` is the device input for the demand over the nominal input over that step.
+        The value is not clipped. Zero when there is no demand, no device or the ``hvac_mode`` excludes the
+        service; for ``cooling_or_heating_device`` the larger of the two services sets the sign.
+        """
+
+        from citylearn.energy_model import HeatPump
+
+        time_step = building.time_step
+        simulation = building.energy_simulation
+        mode = int(simulation.hvac_mode[time_step])
+        temperature = float(building.weather.outdoor_dry_bulb_temperature[time_step])
+        hours = building._dataset_step_hours()
+
+        def fraction(heating: bool) -> float:
+            if mode not in ((2, 3) if heating else (1, 3)):
+                return 0.0
+
+            series = simulation.heating_demand_without_control if heating else simulation.cooling_demand_without_control
+            demand = float(series[time_step])
+            device = building.heating_device if heating else building.cooling_device
+            nominal = float(getattr(device, 'nominal_power', 0.0) or 0.0)
+
+            if not demand > 0.0 or not nominal > 0.0 or not hours > 0.0:
+                return 0.0
+
+            if isinstance(device, HeatPump):
+                electricity = device.get_input_power(demand, temperature, heating)
+            else:
+                electricity = device.get_input_power(demand)
+
+            value = float(electricity)/(nominal*hours)
+            return value if np.isfinite(value) and value > 0.0 else 0.0
+
+        if name == 'heating_device':
+            return fraction(True)
+
+        if name == 'cooling_device':
+            return fraction(False)
+
+        heating, cooling = fraction(True), fraction(False)
+        return heating if heating >= cooling else -cooling
 
 
 class RBCBasicPolicy(_RuleBaselineAgent):

@@ -85,6 +85,26 @@ baseline ([#365](https://github.com/citylearn-project/CityLearn/issues/365)).
   versions as `incompatible`. `MultiCommunityEnv` requires every community to
   use the same version.
 
+### HVAC in the BAU (opt-in `baseline_version=3`)
+
+On datasets with HVAC actions (temperature dynamics), the BAU sends zero to
+`heating_device`, `cooling_device` and `cooling_or_heating_device`, so its
+buildings are neither heated nor cooled and the `*_business_as_usual` rows
+compare the controller with unheated or uncooled houses
+([#362](https://github.com/citylearn-project/CityLearn/issues/362)).
+
+- Nothing changes by default: `baseline_version=2` stays the default and
+  versions 1 and 2 give the same results as before.
+- Set `baseline_version=3` to make the BAU deliver the dataset's own heating and
+  cooling demand at each step, clipped to the action bounds and device limits.
+  The BAU rows and the deltas and ratios to the BAU change on datasets with
+  HVAC actions; on other datasets version 3 equals version 2. The BAU definition
+  becomes `immediate-full-charge-v4+hvac-dataset-demand-v1` (or
+  `immediate-user-target-v3+hvac-dataset-demand-v1`). See
+  [HVAC and the baseline version](baselines.md#hvac-and-the-baseline-version).
+- A `BusinessAsUsualAgent` you run yourself follows the environment's version;
+  `hvac='off'` or `hvac='dataset_demand'` overrides it.
+
 ### District emissions with local trading off
 
 With a community market enabled and `community_market.local_trading_enabled`

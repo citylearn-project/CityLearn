@@ -23,6 +23,8 @@ class BusinessAsUsualBaselineResult:
     episode: int
     time_step: int
     ev_charge_target: str = 'full'
+    #: HVAC behaviour of the BAU, see :py:class:`citylearn.agents.baseline.BusinessAsUsualAgent`.
+    hvac: str = 'off'
 
 
 # EV charging targets of the native BAU, kept here so the environment can
@@ -87,7 +89,11 @@ class CityLearnBusinessAsUsualBaselineService:
         cache_key = (episode, target_time_step)
         cache: Dict[Tuple[int, int], BusinessAsUsualBaselineResult] = getattr(env, cache_name, {})
 
-        if not force and cache_key in cache and cache[cache_key].ev_charge_target == ev_charge_target:
+        # The HVAC behaviour follows the baseline version, which can be set after a cached run.
+        hvac = BusinessAsUsualAgent.hvac_mode_for(env)
+
+        if (not force and cache_key in cache and cache[cache_key].ev_charge_target == ev_charge_target
+                and cache[cache_key].hvac == hvac):
             return cache[cache_key]
 
         # Keep only the latest result. Within an episode the time step only moves forward and reset
@@ -109,7 +115,7 @@ class CityLearnBusinessAsUsualBaselineService:
         if ev_charge_target != 'full':
             # Its own baseline takes the EV charging from this env's 'full' run (`ev_charging`).
             baseline_env._baseline_ev_charging_parent = env
-        agent = BusinessAsUsualAgent(baseline_env, ev_charge_target=ev_charge_target)
+        agent = BusinessAsUsualAgent(baseline_env, ev_charge_target=ev_charge_target, hvac=hvac)
         baseline_env.reset()
 
         if env.random_stream_version == random_streams.LEGACY_RANDOM_STREAM_VERSION:
@@ -178,6 +184,7 @@ class CityLearnBusinessAsUsualBaselineService:
             episode=episode,
             time_step=target_time_step,
             ev_charge_target=ev_charge_target,
+            hvac=hvac,
         )
         setattr(env, cache_name, {cache_key: result})
         return result
