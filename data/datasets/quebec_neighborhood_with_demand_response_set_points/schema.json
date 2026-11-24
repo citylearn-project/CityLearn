@@ -261,7 +261,8 @@
   "reward_function": {
     "type": "citylearn.reward_function.ComfortReward",
     "attributes": {
-      "band": 2.0
+      "band": 2.0,
+      "version": 2
     }
   },
   "buildings": {

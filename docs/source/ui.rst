@@ -9,8 +9,7 @@ and component level.
 * `Open CityLearn UI <https://citylearnui.netlify.app/>`_
 * `Source code and local setup <https://github.com/Soft-CPS-Research-Group/citylearn-ui>`_
 
-The current interface reads the selected CSV files locally in the browser; it
-does not upload them to an application backend. Simulation setup, schemas and
+The interface reads CSV and Parquet exports locally in the browser. Simulation setup, schemas and
 controller execution remain in Python or the CLI. For configuration, start with
 :doc:`guides/features` and :doc:`overview/schema`.
 
@@ -48,8 +47,10 @@ Use an absolute ``render_directory``, as in the example, to choose an explicit
 output location. The exported folder contains ``exported_kpis.csv`` and
 ``exported_data_*_ep0.csv`` files for the available buildings, devices and
 community. Keep the filenames unchanged so the UI can identify their contents.
-The UI export is a wide table with a ``KPI`` column and one column per scope;
-the Python ``evaluate_v2()`` result is a long-form table for analysis.
+The single-community KPI export is a wide table with a ``KPI`` column and one
+numeric column per scope. Its adjacent ``exported_kpis.manifest.json`` contains
+``kpi_definitions``. The Python ``evaluate_v2()`` result and the multi-community
+KPI CSV are long tables with ``unit`` and ``description`` columns.
 
 Import and explore
 ==================

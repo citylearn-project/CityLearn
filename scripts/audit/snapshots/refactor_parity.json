@@ -6876,6 +6876,10 @@
                 ]
               }
             },
+            "meta": {
+              "repr": "EntityMetaSpace(seconds_per_time_step=3600.0, spec_version='entity_v1')",
+              "type": "EntityMetaSpace"
+            },
             "tables": {
               "building": {
                 "dtype": "float32",
@@ -19848,6 +19852,10 @@
                   2
                 ]
               }
+            },
+            "meta": {
+              "repr": "EntityMetaSpace(seconds_per_time_step=60.0, spec_version='entity_v1')",
+              "type": "EntityMetaSpace"
             },
             "tables": {
               "building": {
@@ -32845,6 +32853,10 @@
                   2
                 ]
               }
+            },
+            "meta": {
+              "repr": "EntityMetaSpace(seconds_per_time_step=900.0, spec_version='entity_v1')",
+              "type": "EntityMetaSpace"
             },
             "tables": {
               "building": {
@@ -46041,6 +46053,10 @@
                 ]
               }
             },
+            "meta": {
+              "repr": "EntityMetaSpace(seconds_per_time_step=900.0, spec_version='entity_v1')",
+              "type": "EntityMetaSpace"
+            },
             "tables": {
               "building": {
                 "dtype": "float32",
@@ -47675,6 +47691,10 @@
                   2
                 ]
               }
+            },
+            "meta": {
+              "repr": "EntityMetaSpace(seconds_per_time_step=900.0, spec_version='entity_v1')",
+              "type": "EntityMetaSpace"
             },
             "tables": {
               "building": {
@@ -49340,6 +49360,10 @@
                 ]
               }
             },
+            "meta": {
+              "repr": "EntityMetaSpace(seconds_per_time_step=900.0, spec_version='entity_v1')",
+              "type": "EntityMetaSpace"
+            },
             "tables": {
               "building": {
                 "dtype": "float32",
@@ -50974,6 +50998,10 @@
                   2
                 ]
               }
+            },
+            "meta": {
+              "repr": "EntityMetaSpace(seconds_per_time_step=900.0, spec_version='entity_v1')",
+              "type": "EntityMetaSpace"
             },
             "tables": {
               "building": {
@@ -64182,6 +64210,10 @@
                 ]
               }
             },
+            "meta": {
+              "repr": "EntityMetaSpace(seconds_per_time_step=300.0, spec_version='entity_v1')",
+              "type": "EntityMetaSpace"
+            },
             "tables": {
               "building": {
                 "dtype": "float32",
@@ -76431,6 +76463,15 @@
                   0.14000000059604645,
                   0.15000000596046448,
                   0.1599999964237213,
+                  30.600000381469727,
+                  28.100000381469727,
+                  28.100000381469727,
+                  28.100000381469727,
+                  72.0,
+                  42.0,
+                  42.0,
+                  42.0,
+                  4.849999904632568,
                   1.0,
                   24.0,
                   1.0,
@@ -76463,15 +76504,6 @@
                   8.0,
                   1.0000009536743164,
                   1.0000009536743164,
-                  30.600000381469727,
-                  28.100000381469727,
-                  28.100000381469727,
-                  28.100000381469727,
-                  72.0,
-                  42.0,
-                  42.0,
-                  42.0,
-                  4.849999904632568,
                   1.0,
                   2.0,
                   1.0,
@@ -76514,38 +76546,6 @@
                   0.10999999940395355,
                   0.11999999731779099,
                   0.12999999523162842,
-                  0.0,
-                  -1.0,
-                  -0.10000000149011612,
-                  -0.10000000149011612,
-                  -1.0,
-                  0.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
-                  -1.0,
                   -18.000001907348633,
                   -20.500001907348633,
                   -20.500001907348633,
@@ -76555,6 +76555,38 @@
                   -6.599999904632568,
                   -6.599999904632568,
                   0.0,
+                  0.0,
+                  -1.0,
+                  -0.10000000149011612,
+                  -0.10000000149011612,
+                  -1.0,
+                  0.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
+                  -1.0,
                   0.10000000149011612,
                   0.0,
                   0.0,

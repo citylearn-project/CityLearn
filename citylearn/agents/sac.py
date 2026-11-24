@@ -265,22 +265,6 @@ class SAC(RLC):
         std = np.asarray(std, dtype=float)
         return np.where(std > 1e-5, std + 1e-5, 1.0)[()]
 
-    def _get_seed(self, *key: int) -> int:
-        """Seed of one of the agent's random streams, derived from :attr:`random_seed` and `key`."""
-
-        return int(np.random.SeedSequence(int(self.random_seed), spawn_key=key).generate_state(1)[0])
-
-    def _seed_action_spaces(self):
-        """Seed the action spaces that exploration samples from, unless they are already seeded.
-
-        An unseeded gymnasium space seeds itself from OS entropy on first use. Spaces the caller has seeded keep
-        their stream.
-        """
-
-        for i, space in enumerate(self.action_space):
-            if getattr(space, '_np_random', None) is None:
-                space.seed(self._get_seed(0, i))
-
     def __setstate__(self, state: Mapping[str, Any]):
         self.__dict__.update(state)
 

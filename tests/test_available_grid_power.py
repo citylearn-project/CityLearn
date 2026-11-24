@@ -18,6 +18,7 @@ import pytest
 
 from citylearn.citylearn import CityLearnEnv
 from citylearn.internal import grid_availability
+from private_access import kpi_service, ops_service
 
 SOURCE = Path(__file__).parent/'data'/'minute_ev_demo'
 STATIC_IMPORT_KW = 20.0
@@ -151,7 +152,7 @@ def test_service_violation_kpi_uses_the_limit_in_force_at_each_step(tmp_path):
         for _ in range(4):
             env.step([[1.0]])
 
-        metrics = env._kpi_service._compute_phase_metrics(env.buildings[0], t_start=0, t_final=3)
+        metrics = kpi_service(env)._compute_phase_metrics(env.buildings[0], t_start=0, t_final=3)
         # Only the 0 kW step leaves load above the limit: 1 kW for a quarter hour.
         assert metrics['electrical_service_violation_total_kwh'] == pytest.approx(0.25, abs=1e-6)
         assert metrics['electrical_service_violation_time_step_count'] == 1.0
@@ -165,7 +166,7 @@ def test_deferrable_feasibility_checks_the_limit_at_each_future_step(tmp_path):
 
     try:
         env.reset(seed=0)
-        ops = env.buildings[0]._ops_service
+        ops = ops_service(env.buildings[0])
         assert ops._electrical_service_allows(5.0, {'L1': 5.0}, 0)
         assert not ops._electrical_service_allows(5.0, {'L1': 5.0}, 1)
         assert not ops._electrical_service_allows(0.5, {'L1': 0.5}, 2)

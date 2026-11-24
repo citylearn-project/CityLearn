@@ -6,7 +6,6 @@ terminals and stored energy. This is model-consistency evidence, not calibration
 """
 
 from collections import defaultdict
-from copy import deepcopy
 import csv
 from pathlib import Path
 
@@ -455,13 +454,6 @@ class IndependentBalanceAudit:
                 for e in self._pending(s)
                 if e["kind"] == "transfer" and e["bus"] < 0.0
             )
-            charge = sum(
-                e["bus"]
-                for s in self.stocks.values()
-                if s["owner"] == name
-                for e in self._pending(s)
-                if e["kind"] == "transfer" and e["bus"] >= 0.0
-            )
             supply = row["pv"] - row["curtailed"] + discharge + imports[i]
             buses[name] = graph.node(supply, inputs)
             graph.sink(buses[name], (name, "load"), row["load"])
@@ -709,7 +701,15 @@ class IndependentBalanceAudit:
                     total(bag),
                 )
         if check_kpis:
-            frame = self.env.evaluate_v2(include_business_as_usual=False)
+            # Only control rows are checked, and they do not depend on the baseline version. Version 1 needs no
+            # BAU run, so the audit also works on envs whose devices changed after loading.
+            env = getattr(self.env, 'unwrapped', self.env)
+            version = env.baseline_version
+            env.baseline_version = 1
+            try:
+                frame = env.evaluate_v2(include_business_as_usual=False)
+            finally:
+                env.baseline_version = version
             values = {(r.name, r.cost_function): r.value for r in frame.itertuples()}
             for name, row in self.members.items():
                 for suffix, key in [

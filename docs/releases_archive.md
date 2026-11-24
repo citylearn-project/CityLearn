@@ -5,6 +5,8 @@ limits recorded at the time. Commands and dataset availability refer to those
 versions; use the [current releases](releases.md) and
 [migration instructions](migration.md) for the current CityLearn package.
 
+Portuguese version: [pt/releases_archive.md](pt/releases_archive.md).
+
 ## v3.0.2 - 2026-09-09
 
 Release owner: [@calofonseca](https://github.com/calofonseca).

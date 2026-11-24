@@ -1,106 +1,228 @@
-# Funcionalidades do simulador
+# Funcionalidades e configuração
 
-Configure os equipamentos e serviços no [schema](schema_reference.md), escolha
-as [ações](actions_reference.md) e as [observações](observations_reference.md),
-e execute a simulação pelo [guia de utilização](running_simulations.md).
+Comece pela [primeira simulação](https://www.citylearn.net/quickstart.html) e
+depois escolha as condições que o seu controlador deve tratar. As
+funcionalidades são configuradas no schema ou nos argumentos do ambiente; o mesmo
+ciclo de simulação executa o episódio.
 
-## Edifícios, produção e armazenamento
+Versão em inglês: [../features.md](../features.md).
 
-| Componente | Funcionalidade |
-|---|---|
-| Edifícios | Comunidades com vários edifícios, controlo por agente ou centralizado e API Gymnasium `reset/step`. |
-| Sistemas térmicos | Arrefecimento, aquecimento e água quente com armazenamento térmico. |
-| Baterias | SOC, eficiência, curvas de potência e degradação. |
-| Fotovoltaico | Perfil por kW instalado ou produção medida em `kWh/step`. |
-| Veículos elétricos | Calendários por carregador, veículos ligados ou previstos, eficiência e V2G. |
-| Máquinas diferíveis | Ciclos normalizados, janelas de início, prazos e indicadores de serviço. |
+## Edifícios, sistemas térmicos e armazenamento
 
-## Tempo e unidades
+Uma comunidade contém edifícios com procura de eletricidade e sistemas opcionais
+de arrefecimento, aquecimento e água quente sanitária. O armazenamento térmico
+desloca o momento em que a energia é fornecida; os modelos de edifício com
+temperatura dinâmica permitem que o controlo do AVAC afete a temperatura
+interior. Os indicadores de conforto e de cortes de energia reportam o serviço
+resultante.
 
-A duração dos passos é configurada por `seconds_per_time_step`, incluindo
-1 h, 15 min, 5 min, 1 min e 15 s. Os dados de energia usam `kWh/step`; os limites
-e potências usam `kW`. A conversão das ações considera a duração do passo.
-As verificações físicas opcionais e os testes de baixa energia ajudam a detetar
-erros de escala e arredondamento. Consultar o [contrato de unidades](data_unit_contract.md).
+Escolha os equipamentos na entrada do schema de cada edifício e ative as suas
+ações. A [configuração dos equipamentos](schema_reference.md#secções-de-dispositivos),
+o [significado das ações](actions_reference.md#ações-flat) e os
+[KPIs de conforto](kpis_reference.md#conforto-e-resiliência) dão os pormenores.
 
-## Observações e interfaces
+## Fotovoltaico e baterias
 
-A interface vetorial devolve observações por edifício ou para um agente central.
-A interface de entidades fornece tabelas `district`, `building`, `charger`, `ev`,
-`storage`, `pv` e `deferrable_appliance`, com relações e identificadores estáveis.
-`env.entity_specs` descreve os campos, unidades e grupos de observações.
-As cópias devolvidas impedem a alteração acidental do estado interno pelo agente.
+![A produção FV, o carregamento/descarga da bateria, a procura do edifício e a troca com a rede partilham a ligação do edifício.](../../assets/images/pv-storage-flow.svg)
 
-Os grupos opcionais permitem selecionar previsões, pedidos de resposta à procura
-e informação de robustez. O grupo de resposta à procura inclui o pedido ativo,
-a referência, os preços e o serviço ou défice anterior. O de robustez inclui o
-estado e os contadores de perturbações. Ver o [guia de interfaces](interfaces_flat_entity.md).
+O FV pode usar um perfil de produção normalizado por kW ou a produção medida em
+`kWh/step` com `generation_mode="absolute"`. As baterias estacionárias têm
+parâmetros de capacidade, SOC, potência de carregamento/descarga, eficiência e
+degradação. Ações de armazenamento positivas carregam e negativas descarregam;
+os limites físicos e da ligação determinam a energia aplicada. As eficiências da
+bateria são valores de ida e volta, e as curvas de potência omitidas no esquema
+são sorteadas a partir do fluxo aleatório.
 
-## Topologia dinâmica
+Consulte a [configuração do FV](schema_reference.md#fv), o
+[modelo da bateria](schema_reference.md#bateria), o
+[contrato de unidades](data_unit_contract.md) e as
+[ações de armazenamento](actions_reference.md#conversão-física).
 
-`add_member` e `remove_member` alteram os membros. `add_asset` e `remove_asset`
-alteram carregadores, PV, baterias e máquinas durante o episódio. Os espaços de
-ações e observações acompanham a versão da topologia; `born_at`, `removed_at` e
-`active` registam o ciclo de vida das entidades. A remoção de máquinas cancela os
-ciclos futuros sem deixar consumo pendente.
+## Veículos elétricos e carregadores
 
-## Limites elétricos e fases
+![A janela de ligação de um VE vai do SOC de chegada a um SOC de partida exigido, com ações de carregamento enquanto está ligado.](../../assets/images/ev-service-window.svg)
 
-Carregadores e baterias podem ligar-se a `L1`, `L2`, `L3` ou `all_phases`.
-As observações e os KPIs expõem potência, margem de importação/exportação,
-violações residuais, desequilíbrio e picos por fase. Estes são limites de potência
-ativa na ligação; não representam um cálculo de tensão ou fluxo de potência AC.
-O limite de importação também pode variar no tempo: uma série
-[available_grid_power](schema_reference.md#potencia-de-rede-disponivel) reduz-o abaixo da
-capacidade da ligação em cada timestep, por exemplo quando o operador da rede de distribuição
-limita equipamentos controláveis. Os controladores observam o limite do próximo intervalo como
-`available_grid_power`.
+Os calendários dos carregadores identificam os VE ligados e a chegar, as horas de
+chegada/partida e o SOC de partida exigido. As ações centradas no carregador
+controlam o VE ligado; ações negativas permitem V2G quando há potência de
+descarga disponível. As identidades dos VE e dos carregadores mantêm-se
+separadas, para que veículos diferentes possam usar o mesmo carregador.
 
-## Mercado local e indicadores
+Configure os [carregadores](schema_reference.md#carregadores) e as
+[definições dos VE](schema_reference.md#definições-dos-ve). Leia separadamente o
+serviço mínimo à partida e a exatidão simétrica do alvo no
+[scorecard](scorecard.md). Um exemplo público executável é
+`citylearn_challenge_2022_phase_all_plus_evs`.
 
-O mercado faz a correspondência entre excedentes e procura no mesmo intervalo,
-com repartição por pesos dos membros. Os resultados incluem custos liquidados,
-poupança face à referência sem partilha e autoconsumo comunitário.
-Os KPIs v2 têm nomes estruturados por nível, família, métrica e unidade;
-os testes de referência incluem valores calculados à mão.
-Ver as [definições dos KPIs](kpis_reference.md).
+## Aparelhos flexíveis
 
-## Resposta à procura e várias comunidades
+Um catálogo de ciclos normalizados descreve o consumo ao longo de um ciclo. Um
+calendário separado dá o arranque mais cedo, o arranque mais tarde e o prazo de
+conclusão. A ação pede um arranque; o simulador verifica que o ciclo completo
+cabe na janela e no episódio antes de o aplicar. A conclusão, os ciclos falhados
+e o atraso são registados como indicadores de serviço.
 
-Pedidos DSO/TSO definidos nos dados expõem objetivos de flexibilidade,
-remuneração, entrega e défice através da interface de entidades.
-Cada comunidade mantém os seus pedidos, liquidação e indicadores.
+Consulte a [configuração](schema_reference.md#aparelhos-diferíveis) e a
+[lógica de arranque](actions_reference.md#lógica-de-arranque-dos-aparelhos-diferíveis).
+O exemplo público de VE acima inclui a configuração de aparelhos flexíveis.
 
-`MultiCommunityEnv`, em `citylearn.multi_community`, sincroniza comunidades
-independentes com a mesma duração de passo, episódio, interface e modo
-`central_agent`. `evaluate_v2()` acrescenta linhas `level="portfolio"` com somas
-e rácios ponderados. Os exports incluem subpastas locais e
-`exported_kpis_multi_community.csv`. Consultar o [guia de várias comunidades](multi_community_reference.md).
+## Escadas rolantes
 
-## Eventos de robustez
+A interface flat suporta um modelo agregado de escadas rolantes com os estados
+standby/lento/normal. Uma ação normalizada seleciona um desses estados; as
+entradas de procura e disponibilidade determinam os indicadores de serviço aos
+passageiros e o consumo de energia. É um modelo de estados e procura, não uma
+simulação de passageiros individuais ou de filas.
 
-Ficheiros CSV/Parquet configuram perturbações determinísticas nas observações,
-previsões, ações e disponibilidade lógica dos equipamentos. Cada grupo é opcional.
-Perturbar observações ou previsões não altera o estado físico usado nos KPIs,
-recompensas e liquidação. Falhas no canal de ação podem alterar o comando aplicado.
-Um equipamento logicamente indisponível mantém a sua identidade na topologia.
-Os indicadores distinguem eventos, dados ausentes e ações afetadas.
-Consultar o [guia de robustez](robustness_reference.md).
+Forneça o seu próprio calendário com o
+[schema das escadas rolantes](schema_reference.md#escadas-rolantes-interface-flat).
+O [guia de ações](actions_reference.md#controlo-das-escadas-rolantes) explica os limiares
+dos estados.
 
-## Dados, desempenho e visualização
+## Serviço elétrico e limites por fase
 
-Os [datasets REC de Portugal](portugal_rec_datasets.md) são comunidades em Parquet
-a 15 minutos, com 4, 15, 30 e 100 membros, em 2023-2024. Os cenários de avaliação
-acrescentam alterações de topologia, limites elétricos, falhas de equipamentos,
-cortes e resposta da procura.
+Os edifícios podem ter limites de importação/exportação de potência ativa totais
+e por fase. O armazenamento e os carregadores podem ser atribuídos a ligações de
+fase. O simulador regista as ações pedidas, limitadas e aplicadas juntamente com
+a margem e a potência por fase, o que permite a um estudo distinguir um pedido
+excessivo de uma ultrapassagem residual depois do tratamento das restrições.
 
-CSV e Parquet partilham o contrato de dados. O carregamento por janela e a cache
-comum de meteorologia, preços e carbono reduzem carregamento repetido.
-Os modos de renderização `none`, `during` e `end` controlam quando são escritos
-os resultados. Os exports de séries temporais e KPIs permitem a análise na
-CityLearn UI; a data inicial configura os timestamps apresentados.
+Configure `buildings.<name>.electrical_service` com a
+[referência do schema](schema_reference.md#buildings). Comece com
+`citylearn_three_phase_electrical_service_demo`. Estas são restrições de potência
+ativa na ligação; não calculam a tensão no alimentador nem o fluxo de potência
+AC. Consulte os [KPIs elétricos](kpis_reference.md#serviço-elétrico-e-fases).
 
-O [guia de validação e desempenho](../validation.md), em inglês, reúne as
-verificações físicas, de KPIs e de interfaces, os testes de topologia e os
-resultados medidos. Os testes cobrem os cenários executados, sem substituir a
-calibração com equipamentos reais.
+O limite de importação também pode variar no tempo. Uma série de
+[potência de rede disponível](schema_reference.md#potência-de-rede-disponível)
+reduz-o abaixo da capacidade da ligação em cada passo, por exemplo quando um
+operador da rede de distribuição limita equipamentos controláveis ou reduz a
+capacidade durante situações de stress da rede. Os controladores podem observar
+o limite do próximo intervalo como `available_grid_power`.
+
+## Partilha local de energia e liquidação
+
+Ative `community_market.enabled` para fazer corresponder o excedente e a procura
+do mesmo passo entre membros. Os preços locais e os pesos dos importadores
+determinam a repartição financeira; os exports expõem os custos liquidados, o
+contrafactual só com a rede e as poupanças de cada membro e da comunidade. A
+liquidação valoriza a trajetória física registada.
+
+Configure o [mercado comunitário](schema_reference.md#mercado-comunitário). Por
+omissão, as exportações residuais para a rede não são remuneradas; com
+`"settlement_version": 2` recebem `grid_export_price`, e `tariff_files` dá a
+cada membro os seus próprios preços. Definições inválidas do mercado dão erro
+quando o env é construído. A liquidação local é feita dentro de uma comunidade;
+os resultados de várias comunidades são descritos abaixo.
+
+## Pedidos de resposta à procura
+
+Um ficheiro de pedidos fornece as janelas de ativação do DSO/TSO, a direção, a
+potência alvo, o pagamento, a tolerância e a penalização por défice. Use o modo de
+entidades e ative o grupo de observações `entity_demand_response` para expor os
+pedidos ativos. Os controladores respondem através das ações existentes de
+armazenamento, VE e cargas flexíveis.
+
+A referência é a potência líquida média na janela de histórico anterior ao evento
+configurada, fixada para esse pedido. A energia entregue, a resposta creditada e o
+défice penalizado são grandezas separadas. Consulte o
+[formato dos pedidos e a referência](schema_reference.md#resposta-à-procura) e os
+[KPIs de liquidação](kpis_reference.md#demand-response).
+Use `citylearn_challenge_2022_phase_all_demand_response` como exemplo público.
+
+## Alteração de membros e ativos
+
+Com `interface="entity"` e `topology_mode="dynamic"`, eventos agendados
+acrescentam ou removem membros, carregadores, FV, armazenamento e aparelhos
+flexíveis. Identificadores estáveis, metadados de ciclo de vida e
+espaços/especificações atualizados permitem aos controladores acompanhar estas
+alterações. O reset reconstrói o cenário inicial para o episódio seguinte.
+
+Consulte os [eventos de topologia](schema_reference.md#topologia-dinâmica) e as
+[especificações das entidades](interfaces_flat_entity.md).
+Os exemplos públicos incluem `citylearn_three_phase_dynamic_topology_demo` e
+`citylearn_three_phase_dynamic_asset_changes_demo_15s_parquet`.
+
+## Falhas de dados e de equipamentos
+
+Eventos de robustez opcionais alteram as medições ou previsões visíveis pelo
+controlador, descartam/atrasam/corrompem ações ou tornam canais de ativos
+indisponíveis. O ficheiro de eventos define os alvos, as janelas temporais e as
+perturbações. A corrupção de medições mantém o estado físico intacto; as
+alterações no canal de ação podem afetar o consumo real.
+
+Consulte o [guia de robustez](robustness_reference.md) para todos os modos
+suportados e para a distinção entre valores em falta e zero físico. O exemplo
+público é `citylearn_challenge_2022_phase_all_robustness`.
+
+## Resolução temporal e formatos de dataset
+
+Use cenários horários ou sub-horários, incluindo dados a 15 minutos, 5 minutos,
+1 minuto e 15 segundos. Faça corresponder o passo de tempo do schema à cadência
+das entradas e forneça as colunas de energia em `kWh/step`. Alterar apenas o
+passo de tempo não cria pormenor medido de alta frequência a partir de dados
+horários.
+
+CSV e Parquet usam o mesmo contrato de colunas; o Parquet é útil para datasets
+grandes. Consulte o [guia de datasets](dataset_reference.md) e o
+[contrato de unidades](data_unit_contract.md). Comece as simulações grandes com
+uma janela curta.
+
+Os [datasets REC de Portugal](portugal_rec_datasets.md) são comunidades em
+Parquet a 15 minutos, com 4, 15, 30 e 100 membros, em 2023-2024. Os seus cenários
+de avaliação acrescentam alterações de topologia, limites elétricos, falhas de
+ativos, cortes de energia e resposta à procura.
+
+## Vetores flat e tabelas de entidades
+
+O modo flat fornece vetores por edifício, ou um vetor combinado no modo de agente
+central. O modo de entidades fornece tabelas identificadas, atributos, máscaras e
+arestas relacionais. Os grupos de observações selecionam previsões, margem
+elétrica, prazos de serviço e feedback das ações. Estas entradas podem ser usadas
+por controladores de grafos ou Transformer fornecidos pelo investigador.
+
+O [guia de interfaces](interfaces_flat_entity.md), a
+[referência de observações](observations_reference.md) e a
+[referência de ações](actions_reference.md) definem os contratos.
+
+## Várias comunidades
+
+`MultiCommunityEnv` avança comunidades independentes em sincronia e reporta
+resultados locais e de portefólio. As comunidades filhas partilham o passo de
+tempo, a duração do episódio, a interface, o modo de agente central,
+`physics_version`, `random_stream_version` e `baseline_version`. Cada uma
+mantém o seu próprio estado físico, pedidos de DR e liquidação. O wrapper agrega
+os resultados; não transfere fisicamente energia entre comunidades nem otimiza o
+despacho entre comunidades.
+
+O [guia de várias comunidades](multi_community_reference.md) inclui um exemplo
+completo com datasets públicos disponíveis.
+
+## Controladores, recompensas e ações repetidas
+
+Use os agentes business-as-usual e baseados em regras incluídos, implemente um
+controlador próprio ou integre um algoritmo de aprendizagem. Uma recompensa
+orienta o treino; os KPIs avaliam a execução concluída. Não têm de otimizar a
+mesma grandeza. Verifique a interface suportada por cada controlador/wrapper; os
+RBC clássicos e os wrappers de RL padrão usam o modo flat.
+
+`step_many()` repete uma ação continuando a avançar a física e os serviços em
+cada passo interno. Devolve as recompensas acumuladas e o número de passos
+executados. Consulte as [opções de simulação](running_simulations.md) e os
+[tutoriais de controladores](https://www.citylearn.net/usage/agents.html).
+
+## Avaliação, exports e desempenho
+
+`evaluate_v2()` fornece KPIs estruturados de edifício/comunidade. O
+[scorecard](scorecard.md) apresenta uma seleção compacta; a
+[referência de KPIs](kpis_reference.md) e o [catálogo de nomes](KPI_V2_TREE.md)
+cobrem a saída mais alargada. Os rácios normalizados acompanham as grandezas
+brutas de energia, custo e serviço, em vez de as substituírem.
+
+Use `render_mode="none"` durante o treino, ou `"end"` para exports no fim do
+episódio. O carregamento por janela, as caches de entradas partilhadas, o Parquet
+e os grupos de observações selecionáveis ajudam a controlar os custos de tempo de
+execução e de memória. Consulte as
+[opções de exportação](running_simulations.md#render-e-exportação), a
+[CityLearn UI](https://www.citylearn.net/ui.html) e o
+[guia de desenvolvimento](developer_guide.md) para validação e profiling.

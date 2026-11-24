@@ -2,8 +2,6 @@ import pytest
 import numpy as np
 import pandas as pd
 from unittest.mock import patch, MagicMock
-from pathlib import Path
-from typing import Union
 
 from citylearn.energy_model import PV
 import citylearn.energy_model as energy_model

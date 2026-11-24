@@ -130,6 +130,17 @@ class HourRBC(RBC):
         
         return actions
     
+    @staticmethod
+    def _deferrable_start_map() -> Mapping[int, float]:
+        """Hour map that starts a deferrable appliance's pending cycle as soon as it may start.
+
+        The hour-based controllers schedule storage and HVAC only. A deferrable cycle that is never started is
+        missed (nothing starts it at its deadline), so they start it at the first step its window allows, as an
+        unmanaged household would.
+        """
+
+        return {hour: 1.0 for hour in Building.get_periodic_observation_metadata()['hour']}
+
     def __verify_action_map(self, action_names: List[str], action_map: Mapping[str, Mapping[int, float]], index: int = None):
         missing_actions = [a for a in action_names if a not in list(action_map.keys())]
         message = f'Undefined maps for actions: {missing_actions}'
@@ -214,6 +225,10 @@ class BasicRBC(HourRBC):
 
                         action_map[n][hour] = value
                 
+                elif n.startswith('deferrable_appliance'):
+                    # Not part of the hour schedule: start each pending cycle as soon as it may start (CityLearn #309).
+                    action_map[n] = HourRBC._deferrable_start_map()
+
                 else:
                     raise ValueError(f'Unknown action name: {n}')
 
@@ -323,6 +338,10 @@ class OptimizedRBC(BasicRBC):
 
                         action_map[n][hour] = value
                 
+                elif n.startswith('deferrable_appliance'):
+                    # Not part of the hour schedule: start each pending cycle as soon as it may start (CityLearn #309).
+                    action_map[n] = HourRBC._deferrable_start_map()
+
                 else:
                     raise ValueError(f'Unknown action name: {n}')
 
@@ -401,6 +420,10 @@ class BasicBatteryRBC(BasicRBC):
 
                         action_map[n][hour] = value
                 
+                elif n.startswith('deferrable_appliance'):
+                    # Not part of the hour schedule: start each pending cycle as soon as it may start (CityLearn #309).
+                    action_map[n] = HourRBC._deferrable_start_map()
+
                 else:
                     raise ValueError(f'Unknown action name: {n}')
 

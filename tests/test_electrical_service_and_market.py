@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from private_access import charging_constraint_last_penalty_kwh, charging_constraints_state
 
 pytest.importorskip("gymnasium")
 
@@ -166,6 +167,7 @@ def test_disabled_community_market_keeps_legacy_costs(tmp_path: Path):
                     "enabled": False,
                     "intra_community_sell_ratio": 0.2,
                     "grid_export_price": 0.9,
+                    "settlement_version": 2,
                 }
             }
         ),
@@ -200,6 +202,7 @@ def test_disabled_community_market_with_string_false_keeps_legacy_costs(tmp_path
                     "enabled": "false",
                     "intra_community_sell_ratio": 0.2,
                     "grid_export_price": 0.9,
+                    "settlement_version": 2,
                 }
             }
         ),
@@ -230,6 +233,7 @@ def test_disabled_community_market_does_not_credit_building_exports(tmp_path: Pa
 
     schema["community_market"]["enabled"] = False
     schema["community_market"]["grid_export_price"] = 0.9
+    schema["community_market"]["settlement_version"] = 2
     with open(schema_path, "w", encoding="utf-8") as f:
         json.dump(schema, f, indent=2)
 
@@ -343,7 +347,7 @@ def test_electrical_service_positive_infinite_limits_are_treated_as_unbounded(tm
         env.step([actions])
 
         building = env.buildings[0]
-        state = building._charging_constraints_state
+        state = charging_constraints_state(building)
         assert state is not None
         assert state["building_headroom_kw"] is None
         assert state["building_export_headroom_kw"] is None
@@ -354,8 +358,8 @@ def test_electrical_service_positive_infinite_limits_are_treated_as_unbounded(tm
         assert state["phase_export_headroom_kw"]["L2"] is None
         assert state["phase_export_headroom_kw"]["L3"] is None
         assert np.isfinite(state["total_power_kw"])
-        assert np.isfinite(building._charging_constraint_last_penalty_kwh)
-        assert building._charging_constraint_last_penalty_kwh == pytest.approx(0.0, abs=1e-6)
+        assert np.isfinite(charging_constraint_last_penalty_kwh(building))
+        assert charging_constraint_last_penalty_kwh(building) == pytest.approx(0.0, abs=1e-6)
     finally:
         env.close()
 
@@ -395,13 +399,13 @@ def test_three_phase_limits_clip_controllable_actions(tmp_path: Path):
         env.step([actions])
 
         building = env.buildings[0]
-        state = building._charging_constraints_state
+        state = charging_constraints_state(building)
         assert state is not None
         assert state["total_power_kw"] <= total_import_limit_kw + 1e-6
         assert state["phase_power_kw"]["L1"] <= per_phase_import_limit_kw + 1e-6
         assert state["phase_power_kw"]["L2"] <= per_phase_import_limit_kw + 1e-6
         assert state["phase_power_kw"]["L3"] <= per_phase_import_limit_kw + 1e-6
-        assert building._charging_constraint_last_penalty_kwh > 0.0
+        assert charging_constraint_last_penalty_kwh(building) > 0.0
 
         t = building.time_step - 1
         charger = building.electric_vehicle_chargers[0]
@@ -440,8 +444,8 @@ def test_residual_violation_when_non_controllable_exceeds_limit(tmp_path: Path):
         env.step([actions])
 
         building = env.buildings[0]
-        assert building._charging_constraint_last_penalty_kwh > 0.0
-        state = building._charging_constraints_state
+        assert charging_constraint_last_penalty_kwh(building) > 0.0
+        state = charging_constraints_state(building)
         assert state["total_power_kw"] > 0.1
         obs = building.observations(include_all=True, normalize=False, periodic_normalization=False)
         assert obs["charging_constraint_violation_kwh"] > 0.0

@@ -8,6 +8,7 @@ from typing import Any, Mapping
 
 import numpy as np
 import pytest
+from private_access import entity_service
 
 pytest.importorskip("gymnasium")
 
@@ -592,7 +593,7 @@ def test_near_full_ev_availability_allows_viable_command_only_inside_headroom(tm
         charger.min_charging_power = 1.38
         ev = charger.connected_electric_vehicle
         ev.battery.soc[0] = 0.999
-        service = env._entity_service
+        service = entity_service(env)
         service._headroom_power_limit_for_connection = lambda *args, **kwargs: headroom
         obs = service.observation_payload()
         names = env.entity_specs['tables']['charger']['features']
@@ -607,6 +608,98 @@ def test_near_full_ev_availability_allows_viable_command_only_inside_headroom(tm
             assert action * charger.max_charging_power == pytest.approx(charger.min_charging_power)
             charger.update_connected_electric_vehicle_soc(float(action))
             assert ev.battery.soc[0] == pytest.approx(1.0, abs=1e-6)
+    finally:
+        env.close()
+
+
+def _payload_value(env: CityLearnEnv, payload, table: str, name: str, row: int = 0) -> float:
+    return float(payload["tables"][table][row, env.entity_specs["tables"][table]["features"].index(name)])
+
+
+@pytest.mark.parametrize("soc", [0.995, 0.94])
+def test_faded_ev_reports_the_energy_its_battery_accepts(tmp_path, soc):
+    # Battery.charge stops at degraded_capacity while the SOC stays relative to the nominal capacity,
+    # so a battery faded to 99% is full at SOC 0.99. The observations used the nominal capacity and
+    # reported ~0.4 kW available for an EV that accepts nothing.
+    schema_path = _minute_schema_with_bundles(tmp_path)
+    env = CityLearnEnv(str(schema_path), interface="entity", central_agent=True, random_seed=0)
+    try:
+        env.reset(seed=0)
+        charger = env.buildings[0].electric_vehicle_chargers[0]
+        battery = charger.connected_electric_vehicle.battery
+        # A flat power curve, so that only the capacity limits what one step accepts.
+        battery.capacity_power_curve = [[0.0, 1.0], [1.0, 1.0]]
+        battery._capacity_history.append(0.99 * battery.capacity)
+        battery.soc[0] = soc
+        payload = entity_service(env).observation_payload()
+
+        def value(table: str, name: str) -> float:
+            return _payload_value(env, payload, table, name)
+
+        energy_before = battery.energy_init
+        battery.charge(charger.max_charging_power * 0.25)
+        accepted = battery.energy_init - energy_before
+
+        assert value("charger", "connected_ev_energy_to_full_kwh") == pytest.approx(accepted, abs=1.0e-5)
+        assert value("ev", "energy_to_full_kwh") == pytest.approx(accepted, abs=1.0e-5)
+        assert value("building", "flexible_energy_to_full_kwh") == pytest.approx(
+            value("storage", "energy_to_full_kwh") + accepted, abs=1.0e-5
+        )
+        if soc == 0.995:
+            assert accepted == 0.0
+            for name in (
+                "available_charge_power_kw",
+                "available_charge_action_normalized",
+                "can_charge",
+                "max_deliverable_energy_until_departure_kwh",
+            ):
+                assert value("charger", name) == 0.0, name
+        else:
+            assert 0.0 < accepted < (1.0 - soc) * battery.capacity
+            assert value("charger", "can_charge") == 1.0
+    finally:
+        env.close()
+
+
+def test_physics_version_1_keeps_the_nominal_energy_to_full_of_a_faded_ev(tmp_path):
+    schema_path = _minute_schema_with_bundles(tmp_path)
+    env = CityLearnEnv(str(schema_path), interface="entity", central_agent=True, random_seed=0, physics_version=1)
+    try:
+        env.reset(seed=0)
+        battery = env.buildings[0].electric_vehicle_chargers[0].connected_electric_vehicle.battery
+        battery._capacity_history.append(0.99 * battery.capacity)
+        battery.soc[0] = 0.995
+        payload = entity_service(env).observation_payload()
+
+        assert _payload_value(env, payload, "charger", "connected_ev_energy_to_full_kwh") == pytest.approx(
+            0.005 * battery.capacity, rel=1.0e-5
+        )
+        assert _payload_value(env, payload, "charger", "can_charge") == 1.0
+    finally:
+        env.close()
+
+
+def test_faded_storage_battery_reports_no_charge_headroom_when_full(tmp_path):
+    schema_path = _minute_schema_with_bundles(tmp_path)
+    env = CityLearnEnv(str(schema_path), interface="entity", central_agent=True, random_seed=0)
+    try:
+        env.reset(seed=0)
+        storage = env.buildings[0].electrical_storage
+        storage.capacity_power_curve = [[0.0, 1.0], [1.0, 1.0]]
+        storage._capacity_history.append(0.98 * storage.capacity)
+        storage.soc[0] = 0.99
+        payload = entity_service(env).observation_payload()
+
+        assert storage.preview_charge(1.0) == 0.0
+        assert _payload_value(env, payload, "storage", "degraded_capacity_kwh") == pytest.approx(0.98 * storage.capacity)
+        for name in (
+            "energy_to_full_kwh",
+            "available_charge_power_kw",
+            "available_charge_action_normalized",
+            "can_charge",
+            "charge_headroom_ratio",
+        ):
+            assert _payload_value(env, payload, "storage", name) == 0.0, name
     finally:
         env.close()
 

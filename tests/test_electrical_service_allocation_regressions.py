@@ -6,12 +6,12 @@ from pathlib import Path
 import shutil
 from types import SimpleNamespace
 
-import numpy as np
 import pandas as pd
 import pytest
 
 from citylearn.citylearn import CityLearnEnv
 from citylearn.internal.building_ops import BuildingOpsService
+from private_access import ops_service
 
 
 PHASES = ('L1', 'L2', 'L3')
@@ -42,7 +42,7 @@ def allocation_case(powers, connections, base_kw, total_limits, phase_limits):
 def allocate(layer, building, ev_actions, storage_action=None):
     # The baselines submit simultaneous requests; the runtime allocates the service.
     assert layer == 'runtime'
-    return building._ops_service._apply_electrical_service_constraints(ev_actions, storage_action)
+    return ops_service(building)._apply_electrical_service_constraints(ev_actions, storage_action)
 
 
 @pytest.mark.parametrize('layer', ['runtime'])

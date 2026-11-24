@@ -1,6 +1,5 @@
 """Charger session dynamics: closed-form step energy against fine numerical integration."""
 
-import copy
 import json
 import math
 from pathlib import Path

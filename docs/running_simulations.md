@@ -93,7 +93,7 @@ env = MultiCommunityEnv(
 observations, info = env.reset(seed=0)
 ```
 
-All communities must share `seconds_per_time_step`, effective episode length, `interface` and `central_agent` mode. `evaluate_v2()` returns local rows with `community_id` plus portfolio rows with `level="portfolio"`. See [multi_community_reference.md](multi_community_reference.md).
+All communities must share `seconds_per_time_step`, effective episode length, `interface`, `central_agent` mode, `physics_version`, `random_stream_version` and `baseline_version`. `evaluate_v2()` returns local rows with `community_id` plus portfolio rows with `level="portfolio"`. See [multi_community_reference.md](multi_community_reference.md).
 
 ## `CityLearnEnv` Parameters
 
@@ -109,6 +109,7 @@ All communities must share `seconds_per_time_step`, effective episode length, `i
 | `rolling_episode_split` | bool | schema | Sequential window episodes. | Useful for training. |
 | `random_episode_split` | bool | schema | Random window episodes. | Uses `random_seed`. |
 | `episode_split_boundary` | str | `shared` | How consecutive (non-rolling) splits meet. | `shared` shares the boundary row so every interval is simulated; `disjoint` restores the 3.6.0 splits. |
+| `ev_soc_carryover` | bool | `False` | Start each EV of an episode that continues the previous one in time from its SOC at the end of that episode. | Only the EV SOC is carried. Off, episodes are independent but a session across a boundary loses its charge; on, consecutive episodes depend on the previous controller. See the [KPI reference](kpis_reference.md#departures). |
 | `seconds_per_time_step` | float | schema | Physical duration of each step. | Examples: 15, 60, 300, 900, 3600. |
 | `time_step_ratio` | int/float | inferred | Ratio between control step and dataset spacing. | Inferred from the data; a value passed here must match it. |
 | `time_step_ratio_mode` | str | `reject` | What to do when the control step differs from the dataset step. | `reject` raises an error; `compress` keeps the 3.6.0 behaviour (one data row per step, energies scaled). |
@@ -196,9 +197,25 @@ citylearn simulate data/datasets/my_dataset/schema.json train -e 3
 citylearn simulate data/datasets/my_dataset/schema.json evaluate
 ```
 
-`simulate` writes a training summary (`<simulation_id>-train.json`), an
-evaluation (`<simulation_id>-evaluation.json`) and, with `--save_agent`, the
-agent to the output directory, and prints the path of each file it writes.
+`simulate` writes a training summary (`<simulation_id>-train.json`), the
+evaluation files and, with `--save_agent`, the agent to the output directory,
+and prints the path of each file it writes. `evaluate` and `train --evaluate`
+write two evaluation files:
+
+- `<simulation_id>-evaluation_v2.csv`: the `evaluate_v2()` table, with the
+  columns `cost_function`, `value`, `name`, `level`, `unit` and `description`,
+  one row per KPI and scope. It holds the community market rows when the
+  scenario has a market, and the `*_business_as_usual_*` rows. This is the table
+  that the [KPI reference](kpis_reference.md) and the scorecard describe; read
+  it with `pandas.read_csv`.
+- `<simulation_id>-evaluation.json`: the evaluation window and timestamps, the
+  rewards, the actions and the time series, plus the legacy `evaluate()` KPIs
+  under `evaluation`. Its format does not change, so existing parsers keep
+  working, but compare controllers with the `evaluate_v2()` file.
+
+The business-as-usual rows need a second rollout of `BusinessAsUsualAgent` on the
+evaluation window, as `evaluate_v2()` does in Python. `--no_business_as_usual`
+skips it and writes the table without those rows.
 
 ### Stable Baselines3 agent
 
@@ -217,6 +234,37 @@ citylearn simulate citylearn_challenge_2022_phase_all_plus_evs \
 
 Without `"policy"`, the CLI raises a `TypeError` that shows the argument to add.
 Use `-te start end` to evaluate on other windows, such as unseen days.
+
+To evaluate or keep training a saved model, pass it with `-fa` and name the
+algorithm that saved it with `-a`, for example `-a stable_baselines3.SAC -fa
+outputs/sb3_sac/sb3_sac-agent.zip`. Write to another directory with `-d`:
+`simulate` empties its output directory first, so it refuses to run when that
+directory holds the model to load.
+
+What the Stable Baselines3 integration supports:
+
+- **Central agent, flat interface.** `StableBaselines3Wrapper` turns the central
+  agent's observation and action vectors into one `Box` each. With
+  `central_agent=False` there is one vector per building, and the wrapper raises
+  an error; for one policy per building, use `RLlibMultiAgentEnv`.
+- **No entity interface.** The entity observations are dictionaries of tables
+  whose sizes can change, which the SB3 policies cannot take. The `pt_rec_*`,
+  three-phase, demand-response and robustness datasets default to the entity
+  interface, so pass `"interface": "flat"` in `-ke` (or `interface="flat"` in
+  Python). Dynamic topology and demand response need the entity interface and
+  cannot be used with SB3.
+- **Action bounds.** The action space keeps each device's bounds, for example
+  [-1, 1] for storage and EV chargers and [0, 1] for others, so `check_env`
+  warns that it is not symmetric. SAC rescales its actions to the bounds and PPO
+  clips them, so both work as they are.
+- **Robustness faults.** A missing sensor reading is replaced by
+  `missing_replacement_value` (-9999 in `citylearn_challenge_2022_phase_all_robustness`),
+  which normalises far outside [0, 1]. SB3 does not check observation bounds,
+  but the policy sees that value as it is.
+
+`tests/test_stable_baselines3_integration.py` runs `check_env`, a few SAC and PPO
+updates, `predict` over one episode with every observation inside its space,
+`evaluate_v2()`, and the CLI saving and loading a model.
 
 ### Evaluation window
 
@@ -247,6 +295,7 @@ The training summary records the machine host name and the user name only with
 | `-rs`, `--random_seed` | `42` | Seed. |
 | `--offline` | flag | Require local files. |
 | `--record_host` | flag | Record the host and user names in the training summary. |
+| `--no_business_as_usual` | flag | Write the `evaluate_v2()` table without the business-as-usual rows. |
 | `train -e` | `train -e 10` | Number of training episodes. |
 | `train --save_agent` | flag | Save agent at the end. |
 | `train --evaluate` | flag | Evaluate after training, on the first training episode window unless `-te` is given. |
@@ -329,7 +378,7 @@ requirements installed (see the [developer guide](developer_guide.md) and the
 python -m pytest -q
 python scripts/audit/audit_entity_contract.py --strict
 python scripts/audit/audit_physics.py
-python -m ruff check citylearn tests scripts/manual scripts/ci --select E9,F821
+python -m ruff check citylearn tests scripts/manual scripts/ci
 ```
 
 KPI-only exports include a manifest and service-audit JSON sidecars. They do not

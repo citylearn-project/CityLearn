@@ -1,4 +1,4 @@
-"""Per-building reward metadata and the version 2 EV and comfort rewards (#249)."""
+"""Per-building reward metadata, the version 2 EV and comfort rewards (#249) and their default (#278)."""
 
 import json
 from pathlib import Path
@@ -112,15 +112,16 @@ def _departure_rewards(version):
     return [reward.calculate([_ev_observation(soc)])[0] for soc in DEPARTURE_SOCS]
 
 
-def test_ev_reward_version_1_is_unchanged():
+def test_ev_reward_version_1_is_unchanged_and_deprecated():
     # Severe under-charging scores better than moderate under-charging in version 1.
-    assert _departure_rewards(None) == pytest.approx([110.0, -20.0, 15.0, 15.0])
-    assert _departure_rewards(1) == _departure_rewards(None)
+    with pytest.warns(DeprecationWarning, match='only to reproduce runs made with CityLearn 3.6.0'):
+        assert _departure_rewards(1) == pytest.approx([110.0, -20.0, 15.0, 15.0])
 
 
 def test_ev_reward_version_2_penalizes_deeper_departure_deficits_more():
     rewards = _departure_rewards(2)
 
+    assert _departure_rewards(None) == rewards
     assert rewards == pytest.approx([110.0, -20.0, -35.0, -35.0])
     assert all(a >= b for a, b in zip(rewards, rewards[1:]))
 
@@ -128,7 +129,8 @@ def test_ev_reward_version_2_penalizes_deeper_departure_deficits_more():
 def test_ev_reward_version_2_adds_the_base_reward():
     no_charger = {'net_electricity_consumption': 50.0, 'charging_constraint_violation_kwh': 0.0}
     # MARL base reward of a lone building importing 50 kWh: -0.01 * 50 ** 2 * 50.
-    assert Electric_Vehicles_Reward_Function({'central_agent': False}).calculate([no_charger]) == [0.0]
+    with pytest.warns(DeprecationWarning):
+        assert Electric_Vehicles_Reward_Function({'central_agent': False}, version=1).calculate([no_charger]) == [0.0]
     assert Electric_Vehicles_Reward_Function({'central_agent': False}, version=2).calculate([no_charger]) == [-1250.0]
 
     base = -0.01
@@ -167,8 +169,11 @@ def test_comfort_reward_version_2_follows_the_hvac_mode(observation, version_1, 
     metadata = {'central_agent': False}
     kwargs = dict(lower_exponent=2.0, higher_exponent=3.0)
 
-    assert ComfortReward(metadata, **kwargs).calculate([observation]) == pytest.approx([version_1])
+    with pytest.warns(DeprecationWarning):
+        assert ComfortReward(metadata, version=1, **kwargs).calculate([observation]) == pytest.approx([version_1])
+
     assert ComfortReward(metadata, version=2, **kwargs).calculate([observation]) == pytest.approx([version_2])
+    assert ComfortReward(metadata, **kwargs).calculate([observation]) == pytest.approx([version_2])
 
 
 def test_reward_versions_are_validated_and_recorded():
@@ -185,9 +190,33 @@ def test_reward_versions_are_validated_and_recorded():
         del reward.__dict__['version']
         assert reward.version == 1
 
-    env = CityLearnEnv(_schema(), reward_function_kwargs={'version': 2}, episode_time_steps=4)
+    # The bundled schema selects version 2, which is also the class default.
+    env = CityLearnEnv(_schema(), episode_time_steps=4)
     evidence = env.get_metadata()['reward_evidence']
 
     assert type(env.reward_function) is ComfortReward and env.reward_function.version == 2
+    assert evidence['configured_attributes']['version'] == 2
     assert evidence['effective_public_parameters']['version'] == 2
     env.close()
+
+    with pytest.warns(DeprecationWarning, match='version 1 is deprecated'):
+        env = CityLearnEnv(_schema(), reward_function_kwargs={'version': 1}, episode_time_steps=4)
+
+    assert env.reward_function.version == 1
+    env.close()
+
+
+def test_bundled_schemas_select_reward_version_2():
+    import glob
+
+    names = {'citylearn.reward_function.ComfortReward', 'citylearn.reward_function.Electric_Vehicles_Reward_Function'}
+    selected = []
+
+    for path in glob.glob(str(Path(__file__).resolve().parents[1] / 'data' / 'datasets' / '*' / 'schema.json')):
+        reward = json.loads(Path(path).read_text(encoding='utf-8'))['reward_function']
+
+        if reward['type'] in names:
+            selected.append(Path(path).parent.name)
+            assert (reward.get('attributes') or {}).get('version') == 2, path
+
+    assert len(selected) == 18

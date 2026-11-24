@@ -11,6 +11,7 @@ import pytest
 
 from citylearn.citylearn import CityLearnEnv
 from citylearn.data import ChargerSimulation
+from private_access import entity_service
 
 MINUTE_EV_DEMO = Path(__file__).resolve().parent / 'data' / 'minute_ev_demo'
 
@@ -131,7 +132,7 @@ def test_entity_flexibility_metrics_stop_at_max_soc(tmp_path):
 
     try:
         observations, _ = env.reset()
-        service = env._entity_service
+        service = entity_service(env)
         ev = dict(zip(service._ev_features, observations['tables']['ev'][0]))
         charger = dict(zip(service._charger_features, observations['tables']['charger'][0]))
         building = dict(zip(service._building_features, observations['tables']['building'][0]))

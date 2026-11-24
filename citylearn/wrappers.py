@@ -7,7 +7,7 @@ import pandas as pd
 
 try:
     from ray.rllib.env import MultiAgentEnv
-except (ModuleNotFoundError, ImportError) as e:
+except (ModuleNotFoundError, ImportError):
     from gymnasium import Env as MultiAgentEnv
 
 from citylearn.citylearn import CityLearnEnv
@@ -22,6 +22,25 @@ def _observation_space_key(env: CityLearnEnv) -> Tuple[Any, ...]:
         tuple(env.shared_observations),
         tuple((id(b), tuple(b.active_observations)) for b in env.buildings),
     )
+
+
+def _require_flat_interface(env: Env, wrapper_name: str) -> None:
+    """Raise a clear error when a flat-vector wrapper is put around an entity-interface environment.
+
+    These wrappers read and return the flat lists of :py:class:`citylearn.citylearn.CityLearnEnv`. With
+    `interface='entity'` the environment returns dictionaries of tables instead, which they would misread.
+    """
+
+    interface = getattr(env.unwrapped, 'interface', 'flat')
+
+    if interface != 'flat':
+        raise ValueError(
+            f"{wrapper_name} needs interface='flat', but the environment uses interface='{interface}'. "
+            "Several bundled datasets, such as pt_rec_* and the three-phase demos, default to the entity interface. "
+            "Create the environment with CityLearnEnv(schema, interface='flat', ...), or pass "
+            "-ke '{\"interface\": \"flat\"}' to the CLI. Dynamic topology and demand response need the entity "
+            "interface, so these wrappers cannot be used with them."
+        )
 
 
 class DiscreteCombinations(Sequence):
@@ -125,6 +144,7 @@ class ClippedObservationWrapper(ObservationWrapper):
     """
 
     def __init__(self, env: CityLearnEnv) -> None:
+        _require_flat_interface(env, type(self).__name__)
         super().__init__(env)
         self.env: CityLearnEnv
 
@@ -153,6 +173,7 @@ class NormalizedObservationWrapper(ObservationWrapper):
     """
 
     def __init__(self, env: CityLearnEnv) -> None:
+        _require_flat_interface(env, type(self).__name__)
         super().__init__(env)
         self.env: CityLearnEnv
 
@@ -337,6 +358,7 @@ class NormalizedActionWrapper(ActionWrapper):
     """
 
     def __init__(self, env: CityLearnEnv) -> None:
+        _require_flat_interface(env, type(self).__name__)
         super().__init__(env)
         self.env: CityLearnEnv
         
@@ -411,6 +433,7 @@ class DiscreteObservationWrapper(ObservationWrapper):
     """
 
     def __init__(self, env: CityLearnEnv, bin_sizes: List[Mapping[str, int]] = None, default_bin_size: int = None):
+        _require_flat_interface(env, type(self).__name__)
         super().__init__(env)
         self.env: CityLearnEnv
         assert bin_sizes is None or len(bin_sizes) == len(self.env.unwrapped.buildings), 'length of bin_size must equal number of buildings.'
@@ -436,7 +459,7 @@ class DiscreteObservationWrapper(ObservationWrapper):
 
             env = env.env
 
-        return [list(b.active_observations) for b in env.buildings], env.shared_observations
+        return [list(b.flat_observation_order) for b in env.buildings], env.shared_observations
         
     @property
     def observation_space(self) -> List[spaces.MultiDiscrete]:
@@ -532,6 +555,7 @@ class DiscreteActionWrapper(ActionWrapper):
     """
 
     def __init__(self, env: CityLearnEnv, bin_sizes: List[Mapping[str, int]] = None, default_bin_size: int = None):
+        _require_flat_interface(env, type(self).__name__)
         super().__init__(env)
         self.env: CityLearnEnv
         assert bin_sizes is None or len(bin_sizes) == len(self.env.unwrapped.buildings), 'length of bin_size must equal number of buildings.'
@@ -617,6 +641,7 @@ class TabularQLearningObservationWrapper(ObservationWrapper):
     """
 
     def __init__(self, env: CityLearnEnv, bin_sizes: List[Mapping[str, int]] = None, default_bin_size: int = None) -> None:
+        _require_flat_interface(env, type(self).__name__)
         env = DiscreteObservationWrapper(env, bin_sizes=bin_sizes, default_bin_size=default_bin_size)
         super().__init__(env)
         self.env: CityLearnEnv
@@ -662,6 +687,7 @@ class TabularQLearningActionWrapper(ActionWrapper):
     """
 
     def __init__(self, env: CityLearnEnv, bin_sizes: List[Mapping[str, int]] = None, default_bin_size: int = None) -> None:
+        _require_flat_interface(env, type(self).__name__)
         env = DiscreteActionWrapper(env, bin_sizes=bin_sizes, default_bin_size=default_bin_size)
         super().__init__(env)
         self.env: CityLearnEnv
@@ -730,6 +756,7 @@ class StableBaselines3ObservationWrapper(ObservationWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
+        _require_flat_interface(env, type(self).__name__)
         assert env.unwrapped.central_agent, 'StableBaselines3ObservationWrapper is compatible only when env.central_agent = True.'\
             ' First set env.central_agent = True to use this wrapper.'
         
@@ -761,6 +788,7 @@ class StableBaselines3ActionWrapper(ActionWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
+        _require_flat_interface(env, type(self).__name__)
         assert env.unwrapped.central_agent, 'StableBaselines3ActionWrapper is compatible only when env.central_agent = True.'\
             ' First set env.central_agent = True to use this wrapper.'
         
@@ -792,6 +820,7 @@ class StableBaselines3RewardWrapper(RewardWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
+        _require_flat_interface(env, type(self).__name__)
         assert env.unwrapped.central_agent, 'StableBaselines3RewardWrapper is compatible only when env.central_agent = True.'\
             ' First set env.central_agent = True to use this wrapper.'
         
@@ -879,6 +908,7 @@ class RLlibMultiAgentObservationWrapper(ObservationWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
+        _require_flat_interface(env, type(self).__name__)
         assert not env.unwrapped.central_agent, 'RLlibMultiAgentObservationWrapper is'\
             ' compatible only when env.central_agent = False.'\
                 ' First set env.central_agent = False to use this wrapper.'
@@ -914,6 +944,7 @@ class RLlibMultiAgentActionWrapper(ActionWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
+        _require_flat_interface(env, type(self).__name__)
         assert not env.unwrapped.central_agent, 'RLlibMultiAgentActionWrapper is'\
             ' compatible only when env.central_agent = False.'\
                 ' First set env.central_agent = False to use this wrapper.'
@@ -930,7 +961,8 @@ class RLlibMultiAgentActionWrapper(ActionWrapper):
     def action(self, actions: Mapping[str, np.ndarray]) -> List[List[float]]:
         """Parses actions into data structure for :py:meth:`citylearn.citylearn.CityLearnEnv.step`."""
 
-        return [list(v) for v in actions.values()]
+        # Order by agent ID, not by the order of the dictionary, which RLlib does not guarantee.
+        return [list(actions[f'agent_{i}']) for i in range(len(actions))]
 
 class RLlibMultiAgentRewardWrapper(RewardWrapper):
     """Action wrapper for :code:`RLlib` multi-agent algorithms.
@@ -944,6 +976,7 @@ class RLlibMultiAgentRewardWrapper(RewardWrapper):
     """
 
     def __init__(self, env: CityLearnEnv):
+        _require_flat_interface(env, type(self).__name__)
         assert not env.unwrapped.central_agent, 'RLlibMultiAgentRewardWrapper is'\
             ' compatible only when env.central_agent = False.'\
                 ' First set env.central_agent = False to use this wrapper.'
@@ -1015,8 +1048,13 @@ class RLlibMultiAgentEnv(MultiAgentEnv):
         env = RLlibMultiAgentRewardWrapper(env)
         self.env: CityLearnEnv = env
         self._agent_ids = [f'agent_{i}' for i in range(len(self.buildings))]
+        # RLlib's new API stack reads the agent IDs and the per-agent spaces from these attributes.
+        self.agents = list(self._agent_ids)
+        self.possible_agents = list(self._agent_ids)
         self.observation_space: spaces.Dict = self.env.observation_space
         self.action_space: spaces.Dict = self.env.action_space
+        self.observation_spaces = dict(self.observation_space.spaces)
+        self.action_spaces = dict(self.action_space.spaces)
 
     @property
     def time_step(self) -> int:
