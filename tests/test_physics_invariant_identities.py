@@ -177,7 +177,7 @@ def test_battery_discharge_must_stop_at_the_depth_of_discharge_reserve():
     battery._StorageDevice__soc[t] = reserve_soc + 0.02
     # A model that ignores the reserve: no discharge limit other than the stored energy.
     battery._minimum_soc = lambda: 0.0
-    battery._limit_charge_energy = lambda energy, energy_init, degraded_capacity: (energy, battery.efficiency)
+    battery._limit_charge_energy = lambda energy, energy_init, degraded_capacity, **kwargs: (energy, battery.efficiency)
     names = env.action_names[0]
     action = [0.0]*len(names)
     action[names.index('electrical_storage')] = -0.2

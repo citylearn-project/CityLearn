@@ -20,6 +20,9 @@ import numpy as np
 import pandas as pd
 
 from citylearn.data import ZERO_DIVISION_PLACEHOLDER, ChargerSimulation
+from citylearn.internal.charger_dynamics import (
+    SessionDynamics, SessionState, connected_until, integrate_step, known_departure_seconds,
+)
 
 if TYPE_CHECKING:
     from citylearn.citylearn import CityLearnEnv
@@ -739,6 +742,21 @@ class CityLearnKPIService:
 
         soc = float(arrival_soc)
         connected_steps = max(int(departure_index) - int(interval_start) + 1, 0)
+        # Schedules written by a mobility provider may limit a step to the seconds plugged in
+        # or cap charging at a session SOC ceiling.
+        connected_seconds = getattr(sim, 'electric_vehicle_connected_seconds', None)
+        charge_ceilings = getattr(sim, 'electric_vehicle_charge_soc_ceiling', None)
+        # Chargers with session dynamics deliver the exact energy of their power profile.
+        dynamics = getattr(charger, 'session_dynamics', None)
+        since = self._safe_sequence_value(getattr(sim, 'electric_vehicle_connected_since_seconds', None), interval_start)
+        since = None if since is None or not np.isfinite(float(since)) else float(since)
+        profile_state = (
+            SessionState(age_seconds=0.0 if since is None else since)
+            if (dynamics is not None and dynamics.enabled) or (since is not None and since < 0.0) else None
+        )
+        dynamics = dynamics if dynamics is not None else SessionDynamics()
+        countdowns = getattr(sim, 'electric_vehicle_departure_time', None)
+        exact_departures = getattr(sim, 'electric_vehicle_departure_seconds', None)
 
         # Replay the concrete battery implementation in compact, isolated buffers.
         # No real state, RNG, degradation history or episode tracker is advanced.
@@ -763,11 +781,61 @@ class CityLearnKPIService:
             if audit and self._ev_power_outage_at_step(building, step):
                 power_kw = 0.0
             charger_efficiency = self._ev_charger_charge_efficiency(charger, power_kw, charger_power_kw)
+            transfer_seconds = self._safe_sequence_value(connected_seconds, step)
+            transfer_seconds = (
+                None if transfer_seconds is None or not np.isfinite(float(transfer_seconds))
+                else min(max(float(transfer_seconds), 0.0), seconds_per_time_step)
+            )
+            exact_departure = self._safe_sequence_value(exact_departures, step)
+            exact_departure = (
+                None if exact_departure is None or not np.isfinite(float(exact_departure)) else float(exact_departure)
+            )
+            if exact_departure is not None:
+                transfer_seconds = connected_until(transfer_seconds, exact_departure, seconds_per_time_step)
+            soc_ceiling = self._safe_sequence_value(charge_ceilings, step)
+            soc_ceiling = (
+                None if soc_ceiling is None or not np.isfinite(float(soc_ceiling)) else float(soc_ceiling)
+            )
+            transfer_hours = step_hours if transfer_seconds is None else transfer_seconds / 3600.0
             if replay is not None:
                 if offset:
                     replay.next_time_step()
                 ratio = replay.time_step_ratio or 1.0
-                replay.charge(power_kw * step_hours * charger_efficiency / ratio)
+                if profile_state is not None:
+                    profile = integrate_step(
+                        dynamics, profile_state, command_kw=power_kw, step_seconds=seconds_per_time_step,
+                        connected_seconds=transfer_seconds,
+                        departure_seconds=known_departure_seconds(
+                            self._safe_sequence_value(countdowns, step), transfer_seconds, seconds_per_time_step,
+                            departure_seconds=exact_departure,
+                        ),
+                    )
+                    profile_state = profile.state
+                    charged = [(energy, seconds) for sign, energy, seconds in profile.parts() if sign > 0]
+                    energy, seconds = charged[0] if charged else (0.0, 0.0)
+                    if seconds > 0.0:
+                        efficiency = self._ev_charger_charge_efficiency(
+                            charger, energy / (seconds / 3600.0), charger_power_kw,
+                        )
+                        replay.charge(
+                            energy * efficiency / ratio,
+                            duration_seconds=seconds,
+                            soc_ceiling=soc_ceiling,
+                        )
+                    else:
+                        replay.charge(0.0)
+                elif transfer_seconds is None and soc_ceiling is None:
+                    replay.charge(power_kw * step_hours * charger_efficiency / ratio)
+                elif transfer_seconds is None:
+                    replay.charge(power_kw * step_hours * charger_efficiency / ratio, soc_ceiling=soc_ceiling)
+                elif transfer_seconds > 0.0:
+                    replay.charge(
+                        power_kw * transfer_hours * charger_efficiency / ratio,
+                        duration_seconds=transfer_seconds,
+                        soc_ceiling=soc_ceiling,
+                    )
+                else:
+                    replay.charge(0.0)
                 soc = float(replay.soc[offset])
             else:
                 # Compatibility for legacy battery adapters without a physical
@@ -778,7 +846,7 @@ class CityLearnKPIService:
                     battery, power_kw * charger_efficiency, soc,
                 )
                 eta = self._ev_battery_charge_one_way_efficiency(battery, battery_power)
-                soc = float(np.clip(soc + battery_power * step_hours * eta / capacity_kwh,
+                soc = float(np.clip(soc + battery_power * transfer_hours * eta / capacity_kwh,
                                     0.0, getattr(battery, 'max_soc', 1.0)))
 
         return soc

@@ -70,8 +70,13 @@ def equipment(env):
         for i, device in enumerate(building.escalators or []):
             devices[f'{building.name}/escalators[{i}]'] = parameters(device)
         for charger in building.electric_vehicle_chargers or []:
-            devices[f'{building.name}/charger {charger.charger_id}'] = _exact(
-                {k: getattr(charger, k, None) for k in CHARGER_ATTRIBUTES})
+            parameters_ = {k: getattr(charger, k, None) for k in CHARGER_ATTRIBUTES}
+            dynamics = getattr(charger, 'session_dynamics', None)
+            if dynamics is not None and dynamics.enabled:
+                # Listed only when configured, so chargers without session dynamics compare as before.
+                parameters_['session_dynamics'] = {
+                    k: (None if v == math.inf else v) for k, v in vars(dynamics).items()}
+            devices[f'{building.name}/charger {charger.charger_id}'] = _exact(parameters_)
     for ev in getattr(env, '_all_electric_vehicles', None) or env.electric_vehicles:
         devices[f'{ev.name}/battery'] = parameters(ev.battery)
     return devices

@@ -310,6 +310,11 @@ class CityLearnBusinessAsUsualBaselineService:
             **deepcopy(getattr(env, '_constructor_overrides', {})),
         )
         baseline_env._business_as_usual_sidecar = True
+        mobility = getattr(env, '_mobility_service', None)
+        replay = mobility.replay_provider() if mobility is not None and mobility.active else None
+        if replay is not None:
+            # The reference sees the same connections and driving consumption as the evaluated episode.
+            baseline_env.mobility_provider = replay
         return baseline_env
 
     @staticmethod

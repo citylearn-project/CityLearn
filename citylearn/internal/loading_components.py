@@ -20,6 +20,7 @@ from citylearn import random_streams
 from citylearn.data import ChargerSimulation, LogisticRegressionOccupantParameters
 from citylearn.energy_model import PV, Battery
 from citylearn.internal.physics_version import physics_version_of, resolve_physics_version
+from citylearn.internal.mobility import external_charger_simulation, parse_charger_simulation_source
 from citylearn.utilities import parse_bool
 
 if TYPE_CHECKING:
@@ -135,6 +136,20 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
     if building_schema.get('chargers', None) is not None:
         for charger_name, charger_config in building_schema['chargers'].items():
             noise_std = charger_config.get('noise_std', 0.0)
+            schema_path = f'buildings.{building_name}.chargers.{charger_name}.charger_simulation'
+            if parse_charger_simulation_source(charger_config.get('charger_simulation'), schema_path) is not None:
+                if getattr(loader, '_dynamic_mode', False):
+                    raise ValueError(
+                        f'{schema_path}: external chargers are not supported with topology_mode="dynamic".'
+                    )
+                # A mobility provider writes these rows at runtime; they start away.
+                charger_simulation = external_charger_simulation(expected_rows)
+                loader._set_time_step_offset(charger_simulation, schema['simulation_start_time_step'])
+                chargers_list.append(_construct_charger(
+                    building_name, charger_name, charger_config, charger_simulation, schema,
+                    episode_tracker, time_step_ratio,
+                ))
+                continue
 
             charger_simulation_filepath = os.path.join(schema['root_directory'], charger_config['charger_simulation'])
             # CSV has no column types. Preserve textual IDs such as "01" and "1" before inference.
@@ -208,26 +223,32 @@ def load_chargers(loader: "CityLearnLoadingService", building_name, building_sch
                     or ChargerSimulation._soc_series_unit(current_soc_raw)
                 )
 
-            charger_type = charger_config['type']
-            charger_class = component_constructor(charger_type, f'buildings.{building_name}.chargers.{charger_name}.type')
-            charger_attributes = dict(charger_config.get('attributes', {}) or {})
-            charger_path = f'buildings.{building_name}.chargers.{charger_name}'
-            charger_attributes = charger_power_attributes(
-                charger_class, charger_attributes, charger_path,
-                resolve_physics_version(schema.get('physics_version')),
-            )
-            charger_attributes['episode_tracker'] = episode_tracker
-            # Chargers draw no random values, but an unseeded one draws its seed from Python's global `random`.
-            charger_attributes.setdefault('random_seed', schema['random_seed'])
-            charger_object = charger_class(
-                charger_simulation=charger_simulation,
-                charger_id=charger_name,
-                **charger_attributes,
-                seconds_per_time_step=schema['seconds_per_time_step'],
-                time_step_ratio=time_step_ratio,
-            )
-            chargers_list.append(charger_object)
+            chargers_list.append(_construct_charger(
+                building_name, charger_name, charger_config, charger_simulation, schema,
+                episode_tracker, time_step_ratio,
+            ))
     return chargers_list
+
+
+def _construct_charger(building_name, charger_name, charger_config, charger_simulation, schema,
+                       episode_tracker, time_step_ratio):
+    charger_type = charger_config['type']
+    charger_class = component_constructor(charger_type, f'buildings.{building_name}.chargers.{charger_name}.type')
+    charger_attributes = dict(charger_config.get('attributes', {}) or {})
+    charger_attributes = charger_power_attributes(
+        charger_class, charger_attributes, f'buildings.{building_name}.chargers.{charger_name}',
+        resolve_physics_version(schema.get('physics_version')),
+    )
+    charger_attributes['episode_tracker'] = episode_tracker
+    # Chargers draw no random values, but an unseeded one draws its seed from Python's global `random`.
+    charger_attributes.setdefault('random_seed', schema['random_seed'])
+    return charger_class(
+        charger_simulation=charger_simulation,
+        charger_id=charger_name,
+        **charger_attributes,
+        seconds_per_time_step=schema['seconds_per_time_step'],
+        time_step_ratio=time_step_ratio,
+    )
 
 
 _CHARGER_KEYS = ('type', 'charger_simulation', 'attributes', 'autosize', 'noise_std', 'soc_unit')
