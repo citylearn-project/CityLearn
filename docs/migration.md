@@ -105,6 +105,31 @@ compare the controller with unheated or uncooled houses
 - A `BusinessAsUsualAgent` you run yourself follows the environment's version;
   `hvac='off'` or `hvac='dataset_demand'` overrides it.
 
+### The rule-based baselines run the HVAC
+
+`RBCBasicPolicy`, `RBCSmartPolicy` and `RBCCommunityPolicy` now deliver the
+dataset's heating and cooling demand through the HVAC actions, with the rule of
+the `baseline_version=3` BAU.
+
+- Datasets without HVAC actions: nothing changes, bit for bit, including
+  `comparison_identity()`.
+- Datasets with HVAC actions: the rule-based baselines heat and cool, so their
+  energy, cost and comfort KPIs change. Compare them with the
+  `baseline_version=3` BAU; against the default version 2 BAU, which does not
+  heat or cool, their ratios to the BAU compare heated houses with unheated
+  ones. Their identity records `hvac='dataset_demand'` and the definition gets
+  the suffix `+hvac-dataset-demand-v1`.
+- The storage, EV and appliance rules do not change, but where a dataset with
+  HVAC actions also has batteries, the battery actions can change: the load the
+  rules react to now includes the HVAC.
+- `SACRBC` and `MARLISARBC` built with a rule baseline as `rbc` explore with the
+  HVAC at the dataset demand. `hvac` is not a learner parameter, so
+  `SACRBC(env, rbc=RBCBasicPolicy, hvac='off')` passes it to the rule baseline
+  and keeps the old exploration.
+- `RBCSmartPolicy(env, hvac='off')` (and the same for the other two) gives the
+  zero HVAC of earlier releases, to reproduce earlier numbers. See
+  [HVAC of the rule-based baselines](baselines.md#hvac-of-the-rule-based-baselines).
+
 ### District emissions with local trading off
 
 With a community market enabled and `community_market.local_trading_enabled`

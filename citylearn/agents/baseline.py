@@ -29,6 +29,12 @@ Agent                                       Behaviour
                                             (15 kW by default). Without a market it shares no energy.
 ==========================================  ==========================================================
 
+The three RBCs also run the HVAC (``heating_device``, ``cooling_device``,
+``cooling_or_heating_device``) at the dataset's heating and cooling demand, as the
+BAU does under ``baseline_version=3`` (``hvac='dataset_demand'``, the default; pass
+``hvac='off'`` for the zero HVAC of earlier releases). They do not optimise the HVAC.
+On datasets without HVAC actions this changes nothing.
+
 The policies are ported from the Soft-CPS Algorithms baselines and keep their
 audited defaults. Keyword arguments override the engine hyperparameters, for
 example ``RBCCommunityPolicy(env, community_import_threshold_kw=10.0)``.
@@ -52,6 +58,11 @@ class _RuleBaselineAgent(Agent):
 
     ENGINE_CLASS: ClassVar[type] = engines.NormalTargetPolicy
     DEFINITION_VERSION: ClassVar[str] = ''
+    #: HVAC behaviours: ``'off'`` sends zero, ``'dataset_demand'`` delivers the dataset demand.
+    HVAC_MODES: ClassVar[Tuple[str, ...]] = ('off', 'dataset_demand')
+    _HVAC_ACTIONS: ClassVar[Tuple[str, ...]] = ('heating_device', 'cooling_device', 'cooling_or_heating_device')
+    #: HVAC behaviour; subclasses set it before the base constructor runs.
+    hvac: str = 'off'
     _use_current_step_load = False
     # Values the Algorithms configuration layer resolves for every rule policy;
     # without them the engines fall back to the BAU self-consumption threshold.
@@ -112,8 +123,9 @@ class _RuleBaselineAgent(Agent):
         names, _ = self._flattener.flatten(self._payload(payload))
         buildings = env.buildings
         # The engines control batteries, EV chargers and flexible appliances.
-        # Other active actions (HVAC, thermal storage, ...) receive zero,
-        # clipped to their bounds, as in earlier CityLearn baselines.
+        # Other active actions (thermal storage, ...) receive zero, clipped to
+        # their bounds, as in earlier CityLearn baselines. The HVAC actions are
+        # zero too unless `hvac` is 'dataset_demand' (_set_uncontrolled_actions).
         self._layouts = []
         engine_names, engine_spaces = [], []
         for building in buildings:
@@ -187,118 +199,6 @@ class _RuleBaselineAgent(Agent):
         self.next_time_step()
         return actions
 
-    def _set_uncontrolled_actions(self, building: Any, actions: List[float]):
-        """Set the actions the engine does not control in `actions`, the building's vector; they stay zero here."""
-
-    def comparison_identity(self):
-        from citylearn import __version__
-        parameters = {'definition_version': self.DEFINITION_VERSION}
-        if hasattr(self, 'ev_charge_target'):
-            parameters['ev_charge_target'] = self.ev_charge_target
-        if getattr(self, 'hvac', 'off') != 'off':
-            # Only when it is on, so the identity of the BAU without HVAC is the one of earlier releases.
-            parameters['hvac'] = self.hvac
-        for key, value in sorted(vars(self._engine).items()):
-            if key.startswith('_') or not isinstance(value, (bool, int, float, str)):
-                continue
-            if isinstance(value, float) and not np.isfinite(value):
-                continue
-            parameters[key] = value
-        return dict(
-            implementation=type(self).__module__ + '.' + type(self).__qualname__,
-            version=__version__, parameters=parameters, observation_access='entity_observations',
-        )
-
-    def reset(self):
-        super().reset()
-        engine = self._engine
-        if engine is None:
-            return
-        # The dataset info and the attachment depend on the schema and the
-        # observation layout, not on the episode. Clear only the caches.
-        engine._dispatch_budgets = {}
-        engine._obs_match_cache = {}
-        engine._storage_suffix_cache = {}
-        if getattr(self.env.unwrapped, 'topology_mode', 'static') == 'dynamic':
-            # Reset restores the initial members and assets and replays the
-            # topology events, so attach again to the next observation payload.
-            self._attached_topology_version = None
-
-
-class BusinessAsUsualAgent(_RuleBaselineAgent):
-    """Reference BAU: immediate EV charging, earliest appliance start, PV self-consumption.
-
-    A connected EV is charged at once and at maximum power. With
-    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v4``) it charges
-    to 100%, as the BAU of CityLearn 3.1–3.3 did. With
-    ``ev_charge_target='requested'`` (``immediate-user-target-v3``) it stops at the
-    user's requested departure SOC: the last command is limited to the remaining
-    energy gap, and when that command is below the charger minimum the EV stops
-    slightly below the target instead of overshooting it. Appliances start at the first admissible
-    step and the home battery uses observed current-step demand and PV when
-    estimating local surplus or import.
-
-    The HVAC follows `hvac`. With ``'off'`` the ``heating_device``, ``cooling_device`` and
-    ``cooling_or_heating_device`` actions are zero, as in CityLearn 3.6.0, so on datasets with HVAC
-    actions the BAU buildings are neither heated nor cooled (#362). With ``'dataset_demand'`` each step the
-    HVAC action is the fraction of the device's nominal power that delivers the dataset's own heating or
-    cooling demand (``heating_demand_without_control`` and ``cooling_demand_without_control`` of the energy
-    simulation, the as-simulated demand of the building file), clipped to the action bounds; the device
-    limits (nominal power, outage supply) cap it as for any action. That is a thermostat that meets the
-    load without optimisation. The demand is used only in the steps whose ``hvac_mode`` allows that service.
-    The default, ``None``, is ``'dataset_demand'`` when the environment's ``baseline_version`` is 3 or more
-    and ``'off'`` otherwise.
-
-    Choose the BAU that ``evaluate_v2()`` uses with the environment's
-    ``business_as_usual_ev_charge_target`` and ``baseline_version``.
-    """
-
-    #: HVAC behaviours of the BAU, see the class description.
-    HVAC_MODES: ClassVar[Tuple[str, ...]] = ('off', 'dataset_demand')
-    #: Suffix of the definition identifier when the BAU delivers the dataset HVAC demand.
-    HVAC_DEFINITION_SUFFIX: ClassVar[str] = '+hvac-dataset-demand-v1'
-    _HVAC_ACTIONS: ClassVar[Tuple[str, ...]] = ('heating_device', 'cooling_device', 'cooling_or_heating_device')
-
-    EV_CHARGE_TARGETS: ClassVar[Mapping[str, Tuple[type, str]]] = {
-        'requested': (engines.NormalTargetPolicy, 'immediate-user-target-v3'),
-        'full': (engines.NormalPolicy, 'immediate-full-charge-v4'),
-    }
-    ENGINE_CLASS = engines.NormalPolicy
-    DEFINITION_VERSION = 'immediate-full-charge-v4'
-    _use_current_step_load = True
-
-    def __init__(self, env: CityLearnEnv, ev_charge_target: str = 'full', hvac: Optional[str] = None,
-                 **hyperparameters: Any):
-        self.hvac = self.hvac_mode_for(env) if hvac is None else self._validate_hvac(hvac)
-        self.ENGINE_CLASS, self.DEFINITION_VERSION = self.definition(ev_charge_target, self.hvac)
-        self.ev_charge_target = str(ev_charge_target)
-        super().__init__(env, **hyperparameters)
-
-    @classmethod
-    def definition(cls, ev_charge_target: str, hvac: str = 'off') -> Tuple[type, str]:
-        """Return the engine and the reproducible BAU definition identifier."""
-
-        try:
-            engine, identifier = cls.EV_CHARGE_TARGETS[str(ev_charge_target)]
-        except KeyError:
-            raise ValueError(
-                f"ev_charge_target must be one of {sorted(cls.EV_CHARGE_TARGETS)}, got {ev_charge_target!r}."
-            ) from None
-
-        if cls._validate_hvac(hvac) == 'dataset_demand':
-            identifier += cls.HVAC_DEFINITION_SUFFIX
-
-        return engine, identifier
-
-    @classmethod
-    def hvac_mode_for(cls, env: Any) -> str:
-        """HVAC behaviour of the BAU under the environment's ``baseline_version``."""
-
-        from citylearn.internal.baseline_version import BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION, baseline_version_of
-
-        version = baseline_version_of(getattr(env, 'unwrapped', env))
-        return 'dataset_demand' if version >= BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION else 'off'
-
     @classmethod
     def _validate_hvac(cls, hvac: str) -> str:
         if hvac not in cls.HVAC_MODES:
@@ -307,6 +207,12 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
         return hvac
 
     def _set_uncontrolled_actions(self, building: Any, actions: List[float]):
+        """Set the actions the engine does not control in `actions`, the building's vector.
+
+        With ``hvac='dataset_demand'`` the HVAC actions deliver the dataset demand (see
+        :meth:`dataset_demand_hvac_action`), clipped to the action bounds. Every other one stays zero.
+        """
+
         if self.hvac == 'off':
             return
 
@@ -365,8 +271,151 @@ class BusinessAsUsualAgent(_RuleBaselineAgent):
         heating, cooling = fraction(True), fraction(False)
         return heating if heating >= cooling else -cooling
 
+    def _env_has_hvac_actions(self) -> bool:
+        return any(name in self._HVAC_ACTIONS for building in self.env.unwrapped.buildings
+                   for name in building.active_actions)
 
-class RBCBasicPolicy(_RuleBaselineAgent):
+    def _identity_hvac(self) -> Optional[str]:
+        """HVAC value recorded in :meth:`comparison_identity`, or None to leave it out."""
+
+        return None if self.hvac == 'off' else self.hvac
+
+    def comparison_identity(self):
+        from citylearn import __version__
+        parameters = {'definition_version': self.DEFINITION_VERSION}
+        if hasattr(self, 'ev_charge_target'):
+            parameters['ev_charge_target'] = self.ev_charge_target
+        hvac = self._identity_hvac()
+        if hvac is not None:
+            # Only when it acts, so the identity without HVAC is the one of earlier releases.
+            parameters['hvac'] = hvac
+        for key, value in sorted(vars(self._engine).items()):
+            if key.startswith('_') or not isinstance(value, (bool, int, float, str)):
+                continue
+            if isinstance(value, float) and not np.isfinite(value):
+                continue
+            parameters[key] = value
+        return dict(
+            implementation=type(self).__module__ + '.' + type(self).__qualname__,
+            version=__version__, parameters=parameters, observation_access='entity_observations',
+        )
+
+    def reset(self):
+        super().reset()
+        engine = self._engine
+        if engine is None:
+            return
+        # The dataset info and the attachment depend on the schema and the
+        # observation layout, not on the episode. Clear only the caches.
+        engine._dispatch_budgets = {}
+        engine._obs_match_cache = {}
+        engine._storage_suffix_cache = {}
+        if getattr(self.env.unwrapped, 'topology_mode', 'static') == 'dynamic':
+            # Reset restores the initial members and assets and replays the
+            # topology events, so attach again to the next observation payload.
+            self._attached_topology_version = None
+
+
+class BusinessAsUsualAgent(_RuleBaselineAgent):
+    """Reference BAU: immediate EV charging, earliest appliance start, PV self-consumption.
+
+    A connected EV is charged at once and at maximum power. With
+    ``ev_charge_target='full'`` (default, ``immediate-full-charge-v4``) it charges
+    to 100%, as the BAU of CityLearn 3.1–3.3 did. With
+    ``ev_charge_target='requested'`` (``immediate-user-target-v3``) it stops at the
+    user's requested departure SOC: the last command is limited to the remaining
+    energy gap, and when that command is below the charger minimum the EV stops
+    slightly below the target instead of overshooting it. Appliances start at the first admissible
+    step and the home battery uses observed current-step demand and PV when
+    estimating local surplus or import.
+
+    The HVAC follows `hvac`. With ``'off'`` the ``heating_device``, ``cooling_device`` and
+    ``cooling_or_heating_device`` actions are zero, as in CityLearn 3.6.0, so on datasets with HVAC
+    actions the BAU buildings are neither heated nor cooled (#362). With ``'dataset_demand'`` each step the
+    HVAC action is the fraction of the device's nominal power that delivers the dataset's own heating or
+    cooling demand (``heating_demand_without_control`` and ``cooling_demand_without_control`` of the energy
+    simulation, the as-simulated demand of the building file), clipped to the action bounds; the device
+    limits (nominal power, outage supply) cap it as for any action. That is a thermostat that meets the
+    load without optimisation. The demand is used only in the steps whose ``hvac_mode`` allows that service.
+    The default, ``None``, is ``'dataset_demand'`` when the environment's ``baseline_version`` is 3 or more
+    and ``'off'`` otherwise.
+
+    Choose the BAU that ``evaluate_v2()`` uses with the environment's
+    ``business_as_usual_ev_charge_target`` and ``baseline_version``.
+    """
+
+    #: Suffix of the definition identifier when the BAU delivers the dataset HVAC demand.
+    HVAC_DEFINITION_SUFFIX: ClassVar[str] = '+hvac-dataset-demand-v1'
+
+    EV_CHARGE_TARGETS: ClassVar[Mapping[str, Tuple[type, str]]] = {
+        'requested': (engines.NormalTargetPolicy, 'immediate-user-target-v3'),
+        'full': (engines.NormalPolicy, 'immediate-full-charge-v4'),
+    }
+    ENGINE_CLASS = engines.NormalPolicy
+    DEFINITION_VERSION = 'immediate-full-charge-v4'
+    _use_current_step_load = True
+
+    def __init__(self, env: CityLearnEnv, ev_charge_target: str = 'full', hvac: Optional[str] = None,
+                 **hyperparameters: Any):
+        self.hvac = self.hvac_mode_for(env) if hvac is None else self._validate_hvac(hvac)
+        self.ENGINE_CLASS, self.DEFINITION_VERSION = self.definition(ev_charge_target, self.hvac)
+        self.ev_charge_target = str(ev_charge_target)
+        super().__init__(env, **hyperparameters)
+
+    @classmethod
+    def definition(cls, ev_charge_target: str, hvac: str = 'off') -> Tuple[type, str]:
+        """Return the engine and the reproducible BAU definition identifier."""
+
+        try:
+            engine, identifier = cls.EV_CHARGE_TARGETS[str(ev_charge_target)]
+        except KeyError:
+            raise ValueError(
+                f"ev_charge_target must be one of {sorted(cls.EV_CHARGE_TARGETS)}, got {ev_charge_target!r}."
+            ) from None
+
+        if cls._validate_hvac(hvac) == 'dataset_demand':
+            identifier += cls.HVAC_DEFINITION_SUFFIX
+
+        return engine, identifier
+
+    @classmethod
+    def hvac_mode_for(cls, env: Any) -> str:
+        """HVAC behaviour of the BAU under the environment's ``baseline_version``."""
+
+        from citylearn.internal.baseline_version import BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION, baseline_version_of
+
+        version = baseline_version_of(getattr(env, 'unwrapped', env))
+        return 'dataset_demand' if version >= BUSINESS_AS_USUAL_HVAC_BASELINE_VERSION else 'off'
+
+
+class _RuleBasedPolicy(_RuleBaselineAgent):
+    """Rule-based controller: the engine dispatches storage, EVs and appliances, the HVAC meets the dataset demand.
+
+    With ``hvac='dataset_demand'`` (default) the HVAC actions deliver the dataset's own heating and cooling
+    demand at each step, as the BAU does under ``baseline_version=3``: a thermostat that meets the load,
+    without optimisation. ``hvac='off'`` sends zero, as these controllers did before. On datasets without
+    HVAC actions both give the same results.
+    """
+
+    #: Suffix of the definition identifier when the HVAC delivers the dataset demand on a dataset with HVAC.
+    HVAC_DEFINITION_SUFFIX: ClassVar[str] = '+hvac-dataset-demand-v1'
+
+    def __init__(self, env: CityLearnEnv, hvac: str = 'dataset_demand', **hyperparameters: Any):
+        self.hvac = self._validate_hvac(hvac)
+        super().__init__(env, **hyperparameters)
+
+    def _identity_hvac(self) -> Optional[str]:
+        # Recorded only where it acts, so runs without HVAC actions keep the identity of earlier releases.
+        return super()._identity_hvac() if self._env_has_hvac_actions() else None
+
+    def comparison_identity(self):
+        identity = super().comparison_identity()
+        if self._identity_hvac() is not None:
+            identity['parameters']['definition_version'] += self.HVAC_DEFINITION_SUFFIX
+        return identity
+
+
+class RBCBasicPolicy(_RuleBasedPolicy):
     """Current-price and service-urgency scheduling with battery self-consumption.
 
     EVs receive the minimum charge that meets their departure target, raised to
@@ -382,7 +431,7 @@ class RBCBasicPolicy(_RuleBaselineAgent):
     DEFINITION_VERSION = 'basic-v3'
 
 
-class RBCSmartPolicy(_RuleBaselineAgent):
+class RBCSmartPolicy(_RuleBasedPolicy):
     """Forecast-aware, strictly building-local rule-based controller.
 
     Price and local PV-surplus forecasts schedule EV charging and appliance
@@ -394,7 +443,7 @@ class RBCSmartPolicy(_RuleBaselineAgent):
     DEFINITION_VERSION = 'smart-local-v3'
 
 
-class RBCCommunityPolicy(_RuleBaselineAgent):
+class RBCCommunityPolicy(_RuleBasedPolicy):
     """Smart controller extended with community energy sharing.
 
     With the community market enabled, shareable surplus from other members is
