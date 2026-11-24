@@ -29,9 +29,12 @@ O FV pode usar um perfil de produção normalizado por kW ou a produção medida
 `kWh/step` com `generation_mode="absolute"`. As baterias estacionárias têm
 parâmetros de capacidade, SOC, potência de carregamento/descarga, eficiência e
 degradação. Ações de armazenamento positivas carregam e negativas descarregam;
-os limites físicos e da ligação determinam a energia aplicada.
+os limites físicos e da ligação determinam a energia aplicada. As eficiências da
+bateria são valores de ida e volta, e as curvas de potência omitidas no esquema
+são sorteadas a partir do fluxo aleatório.
 
 Consulte a [configuração do FV](schema_reference.md#fv), o
+[modelo da bateria](schema_reference.md#bateria), o
 [contrato de unidades](data_unit_contract.md) e as
 [ações de armazenamento](actions_reference.md#conversão-física).
 
@@ -186,7 +189,8 @@ O [guia de interfaces](interfaces_flat_entity.md), a
 
 `MultiCommunityEnv` avança comunidades independentes em sincronia e reporta
 resultados locais e de portefólio. As comunidades filhas partilham o passo de
-tempo, a duração do episódio, a interface e o modo de agente central. Cada uma
+tempo, a duração do episódio, a interface, o modo de agente central,
+`physics_version`, `random_stream_version` e `baseline_version`. Cada uma
 mantém o seu próprio estado físico, pedidos de DR e liquidação. O wrapper agrega
 os resultados; não transfere fisicamente energia entre comunidades nem otimiza o
 despacho entre comunidades.

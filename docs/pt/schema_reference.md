@@ -254,10 +254,76 @@ Classes comuns:
 
 | `generation_mode` | Aliases | Interpreta `energy_simulation.solar_generation` como | Fórmula |
 |---|---|---|---|
-| `per_kw` | `profile`, `w_per_kw` | Perfil normalizado por kW instalado, em `W/kW`. | `generation_kwh = nominal_power * value / 1000`. |
+| `per_kw` | `profile`, `w_per_kw` | Perfil normalizado por kW instalado, em `W/kW`. | `generation_kwh = nominal_power * value / 1000 * seconds_per_time_step / 3600`. |
 | `absolute` | `absolute_kwh`, `kwh`, `kwh_step`, `energy` | Produção absoluta já em `kWh/step`. | `generation_kwh = value`. |
 
 Use `absolute` para produção real medida ou para séries de energia geradas por um conversor. Use `per_kw` para perfis FV normalizados.
+
+Por exemplo, `nominal_power=4.0` e um valor de 1000 W/kW dão 4,0 kWh num passo horário e
+1,0 kWh num passo de 900 s.
+
+## Bateria
+
+```json
+"electrical_storage": {
+  "type": "citylearn.energy_model.Battery",
+  "attributes": {
+    "capacity": 6.4,
+    "nominal_power": 5.0,
+    "efficiency": 0.9,
+    "depth_of_discharge": 0.9,
+    "initial_soc": 0.1,
+    "capacity_loss_coefficient": 1e-5,
+    "loss_coefficient": 0.0,
+    "power_efficiency_curve": [[0, 0.83], [0.3, 0.83], [0.7, 0.9], [0.8, 0.9], [1, 0.85]],
+    "capacity_power_curve": [[0.0, 1.0], [0.8, 1.0], [1.0, 0.2]]
+  }
+}
+```
+
+O modelo da bateria estacionária trabalha com a energia por passo de controlo nos terminais
+da bateria, do lado do edifício. O estado de carga (SOC) é uma fração de `capacity`.
+
+| Atributo | Unidade | Predefinição | Significado |
+|---|---:|---|---|
+| `capacity` | kWh | 0 | Capacidade nominal de armazenamento, antes da degradação. |
+| `nominal_power` | kW | 0 | Potência pela qual as curvas são escaladas. |
+| `efficiency` | rácio | sorteada em [0,90, 0,98] | Eficiência de ida e volta. Uma `power_efficiency_curve` gerada é construída à volta dela; durante a simulação, a curva dá a eficiência em cada passo. |
+| `power_efficiency_curve` | `[[x, y], ...]` | sorteada, ver abaixo | Eficiência de ida e volta `y` em função da potência nos terminais dividida por `nominal_power` (`x` em [0, 1]). |
+| `capacity_power_curve` | `[[x, y], ...]` | sorteada, ver abaixo | Potência máxima de carregamento como fração de `nominal_power` (`y`) em função do SOC (`x`). |
+| `discharge_power_curve` | `[[x, y], ...]` | `[[0, 1], [1, 1]]` | Potência máxima de descarga como fração de `nominal_power` em função do SOC. A versão da física 1 usa `capacity_power_curve` em vez desta. |
+| `depth_of_discharge` | rácio | 1,0 | Fração de `capacity` que pode ser descarregada. |
+| `initial_soc` | rácio | `1 - depth_of_discharge` | SOC no início do episódio, em [0, 1]. |
+| `capacity_loss_coefficient` | rácio | sorteado em [1e-5, 1e-4] | Fração de `capacity` perdida por ciclo completo equivalente. |
+| `loss_coefficient` | rácio por hora | sorteado em [0,001, 0,009] | Perda em repouso da energia armazenada; a fórmula por passo está nas [definições dos VE](#definições-dos-ve). |
+
+Uma predefinição indicada como "sorteada" é tirada do fluxo aleatório do ambiente quando o
+atributo é omitido, pelo que depende da semente e de `random_stream_version`. Os datasets do
+desafio de 2022 omitem as duas curvas, pelo que cada semente obtém curvas diferentes. Defina os
+atributos explicitamente para as fixar.
+
+- **Eficiência.** `efficiency` e todos os valores de `power_efficiency_curve` são eficiências
+  de ida e volta: a energia carregada e depois descarregada conserva `efficiency` do seu
+  valor. Cada conversão usa a raiz quadrada. Carregar `E` kWh nos terminais armazena
+  `E * sqrt(eta)`, e entregar `E` kWh retira `E / sqrt(eta)` do armazenamento, em que `eta` é
+  lido de `power_efficiency_curve` à potência aplicada nos terminais. Uma eficiência num só
+  sentido de 0,95 numa ficha técnica deve ser introduzida como 0,95² = 0,9025; introduzida
+  como 0,95, dá uma eficiência num só sentido de cerca de 0,975.
+- **Curvas de potência.** `capacity_power_curve` e `discharge_power_curve` são avaliadas no SOC
+  do início do passo, e os seus valores são multiplicados por `nominal_power`. Entre pontos,
+  as curvas são interpoladas linearmente.
+- **Profundidade de descarga.** A descarga para num SOC de `1 - depth_of_discharge`, um
+  mínimo medido sobre a `capacity` nominal. O carregamento para na capacidade degradada.
+- **Degradação da capacidade.** Depois de cada carga ou descarga, a capacidade desce
+  `capacity_loss_coefficient * capacity * |energia nos terminais| / (2 * capacidade degradada)`.
+  Uma carga e descarga completas da capacidade degradada são um ciclo completo equivalente e
+  perdem `capacity_loss_coefficient * capacity`.
+- **Curvas geradas.** Sem `power_efficiency_curve`, são sorteados cinco pontos com `x` perto
+  de 0, 0,3, 0,7, 0,8 e 1, com valores entre 0,85 e 1,0 vezes `efficiency` (o ponto perto de
+  0,8 é igual a `efficiency`). Sem `capacity_power_curve`, são sorteados três pontos: 0,95 a
+  1,0 com SOC 0, 0,90 a 0,95 com um SOC perto de 0,8, e 0,20 a 0,30 com SOC 1.
+- Com o `initial_soc` predefinido, uma bateria começa na sua reserva: vazia quando
+  `depth_of_discharge` é 1. Defina `initial_soc` para começar noutro ponto.
 
 ## Serviço elétrico
 
@@ -382,7 +448,7 @@ A perda em repouso da bateria dos VE está intencionalmente isolada dos valores 
 
 - Um `battery.attributes.loss_coefficient` ausente ou `null` assume `0.0` nos VE.
 - Os valores explícitos de `loss_coefficient` dos VE são interpretados como rácios de perda horária.
-- Todas as implementações de `StorageDevice`, incluindo `Battery` estacionária e `StorageTank`, convertem os valores horários de `loss_coefficient` em perda efetiva por passo com `loss_coefficient * seconds_per_time_step / 3600`.
+- Todas as implementações de `StorageDevice`, incluindo `Battery` estacionária e `StorageTank`, convertem os valores horários de `loss_coefficient` numa perda efetiva por passo, composta ao longo do passo: `1 - (1 - loss_coefficient) ** (seconds_per_time_step / 3600)`.
 - As gamas predefinidas dos parâmetros do armazenamento estacionário não mudam.
 
 ## Aparelhos diferíveis

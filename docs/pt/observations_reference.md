@@ -95,8 +95,8 @@ O simulador não assume horizontes de previsão fixos. São os que o dataset for
 | `electrical_storage_soc` | rácio | SOC do BESS. |
 | `*_electricity_consumption` | kWh/step | Consumo de eletricidade por uso final. |
 | `electrical_storage_electricity_consumption` | kWh/step | Consumo do BESS, positivo no carregamento e negativo na descarga. |
-| `solar_generation` | kWh/step | Produção FV depois da conversão do modo FV. |
-| `net_electricity_consumption` | kWh/step | Importação positiva, exportação negativa. |
+| `solar_generation` | kWh/step | Produção FV depois da conversão do modo FV, para o intervalo seguinte (linha t+1 quando a observação é para t+1), como valor positivo. `Building.solar_generation` guarda a mesma série com valores negativos. |
+| `net_electricity_consumption` | kWh/step | Importação positiva, exportação negativa, no último intervalo liquidado (linha t quando a observação é para t+1). |
 | `power_outage` | binário | Estado de corte de energia. |
 | `power_outage_unserved_energy` | kWh/step | Carga não servida durante um corte de energia, como no KPI `power_outage_normalized_unserved_energy_total`. Zero sem corte. Apenas na interface flat; a tabela entity `building` não a inclui. |
 | `available_grid_power` | kW | Limite de importação da rede para o intervalo seguinte: o menor entre o `import_kw` estático e a série de [potência de rede disponível](schema_reference.md#potência-de-rede-disponível). Apenas com uma série. Apenas na interface flat; na interface entity, as features de margem (headroom) do edifício seguem o limite. |

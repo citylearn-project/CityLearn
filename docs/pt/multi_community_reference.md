@@ -66,7 +66,7 @@ MultiCommunityEnv(
 )
 ```
 
-`community_id` tem de ser único, não vazio e seguro como componente de um caminho relativo. Só pode conter letras, números, `_`, `-` e `.`. `weight` tem o valor predefinido `1.0`, tem de ser finito e não negativo, e pelo menos uma comunidade tem de ter um peso positivo.
+`community_id` tem de ser único, não vazio e seguro como componente de um caminho relativo. Só pode conter letras, números, `_`, `-` e `.`. `weight` tem o valor predefinido `1.0`, tem de ser finito e não negativo, e pelo menos uma comunidade tem de ter um peso positivo. Cada entrada só aceita `community_id`, `schema`, `env_kwargs` e `weight`: qualquer outra chave levanta um `ValueError` que a nomeia, e `weight` não pode ser um booleano.
 
 `env_kwargs` são passados ao `CityLearnEnv` filho. O wrapper define a sessão de exportação de cada filho como `<render_session_name>/<community_id>`, para que os ficheiros de render e de KPIs fiquem separados por comunidade.
 
@@ -77,6 +77,19 @@ MultiCommunityEnv(
 ```python
 observations = {"community_a": child_observations, "community_b": child_observations}
 info = {"communities": {...}, "time_step": 0}
+```
+
+`reset(seed=..., options=...)` passa `seed` a todos os filhos. `options` pode conter um
+mapeamento por comunidade, indexado por `community_id`; uma comunidade sem entrada própria
+recebe o mapeamento `options` completo:
+
+```python
+# community_a repete o episódio 2. community_b não tem entrada, pelo que recebe o
+# mapeamento completo e repete o episódio 0.
+env.reset(options={"community_a": {"episode_index": 2}, "episode_index": 0})
+
+# As mesmas opções para todos os filhos.
+env.reset(options={"episode_index": 2})
 ```
 
 `step(actions)` espera um payload de ações do filho por comunidade:
@@ -117,8 +130,16 @@ Todos os ambientes filhos têm de usar:
 | A mesma duração efetiva do episódio | Mantém os lotes de treino retangulares. |
 | A mesma `interface` | Mantém estáveis os contratos dos payloads de observação/ação. |
 | O mesmo modo `central_agent` | Evita misturar semânticas de recompensa/ação centralizadas e descentralizadas. |
+| A mesma `physics_version` | Os totais do portefólio somam valores dos distritos, pelo que todas as comunidades têm de simular a mesma física. |
+| A mesma `random_stream_version` | As predefinições sorteadas (curvas e eficiências das baterias, ruído) têm de vir da mesma definição do fluxo aleatório para que os totais sejam comparáveis. |
+| A mesma `baseline_version` | Os KPI de referência do portefólio somam as referências dos distritos, pelo que a definição da referência tem de coincidir. |
 
-O wrapper valida estas condições na construção e novamente depois do reset.
+O wrapper valida estas condições na construção e novamente depois do reset, e
+lança um `ValueError` que indica a definição, por exemplo:
+
+```text
+ValueError: MultiCommunityEnv requires all communities to share physics_version, got {'A': 2, 'B': 1}.
+```
 
 As janelas de calendário não fazem parte do contrato. Cada filho seleciona a
 divisão do seu episódio a partir da sua própria janela de simulação, da definição
